@@ -22,36 +22,25 @@ export default function CraftingPage() {
     api.designs.get,
     designId ? { designId } : "skip"
   );
-  const [elapsed, setElapsed] = useState(0);
-  const recentDesigns = useQuery(api.gallery.getRecentCompleted);
   const searchImages = useAction(api.search.execute);
-  const [pexelsImages, setPexelsImages] = useState<{ url: string; alt: string }[]>([]);
+  const [scrollImages, setScrollImages] = useState<
+    { url: string; alt: string }[]
+  >([]);
 
-  // If no completed designs, fetch from Pexels
+  // Fetch inspiration images for the marquee
   useEffect(() => {
-    if (recentDesigns && recentDesigns.length === 0 && pexelsImages.length === 0) {
-      searchImages({ query: "gold jewelry pendant", perPage: 6 })
-        .then((results: any) => {
-          if (results?.photos) {
-            setPexelsImages(
-              results.photos.map((p: any) => ({
-                url: p.src?.medium || p.src?.small,
-                alt: p.alt || "Jewelry",
-              }))
-            );
-          }
-        })
-        .catch(() => {});
-    }
-  }, [recentDesigns]);
-
-  // Timer
-  useEffect(() => {
-    const interval = setInterval(() => setElapsed((e) => e + 1), 1000);
-    return () => clearInterval(interval);
+    searchImages({ query: "luxury jewelry collection", perPage: 20 })
+      .then((results: any) => {
+        if (results?.length) {
+          setScrollImages(
+            results.map((r: any) => ({ url: r.thumbnail, alt: r.title }))
+          );
+        }
+      })
+      .catch(() => {});
   }, []);
 
-  // Auto-navigate on completion — use replace so crafting page is removed from history
+  // Auto-navigate on completion
   useEffect(() => {
     if (design?.status === "completed" && design._id) {
       router.replace(`/en/design/results/${design._id}`);
@@ -70,29 +59,26 @@ export default function CraftingPage() {
   const statusLabel =
     STATUS_LABELS[design?.status || "generating"] || "Preparing...";
 
+  // Double the images for seamless infinite scroll
+  const marqueeImages = scrollImages.length > 0 ? [...scrollImages, ...scrollImages] : [];
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.4 }}
-      className="min-h-screen bg-cream flex flex-col"
+      className="h-[100dvh] bg-cream flex flex-col overflow-hidden"
     >
       {/* Main content — centered */}
-      <div className="flex-1 flex flex-col items-center justify-center px-6 -mt-16">
+      <div className="flex-1 flex flex-col items-center justify-center px-6">
         {/* Large circular spinner */}
-        <div className="relative w-28 h-28 mb-8">
-          {/* Track */}
+        <div className="relative w-24 h-24 mb-6">
           <svg className="w-full h-full" viewBox="0 0 112 112">
             <circle
-              cx="56"
-              cy="56"
-              r="48"
-              fill="none"
-              stroke="#EDE6D8"
-              strokeWidth="6"
+              cx="56" cy="56" r="48"
+              fill="none" stroke="#EDE6D8" strokeWidth="6"
             />
           </svg>
-          {/* Animated arc */}
           <motion.svg
             className="absolute inset-0 w-full h-full"
             viewBox="0 0 112 112"
@@ -100,19 +86,13 @@ export default function CraftingPage() {
             transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
           >
             <circle
-              cx="56"
-              cy="56"
-              r="48"
-              fill="none"
-              stroke="#8B7355"
-              strokeWidth="6"
-              strokeLinecap="round"
-              strokeDasharray="100 202"
+              cx="56" cy="56" r="48"
+              fill="none" stroke="#8B7355" strokeWidth="6"
+              strokeLinecap="round" strokeDasharray="100 202"
             />
           </motion.svg>
         </div>
 
-        {/* Heading */}
         <motion.h2
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -122,18 +102,16 @@ export default function CraftingPage() {
           Crafting your piece...
         </motion.h2>
 
-        {/* Status text */}
         <motion.p
           key={statusLabel}
           initial={{ opacity: 0, y: 5 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-text-secondary text-base text-center mb-6"
+          className="text-text-secondary text-sm text-center mb-5"
         >
           {statusLabel}
         </motion.p>
 
-        {/* Progress bar */}
-        <div className="w-56 h-1.5 bg-warm rounded-full overflow-hidden mb-3">
+        <div className="w-48 h-1.5 bg-warm rounded-full overflow-hidden mb-2">
           <motion.div
             className="h-full bg-brown rounded-full"
             initial={{ width: 0 }}
@@ -142,11 +120,10 @@ export default function CraftingPage() {
           />
         </div>
 
-        <p className="text-text-tertiary text-sm text-center">
-          Usually 8-15 seconds
+        <p className="text-text-tertiary text-xs text-center">
+          Usually takes about a minute
         </p>
 
-        {/* Error state */}
         {design?.status === "failed" && (
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
@@ -167,53 +144,55 @@ export default function CraftingPage() {
         )}
       </div>
 
-      {/* Browse while waiting — bottom */}
+      {/* Auto-scrolling marquee at the bottom */}
       <motion.div
-        initial={{ opacity: 0, y: 15 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.5 }}
-        className="px-6 pb-8"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.8 }}
+        className="pb-8"
       >
-        <p className="text-text-tertiary text-[10px] uppercase tracking-wider font-medium mb-2">
+        <p className="text-text-tertiary text-[10px] uppercase tracking-wider font-medium mb-3 px-6">
           While you wait
         </p>
-        <div className="flex gap-3 overflow-x-auto pb-2">
-          {recentDesigns && recentDesigns.length > 0
-            ? recentDesigns.map((d) => (
+
+        {marqueeImages.length > 0 ? (
+          <div className="overflow-hidden">
+            <motion.div
+              className="flex gap-3"
+              animate={{ x: [0, -(scrollImages.length * 116)] }}
+              transition={{
+                x: {
+                  duration: scrollImages.length * 3,
+                  repeat: Infinity,
+                  ease: "linear",
+                },
+              }}
+            >
+              {marqueeImages.map((img, i) => (
                 <div
-                  key={d._id}
-                  className="flex-shrink-0 w-[140px] h-[120px] rounded-xl border border-warm overflow-hidden bg-sand"
+                  key={i}
+                  className="flex-shrink-0 w-[100px] h-[100px] rounded-xl overflow-hidden"
                 >
                   <img
-                    src={d.imageUrl}
-                    alt={d.name}
+                    src={img.url}
+                    alt={img.alt}
                     className="w-full h-full object-cover"
+                    loading="lazy"
                   />
                 </div>
-              ))
-            : pexelsImages.length > 0
-              ? pexelsImages.map((img, i) => (
-                  <div
-                    key={i}
-                    className="flex-shrink-0 w-[140px] h-[120px] rounded-xl border border-warm overflow-hidden bg-sand"
-                  >
-                    <img
-                      src={img.url}
-                      alt={img.alt}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                ))
-              : Array.from({ length: 4 }).map((_, i) => (
-                  <div
-                    key={i}
-                    className="flex-shrink-0 w-[140px] h-[120px] bg-sand rounded-xl border border-warm animate-pulse"
-                  />
-                ))}
-        </div>
-        <p className="text-text-tertiary text-xs mt-2">
-          Browse recent community designs →
-        </p>
+              ))}
+            </motion.div>
+          </div>
+        ) : (
+          <div className="flex gap-3 px-6">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div
+                key={i}
+                className="flex-shrink-0 w-[100px] h-[100px] bg-sand rounded-xl animate-pulse"
+              />
+            ))}
+          </div>
+        )}
       </motion.div>
     </motion.div>
   );
