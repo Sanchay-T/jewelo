@@ -3,121 +3,146 @@ import { internalAction } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { v } from "convex/values";
 
-const FONT_DESCRIPTIONS: Record<string, string> = {
+const FONT_STYLES: Record<string, string> = {
   script: "elegant flowing cursive script",
-  modern: "clean modern sans-serif uppercase",
-  classic: "refined classic serif",
+  modern: "clean, modern, bold block capitals",
+  classic: "refined classic serif with balanced proportions",
 };
 
-const STYLE_DESCRIPTIONS: Record<string, string> = {
-  gold_only: "pure gold, no stones",
-  gold_with_stones: "gold with small gemstone accents",
-  gold_with_diamonds: "gold with diamond embellishments",
+const DECORATION_STYLES: Record<string, string> = {
+  gold_only: "none, pure polished gold",
+  gold_with_stones: "small gemstone accents along edges",
+  gold_with_diamonds: "pave-set round brilliant-cut diamonds catching light",
 };
 
-const SIZE_DESCRIPTIONS: Record<string, string> = {
-  small: "delicate and petite (12mm)",
-  medium: "balanced and elegant (18mm)",
-  large: "bold and statement-making (25mm)",
+const SIZE_FEELS: Record<string, string> = {
+  small: "delicate, petite, 12mm",
+  medium: "balanced, elegant, 18mm",
+  large: "bold, statement-making, 25mm",
 };
 
-function buildGenerationPrompt(design: {
-  name: string;
-  karat: string;
-  font: string;
-  size: string;
-  style: string;
-  jewelryType?: string;
-  designStyle?: string;
-}): string {
-  const fontDesc = FONT_DESCRIPTIONS[design.font] || "elegant script";
-  const styleDesc = STYLE_DESCRIPTIONS[design.style] || "pure gold";
-  const sizeDesc = SIZE_DESCRIPTIONS[design.size] || "18mm";
-  const aesthetic = design.designStyle || "elegant";
+// Camera angles for 4 diverse variations
+const CAMERA_ANGLES = [
+  "front-facing hero shot, name centered and prominent",
+  "angled 3/4 view showing depth and dimension of lettering",
+  "100mm macro lens, tight crop on the engraved name and metal texture",
+  "soft overhead angle with dramatic directional lighting on the name",
+];
 
-  return `You are a world-class jewelry designer and luxury product photographer.
+// ── JSON PROMPT: Reference-based (engrave on existing piece) ───────
+function buildReferencePrompt(
+  design: { name: string; font: string; karat: string; style: string },
+  variationIndex: number,
+): string {
+  const fontStyle = FONT_STYLES[design.font] || "elegant script";
+  const camera = CAMERA_ANGLES[variationIndex];
 
-A customer wants custom jewelry with their name on it. They've shown you a reference image.
-
-STEP 1 — STUDY THE REFERENCE:
-Look at the reference image and identify:
-- The exact type of jewelry (ring, pendant, bracelet, earring, chain, etc.)
-- Its shape, silhouette, proportions, and dimensions
-- The metal type, color, and finish
-- Any stones, filigree, patterns, or decorative elements
-
-STEP 2 — VISUALIZE IN 3D:
-Mentally construct this jewelry as a 3D object. Find the best surface for embossing '${design.name}'. Consider how letters wrap around the curves.
-
-STEP 3 — GENERATE:
-Create a photorealistic product photograph of the same type of jewelry as the reference, with '${design.name}' embossed on it.
-
-SPECIFICATIONS:
-- Jewelry type: match the reference image exactly (if it's a ring, generate a ring; if a pendant, a pendant)
-- Metal: match the reference — preserve color, tone, and finish exactly
-- Style: ${aesthetic}, inspired by the reference
-- Embossing: '${design.name}' in ${fontDesc}, with physical depth in the metal
-- Decoration: ${styleDesc}
-- Size: ${sizeDesc}
-
-PHOTOGRAPHY:
-- Professional studio, soft lighting, warm cream background
-- Sharp focus on the jewelry and name
-- Subtle shadow beneath the piece
-- This must look like a photograph from a Cartier or Tiffany catalog
-
-CRITICAL: DO NOT paste flat text on a surface. The name must be PHYSICALLY part of the 3D metal form. Generate the complete photograph now.`;
+  return JSON.stringify({
+    generation_profile: "commercial-jewelry-asset",
+    task: "Engrave the customer's name onto the jewelry shown in the reference image. Do NOT redesign the jewelry — only add the engraving.",
+    subject: {
+      geometry_source: "Use the provided reference image EXACTLY. Same jewelry, same stones, same chain, same background, same lighting, same camera angle.",
+      preserve_rules: [
+        "DO NOT change anything about this image except adding the engraving",
+        "The engraving must look like it existed BEFORE the photograph was taken",
+        "Same metal, same finish, same composition",
+      ],
+    },
+    custom_typography: {
+      engraved_text: design.name,
+      character_count: design.name.length,
+      spelling_check: `The text must read exactly: ${design.name.split("").join(" - ")}`,
+      font_style: fontStyle,
+      text_accuracy: `CRITICAL: Every single letter of '${design.name}' must be present and clearly legible. Do not truncate, abbreviate, or skip any letters. The name has ${design.name.length} characters.`,
+      integration_style: "physically engraved into the metal surface with V-shaped grooves, following the 3D curvature",
+      engraving_physics: [
+        "V-shaped grooves cut by engraving burin",
+        "Groove wall facing light = bright specular highlight",
+        "Groove wall in shadow = darker than surrounding metal",
+        "Deepest point of groove = darkest",
+        "Sharp highlights where groove edge meets flat surface",
+        "Letter strokes taper at start and end (burin entry/exit)",
+      ],
+    },
+    technical_render: {
+      camera,
+      lighting: "professional studio, three-point softbox, warm tone",
+      resolution: "ultra-crisp, photorealistic, 8k detail",
+      style: "luxury jewelry catalog photography",
+    },
+  }, null, 2);
 }
 
-function buildFromScratchPrompt(design: {
-  name: string;
-  karat: string;
-  font: string;
-  size: string;
-  style: string;
-  jewelryType?: string;
-  designStyle?: string;
-}): string {
-  const fontDesc = FONT_DESCRIPTIONS[design.font] || "elegant script";
-  const styleDesc = STYLE_DESCRIPTIONS[design.style] || "pure gold";
-  const sizeDesc = SIZE_DESCRIPTIONS[design.size] || "18mm";
+// ── JSON PROMPT: From-scratch (generate new piece) ─────────────────
+function buildFromScratchPrompt(
+  design: {
+    name: string;
+    karat: string;
+    font: string;
+    size: string;
+    style: string;
+    jewelryType?: string;
+    designStyle?: string;
+  },
+  variationIndex: number,
+): string {
+  const fontStyle = FONT_STYLES[design.font] || "elegant script";
+  const decoration = DECORATION_STYLES[design.style] || "none, pure polished gold";
+  const sizeFeel = SIZE_FEELS[design.size] || "balanced, elegant, 18mm";
   const type = design.jewelryType || "pendant";
   const aesthetic = design.designStyle || "minimalist";
+  const camera = CAMERA_ANGLES[variationIndex];
 
-  return `You are a world-class jewelry designer and luxury product photographer.
-
-Generate a photorealistic product photograph of a custom ${design.karat} gold ${type} with the name '${design.name}' embossed on it.
-
-DESIGN:
-- Style: ${aesthetic}
-- Metal: ${design.karat} yellow gold, polished with warm luster
-- Decoration: ${styleDesc}
-- Size feel: ${sizeDesc}
-- Type: ${type} (with chain if pendant/necklace)
-
-NAME EMBOSSING:
-- '${design.name}' in ${fontDesc} lettering
-- Letters have PHYSICAL DEPTH — raised from or engraved into the metal
-- Each letter follows the 3D contours of the piece
-- Realistic light and shadow on each letter stroke
-- Looks crafted by a master engraver
-
-PHOTOGRAPHY:
-- Professional studio product shot
-- Soft lighting, warm cream background
-- Sharp focus on name area, gentle depth of field
-- Luxury catalog quality — Cartier/Tiffany level
-- Subtle shadow, realistic gold reflections
-
-The name must be PHYSICALLY part of the metal, not flat text. Generate now.`;
+  return JSON.stringify({
+    generation_profile: "commercial-jewelry-asset",
+    task: `Create a photorealistic product photograph of a custom ${type} with the customer's name engraved on it.`,
+    subject: {
+      item_type: type,
+      design_style: aesthetic,
+      primary_material: `solid ${design.karat} yellow gold`,
+      finish: "high polish with warm luster",
+      decoration,
+      size: sizeFeel,
+      chain: type.includes("pendant") || type.includes("necklace") ? "delicate matching gold chain" : "none",
+    },
+    custom_typography: {
+      engraved_text: design.name,
+      character_count: design.name.length,
+      spelling_check: `The text must read exactly: ${design.name.split("").join(" - ")}`,
+      font_style: fontStyle,
+      text_accuracy: `CRITICAL: Every single letter of '${design.name}' must be present and clearly legible. Do not truncate, abbreviate, or skip any letters. The name has ${design.name.length} characters.`,
+      integration_style: "flawlessly embossed into the metal, following 3D curves of the piece",
+      engraving_physics: [
+        "V-shaped grooves cut by engraving burin",
+        "Groove wall facing light = bright specular highlight",
+        "Groove wall in shadow = darker than surrounding metal",
+        "Deepest point of groove = darkest",
+        "Sharp highlights where groove edge meets flat surface",
+        "Letter strokes taper at start and end (burin entry/exit)",
+      ],
+    },
+    environment: {
+      background: "warm cream studio backdrop (#FAF7F2)",
+      props: "none",
+    },
+    technical_render: {
+      camera,
+      lighting: "professional studio, three-point softbox, warm tone",
+      resolution: "ultra-crisp, photorealistic, 8k detail",
+      style: "luxury jewelry catalog photography, Cartier/Tiffany level",
+    },
+  }, null, 2);
 }
 
+// ── Gemini API call ────────────────────────────────────────────────
 async function callGemini(
   ai: any,
   prompt: string,
   referenceBase64: string | null,
 ): Promise<{ imageData: string; mimeType: string } | null> {
-  const contents: any[] = [{ text: prompt }];
+  const contents: any[] = [];
+  contents.push({ text: prompt });
+
   if (referenceBase64) {
     contents.push({
       inlineData: {
@@ -132,10 +157,6 @@ async function callGemini(
     contents,
     config: {
       responseModalities: ["TEXT", "IMAGE"],
-      imageConfig: {
-        aspectRatio: "1:1",
-        imageSize: "1K",
-      },
     },
   });
 
@@ -153,49 +174,40 @@ async function callGemini(
   return null;
 }
 
+// ── Main generation action ─────────────────────────────────────────
 export const generate = internalAction({
   args: { designId: v.id("designs") },
   handler: async (ctx, { designId }) => {
     try {
-      // 1. Get design
       const design = await ctx.runQuery(internal.designs.getInternal, { designId });
 
-      // === DEBUG LOGGING ===
-      console.log("=== GENERATION DEBUG ===");
-      console.log("Design ID:", designId);
-      console.log("Name:", design.name);
-      console.log("Karat:", design.karat);
-      console.log("Font:", design.font);
-      console.log("Size:", design.size);
-      console.log("Style:", design.style);
-      console.log("JewelryType:", JSON.stringify(design.jewelryType));
-      console.log("DesignStyle:", JSON.stringify(design.designStyle));
-      console.log("ReferenceType:", design.referenceType);
-      console.log("ReferenceUrl:", design.referenceUrl?.slice(0, 80));
-      console.log("ReferenceStorageId:", design.referenceStorageId);
-      console.log("=== END DEBUG ===");
+      console.log("=== GENERATION START ===");
+      console.log("Name:", design.name, "| Karat:", design.karat);
+      console.log("Font:", design.font, "| Style:", design.style);
+      console.log("Reference:", design.referenceUrl ? "yes" : "no");
 
-      // 2. Update status: analyzing
+      // Status: analyzing
       await ctx.runMutation(internal.designs.updateStatus, {
         designId,
         status: "analyzing",
-        analysisStep: "Studying your reference...",
+        analysisStep: "Studying the piece...",
       });
 
-      // 3. Download reference image if exists and store in Convex
+      // Get reference image as base64
       let referenceBase64: string | null = null;
       let referenceUrl = design.referenceUrl;
+
       if (design.referenceStorageId) {
         const url = await ctx.storage.getUrl(design.referenceStorageId);
         if (url) referenceUrl = url;
       }
+
       if (referenceUrl) {
         try {
           const response = await fetch(referenceUrl);
           const buffer = await response.arrayBuffer();
           referenceBase64 = Buffer.from(buffer).toString("base64");
 
-          // Store the reference in Convex storage for reliable display later
           if (!design.referenceStorageId) {
             const blob = new Blob([buffer], { type: "image/jpeg" });
             const refStorageId = await ctx.storage.store(blob);
@@ -209,11 +221,11 @@ export const generate = internalAction({
         }
       }
 
-      // 4. Update with analysis data
+      // Status: engraving
       await ctx.runMutation(internal.designs.updateStatus, {
         designId,
         status: "engraving",
-        analysisStep: `Creating '${design.name}' in ${design.karat} gold...`,
+        analysisStep: `Engraving '${design.name}' in ${design.karat} gold...`,
         analysisData: {
           jewelryType: design.jewelryType || "Pendant",
           metal: `${design.karat} Gold`,
@@ -221,41 +233,31 @@ export const generate = internalAction({
         },
       });
 
-      // 5. Initialize Gemini
+      // Initialize Gemini
       const { GoogleGenAI } = await import("@google/genai");
-
       const saJsonBase64 = process.env.GOOGLE_SA_JSON;
       if (!saJsonBase64) throw new Error("GOOGLE_SA_JSON not set");
-
       const saJson = JSON.parse(Buffer.from(saJsonBase64, "base64").toString());
 
       const ai = new GoogleGenAI({
         vertexai: true,
         project: process.env.GCP_PROJECT_ID || "cyphersol-prod",
         location: process.env.GCP_LOCATION || "global",
-        googleAuthOptions: {
-          credentials: saJson,
-        },
+        googleAuthOptions: { credentials: saJson },
       });
 
-      // 6. Build prompt based on whether there's a reference image
-      const prompt = referenceBase64
-        ? buildGenerationPrompt(design)
-        : buildFromScratchPrompt(design);
-
-      console.log("Has reference image:", !!referenceBase64);
-      console.log("Reference image size:", referenceBase64 ? (referenceBase64.length / 1024).toFixed(0) + "kb base64" : "none");
-      console.log("Prompt first 300 chars:", prompt.slice(0, 300));
-
-      // 7. Generate 4 variations SEQUENTIALLY — Pro model rate limit is ~2/min
-      const results: ({ imageData: string; mimeType: string } | null)[] = [];
+      // Generate 4 variations sequentially (rate limit ~2/min)
       for (let i = 0; i < 4; i++) {
         try {
-          console.log(`Generating variation ${i + 1}/4...`);
+          const prompt = referenceBase64
+            ? buildReferencePrompt(design, i)
+            : buildFromScratchPrompt(design, i);
+
+          console.log(`Variation ${i + 1}/4: ${CAMERA_ANGLES[i].slice(0, 50)}...`);
+
           const result = await callGemini(ai, prompt, referenceBase64);
-          results.push(result);
+
           if (result) {
-            // Store immediately so user can see progress
             const imageBuffer = Buffer.from(result.imageData, "base64");
             const blob = new Blob([imageBuffer], { type: result.mimeType });
             const storageId = await ctx.storage.store(blob);
@@ -263,24 +265,29 @@ export const generate = internalAction({
               designId,
               imageStorageId: storageId,
             });
+            console.log(`  ✓ Variation ${i + 1} stored`);
+          } else {
+            console.warn(`  ✗ Variation ${i + 1} returned no image`);
           }
-          // Wait 15s between calls to respect rate limit (except after last)
+
+          // 15s between calls for rate limit (except after last)
           if (i < 3) {
             await new Promise((r) => setTimeout(r, 15000));
           }
-        } catch (err) {
-          console.error(`Variation ${i} failed:`, err);
-          results.push(null);
+        } catch (err: any) {
+          console.error(`Variation ${i + 1} failed:`, err.message || err);
         }
       }
 
-      // 8. Check results and set completed
-      const storedCount = results.filter(Boolean).length;
-      if (storedCount === 0) {
-        throw new Error("No images generated by Gemini");
+      // Check results
+      const finalDesign = await ctx.runQuery(internal.designs.getInternal, { designId });
+      const imageCount = finalDesign.imageStorageIds?.length || 0;
+
+      if (imageCount === 0) {
+        throw new Error("No images generated");
       }
 
-      console.log(`Generation complete: ${storedCount}/4 images stored`);
+      console.log(`=== DONE: ${imageCount}/4 images ===`);
       await ctx.runMutation(internal.designs.completeGeneration, { designId });
     } catch (error: any) {
       console.error("Generation failed:", error);

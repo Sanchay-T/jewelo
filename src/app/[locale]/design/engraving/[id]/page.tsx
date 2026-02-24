@@ -24,8 +24,9 @@ export default function EngravingPage() {
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.3 }}
-      className="min-h-screen bg-cream px-6 pt-4 pb-24"
+      className="min-h-screen bg-cream px-6 pt-4 pb-24 lg:pt-20 lg:pb-8"
     >
+      <div className="max-w-xl mx-auto">
       <div className="h-4" />
       <StepIndicator currentStep={6} totalSteps={7} />
       <h2 className="font-display text-2xl mb-2">Your name, engraved</h2>
@@ -33,7 +34,8 @@ export default function EngravingPage() {
         Here&apos;s how it looks on your piece. Tap to zoom.
       </p>
 
-      <div className="space-y-3 mb-5">
+      {/* Desktop: side-by-side / Mobile: stacked */}
+      <div className="space-y-3 mb-5 lg:grid lg:grid-cols-2 lg:gap-6 lg:space-y-0">
         {/* Reference */}
         <div>
           <p className="text-text-tertiary text-[10px] uppercase tracking-wider mb-2">
@@ -64,7 +66,7 @@ export default function EngravingPage() {
           initial={{ opacity: 0, y: 5 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="flex items-center justify-center"
+          className="flex items-center justify-center lg:hidden"
         >
           <ArrowDown className="w-5 h-5 text-brown" />
         </motion.div>
@@ -142,6 +144,7 @@ export default function EngravingPage() {
       <button className="w-full border border-brown/20 text-text-secondary py-3 rounded-xl text-sm">
         Try different placement
       </button>
+      </div>
 
       {/* Fullscreen image viewer */}
       <AnimatePresence>

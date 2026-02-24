@@ -7,13 +7,13 @@ import { ContinueDesignBanner } from "@/components/shared/ContinueDesignBanner";
 export default function LandingPage() {
   return (
     <div className="h-[100dvh] bg-cream relative flex flex-col">
-      <div className="flex-1 flex flex-col px-6 pt-4 pb-20 overflow-hidden">
-        {/* Logo */}
+      <div className="flex-1 flex flex-col px-6 pt-4 pb-20 overflow-hidden lg:pt-20 lg:pb-8 lg:px-8">
+        {/* Logo — hidden on desktop (top nav has it) */}
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
-          className="flex items-center gap-2 mb-4"
+          className="flex items-center gap-2 mb-4 lg:hidden"
         >
           <div className="w-7 h-7 rounded-full bg-brown flex items-center justify-center">
             <span className="text-cream text-[10px] font-bold">J</span>
@@ -21,51 +21,80 @@ export default function LandingPage() {
           <span className="font-display text-base text-brown">Jewelo</span>
         </motion.div>
 
-        {/* Hero */}
-        <motion.h1 className="font-display text-[32px] leading-[1.1] mb-1.5">
-          <motion.span
-            initial={{ opacity: 0, y: 20, filter: "blur(8px)" }}
-            animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-            transition={{ duration: 0.6, delay: 0.1 }}
-            className="text-text-secondary italic block"
+        {/* Desktop: two-column layout / Mobile: stacked */}
+        <div className="flex-1 flex flex-col min-h-0 lg:flex-row lg:items-center lg:gap-12 lg:max-w-6xl lg:mx-auto lg:w-full">
+          {/* Left column: Hero text + CTAs */}
+          <div className="flex-shrink-0 lg:flex-1 lg:flex lg:flex-col lg:justify-center lg:max-w-lg">
+            {/* Hero */}
+            <motion.h1 className="font-display text-[32px] leading-[1.1] mb-1.5 lg:text-[48px] lg:mb-3">
+              <motion.span
+                initial={{ opacity: 0, y: 20, filter: "blur(8px)" }}
+                animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                transition={{ duration: 0.6, delay: 0.1 }}
+                className="text-text-secondary italic block"
+              >
+                Craft Your
+              </motion.span>
+              <motion.span
+                initial={{ opacity: 0, y: 20, filter: "blur(8px)" }}
+                animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                transition={{ duration: 0.6, delay: 0.25 }}
+                className="text-text-primary font-semibold block"
+              >
+                Dream Jewelry
+              </motion.span>
+            </motion.h1>
+
+            <motion.p
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.4 }}
+              className="text-text-secondary text-sm mb-4 lg:text-base lg:mb-8"
+            >
+              Designed by AI. Handcrafted by master artisans in 48 hours.
+            </motion.p>
+
+            {/* CTAs — shown below hero on desktop, bottom on mobile */}
+            <motion.div
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.65 }}
+              className="flex-shrink-0 hidden lg:block"
+            >
+              <Link
+                href="/en/design/language"
+                className="inline-block bg-brown text-cream font-semibold py-3.5 px-10 rounded-xl text-sm text-center mb-3 hover:bg-brown-dark transition relative overflow-hidden group"
+              >
+                <span className="relative z-10">Begin Designing</span>
+                <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+              </Link>
+              <Link
+                href="/en/gallery"
+                className="inline-block ml-3 border border-brown/20 text-text-secondary py-3.5 px-10 rounded-xl text-sm text-center hover:bg-sand/50 transition"
+              >
+                View Gallery
+              </Link>
+              <ContinueDesignBanner />
+            </motion.div>
+          </div>
+
+          {/* Before/After Slider — takes remaining vertical space */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5, delay: 0.5 }}
+            className="flex-1 min-h-0 mb-4 lg:mb-0 lg:max-w-xl lg:max-h-[500px] lg:aspect-[4/3]"
           >
-            Craft Your
-          </motion.span>
-          <motion.span
-            initial={{ opacity: 0, y: 20, filter: "blur(8px)" }}
-            animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-            transition={{ duration: 0.6, delay: 0.25 }}
-            className="text-text-primary font-semibold block"
-          >
-            Dream Jewelry
-          </motion.span>
-        </motion.h1>
+            <BeforeAfterSlider />
+          </motion.div>
+        </div>
 
-        <motion.p
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.4 }}
-          className="text-text-secondary text-sm mb-4"
-        >
-          Designed by AI. Handcrafted by master artisans in 48 hours.
-        </motion.p>
-
-        {/* Before/After Slider — takes remaining vertical space */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.5, delay: 0.5 }}
-          className="flex-1 min-h-0 mb-4"
-        >
-          <BeforeAfterSlider />
-        </motion.div>
-
-        {/* CTAs */}
+        {/* CTAs — mobile only */}
         <motion.div
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.65 }}
-          className="flex-shrink-0"
+          className="flex-shrink-0 lg:hidden"
         >
           <Link
             href="/en/design/language"
@@ -81,7 +110,9 @@ export default function LandingPage() {
             View Gallery
           </Link>
         </motion.div>
-        <ContinueDesignBanner />
+        <div className="lg:hidden">
+          <ContinueDesignBanner />
+        </div>
       </div>
     </div>
   );

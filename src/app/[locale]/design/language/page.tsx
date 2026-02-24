@@ -20,8 +20,9 @@ export default function LanguagePage() {
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
-      className="min-h-screen bg-cream px-6 pt-4 pb-24"
+      className="min-h-screen bg-cream px-6 pt-4 pb-24 lg:pt-20 lg:pb-8"
     >
+      <div className="max-w-lg mx-auto">
       <div className="h-4" />
       <StepIndicator currentStep={1} totalSteps={7} />
 
@@ -94,6 +95,7 @@ export default function LanguagePage() {
       >
         Continue
       </motion.button>
+      </div>
     </motion.div>
   );
 }

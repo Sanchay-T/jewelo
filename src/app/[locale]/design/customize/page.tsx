@@ -75,8 +75,9 @@ export default function ConfiguratorPage() {
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
-      className="min-h-screen bg-cream px-6 pt-4 pb-24"
+      className="min-h-screen bg-cream px-6 pt-4 pb-24 lg:pt-20 lg:pb-8"
     >
+      <div className="max-w-lg mx-auto">
       <div className="h-4" />
       <StepIndicator currentStep={3} totalSteps={7} />
 
@@ -85,7 +86,7 @@ export default function ConfiguratorPage() {
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1, duration: 0.4 }}
-        className="bg-white rounded-2xl p-8 mb-6 shadow-card border border-warm text-center sticky top-0 z-10"
+        className="bg-white rounded-2xl p-8 mb-6 shadow-card border border-warm text-center sticky top-0 z-10 lg:top-16"
       >
         <p className="text-text-tertiary text-[10px] uppercase tracking-widest mb-3">
           Live Preview
@@ -157,6 +158,7 @@ export default function ConfiguratorPage() {
             {component}
           </motion.div>
         ))}
+      </div>
       </div>
     </motion.div>
   );

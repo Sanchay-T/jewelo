@@ -20,18 +20,19 @@ export default function FromScratchPage() {
   const [selectedStyle, setSelectedStyle] = useState<string>("Minimalist");
 
   return (
-    <div className="min-h-screen bg-cream px-6 pt-4 pb-24">
+    <div className="min-h-screen bg-cream px-6 pt-4 pb-24 lg:pt-20 lg:pb-8">
+      <div className="max-w-lg mx-auto">
       <div className="h-4" />
       <StepIndicator currentStep={2} totalSteps={7} />
-      <h2 className="font-display text-xl mb-1">Design from scratch</h2>
-      <p className="text-text-secondary text-xs mb-5">
+      <h2 className="font-display text-xl mb-1 lg:text-2xl">Design from scratch</h2>
+      <p className="text-text-secondary text-xs mb-5 lg:text-sm">
         No reference needed. Describe what you want.
       </p>
 
       <p className="text-text-secondary text-[10px] uppercase tracking-wider mb-2">
         What type of piece?
       </p>
-      <div className="grid grid-cols-2 gap-2 mb-4">
+      <div className="grid grid-cols-2 gap-2 mb-4 lg:grid-cols-4">
         {jewelryTypes.map((type) => (
           <button
             key={type.id}
@@ -73,11 +74,11 @@ export default function FromScratchPage() {
         ))}
       </div>
 
-      <div className="bg-sand rounded-xl p-6 text-center mb-4 border border-warm">
+      <div className="bg-sand rounded-xl p-6 text-center mb-4 border border-warm lg:p-8">
         <p className="text-text-tertiary text-xs uppercase tracking-wider mb-2">
           AI will generate
         </p>
-        <p className="font-display text-3xl italic text-gold/60">Sarah</p>
+        <p className="font-display text-3xl italic text-gold/60 lg:text-4xl">Sarah</p>
         <p className="text-text-tertiary text-[10px] mt-2">
           {selectedStyle} gold {selectedType}
         </p>
@@ -93,6 +94,7 @@ export default function FromScratchPage() {
       >
         Continue to Customize
       </button>
+      </div>
     </div>
   );
 }

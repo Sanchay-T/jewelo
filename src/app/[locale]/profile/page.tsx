@@ -10,8 +10,8 @@ export default function ProfilePage() {
   const savedDesigns = useQuery(api.gallery.getRecentCompleted);
 
   return (
-    <div className="min-h-screen bg-cream pb-24">
-      <div className="px-6 pt-8">
+    <div className="min-h-screen bg-cream pb-24 lg:pt-16 lg:pb-8">
+      <div className="px-6 pt-8 max-w-2xl mx-auto">
         {/* Header */}
         <div className="flex items-center gap-4 mb-8">
           <div className="w-14 h-14 rounded-full bg-brown flex items-center justify-center">

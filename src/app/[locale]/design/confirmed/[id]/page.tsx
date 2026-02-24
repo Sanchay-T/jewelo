@@ -12,7 +12,9 @@ export default function ConfirmedPage() {
   const order = useQuery(api.orders.get, orderId ? { orderId } : "skip");
 
   return (
-    <div className="min-h-screen bg-cream px-6 pt-4 pb-24 flex flex-col items-center">
+    <div className="min-h-screen bg-cream px-6 pt-4 pb-24 flex flex-col items-center lg:pt-20 lg:pb-8">
+      <div className="w-full max-w-lg">
+      <div className="flex flex-col items-center">
       <div className="h-4" />
       <div className="w-20 h-20 rounded-full bg-green-50 flex items-center justify-center mt-8 mb-6">
         <Check className="w-10 h-10 text-green-500" />
@@ -95,6 +97,8 @@ export default function ConfirmedPage() {
       >
         Design Another
       </Link>
+      </div>
+      </div>
     </div>
   );
 }

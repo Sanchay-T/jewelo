@@ -66,12 +66,15 @@ export default function ReviewPage() {
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
-      className="min-h-screen bg-cream px-6 pt-4 pb-24"
+      className="min-h-screen bg-cream px-6 pt-4 pb-24 lg:pt-20 lg:pb-8"
     >
+      <div className="max-w-lg mx-auto lg:max-w-2xl">
       <div className="h-4" />
       <StepIndicator currentStep={7} totalSteps={7} />
       <h2 className="font-display text-2xl mb-4">Review</h2>
 
+      {/* Desktop: side-by-side image and details / Mobile: stacked */}
+      <div className="lg:grid lg:grid-cols-2 lg:gap-8 lg:items-start">
       {/* Show actual generated image */}
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
@@ -92,6 +95,7 @@ export default function ReviewPage() {
         )}
       </motion.div>
 
+      <div>
       <p className="font-display text-lg text-brown mb-1">
         &ldquo;{design?.name}&rdquo; Name Pendant
       </p>
@@ -177,6 +181,9 @@ export default function ReviewPage() {
       >
         {saved ? "✓ Saved to Gallery" : "Save to Gallery"}
       </button>
+      </div>
+      </div>
+      </div>
     </motion.div>
   );
 }

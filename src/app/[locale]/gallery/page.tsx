@@ -43,8 +43,8 @@ export default function GalleryPage() {
   }, [activeCategory]);
 
   return (
-    <div className="min-h-screen bg-cream pb-24">
-      <div className="px-6 pt-8">
+    <div className="min-h-screen bg-cream pb-24 lg:pt-16 lg:pb-8">
+      <div className="px-6 pt-8 lg:max-w-5xl lg:mx-auto">
         <h1 className="font-display text-3xl text-text-primary mb-1">
           Gallery
         </h1>
@@ -55,11 +55,11 @@ export default function GalleryPage() {
 
       {/* Community Designs */}
       {recentDesigns && recentDesigns.length > 0 && (
-        <div className="mb-8">
+        <div className="mb-8 lg:max-w-5xl lg:mx-auto">
           <p className="px-6 text-text-secondary text-[10px] uppercase tracking-wider font-medium mb-3">
             Community Designs
           </p>
-          <div className="flex gap-3 overflow-x-auto px-6 pb-2">
+          <div className="flex gap-3 overflow-x-auto px-6 pb-2 lg:flex-wrap lg:overflow-x-visible">
             {recentDesigns.map((d, i) => (
               <motion.button
                 key={d._id}
@@ -67,7 +67,7 @@ export default function GalleryPage() {
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: i * 0.05 }}
                 onClick={() => setViewerUrl(d.imageUrl)}
-                className="flex-shrink-0 w-32 h-32 rounded-xl border border-warm overflow-hidden bg-sand"
+                className="flex-shrink-0 w-32 h-32 rounded-xl border border-warm overflow-hidden bg-sand lg:w-40 lg:h-40"
               >
                 <img
                   src={d.imageUrl}
@@ -81,7 +81,7 @@ export default function GalleryPage() {
       )}
 
       {/* Category pills */}
-      <div className="px-6 mb-4">
+      <div className="px-6 mb-4 lg:max-w-5xl lg:mx-auto">
         <p className="text-text-secondary text-[10px] uppercase tracking-wider font-medium mb-2">
           Inspiration
         </p>
@@ -103,10 +103,10 @@ export default function GalleryPage() {
       </div>
 
       {/* Pexels grid */}
-      <div className="px-6">
+      <div className="px-6 lg:max-w-5xl lg:mx-auto">
         {loading ? (
-          <div className="grid grid-cols-2 gap-3">
-            {Array.from({ length: 6 }).map((_, i) => (
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
+            {Array.from({ length: 8 }).map((_, i) => (
               <div
                 key={i}
                 className="aspect-square rounded-xl bg-sand border border-warm animate-pulse"
@@ -114,7 +114,7 @@ export default function GalleryPage() {
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
             {pexelsImages.map((img, i) => (
               <motion.div
                 key={`${activeCategory}-${i}`}

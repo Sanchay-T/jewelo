@@ -8,8 +8,9 @@ import type { Id } from "../../../../../convex/_generated/dataModel";
 
 const STATUS_LABELS: Record<string, string> = {
   generating: "Preparing your design",
-  analyzing: "Analyzing the piece",
-  engraving: "Shaping the gold",
+  analyzing: "Studying the reference",
+  drafting: "Generating draft designs",
+  refining: "Refining the lettering",
   completed: "Done!",
   failed: "Something went wrong",
 };
@@ -49,12 +50,14 @@ export default function CraftingPage() {
 
   const progress =
     design?.status === "analyzing"
-      ? 33
-      : design?.status === "engraving"
-        ? 65
-        : design?.status === "completed"
-          ? 100
-          : 10;
+      ? 20
+      : design?.status === "drafting"
+        ? 40
+        : design?.status === "refining"
+          ? 70
+          : design?.status === "completed"
+            ? 100
+            : 10;
 
   const statusLabel =
     STATUS_LABELS[design?.status || "generating"] || "Preparing...";
@@ -67,10 +70,10 @@ export default function CraftingPage() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.4 }}
-      className="h-[100dvh] bg-cream flex flex-col overflow-hidden"
+      className="h-[100dvh] bg-cream flex flex-col overflow-hidden lg:pt-16"
     >
       {/* Main content — centered */}
-      <div className="flex-1 flex flex-col items-center justify-center px-6">
+      <div className="flex-1 flex flex-col items-center justify-center px-6 max-w-lg mx-auto w-full">
         {/* Large circular spinner */}
         <div className="relative w-24 h-24 mb-6">
           <svg className="w-full h-full" viewBox="0 0 112 112">

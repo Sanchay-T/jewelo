@@ -42,8 +42,9 @@ export default function ResultsPage() {
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
-      className="min-h-screen bg-cream px-6 pt-4 pb-24"
+      className="min-h-screen bg-cream px-6 pt-4 pb-24 lg:pt-20 lg:pb-8"
     >
+      <div className="max-w-xl mx-auto">
       <div className="h-4" />
       <StepIndicator currentStep={5} totalSteps={7} />
 
@@ -64,7 +65,7 @@ export default function ResultsPage() {
         Tap to select · pinch to zoom
       </motion.p>
 
-      <div className="grid grid-cols-2 gap-3 mb-6">
+      <div className="grid grid-cols-2 gap-3 mb-6 lg:gap-4">
         {(imageUrls.length > 0 ? imageUrls : [null, null, null, null]).map(
           (url, i) => (
             <motion.div
@@ -153,6 +154,7 @@ export default function ResultsPage() {
           <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
         </button>
       </motion.div>
+      </div>
 
       {/* Fullscreen image viewer */}
       <AnimatePresence>

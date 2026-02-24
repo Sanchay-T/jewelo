@@ -69,13 +69,30 @@ export default function InspirationPage() {
     selectedIndex !== null ? images[selectedIndex] : null;
 
   return (
-    <div className="min-h-screen bg-cream px-6 pt-4 pb-24">
+    <div className="min-h-screen bg-cream px-6 pt-4 pb-24 lg:pt-20 lg:pb-8">
+      <div className="max-w-2xl mx-auto">
       <div className="h-4" />
       <StepIndicator currentStep={2} totalSteps={7} />
-      <h2 className="font-display text-xl mb-1">Find your inspiration</h2>
-      <p className="text-text-secondary text-xs mb-4">
+      <h2 className="font-display text-xl mb-1 lg:text-2xl">Find your inspiration</h2>
+      <p className="text-text-secondary text-xs mb-4 lg:text-sm">
         Pick a piece. We&apos;ll engrave your name on it.
       </p>
+
+      {/* Sticky CTA — visible as soon as an image is selected */}
+      {selectedImage && (
+        <div className="sticky top-0 z-20 -mx-6 px-6 py-3 bg-cream/95 backdrop-blur-sm border-b border-warm lg:top-16">
+          <button
+            onClick={() =>
+              router.push(
+                `/en/design/customize?lang=${lang}&ref=${encodeURIComponent(selectedImage.imageUrl)}`
+              )
+            }
+            className="w-full font-semibold py-3.5 rounded-xl text-sm bg-brown text-cream hover:bg-brown-dark transition"
+          >
+            Use Selected Reference →
+          </button>
+        </div>
+      )}
 
       <SearchBar onSearch={handleSearch} loading={loading} />
       <CategoryPills
@@ -141,6 +158,7 @@ export default function InspirationPage() {
       >
         Skip — design from scratch →
       </button>
+      </div>
     </div>
   );
 }
