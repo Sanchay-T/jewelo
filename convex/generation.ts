@@ -33,20 +33,24 @@ function buildGenerationPrompt(design: {
   const fontDesc = FONT_DESCRIPTIONS[design.font] || "elegant script";
   const styleDesc = STYLE_DESCRIPTIONS[design.style] || "pure gold";
   const sizeDesc = SIZE_DESCRIPTIONS[design.size] || "18mm";
-  const type = design.jewelryType || "pendant";
+  const hasExplicitType = !!design.jewelryType;
+  const type = design.jewelryType || "jewelry piece";
   const aesthetic = design.designStyle || "elegant";
 
   return `You are a world-class jewelry designer and luxury product photographer.
 
-A customer wants a custom ${type}. They've shown you a reference image as inspiration for the style.
+A customer wants a custom piece of jewelry. They've shown you a reference image as inspiration.
 
-STEP 1 — STUDY THE REFERENCE:
-Analyze this jewelry piece in detail:
-- What type of jewelry is it?
+STEP 1 — STUDY THE REFERENCE (THIS IS CRITICAL):
+Look at the reference image CAREFULLY and determine:
+- What EXACT type of jewelry is this? (ring, pendant, bracelet, earring, chain, etc.)
 - What is its shape, silhouette, and proportions?
-- What metal and finish? (polished, matte, brushed, hammered, etc.)
+- What metal is it? (yellow gold, white gold, rose gold, silver, platinum)
+- What is the finish? (polished, matte, brushed, hammered, etc.)
 - Are there stones, filigree, patterns, or decorative elements?
 - What makes this piece distinctive and beautiful?
+
+${hasExplicitType ? `The customer specifically wants a ${type}.` : "You MUST create the SAME TYPE of jewelry as shown in the reference image. If the reference shows a ring, create a ring. If it shows a pendant, create a pendant. Do NOT change the jewelry type."}
 
 STEP 2 — VISUALIZE IN 3D:
 Now mentally construct this piece as a 3D object:
@@ -54,21 +58,16 @@ Now mentally construct this piece as a 3D object:
 - Identify the best surface and angle for embossing the name '${design.name}'
 - Consider how the letters would wrap around the 3D curves of the metal
 - Think about which camera angle best showcases both the piece and the name
-- Visualize how light would hit the raised/engraved lettering from different directions
 
 STEP 3 — CREATE THE FINAL PIECE:
-Generate a brand new, photorealistic product photograph of a ${aesthetic} ${design.karat} gold ${type} with the name '${design.name}' embossed on it:
+Generate a brand new, photorealistic product photograph of this ${hasExplicitType ? type : "piece (matching the reference type)"} in ${design.karat} gold with the name '${design.name}' embossed on it:
 
 JEWELRY SPECIFICATIONS:
-- This is a ${type}, NOT a pendant (unless specified). Match the correct jewelry form.
-- Match the STYLE of the reference image, but create a FRESH original piece
+- Create the SAME TYPE of jewelry as the reference image${hasExplicitType ? ` (${type})` : ""}
+- Match the STYLE and FORM of the reference, but create a FRESH original piece
 - Metal: ${design.karat} yellow gold with realistic warm luster and reflections
 - Decoration: ${styleDesc}
 - Size feel: ${sizeDesc}
-${type === "pendant" ? "- The pendant hangs from a delicate matching gold chain" : ""}
-${type === "ring" ? "- Show the ring at a slight angle to reveal the band and the engraved name" : ""}
-${type === "bracelet" ? "- Show the bracelet with the name visible on the outer surface" : ""}
-${type === "earrings" ? "- Show a pair of matching earrings with the name/initials" : ""}
 
 NAME EMBOSSING:
 - The name '${design.name}' must be embossed in ${fontDesc} lettering
