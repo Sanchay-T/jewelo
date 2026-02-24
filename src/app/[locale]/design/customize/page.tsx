@@ -23,6 +23,8 @@ export default function ConfiguratorPage() {
   const searchParams = useSearchParams();
   const lang = searchParams.get("lang") || "en";
   const refUrl = searchParams.get("ref") || undefined;
+  const jewelryType = searchParams.get("type") || "pendant";
+  const designStyle = searchParams.get("style") || "Minimalist";
 
   const [name, setName] = useState("");
   const [font, setFont] = useState("script");
@@ -57,6 +59,8 @@ export default function ConfiguratorPage() {
         style: "gold_only",
         referenceType: refUrl ? "search" : undefined,
         referenceUrl: refUrl,
+        jewelryType,
+        designStyle,
       });
       setActiveDesign(designId, "crafting");
       router.push(`/en/design/crafting?designId=${designId}`);

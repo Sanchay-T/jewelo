@@ -96,7 +96,7 @@ export const updateStatus = internalMutation({
   },
 });
 
-export const completeGeneration = internalMutation({
+export const addGeneratedImage = internalMutation({
   args: {
     designId: v.id("designs"),
     imageStorageId: v.id("_storage"),
@@ -107,8 +107,16 @@ export const completeGeneration = internalMutation({
     const existing = design.imageStorageIds || [];
     await ctx.db.patch(designId, {
       imageStorageIds: [...existing, imageStorageId],
-      status: "completed",
     });
+  },
+});
+
+export const completeGeneration = internalMutation({
+  args: {
+    designId: v.id("designs"),
+  },
+  handler: async (ctx, { designId }) => {
+    await ctx.db.patch(designId, { status: "completed" });
   },
 });
 

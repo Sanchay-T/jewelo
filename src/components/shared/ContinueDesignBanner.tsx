@@ -1,4 +1,5 @@
 "use client";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion } from "motion/react";
 import { ArrowRight, Sparkles } from "lucide-react";
@@ -7,8 +8,14 @@ import { useDesignFlow } from "@/lib/DesignFlowContext";
 export function ContinueDesignBanner() {
   const { activeDesignId, getResumeUrl } = useDesignFlow();
   const resumeUrl = getResumeUrl();
+  const [mounted, setMounted] = useState(false);
 
-  if (!activeDesignId || !resumeUrl) return null;
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Don't render on server — sessionStorage state causes hydration mismatch
+  if (!mounted || !activeDesignId || !resumeUrl) return null;
 
   return (
     <motion.div
