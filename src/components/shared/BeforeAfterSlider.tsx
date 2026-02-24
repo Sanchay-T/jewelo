@@ -52,7 +52,7 @@ export function BeforeAfterSlider() {
       {/* AFTER (Render) — revealed from left to handle position */}
       <div
         className="absolute inset-0"
-        style={{ clipPath: `inset(0 ${100 - position}% 0 0)` }}
+        style={{ clipPath: `inset(0 0 0 ${position}%)` }}
       >
         <div className="absolute inset-0 bg-[#f5ede3]">
           <img
