@@ -33,54 +33,36 @@ function buildGenerationPrompt(design: {
   const fontDesc = FONT_DESCRIPTIONS[design.font] || "elegant script";
   const styleDesc = STYLE_DESCRIPTIONS[design.style] || "pure gold";
   const sizeDesc = SIZE_DESCRIPTIONS[design.size] || "18mm";
-  const hasExplicitType = !!design.jewelryType;
-  const type = design.jewelryType || "jewelry piece";
   const aesthetic = design.designStyle || "elegant";
 
   return `You are a world-class jewelry designer and luxury product photographer.
 
-A customer wants a custom piece of jewelry. They've shown you a reference image as inspiration.
+A customer wants custom jewelry with their name on it. They've shown you a reference image.
 
-STEP 1 — STUDY THE REFERENCE (THIS IS CRITICAL):
-Look at the reference image CAREFULLY and determine:
-- What EXACT type of jewelry is this? (ring, pendant, bracelet, earring, chain, etc.)
-- What is its shape, silhouette, and proportions?
-- What metal is it? (yellow gold, white gold, rose gold, silver, platinum)
-- What is the finish? (polished, matte, brushed, hammered, etc.)
-- Are there stones, filigree, patterns, or decorative elements?
-- What makes this piece distinctive and beautiful?
-
-${hasExplicitType ? `The customer specifically wants a ${type}.` : "You MUST create the SAME TYPE of jewelry as shown in the reference image. If the reference shows a ring, create a ring. If it shows a pendant, create a pendant. Do NOT change the jewelry type."}
+STEP 1 — STUDY THE REFERENCE:
+Look at the reference image and identify:
+- The exact type of jewelry (ring, pendant, bracelet, earring, chain, etc.)
+- Its shape, silhouette, proportions, and dimensions
+- The metal type, color, and finish
+- Any stones, filigree, patterns, or decorative elements
 
 STEP 2 — VISUALIZE IN 3D:
-Now mentally construct this piece as a 3D object:
-- Understand its full depth, curvature, thickness, and surfaces
-- Identify the best surface and angle for embossing the name '${design.name}'
-- Consider how the letters would wrap around the 3D curves of the metal
-- Think about which camera angle best showcases both the piece and the name
+Mentally construct this jewelry as a 3D object. Find the best surface for embossing '${design.name}'. Consider how letters wrap around the curves.
 
-STEP 3 — CREATE THE FINAL PIECE:
-Generate a brand new, photorealistic product photograph of this ${hasExplicitType ? type : "piece (matching the reference type)"} in ${design.karat} gold with the name '${design.name}' embossed on it:
+STEP 3 — GENERATE:
+Create a photorealistic product photograph of the same type of jewelry as the reference, with '${design.name}' embossed on it.
 
-JEWELRY SPECIFICATIONS:
-- Jewelry type: ${hasExplicitType ? type : "identical to the reference image"}
-- Metal: exactly as seen in the reference — preserve the color, tone, and finish
-- Style: a fresh original piece inspired by the reference, with '${design.name}' embossed
+SPECIFICATIONS:
+- Jewelry type: match the reference image exactly (if it's a ring, generate a ring; if a pendant, a pendant)
+- Metal: match the reference — preserve color, tone, and finish exactly
+- Style: ${aesthetic}, inspired by the reference
+- Embossing: '${design.name}' in ${fontDesc}, with physical depth in the metal
 - Decoration: ${styleDesc}
-- Size feel: ${sizeDesc}
-
-NAME EMBOSSING:
-- The name '${design.name}' must be embossed in ${fontDesc} lettering
-- The letters must have PHYSICAL DEPTH — they are raised from or engraved into the metal surface
-- Each letter follows the 3D contour and curvature of the ${type}
-- Light catches the edges of each letter creating highlights and shadows
-- The lettering looks like it was crafted by a master engraver, not digitally added
+- Size: ${sizeDesc}
 
 PHOTOGRAPHY:
-- Professional studio product photography
-- Soft key light from upper-left, warm fill light, subtle rim light
-- Warm cream/champagne gradient background
-- Sharp focus on the ${type} and name, gentle depth of field elsewhere
+- Professional studio, soft lighting, warm cream background
+- Sharp focus on the jewelry and name
 - Subtle shadow beneath the piece
 - This must look like a photograph from a Cartier or Tiffany catalog
 
