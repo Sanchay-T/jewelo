@@ -64,8 +64,9 @@ Generate a brand new, photorealistic product photograph of this ${hasExplicitTyp
 
 JEWELRY SPECIFICATIONS:
 - Create the SAME TYPE of jewelry as the reference image${hasExplicitType ? ` (${type})` : ""}
-- Match the STYLE and FORM of the reference, but create a FRESH original piece
-- Metal: ${design.karat} yellow gold with realistic warm luster and reflections
+- Match the SAME METAL and FINISH as the reference image (silver stays silver, gold stays gold, rose gold stays rose gold, platinum stays platinum)
+- If the reference is silver or white gold, keep it silver/white gold — do NOT change it to yellow gold
+- Match the STYLE and FORM of the reference, but create a FRESH original piece with '${design.name}' embossed
 - Decoration: ${styleDesc}
 - Size feel: ${sizeDesc}
 
