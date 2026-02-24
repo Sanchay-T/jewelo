@@ -23,8 +23,8 @@ export default function ConfiguratorPage() {
   const searchParams = useSearchParams();
   const lang = searchParams.get("lang") || "en";
   const refUrl = searchParams.get("ref") || undefined;
-  const jewelryType = searchParams.get("type") || "pendant";
-  const designStyle = searchParams.get("style") || "Minimalist";
+  const jewelryType = searchParams.get("type") || undefined;
+  const designStyle = searchParams.get("style") || undefined;
 
   const [name, setName] = useState("");
   const [font, setFont] = useState("script");

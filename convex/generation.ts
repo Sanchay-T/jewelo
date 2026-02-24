@@ -178,6 +178,21 @@ export const generate = internalAction({
       // 1. Get design
       const design = await ctx.runQuery(internal.designs.getInternal, { designId });
 
+      // === DEBUG LOGGING ===
+      console.log("=== GENERATION DEBUG ===");
+      console.log("Design ID:", designId);
+      console.log("Name:", design.name);
+      console.log("Karat:", design.karat);
+      console.log("Font:", design.font);
+      console.log("Size:", design.size);
+      console.log("Style:", design.style);
+      console.log("JewelryType:", JSON.stringify(design.jewelryType));
+      console.log("DesignStyle:", JSON.stringify(design.designStyle));
+      console.log("ReferenceType:", design.referenceType);
+      console.log("ReferenceUrl:", design.referenceUrl?.slice(0, 80));
+      console.log("ReferenceStorageId:", design.referenceStorageId);
+      console.log("=== END DEBUG ===");
+
       // 2. Update status: analyzing
       await ctx.runMutation(internal.designs.updateStatus, {
         designId,
@@ -245,6 +260,10 @@ export const generate = internalAction({
       const prompt = referenceBase64
         ? buildGenerationPrompt(design)
         : buildFromScratchPrompt(design);
+
+      console.log("Has reference image:", !!referenceBase64);
+      console.log("Reference image size:", referenceBase64 ? (referenceBase64.length / 1024).toFixed(0) + "kb base64" : "none");
+      console.log("Prompt first 300 chars:", prompt.slice(0, 300));
 
       // 7. Generate 4 variations SEQUENTIALLY — Pro model rate limit is ~2/min
       const results: ({ imageData: string; mimeType: string } | null)[] = [];
