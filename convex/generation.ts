@@ -3,47 +3,125 @@ import { internalAction } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { v } from "convex/values";
 
-function buildEngravePrompt(name: string): string {
-  return `You are a master jeweler AND a professional product photographer.
+const FONT_DESCRIPTIONS: Record<string, string> = {
+  script: "elegant flowing cursive script",
+  modern: "clean modern sans-serif uppercase",
+  classic: "refined classic serif",
+};
 
-A customer has brought you this piece of jewelry and asked you to engrave the name '${name}' on it. You will engrave it, then photograph the result in the exact same setup.
+const STYLE_DESCRIPTIONS: Record<string, string> = {
+  gold_only: "pure gold, no stones",
+  gold_with_stones: "gold with small gemstone accents",
+  gold_with_diamonds: "gold with diamond embellishments",
+};
 
-STEP 1 — ANALYZE THIS PHOTO:
-Before you do anything, study this image carefully:
-- What type of jewelry is this? (ring, pendant, bracelet, chain, earring, etc.)
-- Where is the light coming from? (direction, intensity, color temperature)
-- What metal is this? (yellow gold, rose gold, white gold, silver, platinum)
-- What is the surface finish? (polished, matte, brushed, hammered, textured)
-- Where are the flat or gently curved surfaces where engraving is physically possible?
-- What is the camera angle and depth of field?
+const SIZE_DESCRIPTIONS: Record<string, string> = {
+  small: "delicate and petite (12mm)",
+  medium: "balanced and elegant (18mm)",
+  large: "bold and statement-making (25mm)",
+};
 
-STEP 2 — DECIDE PLACEMENT:
-Based on your analysis, find the single best location on this piece to engrave '${name}':
-- Choose a surface that is visible, smooth enough to engrave, and large enough for the text
-- The text should not overlap any stones, settings, clasps, or decorative elements
-- The text should follow the natural curve of the surface it sits on
-- Choose a font size that is proportional — small enough to be realistic, large enough to read
-- Choose a font style that matches the piece's aesthetic
+function buildGenerationPrompt(design: {
+  name: string;
+  karat: string;
+  font: string;
+  size: string;
+  style: string;
+}): string {
+  const fontDesc = FONT_DESCRIPTIONS[design.font] || "elegant script";
+  const styleDesc = STYLE_DESCRIPTIONS[design.style] || "pure gold";
+  const sizeDesc = SIZE_DESCRIPTIONS[design.size] || "18mm";
 
-STEP 3 — ENGRAVE WITH REAL PHYSICS:
-Now engrave the name into the metal. This is a PHYSICAL operation on real metal:
-- Your engraving tool cuts V-shaped grooves into the metal surface
-- The inside of each groove is angled, so it reflects light DIFFERENTLY than the flat surface around it
-- The groove wall FACING the light source appears as a bright line
-- The groove wall AWAY from the light source is in shadow
-- The deepest point of each groove is the darkest
-- Where the groove edge meets the flat surface, there is a sharp specular highlight
-- The engraving follows the 3D curvature of the surface — it is not flat text pasted on a curved object
-- At the start and end of each letter stroke, the groove tapers to a point (the burin enters and exits the metal)
+  return `You are a world-class jewelry designer and luxury product photographer.
 
-ABSOLUTE RULES:
-- DO NOT change anything about this image except adding the engraving
-- Same jewelry, same stones, same chain, same background, same lighting, same camera angle
-- The engraving must look like it existed BEFORE the photograph was taken
-- If someone zoomed in 400%, the engraving should show physical depth in the metal, not flat printed text
-- The output image should be the same composition as the input
+A customer wants a custom name pendant. They've shown you a reference image as inspiration for the style.
 
-Output the edited photograph now.`;
+STEP 1 — STUDY THE REFERENCE:
+Analyze this jewelry piece in detail:
+- What type of jewelry is it? (pendant, ring, bracelet, earring, etc.)
+- What is its shape, silhouette, and proportions?
+- What metal and finish? (polished, matte, brushed, hammered, etc.)
+- Are there stones, filigree, patterns, or decorative elements?
+- What makes this piece distinctive and beautiful?
+
+STEP 2 — VISUALIZE IN 3D:
+Now mentally construct this piece as a 3D object:
+- Understand its full depth, curvature, thickness, and surfaces
+- Identify the best surface and angle for embossing the name '${design.name}'
+- Consider how the letters would wrap around the 3D curves of the metal
+- Think about which camera angle best showcases both the piece and the name
+- Visualize how light would hit the raised/engraved lettering from different directions
+
+STEP 3 — CREATE THE FINAL PIECE:
+Generate a brand new, photorealistic product photograph of a ${design.karat} gold pendant with the name '${design.name}' embossed on it:
+
+JEWELRY SPECIFICATIONS:
+- Match the STYLE and TYPE of the reference image, but create a FRESH original piece
+- Metal: ${design.karat} yellow gold with realistic warm luster and reflections
+- Decoration: ${styleDesc}
+- Size feel: ${sizeDesc}
+- The pendant hangs from a delicate matching gold chain
+
+NAME EMBOSSING:
+- The name '${design.name}' must be embossed in ${fontDesc} lettering
+- The letters must have PHYSICAL DEPTH — they are raised from or engraved into the metal surface
+- Each letter follows the 3D contour and curvature of the pendant
+- Light catches the edges of each letter creating highlights and shadows
+- The lettering looks like it was crafted by a master engraver, not digitally added
+- If you zoomed in 400%, you'd see the physical depth of each stroke in the metal
+
+PHOTOGRAPHY:
+- Professional studio product photography
+- Soft key light from upper-left, warm fill light, subtle rim light
+- Warm cream/champagne gradient background
+- Sharp focus on the pendant and name, gentle depth of field on chain ends
+- Subtle shadow beneath the pendant
+- This must look like a photograph from a Cartier or Tiffany catalog
+
+CRITICAL: DO NOT paste flat text on a surface. The name must be PHYSICALLY part of the 3D metal form. Generate the complete photograph now.`;
+}
+
+function buildFromScratchPrompt(design: {
+  name: string;
+  karat: string;
+  font: string;
+  size: string;
+  style: string;
+  jewelryType?: string;
+  designStyle?: string;
+}): string {
+  const fontDesc = FONT_DESCRIPTIONS[design.font] || "elegant script";
+  const styleDesc = STYLE_DESCRIPTIONS[design.style] || "pure gold";
+  const sizeDesc = SIZE_DESCRIPTIONS[design.size] || "18mm";
+  const type = design.jewelryType || "pendant";
+  const aesthetic = design.designStyle || "minimalist";
+
+  return `You are a world-class jewelry designer and luxury product photographer.
+
+Generate a photorealistic product photograph of a custom ${design.karat} gold ${type} with the name '${design.name}' embossed on it.
+
+DESIGN:
+- Style: ${aesthetic}
+- Metal: ${design.karat} yellow gold, polished with warm luster
+- Decoration: ${styleDesc}
+- Size feel: ${sizeDesc}
+- Type: ${type} (with chain if pendant/necklace)
+
+NAME EMBOSSING:
+- '${design.name}' in ${fontDesc} lettering
+- Letters have PHYSICAL DEPTH — raised from or engraved into the metal
+- Each letter follows the 3D contours of the piece
+- Realistic light and shadow on each letter stroke
+- Looks crafted by a master engraver
+
+PHOTOGRAPHY:
+- Professional studio product shot
+- Soft lighting, warm cream background
+- Sharp focus on name area, gentle depth of field
+- Luxury catalog quality — Cartier/Tiffany level
+- Subtle shadow, realistic gold reflections
+
+The name must be PHYSICALLY part of the metal, not flat text. Generate now.`;
 }
 
 async function callGemini(
@@ -94,7 +172,7 @@ export const generate = internalAction({
       await ctx.runMutation(internal.designs.updateStatus, {
         designId,
         status: "analyzing",
-        analysisStep: "Identifying jewelry type...",
+        analysisStep: "Studying your reference...",
       });
 
       // 3. Download reference image if exists and store in Convex
@@ -110,7 +188,7 @@ export const generate = internalAction({
           const buffer = await response.arrayBuffer();
           referenceBase64 = Buffer.from(buffer).toString("base64");
 
-          // Store the reference image in Convex storage if it came from a URL
+          // Store the reference in Convex storage for reliable display later
           if (!design.referenceStorageId) {
             const blob = new Blob([buffer], { type: "image/jpeg" });
             const refStorageId = await ctx.storage.store(blob);
@@ -128,11 +206,11 @@ export const generate = internalAction({
       await ctx.runMutation(internal.designs.updateStatus, {
         designId,
         status: "engraving",
-        analysisStep: `Engraving '${design.name}' now...`,
+        analysisStep: `Creating '${design.name}' in ${design.karat} gold...`,
         analysisData: {
-          jewelryType: "Pendant",
-          metal: "Gold, polished",
-          bestSpot: "AI determined",
+          jewelryType: design.jewelryType || "Pendant",
+          metal: `${design.karat} Gold`,
+          bestSpot: "AI visualized",
         },
       });
 
@@ -153,15 +231,15 @@ export const generate = internalAction({
         },
       });
 
-      // 6. Generate 4 variations with the SAME prompt
-      //    Gemini's natural randomness produces different variations each call.
-      //    This is the same behavior as ChatGPT/DALL-E giving 4 outputs.
-      const prompt = buildEngravePrompt(design.name);
+      // 6. Build prompt based on whether there's a reference image
+      const prompt = referenceBase64
+        ? buildGenerationPrompt(design)
+        : buildFromScratchPrompt(design);
 
+      // 7. Generate 4 variations — Pro model is slower, use 3s stagger
       const generationPromises = Array.from({ length: 4 }, (_, i) => {
         return new Promise<{ imageData: string; mimeType: string } | null>(
           (resolve) => {
-            // Stagger by 1s to avoid rate limits
             setTimeout(async () => {
               try {
                 const result = await callGemini(ai, prompt, referenceBase64);
@@ -170,14 +248,14 @@ export const generate = internalAction({
                 console.error(`Variation ${i} failed:`, err);
                 resolve(null);
               }
-            }, i * 1000);
+            }, i * 3000);
           }
         );
       });
 
       const results = await Promise.all(generationPromises);
 
-      // 7. Store all successful images
+      // 8. Store all successful images
       let storedCount = 0;
       for (const result of results) {
         if (result) {
