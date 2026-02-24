@@ -63,10 +63,9 @@ STEP 3 — CREATE THE FINAL PIECE:
 Generate a brand new, photorealistic product photograph of this ${hasExplicitType ? type : "piece (matching the reference type)"} in ${design.karat} gold with the name '${design.name}' embossed on it:
 
 JEWELRY SPECIFICATIONS:
-- Create the SAME TYPE of jewelry as the reference image${hasExplicitType ? ` (${type})` : ""}
-- Match the SAME METAL and FINISH as the reference image (silver stays silver, gold stays gold, rose gold stays rose gold, platinum stays platinum)
-- If the reference is silver or white gold, keep it silver/white gold — do NOT change it to yellow gold
-- Match the STYLE and FORM of the reference, but create a FRESH original piece with '${design.name}' embossed
+- Jewelry type: ${hasExplicitType ? type : "identical to the reference image"}
+- Metal: exactly as seen in the reference — preserve the color, tone, and finish
+- Style: a fresh original piece inspired by the reference, with '${design.name}' embossed
 - Decoration: ${styleDesc}
 - Size feel: ${sizeDesc}
 
