@@ -140,10 +140,14 @@ async function callGemini(
   }
 
   const response = await ai.models.generateContent({
-    model: "gemini-2.0-flash-exp",
+    model: "gemini-3-pro-image-preview",
     contents,
     config: {
       responseModalities: ["TEXT", "IMAGE"],
+      imageConfig: {
+        aspectRatio: "1:1",
+        imageSize: "1K",
+      },
     },
   });
 
