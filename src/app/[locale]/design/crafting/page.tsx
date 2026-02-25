@@ -62,8 +62,12 @@ export default function CraftingPage() {
   const statusLabel =
     STATUS_LABELS[design?.status || "generating"] || "Preparing...";
 
-  // Double the images for seamless infinite scroll
-  const marqueeImages = scrollImages.length > 0 ? [...scrollImages, ...scrollImages] : [];
+  // Split images into two rows, triple for seamless loop
+  const half = Math.ceil(scrollImages.length / 2);
+  const row1 = scrollImages.slice(0, half);
+  const row2 = scrollImages.slice(half);
+  const marqueeRow1 = row1.length > 0 ? [...row1, ...row1, ...row1] : [];
+  const marqueeRow2 = row2.length > 0 ? [...row2, ...row2, ...row2] : [];
 
   return (
     <motion.div
@@ -147,53 +151,95 @@ export default function CraftingPage() {
         )}
       </div>
 
-      {/* Auto-scrolling marquee at the bottom */}
+      {/* Auto-scrolling marquee — two rows, opposite directions */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.8 }}
-        className="pb-8"
+        className="pb-20 lg:pb-4"
       >
         <p className="text-text-tertiary text-[10px] uppercase tracking-wider font-medium mb-3 px-6">
           While you wait
         </p>
 
-        {marqueeImages.length > 0 ? (
-          <div className="overflow-hidden">
-            <motion.div
-              className="flex gap-3"
-              animate={{ x: [0, -(scrollImages.length * 116)] }}
-              transition={{
-                x: {
-                  duration: scrollImages.length * 3,
-                  repeat: Infinity,
-                  ease: "linear",
-                },
-              }}
-            >
-              {marqueeImages.map((img, i) => (
-                <div
-                  key={i}
-                  className="flex-shrink-0 w-[100px] h-[100px] rounded-xl overflow-hidden"
-                >
-                  <img
-                    src={img.url}
-                    alt={img.alt}
-                    className="w-full h-full object-cover"
-                    loading="lazy"
-                  />
-                </div>
-              ))}
-            </motion.div>
+        {marqueeRow1.length > 0 ? (
+          <div className="space-y-2.5 overflow-hidden">
+            {/* Row 1 — scrolls left */}
+            <div className="overflow-hidden">
+              <motion.div
+                className="flex gap-2.5"
+                animate={{ x: [0, -(row1.length * 82)] }}
+                transition={{
+                  x: {
+                    duration: row1.length * 4,
+                    repeat: Infinity,
+                    ease: "linear",
+                  },
+                }}
+              >
+                {marqueeRow1.map((img, i) => (
+                  <div
+                    key={`r1-${i}`}
+                    className="flex-shrink-0 w-[72px] h-[72px] rounded-lg overflow-hidden"
+                  >
+                    <img
+                      src={img.url}
+                      alt={img.alt}
+                      className="w-full h-full object-cover"
+                      loading="lazy"
+                    />
+                  </div>
+                ))}
+              </motion.div>
+            </div>
+
+            {/* Row 2 — scrolls right (opposite) */}
+            <div className="overflow-hidden">
+              <motion.div
+                className="flex gap-2.5"
+                animate={{ x: [-(row2.length * 82), 0] }}
+                transition={{
+                  x: {
+                    duration: row2.length * 4,
+                    repeat: Infinity,
+                    ease: "linear",
+                  },
+                }}
+              >
+                {marqueeRow2.map((img, i) => (
+                  <div
+                    key={`r2-${i}`}
+                    className="flex-shrink-0 w-[72px] h-[72px] rounded-lg overflow-hidden"
+                  >
+                    <img
+                      src={img.url}
+                      alt={img.alt}
+                      className="w-full h-full object-cover"
+                      loading="lazy"
+                    />
+                  </div>
+                ))}
+              </motion.div>
+            </div>
           </div>
         ) : (
-          <div className="flex gap-3 px-6">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <div
-                key={i}
-                className="flex-shrink-0 w-[100px] h-[100px] bg-sand rounded-xl animate-pulse"
-              />
-            ))}
+          <div className="space-y-2.5 px-6">
+            <div className="flex gap-2.5">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div
+                  key={`s1-${i}`}
+                  className="flex-shrink-0 w-[72px] h-[72px] bg-sand rounded-lg animate-pulse"
+                />
+              ))}
+            </div>
+            <div className="flex gap-2.5">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div
+                  key={`s2-${i}`}
+                  className="flex-shrink-0 w-[72px] h-[72px] bg-sand rounded-lg animate-pulse"
+                />
+              ))}
+            </div>
           </div>
         )}
       </motion.div>
