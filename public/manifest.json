@@ -1,0 +1,21 @@
+{
+  "name": "Jewelo",
+  "short_name": "Jewelo",
+  "description": "AI-powered custom jewelry design. Made real in 48 hours.",
+  "start_url": "/en",
+  "display": "standalone",
+  "background_color": "#FAF7F2",
+  "theme_color": "#FAF7F2",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
