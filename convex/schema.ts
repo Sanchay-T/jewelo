@@ -49,10 +49,14 @@ export default defineSchema({
     selectedVariationIndex: v.optional(v.number()), // 0-3 (which variation pair)
     regenerationsRemaining: v.number(),
 
-    // Video (Veo 3.1 rotating animation)
+    // Video (Veo 3.1 rotating animations — one per variation)
+    videoStorageIds: v.optional(v.array(v.id("_storage"))),
+    videoStatuses: v.optional(v.array(v.string())), // ["completed","generating","pending","failed"]
+    videoOperationIds: v.optional(v.array(v.string())),
+    // Legacy single-video fields (backward compat — remove after migration)
     videoOperationId: v.optional(v.string()),
     videoStorageId: v.optional(v.id("_storage")),
-    videoStatus: v.optional(v.string()), // "generating" | "completed" | "failed"
+    videoStatus: v.optional(v.string()),
 
     // Featured flag (for landing page)
     featured: v.optional(v.boolean()),

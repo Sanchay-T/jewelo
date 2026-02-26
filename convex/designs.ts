@@ -145,14 +145,34 @@ export const addOnBodyImage = internalMutation({
 export const updateVideoStatus = internalMutation({
   args: {
     designId: v.id("designs"),
-    videoOperationId: v.optional(v.string()),
-    videoStorageId: v.optional(v.id("_storage")),
-    videoStatus: v.string(),
+    variationIndex: v.number(),
+    operationId: v.optional(v.string()),
+    storageId: v.optional(v.id("_storage")),
+    status: v.string(),
   },
-  handler: async (ctx, { designId, ...updates }) => {
-    const patch: Record<string, unknown> = { videoStatus: updates.videoStatus };
-    if (updates.videoOperationId) patch.videoOperationId = updates.videoOperationId;
-    if (updates.videoStorageId) patch.videoStorageId = updates.videoStorageId;
+  handler: async (ctx, { designId, variationIndex, operationId, storageId, status }) => {
+    const design = await ctx.db.get(designId);
+    if (!design) return;
+
+    const statuses = [...(design.videoStatuses || ["pending", "pending", "pending", "pending"])];
+    const opIds = [...(design.videoOperationIds || ["", "", "", ""])];
+
+    statuses[variationIndex] = status;
+    if (operationId) opIds[variationIndex] = operationId;
+
+    const patch: Record<string, unknown> = {
+      videoStatuses: statuses,
+      videoOperationIds: opIds,
+    };
+
+    if (storageId) {
+      const storageIds = [...(design.videoStorageIds || [])];
+      // Ensure array is long enough
+      while (storageIds.length <= variationIndex) storageIds.push(undefined as any);
+      storageIds[variationIndex] = storageId;
+      patch.videoStorageIds = storageIds.filter(Boolean);
+    }
+
     await ctx.db.patch(designId, patch);
   },
 });
@@ -187,9 +207,7 @@ export const selectVariation = mutation({
   args: { designId: v.id("designs"), index: v.number() },
   handler: async (ctx, { designId, index }) => {
     await ctx.db.patch(designId, { selectedVariationIndex: index });
-
-    // Auto-trigger Veo 3.1 video generation in background
-    await ctx.scheduler.runAfter(0, internal.video.generateVideo, { designId });
+    // Videos now trigger from generation completion, not selection
   },
 });
 
@@ -209,8 +227,36 @@ export const regenerate = mutation({
       videoStorageId: undefined,
       videoStatus: undefined,
       videoOperationId: undefined,
+      videoStorageIds: undefined,
+      videoStatuses: undefined,
+      videoOperationIds: undefined,
     });
 
     await ctx.scheduler.runAfter(0, internal.generation.generate, { designId });
+  },
+});
+
+export const getWithVideos = query({
+  args: { designId: v.id("designs") },
+  handler: async (ctx, { designId }) => {
+    const design = await ctx.db.get(designId);
+    if (!design) return null;
+
+    const productImageUrls = await Promise.all(
+      (design.productImageStorageIds || []).map((id) => ctx.storage.getUrl(id))
+    );
+
+    const videoUrls = await Promise.all(
+      (design.videoStorageIds || []).map((id) =>
+        id ? ctx.storage.getUrl(id) : null
+      )
+    );
+
+    return {
+      ...design,
+      productImageUrls: productImageUrls.filter(Boolean) as string[],
+      videoUrls,
+      videoStatuses: design.videoStatuses || [],
+    };
   },
 });
