@@ -6,28 +6,7 @@ import {
   buildVideoPrompt,
   buildVideoNegativePrompt,
 } from "../src/lib/prompts/index";
-
-// NOTE: `google-auth-library` must be installed:
-//   npm install google-auth-library
-// It is NOT currently in package.json.
-
-/**
- * Acquire a Google Cloud access token using the service account credentials.
- *
- * Uses the `google-auth-library` package which automatically picks up
- * credentials from the GOOGLE_APPLICATION_CREDENTIALS environment variable
- * (path to a service-account JSON file).
- */
-async function getGcpAccessToken(): Promise<string> {
-  const { GoogleAuth } = await import("google-auth-library");
-  const auth = new GoogleAuth({
-    scopes: ["https://www.googleapis.com/auth/cloud-platform"],
-  });
-  const client = await auth.getClient();
-  const { token } = await client.getAccessToken();
-  if (!token) throw new Error("Failed to obtain GCP access token");
-  return token;
-}
+import { GoogleGenAI } from "@google/genai";
 
 // ── Generate a rotating jewelry video via Veo 3.1 ──────────────────
 export const generateVideo = internalAction({
@@ -40,7 +19,6 @@ export const generateVideo = internalAction({
 
       // Determine which product image to use as the source frame
       const storageIds = design.productImageStorageIds || [];
-
       if (storageIds.length === 0) {
         throw new Error("No product images available for video generation");
       }
@@ -58,7 +36,7 @@ export const generateVideo = internalAction({
 
       // Derive jewelry/metal type for prompt
       const jewelryType = design.jewelryType || "name_pendant";
-      const metalType = design.metalType || "yellow_gold";
+      const metalType = design.metalType || "yellow";
       const karat = design.karat || "21K";
 
       // Build prompts
@@ -66,7 +44,7 @@ export const generateVideo = internalAction({
       const negativePrompt = buildVideoNegativePrompt();
 
       console.log(
-        `[video] Starting Veo 3.1 generation for design ${designId} variation ${variationIndex}`,
+        `[video] Starting Veo 3.1 for design ${designId} variation ${variationIndex}`,
       );
       console.log(`[video] Jewelry: ${jewelryType}, Metal: ${metalType}`);
 
@@ -77,80 +55,105 @@ export const generateVideo = internalAction({
         status: "generating",
       });
 
-      // Call Veo 3.1 via Vertex AI REST (long-running operation)
-      const projectId = process.env.GCP_PROJECT_ID;
-      if (!projectId) throw new Error("GCP_PROJECT_ID not set");
-
-      const accessToken = await getGcpAccessToken();
-
-      const endpoint = `https://us-central1-aiplatform.googleapis.com/v1/projects/${projectId}/locations/us-central1/publishers/google/models/veo-3.1-generate-preview:predictLongRunning`;
-
-      const body = {
-        instances: [
-          {
-            prompt: videoPrompt,
-            referenceImages: [
-              {
-                image: {
-                  bytesBase64Encoded: imageBase64,
-                  mimeType: "image/png",
-                },
-                referenceType: "asset",
-              },
-            ],
-          },
-        ],
-        parameters: {
-          durationSeconds: 6,
-          resolution: "1080p",
-          aspectRatio: "9:16",
-          sampleCount: 1,
-          negativePrompt,
-          personGeneration: "disallow",
-        },
-      };
-
-      const response = await fetch(endpoint, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(body),
+      // Use @google/genai SDK (same as Gemini image gen — works in Convex)
+      const ai = new GoogleGenAI({
+        vertexai: true,
+        project: process.env.GCP_PROJECT_ID || "cyphersol-prod",
+        location: "us-central1", // Veo requires us-central1
       });
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(
-          `Veo 3.1 API error ${response.status}: ${errorText}`,
-        );
-      }
+      // Call Veo 3.1 via SDK
+      const operation = await ai.models.generateVideos({
+        model: "veo-3.1-generate-preview",
+        prompt: videoPrompt,
+        image: {
+          imageBytes: imageBase64,
+          mimeType: "image/png",
+        },
+        config: {
+          aspectRatio: "9:16",
+          numberOfVideos: 1,
+          durationSeconds: 6,
+          negativePrompt,
+          personGeneration: "dont_allow",
+        },
+      });
 
-      const result = await response.json();
-      const operationName: string | undefined = result.name;
+      console.log(`[video] Operation started, polling...`);
 
-      if (!operationName) {
-        throw new Error(
-          "Veo 3.1 did not return an operation name: " +
-            JSON.stringify(result),
-        );
-      }
-
-      console.log(`[video] Operation started: ${operationName}`);
-
-      // Store the operation ID on the design record
+      // Store operation name for tracking
+      const opName = operation.name || "";
       await ctx.runMutation(internal.designs.updateVideoStatus, {
         designId,
         variationIndex,
         status: "generating",
-        operationId: operationName,
+        operationId: opName,
       });
 
-      // Schedule first poll in 5 seconds
-      await ctx.scheduler.runAfter(
-        5000,
-        internal.video.pollVideoCompletion,
-        { designId, variationIndex },
+      // Poll for completion (SDK handles auth automatically)
+      let currentOp = operation;
+      const maxPolls = 60; // 5 minutes max
+      for (let poll = 0; poll < maxPolls; poll++) {
+        await new Promise((r) => setTimeout(r, 5000));
+
+        currentOp = await ai.operations.get({ operation: currentOp });
+
+        if (currentOp.done) {
+          break;
+        }
+        console.log(`[video] Still rendering... (poll ${poll + 1})`);
+      }
+
+      if (!currentOp.done) {
+        throw new Error("Video generation timed out after 5 minutes");
+      }
+
+      // Extract video
+      const videos = currentOp.response?.generatedVideos;
+      if (!videos || videos.length === 0) {
+        throw new Error("Veo returned no videos");
+      }
+
+      const videoData = videos[0]?.video;
+      if (!videoData) {
+        throw new Error("No video data in response");
+      }
+
+      // Get video bytes — SDK may return as videoBytes or need download from uri
+      let videoBytes: Uint8Array | null = null;
+
+      if (videoData.videoBytes) {
+        videoBytes = typeof videoData.videoBytes === "string"
+          ? Buffer.from(videoData.videoBytes, "base64")
+          : new Uint8Array(videoData.videoBytes);
+      } else if (videoData.uri) {
+        console.log(`[video] Downloading from URI: ${videoData.uri}`);
+        const dlResp = await fetch(videoData.uri);
+        const dlBuffer = await dlResp.arrayBuffer();
+        videoBytes = new Uint8Array(dlBuffer);
+      }
+
+      if (!videoBytes || videoBytes.length === 0) {
+        throw new Error("Failed to extract video bytes");
+      }
+
+      console.log(
+        `[video] Video ready — ${Math.round(videoBytes.length / 1024)}KB`,
+      );
+
+      // Store in Convex
+      const blob = new Blob([videoBytes as unknown as BlobPart], { type: "video/mp4" });
+      const videoStorageId = await ctx.storage.store(blob);
+
+      await ctx.runMutation(internal.designs.updateVideoStatus, {
+        designId,
+        variationIndex,
+        status: "completed",
+        storageId: videoStorageId,
+      });
+
+      console.log(
+        `[video] Stored for design ${designId} variation ${variationIndex}`,
       );
     } catch (error: any) {
       console.error("[video] Generation failed:", error.message || error);
@@ -163,95 +166,12 @@ export const generateVideo = internalAction({
   },
 });
 
-// ── Poll the Veo 3.1 long-running operation until done ──────────────
+// pollVideoCompletion is no longer needed — polling happens inline in generateVideo
+// Keeping as a no-op for backward compat with any scheduled calls
 export const pollVideoCompletion = internalAction({
   args: { designId: v.id("designs"), variationIndex: v.number() },
-  handler: async (ctx, { designId, variationIndex }) => {
-    try {
-      const design = await ctx.runQuery(internal.designs.getInternal, {
-        designId,
-      });
-
-      const operationName = design.videoOperationIds?.[variationIndex];
-      if (!operationName) {
-        throw new Error(`No videoOperationId for variation ${variationIndex} — cannot poll`);
-      }
-
-      const accessToken = await getGcpAccessToken();
-
-      const pollUrl = `https://us-central1-aiplatform.googleapis.com/v1/${operationName}`;
-
-      const response = await fetch(pollUrl, {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(
-          `Poll error ${response.status}: ${errorText}`,
-        );
-      }
-
-      const result = await response.json();
-
-      if (result.done) {
-        // Check for error in the operation result
-        if (result.error) {
-          throw new Error(
-            `Veo 3.1 operation failed: ${JSON.stringify(result.error)}`,
-          );
-        }
-
-        // Extract the video bytes
-        const videoBase64: string | undefined =
-          result.response?.predictions?.[0]?.bytesBase64Encoded;
-
-        if (!videoBase64) {
-          throw new Error(
-            "Veo 3.1 completed but no video data in response: " +
-              JSON.stringify(result.response),
-          );
-        }
-
-        console.log(
-          `[video] Operation complete — storing video (${Math.round(videoBase64.length * 0.75 / 1024)}KB)`,
-        );
-
-        // Store video in Convex storage
-        const videoBuffer = Buffer.from(videoBase64, "base64");
-        const blob = new Blob([videoBuffer], { type: "video/mp4" });
-        const videoStorageId = await ctx.storage.store(blob);
-
-        // Update design with completed video
-        await ctx.runMutation(internal.designs.updateVideoStatus, {
-          designId,
-          variationIndex,
-          status: "completed",
-          storageId: videoStorageId,
-        });
-
-        console.log(`[video] Video stored for design ${designId} variation ${variationIndex}`);
-      } else {
-        // Not done yet — schedule another poll in 5 seconds
-        console.log(
-          `[video] Operation still in progress for design ${designId} variation ${variationIndex}, polling again in 5s...`,
-        );
-        await ctx.scheduler.runAfter(
-          5000,
-          internal.video.pollVideoCompletion,
-          { designId, variationIndex },
-        );
-      }
-    } catch (error: any) {
-      console.error("[video] Poll failed:", error.message || error);
-      await ctx.runMutation(internal.designs.updateVideoStatus, {
-        designId,
-        variationIndex,
-        status: "failed",
-      });
-    }
+  handler: async () => {
+    // No-op — polling is now inline in generateVideo
+    console.log("[video] Legacy pollVideoCompletion called — ignoring");
   },
 });
