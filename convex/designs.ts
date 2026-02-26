@@ -187,6 +187,9 @@ export const selectVariation = mutation({
   args: { designId: v.id("designs"), index: v.number() },
   handler: async (ctx, { designId, index }) => {
     await ctx.db.patch(designId, { selectedVariationIndex: index });
+
+    // Auto-trigger Veo 3.1 video generation in background
+    await ctx.scheduler.runAfter(0, internal.video.generateVideo, { designId });
   },
 });
 

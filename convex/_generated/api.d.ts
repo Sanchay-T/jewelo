@@ -20,6 +20,7 @@ import type * as search from "../search.js";
 import type * as showcase from "../showcase.js";
 import type * as transliterate from "../transliterate.js";
 import type * as uploads from "../uploads.js";
+import type * as video from "../video.js";
 
 import type {
   ApiFromModules,
@@ -40,6 +41,7 @@ declare const fullApi: ApiFromModules<{
   showcase: typeof showcase;
   transliterate: typeof transliterate;
   uploads: typeof uploads;
+  video: typeof video;
 }>;
 
 /**
