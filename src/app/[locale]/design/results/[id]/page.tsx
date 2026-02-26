@@ -5,7 +5,7 @@ import { useQuery, useMutation } from "convex/react";
 import { motion, AnimatePresence } from "motion/react";
 import { api } from "../../../../../../convex/_generated/api";
 import { StepIndicator } from "@/components/layout/StepIndicator";
-import { Check, Gem, Maximize2, User, X, ZoomIn, ZoomOut } from "lucide-react";
+import { Check, Gem, Maximize2, Play, User, X, ZoomIn, ZoomOut } from "lucide-react";
 import type { Id } from "../../../../../../convex/_generated/dataModel";
 
 export default function ResultsPage() {
@@ -13,7 +13,7 @@ export default function ResultsPage() {
   const params = useParams();
   const designId = params.id as Id<"designs">;
   const design = useQuery(
-    api.designs.getWithImages,
+    api.designs.getWithVideos,
     designId ? { designId } : "skip"
   );
   const selectVariation = useMutation(api.designs.selectVariation);
@@ -207,6 +207,20 @@ export default function ResultsPage() {
           );
         })}
       </div>
+
+      {/* See in Motion button — shows when at least 1 video is ready */}
+      {design?.videoStatuses?.some((s: string) => s === "completed") && (
+        <motion.button
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.75 }}
+          onClick={() => router.push(`/en/design/videos/${designId}`)}
+          className="w-full py-3 rounded-xl bg-sand border border-warm text-brown font-medium flex items-center justify-center gap-2 hover:bg-warm transition-colors mb-4"
+        >
+          <Play size={16} fill="currentColor" />
+          See in Motion
+        </motion.button>
+      )}
 
       <motion.div
         initial={{ opacity: 0, y: 10 }}

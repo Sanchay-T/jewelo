@@ -246,16 +246,26 @@ export const getWithVideos = query({
       (design.productImageStorageIds || []).map((id) => ctx.storage.getUrl(id))
     );
 
+    const onBodyImageUrls = await Promise.all(
+      (design.onBodyImageStorageIds || []).map((id) => ctx.storage.getUrl(id))
+    );
+
     const videoUrls = await Promise.all(
       (design.videoStorageIds || []).map((id) =>
         id ? ctx.storage.getUrl(id) : null
       )
     );
 
+    const videoUrl = design.videoStorageId
+      ? await ctx.storage.getUrl(design.videoStorageId)
+      : null;
+
     return {
       ...design,
       productImageUrls: productImageUrls.filter(Boolean) as string[],
+      onBodyImageUrls: onBodyImageUrls.filter(Boolean) as string[],
       videoUrls,
+      videoUrl,
       videoStatuses: design.videoStatuses || [],
     };
   },
