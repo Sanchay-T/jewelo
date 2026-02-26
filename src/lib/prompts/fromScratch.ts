@@ -45,6 +45,11 @@ export function buildFromScratchPrompt(
     jewelryType === "chain";
 
   const prompt = {
+    output_format: {
+      aspect_ratio: "1:1 square",
+      resolution: "high resolution, minimum 1024x1024 pixels",
+      instruction: "Generate a SQUARE image. Width and height must be equal.",
+    },
     STEP_1_design_piece: {
       instruction: `Design a beautiful custom ${aesthetic} ${jewelryType} from scratch. Think about shape, proportion, and where the customer's name will be engraved BEFORE finalizing the form.`,
       shape: {

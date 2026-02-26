@@ -87,6 +87,11 @@ export function buildOnBodyPrompt(
   const bodyMap = BODY_MAPPING[jewelryType] || DEFAULT_BODY;
 
   const prompt = {
+    output_format: {
+      aspect_ratio: "1:1 square",
+      resolution: "high resolution, minimum 1024x1024 pixels",
+      instruction: "Generate a SQUARE image. Width and height must be equal.",
+    },
     task: "ON_BODY_SHOT",
     context: {
       jewelry_type: jewelryType,
@@ -122,6 +127,7 @@ export function buildOnBodyPrompt(
       font_style: fontStyle,
       physics: engravingPhysicsBlock(),
       text_accuracy: `CRITICAL: The name '${design.name}' must be spelled exactly as shown. Every letter must be present and legible. Character count: ${design.name.length}. Spelling check: ${design.name.split("").join(" - ")}`,
+      legibility: `The engraved name '${design.name}' MUST be clearly readable even in the on-body context. Frame the shot so the jewelry — and especially the engraved name — is prominent and legible. The name is the star of this photograph.`,
     },
     absolute_rules: absoluteRulesBlock(hasReference, metalType),
   };

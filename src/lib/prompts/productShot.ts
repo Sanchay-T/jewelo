@@ -34,6 +34,11 @@ export function buildProductShotPrompt(
   const karat = design.karat || "18K";
 
   const prompt = {
+    output_format: {
+      aspect_ratio: "1:1 square",
+      resolution: "high resolution, minimum 1024x1024 pixels",
+      instruction: "Generate a SQUARE image. Width and height must be equal.",
+    },
     task: "PRODUCT_SHOT",
     context: {
       jewelry_type: jewelryType,
@@ -52,6 +57,7 @@ export function buildProductShotPrompt(
       font_style: fontStyle,
       physics: engravingPhysicsBlock(),
       text_accuracy: `CRITICAL: The name '${design.name}' must be spelled exactly as shown. Every letter must be present and legible. Character count: ${design.name.length}. Spelling check: ${design.name.split("").join(" - ")}`,
+      legibility: `The engraved name '${design.name}' MUST be clearly legible and prominent. It is the hero element of this photograph. The viewer should be able to read it instantly.`,
     },
     camera: {
       angle: variation.camera,
