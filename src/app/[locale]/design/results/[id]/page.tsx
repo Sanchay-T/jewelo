@@ -5,7 +5,7 @@ import { useQuery, useMutation } from "convex/react";
 import { motion, AnimatePresence } from "motion/react";
 import { api } from "../../../../../../convex/_generated/api";
 import { StepIndicator } from "@/components/layout/StepIndicator";
-import { Check, Maximize2, X, ZoomIn, ZoomOut } from "lucide-react";
+import { Check, Gem, Maximize2, User, X, ZoomIn, ZoomOut } from "lucide-react";
 import type { Id } from "../../../../../../convex/_generated/dataModel";
 
 export default function ResultsPage() {
@@ -22,8 +22,31 @@ export default function ResultsPage() {
   const [viewerUrl, setViewerUrl] = useState<string | null>(null);
   const [viewerZoom, setViewerZoom] = useState(1);
 
-  const imageUrls = design?.productImageUrls || [];
+  // Per-card view mode (independent toggles)
+  const [cardViews, setCardViews] = useState<Record<number, "product" | "onBody">>({});
+  const [globalView, setGlobalView] = useState<"product" | "onBody">("product");
+
+  const productUrls = design?.productImageUrls || [];
+  const onBodyUrls = design?.onBodyImageUrls || [];
   const remaining = design?.regenerationsRemaining ?? 3;
+
+  const getViewForCard = (index: number) => cardViews[index] ?? globalView;
+  const getUrlForCard = (index: number) => {
+    const view = getViewForCard(index);
+    return view === "onBody" ? onBodyUrls[index] : productUrls[index];
+  };
+
+  const toggleCard = (index: number) => {
+    setCardViews((prev) => ({
+      ...prev,
+      [index]: getViewForCard(index) === "product" ? "onBody" : "product",
+    }));
+  };
+
+  const toggleGlobal = (view: "product" | "onBody") => {
+    setGlobalView(view);
+    setCardViews({}); // Reset per-card overrides
+  };
 
   const handleSelect = async () => {
     if (!designId) return;
@@ -65,9 +88,37 @@ export default function ResultsPage() {
         Tap to select · pinch to zoom
       </motion.p>
 
+      {/* Global product / on-body toggle */}
+      <div className="flex items-center justify-center gap-2 mb-4">
+        <button
+          onClick={() => toggleGlobal("product")}
+          className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+            globalView === "product"
+              ? "bg-brown text-white"
+              : "bg-sand text-text-secondary hover:bg-warm"
+          }`}
+        >
+          <Gem size={14} />
+          Product
+        </button>
+        <button
+          onClick={() => toggleGlobal("onBody")}
+          className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+            globalView === "onBody"
+              ? "bg-brown text-white"
+              : "bg-sand text-text-secondary hover:bg-warm"
+          }`}
+        >
+          <User size={14} />
+          On Body
+        </button>
+      </div>
+
       <div className="grid grid-cols-2 gap-3 mb-6 lg:gap-4">
-        {(imageUrls.length > 0 ? imageUrls : [null, null, null, null]).map(
-          (url, i) => (
+        {([0, 1, 2, 3] as const).map((i) => {
+          const cardUrl = getUrlForCard(i);
+          const hasProduct = !!productUrls[i];
+          return (
             <motion.div
               key={i}
               initial={{ opacity: 0, scale: 0.85, filter: "blur(8px)" }}
@@ -87,12 +138,24 @@ export default function ResultsPage() {
                     : "border border-warm"
                 }`}
               >
-                {url ? (
-                  <img
-                    src={url}
-                    alt={`Design ${i + 1}`}
-                    className="w-full h-full object-cover"
-                  />
+                {cardUrl ? (
+                  <AnimatePresence mode="wait">
+                    <motion.img
+                      key={cardUrl}
+                      src={cardUrl}
+                      alt={`Variation ${i + 1}`}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.3 }}
+                      className="w-full h-full object-cover"
+                    />
+                  </AnimatePresence>
+                ) : hasProduct ? (
+                  /* On-body not available yet — show shimmer */
+                  <div className="w-full h-full bg-sand animate-pulse flex items-center justify-center">
+                    <User className="w-6 h-6 text-gold/30" />
+                  </div>
                 ) : (
                   <div className="w-full h-full bg-sand animate-pulse flex items-center justify-center">
                     <p className="font-display text-xl italic text-gold/40">
@@ -116,12 +179,23 @@ export default function ResultsPage() {
                 )}
               </button>
 
+              {/* Per-card view toggle */}
+              {hasProduct && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); toggleCard(i); }}
+                  className="absolute top-2 right-10 z-10 w-8 h-8 rounded-full bg-white/80 backdrop-blur flex items-center justify-center shadow-sm hover:bg-white transition-colors"
+                  title={getViewForCard(i) === "product" ? "Show on body" : "Show product"}
+                >
+                  {getViewForCard(i) === "product" ? <User size={14} /> : <Gem size={14} />}
+                </button>
+              )}
+
               {/* Expand button — opens fullscreen */}
-              {url && (
+              {cardUrl && (
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    setViewerUrl(url);
+                    setViewerUrl(cardUrl);
                     setViewerZoom(1);
                   }}
                   className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center"
@@ -130,8 +204,8 @@ export default function ResultsPage() {
                 </button>
               )}
             </motion.div>
-          )
-        )}
+          );
+        })}
       </div>
 
       <motion.div
