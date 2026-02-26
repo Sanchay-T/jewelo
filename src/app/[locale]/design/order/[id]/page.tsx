@@ -44,8 +44,8 @@ export default function ReviewPage() {
   });
 
   // Get the selected image URL
-  const selectedIdx = design?.selectedImageIndex ?? 0;
-  const selectedImageUrl = design?.imageUrls?.[selectedIdx];
+  const selectedIdx = design?.selectedVariationIndex ?? 0;
+  const selectedImageUrl = design?.productImageUrls?.[selectedIdx];
 
   // Type-aware size display
   const jewelryType = design?.jewelryType || "pendant";

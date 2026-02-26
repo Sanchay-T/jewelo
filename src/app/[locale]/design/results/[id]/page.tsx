@@ -22,7 +22,7 @@ export default function ResultsPage() {
   const [viewerUrl, setViewerUrl] = useState<string | null>(null);
   const [viewerZoom, setViewerZoom] = useState(1);
 
-  const imageUrls = design?.imageUrls || [];
+  const imageUrls = design?.productImageUrls || [];
   const remaining = design?.regenerationsRemaining ?? 3;
 
   const handleSelect = async () => {

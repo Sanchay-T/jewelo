@@ -50,10 +50,21 @@ export const getWithImages = query({
   handler: async (ctx, { designId }) => {
     const design = await ctx.db.get(designId);
     if (!design) return null;
-    const imageUrls = await Promise.all(
-      (design.imageStorageIds || []).map((id) => ctx.storage.getUrl(id))
+    const productImageUrls = await Promise.all(
+      (design.productImageStorageIds || []).map((id) => ctx.storage.getUrl(id))
     );
-    return { ...design, imageUrls: imageUrls.filter(Boolean) as string[] };
+    const onBodyImageUrls = await Promise.all(
+      (design.onBodyImageStorageIds || []).map((id) => ctx.storage.getUrl(id))
+    );
+    const videoUrl = design.videoStorageId
+      ? await ctx.storage.getUrl(design.videoStorageId)
+      : null;
+    return {
+      ...design,
+      productImageUrls: productImageUrls.filter(Boolean) as string[],
+      onBodyImageUrls: onBodyImageUrls.filter(Boolean) as string[],
+      videoUrl,
+    };
   },
 });
 
@@ -67,8 +78,8 @@ export const getBeforeAfter = query({
       ? await ctx.storage.getUrl(design.referenceStorageId)
       : design.referenceUrl || null;
 
-    const selectedIdx = design.selectedImageIndex ?? 0;
-    const resultStorageId = design.imageStorageIds?.[selectedIdx];
+    const selectedIdx = design.selectedVariationIndex ?? 0;
+    const resultStorageId = design.productImageStorageIds?.[selectedIdx];
     const resultUrl = resultStorageId
       ? await ctx.storage.getUrl(resultStorageId)
       : null;
@@ -96,18 +107,48 @@ export const updateStatus = internalMutation({
   },
 });
 
-export const addGeneratedImage = internalMutation({
+export const addProductImage = internalMutation({
   args: {
     designId: v.id("designs"),
-    imageStorageId: v.id("_storage"),
+    storageId: v.id("_storage"),
   },
-  handler: async (ctx, { designId, imageStorageId }) => {
+  handler: async (ctx, { designId, storageId }) => {
     const design = await ctx.db.get(designId);
     if (!design) return;
-    const existing = design.imageStorageIds || [];
+    const existing = design.productImageStorageIds || [];
     await ctx.db.patch(designId, {
-      imageStorageIds: [...existing, imageStorageId],
+      productImageStorageIds: [...existing, storageId],
     });
+  },
+});
+
+export const addOnBodyImage = internalMutation({
+  args: {
+    designId: v.id("designs"),
+    storageId: v.id("_storage"),
+  },
+  handler: async (ctx, { designId, storageId }) => {
+    const design = await ctx.db.get(designId);
+    if (!design) return;
+    const existing = design.onBodyImageStorageIds || [];
+    await ctx.db.patch(designId, {
+      onBodyImageStorageIds: [...existing, storageId],
+    });
+  },
+});
+
+export const updateVideoStatus = internalMutation({
+  args: {
+    designId: v.id("designs"),
+    videoOperationId: v.optional(v.string()),
+    videoStorageId: v.optional(v.id("_storage")),
+    videoStatus: v.string(),
+  },
+  handler: async (ctx, { designId, ...updates }) => {
+    const patch: Record<string, unknown> = { videoStatus: updates.videoStatus };
+    if (updates.videoOperationId) patch.videoOperationId = updates.videoOperationId;
+    if (updates.videoStorageId) patch.videoStorageId = updates.videoStorageId;
+    await ctx.db.patch(designId, patch);
   },
 });
 
@@ -140,7 +181,7 @@ export const saveToGallery = mutation({
 export const selectVariation = mutation({
   args: { designId: v.id("designs"), index: v.number() },
   handler: async (ctx, { designId, index }) => {
-    await ctx.db.patch(designId, { selectedImageIndex: index });
+    await ctx.db.patch(designId, { selectedVariationIndex: index });
   },
 });
 
@@ -155,7 +196,11 @@ export const regenerate = mutation({
     await ctx.db.patch(designId, {
       status: "generating",
       regenerationsRemaining: remaining,
-      imageStorageIds: [],
+      productImageStorageIds: [],
+      onBodyImageStorageIds: [],
+      videoStorageId: undefined,
+      videoStatus: undefined,
+      videoOperationId: undefined,
     });
 
     await ctx.scheduler.runAfter(0, internal.generation.generate, { designId });

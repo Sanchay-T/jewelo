@@ -350,9 +350,9 @@ export const generate = internalAction({
               const imageBuffer = Buffer.from(result.imageData, "base64");
               const blob = new Blob([imageBuffer], { type: result.mimeType });
               const storageId = await ctx.storage.store(blob);
-              await ctx.runMutation(internal.designs.addGeneratedImage, {
+              await ctx.runMutation(internal.designs.addProductImage, {
                 designId,
-                imageStorageId: storageId,
+                storageId,
               });
               console.log(`  ✓ Variation ${i + 1} stored (${elapsed}s)`);
 
@@ -390,7 +390,7 @@ export const generate = internalAction({
 
       // Check results
       const finalDesign = await ctx.runQuery(internal.designs.getInternal, { designId });
-      const imageCount = finalDesign.imageStorageIds?.length || 0;
+      const imageCount = finalDesign.productImageStorageIds?.length || 0;
 
       if (imageCount === 0) {
         throw new Error("No images generated");

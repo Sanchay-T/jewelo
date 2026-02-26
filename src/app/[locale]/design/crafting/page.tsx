@@ -39,32 +39,28 @@ export default function CraftingPage() {
     }
   }, [design?.status, design?._id, router]);
 
-  // Derive progress from actual image count
-  const imageCount = design?.imageUrls?.length ?? 0;
+  // Derive progress from actual image count (8 total: 4 product + 4 on-body)
+  const productCount = design?.productImageUrls?.length ?? 0;
+  const onBodyCount = design?.onBodyImageUrls?.length ?? 0;
+  const totalImages = productCount + onBodyCount;
   const isFailed = design?.status === "failed";
   const isCompleted = design?.status === "completed";
 
   const progress = isCompleted
     ? 100
-    : imageCount === 0
-      ? 10
-      : imageCount === 1
-        ? 30
-        : imageCount === 2
-          ? 50
-          : imageCount === 3
-            ? 75
-            : 95;
+    : design?.status === "analyzing"
+      ? 5
+      : Math.min(95, 10 + (totalImages / 8) * 85);
 
   const statusLabel = isFailed
     ? "Something went wrong"
     : isCompleted
       ? "Done!"
-      : imageCount === 0
+      : totalImages === 0
         ? design?.analysisStep || "Analyzing your piece..."
-        : imageCount >= 4
+        : totalImages >= 8
           ? "Finishing up..."
-          : `${imageCount} of 4 variations ready`;
+          : `Crafting your jewelry... (${totalImages} of 8)`;
 
   // Split images into two rows, triple for seamless loop
   const half = Math.ceil(scrollImages.length / 2);

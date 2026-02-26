@@ -32,10 +32,27 @@ export default defineSchema({
     ),
     error: v.optional(v.string()),
 
-    // Results
+    // Text reference (Canvas-rendered name PNG)
+    textReferenceStorageId: v.optional(v.id("_storage")),
+
+    // Metal type (for background selection)
+    metalType: v.optional(v.string()), // "yellow" | "rose" | "white"
+
+    // Legacy (backward compat with existing data — remove after migration)
     imageStorageIds: v.optional(v.array(v.id("_storage"))),
     selectedImageIndex: v.optional(v.number()),
+
+    // Results — product shots (4 studio images)
+    productImageStorageIds: v.optional(v.array(v.id("_storage"))),
+    // Results — on-body shots (4 contextual images)
+    onBodyImageStorageIds: v.optional(v.array(v.id("_storage"))),
+    selectedVariationIndex: v.optional(v.number()), // 0-3 (which variation pair)
     regenerationsRemaining: v.number(),
+
+    // Video (Veo 3.1 rotating animation)
+    videoOperationId: v.optional(v.string()),
+    videoStorageId: v.optional(v.id("_storage")),
+    videoStatus: v.optional(v.string()), // "generating" | "completed" | "failed"
 
     // Featured flag (for landing page)
     featured: v.optional(v.boolean()),
@@ -97,4 +114,12 @@ export default defineSchema({
     hour: v.number(),
     count: v.number(),
   }).index("by_identifier_hour", ["identifier", "hour"]),
+
+  showcaseImages: defineTable({
+    jewelryType: v.string(),
+    designStyle: v.string(),
+    imageStorageId: v.id("_storage"),
+    metalType: v.string(),
+    featured: v.boolean(),
+  }).index("by_type_style", ["jewelryType", "designStyle"]),
 });

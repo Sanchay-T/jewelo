@@ -31,9 +31,9 @@ export const getRecentCompleted = query({
 
     const results = [];
     for (const design of designs) {
-      if (design.imageStorageIds && design.imageStorageIds.length > 0) {
-        const idx = design.selectedImageIndex ?? 0;
-        const storageId = design.imageStorageIds[idx] || design.imageStorageIds[0];
+      if (design.productImageStorageIds && design.productImageStorageIds.length > 0) {
+        const idx = design.selectedVariationIndex ?? 0;
+        const storageId = design.productImageStorageIds[idx] || design.productImageStorageIds[0];
         const url = await ctx.storage.getUrl(storageId);
         if (url) {
           results.push({ _id: design._id, name: design.name, imageUrl: url });

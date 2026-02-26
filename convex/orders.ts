@@ -87,9 +87,9 @@ export const getRecent = query({
     for (const order of orders) {
       const design = await ctx.db.get(order.designId);
       let imageUrl = null;
-      if (design?.imageStorageIds?.length) {
-        const idx = design.selectedImageIndex ?? 0;
-        const sid = design.imageStorageIds[idx] || design.imageStorageIds[0];
+      if (design?.productImageStorageIds?.length) {
+        const idx = design.selectedVariationIndex ?? 0;
+        const sid = design.productImageStorageIds[idx] || design.productImageStorageIds[0];
         imageUrl = await ctx.storage.getUrl(sid);
       }
       results.push({

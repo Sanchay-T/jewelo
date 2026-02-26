@@ -80,8 +80,14 @@ type Design = {
   referenceStorageId?: Id<"_storage">;
   jewelryType?: string;
   designStyle?: string;
-  imageStorageIds?: Id<"_storage">[];
-  selectedImageIndex?: number;
+  textReferenceStorageId?: Id<"_storage">;
+  metalType?: string;
+  productImageStorageIds?: Id<"_storage">[];
+  onBodyImageStorageIds?: Id<"_storage">[];
+  selectedVariationIndex?: number;
+  videoOperationId?: string;
+  videoStorageId?: Id<"_storage">;
+  videoStatus?: string;
   regenerationsRemaining: number;
   analysisStep?: string;
   analysisData?: {
