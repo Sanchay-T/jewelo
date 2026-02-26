@@ -119,10 +119,10 @@ export default function CraftingPage() {
         </motion.p>
 
         {/* Live thumbnails — fade in as each image arrives */}
-        {imageCount > 0 && (
+        {productCount > 0 && (
           <div className="flex items-center justify-center gap-2 mb-4">
             <AnimatePresence>
-              {design!.imageUrls.map((url, i) => (
+              {(design!.productImageUrls || []).map((url: string, i: number) => (
                 <motion.div
                   key={url}
                   initial={{ opacity: 0, scale: 0.5 }}
@@ -139,7 +139,7 @@ export default function CraftingPage() {
               ))}
             </AnimatePresence>
             {/* Empty slots */}
-            {Array.from({ length: 4 - imageCount }).map((_, i) => (
+            {Array.from({ length: 4 - productCount }).map((_, i) => (
               <div
                 key={`empty-${i}`}
                 className="w-12 h-12 rounded-lg border-2 border-dashed border-warm bg-sand/30"
@@ -158,8 +158,8 @@ export default function CraftingPage() {
         </div>
 
         <p className="text-text-tertiary text-xs text-center">
-          {imageCount > 0
-            ? `${imageCount}/4 images generated`
+          {totalImages > 0
+            ? `${totalImages}/8 images generated`
             : "Usually takes about a minute"}
         </p>
 
