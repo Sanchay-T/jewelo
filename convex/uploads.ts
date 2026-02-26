@@ -14,3 +14,10 @@ export const saveReference = mutation({
     return { storageId, url };
   },
 });
+
+export const saveTextReference = mutation({
+  args: { designId: v.id("designs"), storageId: v.id("_storage") },
+  handler: async (ctx, { designId, storageId }) => {
+    await ctx.db.patch(designId, { textReferenceStorageId: storageId });
+  },
+});

@@ -224,19 +224,21 @@ function buildNamePendantPrompt(
 async function callGemini(
   ai: any,
   prompt: string,
-  referenceBase64: string | null,
+  referenceImages: Array<{ base64: string; mimeType: string }>,
 ): Promise<{ imageData: string; mimeType: string } | null> {
   const contents: any[] = [];
-  contents.push({ text: prompt });
 
-  if (referenceBase64) {
+  // Add all reference images as inline_data parts BEFORE the text prompt
+  for (const ref of referenceImages) {
     contents.push({
       inlineData: {
-        mimeType: "image/jpeg",
-        data: referenceBase64,
+        mimeType: ref.mimeType,
+        data: ref.base64,
       },
     });
   }
+
+  contents.push({ text: prompt });
 
   const response = await ai.models.generateContent({
     model: "gemini-3.1-flash-image-preview",
@@ -272,19 +274,26 @@ export const generate = internalAction({
       console.log("Font:", design.font, "| Style:", design.style);
       console.log("Reference:", design.referenceUrl ? "yes" : "no");
 
-      // Status: analyzing
+      // Status: analyzing — also gives the client time to upload the text reference
       await ctx.runMutation(internal.designs.updateStatus, {
         designId,
         status: "analyzing",
         analysisStep: "Studying the piece...",
       });
 
+      // Brief pause to allow the client-side text reference upload to complete
+      // (the client uploads in parallel after createDesign returns)
+      await new Promise((r) => setTimeout(r, 2000));
+
+      // Re-read design to pick up textReferenceStorageId saved by the client
+      const freshDesign = await ctx.runQuery(internal.designs.getInternal, { designId });
+
       // Get reference image as base64
       let referenceBase64: string | null = null;
-      let referenceUrl = design.referenceUrl;
+      let referenceUrl = freshDesign.referenceUrl;
 
-      if (design.referenceStorageId) {
-        const url = await ctx.storage.getUrl(design.referenceStorageId);
+      if (freshDesign.referenceStorageId) {
+        const url = await ctx.storage.getUrl(freshDesign.referenceStorageId);
         if (url) referenceUrl = url;
       }
 
@@ -294,7 +303,7 @@ export const generate = internalAction({
           const buffer = await response.arrayBuffer();
           referenceBase64 = Buffer.from(buffer).toString("base64");
 
-          if (!design.referenceStorageId) {
+          if (!freshDesign.referenceStorageId) {
             const blob = new Blob([buffer], { type: "image/jpeg" });
             const refStorageId = await ctx.storage.store(blob);
             await ctx.runMutation(internal.designs.storeReferenceImage, {
@@ -305,6 +314,31 @@ export const generate = internalAction({
         } catch (e) {
           console.error("Failed to download reference:", e);
         }
+      }
+
+      // Download text reference image (Canvas-rendered name PNG)
+      let textReferenceBase64: string | undefined;
+      if (freshDesign.textReferenceStorageId) {
+        const textRefUrl = await ctx.storage.getUrl(freshDesign.textReferenceStorageId);
+        if (textRefUrl) {
+          try {
+            const textResp = await fetch(textRefUrl);
+            const textBuffer = await textResp.arrayBuffer();
+            textReferenceBase64 = Buffer.from(textBuffer).toString("base64");
+            console.log("Text reference image loaded:", Math.round(textBuffer.byteLength / 1024), "KB");
+          } catch (e) {
+            console.error("Failed to download text reference:", e);
+          }
+        }
+      }
+
+      // Build reference images array for callGemini
+      const referenceImages: Array<{ base64: string; mimeType: string }> = [];
+      if (referenceBase64) {
+        referenceImages.push({ base64: referenceBase64, mimeType: "image/jpeg" });
+      }
+      if (textReferenceBase64) {
+        referenceImages.push({ base64: textReferenceBase64, mimeType: "image/png" });
       }
 
       // Status: engraving
@@ -343,7 +377,7 @@ export const generate = internalAction({
         for (let attempt = 0; attempt < 3; attempt++) {
           try {
             const start = Date.now();
-            const result = await callGemini(ai, prompt, referenceBase64);
+            const result = await callGemini(ai, prompt, referenceImages);
             const elapsed = ((Date.now() - start) / 1000).toFixed(1);
 
             if (result) {

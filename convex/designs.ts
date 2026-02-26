@@ -15,6 +15,7 @@ export const create = mutation({
     referenceStorageId: v.optional(v.id("_storage")),
     jewelryType: v.optional(v.string()),
     designStyle: v.optional(v.string()),
+    metalType: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const designId = await ctx.db.insert("designs", {

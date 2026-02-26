@@ -16,6 +16,7 @@ import { DecorationSelector } from "@/components/design/DecorationSelector";
 import { calculatePrice } from "@/lib/pricing";
 import { AED_USD_PEG, JEWELRY_SIZE_MAP } from "@/lib/constants";
 import type { Size, Karat, Style } from "@/lib/constants";
+import { renderTextToCanvas } from "@/lib/canvasTextRenderer";
 
 export default function ConfiguratorPage() {
   const router = useRouter();
@@ -44,6 +45,8 @@ export default function ConfiguratorPage() {
   const FALLBACK_GOLD_PRICE_PER_GRAM = 310;
   const goldPrice = useQuery(api.prices.getCurrent);
   const createDesign = useMutation(api.designs.create);
+  const generateUploadUrl = useMutation(api.uploads.generateUploadUrl);
+  const saveTextReference = useMutation(api.uploads.saveTextReference);
 
   const pricePerGram = goldPrice?.pricePerGram || FALLBACK_GOLD_PRICE_PER_GRAM;
   const isLivePrice = !!goldPrice?.pricePerGram;
@@ -67,6 +70,7 @@ export default function ConfiguratorPage() {
     isSubmittingRef.current = true;
     setLoading(true);
     try {
+      // 1. Create the design record first (triggers generation action)
       const designId = await createDesign({
         name: displayName,
         language: lang,
@@ -78,7 +82,32 @@ export default function ConfiguratorPage() {
         referenceUrl: refUrl,
         jewelryType,
         designStyle,
+        metalType: goldType,
       });
+
+      // 2. Render the name on canvas and upload as text reference
+      //    This runs in parallel with the generation action's initial setup.
+      //    The generation action will pick up the textReferenceStorageId
+      //    when it reads the design record (after analyzing step).
+      try {
+        const textBlob = await renderTextToCanvas(displayName, font, lang);
+        const uploadUrl = await generateUploadUrl();
+        const uploadResp = await fetch(uploadUrl, {
+          method: "POST",
+          headers: { "Content-Type": "image/png" },
+          body: textBlob,
+        });
+        if (uploadResp.ok) {
+          const { storageId } = await uploadResp.json();
+          await saveTextReference({ designId, storageId });
+        } else {
+          console.error("Text reference upload failed:", uploadResp.status);
+        }
+      } catch (textRefErr) {
+        // Non-fatal: generation can proceed without text reference
+        console.error("Text reference render/upload failed:", textRefErr);
+      }
+
       setActiveDesign(designId, "crafting");
       router.push(`/en/design/crafting?designId=${designId}`);
     } catch (err) {
