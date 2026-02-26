@@ -2,6 +2,14 @@
 import { internalAction } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { v } from "convex/values";
+import {
+  buildProductShotPrompt,
+  buildOnBodyPrompt,
+  buildFromScratchPrompt,
+  type DesignInput,
+} from "../src/lib/prompts/index";
+
+// ── Legacy inline prompt builders (kept for backward compat — remove in Task 15)
 
 const FONT_STYLES: Record<string, string> = {
   script: "elegant flowing cursive script",
@@ -38,6 +46,7 @@ const CAMERA_ANGLES = [
 ];
 
 // ── JSON PROMPT: Reference-based (engrave on existing piece) ───────
+// (Legacy — kept for backward compat, no longer called in the main loop)
 function buildReferencePrompt(
   design: { name: string; font: string; karat: string; style: string },
   variationIndex: number,
@@ -98,7 +107,8 @@ function buildReferencePrompt(
 }
 
 // ── JSON PROMPT: From-scratch (generate new piece) ─────────────────
-function buildFromScratchPrompt(
+// (Legacy — kept for backward compat, no longer called in the main loop)
+function _legacyBuildFromScratchPrompt(
   design: {
     name: string;
     karat: string;
@@ -170,6 +180,7 @@ function buildFromScratchPrompt(
 }
 
 // ── JSON PROMPT: Name pendant (name IS the shape) ──────────────────
+// (Legacy — kept for backward compat, no longer called in the main loop)
 function buildNamePendantPrompt(
   design: {
     name: string;
@@ -257,6 +268,45 @@ async function callGemini(
         imageData: part.inlineData.data,
         mimeType: part.inlineData.mimeType || "image/png",
       };
+    }
+  }
+  return null;
+}
+
+// ── Helper: single Gemini call with retry (3x on 429, exponential backoff) ──
+async function callGeminiWithRetry(
+  ai: any,
+  prompt: string,
+  referenceImages: Array<{ base64: string; mimeType: string }>,
+  label: string,
+): Promise<{ imageData: string; mimeType: string } | null> {
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      const start = Date.now();
+      const result = await callGemini(ai, prompt, referenceImages);
+      const elapsed = ((Date.now() - start) / 1000).toFixed(1);
+
+      if (result) {
+        console.log(`  OK ${label} (${elapsed}s)`);
+        return result;
+      } else {
+        console.warn(`  EMPTY ${label} — no image returned (${elapsed}s)`);
+        return null;
+      }
+    } catch (err: any) {
+      const is429 =
+        err.message?.includes("429") ||
+        err.message?.includes("RESOURCE_EXHAUSTED");
+      if (is429 && attempt < 2) {
+        const wait = (attempt + 1) * 15;
+        console.warn(
+          `  RETRY ${label} — rate limited, waiting ${wait}s (attempt ${attempt + 1}/3)`,
+        );
+        await new Promise((r) => setTimeout(r, wait * 1000));
+      } else {
+        console.error(`  FAIL ${label}:`, err.message || err);
+        return null;
+      }
     }
   }
   return null;
@@ -360,77 +410,109 @@ export const generate = internalAction({
 
       const ai = new GoogleGenAI({ apiKey });
 
-      // Generate 4 variations in parallel (AI Studio paid tier: 10+ RPM)
-      const promises = CAMERA_ANGLES.map(async (angle, i) => {
-        // 3s stagger to avoid burst spike
-        if (i > 0) await new Promise((r) => setTimeout(r, i * 3000));
+      // ── Build DesignInput for the new prompt builders ──────────────
+      const hasReference = !!(referenceBase64 || freshDesign.referenceStorageId);
 
-        const prompt = referenceBase64
-          ? buildReferencePrompt(design, i)
-          : design.jewelryType === "name_pendant"
-            ? buildNamePendantPrompt(design, i)
-            : buildFromScratchPrompt(design, i);
+      const designInput: DesignInput = {
+        name: design.name,
+        language: design.language as DesignInput["language"],
+        font: design.font,
+        size: design.size as DesignInput["size"],
+        karat: design.karat as DesignInput["karat"],
+        style: design.style as DesignInput["style"],
+        metalType: (design.metalType || "yellow") as DesignInput["metalType"],
+        jewelryType: design.jewelryType,
+        designStyle: design.designStyle,
+      };
 
-        console.log(`Variation ${i + 1}/4: ${angle.slice(0, 50)}...`);
+      // ── 8-call pair-staggered generation: 4 product + 4 on-body ──
+      // For each variation (0-3) we fire a product shot and on-body shot
+      // in parallel, then wait 3s before the next pair.
+      const VARIATION_COUNT = 4;
 
-        // Retry up to 3 times on 429
-        for (let attempt = 0; attempt < 3; attempt++) {
+      for (let i = 0; i < VARIATION_COUNT; i++) {
+        // 3-second stagger between pairs (skip for the first pair)
+        if (i > 0) {
+          await new Promise((r) => setTimeout(r, 3000));
+        }
+
+        // Build prompts for this variation
+        const productPrompt = hasReference
+          ? buildProductShotPrompt(designInput, i, true)
+          : buildFromScratchPrompt(designInput, i);
+
+        const onBodyPrompt = buildOnBodyPrompt(designInput, i, hasReference);
+
+        console.log(`--- Variation ${i + 1}/${VARIATION_COUNT}: firing product + on-body pair ---`);
+
+        // Fire both calls in parallel
+        const [productResult, onBodyResult] = await Promise.all([
+          callGeminiWithRetry(
+            ai,
+            productPrompt,
+            referenceImages,
+            `product[${i + 1}]`,
+          ),
+          callGeminiWithRetry(
+            ai,
+            onBodyPrompt,
+            referenceImages,
+            `on-body[${i + 1}]`,
+          ),
+        ]);
+
+        // Store product image
+        if (productResult) {
           try {
-            const start = Date.now();
-            const result = await callGemini(ai, prompt, referenceImages);
-            const elapsed = ((Date.now() - start) / 1000).toFixed(1);
-
-            if (result) {
-              const imageBuffer = Buffer.from(result.imageData, "base64");
-              const blob = new Blob([imageBuffer], { type: result.mimeType });
-              const storageId = await ctx.storage.store(blob);
-              await ctx.runMutation(internal.designs.addProductImage, {
-                designId,
-                storageId,
-              });
-              console.log(`  ✓ Variation ${i + 1} stored (${elapsed}s)`);
-
-              await ctx.runMutation(internal.designs.updateStatus, {
-                designId,
-                status: "engraving",
-                analysisStep: `Variation ${i + 1} of 4 complete...`,
-              });
-              return true;
-            } else {
-              console.warn(`  ✗ Variation ${i + 1} returned no image (${elapsed}s)`);
-              return false;
-            }
-          } catch (err: any) {
-            const is429 = err.message?.includes("429") || err.message?.includes("RESOURCE_EXHAUSTED");
-            if (is429 && attempt < 2) {
-              const wait = (attempt + 1) * 15;
-              console.warn(`  ⏳ Variation ${i + 1} rate limited, retrying in ${wait}s (attempt ${attempt + 1}/3)`);
-              await new Promise((r) => setTimeout(r, wait * 1000));
-            } else {
-              console.error(`  ✗ Variation ${i + 1} failed:`, err.message || err);
-              return false;
-            }
+            const imageBuffer = Buffer.from(productResult.imageData, "base64");
+            const blob = new Blob([imageBuffer], { type: productResult.mimeType });
+            const storageId = await ctx.storage.store(blob);
+            await ctx.runMutation(internal.designs.addProductImage, {
+              designId,
+              storageId,
+            });
+          } catch (e: any) {
+            console.error(`  STORE FAIL product[${i + 1}]:`, e.message || e);
           }
+        } else {
+          console.warn(`  SKIP product[${i + 1}] — no image to store`);
         }
-        return false;
-      });
 
-      const results = await Promise.allSettled(promises);
-      for (const [i, r] of results.entries()) {
-        if (r.status === "rejected") {
-          console.error(`Variation ${i + 1} failed:`, r.reason?.message || r.reason);
+        // Store on-body image
+        if (onBodyResult) {
+          try {
+            const imageBuffer = Buffer.from(onBodyResult.imageData, "base64");
+            const blob = new Blob([imageBuffer], { type: onBodyResult.mimeType });
+            const storageId = await ctx.storage.store(blob);
+            await ctx.runMutation(internal.designs.addOnBodyImage, {
+              designId,
+              storageId,
+            });
+          } catch (e: any) {
+            console.error(`  STORE FAIL on-body[${i + 1}]:`, e.message || e);
+          }
+        } else {
+          console.warn(`  SKIP on-body[${i + 1}] — no image to store`);
         }
+
+        // Update progress
+        await ctx.runMutation(internal.designs.updateStatus, {
+          designId,
+          status: "engraving",
+          analysisStep: `Crafting variation ${i + 1} of ${VARIATION_COUNT}...`,
+        });
       }
 
-      // Check results
+      // ── Check results ─────────────────────────────────────────────
       const finalDesign = await ctx.runQuery(internal.designs.getInternal, { designId });
-      const imageCount = finalDesign.productImageStorageIds?.length || 0;
+      const productCount = finalDesign.productImageStorageIds?.length || 0;
+      const onBodyCount = finalDesign.onBodyImageStorageIds?.length || 0;
 
-      if (imageCount === 0) {
+      if (productCount === 0) {
         throw new Error("No images generated");
       }
 
-      console.log(`=== DONE: ${imageCount}/4 images ===`);
+      console.log(`=== DONE: ${productCount} product + ${onBodyCount} on-body images ===`);
       await ctx.runMutation(internal.designs.completeGeneration, { designId });
     } catch (error: any) {
       console.error("Generation failed:", error);
