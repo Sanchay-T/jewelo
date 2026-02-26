@@ -211,9 +211,9 @@ export const generate = internalAction({
       const VARIATION_COUNT = 4;
 
       for (let i = 0; i < VARIATION_COUNT; i++) {
-        // 3-second stagger between pairs (skip for the first pair)
+        // 5-second stagger between pairs to avoid Gemini rate limits (skip for first pair)
         if (i > 0) {
-          await new Promise((r) => setTimeout(r, 3000));
+          await new Promise((r) => setTimeout(r, 5000));
         }
 
         // Build prompts for this variation
