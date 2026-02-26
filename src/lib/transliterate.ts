@@ -7,15 +7,42 @@
  * For perfect accuracy, the AI refine button calls Gemini Flash.
  */
 
-// Digraphs must be checked before single chars
+// Common Arabic name corrections — checked FIRST before character-by-character
+// transliteration. These provide perfect results for frequently used names.
+const NAME_CORRECTIONS: Record<string, string> = {
+  sarah: "سارة",
+  layla: "ليلى",
+  leila: "ليلى",
+  fatima: "فاطمة",
+  aisha: "عائشة",
+  omar: "عمر",
+  ahmed: "أحمد",
+  mohammad: "محمد",
+  mohammed: "محمد",
+  ali: "علي",
+  hassan: "حسن",
+  hussein: "حسين",
+  noor: "نور",
+  nour: "نور",
+  yusuf: "يوسف",
+  khalid: "خالد",
+};
+
+// Digraphs must be checked before single chars.
+// Long vowels and consonant digraphs are ordered so that longer/more-specific
+// patterns match before shorter ones.
 const DIGRAPHS: [string, string][] = [
   ["sh", "ش"],
   ["th", "ث"],
   ["kh", "خ"],
   ["dh", "ذ"],
+  ["zh", "ظ"],
   ["gh", "غ"],
+  ["aa", "آ"],
   ["ee", "ي"],
+  ["ii", "ي"],
   ["oo", "و"],
+  ["uu", "و"],
   ["ai", "ع"],
   ["ou", "و"],
   ["ay", "ي"],
@@ -60,6 +87,11 @@ export function transliterate(text: string): string {
   if (!text) return "";
 
   let input = text.toLowerCase().trim();
+
+  // Check name corrections map first — perfect results for common names
+  const corrected = NAME_CORRECTIONS[input];
+  if (corrected) return corrected;
+
   let result = "";
 
   // Check for common name-ending patterns first
