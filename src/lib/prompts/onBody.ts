@@ -66,10 +66,13 @@ const BODY_MAPPING: Record<
 const DEFAULT_BODY = BODY_MAPPING.pendant;
 
 /**
- * Builds a JSON-structured prompt for generating an on-body lifestyle shot
+ * Builds a plain-text prompt for generating an on-body lifestyle shot
  * of the jewelry piece being worn. The shot shows the piece in context --
  * on a neck, hand, wrist, or ear -- with the framing carefully cropped
  * to keep the focus on the jewelry and avoid showing the model's full face.
+ *
+ * Returns a multi-line natural-language string (NOT JSON -- Gemini image gen
+ * returns 400 errors on large JSON prompt payloads).
  */
 export function buildOnBodyPrompt(
   design: DesignInput,
@@ -86,51 +89,47 @@ export function buildOnBodyPrompt(
   const karat = design.karat || "18K";
   const bodyMap = BODY_MAPPING[jewelryType] || DEFAULT_BODY;
 
-  const prompt = {
-    output_format: {
-      aspect_ratio: "1:1 square",
-      resolution: "high resolution, minimum 1024x1024 pixels",
-      instruction: "Generate a SQUARE image. Width and height must be equal.",
-    },
-    task: "ON_BODY_SHOT",
-    context: {
-      jewelry_type: jewelryType,
-      metal: `${karat} ${metalLabel} gold`,
-      decoration,
-      size_feel: sizeFeel,
-      design_style: design.designStyle || "minimalist",
-      style_reference: "Cartier, Tiffany, Bulgari editorial campaign quality",
-      has_reference_image: hasReference,
-      instruction: hasReference
-        ? "The attached reference shows the jewelry style. Generate an on-body lifestyle shot of a similar piece being worn."
-        : `Generate an on-body lifestyle shot of a ${jewelryType} in ${karat} ${metalLabel} gold being worn.`,
-    },
-    body: {
-      part: bodyMap.part,
-      framing: bodyMap.framing,
-      pose: bodyMap.pose,
-      skin: "natural warm-toned skin, healthy glow, no visible blemishes",
-      rules: bodyMap.rules,
-      wardrobe: "minimal or absent -- bare skin or simple neutral fabric that does not compete with the jewelry",
-    },
-    camera: {
-      angle: variation.camera,
-      lighting: variation.lighting,
-      feel: variation.feel,
-      lens: "85mm, f/1.8, creamy bokeh",
-      depth_of_field: "shallow -- jewelry tack-sharp, background and skin softly blurred",
-      resolution: "ultra-crisp, photorealistic, 8K detail",
-    },
-    text_reference: textReferenceBlock(design.name, design.language),
-    engraving: {
-      text: design.name,
-      font_style: fontStyle,
-      physics: engravingPhysicsBlock(),
-      text_accuracy: `CRITICAL: The name '${design.name}' must be spelled exactly as shown. Every letter must be present and legible. Character count: ${design.name.length}. Spelling check: ${design.name.split("").join(" - ")}`,
-      legibility: `The engraved name '${design.name}' MUST be clearly readable even in the on-body context. Frame the shot so the jewelry — and especially the engraved name — is prominent and legible. The name is the star of this photograph.`,
-    },
-    absolute_rules: absoluteRulesBlock(hasReference, metalType),
-  };
+  const referenceNote = hasReference
+    ? "The attached reference shows the jewelry style. Generate an on-body lifestyle shot of a similar piece being worn."
+    : `Generate an on-body lifestyle shot of a ${jewelryType} in ${karat} ${metalLabel} gold being worn.`;
 
-  return JSON.stringify(prompt, null, 2);
+  return `Generate a professional jewelry advertisement photograph showing a ${jewelryType} in ${karat} ${metalLabel} gold being worn.
+
+${referenceNote}
+
+PIECE DETAILS:
+- Metal: ${karat} ${metalLabel} gold, high polish with warm luster
+- Decoration: ${decoration}
+- Size feel: ${sizeFeel}
+- Design style: ${design.designStyle || "minimalist"}
+- Style reference: Cartier, Tiffany, Bulgari editorial campaign quality
+
+BODY & FRAMING:
+- Body part: ${bodyMap.part}
+- Framing: ${bodyMap.framing}
+- Pose: ${bodyMap.pose}
+- Skin: Natural warm-toned skin, healthy glow, no visible blemishes
+- ${bodyMap.rules}
+- Wardrobe: Minimal or absent -- bare skin or simple neutral fabric that does not compete with the jewelry
+- The jewelry is the star of the photograph.
+
+${textReferenceBlock(design.name, design.language)}
+
+ENGRAVING:
+The name '${design.name}' must be engraved on this piece in ${fontStyle}.
+Spelling check: ${design.name.split("").join(" - ")} = ${design.name.length} characters.
+${engravingPhysicsBlock()}
+The engraved name '${design.name}' MUST be clearly readable even in the on-body context. Frame the shot so the jewelry -- and especially the engraved name -- is prominent and legible. The name is the star of this photograph.
+
+CAMERA & LIGHTING:
+- Angle: ${variation.camera}
+- Lighting: ${variation.lighting}. Soft studio lighting, shallow depth of field.
+- Lens: 85mm, f/1.8, creamy bokeh
+- Depth of field: shallow -- jewelry tack-sharp, background and skin softly blurred
+- Feel: ${variation.feel}
+- Resolution: ultra-crisp, photorealistic, 8K detail
+
+OUTPUT: Generate a SQUARE 1:1 image. Professional jewelry ad quality. No watermarks.
+
+${absoluteRulesBlock(hasReference, metalType)}`;
 }
