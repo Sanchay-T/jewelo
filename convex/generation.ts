@@ -294,6 +294,14 @@ export const generate = internalAction({
 
       console.log(`=== DONE: ${productCount} product + ${onBodyCount} on-body images ===`);
       await ctx.runMutation(internal.designs.completeGeneration, { designId });
+
+      // Trigger 4 Veo video generations (2s stagger)
+      for (let i = 0; i < 4; i++) {
+        await ctx.scheduler.runAfter(i * 2000, internal.video.generateVideo, {
+          designId,
+          variationIndex: i,
+        });
+      }
     } catch (error: any) {
       console.error("Generation failed:", error);
       await ctx.runMutation(internal.designs.updateStatus, {

@@ -31,22 +31,21 @@ async function getGcpAccessToken(): Promise<string> {
 
 // ── Generate a rotating jewelry video via Veo 3.1 ──────────────────
 export const generateVideo = internalAction({
-  args: { designId: v.id("designs") },
-  handler: async (ctx, { designId }) => {
+  args: { designId: v.id("designs"), variationIndex: v.number() },
+  handler: async (ctx, { designId, variationIndex }) => {
     try {
       const design = await ctx.runQuery(internal.designs.getInternal, {
         designId,
       });
 
       // Determine which product image to use as the source frame
-      const selectedIdx = design.selectedVariationIndex ?? 0;
       const storageIds = design.productImageStorageIds || [];
 
       if (storageIds.length === 0) {
         throw new Error("No product images available for video generation");
       }
 
-      const sourceStorageId = storageIds[selectedIdx] ?? storageIds[0];
+      const sourceStorageId = storageIds[variationIndex] ?? storageIds[0];
       const sourceUrl = await ctx.storage.getUrl(sourceStorageId);
       if (!sourceUrl) {
         throw new Error("Could not resolve product image URL");
@@ -67,14 +66,15 @@ export const generateVideo = internalAction({
       const negativePrompt = buildVideoNegativePrompt();
 
       console.log(
-        `[video] Starting Veo 3.1 generation for design ${designId}`,
+        `[video] Starting Veo 3.1 generation for design ${designId} variation ${variationIndex}`,
       );
       console.log(`[video] Jewelry: ${jewelryType}, Metal: ${metalType}`);
 
       // Mark video as generating
       await ctx.runMutation(internal.designs.updateVideoStatus, {
         designId,
-        videoStatus: "generating",
+        variationIndex,
+        status: "generating",
       });
 
       // Call Veo 3.1 via Vertex AI REST (long-running operation)
@@ -141,21 +141,23 @@ export const generateVideo = internalAction({
       // Store the operation ID on the design record
       await ctx.runMutation(internal.designs.updateVideoStatus, {
         designId,
-        videoStatus: "generating",
-        videoOperationId: operationName,
+        variationIndex,
+        status: "generating",
+        operationId: operationName,
       });
 
       // Schedule first poll in 5 seconds
       await ctx.scheduler.runAfter(
         5000,
         internal.video.pollVideoCompletion,
-        { designId },
+        { designId, variationIndex },
       );
     } catch (error: any) {
       console.error("[video] Generation failed:", error.message || error);
       await ctx.runMutation(internal.designs.updateVideoStatus, {
         designId,
-        videoStatus: "failed",
+        variationIndex,
+        status: "failed",
       });
     }
   },
@@ -163,16 +165,16 @@ export const generateVideo = internalAction({
 
 // ── Poll the Veo 3.1 long-running operation until done ──────────────
 export const pollVideoCompletion = internalAction({
-  args: { designId: v.id("designs") },
-  handler: async (ctx, { designId }) => {
+  args: { designId: v.id("designs"), variationIndex: v.number() },
+  handler: async (ctx, { designId, variationIndex }) => {
     try {
       const design = await ctx.runQuery(internal.designs.getInternal, {
         designId,
       });
 
-      const operationName = design.videoOperationId;
+      const operationName = design.videoOperationIds?.[variationIndex];
       if (!operationName) {
-        throw new Error("No videoOperationId on design — cannot poll");
+        throw new Error(`No videoOperationId for variation ${variationIndex} — cannot poll`);
       }
 
       const accessToken = await getGcpAccessToken();
@@ -226,27 +228,29 @@ export const pollVideoCompletion = internalAction({
         // Update design with completed video
         await ctx.runMutation(internal.designs.updateVideoStatus, {
           designId,
-          videoStatus: "completed",
-          videoStorageId,
+          variationIndex,
+          status: "completed",
+          storageId: videoStorageId,
         });
 
-        console.log(`[video] Video stored for design ${designId}`);
+        console.log(`[video] Video stored for design ${designId} variation ${variationIndex}`);
       } else {
         // Not done yet — schedule another poll in 5 seconds
         console.log(
-          `[video] Operation still in progress for design ${designId}, polling again in 5s...`,
+          `[video] Operation still in progress for design ${designId} variation ${variationIndex}, polling again in 5s...`,
         );
         await ctx.scheduler.runAfter(
           5000,
           internal.video.pollVideoCompletion,
-          { designId },
+          { designId, variationIndex },
         );
       }
     } catch (error: any) {
       console.error("[video] Poll failed:", error.message || error);
       await ctx.runMutation(internal.designs.updateVideoStatus, {
         designId,
-        videoStatus: "failed",
+        variationIndex,
+        status: "failed",
       });
     }
   },
