@@ -3,9 +3,10 @@
 interface LivePriceDisplayProps {
   priceAED: number;
   priceUSD: number;
+  isLive?: boolean;
 }
 
-export function LivePriceDisplay({ priceAED, priceUSD }: LivePriceDisplayProps) {
+export function LivePriceDisplay({ priceAED, priceUSD, isLive = true }: LivePriceDisplayProps) {
   return (
     <div className="bg-white rounded-xl p-4 border border-warm">
       <div className="flex items-center justify-between">
@@ -21,8 +22,10 @@ export function LivePriceDisplay({ priceAED, priceUSD }: LivePriceDisplayProps) 
           </p>
         </div>
         <div className="flex items-center gap-1">
-          <div className="w-2 h-2 rounded-full bg-green-500 live-pulse" />
-          <span className="text-green-600 text-[10px] font-medium">LIVE</span>
+          <div className={`w-2 h-2 rounded-full ${isLive ? "bg-green-500 live-pulse" : "bg-yellow-500"}`} />
+          <span className={`text-[10px] font-medium ${isLive ? "text-green-600" : "text-yellow-600"}`}>
+            {isLive ? "LIVE" : "EST"}
+          </span>
         </div>
       </div>
     </div>

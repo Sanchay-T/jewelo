@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "motion/react";
 import { StepIndicator } from "@/components/layout/StepIndicator";
+import { useDesignFlow } from "@/lib/DesignFlowContext";
 import { Check } from "lucide-react";
 
 const languages = [
@@ -14,6 +15,7 @@ const languages = [
 export default function LanguagePage() {
   const [selected, setSelected] = useState<string | null>(null);
   const router = useRouter();
+  const { setLanguage } = useDesignFlow();
 
   return (
     <motion.div
@@ -83,9 +85,12 @@ export default function LanguagePage() {
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.6 }}
-        onClick={() =>
-          selected && router.push(`/en/design/inspiration?lang=${selected}`)
-        }
+        onClick={() => {
+          if (selected) {
+            setLanguage(selected);
+            router.push(`/en/design/inspiration?lang=${selected}`);
+          }
+        }}
         disabled={!selected}
         className={`w-full font-semibold py-4 rounded-xl text-base mt-8 transition ${
           selected

@@ -1,5 +1,6 @@
 "use client";
 import { Check } from "lucide-react";
+import { motion } from "motion/react";
 
 interface InspirationImage {
   imageUrl: string;
@@ -18,41 +19,39 @@ export function InspirationGrid({
   selectedIndex,
   onSelect,
 }: InspirationGridProps) {
-  if (images.length === 0) {
-    return (
-      <div className="grid grid-cols-3 gap-2 mb-4 lg:grid-cols-4 lg:gap-3">
-        {Array.from({ length: 8 }).map((_, i) => (
-          <div
-            key={i}
-            className="aspect-square rounded-lg bg-sand border border-warm"
-          />
-        ))}
-      </div>
-    );
-  }
+  if (images.length === 0) return null;
+
   return (
-    <div className="grid grid-cols-3 gap-2 mb-4 lg:grid-cols-4 lg:gap-3">
+    <div className="grid grid-cols-3 gap-2 lg:grid-cols-4 lg:gap-3">
       {images.map((img, i) => (
-        <button
-          key={i}
+        <motion.button
+          key={`${img.thumbnail}-${i}`}
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.2, delay: Math.min(i * 0.03, 0.3) }}
           onClick={() => onSelect(i)}
-          className={`aspect-square rounded-lg overflow-hidden relative ${
+          className={`aspect-square rounded-lg overflow-hidden relative transition-all ${
             selectedIndex === i
-              ? "border-2 border-brown"
-              : "border border-warm"
+              ? "ring-2 ring-brown ring-offset-2 ring-offset-cream scale-[0.97]"
+              : "border border-warm hover:border-brown/40"
           }`}
         >
           <img
             src={img.thumbnail}
             alt={img.title}
             className="w-full h-full object-cover"
+            loading="lazy"
           />
           {selectedIndex === i && (
-            <div className="absolute top-1 right-1 w-4 h-4 rounded-full bg-brown flex items-center justify-center">
-              <Check className="w-2.5 h-2.5 text-white" strokeWidth={3} />
-            </div>
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-brown flex items-center justify-center shadow-sm"
+            >
+              <Check className="w-3 h-3 text-white" strokeWidth={3} />
+            </motion.div>
           )}
-        </button>
+        </motion.button>
       ))}
     </div>
   );

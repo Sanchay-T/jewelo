@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useRef, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useQuery, useMutation } from "convex/react";
 import { motion } from "motion/react";
@@ -9,19 +9,20 @@ import { StepIndicator } from "@/components/layout/StepIndicator";
 import { NameInput } from "@/components/design/NameInput";
 import { FontStylePicker } from "@/components/design/FontStylePicker";
 import { SizeSelector } from "@/components/design/SizeSelector";
-import { MetalSelector } from "@/components/design/MetalSelector";
+import { MetalSelector, getGoldColor, getGoldLabel } from "@/components/design/MetalSelector";
 import { LivePriceDisplay } from "@/components/design/LivePriceDisplay";
 import { GenerateButton } from "@/components/design/GenerateButton";
-
-const AED_USD_PEG = 3.6725;
-const KARAT_FACTOR: Record<string, number> = { "18K": 0.75, "21K": 0.875, "22K": 0.916 };
-const WEIGHT: Record<string, number> = { small: 2.5, medium: 4.0, large: 6.5 };
-const LABOR: Record<string, number> = { small: 150, medium: 250, large: 400 };
+import { DecorationSelector } from "@/components/design/DecorationSelector";
+import { calculatePrice } from "@/lib/pricing";
+import { AED_USD_PEG, JEWELRY_SIZE_MAP } from "@/lib/constants";
+import type { Size, Karat, Style } from "@/lib/constants";
 
 export default function ConfiguratorPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const lang = searchParams.get("lang") || "en";
+  const { setActiveDesign, language: contextLang } = useDesignFlow();
+
+  const lang = searchParams.get("lang") || contextLang || "en";
   const refUrl = searchParams.get("ref") || undefined;
   const jewelryType = searchParams.get("type") || "jewelry";
   const designStyle = searchParams.get("style") || "elegant";
@@ -30,33 +31,49 @@ export default function ConfiguratorPage() {
   const [font, setFont] = useState("script");
   const [size, setSize] = useState("medium");
   const [karat, setKarat] = useState("21K");
+  const [goldType, setGoldType] = useState("yellow");
+  const [style, setStyle] = useState("gold_only");
   const [loading, setLoading] = useState(false);
+  const [transliteratedName, setTransliteratedName] = useState("");
+  const isSubmittingRef = useRef(false);
 
+  const handleTransliterated = useCallback((result: string) => {
+    setTransliteratedName(result);
+  }, []);
+
+  const FALLBACK_GOLD_PRICE_PER_GRAM = 310;
   const goldPrice = useQuery(api.prices.getCurrent);
   const createDesign = useMutation(api.designs.create);
-  const { setActiveDesign } = useDesignFlow();
 
-  const pricePerGram = goldPrice?.pricePerGram || 0;
-  const weight = WEIGHT[size] || 4.0;
-  const materialCost = weight * (KARAT_FACTOR[karat] || 0.875) * pricePerGram;
-  const laborCost = LABOR[size] || 250;
-  const subtotal = materialCost + laborCost;
-  const total = Math.round(subtotal + subtotal * 0.8);
+  const pricePerGram = goldPrice?.pricePerGram || FALLBACK_GOLD_PRICE_PER_GRAM;
+  const isLivePrice = !!goldPrice?.pricePerGram;
+
+  const priceBreakdown = calculatePrice({
+    karat: karat as Karat,
+    size: size as Size,
+    style: style as Style,
+    goldPricePerGram: pricePerGram,
+    jewelryType,
+  });
+  const total = priceBreakdown.total;
   const totalUSD = Math.round(total / AED_USD_PEG);
 
+  // For Arabic/Chinese, prefer AI-refined name, fall back to local transliteration or raw name
+  const displayName = transliteratedName || name;
   const canGenerate = name.length > 0;
 
   const handleGenerate = async () => {
-    if (!canGenerate) return;
+    if (!canGenerate || isSubmittingRef.current) return;
+    isSubmittingRef.current = true;
     setLoading(true);
     try {
       const designId = await createDesign({
-        name,
+        name: displayName,
         language: lang,
         font,
         size,
         karat,
-        style: "gold_only",
+        style,
         referenceType: refUrl ? "search" : undefined,
         referenceUrl: refUrl,
         jewelryType,
@@ -66,6 +83,7 @@ export default function ConfiguratorPage() {
       router.push(`/en/design/crafting?designId=${designId}`);
     } catch (err) {
       console.error("Create design failed:", err);
+      isSubmittingRef.current = false;
       setLoading(false);
     }
   };
@@ -92,16 +110,22 @@ export default function ConfiguratorPage() {
           Live Preview
         </p>
         <motion.p
-          key={`${name}-${font}-${size}-${karat}`}
+          key={`${name}-${font}-${size}-${karat}-${goldType}-${lang}`}
           initial={{ opacity: 0.5, scale: 0.98 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.3 }}
+          dir={lang === "ar" ? "rtl" : "ltr"}
+          lang={lang}
           className={`${
-            font === "script"
-              ? "font-display italic"
-              : font === "modern"
-                ? "tracking-[0.2em] uppercase font-body font-light"
-                : "font-display"
+            lang === "ar"
+              ? font === "diwani" ? "font-arabic italic"
+                : font === "kufi" ? "font-arabic font-bold"
+                : "font-arabic"
+              : font === "script"
+                ? "font-display italic"
+                : font === "modern"
+                  ? "tracking-[0.2em] uppercase font-body font-light"
+                  : "font-display"
           } ${
             size === "small"
               ? "text-3xl"
@@ -109,44 +133,33 @@ export default function ConfiguratorPage() {
                 ? "text-6xl"
                 : "text-5xl"
           }`}
-          style={{
-            color:
-              karat === "18K"
-                ? "#D4A853"
-                : karat === "22K"
-                  ? "#B8923F"
-                  : "#C9A03E",
-          }}
+          style={{ color: getGoldColor(karat, goldType) }}
         >
-          {name || "Your Name"}
+          {displayName || (lang === "ar" ? "اسمك" : "Your Name")}
         </motion.p>
         {/* Metal color swatch */}
         <div className="flex items-center justify-center gap-2 mt-3">
           <div
             className="w-3 h-3 rounded-full"
-            style={{
-              background:
-                karat === "18K"
-                  ? "#D4A853"
-                  : karat === "22K"
-                    ? "#B8923F"
-                    : "#C9A03E",
-            }}
+            style={{ background: getGoldColor(karat, goldType) }}
           />
           <p className="text-text-tertiary text-xs font-mono">
-            {size === "small" ? "12mm" : size === "large" ? "25mm" : "18mm"} ·{" "}
-            {karat} Yellow Gold
+            {(jewelryType in JEWELRY_SIZE_MAP
+              ? JEWELRY_SIZE_MAP[jewelryType as keyof typeof JEWELRY_SIZE_MAP]?.[size as Size]?.dimension
+              : null) || (size === "small" ? "12mm" : size === "large" ? "25mm" : "18mm")}{" "}
+            · {getGoldLabel(karat, goldType)}
           </p>
         </div>
       </motion.div>
 
       <div className="space-y-5">
         {[
-          <NameInput key="name" value={name} onChange={setName} language={lang} />,
-          <FontStylePicker key="font" name={name} value={font} onChange={setFont} />,
-          <SizeSelector key="size" value={size} onChange={setSize} />,
-          <MetalSelector key="metal" value={karat} onChange={setKarat} />,
-          <LivePriceDisplay key="price" priceAED={total} priceUSD={totalUSD} />,
+          <NameInput key="name" value={name} onChange={setName} language={lang} onTransliterated={handleTransliterated} />,
+          <FontStylePicker key="font" name={name} value={font} onChange={setFont} language={lang} />,
+          <SizeSelector key="size" value={size} onChange={setSize} jewelryType={jewelryType} />,
+          <MetalSelector key="metal" value={karat} onChange={setKarat} goldType={goldType} onGoldTypeChange={setGoldType} />,
+          <DecorationSelector key="decoration" value={style} onChange={setStyle} />,
+          <LivePriceDisplay key="price" priceAED={total} priceUSD={totalUSD} isLive={isLivePrice} />,
           <GenerateButton key="gen" disabled={!canGenerate} loading={loading} onClick={handleGenerate} />,
         ].map((component, i) => (
           <motion.div

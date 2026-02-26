@@ -1,8 +1,10 @@
 "use client";
+import { useEffect } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useQuery } from "convex/react";
 import { api } from "../../../../../../convex/_generated/api";
+import { useDesignFlow } from "@/lib/DesignFlowContext";
 import { Check } from "lucide-react";
 import type { Id } from "../../../../../../convex/_generated/dataModel";
 
@@ -10,6 +12,12 @@ export default function ConfirmedPage() {
   const params = useParams();
   const orderId = params.id as Id<"orders">;
   const order = useQuery(api.orders.get, orderId ? { orderId } : "skip");
+  const { clearDesign } = useDesignFlow();
+
+  // Clear the active design so the "Continue Design" banner stops showing
+  useEffect(() => {
+    clearDesign();
+  }, [clearDesign]);
 
   return (
     <div className="min-h-screen bg-cream px-6 pt-4 pb-24 flex flex-col items-center lg:pt-20 lg:pb-8">

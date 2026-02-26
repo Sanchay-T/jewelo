@@ -4,7 +4,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { StepIndicator } from "@/components/layout/StepIndicator";
 
 const jewelryTypes = [
-  { id: "pendant", label: "Pendant", description: "Name necklace" },
+  { id: "name_pendant", label: "Name Pendant", description: "Name is the shape" },
+  { id: "pendant", label: "Pendant", description: "Engraved pendant" },
   { id: "ring", label: "Ring", description: "Engraved band" },
   { id: "bracelet", label: "Bracelet", description: "Name cuff" },
   { id: "earrings", label: "Earrings", description: "Initial studs" },
@@ -16,7 +17,7 @@ export default function FromScratchPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const lang = searchParams.get("lang") || "en";
-  const [selectedType, setSelectedType] = useState<string>("pendant");
+  const [selectedType, setSelectedType] = useState<string>("name_pendant");
   const [selectedStyle, setSelectedStyle] = useState<string>("Minimalist");
 
   return (
@@ -78,9 +79,9 @@ export default function FromScratchPage() {
         <p className="text-text-tertiary text-xs uppercase tracking-wider mb-2">
           AI will generate
         </p>
-        <p className="font-display text-3xl italic text-gold/60 lg:text-4xl">Sarah</p>
+        <p className="font-display text-3xl italic text-gold/60 lg:text-4xl">Your Name</p>
         <p className="text-text-tertiary text-[10px] mt-2">
-          {selectedStyle} gold {selectedType}
+          {selectedStyle} gold {jewelryTypes.find(t => t.id === selectedType)?.label || selectedType}
         </p>
       </div>
 

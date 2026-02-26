@@ -34,42 +34,37 @@ export default function EngravingPage() {
         Here&apos;s how it looks on your piece. Tap to zoom.
       </p>
 
-      {/* Desktop: side-by-side / Mobile: stacked */}
-      <div className="space-y-3 mb-5 lg:grid lg:grid-cols-2 lg:gap-6 lg:space-y-0">
-        {/* Reference */}
-        <div>
-          <p className="text-text-tertiary text-[10px] uppercase tracking-wider mb-2">
-            Your reference
-          </p>
-          <button
-            onClick={() => data?.referenceUrl && setViewerUrl(data.referenceUrl)}
-            className="w-full aspect-[4/3] rounded-xl bg-sand border border-warm flex items-center justify-center overflow-hidden"
-          >
-            {data?.referenceUrl ? (
-              <img
-                src={data.referenceUrl}
-                alt="Reference"
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <div className="text-center">
-                <span className="text-gold text-3xl">☽</span>
-                <p className="text-text-tertiary text-xs mt-1">
-                  Original piece
-                </p>
-              </div>
-            )}
-          </button>
-        </div>
+      {/* Desktop: side-by-side / Mobile: single column */}
+      <div className={`space-y-3 mb-5 ${data?.referenceUrl ? "lg:grid lg:grid-cols-2 lg:gap-6 lg:space-y-0" : ""}`}>
+        {/* Reference — only show if user picked one */}
+        {data?.referenceUrl && (
+          <>
+            <div>
+              <p className="text-text-tertiary text-[10px] uppercase tracking-wider mb-2">
+                Your reference
+              </p>
+              <button
+                onClick={() => setViewerUrl(data.referenceUrl!)}
+                className="w-full aspect-[4/3] rounded-xl bg-sand border border-warm flex items-center justify-center overflow-hidden"
+              >
+                <img
+                  src={data.referenceUrl}
+                  alt="Reference"
+                  className="w-full h-full object-cover"
+                />
+              </button>
+            </div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 5 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="flex items-center justify-center lg:hidden"
-        >
-          <ArrowDown className="w-5 h-5 text-brown" />
-        </motion.div>
+            <motion.div
+              initial={{ opacity: 0, y: 5 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="flex items-center justify-center lg:hidden"
+            >
+              <ArrowDown className="w-5 h-5 text-brown" />
+            </motion.div>
+          </>
+        )}
 
         {/* Result */}
         <motion.div

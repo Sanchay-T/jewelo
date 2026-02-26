@@ -28,17 +28,17 @@ export default function GalleryPage() {
       perPage: 12,
     })
       .then((results: any) => {
-        if (results?.photos) {
+        if (Array.isArray(results) && results.length > 0) {
           setPexelsImages(
-            results.photos.map((p: any) => ({
-              url: p.src?.medium || p.src?.small,
-              alt: p.alt || "Jewelry",
-              fullUrl: p.src?.large || p.src?.original,
+            results.map((r: any) => ({
+              url: r.thumbnail || r.imageUrl,
+              alt: r.title || "Jewelry",
+              fullUrl: r.imageUrl,
             }))
           );
         }
       })
-      .catch(() => {})
+      .catch((err) => console.error("Gallery search failed:", err))
       .finally(() => setLoading(false));
   }, [activeCategory]);
 

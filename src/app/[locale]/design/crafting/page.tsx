@@ -2,25 +2,16 @@
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useQuery, useAction } from "convex/react";
-import { motion } from "motion/react";
+import { motion, AnimatePresence } from "motion/react";
 import { api } from "../../../../../convex/_generated/api";
 import type { Id } from "../../../../../convex/_generated/dataModel";
-
-const STATUS_LABELS: Record<string, string> = {
-  generating: "Preparing your design",
-  analyzing: "Studying the reference",
-  drafting: "Generating draft designs",
-  refining: "Refining the lettering",
-  completed: "Done!",
-  failed: "Something went wrong",
-};
 
 export default function CraftingPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const designId = searchParams.get("designId") as Id<"designs"> | null;
   const design = useQuery(
-    api.designs.get,
+    api.designs.getWithImages,
     designId ? { designId } : "skip"
   );
   const searchImages = useAction(api.search.execute);
@@ -48,19 +39,32 @@ export default function CraftingPage() {
     }
   }, [design?.status, design?._id, router]);
 
-  const progress =
-    design?.status === "analyzing"
-      ? 20
-      : design?.status === "drafting"
-        ? 40
-        : design?.status === "refining"
-          ? 70
-          : design?.status === "completed"
-            ? 100
-            : 10;
+  // Derive progress from actual image count
+  const imageCount = design?.imageUrls?.length ?? 0;
+  const isFailed = design?.status === "failed";
+  const isCompleted = design?.status === "completed";
 
-  const statusLabel =
-    STATUS_LABELS[design?.status || "generating"] || "Preparing...";
+  const progress = isCompleted
+    ? 100
+    : imageCount === 0
+      ? 10
+      : imageCount === 1
+        ? 30
+        : imageCount === 2
+          ? 50
+          : imageCount === 3
+            ? 75
+            : 95;
+
+  const statusLabel = isFailed
+    ? "Something went wrong"
+    : isCompleted
+      ? "Done!"
+      : imageCount === 0
+        ? design?.analysisStep || "Analyzing your piece..."
+        : imageCount >= 4
+          ? "Finishing up..."
+          : `${imageCount} of 4 variations ready`;
 
   // Split images into two rows, triple for seamless loop
   const half = Math.ceil(scrollImages.length / 2);
@@ -118,6 +122,36 @@ export default function CraftingPage() {
           {statusLabel}
         </motion.p>
 
+        {/* Live thumbnails — fade in as each image arrives */}
+        {imageCount > 0 && (
+          <div className="flex items-center justify-center gap-2 mb-4">
+            <AnimatePresence>
+              {design!.imageUrls.map((url, i) => (
+                <motion.div
+                  key={url}
+                  initial={{ opacity: 0, scale: 0.5 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 20, delay: i * 0.05 }}
+                  className="w-12 h-12 rounded-lg overflow-hidden border-2 border-brown/20 shadow-sm"
+                >
+                  <img
+                    src={url}
+                    alt={`Variation ${i + 1}`}
+                    className="w-full h-full object-cover"
+                  />
+                </motion.div>
+              ))}
+            </AnimatePresence>
+            {/* Empty slots */}
+            {Array.from({ length: 4 - imageCount }).map((_, i) => (
+              <div
+                key={`empty-${i}`}
+                className="w-12 h-12 rounded-lg border-2 border-dashed border-warm bg-sand/30"
+              />
+            ))}
+          </div>
+        )}
+
         <div className="w-48 h-1.5 bg-warm rounded-full overflow-hidden mb-2">
           <motion.div
             className="h-full bg-brown rounded-full"
@@ -128,10 +162,12 @@ export default function CraftingPage() {
         </div>
 
         <p className="text-text-tertiary text-xs text-center">
-          Usually takes about a minute
+          {imageCount > 0
+            ? `${imageCount}/4 images generated`
+            : "Usually takes about a minute"}
         </p>
 
-        {design?.status === "failed" && (
+        {isFailed && (
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -139,7 +175,7 @@ export default function CraftingPage() {
           >
             <p className="text-red-600 text-sm mb-2">Generation failed</p>
             <p className="text-text-tertiary text-xs mb-3">
-              {design.error || "Please try again"}
+              {design?.error || "Please try again"}
             </p>
             <button
               onClick={() => router.back()}

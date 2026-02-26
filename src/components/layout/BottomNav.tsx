@@ -12,6 +12,11 @@ const tabs = [
 
 export function BottomNav() {
   const pathname = usePathname();
+
+  // Hide bottom nav during design flow (these pages have their own bottom bars)
+  const isDesignFlow = pathname.includes("/design/");
+  if (isDesignFlow) return null;
+
   return (
     <>
       {/* Mobile bottom nav */}

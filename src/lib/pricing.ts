@@ -1,4 +1,4 @@
-import { SIZE_MAP, KARAT_FACTOR, LABOR_COST, MARKUP_PERCENT } from "./constants";
+import { SIZE_MAP, JEWELRY_SIZE_MAP, KARAT_FACTOR, LABOR_COST, MARKUP_PERCENT } from "./constants";
 import type { Size, Karat, Style } from "./constants";
 
 export type PriceBreakdown = {
@@ -18,8 +18,12 @@ export function calculatePrice(params: {
   size: Size;
   style: Style;
   goldPricePerGram: number;
+  jewelryType?: string;
 }): PriceBreakdown {
-  const sizeData = SIZE_MAP[params.size];
+  const typeMap = params.jewelryType && params.jewelryType in JEWELRY_SIZE_MAP
+    ? JEWELRY_SIZE_MAP[params.jewelryType as keyof typeof JEWELRY_SIZE_MAP]
+    : null;
+  const sizeData = (typeMap?.[params.size as keyof typeof typeMap] as typeof SIZE_MAP[Size]) || SIZE_MAP[params.size];
   const weight = params.style === "gold_only" ? sizeData.weightGoldOnly : sizeData.weightWithStones;
   const goldContent = weight * KARAT_FACTOR[params.karat];
   const materialCost = goldContent * params.goldPricePerGram;
