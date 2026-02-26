@@ -1,11 +1,12 @@
 "use client";
-import { useEffect } from "react";
+import { useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useQuery } from "convex/react";
 import { api } from "../../../../../../convex/_generated/api";
 import { useDesignFlow } from "@/lib/DesignFlowContext";
-import { Check } from "lucide-react";
+import { Check, Share2 } from "lucide-react";
+import { VideoPlayer } from "@/components/shared/VideoPlayer";
 import type { Id } from "../../../../../../convex/_generated/dataModel";
 
 export default function ConfirmedPage() {
@@ -18,6 +19,22 @@ export default function ConfirmedPage() {
   useEffect(() => {
     clearDesign();
   }, [clearDesign]);
+
+  const videoUrl = order?.videoUrl ?? null;
+
+  const handleShare = useCallback(async () => {
+    if (navigator.share && videoUrl) {
+      try {
+        await navigator.share({
+          title: `My custom ${order?.design?.name} jewelry`,
+          text: "Check out my custom jewelry design!",
+          url: videoUrl,
+        });
+      } catch {
+        // User cancelled or share failed — silently ignore
+      }
+    }
+  }, [videoUrl, order?.design?.name]);
 
   return (
     <div className="min-h-screen bg-cream px-6 pt-4 pb-24 flex flex-col items-center lg:pt-20 lg:pb-8">
@@ -52,6 +69,19 @@ export default function ConfirmedPage() {
           </div>
         </div>
       </div>
+
+      {videoUrl && (
+        <div className="w-full mb-8">
+          <VideoPlayer url={videoUrl} label="Your design in motion" />
+          <button
+            onClick={handleShare}
+            className="mt-3 w-full flex items-center justify-center gap-2 border border-brown/20 text-text-secondary py-3 rounded-xl text-sm hover:bg-sand/50 transition"
+          >
+            <Share2 className="w-4 h-4" />
+            Share your design
+          </button>
+        </div>
+      )}
 
       <div className="w-full space-y-4 mb-8">
         <p className="text-text-secondary text-xs uppercase tracking-wider font-medium">

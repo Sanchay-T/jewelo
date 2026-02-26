@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { api } from "../../../../../../convex/_generated/api";
 import { StepIndicator } from "@/components/layout/StepIndicator";
 import { X, ZoomIn, ZoomOut } from "lucide-react";
+import { VideoPlayer } from "@/components/shared/VideoPlayer";
 import { calculatePrice } from "@/lib/pricing";
 import { AED_USD_PEG, JEWELRY_SIZE_MAP } from "@/lib/constants";
 import type { Size, Karat, Style } from "@/lib/constants";
@@ -122,6 +123,12 @@ export default function ReviewPage() {
           <> · {design.style === "gold_with_stones" ? "Gemstones" : "Diamonds"}</>
         )}
       </p>
+
+      {design?.videoUrl && (
+        <div className="mb-6">
+          <VideoPlayer url={design.videoUrl} label="Your design in motion" />
+        </div>
+      )}
 
       <div className="bg-white rounded-xl p-5 border border-warm mb-6 space-y-2">
         <div className="flex justify-between text-sm">

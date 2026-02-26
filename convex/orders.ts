@@ -72,7 +72,10 @@ export const get = query({
     const order = await ctx.db.get(orderId);
     if (!order) return null;
     const design = await ctx.db.get(order.designId);
-    return { ...order, design };
+    const videoUrl = design?.videoStorageId
+      ? await ctx.storage.getUrl(design.videoStorageId)
+      : null;
+    return { ...order, design, videoUrl };
   },
 });
 

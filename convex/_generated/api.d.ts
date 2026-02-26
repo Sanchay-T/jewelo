@@ -17,6 +17,7 @@ import type * as orders from "../orders.js";
 import type * as prices from "../prices.js";
 import type * as pricesActions from "../pricesActions.js";
 import type * as search from "../search.js";
+import type * as showcase from "../showcase.js";
 import type * as transliterate from "../transliterate.js";
 import type * as uploads from "../uploads.js";
 
@@ -36,6 +37,7 @@ declare const fullApi: ApiFromModules<{
   prices: typeof prices;
   pricesActions: typeof pricesActions;
   search: typeof search;
+  showcase: typeof showcase;
   transliterate: typeof transliterate;
   uploads: typeof uploads;
 }>;

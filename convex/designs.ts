@@ -85,7 +85,11 @@ export const getBeforeAfter = query({
       ? await ctx.storage.getUrl(resultStorageId)
       : null;
 
-    return { referenceUrl, resultUrl, design };
+    const videoUrl = design.videoStorageId
+      ? await ctx.storage.getUrl(design.videoStorageId)
+      : null;
+
+    return { referenceUrl, resultUrl, videoUrl, design };
   },
 });
 

@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { api } from "../../../../../../convex/_generated/api";
 import { StepIndicator } from "@/components/layout/StepIndicator";
 import { Check, ArrowDown, X, ZoomIn, ZoomOut } from "lucide-react";
+import { VideoPlayer } from "@/components/shared/VideoPlayer";
 import type { Id } from "../../../../../../convex/_generated/dataModel";
 
 export default function EngravingPage() {
@@ -96,6 +97,12 @@ export default function EngravingPage() {
           </button>
         </motion.div>
       </div>
+
+      {data?.videoUrl && (
+        <div className="mb-5">
+          <VideoPlayer url={data.videoUrl} label="Your design in motion" />
+        </div>
+      )}
 
       <motion.div
         initial={{ opacity: 0, y: 10 }}
