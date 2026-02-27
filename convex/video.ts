@@ -55,11 +55,22 @@ export const generateVideo = internalAction({
         status: "generating",
       });
 
-      // Use @google/genai SDK (same as Gemini image gen — works in Convex)
+      // Use @google/genai SDK with Vertex AI + service account credentials
+      // Veo 3.1 requires Vertex AI (not API key auth)
+      const saJsonB64 = process.env.GOOGLE_SA_JSON;
+      if (!saJsonB64) throw new Error("GOOGLE_SA_JSON env var not set");
+
+      const saJson = JSON.parse(
+        Buffer.from(saJsonB64, "base64").toString("utf-8")
+      );
+
       const ai = new GoogleGenAI({
         vertexai: true,
         project: process.env.GCP_PROJECT_ID || "cyphersol-prod",
         location: "us-central1", // Veo requires us-central1
+        googleAuthOptions: {
+          credentials: saJson,
+        },
       });
 
       // Call Veo 3.1 via SDK
