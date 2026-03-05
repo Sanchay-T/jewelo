@@ -19,6 +19,20 @@ export default defineSchema({
     // From scratch (optional)
     jewelryType: v.optional(v.string()),
     designStyle: v.optional(v.string()),
+    styleFamily: v.optional(v.string()),
+    complexity: v.optional(v.number()), // 1-10
+    gender: v.optional(v.string()), // "female" | "male" | "unisex"
+    gemstones: v.optional(v.array(v.string())), // includes "diamond" in mixed selections
+    primaryGemstone: v.optional(v.string()),
+    lengthMm: v.optional(v.number()),
+    thicknessMm: v.optional(v.number()),
+    additionalInfo: v.optional(
+      v.object({
+        occasion: v.optional(v.string()),
+        metalFinish: v.optional(v.string()),
+        notes: v.optional(v.string()),
+      })
+    ),
 
     // Generation status
     status: v.string(), // "generating" | "analyzing" | "engraving" | "completed" | "failed"
@@ -126,4 +140,81 @@ export default defineSchema({
     metalType: v.string(),
     featured: v.boolean(),
   }).index("by_type_style", ["jewelryType", "designStyle"]),
+
+  stylePreviewImages: defineTable({
+    styleFamily: v.string(), // "minimalist" | "floral" | "art_deco" | "vintage" | "modern" | "arabic"
+    imageStorageId: v.id("_storage"),
+    createdAt: v.number(),
+  }).index("by_style", ["styleFamily"]),
+
+  inspirationTemplates: defineTable({
+    jewelryType: v.string(),
+    styleFamily: v.string(),
+    complexity: v.number(),
+    gender: v.string(), // "female" | "male" | "unisex"
+    gemstones: v.array(v.string()),
+    stoneProfile: v.string(), // "none" | "diamond" | "colored" | "mixed"
+    imageStorageId: v.optional(v.id("_storage")),
+    imageUrl: v.optional(v.string()),
+    source: v.string(), // "seed" | "gallery_promoted" | "order_promoted"
+    active: v.boolean(),
+    uses: v.number(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_filter", ["jewelryType", "styleFamily", "complexity"])
+    .index("by_active", ["active"])
+    .index("by_style", ["styleFamily"]),
+
+  quoteRequests: defineTable({
+    designId: v.id("designs"),
+    customerName: v.string(),
+    customerPhone: v.string(),
+    customerEmail: v.optional(v.string()),
+    jewelryType: v.string(),
+    lengthMm: v.optional(v.number()),
+    estimatedPrice: v.optional(v.number()),
+    notes: v.string(),
+    status: v.string(), // "open" | "reviewing" | "quoted" | "accepted" | "declined"
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_status", ["status"])
+    .index("by_design", ["designId"]),
+
+  // ── Prompt Management System ────────────────────────────────────────
+  promptTemplates: defineTable({
+    slug: v.string(),
+    version: v.number(),
+    name: v.string(),
+    template: v.string(),
+    isActive: v.boolean(),
+    changeNote: v.optional(v.string()),
+    createdAt: v.number(),
+  })
+    .index("by_slug", ["slug"])
+    .index("by_slug_active", ["slug", "isActive"]),
+
+  promptPartials: defineTable({
+    slug: v.string(),
+    version: v.number(),
+    name: v.string(),
+    template: v.string(),
+    isActive: v.boolean(),
+    changeNote: v.optional(v.string()),
+    createdAt: v.number(),
+  })
+    .index("by_slug", ["slug"])
+    .index("by_slug_active", ["slug", "isActive"]),
+
+  promptConfigs: defineTable({
+    key: v.string(),
+    version: v.number(),
+    data: v.string(),
+    isActive: v.boolean(),
+    changeNote: v.optional(v.string()),
+    createdAt: v.number(),
+  })
+    .index("by_key", ["key"])
+    .index("by_key_active", ["key", "isActive"]),
 });

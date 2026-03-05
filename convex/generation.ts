@@ -3,19 +3,29 @@ import { internalAction } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { v } from "convex/values";
 import {
-  buildProductShotPrompt,
   buildOnBodyPrompt,
   buildFromScratchPrompt,
+  buildReferenceEngravePrompt,
+  VARIATIONS,
   type DesignInput,
 } from "../src/lib/prompts/index";
+import {
+  compilePrompt,
+  buildPromptContext,
+  fetchAllActiveConfigs,
+  type DesignInputForEngine,
+} from "./lib/promptEngine";
 
-
+// ── Model constants ──────────────────────────────────────────────────
+const MODEL_PRO = "gemini-3.1-flash-image-preview"; // all calls use flash for now (testing)
+const MODEL_FLASH = "gemini-3.1-flash-image-preview";
 
 // ── Gemini API call via Vertex AI ────────────────────────────────────
 async function callGemini(
   ai: any,
   prompt: string,
   referenceImages: Array<{ base64: string; mimeType: string }>,
+  model: string = MODEL_FLASH,
 ): Promise<{ imageData: string; mimeType: string } | null> {
   const contents: any[] = [];
 
@@ -32,7 +42,7 @@ async function callGemini(
   contents.push({ text: prompt });
 
   const response = await ai.models.generateContent({
-    model: "gemini-3.1-flash-image-preview",
+    model,
     contents,
     config: {
       responseModalities: ["TEXT", "IMAGE"],
@@ -59,11 +69,12 @@ async function callGeminiWithRetry(
   prompt: string,
   referenceImages: Array<{ base64: string; mimeType: string }>,
   label: string,
+  model: string = MODEL_FLASH,
 ): Promise<{ imageData: string; mimeType: string } | null> {
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
       const start = Date.now();
-      const result = await callGemini(ai, prompt, referenceImages);
+      const result = await callGemini(ai, prompt, referenceImages, model);
       const elapsed = ((Date.now() - start) / 1000).toFixed(1);
 
       if (result) {
@@ -90,6 +101,34 @@ async function callGeminiWithRetry(
     }
   }
   return null;
+}
+
+/**
+ * On-body prompt: takes a product shot as reference and shows that
+ * exact piece being worn on a person. Identity constraint ensures
+ * the AI doesn't redesign the piece.
+ */
+function buildChainedOnBodyPrompt(
+  design: DesignInput,
+  variationIndex: number,
+): string {
+  const basePrompt = buildOnBodyPrompt(design, variationIndex, false);
+
+  const metalType = design.metalType || "yellow";
+  const metalLabel = metalType.replace(/_/g, " ");
+  const karat = design.karat || "18K";
+  const jewelryType = design.jewelryType || "pendant";
+  const isNamePendant = jewelryType === "name_pendant" || jewelryType === "pendant";
+
+  const identityDesc = isNamePendant
+    ? `The first attached image shows the EXACT ${karat} ${metalLabel} gold name pendant where the name '${design.name}' forms the pendant shape -- the letters ARE the piece. You MUST use this exact piece in the on-body shot below. Do NOT redesign or create a new piece. Same letter shapes, same decorative elements, same metal, same chain. Only the context changes (now worn on a person).`
+    : `The first attached image shows the EXACT ${karat} ${metalLabel} gold ${jewelryType} with the name '${design.name}' engraved on it. You MUST use this exact piece in the on-body shot below. Do NOT redesign or create a new piece. Same metal, same shape, same engraving, same stones, same chain. Only the context changes (now worn on a person).`;
+
+  return `IDENTITY CONSTRAINT — THIS IS THE SAME PIECE:
+${identityDesc}
+If a second attached image shows the name rendered in text, use it as a visual guide to ensure the name remains accurate on-body.
+
+${basePrompt}`;
 }
 
 // ── Main generation action ─────────────────────────────────────────
@@ -203,213 +242,162 @@ export const generate = internalAction({
         metalType: (design.metalType || "yellow") as DesignInput["metalType"],
         jewelryType: design.jewelryType,
         designStyle: design.designStyle,
+        styleFamily: design.styleFamily,
+        complexity: design.complexity,
+        gemstones: design.gemstones,
+        primaryGemstone: design.primaryGemstone,
+        lengthMm: design.lengthMm,
+        thicknessMm: design.thicknessMm,
+        additionalInfo: design.additionalInfo,
       };
 
+      const engineInput: DesignInputForEngine = {
+        name: design.name,
+        language: design.language,
+        font: design.font,
+        size: design.size,
+        karat: design.karat,
+        style: design.style,
+        metalType: design.metalType || "yellow",
+        jewelryType: design.jewelryType,
+        designStyle: design.designStyle,
+        styleFamily: design.styleFamily,
+        complexity: design.complexity,
+        gemstones: design.gemstones,
+        additionalInfo: design.additionalInfo,
+      };
+
+      // Fetch all active configs from DB (once for the whole generation)
+      const configs = await fetchAllActiveConfigs(ctx);
+
       // ══════════════════════════════════════════════════════════════
-      // HERO-ANCHORED GENERATION PIPELINE
+      // 4-CHAIN GENERATION PIPELINE
       //
-      // Step 1: Generate 1 hero product shot (preserves reference if exists)
-      // Step 2: Use hero as anchor for 3 more angles + 4 on-body shots
+      // Phase 1: Generate 4 independent product shots (different variations)
+      // Phase 2: For each product, generate its on-body shot
       //
-      // This ensures ALL outputs show the SAME jewelry piece.
+      // Each product[i] → on-body[i] → video[i] is an independent chain.
+      // The user sees 4 different design options to choose from.
       // ══════════════════════════════════════════════════════════════
 
       const VARIATION_COUNT = 4;
-      const fontStyle = designInput.font;
-      const metalLabel = designInput.metalType;
-      const karat = designInput.karat;
-      const jewelryType = designInput.jewelryType || "pendant";
-      const name = designInput.name;
 
-      // ── STEP 1: Generate hero product shot ──────────────────────
-      console.log("--- Step 1: Generating HERO product shot ---");
+      // ── PHASE 1: Generate 4 product shots ─────────────────────────
+      console.log("--- Phase 1: Generating 4 product shots ---");
 
       await ctx.runMutation(internal.designs.updateStatus, {
         designId,
         status: "engraving",
-        analysisStep: "Creating your hero design...",
+        analysisStep: "Creating your designs...",
       });
 
-      let heroPrompt: string;
-      if (hasReference) {
-        // REFERENCE FLOW: Use the proven universal engrave prompt
-        // This preserves the original jewelry piece and only adds engraving
-        heroPrompt = `You are a master jeweler AND a professional product photographer.
-
-A customer has brought you this piece of jewelry and asked you to engrave the name '${name}' on it. You will engrave it, then photograph the result in the exact same setup.
-
-STEP 1 — ANALYZE THIS PHOTO:
-Before you do anything, study this image carefully:
-- What type of jewelry is this?
-- Where is the light coming from?
-- What metal is this?
-- What is the surface finish?
-- Where are the flat or gently curved surfaces where engraving is physically possible?
-- What is the camera angle and depth of field?
-
-STEP 2 — DECIDE PLACEMENT:
-Based on your analysis, find the single best location to engrave '${name}':
-- Choose a surface that is visible, smooth enough, and large enough for the text
-- Do NOT overlap any stones, settings, clasps, or decorative elements
-- Text should follow the natural curve of the surface
-- Font size proportional to the piece — realistic but legible
-- The name '${name}' must be the hero element — clearly readable at first glance
-
-STEP 3 — ENGRAVE WITH REAL PHYSICS:
-- V-shaped grooves cut into metal surface
-- Groove wall facing light = bright specular highlight
-- Groove wall away from light = shadow
-- Deepest point of each groove is darkest
-- Sharp specular highlight where groove edge meets flat surface
-- Text follows 3D curvature — NOT flat text pasted on
-- Letter strokes taper at start and end (burin entry/exit)
-
-ABSOLUTE RULES:
-- DO NOT change anything about this image except adding the engraving
-- Same jewelry, same stones, same chain, same background, same lighting, same camera angle
-- The engraving must look like it existed BEFORE the photograph was taken
-- At 400% zoom, show physical depth in the metal
-- Output the same composition as the input — SQUARE 1:1 format
-
-Output the edited photograph now.`;
-      } else {
-        // FROM SCRATCH FLOW: Design a new piece
-        heroPrompt = buildFromScratchPrompt(designInput, 0);
+      // Build 4 product prompts (one per VARIATION) — DB templates with hardcoded fallback
+      const productPrompts: string[] = [];
+      for (let i = 0; i < VARIATION_COUNT; i++) {
+        const promptCtx = buildPromptContext(engineInput, i, configs, { hasReference });
+        const slug = hasReference ? "reference" : "fromScratch";
+        const fallback = () => hasReference
+          ? buildReferenceEngravePrompt(designInput, i)
+          : buildFromScratchPrompt(designInput, i);
+        productPrompts.push(await compilePrompt(ctx, slug, promptCtx, fallback));
       }
 
-      const heroResult = await callGeminiWithRetry(
-        ai, heroPrompt, referenceImages, "HERO"
-      );
+      // Keep product base64s for Phase 2 (on-body references)
+      const productBase64s: Array<string | null> = [];
 
-      if (!heroResult) {
-        throw new Error("Hero product shot failed — cannot continue");
-      }
-
-      // Store hero image
-      const heroBuffer = Buffer.from(heroResult.imageData, "base64");
-      const heroBlob = new Blob([heroBuffer], { type: heroResult.mimeType });
-      const heroStorageId = await ctx.storage.store(heroBlob);
-      await ctx.runMutation(internal.designs.addProductImage, {
-        designId, storageId: heroStorageId,
-      });
-
-      console.log("  ✓ Hero product shot stored");
-
-      // Hero base64 becomes the anchor for ALL subsequent calls
-      const heroBase64 = heroResult.imageData;
-
-      await ctx.runMutation(internal.designs.updateStatus, {
-        designId,
-        status: "engraving",
-        analysisStep: "Creating variations of your design...",
-      });
-
-      // ── STEP 2: Generate remaining shots anchored to hero ───────
-      // 3 more product angles + 4 on-body shots = 7 calls
-      // All receive the hero image as reference
-      console.log("--- Step 2: Generating 3 angle variations + 4 on-body shots ---");
-
-      const heroRef: Array<{ base64: string; mimeType: string }> = [
-        { base64: heroBase64, mimeType: "image/png" },
-      ];
-      // Also include text reference if available
-      if (textReferenceBase64) {
-        heroRef.push({ base64: textReferenceBase64, mimeType: "image/png" });
-      }
-
-      // Build all 7 prompts
-      const anglePrompts = [1, 2, 3].map((i) => {
-        const angles = [
-          "3/4 angled view showing depth and dimension",
-          "macro close-up focused on the engraved name and metal texture",
-          "slightly lower angle with warm directional lighting, editorial mood",
-        ];
-        return `You are a professional jewelry product photographer.
-
-You have been given a photograph of a ${karat} ${metalLabel} gold ${jewelryType} with the name '${name}' engraved on it.
-
-Photograph this EXACT SAME piece from a different angle: ${angles[i - 1]}.
-
-CRITICAL RULES:
-- This is the SAME physical jewelry piece — do NOT redesign it
-- Same metal color, same shape, same engraving, same stones (if any)
-- Same chain and clasp style (if present)
-- Only the camera angle and lighting change
-- The engraved name '${name}' must remain clearly legible
-- Professional studio photography, SQUARE 1:1 format
-- 85mm lens, shallow depth of field
-
-Generate the photograph now.`;
-      });
-
-      const onBodyPrompts = [0, 1, 2, 3].map((i) => {
-        const angles = [
-          "front-facing, centered, even studio lighting",
-          "slightly angled, key light from upper-left",
-          "close crop emphasizing the jewelry, focused lighting",
-          "warm directional light, editorial mood",
-        ];
-
-        // Body part mapping
-        let bodyPart = "neck and upper chest";
-        let framing = "Frame from chin to clavicle. No face visible.";
-        let pose = "Jewelry resting naturally, chain draping over collarbones";
-
-        if (jewelryType === "ring") {
-          bodyPart = "hand and fingers";
-          framing = "Close crop on hand and wrist. Graceful hand pose.";
-          pose = "Ring on ring finger, fingers slightly spread";
-        } else if (jewelryType === "bracelet") {
-          bodyPart = "wrist and hand in upright position";
-          framing = "Wrist facing camera, hand elevated.";
-          pose = "Bracelet on wrist, hand upright with fingers relaxed";
-        } else if (jewelryType === "earrings") {
-          bodyPart = "ear and jawline";
-          framing = "Side profile from ear to jaw. No eyes visible. Hair swept back.";
-          pose = "Earring hanging naturally from earlobe";
-        }
-
-        return `You are a luxury jewelry advertising photographer. Style reference: Cartier, Tiffany, Bulgari editorial campaigns.
-
-You have been given a product photograph of a ${karat} ${metalLabel} gold ${jewelryType} with the name '${name}' engraved on it.
-
-Now photograph this EXACT SAME piece being worn on a person:
-- Body part: ${bodyPart}
-- Framing: ${framing}
-- Pose: ${pose}
-- Camera: ${angles[i]}
-- Skin: Natural warm-toned skin
-- 85mm lens, f/1.8, creamy bokeh background
-
-CRITICAL RULES:
-- This must be the EXACT SAME jewelry piece from the reference image
-- Same metal, same shape, same engraving, same stones
-- Do NOT redesign or alter the jewelry in any way
-- The engraved name '${name}' must remain clearly visible
-- NO face visible. NO eyes. The jewelry is the star.
-- Professional jewelry ad quality, SQUARE 1:1 format
-
-Generate the on-body photograph now.`;
-      });
-
-      // Fire all 7 with rate-limit-friendly stagger
-      const allPrompts = [
-        ...anglePrompts.map((p, i) => ({ type: "product" as const, prompt: p, label: `angle[${i + 2}]` })),
-        ...onBodyPrompts.map((p, i) => ({ type: "onbody" as const, prompt: p, label: `on-body[${i + 1}]` })),
-      ];
-
-      // Process in batches of 2 with 5s stagger
-      for (let batch = 0; batch < allPrompts.length; batch += 2) {
+      // Process product shots in batches of 2 with 5s stagger
+      for (let batch = 0; batch < VARIATION_COUNT; batch += 2) {
         if (batch > 0) {
           await new Promise((r) => setTimeout(r, 5000));
         }
 
-        const batchItems = allPrompts.slice(batch, batch + 2);
-        console.log(`  Batch ${Math.floor(batch / 2) + 1}: ${batchItems.map(b => b.label).join(" + ")}`);
+        const batchIndices = [batch, batch + 1].filter((i) => i < VARIATION_COUNT);
+        console.log(`  Product batch: ${batchIndices.map((i) => `product[${i}]`).join(" + ")}`);
+
+        const results = await Promise.all(
+          batchIndices.map((i) =>
+            callGeminiWithRetry(
+              ai, productPrompts[i], referenceImages, `product[${i}]`, MODEL_PRO
+            )
+          )
+        );
+
+        for (let j = 0; j < results.length; j++) {
+          const result = results[j];
+          const idx = batchIndices[j];
+          if (!result) {
+            console.warn(`  SKIP product[${idx}] — no image`);
+            productBase64s[idx] = null;
+            continue;
+          }
+          try {
+            const buf = Buffer.from(result.imageData, "base64");
+            const blob = new Blob([buf], { type: result.mimeType });
+            const sid = await ctx.storage.store(blob);
+            await ctx.runMutation(internal.designs.addProductImage, { designId, storageId: sid });
+            productBase64s[idx] = result.imageData;
+            console.log(`  ✓ product[${idx}] stored`);
+          } catch (e: any) {
+            console.error(`  STORE FAIL product[${idx}]:`, e.message || e);
+            productBase64s[idx] = null;
+          }
+        }
+
+        await ctx.runMutation(internal.designs.updateStatus, {
+          designId,
+          status: "engraving",
+          analysisStep: `Creating your designs... (${Math.min(batch + 2, VARIATION_COUNT)}/4 product shots)`,
+        });
+      }
+
+      // ── PHASE 2: Generate on-body shots (one per successful product) ──
+      console.log("--- Phase 2: Generating on-body shots ---");
+
+      await ctx.runMutation(internal.designs.updateStatus, {
+        designId,
+        status: "engraving",
+        analysisStep: "Creating on-body previews...",
+      });
+
+      // Build on-body calls only for products that succeeded
+      const onBodyCalls: Array<{ prompt: string; refs: Array<{ base64: string; mimeType: string }>; index: number }> = [];
+      for (let i = 0; i < VARIATION_COUNT; i++) {
+        if (!productBase64s[i]) continue;
+        const refs: Array<{ base64: string; mimeType: string }> = [
+          { base64: productBase64s[i]!, mimeType: "image/png" },
+        ];
+        if (textReferenceBase64) {
+          refs.push({ base64: textReferenceBase64, mimeType: "image/png" });
+        }
+
+        // Use DB template for chained on-body with hardcoded fallback
+        const onBodyCtx = buildPromptContext(engineInput, i, configs, { hasReference });
+        const onBodyPrompt = await compilePrompt(
+          ctx, "chainedOnBody", onBodyCtx,
+          () => buildChainedOnBodyPrompt(designInput, i),
+        );
+
+        onBodyCalls.push({
+          prompt: onBodyPrompt,
+          refs,
+          index: i,
+        });
+      }
+
+      // Process on-body shots in batches of 2 with 5s stagger
+      for (let batch = 0; batch < onBodyCalls.length; batch += 2) {
+        if (batch > 0) {
+          await new Promise((r) => setTimeout(r, 5000));
+        }
+
+        const batchItems = onBodyCalls.slice(batch, batch + 2);
+        console.log(`  On-body batch: ${batchItems.map((b) => `on-body[${b.index}]`).join(" + ")}`);
 
         const results = await Promise.all(
           batchItems.map((item) =>
-            callGeminiWithRetry(ai, item.prompt, heroRef, item.label)
+            callGeminiWithRetry(
+              ai, item.prompt, item.refs, `on-body[${item.index}]`, MODEL_PRO
+            )
           )
         );
 
@@ -417,28 +405,24 @@ Generate the on-body photograph now.`;
           const result = results[j];
           const item = batchItems[j];
           if (!result) {
-            console.warn(`  SKIP ${item.label} — no image`);
+            console.warn(`  SKIP on-body[${item.index}] — no image`);
             continue;
           }
           try {
             const buf = Buffer.from(result.imageData, "base64");
             const blob = new Blob([buf], { type: result.mimeType });
             const sid = await ctx.storage.store(blob);
-            if (item.type === "product") {
-              await ctx.runMutation(internal.designs.addProductImage, { designId, storageId: sid });
-            } else {
-              await ctx.runMutation(internal.designs.addOnBodyImage, { designId, storageId: sid });
-            }
-            console.log(`  ✓ ${item.label} stored`);
+            await ctx.runMutation(internal.designs.addOnBodyImage, { designId, storageId: sid });
+            console.log(`  ✓ on-body[${item.index}] stored`);
           } catch (e: any) {
-            console.error(`  STORE FAIL ${item.label}:`, e.message || e);
+            console.error(`  STORE FAIL on-body[${item.index}]:`, e.message || e);
           }
         }
 
         await ctx.runMutation(internal.designs.updateStatus, {
           designId,
           status: "engraving",
-          analysisStep: `Creating your designs... (${Math.min(batch + 2, allPrompts.length) + 1}/8)`,
+          analysisStep: `Creating on-body previews... (${Math.min(batch + 2, onBodyCalls.length)}/${onBodyCalls.length})`,
         });
       }
 
@@ -454,8 +438,10 @@ Generate the on-body photograph now.`;
       console.log(`=== DONE: ${productCount} product + ${onBodyCount} on-body images ===`);
       await ctx.runMutation(internal.designs.completeGeneration, { designId });
 
-      // Trigger 4 Veo video generations (2s stagger)
-      for (let i = 0; i < 4; i++) {
+      // Trigger Veo video generations for each on-body image (2s stagger)
+      // Videos use on-body shots as source frames (model wearing the piece)
+      const videoCount = finalDesign.onBodyImageStorageIds?.length || finalDesign.productImageStorageIds?.length || 0;
+      for (let i = 0; i < videoCount; i++) {
         await ctx.scheduler.runAfter(i * 2000, internal.video.generateVideo, {
           designId,
           variationIndex: i,

@@ -1,6 +1,5 @@
 "use client";
-import { useState } from "react";
-import { motion, AnimatePresence } from "motion/react";
+import { motion } from "motion/react";
 
 interface MetalSelectorProps {
   value: string;
@@ -47,108 +46,93 @@ export function getGoldLabel(karat: string, goldType: string): string {
 }
 
 export function MetalSelector({ value, onChange, goldType, onGoldTypeChange }: MetalSelectorProps) {
-  const [showTypes, setShowTypes] = useState(false);
   const activeType = goldTypes.find((t) => t.id === goldType) || goldTypes[0];
+  const activeKarat = karats.find((k) => k.id === value) || karats[1];
   const activeColor = getGoldColor(value, goldType);
 
   return (
-    <div>
-      <label className="text-text-secondary text-xs font-medium uppercase tracking-wider mb-2 block">
+    <div className="space-y-3">
+      <label className="text-text-secondary text-xs font-medium uppercase tracking-wider block">
         Metal
       </label>
 
-      {/* Karat selection */}
-      <div className="grid grid-cols-3 gap-2 mb-3">
-        {karats.map((karat) => {
-          const color = getGoldColor(karat.id, goldType);
+      {/* Gold type pill tabs */}
+      <div className="flex bg-sand rounded-xl p-1">
+        {goldTypes.map((type) => {
+          const isActive = goldType === type.id;
           return (
             <motion.button
-              key={karat.id}
+              key={type.id}
               whileTap={{ scale: 0.97 }}
-              onClick={() => {
-                onChange(karat.id);
-                if (!showTypes) setShowTypes(true);
-              }}
-              className={`bg-white rounded-lg p-3 text-center transition-all ${
-                value === karat.id
-                  ? "border-2 border-brown shadow-sm"
-                  : "border border-warm"
+              onClick={() => onGoldTypeChange(type.id)}
+              className={`relative flex-1 rounded-[10px] py-2 px-3 text-xs font-medium transition-colors ${
+                isActive ? "text-cream" : "text-text-secondary"
               }`}
             >
-              <motion.div
-                className="w-7 h-7 rounded-full mx-auto mb-1.5"
-                style={{ background: color }}
-                layoutId={value === karat.id ? "active-karat-swatch" : undefined}
-              />
-              <p className={`text-xs ${value === karat.id ? "font-semibold text-text-primary" : "text-text-secondary"}`}>
-                {karat.label}
-              </p>
-              <p className="text-[9px] text-text-tertiary">{karat.purity}</p>
+              {isActive && (
+                <motion.div
+                  layoutId="goldType"
+                  className="absolute inset-0 bg-brown rounded-[10px]"
+                  transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                />
+              )}
+              <span className="relative z-10">{type.label}</span>
             </motion.button>
           );
         })}
       </div>
 
-      {/* Gold type selection — slides in after karat is picked */}
-      <AnimatePresence>
-        {showTypes && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
-            className="overflow-hidden"
-          >
-            <div className="grid grid-cols-3 gap-2">
-              {goldTypes.map((type) => {
-                const color = type.colors[value as keyof typeof type.colors] || type.colors["21K"];
-                const isActive = goldType === type.id;
-                return (
-                  <motion.button
-                    key={type.id}
-                    whileTap={{ scale: 0.97 }}
-                    onClick={() => onGoldTypeChange(type.id)}
-                    className={`relative bg-white rounded-lg p-3 text-center transition-all ${
-                      isActive
-                        ? "border-2 border-brown shadow-sm"
-                        : "border border-warm"
-                    }`}
-                  >
-                    <motion.div
-                      className="w-full h-3 rounded-full mb-2"
-                      style={{ background: `linear-gradient(90deg, ${type.colors["18K"]}, ${type.colors["22K"]})` }}
-                      animate={isActive ? { scale: [1, 1.05, 1] } : {}}
-                      transition={{ duration: 0.3 }}
-                    />
-                    <p className={`text-[10px] leading-tight ${isActive ? "font-semibold text-text-primary" : "text-text-secondary"}`}>
-                      {type.label}
-                    </p>
-                    <p className="text-[8px] text-text-tertiary mt-0.5">
-                      {type.description}
-                    </p>
-                  </motion.button>
-                );
-              })}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Current selection summary */}
+      {/* Live swatch */}
       <motion.div
-        key={`${value}-${goldType}`}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="flex items-center gap-2 mt-2"
+        className="rounded-xl h-20 w-full overflow-hidden relative"
+        animate={{ backgroundColor: activeColor }}
+        transition={{ duration: 0.4, ease: [0.25, 0.1, 0.25, 1] }}
       >
-        <div
-          className="w-3 h-3 rounded-full"
-          style={{ background: activeColor }}
-        />
-        <p className="text-text-tertiary text-[10px]">
-          {getGoldLabel(value, goldType)}
-        </p>
+        <div className="shimmer-swatch absolute inset-0" />
       </motion.div>
+
+      {/* Segmented karat toggle */}
+      <div className="flex bg-sand rounded-lg p-1">
+        {karats.map((karat) => {
+          const isActive = value === karat.id;
+          return (
+            <motion.button
+              key={karat.id}
+              whileTap={{ scale: 0.97 }}
+              onClick={() => onChange(karat.id)}
+              className={`relative flex-1 rounded-md py-2 px-2 text-center transition-colors ${
+                isActive ? "text-cream" : "text-text-secondary"
+              }`}
+            >
+              {isActive && (
+                <motion.div
+                  layoutId="karatSelect"
+                  className="absolute inset-0 bg-brown rounded-md"
+                  transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                />
+              )}
+              <span className="relative z-10 flex items-center justify-center gap-1">
+                <span className="text-xs font-semibold">{karat.label}</span>
+                <span className={`text-[10px] ${isActive ? "text-cream/70" : "text-text-tertiary"}`}>
+                  {karat.purity}
+                </span>
+              </span>
+            </motion.button>
+          );
+        })}
+      </div>
+
+      {/* Summary line */}
+      <div className="flex items-center gap-2">
+        <motion.div
+          className="w-3 h-3 rounded-full shrink-0"
+          animate={{ backgroundColor: activeColor }}
+          transition={{ duration: 0.3 }}
+        />
+        <p className="text-text-tertiary text-[11px]">
+          {activeKarat.label} {activeType.label} · {activeKarat.purity} pure
+        </p>
+      </div>
     </div>
   );
 }

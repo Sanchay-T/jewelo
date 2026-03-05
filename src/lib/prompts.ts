@@ -2,9 +2,9 @@
 // This file exists for backward compatibility with any imports
 // that reference "@/lib/prompts" directly.
 export {
-  buildProductShotPrompt,
   buildOnBodyPrompt,
   buildFromScratchPrompt,
+  buildReferenceEngravePrompt,
   buildVideoPrompt,
   buildVideoNegativePrompt,
   type DesignInput,

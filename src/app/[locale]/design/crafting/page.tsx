@@ -45,6 +45,10 @@ export default function CraftingPage() {
   const totalImages = productCount + onBodyCount;
   const isFailed = design?.status === "failed";
   const isCompleted = design?.status === "completed";
+  const regenerationRound = design?.regenerationsRemaining !== undefined
+    ? 3 - design.regenerationsRemaining
+    : 0;
+  const isRegeneration = regenerationRound > 0;
 
   const progress = isCompleted
     ? 100
@@ -106,7 +110,7 @@ export default function CraftingPage() {
           transition={{ delay: 0.2 }}
           className="font-display text-2xl text-text-primary text-center mb-2"
         >
-          Crafting your piece...
+          {isRegeneration ? "Refining your design..." : "Crafting your piece..."}
         </motion.h2>
 
         <motion.p
@@ -160,7 +164,9 @@ export default function CraftingPage() {
         <p className="text-text-tertiary text-xs text-center">
           {totalImages > 0
             ? `${totalImages}/8 images generated`
-            : "Usually takes about a minute"}
+            : isRegeneration
+              ? `Round ${regenerationRound + 1} of 3 — fresh variations coming`
+              : "Usually takes about a minute"}
         </p>
 
         {isFailed && (
@@ -191,7 +197,7 @@ export default function CraftingPage() {
         className="pb-20 lg:pb-4"
       >
         <p className="text-text-tertiary text-[10px] uppercase tracking-wider font-medium mb-3 px-6">
-          While you wait
+          {isRegeneration ? "Creating new variations" : "While you wait"}
         </p>
 
         {marqueeRow1.length > 0 ? (

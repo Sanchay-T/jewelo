@@ -8,7 +8,10 @@ export {
   // Lookup maps
   FONT_STYLES,
   DECORATION_STYLES,
+  decorationFromSelection,
   SIZE_FEELS,
+  complexityDescriptor,
+  finishDescriptor,
   BACKGROUND_STYLES,
   // Reusable prompt blocks
   engravingPhysicsBlock,
@@ -21,7 +24,7 @@ export {
   VARIATIONS,
 } from "./variations";
 
-export { buildProductShotPrompt } from "./productShot";
 export { buildOnBodyPrompt } from "./onBody";
 export { buildFromScratchPrompt } from "./fromScratch";
+export { buildReferenceEngravePrompt } from "./referenceShot";
 export { buildVideoPrompt, buildVideoNegativePrompt } from "./videoPrompt";

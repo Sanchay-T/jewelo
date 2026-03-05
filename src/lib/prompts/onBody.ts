@@ -1,13 +1,19 @@
 import {
   FONT_STYLES,
-  DECORATION_STYLES,
   SIZE_FEELS,
-  engravingPhysicsBlock,
+  complexityDescriptor,
+  decorationFromSelection,
+  finishDescriptor,
   textReferenceBlock,
   absoluteRulesBlock,
   type DesignInput,
 } from "./shared";
 import { VARIATIONS } from "./variations";
+
+/** Returns true if the jewelry type is a name pendant where letters form the shape */
+function isNamePendantType(jewelryType: string): boolean {
+  return jewelryType === "name_pendant" || jewelryType === "pendant";
+}
 
 /**
  * Body-part mapping per jewelry type.
@@ -32,7 +38,7 @@ const BODY_MAPPING: Record<
   },
   name_pendant: {
     part: "neck and upper chest",
-    framing: "chin to clavicle, tight crop centering the pendant on the chest",
+    framing: "chin to clavicle, tight crop centering the name pendant on the chest so every letter of the name is visible and readable",
     pose: "straight-on or slight 3/4 turn, relaxed shoulders, pendant resting naturally",
     rules: "NO face above the lips, NO eyes, NO full head visible",
   },
@@ -81,45 +87,42 @@ export function buildOnBodyPrompt(
 ): string {
   const variation = VARIATIONS[variationIndex % VARIATIONS.length];
   const fontStyle = FONT_STYLES[design.font] || "elegant script";
-  const decoration = DECORATION_STYLES[design.style] || "none, pure polished gold";
+  const decoration = decorationFromSelection(design);
   const sizeFeel = SIZE_FEELS[design.size] || "balanced, elegant, 18mm";
   const metalType = design.metalType || "yellow";
   const metalLabel = metalType.replace(/_/g, " ");
   const jewelryType = design.jewelryType || "pendant";
   const karat = design.karat || "18K";
+  const complexityFeel = complexityDescriptor(design.complexity);
+  const finish = finishDescriptor(design.additionalInfo?.metalFinish);
+  const occasion = design.additionalInfo?.occasion ? `Made for ${design.additionalInfo.occasion}.` : "";
   const bodyMap = BODY_MAPPING[jewelryType] || DEFAULT_BODY;
 
   const referenceNote = hasReference
     ? "The attached reference shows the jewelry style. Generate an on-body lifestyle shot of a similar piece being worn."
     : `Generate an on-body lifestyle shot of a ${jewelryType} in ${karat} ${metalLabel} gold being worn.`;
 
+  const isNamePendant = isNamePendantType(jewelryType);
+
+  const engravingSection = isNamePendant
+    ? `THE NAME AS THE PENDANT:
+The name '${design.name}' forms the pendant itself -- the letters are solid ${karat} ${metalLabel} gold shapes, not engraved grooves on a separate surface. Each letter is a physical piece of gold with thickness and dimension, connected to form the word '${design.name}' in ${fontStyle}. There is no flat plate or pendant body behind the letters. Every single letter must be visible, correctly shaped, and clearly readable even in the on-body context. The name is the star of this photograph.`
+    : `ENGRAVING:
+The name '${design.name}' is engraved on this piece in ${fontStyle}. The engraving cuts V-shaped grooves into the metal, with angled walls that catch light as bright specular lines on one side and fall into soft shadow on the other. The grooves follow the 3D curvature of the surface and taper to fine points at the start and end of each stroke. The engraved name '${design.name}' MUST be clearly readable even in the on-body context -- frame the shot so the jewelry and especially the engraved name are prominent and legible. The name is the star of this photograph.`;
+
   return `Generate a professional jewelry advertisement photograph showing a ${jewelryType} in ${karat} ${metalLabel} gold being worn.
 
 ${referenceNote}
 
 PIECE DETAILS:
-- Metal: ${karat} ${metalLabel} gold, high polish with warm luster
-- Decoration: ${decoration}
-- Size feel: ${sizeFeel}
-- Design style: ${design.designStyle || "minimalist"}
-- Style reference: Cartier, Tiffany, Bulgari editorial campaign quality
+This is a ${design.styleFamily || design.designStyle || "minimalist"} ${jewelryType} crafted from ${karat} ${metalLabel} gold with a ${finish} and warm luster. It features ${decoration}, is ${sizeFeel}, and should feel ${complexityFeel}. ${occasion} The quality standard is Cartier, Tiffany, Bulgari editorial campaign level.
 
 BODY & FRAMING:
-- Body part: ${bodyMap.part}
-- Framing: ${bodyMap.framing}
-- Pose: ${bodyMap.pose}
-- Skin: Natural warm-toned skin, healthy glow, no visible blemishes
-- ${bodyMap.rules}
-- Wardrobe: Minimal or absent -- bare skin or simple neutral fabric that does not compete with the jewelry
-- The jewelry is the star of the photograph.
+The piece is worn on the ${bodyMap.part}. Frame the shot as ${bodyMap.framing}, with the model in ${bodyMap.pose}. The model has natural warm-toned skin with a healthy glow. ${bodyMap.rules}. Wardrobe is minimal or absent -- bare skin or simple neutral fabric that does not compete with the jewelry. The jewelry is the star of the photograph.
 
 ${textReferenceBlock(design.name, design.language)}
 
-ENGRAVING:
-The name '${design.name}' must be engraved on this piece in ${fontStyle}.
-Spelling check: ${design.name.split("").join(" - ")} = ${design.name.length} characters.
-${engravingPhysicsBlock()}
-The engraved name '${design.name}' MUST be clearly readable even in the on-body context. Frame the shot so the jewelry -- and especially the engraved name -- is prominent and legible. The name is the star of this photograph.
+${engravingSection}
 
 CAMERA & LIGHTING:
 - Angle: ${variation.camera}

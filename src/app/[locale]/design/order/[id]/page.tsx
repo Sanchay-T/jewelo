@@ -9,8 +9,9 @@ import { X, ZoomIn, ZoomOut } from "lucide-react";
 import { VideoPlayer } from "@/components/shared/VideoPlayer";
 import { calculatePrice } from "@/lib/pricing";
 import { AED_USD_PEG, JEWELRY_SIZE_MAP } from "@/lib/constants";
-import type { Size, Karat, Style } from "@/lib/constants";
+import type { Size, Karat, Style, Gemstone, MetalFinish } from "@/lib/constants";
 import type { Id } from "../../../../../../convex/_generated/dataModel";
+import { isQuoteEligible } from "@/lib/quotes";
 
 // Fallback gold price per gram (AED) when API is down — ~AED 310/g as of Feb 2026
 const FALLBACK_GOLD_PRICE_PER_GRAM = 310;
@@ -25,11 +26,15 @@ export default function ReviewPage() {
   );
   const goldPrice = useQuery(api.prices.getCurrent);
   const createOrder = useMutation(api.orders.create);
+  const createQuote = useMutation(api.quotes.create);
   const saveToGallery = useMutation(api.designs.saveToGallery);
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
   const [loading, setLoading] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [quoteNotes, setQuoteNotes] = useState("");
+  const [quoteLoading, setQuoteLoading] = useState(false);
+  const [quoteSent, setQuoteSent] = useState(false);
   const [viewerUrl, setViewerUrl] = useState<string | null>(null);
   const [viewerZoom, setViewerZoom] = useState(1);
 
@@ -42,6 +47,10 @@ export default function ReviewPage() {
     style: (design?.style || "gold_only") as Style,
     goldPricePerGram: pricePerGram,
     jewelryType: design?.jewelryType,
+    complexity: design?.complexity,
+    gemstones: (design?.gemstones || []) as Gemstone[],
+    metalFinish: design?.additionalInfo?.metalFinish as MetalFinish | undefined,
+    lengthMm: design?.lengthMm,
   });
 
   // Get the selected image URL
@@ -55,6 +64,11 @@ export default function ReviewPage() {
     : null;
   const sizeDisplay = sizeMap?.[design?.size as Size]?.dimension
     || (design?.size === "small" ? "12mm" : design?.size === "large" ? "25mm" : "18mm");
+  const quoteEligible = isQuoteEligible({
+    jewelryType,
+    lengthMm: design?.lengthMm,
+    size: (design?.size || "medium") as Size,
+  });
 
   const handleOrder = async () => {
     if (!designId || !customerName || !customerPhone) return;
@@ -69,6 +83,25 @@ export default function ReviewPage() {
     } catch (err) {
       console.error("Order failed:", err);
       setLoading(false);
+    }
+  };
+
+  const handleQuoteRequest = async () => {
+    if (!designId || !customerName || !customerPhone || !quoteNotes.trim()) return;
+    setQuoteLoading(true);
+    try {
+      await createQuote({
+        designId,
+        customerName,
+        customerPhone,
+        notes: quoteNotes.trim(),
+        estimatedPrice: priceBreakdown.total,
+      });
+      setQuoteSent(true);
+    } catch (err) {
+      console.error("Quote request failed:", err);
+    } finally {
+      setQuoteLoading(false);
     }
   };
 
@@ -182,6 +215,15 @@ export default function ReviewPage() {
           onChange={(e) => setCustomerPhone(e.target.value)}
           className="w-full bg-white border border-warm rounded-lg px-4 py-3 text-text-primary outline-none focus:border-brown"
         />
+        {quoteEligible && (
+          <textarea
+            placeholder="Notes for custom quote (required for quote request)"
+            value={quoteNotes}
+            onChange={(e) => setQuoteNotes(e.target.value)}
+            className="w-full bg-white border border-warm rounded-lg px-4 py-3 text-text-primary outline-none focus:border-brown resize-none"
+            rows={3}
+          />
+        )}
       </div>
 
       <button
@@ -195,6 +237,21 @@ export default function ReviewPage() {
       >
         {loading ? "Placing Order..." : "Place Order"}
       </button>
+      {quoteEligible && (
+        <button
+          onClick={handleQuoteRequest}
+          disabled={!customerName || !customerPhone || !quoteNotes.trim() || quoteLoading || quoteSent}
+          className={`w-full font-semibold py-3.5 rounded-xl mb-3 transition ${
+            quoteSent
+              ? "bg-green-600 text-cream"
+              : customerName && customerPhone && quoteNotes.trim()
+                ? "border border-brown text-brown hover:bg-sand/60"
+                : "border border-warm text-text-tertiary"
+          }`}
+        >
+          {quoteSent ? "Quote Requested" : quoteLoading ? "Requesting..." : "Request Custom Quote"}
+        </button>
+      )}
       <button
         onClick={async () => {
           if (!designId || saved) return;

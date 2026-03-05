@@ -7,6 +7,12 @@ import {
   buildVideoNegativePrompt,
 } from "../src/lib/prompts/index";
 import { GoogleGenAI } from "@google/genai";
+import {
+  compilePrompt,
+  buildPromptContext,
+  fetchAllActiveConfigs,
+  type DesignInputForEngine,
+} from "./lib/promptEngine";
 
 // ── Generate a rotating jewelry video via Veo 3.1 ──────────────────
 export const generateVideo = internalAction({
@@ -17,13 +23,14 @@ export const generateVideo = internalAction({
         designId,
       });
 
-      // Determine which product image to use as the source frame
-      const storageIds = design.productImageStorageIds || [];
-      if (storageIds.length === 0) {
-        throw new Error("No product images available for video generation");
+      // Use the on-body image as the source frame (model wearing the piece)
+      // Fall back to product image if on-body isn't available
+      const onBodyIds = design.onBodyImageStorageIds || [];
+      const productIds = design.productImageStorageIds || [];
+      const sourceStorageId = onBodyIds[variationIndex] ?? productIds[variationIndex] ?? productIds[0];
+      if (!sourceStorageId) {
+        throw new Error("No images available for video generation");
       }
-
-      const sourceStorageId = storageIds[variationIndex] ?? storageIds[0];
       const sourceUrl = await ctx.storage.getUrl(sourceStorageId);
       if (!sourceUrl) {
         throw new Error("Could not resolve product image URL");
@@ -39,9 +46,32 @@ export const generateVideo = internalAction({
       const metalType = design.metalType || "yellow";
       const karat = design.karat || "21K";
 
-      // Build prompts
-      const videoPrompt = buildVideoPrompt(jewelryType, metalType, karat);
-      const negativePrompt = buildVideoNegativePrompt();
+      // Build prompts — DB templates with hardcoded fallback
+      const configs = await fetchAllActiveConfigs(ctx);
+      const engineInput: DesignInputForEngine = {
+        name: design.name,
+        language: design.language,
+        font: design.font || "script",
+        size: design.size || "medium",
+        karat,
+        style: design.style || "gold_only",
+        metalType,
+        jewelryType,
+        designStyle: design.designStyle,
+        styleFamily: design.styleFamily,
+        complexity: design.complexity,
+        gemstones: design.gemstones,
+        additionalInfo: design.additionalInfo,
+      };
+      const promptCtx = buildPromptContext(engineInput, variationIndex, configs);
+      const videoPrompt = await compilePrompt(
+        ctx, "video", promptCtx,
+        () => buildVideoPrompt(jewelryType, metalType, karat),
+      );
+      const negativePrompt = await compilePrompt(
+        ctx, "videoNegative", promptCtx,
+        () => buildVideoNegativePrompt(),
+      );
 
       console.log(
         `[video] Starting Veo 3.1 for design ${designId} variation ${variationIndex}`,
@@ -86,7 +116,7 @@ export const generateVideo = internalAction({
           numberOfVideos: 1,
           durationSeconds: 6,
           negativePrompt,
-          personGeneration: "dont_allow",
+          personGeneration: "allow_adult",
         },
       });
 

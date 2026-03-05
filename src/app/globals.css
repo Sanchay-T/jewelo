@@ -130,6 +130,62 @@ button, a, [role="button"] {
   touch-action: manipulation;
 }
 
+/* Metal shimmer effect */
+@keyframes metal-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.shimmer-swatch {
+  background-size: 200% 100%;
+  background-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.3) 50%,
+    transparent 100%
+  );
+  animation: metal-shimmer 3s ease-in-out infinite;
+}
+
+/* Gem pulse glow */
+@keyframes gem-pulse {
+  0%, 100% { box-shadow: 0 0 4px 1px var(--gem-color); }
+  50% { box-shadow: 0 0 12px 4px var(--gem-color); }
+}
+.gem-pulse {
+  animation: gem-pulse 2s ease-in-out infinite;
+}
+
+/* Custom gold range slider */
+input[type="range"].gold-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  outline: none;
+  cursor: pointer;
+}
+input[type="range"].gold-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--color-gold);
+  border: 3px solid white;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+}
+input[type="range"].gold-slider::-moz-range-thumb {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--color-gold);
+  border: 3px solid white;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+}
+
 /* Live price indicator pulse */
 @keyframes live-pulse {
   0%, 100% { opacity: 1; }

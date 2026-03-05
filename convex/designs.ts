@@ -1,6 +1,7 @@
 import { query, mutation, internalQuery, internalMutation } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { v } from "convex/values";
+import { NAME_LIMITS } from "../src/lib/constants";
 
 export const create = mutation({
   args: {
@@ -16,8 +17,32 @@ export const create = mutation({
     jewelryType: v.optional(v.string()),
     designStyle: v.optional(v.string()),
     metalType: v.optional(v.string()),
+    styleFamily: v.optional(v.string()),
+    complexity: v.optional(v.number()),
+    gender: v.optional(v.string()),
+    gemstones: v.optional(v.array(v.string())),
+    primaryGemstone: v.optional(v.string()),
+    lengthMm: v.optional(v.number()),
+    thicknessMm: v.optional(v.number()),
+    additionalInfo: v.optional(
+      v.object({
+        occasion: v.optional(v.string()),
+        metalFinish: v.optional(v.string()),
+        notes: v.optional(v.string()),
+      })
+    ),
   },
   handler: async (ctx, args) => {
+    // Server-side character length validation
+    const lang = args.language as keyof typeof NAME_LIMITS;
+    const limits = NAME_LIMITS[lang] || NAME_LIMITS.en;
+    const charCount = [...args.name].length; // spread handles multi-byte (Arabic, Chinese)
+    if (charCount < limits.min || charCount > limits.max) {
+      throw new Error(
+        `Name must be ${limits.min}-${limits.max} characters for ${lang.toUpperCase()}, got ${charCount}`
+      );
+    }
+
     const designId = await ctx.db.insert("designs", {
       ...args,
       status: "generating",
@@ -154,8 +179,17 @@ export const updateVideoStatus = internalMutation({
     const design = await ctx.db.get(designId);
     if (!design) return;
 
-    const statuses = [...(design.videoStatuses || ["pending", "pending", "pending", "pending"])];
-    const opIds = [...(design.videoOperationIds || ["", "", "", ""])];
+    // Dynamically size arrays based on actual product image count
+    const imageCount = design.productImageStorageIds?.length || 4;
+    const defaultStatuses = Array.from({ length: imageCount }, () => "pending");
+    const defaultOpIds = Array.from({ length: imageCount }, () => "");
+
+    const statuses = [...(design.videoStatuses || defaultStatuses)];
+    const opIds = [...(design.videoOperationIds || defaultOpIds)];
+
+    // Extend arrays if variationIndex is beyond current length
+    while (statuses.length <= variationIndex) statuses.push("pending");
+    while (opIds.length <= variationIndex) opIds.push("");
 
     statuses[variationIndex] = status;
     if (operationId) opIds[variationIndex] = operationId;
@@ -166,11 +200,11 @@ export const updateVideoStatus = internalMutation({
     };
 
     if (storageId) {
-      const storageIds = [...(design.videoStorageIds || [])];
+      const storageIds: (typeof storageId | undefined)[] = [...(design.videoStorageIds || [])];
       // Ensure array is long enough
-      while (storageIds.length <= variationIndex) storageIds.push(undefined as any);
+      while (storageIds.length <= variationIndex) storageIds.push(undefined);
       storageIds[variationIndex] = storageId;
-      patch.videoStorageIds = storageIds.filter(Boolean);
+      patch.videoStorageIds = storageIds.filter((id): id is typeof storageId => Boolean(id));
     }
 
     await ctx.db.patch(designId, patch);
@@ -200,6 +234,32 @@ export const saveToGallery = mutation({
   args: { designId: v.id("designs") },
   handler: async (ctx, { designId }) => {
     await ctx.db.patch(designId, { featured: true });
+    await ctx.scheduler.runAfter(0, internal.templates.captureFromDesign, {
+      designId,
+      source: "gallery_promoted",
+    });
+  },
+});
+
+export const updatePreferences = mutation({
+  args: {
+    designId: v.id("designs"),
+    language: v.optional(v.string()),
+    font: v.optional(v.string()),
+    styleFamily: v.optional(v.string()),
+    complexity: v.optional(v.number()),
+    gemstones: v.optional(v.array(v.string())),
+    primaryGemstone: v.optional(v.string()),
+    additionalInfo: v.optional(
+      v.object({
+        occasion: v.optional(v.string()),
+        metalFinish: v.optional(v.string()),
+        notes: v.optional(v.string()),
+      })
+    ),
+  },
+  handler: async (ctx, { designId, ...updates }) => {
+    await ctx.db.patch(designId, updates);
   },
 });
 

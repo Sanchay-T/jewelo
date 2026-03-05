@@ -17,6 +17,61 @@ export const AED_USD_PEG = 3.6725;
 export const MAX_REGENERATIONS = 3;
 export const MAX_GENERATIONS_PER_HOUR = 10;
 
+export const STYLE_FAMILIES = [
+  "minimalist",
+  "floral",
+  "art_deco",
+  "vintage",
+  "modern",
+  "arabic",
+] as const;
+
+export const GEMSTONES = [
+  "diamond",
+  "ruby",
+  "emerald",
+  "sapphire",
+  "amethyst",
+  "topaz",
+] as const;
+
+export const METAL_FINISHES = [
+  "polished",
+  "matte",
+  "brushed",
+  "hammered",
+  "textured",
+] as const;
+
+export const STONE_UNIT_COST_AED = {
+  diamond: 120,
+  ruby: 70,
+  emerald: 75,
+  sapphire: 65,
+  amethyst: 40,
+  topaz: 35,
+} as const;
+
+export const COMPLEMENTARY_GEMSTONES: Record<string, readonly string[]> = {
+  diamond: ["ruby", "emerald", "sapphire"],
+  ruby: ["emerald", "sapphire"],
+  emerald: ["ruby", "amethyst"],
+  sapphire: ["topaz", "emerald"],
+  amethyst: ["topaz", "emerald"],
+  topaz: ["sapphire", "amethyst"],
+};
+
+export const METAL_FINISH_LABOR_SURCHARGE = {
+  polished: 0,
+  matte: 2,
+  brushed: 3,
+  hammered: 5,
+  textured: 6,
+} as const;
+
+export const DEFAULT_PENDANT_THICKNESS_MM = 1.2;
+export const PENDANT_LENGTH_OPTIONS_MM = [12, 15, 18, 22, 25, 30] as const;
+
 export const JEWELRY_SIZE_MAP = {
   pendant: {
     small:  { label: "S", dimension: "12mm", weightGoldOnly: 2.5, weightWithStones: 3.0 },
@@ -50,3 +105,18 @@ export type Size = keyof typeof SIZE_MAP;
 export type Karat = keyof typeof KARAT_FACTOR;
 export type Style = keyof typeof MARKUP_PERCENT;
 export type Language = keyof typeof NAME_LIMITS;
+export type StyleFamily = typeof STYLE_FAMILIES[number];
+export type Gemstone = typeof GEMSTONES[number];
+export type MetalFinish = typeof METAL_FINISHES[number];
+
+export function sizeFromLengthMm(lengthMm: number): Size {
+  if (lengthMm <= 15) return "small";
+  if (lengthMm <= 22) return "medium";
+  return "large";
+}
+
+export function styleFromGemstones(gemstones?: readonly string[], fallbackStyle: Style = "gold_only"): Style {
+  if (!gemstones || gemstones.length === 0) return fallbackStyle;
+  if (gemstones.length === 1 && gemstones[0] === "diamond") return "gold_with_diamonds";
+  return "gold_with_stones";
+}

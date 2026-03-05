@@ -1,5 +1,8 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
+import { internal } from "./_generated/api";
+import { calculatePrice } from "../src/lib/pricing";
+import type { Size, Karat, Style, Gemstone, MetalFinish } from "../src/lib/constants";
 
 export const create = mutation({
   args: {
@@ -21,33 +24,17 @@ export const create = mutation({
       .first();
 
     const pricePerGram = goldPrice?.pricePerGram || 250;
-
-    // Server-side price calculation
-    const karatFactor: Record<string, number> = { "18K": 0.750, "21K": 0.875, "22K": 0.916 };
-    const weightMap: Record<string, number> = { small: 2.5, medium: 4.0, large: 6.5 };
-    const laborMap: Record<string, number> = { small: 150, medium: 250, large: 400 };
-
-    const weight = weightMap[design.size] || 4.0;
-    const goldContent = weight * (karatFactor[design.karat] || 0.875);
-    const materialCost = Math.round(goldContent * pricePerGram);
-    const laborCost = laborMap[design.size] || 250;
-    const stoneCost = 0;
-    const subtotal = materialCost + laborCost + stoneCost;
-    const markupPercent = design.style === "gold_only" ? 80 : design.style === "gold_with_stones" ? 100 : 120;
-    const markup = Math.round(subtotal * (markupPercent / 100));
-    const total = subtotal + markup;
-
-    const priceBreakdown = {
-      weight,
-      materialCost,
-      laborCost,
-      stoneCost,
-      markup,
-      total,
-      currency: "AED",
+    const priceBreakdown = calculatePrice({
+      karat: (design.karat || "21K") as Karat,
+      size: (design.size || "medium") as Size,
+      style: (design.style || "gold_only") as Style,
       goldPricePerGram: pricePerGram,
-      updatedAt: Date.now(),
-    };
+      jewelryType: design.jewelryType,
+      complexity: design.complexity,
+      gemstones: (design.gemstones || []) as Gemstone[],
+      metalFinish: design.additionalInfo?.metalFinish as MetalFinish | undefined,
+      lengthMm: design.lengthMm,
+    });
 
     const orderId = await ctx.db.insert("orders", {
       designId: args.designId,
@@ -56,10 +43,15 @@ export const create = mutation({
       customerEmail: args.customerEmail,
       status: "confirmed",
       priceBreakdown,
-      totalPrice: total,
+      totalPrice: priceBreakdown.total,
       currency: "AED",
       goldPriceAtOrder: pricePerGram,
       createdAt: Date.now(),
+    });
+
+    await ctx.scheduler.runAfter(0, internal.templates.captureFromDesign, {
+      designId: args.designId,
+      source: "order_promoted",
     });
 
     return orderId;

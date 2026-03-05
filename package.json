@@ -17,6 +17,8 @@
     "convex": "^1.32.0",
     "google-auth-library": "^10.6.1",
     "gsap": "^3.14.2",
+    "handlebars": "^4.7.8",
+    "js-yaml": "^4.1.1",
     "lucide-react": "^0.575.0",
     "motion": "^12.34.3",
     "next": "16.1.6",
@@ -34,6 +36,7 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@types/js-yaml": "^4.0.9",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
