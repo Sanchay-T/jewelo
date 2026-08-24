@@ -1,18 +1,23 @@
 "use node";
 import { internalAction } from "./_generated/server";
+import type { DataModel } from "./_generated/dataModel";
 import { internal } from "./_generated/api";
 import { v } from "convex/values";
+import type { GenericActionCtx } from "convex/server";
 import {
   buildOnBodyPrompt,
   buildFromScratchPrompt,
   buildReferenceEngravePrompt,
-  VARIATIONS,
   type DesignInput,
 } from "../src/lib/prompts/index";
 import {
-  compilePrompt,
   buildPromptContext,
-  fetchAllActiveConfigs,
+  buildPromptSnapshotFromBundle,
+  fetchResolvedPromptBundleForExecution,
+  getPromptExecutionOptionsForDesign,
+  getBundleConfigs,
+  PROMPT_STAGE_KEYS,
+  resolveStagePrompt,
   type DesignInputForEngine,
 } from "./lib/promptEngine";
 
@@ -20,14 +25,42 @@ import {
 const MODEL_PRO = "gemini-3.1-flash-image-preview"; // all calls use flash for now (testing)
 const MODEL_FLASH = "gemini-3.1-flash-image-preview";
 
+type GeminiReferenceImage = { base64: string; mimeType: string };
+type GeminiInlinePart = { inlineData: { mimeType: string; data: string } } | { text: string };
+type GeminiGenerateContentResponse = {
+  candidates?: Array<{
+    content?: {
+      parts?: Array<{
+        inlineData?: {
+          data?: string;
+          mimeType?: string;
+        };
+      }>;
+    };
+  }>;
+};
+type GeminiImageClient = {
+  models: {
+    generateContent: (args: {
+      model: string;
+      contents: GeminiInlinePart[];
+      config: { responseModalities: string[] };
+    }) => Promise<GeminiGenerateContentResponse>;
+  };
+};
+
+function getErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
+
 // ── Gemini API call via Vertex AI ────────────────────────────────────
 async function callGemini(
-  ai: any,
+  ai: GeminiImageClient,
   prompt: string,
-  referenceImages: Array<{ base64: string; mimeType: string }>,
+  referenceImages: GeminiReferenceImage[],
   model: string = MODEL_FLASH,
 ): Promise<{ imageData: string; mimeType: string } | null> {
-  const contents: any[] = [];
+  const contents: GeminiInlinePart[] = [];
 
   // Add all reference images as inline_data parts BEFORE the text prompt
   for (const ref of referenceImages) {
@@ -65,9 +98,9 @@ async function callGemini(
 
 // ── Helper: single Gemini call with retry (3x on 429, exponential backoff) ──
 async function callGeminiWithRetry(
-  ai: any,
+  ai: GeminiImageClient,
   prompt: string,
-  referenceImages: Array<{ base64: string; mimeType: string }>,
+  referenceImages: GeminiReferenceImage[],
   label: string,
   model: string = MODEL_FLASH,
 ): Promise<{ imageData: string; mimeType: string } | null> {
@@ -84,10 +117,11 @@ async function callGeminiWithRetry(
         console.warn(`  EMPTY ${label} — no image returned (${elapsed}s)`);
         return null;
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const message = getErrorMessage(err);
       const is429 =
-        err.message?.includes("429") ||
-        err.message?.includes("RESOURCE_EXHAUSTED");
+        message.includes("429") ||
+        message.includes("RESOURCE_EXHAUSTED");
       if (is429 && attempt < 2) {
         const wait = (attempt + 1) * 15;
         console.warn(
@@ -95,7 +129,7 @@ async function callGeminiWithRetry(
         );
         await new Promise((r) => setTimeout(r, wait * 1000));
       } else {
-        console.error(`  FAIL ${label}:`, err.message || err);
+        console.error(`  FAIL ${label}:`, message);
         return null;
       }
     }
@@ -131,328 +165,469 @@ If a second attached image shows the name rendered in text, use it as a visual g
 ${basePrompt}`;
 }
 
+type GenerationCtx = GenericActionCtx<DataModel>;
+
+async function createGeminiClient() {
+  const { GoogleGenAI } = await import("@google/genai");
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) throw new Error("GEMINI_API_KEY not set");
+  return new GoogleGenAI({ apiKey });
+}
+
+async function loadGenerationContext(ctx: GenerationCtx, designId: string) {
+  const design = await ctx.runQuery(internal.designs.getInternal, { designId: designId as never });
+
+  if (!design.textReferenceStorageId) {
+    throw new Error("Text reference is required before generation");
+  }
+
+  let referenceBase64: string | null = null;
+  let referenceUrl = design.referenceUrl;
+
+  if (design.referenceStorageId) {
+    const storageUrl = await ctx.storage.getUrl(design.referenceStorageId);
+    if (storageUrl) {
+      referenceUrl = storageUrl;
+    }
+  }
+
+  if (referenceUrl) {
+    try {
+      const response = await fetch(referenceUrl);
+      const buffer = await response.arrayBuffer();
+      referenceBase64 = Buffer.from(buffer).toString("base64");
+
+      if (!design.referenceStorageId) {
+        const blob = new Blob([buffer], { type: "image/jpeg" });
+        const refStorageId = await ctx.storage.store(blob);
+        await ctx.runMutation(internal.designs.storeReferenceImage, {
+          designId: designId as never,
+          referenceStorageId: refStorageId,
+        });
+      }
+    } catch (error) {
+      console.error("Failed to download reference:", error);
+    }
+  }
+
+  let textReferenceBase64: string | undefined;
+  const textRefUrl = await ctx.storage.getUrl(design.textReferenceStorageId);
+  if (textRefUrl) {
+    try {
+      const textResp = await fetch(textRefUrl);
+      const textBuffer = await textResp.arrayBuffer();
+      textReferenceBase64 = Buffer.from(textBuffer).toString("base64");
+    } catch (error) {
+      console.error("Failed to download text reference:", error);
+    }
+  }
+
+  if (!textReferenceBase64) {
+    throw new Error("Text reference could not be loaded");
+  }
+
+  const hasReference = !!(referenceBase64 || design.referenceStorageId);
+
+  const designInput: DesignInput = {
+    name: design.name,
+    language: design.language as DesignInput["language"],
+    font: design.font,
+    size: design.size as DesignInput["size"],
+    karat: design.karat as DesignInput["karat"],
+    style: design.style as DesignInput["style"],
+    metalType: (design.metalType || "yellow") as DesignInput["metalType"],
+    jewelryType: design.jewelryType,
+    designStyle: design.designStyle,
+    styleFamily: design.styleFamily,
+    complexity: design.complexity,
+    gemstones: design.gemstones,
+    primaryGemstone: design.primaryGemstone,
+    lengthMm: design.lengthMm,
+    thicknessMm: design.thicknessMm,
+    additionalInfo: design.additionalInfo,
+  };
+
+  const engineInput: DesignInputForEngine = {
+    name: design.name,
+    language: design.language,
+    font: design.font,
+    size: design.size,
+    karat: design.karat,
+    style: design.style,
+    metalType: design.metalType || "yellow",
+    jewelryType: design.jewelryType,
+    designStyle: design.designStyle,
+    styleFamily: design.styleFamily,
+    complexity: design.complexity,
+    gemstones: design.gemstones,
+    additionalInfo: design.additionalInfo,
+  };
+
+  const promptBundle = await fetchResolvedPromptBundleForExecution(
+    ctx,
+    getPromptExecutionOptionsForDesign(design)
+  );
+  if (promptBundle && !design.promptSnapshot) {
+    await ctx.runMutation(internal.designs.storePromptSnapshot, {
+      designId: designId as never,
+      promptSnapshot: buildPromptSnapshotFromBundle(promptBundle, []),
+    });
+  }
+
+  return {
+    design,
+    designInput,
+    engineInput,
+    hasReference,
+    promptBundle,
+    configs: promptBundle ? getBundleConfigs(promptBundle) : {},
+    referenceImages: [
+      ...(referenceBase64 ? [{ base64: referenceBase64, mimeType: "image/jpeg" as const }] : []),
+      { base64: textReferenceBase64, mimeType: "image/png" as const },
+    ] as GeminiReferenceImage[],
+    textReferenceBase64,
+    ai: await createGeminiClient(),
+  };
+}
+
+async function generateProductStageInternal(
+  ctx: GenerationCtx,
+  designId: string,
+  loadedContext?: Awaited<ReturnType<typeof loadGenerationContext>>,
+) {
+  const loaded = loadedContext ?? await loadGenerationContext(ctx, designId);
+  const { ai, design, designInput, engineInput, hasReference, promptBundle, configs, referenceImages } = loaded;
+
+  const variationCount = 4;
+  const productPrompts: string[] = [];
+  const productBase64s: Array<string | null> = Array.from({ length: variationCount }, () => null);
+  let recordedProductStage = false;
+
+  await ctx.runMutation(internal.designs.updateStatus, {
+    designId: designId as never,
+    status: "engraving",
+    analysisStep: "Creating your designs...",
+    analysisData: {
+      jewelryType: design.jewelryType || "Pendant",
+      metal: `${design.karat} Gold`,
+      bestSpot: "AI visualized",
+    },
+  });
+
+  for (let i = 0; i < variationCount; i += 1) {
+    const promptCtx = buildPromptContext(engineInput, i, configs, { hasReference });
+    const fallback = () => hasReference
+      ? buildReferenceEngravePrompt(designInput, i)
+      : buildFromScratchPrompt(designInput, i);
+    const resolved = await resolveStagePrompt(
+      ctx,
+      hasReference ? PROMPT_STAGE_KEYS.productReference : PROMPT_STAGE_KEYS.productFromScratch,
+      promptCtx,
+      fallback,
+      promptBundle
+    );
+    productPrompts.push(resolved.prompt);
+
+    if (!recordedProductStage && promptBundle) {
+      await ctx.runMutation(internal.designs.recordPromptStage, {
+        designId: designId as never,
+        stage: resolved.stageSnapshot,
+      });
+      recordedProductStage = true;
+    }
+  }
+
+  for (let batch = 0; batch < variationCount; batch += 2) {
+    if (batch > 0) {
+      await new Promise((resolve) => setTimeout(resolve, 5000));
+    }
+
+    const batchIndices = [batch, batch + 1].filter((index) => index < variationCount);
+    const results = await Promise.all(
+      batchIndices.map((index) =>
+        callGeminiWithRetry(
+          ai,
+          productPrompts[index],
+          referenceImages,
+          `product[${index}]`,
+          MODEL_PRO
+        )
+      )
+    );
+
+    for (let offset = 0; offset < results.length; offset += 1) {
+      const result = results[offset];
+      const variationIndex = batchIndices[offset];
+      if (!result) {
+        continue;
+      }
+
+      try {
+        const buf = Buffer.from(result.imageData, "base64");
+        const blob = new Blob([buf], { type: result.mimeType });
+        const storageId = await ctx.storage.store(blob);
+        await ctx.runMutation(internal.designs.addProductImage, {
+          designId: designId as never,
+          variationIndex,
+          storageId,
+        });
+        productBase64s[variationIndex] = result.imageData;
+      } catch (error) {
+        console.error(`STORE FAIL product[${variationIndex}]:`, getErrorMessage(error));
+      }
+    }
+
+    await ctx.runMutation(internal.designs.updateStatus, {
+      designId: designId as never,
+      status: "engraving",
+      analysisStep: `Creating your designs... (${Math.min(batch + 2, variationCount)}/4 product shots)`,
+    });
+  }
+
+  const refreshed = await ctx.runQuery(internal.designs.getInternal, { designId: designId as never });
+  const productCount = refreshed.productImageStorageIds?.filter(Boolean).length || 0;
+  if (productCount === 0) {
+    throw new Error("No product images generated");
+  }
+
+  return {
+    ...loaded,
+    design: refreshed,
+    productBase64s,
+    productCount,
+  };
+}
+
+async function buildOnBodyCalls(
+  ctx: GenerationCtx,
+  loaded: Awaited<ReturnType<typeof loadGenerationContext>>,
+  productBase64s?: Array<string | null>,
+) {
+  const refreshed = await ctx.runQuery(internal.designs.getInternal, { designId: loaded.design._id });
+  const calls: Array<{ prompt: string; refs: GeminiReferenceImage[]; index: number }> = [];
+  let recordedOnBodyStage = false;
+
+  for (let i = 0; i < 4; i += 1) {
+    let productBase64 = productBase64s?.[i] ?? null;
+    const productStorageId = refreshed.productImageStorageIds?.[i];
+    if (!productBase64 && productStorageId) {
+      const productUrl = await ctx.storage.getUrl(productStorageId);
+      if (productUrl) {
+        const response = await fetch(productUrl);
+        const buffer = await response.arrayBuffer();
+        productBase64 = Buffer.from(buffer).toString("base64");
+      }
+    }
+
+    if (!productBase64) {
+      continue;
+    }
+
+    const refs: GeminiReferenceImage[] = [
+      { base64: productBase64, mimeType: "image/png" },
+    ];
+    if (loaded.textReferenceBase64) {
+      refs.push({ base64: loaded.textReferenceBase64, mimeType: "image/png" });
+    }
+
+    const onBodyCtx = buildPromptContext(loaded.engineInput, i, loaded.configs, {
+      hasReference: loaded.hasReference,
+    });
+    const resolved = await resolveStagePrompt(
+      ctx,
+      PROMPT_STAGE_KEYS.onBodyChained,
+      onBodyCtx,
+      () => buildChainedOnBodyPrompt(loaded.designInput, i),
+      loaded.promptBundle
+    );
+
+    if (!recordedOnBodyStage && loaded.promptBundle) {
+      await ctx.runMutation(internal.designs.recordPromptStage, {
+        designId: loaded.design._id,
+        stage: resolved.stageSnapshot,
+      });
+      recordedOnBodyStage = true;
+    }
+
+    calls.push({
+      prompt: resolved.prompt,
+      refs,
+      index: i,
+    });
+  }
+
+  return calls;
+}
+
+async function generateOnBodyStageInternal(
+  ctx: GenerationCtx,
+  designId: string,
+  loadedContext?: Awaited<ReturnType<typeof loadGenerationContext>>,
+  productBase64s?: Array<string | null>,
+) {
+  const loaded = loadedContext ?? await loadGenerationContext(ctx, designId);
+  const onBodyCalls = await buildOnBodyCalls(ctx, loaded, productBase64s);
+
+  if (onBodyCalls.length === 0) {
+    throw new Error("No product images available for on-body generation");
+  }
+
+  await ctx.runMutation(internal.designs.updateStatus, {
+    designId: designId as never,
+    status: "engraving",
+    analysisStep: "Creating on-body previews...",
+  });
+
+  for (let batch = 0; batch < onBodyCalls.length; batch += 2) {
+    if (batch > 0) {
+      await new Promise((resolve) => setTimeout(resolve, 5000));
+    }
+
+    const batchItems = onBodyCalls.slice(batch, batch + 2);
+    const results = await Promise.all(
+      batchItems.map((item) =>
+        callGeminiWithRetry(
+          loaded.ai,
+          item.prompt,
+          item.refs,
+          `on-body[${item.index}]`,
+          MODEL_PRO
+        )
+      )
+    );
+
+    for (let offset = 0; offset < results.length; offset += 1) {
+      const result = results[offset];
+      const item = batchItems[offset];
+      if (!result) {
+        continue;
+      }
+
+      try {
+        const buf = Buffer.from(result.imageData, "base64");
+        const blob = new Blob([buf], { type: result.mimeType });
+        const storageId = await ctx.storage.store(blob);
+        await ctx.runMutation(internal.designs.addOnBodyImage, {
+          designId: designId as never,
+          variationIndex: item.index,
+          storageId,
+        });
+      } catch (error) {
+        console.error(`STORE FAIL on-body[${item.index}]:`, getErrorMessage(error));
+      }
+    }
+
+    await ctx.runMutation(internal.designs.updateStatus, {
+      designId: designId as never,
+      status: "engraving",
+      analysisStep: `Creating on-body previews... (${Math.min(batch + 2, onBodyCalls.length)}/${onBodyCalls.length})`,
+    });
+  }
+
+  const refreshed = await ctx.runQuery(internal.designs.getInternal, { designId: designId as never });
+  const onBodyCount = refreshed.onBodyImageStorageIds?.filter(Boolean).length || 0;
+
+  return {
+    ...loaded,
+    design: refreshed,
+    onBodyCount,
+  };
+}
+
+async function queueVideoGenerations(ctx: GenerationCtx, designId: string) {
+  const design = await ctx.runQuery(internal.designs.getInternal, {
+    designId: designId as never,
+  });
+  const videoSlots = Math.max(
+    design.onBodyImageStorageIds?.length || 0,
+    design.productImageStorageIds?.length || 0,
+  );
+
+  let queuedVideos = 0;
+  for (let i = 0; i < videoSlots; i += 1) {
+    const hasSource = design.onBodyImageStorageIds?.[i] || design.productImageStorageIds?.[i];
+    if (!hasSource) continue;
+    await ctx.scheduler.runAfter(i * 2000, internal.video.generateVideo, {
+      designId: designId as never,
+      variationIndex: i,
+    });
+    queuedVideos += 1;
+  }
+
+  return queuedVideos;
+}
+
+export const generateProductStage = internalAction({
+  args: { designId: v.id("designs") },
+  handler: async (ctx, { designId }) => {
+    try {
+      await generateProductStageInternal(ctx, designId);
+      await ctx.runMutation(internal.designs.completeGeneration, { designId });
+    } catch (error) {
+      console.error("Product stage failed:", error);
+      await ctx.runMutation(internal.designs.updateStatus, {
+        designId,
+        status: "failed",
+        error: getErrorMessage(error) || "Product stage failed",
+      });
+    }
+  },
+});
+
+export const generateOnBodyStage = internalAction({
+  args: { designId: v.id("designs") },
+  handler: async (ctx, { designId }) => {
+    try {
+      await generateOnBodyStageInternal(ctx, designId);
+      await ctx.runMutation(internal.designs.completeGeneration, { designId });
+    } catch (error) {
+      console.error("On-body stage failed:", error);
+      await ctx.runMutation(internal.designs.updateStatus, {
+        designId,
+        status: "failed",
+        error: getErrorMessage(error) || "On-body stage failed",
+      });
+    }
+  },
+});
+
 // ── Main generation action ─────────────────────────────────────────
 export const generate = internalAction({
   args: { designId: v.id("designs") },
   handler: async (ctx, { designId }) => {
     try {
       const design = await ctx.runQuery(internal.designs.getInternal, { designId });
-
       console.log("=== GENERATION START ===");
       console.log("Name:", design.name, "| Karat:", design.karat);
       console.log("Font:", design.font, "| Style:", design.style);
       console.log("Reference:", design.referenceUrl ? "yes" : "no");
 
-      // Status: analyzing — also gives the client time to upload the text reference
       await ctx.runMutation(internal.designs.updateStatus, {
         designId,
         status: "analyzing",
         analysisStep: "Studying the piece...",
       });
 
-      // Brief pause to allow the client-side text reference upload to complete
-      // (the client uploads in parallel after createDesign returns)
-      await new Promise((r) => setTimeout(r, 2000));
-
-      // Re-read design to pick up textReferenceStorageId saved by the client
-      const freshDesign = await ctx.runQuery(internal.designs.getInternal, { designId });
-
-      // Get reference image as base64
-      let referenceBase64: string | null = null;
-      let referenceUrl = freshDesign.referenceUrl;
-
-      if (freshDesign.referenceStorageId) {
-        const url = await ctx.storage.getUrl(freshDesign.referenceStorageId);
-        if (url) referenceUrl = url;
-      }
-
-      if (referenceUrl) {
-        try {
-          const response = await fetch(referenceUrl);
-          const buffer = await response.arrayBuffer();
-          referenceBase64 = Buffer.from(buffer).toString("base64");
-
-          if (!freshDesign.referenceStorageId) {
-            const blob = new Blob([buffer], { type: "image/jpeg" });
-            const refStorageId = await ctx.storage.store(blob);
-            await ctx.runMutation(internal.designs.storeReferenceImage, {
-              designId,
-              referenceStorageId: refStorageId,
-            });
-          }
-        } catch (e) {
-          console.error("Failed to download reference:", e);
-        }
-      }
-
-      // Download text reference image (Canvas-rendered name PNG)
-      let textReferenceBase64: string | undefined;
-      if (freshDesign.textReferenceStorageId) {
-        const textRefUrl = await ctx.storage.getUrl(freshDesign.textReferenceStorageId);
-        if (textRefUrl) {
-          try {
-            const textResp = await fetch(textRefUrl);
-            const textBuffer = await textResp.arrayBuffer();
-            textReferenceBase64 = Buffer.from(textBuffer).toString("base64");
-            console.log("Text reference image loaded:", Math.round(textBuffer.byteLength / 1024), "KB");
-          } catch (e) {
-            console.error("Failed to download text reference:", e);
-          }
-        }
-      }
-
-      // Build reference images array for callGemini
-      const referenceImages: Array<{ base64: string; mimeType: string }> = [];
-      if (referenceBase64) {
-        referenceImages.push({ base64: referenceBase64, mimeType: "image/jpeg" });
-      }
-      if (textReferenceBase64) {
-        referenceImages.push({ base64: textReferenceBase64, mimeType: "image/png" });
-      }
-
-      // Status: engraving
-      await ctx.runMutation(internal.designs.updateStatus, {
+      const productStage = await generateProductStageInternal(ctx, designId);
+      const onBodyStage = await generateOnBodyStageInternal(
+        ctx,
         designId,
-        status: "engraving",
-        analysisStep: `Engraving '${design.name}' in ${design.karat} gold...`,
-        analysisData: {
-          jewelryType: design.jewelryType || "Pendant",
-          metal: `${design.karat} Gold`,
-          bestSpot: "AI visualized",
-        },
-      });
+        productStage,
+        productStage.productBase64s
+      );
+      const queuedVideos = await queueVideoGenerations(ctx, designId);
 
-      // Initialize Gemini via Google AI Studio (higher rate limits than Vertex AI)
-      const { GoogleGenAI } = await import("@google/genai");
-      const apiKey = process.env.GEMINI_API_KEY;
-      if (!apiKey) throw new Error("GEMINI_API_KEY not set");
-
-      const ai = new GoogleGenAI({ apiKey });
-
-      // ── Build DesignInput for the new prompt builders ──────────────
-      const hasReference = !!(referenceBase64 || freshDesign.referenceStorageId);
-
-      const designInput: DesignInput = {
-        name: design.name,
-        language: design.language as DesignInput["language"],
-        font: design.font,
-        size: design.size as DesignInput["size"],
-        karat: design.karat as DesignInput["karat"],
-        style: design.style as DesignInput["style"],
-        metalType: (design.metalType || "yellow") as DesignInput["metalType"],
-        jewelryType: design.jewelryType,
-        designStyle: design.designStyle,
-        styleFamily: design.styleFamily,
-        complexity: design.complexity,
-        gemstones: design.gemstones,
-        primaryGemstone: design.primaryGemstone,
-        lengthMm: design.lengthMm,
-        thicknessMm: design.thicknessMm,
-        additionalInfo: design.additionalInfo,
-      };
-
-      const engineInput: DesignInputForEngine = {
-        name: design.name,
-        language: design.language,
-        font: design.font,
-        size: design.size,
-        karat: design.karat,
-        style: design.style,
-        metalType: design.metalType || "yellow",
-        jewelryType: design.jewelryType,
-        designStyle: design.designStyle,
-        styleFamily: design.styleFamily,
-        complexity: design.complexity,
-        gemstones: design.gemstones,
-        additionalInfo: design.additionalInfo,
-      };
-
-      // Fetch all active configs from DB (once for the whole generation)
-      const configs = await fetchAllActiveConfigs(ctx);
-
-      // ══════════════════════════════════════════════════════════════
-      // 4-CHAIN GENERATION PIPELINE
-      //
-      // Phase 1: Generate 4 independent product shots (different variations)
-      // Phase 2: For each product, generate its on-body shot
-      //
-      // Each product[i] → on-body[i] → video[i] is an independent chain.
-      // The user sees 4 different design options to choose from.
-      // ══════════════════════════════════════════════════════════════
-
-      const VARIATION_COUNT = 4;
-
-      // ── PHASE 1: Generate 4 product shots ─────────────────────────
-      console.log("--- Phase 1: Generating 4 product shots ---");
-
-      await ctx.runMutation(internal.designs.updateStatus, {
-        designId,
-        status: "engraving",
-        analysisStep: "Creating your designs...",
-      });
-
-      // Build 4 product prompts (one per VARIATION) — DB templates with hardcoded fallback
-      const productPrompts: string[] = [];
-      for (let i = 0; i < VARIATION_COUNT; i++) {
-        const promptCtx = buildPromptContext(engineInput, i, configs, { hasReference });
-        const slug = hasReference ? "reference" : "fromScratch";
-        const fallback = () => hasReference
-          ? buildReferenceEngravePrompt(designInput, i)
-          : buildFromScratchPrompt(designInput, i);
-        productPrompts.push(await compilePrompt(ctx, slug, promptCtx, fallback));
-      }
-
-      // Keep product base64s for Phase 2 (on-body references)
-      const productBase64s: Array<string | null> = [];
-
-      // Process product shots in batches of 2 with 5s stagger
-      for (let batch = 0; batch < VARIATION_COUNT; batch += 2) {
-        if (batch > 0) {
-          await new Promise((r) => setTimeout(r, 5000));
-        }
-
-        const batchIndices = [batch, batch + 1].filter((i) => i < VARIATION_COUNT);
-        console.log(`  Product batch: ${batchIndices.map((i) => `product[${i}]`).join(" + ")}`);
-
-        const results = await Promise.all(
-          batchIndices.map((i) =>
-            callGeminiWithRetry(
-              ai, productPrompts[i], referenceImages, `product[${i}]`, MODEL_PRO
-            )
-          )
-        );
-
-        for (let j = 0; j < results.length; j++) {
-          const result = results[j];
-          const idx = batchIndices[j];
-          if (!result) {
-            console.warn(`  SKIP product[${idx}] — no image`);
-            productBase64s[idx] = null;
-            continue;
-          }
-          try {
-            const buf = Buffer.from(result.imageData, "base64");
-            const blob = new Blob([buf], { type: result.mimeType });
-            const sid = await ctx.storage.store(blob);
-            await ctx.runMutation(internal.designs.addProductImage, { designId, storageId: sid });
-            productBase64s[idx] = result.imageData;
-            console.log(`  ✓ product[${idx}] stored`);
-          } catch (e: any) {
-            console.error(`  STORE FAIL product[${idx}]:`, e.message || e);
-            productBase64s[idx] = null;
-          }
-        }
-
-        await ctx.runMutation(internal.designs.updateStatus, {
-          designId,
-          status: "engraving",
-          analysisStep: `Creating your designs... (${Math.min(batch + 2, VARIATION_COUNT)}/4 product shots)`,
-        });
-      }
-
-      // ── PHASE 2: Generate on-body shots (one per successful product) ──
-      console.log("--- Phase 2: Generating on-body shots ---");
-
-      await ctx.runMutation(internal.designs.updateStatus, {
-        designId,
-        status: "engraving",
-        analysisStep: "Creating on-body previews...",
-      });
-
-      // Build on-body calls only for products that succeeded
-      const onBodyCalls: Array<{ prompt: string; refs: Array<{ base64: string; mimeType: string }>; index: number }> = [];
-      for (let i = 0; i < VARIATION_COUNT; i++) {
-        if (!productBase64s[i]) continue;
-        const refs: Array<{ base64: string; mimeType: string }> = [
-          { base64: productBase64s[i]!, mimeType: "image/png" },
-        ];
-        if (textReferenceBase64) {
-          refs.push({ base64: textReferenceBase64, mimeType: "image/png" });
-        }
-
-        // Use DB template for chained on-body with hardcoded fallback
-        const onBodyCtx = buildPromptContext(engineInput, i, configs, { hasReference });
-        const onBodyPrompt = await compilePrompt(
-          ctx, "chainedOnBody", onBodyCtx,
-          () => buildChainedOnBodyPrompt(designInput, i),
-        );
-
-        onBodyCalls.push({
-          prompt: onBodyPrompt,
-          refs,
-          index: i,
-        });
-      }
-
-      // Process on-body shots in batches of 2 with 5s stagger
-      for (let batch = 0; batch < onBodyCalls.length; batch += 2) {
-        if (batch > 0) {
-          await new Promise((r) => setTimeout(r, 5000));
-        }
-
-        const batchItems = onBodyCalls.slice(batch, batch + 2);
-        console.log(`  On-body batch: ${batchItems.map((b) => `on-body[${b.index}]`).join(" + ")}`);
-
-        const results = await Promise.all(
-          batchItems.map((item) =>
-            callGeminiWithRetry(
-              ai, item.prompt, item.refs, `on-body[${item.index}]`, MODEL_PRO
-            )
-          )
-        );
-
-        for (let j = 0; j < results.length; j++) {
-          const result = results[j];
-          const item = batchItems[j];
-          if (!result) {
-            console.warn(`  SKIP on-body[${item.index}] — no image`);
-            continue;
-          }
-          try {
-            const buf = Buffer.from(result.imageData, "base64");
-            const blob = new Blob([buf], { type: result.mimeType });
-            const sid = await ctx.storage.store(blob);
-            await ctx.runMutation(internal.designs.addOnBodyImage, { designId, storageId: sid });
-            console.log(`  ✓ on-body[${item.index}] stored`);
-          } catch (e: any) {
-            console.error(`  STORE FAIL on-body[${item.index}]:`, e.message || e);
-          }
-        }
-
-        await ctx.runMutation(internal.designs.updateStatus, {
-          designId,
-          status: "engraving",
-          analysisStep: `Creating on-body previews... (${Math.min(batch + 2, onBodyCalls.length)}/${onBodyCalls.length})`,
-        });
-      }
-
-      // ── Check results ─────────────────────────────────────────────
-      const finalDesign = await ctx.runQuery(internal.designs.getInternal, { designId });
-      const productCount = finalDesign.productImageStorageIds?.length || 0;
-      const onBodyCount = finalDesign.onBodyImageStorageIds?.length || 0;
-
-      if (productCount === 0) {
-        throw new Error("No images generated");
-      }
-
-      console.log(`=== DONE: ${productCount} product + ${onBodyCount} on-body images ===`);
+      console.log(
+        `=== DONE: ${productStage.productCount} product + ${onBodyStage.onBodyCount} on-body images ===`
+      );
       await ctx.runMutation(internal.designs.completeGeneration, { designId });
-
-      // Trigger Veo video generations for each on-body image (2s stagger)
-      // Videos use on-body shots as source frames (model wearing the piece)
-      const videoCount = finalDesign.onBodyImageStorageIds?.length || finalDesign.productImageStorageIds?.length || 0;
-      for (let i = 0; i < videoCount; i++) {
-        await ctx.scheduler.runAfter(i * 2000, internal.video.generateVideo, {
-          designId,
-          variationIndex: i,
-        });
-      }
-    } catch (error: any) {
+      console.log(`=== QUEUED ${queuedVideos} video jobs ===`);
+    } catch (error: unknown) {
       console.error("Generation failed:", error);
       await ctx.runMutation(internal.designs.updateStatus, {
         designId,
         status: "failed",
-        error: error.message || "Generation failed",
+        error: getErrorMessage(error) || "Generation failed",
       });
     }
   },

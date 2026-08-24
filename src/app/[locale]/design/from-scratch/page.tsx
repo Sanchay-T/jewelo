@@ -1,6 +1,6 @@
 "use client";
 import { useState, useMemo, useRef, useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams, useParams } from "next/navigation";
 import { useQuery } from "convex/react";
 import { motion, AnimatePresence } from "motion/react";
 import { api } from "../../../../../convex/_generated/api";
@@ -83,6 +83,8 @@ const styles: { id: StyleFamily; label: string; gradient: string; query: string 
 export default function FromScratchPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const params = useParams();
+  const locale = (params.locale as string) || "en";
   const scrollRef = useRef<HTMLDivElement>(null);
   const lang = searchParams.get("lang") || "en";
   const [selectedType, setSelectedType] = useState<string>(searchParams.get("type") || "name_pendant");
@@ -146,7 +148,7 @@ export default function FromScratchPage() {
 
   return (
     <div className="bg-cream pb-24 lg:pb-8">
-      <div className="max-w-lg mx-auto lg:max-w-2xl">
+      <div className="max-w-lg mx-auto lg:max-w-4xl">
 
         {/* Header */}
         <div className="px-6">
@@ -234,7 +236,7 @@ export default function FromScratchPage() {
             <p className="text-text-tertiary text-[10px] uppercase tracking-wider font-medium mb-2">Style</p>
 
             {/* Visual style grid — showcase > search > gradient fallback */}
-            <div className="grid grid-cols-3 gap-2 mb-5">
+            <div className="grid grid-cols-3 lg:grid-cols-6 gap-2 lg:gap-3 mb-5">
               {styles.map((style) => {
                 const imgUrl = getStyleImage(selectedType, style.id) || stylePreviewImages?.[style.id];
                 const isSelected = selectedStyle === style.id;
@@ -303,7 +305,7 @@ export default function FromScratchPage() {
                 complexity: String(complexity),
                 name: displayName(name, transliteratedName).trim(),
               });
-              router.push(`/en/design/customize?${query.toString()}`);
+              router.push(`/${locale}/design/customize?${query.toString()}`);
             }}
             disabled={!canContinue}
             className={`w-full py-3.5 rounded-xl text-sm font-semibold transition flex items-center justify-center gap-2 ${

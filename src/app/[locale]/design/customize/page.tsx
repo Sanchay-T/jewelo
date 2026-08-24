@@ -1,6 +1,6 @@
 "use client";
 import { useState, useRef, useCallback, useMemo } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams, useParams } from "next/navigation";
 import { useQuery, useMutation } from "convex/react";
 import { motion } from "motion/react";
 import { api } from "../../../../../convex/_generated/api";
@@ -10,7 +10,6 @@ import { FontStylePicker } from "@/components/design/FontStylePicker";
 import { SizeSelector } from "@/components/design/SizeSelector";
 import { MetalSelector, getGoldColor, getGoldLabel } from "@/components/design/MetalSelector";
 import { LivePriceDisplay } from "@/components/design/LivePriceDisplay";
-import { GenerateButton } from "@/components/design/GenerateButton";
 import { StickyBottomBar } from "@/components/design/StickyBottomBar";
 import { GemstoneSelector } from "@/components/design/GemstoneSelector";
 import { ComplexitySlider } from "@/components/design/ComplexitySlider";
@@ -32,7 +31,9 @@ import { renderTextToCanvas } from "@/lib/canvasTextRenderer";
 export default function ConfiguratorPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { setActiveDesign, language: contextLang, setLanguage } = useDesignFlow();
+  const params = useParams();
+  const locale = (params.locale as string) || "en";
+  const { setActiveDesign, language: contextLang, setLanguage, sessionId } = useDesignFlow();
 
   const initialLang = searchParams.get("lang") || contextLang || "en";
   const refUrl = searchParams.get("ref") || undefined;
@@ -56,6 +57,7 @@ export default function ConfiguratorPage() {
   const [complexity, setComplexity] = useState(Number(searchParams.get("complexity") || 5));
   const [gemstones, setGemstones] = useState<Gemstone[]>(parsedGemstones);
   const [loading, setLoading] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const [transliteratedName, setTransliteratedName] = useState("");
   const [additionalInfo, setAdditionalInfo] = useState<{
     occasion?: string;
@@ -81,6 +83,7 @@ export default function ConfiguratorPage() {
   const FALLBACK_GOLD_PRICE_PER_GRAM = 310;
   const goldPrice = useQuery(api.prices.getCurrent);
   const createDesign = useMutation(api.designs.create);
+  const startGeneration = useMutation(api.designs.startGeneration);
   const generateUploadUrl = useMutation(api.uploads.generateUploadUrl);
   const saveTextReference = useMutation(api.uploads.saveTextReference);
 
@@ -104,15 +107,17 @@ export default function ConfiguratorPage() {
   const totalUSD = Math.round(total / AED_USD_PEG);
 
   const displayName = transliteratedName || name;
-  const canGenerate = name.length > 0;
+  const canGenerate = name.length > 0 && !!sessionId;
 
   const handleGenerate = async () => {
-    if (!canGenerate || isSubmittingRef.current) return;
+    if (!canGenerate || !sessionId || isSubmittingRef.current) return;
     isSubmittingRef.current = true;
     setLoading(true);
+    setSubmitError(null);
 
     try {
       const designId = await createDesign({
+        sessionId,
         name: displayName,
         language,
         font,
@@ -134,126 +139,173 @@ export default function ConfiguratorPage() {
         additionalInfo,
       });
 
-      try {
-        const textBlob = await renderTextToCanvas(displayName, font, language);
-        const uploadUrl = await generateUploadUrl();
-        const uploadResp = await fetch(uploadUrl, {
-          method: "POST",
-          headers: { "Content-Type": "image/png" },
-          body: textBlob,
-        });
-        if (uploadResp.ok) {
-          const { storageId } = await uploadResp.json();
-          await saveTextReference({ designId, storageId });
-        } else {
-          console.error("Text reference upload failed:", uploadResp.status);
-        }
-      } catch (textRefErr) {
-        console.error("Text reference render/upload failed:", textRefErr);
+      const textBlob = await renderTextToCanvas(displayName, font, language);
+      const uploadUrl = await generateUploadUrl();
+      const uploadResp = await fetch(uploadUrl, {
+        method: "POST",
+        headers: { "Content-Type": "image/png" },
+        body: textBlob,
+      });
+      if (!uploadResp.ok) {
+        throw new Error("Could not upload your text reference. Please try again.");
       }
+      const { storageId } = await uploadResp.json();
+      await saveTextReference({ designId, storageId });
+      await startGeneration({ designId });
 
       setActiveDesign(designId, "crafting");
-      router.push(`/en/design/crafting?designId=${designId}`);
+      router.push(`/${locale}/design/crafting?designId=${designId}`);
     } catch (err) {
       console.error("Create design failed:", err);
+      setSubmitError(
+        err instanceof Error
+          ? err.message
+          : "We could not start your design. Your inputs are still here, so you can retry."
+      );
       isSubmittingRef.current = false;
       setLoading(false);
     }
   };
 
+  const previewCard = (
+    <motion.div
+      initial={{ opacity: 0, y: -10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.1, duration: 0.4 }}
+      className="bg-white rounded-2xl p-8 mb-6 lg:mb-0 shadow-card border border-warm text-center"
+    >
+      <p className="text-text-tertiary text-[10px] uppercase tracking-widest mb-3">Live Preview</p>
+      <motion.p
+        key={`${name}-${font}-${size}-${karat}-${goldType}-${language}-${complexity}-${gemstones.join("-")}`}
+        initial={{ opacity: 0.5, scale: 0.98 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.3 }}
+        dir={language === "ar" ? "rtl" : "ltr"}
+        lang={language}
+        className={`${
+          language === "ar"
+            ? font === "diwani"
+              ? "font-arabic italic"
+              : font === "kufi"
+                ? "font-arabic font-bold"
+                : "font-arabic"
+            : font === "script"
+              ? "font-display italic"
+              : font === "modern"
+                ? "tracking-[0.2em] uppercase font-body font-light"
+                : "font-display"
+        } ${
+          size === "small" ? "text-3xl" : size === "large" ? "text-6xl lg:text-7xl" : "text-5xl lg:text-6xl"
+        }`}
+        style={{ color: getGoldColor(karat, goldType) }}
+      >
+        {displayName || (language === "ar" ? "اسمك" : "Your Name")}
+      </motion.p>
+      <div className="flex items-center justify-center gap-2 mt-3">
+        <div className="w-3 h-3 rounded-full" style={{ background: getGoldColor(karat, goldType) }} />
+        <p className="text-text-tertiary text-xs font-mono">
+          {isPendant
+            ? `${lengthMm}mm`
+            : (jewelryType in JEWELRY_SIZE_MAP
+              ? JEWELRY_SIZE_MAP[jewelryType as keyof typeof JEWELRY_SIZE_MAP]?.[size]?.dimension
+              : null) || (size === "small" ? "12mm" : size === "large" ? "25mm" : "18mm")} {" "}
+          · {getGoldLabel(karat, goldType)}
+        </p>
+      </div>
+
+      {/* Price + Generate CTA — visible on desktop only, inline under preview */}
+      <div className="hidden lg:block mt-6 pt-6 border-t border-warm">
+        <LivePriceDisplay priceAED={total} priceUSD={totalUSD} isLive={isLivePrice} compact />
+        <button
+          onClick={handleGenerate}
+          disabled={!canGenerate || loading}
+          className={`w-full mt-4 py-3.5 rounded-xl text-sm font-semibold transition flex items-center justify-center gap-2 ${
+            !canGenerate || loading
+              ? "bg-brown-light text-cream/60 cursor-not-allowed"
+              : "bg-brown text-cream hover:bg-brown-dark"
+          }`}
+        >
+          {loading ? "Generating..." : "Generate Design"}
+        </button>
+      </div>
+    </motion.div>
+  );
+
+  const controlsSection = (
+    <div className="space-y-5">
+      {[
+        <InlineLanguageSelector key="language" value={language} onChange={handleLanguageChange} />,
+        <NameInput key="name" value={name} onChange={setName} language={language} onTransliterated={handleTransliterated} />,
+        <FontStylePicker key="font" name={name} value={font} onChange={setFont} language={language} metalColor={getGoldColor(karat, goldType)} />,
+        <MetalSelector key="metal" value={karat} onChange={setKarat} goldType={goldType} onGoldTypeChange={setGoldType} />,
+        isPendant
+          ? <PendantLengthSelector key="length" value={lengthMm} onChange={handleLengthChange} />
+          : <SizeSelector key="size" value={size} onChange={(v) => setSize(v as Size)} jewelryType={jewelryType} />,
+        <ComplexitySlider key="complexity" value={complexity} onChange={setComplexity} />,
+        <GemstoneSelector key="gemstones" value={gemstones} onChange={setGemstones} />,
+        <AdditionalInfoSection key="additional" value={additionalInfo} onChange={setAdditionalInfo} />,
+      ].map((component, i) => (
+        <motion.div
+          key={i}
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 + i * 0.08, duration: 0.4 }}
+        >
+          {component}
+        </motion.div>
+      ))}
+    </div>
+  );
+
   return (
     <div className="bg-cream px-6 pb-40 lg:pb-8">
-      <div className="max-w-lg mx-auto">
-
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1, duration: 0.4 }}
-          className="bg-white rounded-2xl p-8 mb-6 shadow-card border border-warm text-center sticky top-0 z-10 lg:top-16"
-        >
-          <p className="text-text-tertiary text-[10px] uppercase tracking-widest mb-3">Live Preview</p>
-          <motion.p
-            key={`${name}-${font}-${size}-${karat}-${goldType}-${language}-${complexity}-${gemstones.join("-")}`}
-            initial={{ opacity: 0.5, scale: 0.98 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.3 }}
-            dir={language === "ar" ? "rtl" : "ltr"}
-            lang={language}
-            className={`${
-              language === "ar"
-                ? font === "diwani"
-                  ? "font-arabic italic"
-                  : font === "kufi"
-                    ? "font-arabic font-bold"
-                    : "font-arabic"
-                : font === "script"
-                  ? "font-display italic"
-                  : font === "modern"
-                    ? "tracking-[0.2em] uppercase font-body font-light"
-                    : "font-display"
-            } ${
-              size === "small" ? "text-3xl" : size === "large" ? "text-6xl" : "text-5xl"
-            }`}
-            style={{ color: getGoldColor(karat, goldType) }}
-          >
-            {displayName || (language === "ar" ? "اسمك" : "Your Name")}
-          </motion.p>
-          <div className="flex items-center justify-center gap-2 mt-3">
-            <div className="w-3 h-3 rounded-full" style={{ background: getGoldColor(karat, goldType) }} />
-            <p className="text-text-tertiary text-xs font-mono">
-              {isPendant
-                ? `${lengthMm}mm`
-                : (jewelryType in JEWELRY_SIZE_MAP
-                  ? JEWELRY_SIZE_MAP[jewelryType as keyof typeof JEWELRY_SIZE_MAP]?.[size]?.dimension
-                  : null) || (size === "small" ? "12mm" : size === "large" ? "25mm" : "18mm")} {" "}
-              · {getGoldLabel(karat, goldType)}
-            </p>
+      {/* Mobile: single column */}
+      <div className="max-w-lg mx-auto lg:hidden">
+        {previewCard}
+        {submitError && (
+          <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            {submitError}
           </div>
-        </motion.div>
+        )}
+        {controlsSection}
+      </div>
 
-        <div className="space-y-5">
-          {[
-            <InlineLanguageSelector key="language" value={language} onChange={handleLanguageChange} />,
-            <NameInput key="name" value={name} onChange={setName} language={language} onTransliterated={handleTransliterated} />,
-            <FontStylePicker key="font" name={name} value={font} onChange={setFont} language={language} metalColor={getGoldColor(karat, goldType)} />,
-            <MetalSelector key="metal" value={karat} onChange={setKarat} goldType={goldType} onGoldTypeChange={setGoldType} />,
-            isPendant
-              ? <PendantLengthSelector key="length" value={lengthMm} onChange={handleLengthChange} />
-              : <SizeSelector key="size" value={size} onChange={(v) => setSize(v as Size)} jewelryType={jewelryType} />,
-            <ComplexitySlider key="complexity" value={complexity} onChange={setComplexity} />,
-            <GemstoneSelector key="gemstones" value={gemstones} onChange={setGemstones} />,
-            <AdditionalInfoSection key="additional" value={additionalInfo} onChange={setAdditionalInfo} />,
-          ].map((component, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 + i * 0.08, duration: 0.4 }}
-            >
-              {component}
-            </motion.div>
-          ))}
+      {/* Desktop: two-column layout */}
+      <div className="hidden lg:grid lg:grid-cols-[380px_1fr] lg:gap-8 lg:max-w-4xl lg:mx-auto lg:items-start">
+        <div className="lg:sticky lg:top-20">
+          {previewCard}
+        </div>
+        <div>
+          {submitError && (
+            <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+              {submitError}
+            </div>
+          )}
+          {controlsSection}
         </div>
       </div>
 
-      <StickyBottomBar>
-        <div className="flex items-center gap-3">
-          <div className="flex-1">
-            <LivePriceDisplay priceAED={total} priceUSD={totalUSD} isLive={isLivePrice} compact />
+      {/* Sticky bottom bar — mobile only */}
+      <div className="lg:hidden">
+        <StickyBottomBar>
+          <div className="flex items-center gap-3">
+            <div className="flex-1">
+              <LivePriceDisplay priceAED={total} priceUSD={totalUSD} isLive={isLivePrice} compact />
+            </div>
+            <button
+              onClick={handleGenerate}
+              disabled={!canGenerate || loading}
+              className={`px-6 py-3 rounded-xl text-sm font-semibold transition flex items-center gap-2 ${
+                !canGenerate || loading
+                  ? "bg-brown-light text-cream/60 cursor-not-allowed"
+                  : "bg-brown text-cream hover:bg-brown-dark"
+              }`}
+            >
+              {loading ? "Generating..." : "Generate"}
+            </button>
           </div>
-          <button
-            onClick={handleGenerate}
-            disabled={!canGenerate || loading}
-            className={`px-6 py-3 rounded-xl text-sm font-semibold transition flex items-center gap-2 ${
-              !canGenerate || loading
-                ? "bg-brown-light text-cream/60 cursor-not-allowed"
-                : "bg-brown text-cream hover:bg-brown-dark"
-            }`}
-          >
-            {loading ? "Generating..." : "Generate"}
-          </button>
-        </div>
-      </StickyBottomBar>
+        </StickyBottomBar>
+      </div>
     </div>
   );
 }

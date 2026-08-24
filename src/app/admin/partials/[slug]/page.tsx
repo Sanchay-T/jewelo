@@ -10,11 +10,21 @@ import { VersionHistory } from "../../../../components/admin/VersionHistory";
 import { useState } from "react";
 import Link from "next/link";
 
+type PartialVersion = {
+  _id: string;
+  version: number;
+  name: string;
+  template: string;
+  isActive: boolean;
+  changeNote?: string;
+  createdAt: number;
+};
+
 function PartialDetail() {
   const params = useParams();
   const slug = params.slug as string;
 
-  const versions = useQuery(api.prompts.getPartialVersions, { slug });
+  const versions = useQuery(api.prompts.getPartialVersions, { slug }) as PartialVersion[] | undefined;
   const [selectedVersion, setSelectedVersion] = useState<number | null>(null);
 
   if (!versions) {
@@ -64,9 +74,7 @@ function PartialDetail() {
 
           <div>
             <VersionHistory
-              versions={versions as any}
-              type="partial"
-              identifier={slug}
+              versions={versions}
               onSelect={(v) => setSelectedVersion(v.version)}
             />
           </div>

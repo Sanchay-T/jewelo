@@ -1,18 +1,49 @@
 "use client";
 
-import { useState, useEffect, ReactNode } from "react";
+import { ReactNode, useSyncExternalStore, useState } from "react";
 import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 
+const PASSWORD_STORAGE_KEY = "admin_password";
+const PASSWORD_EVENT = "admin-password-change";
+
+function readStoredPassword(): string | null {
+  if (typeof window === "undefined") {
+    return null;
+  }
+  return window.sessionStorage.getItem(PASSWORD_STORAGE_KEY);
+}
+
+function subscribeToPasswordStore(onStoreChange: () => void) {
+  if (typeof window === "undefined") {
+    return () => undefined;
+  }
+
+  const handleChange = () => onStoreChange();
+  window.addEventListener("storage", handleChange);
+  window.addEventListener(PASSWORD_EVENT, handleChange);
+
+  return () => {
+    window.removeEventListener("storage", handleChange);
+    window.removeEventListener(PASSWORD_EVENT, handleChange);
+  };
+}
+
+function notifyPasswordStoreChanged() {
+  if (typeof window === "undefined") {
+    return;
+  }
+  window.dispatchEvent(new Event(PASSWORD_EVENT));
+}
+
+function useStoredAdminPassword() {
+  return useSyncExternalStore(subscribeToPasswordStore, readStoredPassword, () => null);
+}
+
 export function PasswordGate({ children }: { children: ReactNode }) {
   const [password, setPassword] = useState("");
-  const [stored, setStored] = useState<string | null>(null);
   const [error, setError] = useState(false);
-
-  useEffect(() => {
-    const pw = sessionStorage.getItem("admin_password");
-    if (pw) setStored(pw);
-  }, []);
+  const stored = useStoredAdminPassword();
 
   const checkResult = useQuery(
     api.prompts.checkPassword,
@@ -23,16 +54,11 @@ export function PasswordGate({ children }: { children: ReactNode }) {
     return <>{children}</>;
   }
 
-  if (stored && checkResult === false) {
-    sessionStorage.removeItem("admin_password");
-    setStored(null);
-  }
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!password.trim()) return;
-    sessionStorage.setItem("admin_password", password);
-    setStored(password);
+    window.sessionStorage.setItem(PASSWORD_STORAGE_KEY, password);
+    notifyPasswordStoreChanged();
     setError(false);
   };
 
@@ -66,9 +92,5 @@ export function PasswordGate({ children }: { children: ReactNode }) {
 }
 
 export function useAdminPassword(): string {
-  const [pw, setPw] = useState("");
-  useEffect(() => {
-    setPw(sessionStorage.getItem("admin_password") ?? "");
-  }, []);
-  return pw;
+  return useStoredAdminPassword() ?? "";
 }

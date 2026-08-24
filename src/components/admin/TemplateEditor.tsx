@@ -51,7 +51,7 @@ export function TemplateEditor({
           name,
           template,
           changeNote: changeNote || undefined,
-          activate: true,
+          activate: false,
         });
       } else {
         await createPartial({
@@ -60,7 +60,7 @@ export function TemplateEditor({
           name,
           template,
           changeNote: changeNote || undefined,
-          activate: true,
+          activate: false,
         });
       }
       setChangeNote("");
@@ -143,8 +143,12 @@ export function TemplateEditor({
         disabled={saving || !isDirty}
         className="w-full bg-blue-600 hover:bg-blue-500 disabled:bg-zinc-700 disabled:text-zinc-500 text-white font-medium py-3 rounded transition-colors min-h-[44px]"
       >
-        {saving ? "Saving..." : saved ? "Saved!" : "Save New Version & Activate"}
+        {saving ? "Saving..." : saved ? "Saved!" : "Save New Version"}
       </button>
+
+      <p className="text-xs text-zinc-500">
+        Saving creates a new asset version. Releases decide what becomes active at runtime.
+      </p>
 
       <TemplatePreview template={template} partials={partials} />
     </div>

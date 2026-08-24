@@ -8,11 +8,19 @@ import {
 } from "../src/lib/prompts/index";
 import { GoogleGenAI } from "@google/genai";
 import {
-  compilePrompt,
   buildPromptContext,
-  fetchAllActiveConfigs,
+  buildPromptSnapshotFromBundle,
+  fetchResolvedPromptBundleForExecution,
+  getPromptExecutionOptionsForDesign,
+  getBundleConfigs,
+  PROMPT_STAGE_KEYS,
+  resolveStagePrompt,
   type DesignInputForEngine,
 } from "./lib/promptEngine";
+
+function getErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
 
 // ── Generate a rotating jewelry video via Veo 3.1 ──────────────────
 export const generateVideo = internalAction({
@@ -27,7 +35,7 @@ export const generateVideo = internalAction({
       // Fall back to product image if on-body isn't available
       const onBodyIds = design.onBodyImageStorageIds || [];
       const productIds = design.productImageStorageIds || [];
-      const sourceStorageId = onBodyIds[variationIndex] ?? productIds[variationIndex] ?? productIds[0];
+      const sourceStorageId = onBodyIds[variationIndex] ?? productIds[variationIndex];
       if (!sourceStorageId) {
         throw new Error("No images available for video generation");
       }
@@ -40,14 +48,26 @@ export const generateVideo = internalAction({
       const imageResp = await fetch(sourceUrl);
       const imageBuffer = await imageResp.arrayBuffer();
       const imageBase64 = Buffer.from(imageBuffer).toString("base64");
+      const sourceMimeType = imageResp.headers.get("content-type") || "image/png";
 
       // Derive jewelry/metal type for prompt
       const jewelryType = design.jewelryType || "name_pendant";
       const metalType = design.metalType || "yellow";
       const karat = design.karat || "21K";
 
-      // Build prompts — DB templates with hardcoded fallback
-      const configs = await fetchAllActiveConfigs(ctx);
+      const promptBundle = await fetchResolvedPromptBundleForExecution(
+        ctx,
+        getPromptExecutionOptionsForDesign(design)
+      );
+      if (promptBundle && !design.promptSnapshot) {
+        await ctx.runMutation(internal.designs.storePromptSnapshot, {
+          designId,
+          promptSnapshot: buildPromptSnapshotFromBundle(promptBundle, []),
+        });
+      }
+
+      // Build prompts — release-scoped templates with hardcoded non-prod fallback
+      const configs = promptBundle ? getBundleConfigs(promptBundle) : {};
       const engineInput: DesignInputForEngine = {
         name: design.name,
         language: design.language,
@@ -64,14 +84,30 @@ export const generateVideo = internalAction({
         additionalInfo: design.additionalInfo,
       };
       const promptCtx = buildPromptContext(engineInput, variationIndex, configs);
-      const videoPrompt = await compilePrompt(
-        ctx, "video", promptCtx,
+      const resolvedVideoPrompt = await resolveStagePrompt(
+        ctx,
+        PROMPT_STAGE_KEYS.videoMain,
+        promptCtx,
         () => buildVideoPrompt(jewelryType, metalType, karat),
+        promptBundle
       );
-      const negativePrompt = await compilePrompt(
-        ctx, "videoNegative", promptCtx,
+      const resolvedNegativePrompt = await resolveStagePrompt(
+        ctx,
+        PROMPT_STAGE_KEYS.videoNegative,
+        promptCtx,
         () => buildVideoNegativePrompt(),
+        promptBundle
       );
+      if (promptBundle) {
+        await ctx.runMutation(internal.designs.recordPromptStage, {
+          designId,
+          stage: resolvedVideoPrompt.stageSnapshot,
+        });
+        await ctx.runMutation(internal.designs.recordPromptStage, {
+          designId,
+          stage: resolvedNegativePrompt.stageSnapshot,
+        });
+      }
 
       console.log(
         `[video] Starting Veo 3.1 for design ${designId} variation ${variationIndex}`,
@@ -106,16 +142,16 @@ export const generateVideo = internalAction({
       // Call Veo 3.1 via SDK
       const operation = await ai.models.generateVideos({
         model: "veo-3.1-generate-preview",
-        prompt: videoPrompt,
+        prompt: resolvedVideoPrompt.prompt,
         image: {
           imageBytes: imageBase64,
-          mimeType: "image/png",
+          mimeType: sourceMimeType,
         },
         config: {
           aspectRatio: "9:16",
           numberOfVideos: 1,
           durationSeconds: 6,
-          negativePrompt,
+          negativePrompt: resolvedNegativePrompt.prompt,
           personGeneration: "allow_adult",
         },
       });
@@ -196,8 +232,8 @@ export const generateVideo = internalAction({
       console.log(
         `[video] Stored for design ${designId} variation ${variationIndex}`,
       );
-    } catch (error: any) {
-      console.error("[video] Generation failed:", error.message || error);
+    } catch (error: unknown) {
+      console.error("[video] Generation failed:", getErrorMessage(error));
       await ctx.runMutation(internal.designs.updateVideoStatus, {
         designId,
         variationIndex,

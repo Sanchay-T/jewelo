@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { useAdminPassword } from "./PasswordGate";
@@ -36,8 +36,11 @@ export function YamlEditor({
     try {
       const parsed = yaml.load(yamlText);
       return { json: JSON.stringify(parsed, null, 2), error: null };
-    } catch (err: any) {
-      return { json: null, error: err.message };
+    } catch (error) {
+      return {
+        json: null,
+        error: error instanceof Error ? error.message : String(error),
+      };
     }
   }, [yamlText]);
 
@@ -50,7 +53,7 @@ export function YamlEditor({
         key: configKey,
         data: json,
         changeNote: changeNote || undefined,
-        activate: true,
+        activate: false,
       });
       setChangeNote("");
       setSaved(true);
@@ -90,8 +93,12 @@ export function YamlEditor({
         disabled={saving || !isDirty || !!error}
         className="w-full bg-blue-600 hover:bg-blue-500 disabled:bg-zinc-700 disabled:text-zinc-500 text-white font-medium py-3 rounded transition-colors min-h-[44px]"
       >
-        {saving ? "Saving..." : saved ? "Saved!" : "Save New Version & Activate"}
+        {saving ? "Saving..." : saved ? "Saved!" : "Save New Version"}
       </button>
+
+      <p className="text-xs text-zinc-500">
+        Saving creates a config version only. Releases choose which config versions become active.
+      </p>
 
       <div>
         <h3 className="text-sm font-medium text-zinc-400 uppercase tracking-wide mb-2">

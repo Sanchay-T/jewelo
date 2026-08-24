@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useMemo } from "react";
 import Handlebars from "handlebars";
 
 const SAMPLE_CONTEXT = {
@@ -47,9 +47,7 @@ export function TemplatePreview({
   template: string;
   partials?: Array<{ slug: string; template: string }>;
 }) {
-  const [error, setError] = useState<string | null>(null);
-
-  const rendered = useMemo(() => {
+  const preview = useMemo(() => {
     try {
       const hbs = Handlebars.create();
       if (partials) {
@@ -58,12 +56,15 @@ export function TemplatePreview({
         }
       }
       const compiled = hbs.compile(template, { noEscape: true });
-      const result = compiled(SAMPLE_CONTEXT);
-      setError(null);
-      return result;
-    } catch (err: any) {
-      setError(err.message);
-      return null;
+      return {
+        error: null,
+        rendered: compiled(SAMPLE_CONTEXT),
+      };
+    } catch (err: unknown) {
+      return {
+        error: err instanceof Error ? err.message : "Unable to render preview.",
+        rendered: null,
+      };
     }
   }, [template, partials]);
 
@@ -72,13 +73,13 @@ export function TemplatePreview({
       <h3 className="text-sm font-medium text-zinc-400 uppercase tracking-wide mb-2">
         Preview (sample data)
       </h3>
-      {error ? (
+      {preview.error ? (
         <div className="bg-red-900/30 border border-red-700 rounded p-3 text-red-300 text-sm font-mono">
-          {error}
+          {preview.error}
         </div>
       ) : (
         <pre className="bg-zinc-800 border border-zinc-700 rounded p-3 text-zinc-300 text-xs font-mono whitespace-pre-wrap max-h-96 overflow-y-auto">
-          {rendered}
+          {preview.rendered}
         </pre>
       )}
     </div>

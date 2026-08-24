@@ -164,6 +164,31 @@ Every character must be present, correctly shaped, and in the exact order shown 
 }
 
 /**
+ * Maison-campaign exclusion rules shared across all product shots. These are
+ * the hard constraints that keep the pendant identity stable — no duplicate
+ * pieces, no invented ornaments, no letterform distortion.
+ */
+export function commonProductRulesBlock(): string {
+  return `MAISON CAMPAIGN RULES:
+- The pendant must spell the exact approved name with no missing, duplicated, melted, or fused characters.
+- Do not invent extra words, symbols, stones, or decorative attachments beyond the approved configuration.
+- The pendant identity must remain constant across all generated options; only framing, lighting, and editorial treatment may vary.
+- The metal color, finish, chain style, and gemstone presence must follow the approved design exactly.
+- Show one luxury pendant only. No extra jewelry pieces, no earrings, no rings, no bracelets, and no duplicate pendants.`;
+}
+
+/**
+ * Returns a natural-language description of the script direction for the
+ * approved name. Right-to-left for Arabic, top-down stroke order for Chinese,
+ * left-to-right for Latin.
+ */
+export function scriptDirection(language: string): string {
+  if (language === "ar") return "right-to-left Arabic";
+  if (language === "zh") return "top-down Chinese stroke order";
+  return "left-to-right Latin";
+}
+
+/**
  * Returns the absolute rules that constrain the model's output, including the
  * correct background colour for the chosen metal type.
  */

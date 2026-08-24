@@ -4,10 +4,21 @@ import { motion } from "motion/react";
 import { api } from "../../../../convex/_generated/api";
 import { Package, Clock, ChevronRight } from "lucide-react";
 import Link from "next/link";
+import { useParams } from "next/navigation";
+import { useDesignFlow } from "@/lib/DesignFlowContext";
 
 export default function ProfilePage() {
-  const recentOrders = useQuery(api.orders.getRecent);
-  const savedDesigns = useQuery(api.gallery.getRecentCompleted);
+  const params = useParams();
+  const locale = (params.locale as string) || "en";
+  const { sessionId, language } = useDesignFlow();
+  const recentOrders = useQuery(
+    api.orders.getRecentForSession,
+    sessionId ? { sessionId } : "skip"
+  );
+  const savedDesigns = useQuery(
+    api.gallery.getRecentCompletedForSession,
+    sessionId ? { sessionId } : "skip"
+  );
 
   return (
     <div className="min-h-screen bg-cream pb-24 lg:pt-16 lg:pb-8">
@@ -15,11 +26,11 @@ export default function ProfilePage() {
         {/* Header */}
         <div className="flex items-center gap-4 mb-8">
           <div className="w-14 h-14 rounded-full bg-brown flex items-center justify-center">
-            <span className="text-cream text-xl font-bold font-display">G</span>
+            <span className="text-cream text-xl font-bold font-display">D</span>
           </div>
           <div>
-            <h1 className="font-display text-2xl text-text-primary">Guest</h1>
-            <p className="text-text-tertiary text-sm">Dubai, UAE</p>
+            <h1 className="font-display text-2xl text-text-primary">This device</h1>
+            <p className="text-text-tertiary text-sm">Private activity saved in this browser</p>
           </div>
         </div>
 
@@ -27,7 +38,7 @@ export default function ProfilePage() {
         <div className="mb-8">
           <div className="flex items-center justify-between mb-3">
             <p className="text-text-secondary text-[10px] uppercase tracking-wider font-medium">
-              Your Orders
+              Recent Orders
             </p>
             {recentOrders && recentOrders.length > 0 && (
               <span className="text-text-tertiary text-[10px]">
@@ -39,9 +50,9 @@ export default function ProfilePage() {
           {!recentOrders || recentOrders.length === 0 ? (
             <div className="bg-white rounded-xl p-6 border border-warm text-center">
               <Package className="w-8 h-8 text-text-tertiary mx-auto mb-2" />
-              <p className="text-text-secondary text-sm">No orders yet</p>
+              <p className="text-text-secondary text-sm">No orders on this device yet</p>
               <p className="text-text-tertiary text-xs mt-1">
-                Your orders will appear here
+                Orders placed from this browser will appear here
               </p>
             </div>
           ) : (
@@ -54,7 +65,7 @@ export default function ProfilePage() {
                   transition={{ delay: i * 0.05 }}
                 >
                   <Link
-                    href={`/en/design/confirmed/${order._id}`}
+                    href={`/${locale}/design/confirmed/${order._id}`}
                     className="flex items-center gap-3 bg-white rounded-xl p-3 border border-warm hover:bg-sand/30 transition"
                   >
                     <div className="w-12 h-12 rounded-lg bg-sand flex items-center justify-center flex-shrink-0 overflow-hidden">
@@ -109,7 +120,7 @@ export default function ProfilePage() {
         {savedDesigns && savedDesigns.length > 0 && (
           <div className="mb-8">
             <p className="text-text-secondary text-[10px] uppercase tracking-wider font-medium mb-3">
-              Saved Designs
+              Recent Designs On This Device
             </p>
             <div className="flex gap-3 overflow-x-auto pb-2">
               {savedDesigns.map((d) => (
@@ -131,16 +142,16 @@ export default function ProfilePage() {
         {/* Settings stub */}
         <div>
           <p className="text-text-secondary text-[10px] uppercase tracking-wider font-medium mb-3">
-            Settings
+            Preferences
           </p>
           <div className="bg-white rounded-xl border border-warm divide-y divide-warm">
             <div className="flex items-center justify-between p-4">
-              <span className="text-text-primary text-sm">Language</span>
+              <span className="text-text-primary text-sm">Interface</span>
               <span className="text-text-tertiary text-sm">English</span>
             </div>
             <div className="flex items-center justify-between p-4">
-              <span className="text-text-primary text-sm">Currency</span>
-              <span className="text-text-tertiary text-sm">AED</span>
+              <span className="text-text-primary text-sm">Name script</span>
+              <span className="text-text-tertiary text-sm uppercase">{language}</span>
             </div>
           </div>
         </div>

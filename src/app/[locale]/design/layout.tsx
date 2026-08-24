@@ -28,7 +28,7 @@ export default function DesignLayout({ children }: { children: React.ReactNode }
   return (
     <div className="min-h-screen bg-cream">
       {showIndicator && (
-        <div className="max-w-lg mx-auto px-6 pt-4 lg:pt-20">
+        <div className="max-w-lg lg:max-w-4xl mx-auto px-6 pt-4 lg:pt-20">
           <div className="h-4" />
           <StepIndicator currentStep={step} />
         </div>

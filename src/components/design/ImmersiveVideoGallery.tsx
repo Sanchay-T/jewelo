@@ -6,7 +6,7 @@ import { ArrowLeft } from "lucide-react";
 interface ImmersiveVideoGalleryProps {
   videoUrls: (string | null)[];
   videoStatuses: string[];
-  posterUrls: string[];
+  posterUrls: (string | null)[];
   onSelect: (variationIndex: number) => void;
   onBack: () => void;
 }
@@ -132,7 +132,7 @@ export function ImmersiveVideoGallery({
                     videoRefs.current[activeIndex] = el;
                   }}
                   src={videoUrls[activeIndex]!}
-                  poster={posterUrls[activeIndex]}
+                  poster={posterUrls[activeIndex] ?? undefined}
                   autoPlay
                   loop
                   muted

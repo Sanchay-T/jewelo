@@ -1,9 +1,5 @@
 "use client";
 
-import { useMutation } from "convex/react";
-import { api } from "../../../convex/_generated/api";
-import { useAdminPassword } from "./PasswordGate";
-
 interface Version {
   _id: string;
   version: number;
@@ -13,38 +9,13 @@ interface Version {
   createdAt: number;
 }
 
-type ActivateFn = typeof api.prompts.activateTemplateVersion
-  | typeof api.prompts.activatePartialVersion
-  | typeof api.prompts.activateConfigVersion;
-
 export function VersionHistory({
   versions,
-  type,
-  identifier,
   onSelect,
 }: {
   versions: Version[];
-  type: "template" | "partial" | "config";
-  identifier: string;
   onSelect?: (version: Version) => void;
 }) {
-  const password = useAdminPassword();
-
-  const activateTemplate = useMutation(api.prompts.activateTemplateVersion);
-  const activatePartial = useMutation(api.prompts.activatePartialVersion);
-  const activateConfig = useMutation(api.prompts.activateConfigVersion);
-
-  const handleActivate = async (version: number) => {
-    const args = { password, version } as any;
-    if (type === "template") {
-      await activateTemplate({ ...args, slug: identifier });
-    } else if (type === "partial") {
-      await activatePartial({ ...args, slug: identifier });
-    } else {
-      await activateConfig({ ...args, key: identifier });
-    }
-  };
-
   const sorted = [...versions].sort((a, b) => b.version - a.version);
 
   return (
@@ -67,21 +38,13 @@ export function VersionHistory({
               <span className="text-white font-mono text-sm">v{v.version}</span>
               {v.isActive && (
                 <span className="bg-blue-500 text-white text-xs px-1.5 py-0.5 rounded font-medium">
-                  ACTIVE
+                  LEGACY ACTIVE
                 </span>
               )}
             </div>
-            {!v.isActive && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleActivate(v.version);
-                }}
-                className="bg-zinc-700 hover:bg-zinc-600 text-white text-xs px-3 py-1.5 rounded transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
-              >
-                Activate
-              </button>
-            )}
+            <span className="text-[11px] uppercase tracking-[0.18em] text-zinc-500">
+              Release-managed
+            </span>
           </div>
           <p className="text-zinc-400 text-sm mt-1">{v.name}</p>
           {v.changeNote && (

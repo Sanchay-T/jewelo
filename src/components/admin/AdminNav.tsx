@@ -5,26 +5,31 @@ import { usePathname } from "next/navigation";
 
 const NAV_ITEMS = [
   { href: "/admin", label: "Dashboard" },
+  { href: "/admin/playground", label: "Playground" },
+  { href: "/admin/pipelines", label: "Pipelines" },
+  { href: "/admin/releases", label: "Releases" },
+  { href: "/admin/validation", label: "Validation" },
+  { href: "/admin/environments", label: "Environments" },
 ];
 
 export function AdminNav() {
   const pathname = usePathname();
 
   return (
-    <header className="bg-zinc-900 border-b border-zinc-800 px-4 py-3">
-      <div className="max-w-5xl mx-auto flex items-center gap-6">
-        <Link href="/admin" className="text-white font-semibold text-lg">
+    <header className="border-b border-zinc-800 bg-zinc-950/95 px-4 py-4 backdrop-blur">
+      <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-4">
+        <Link href="/admin" className="text-white font-semibold text-lg tracking-tight">
           Prompt Admin
         </Link>
-        <nav className="flex gap-4">
+        <nav className="flex flex-wrap gap-2">
           {NAV_ITEMS.map((item) => (
             <Link
               key={item.href}
               href={item.href}
-              className={`text-sm transition-colors ${
-                pathname === item.href
-                  ? "text-blue-400"
-                  : "text-zinc-400 hover:text-white"
+              className={`rounded-full border px-3 py-1.5 text-sm transition-colors ${
+                pathname === item.href || pathname.startsWith(`${item.href}/`)
+                  ? "border-amber-400/50 bg-amber-500/10 text-amber-200"
+                  : "border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:text-white"
               }`}
             >
               {item.label}
@@ -36,7 +41,7 @@ export function AdminNav() {
             sessionStorage.removeItem("admin_password");
             window.location.reload();
           }}
-          className="ml-auto text-sm text-zinc-500 hover:text-red-400 transition-colors"
+          className="ml-auto rounded-full border border-zinc-800 px-3 py-1.5 text-sm text-zinc-500 transition-colors hover:border-red-500/40 hover:text-red-300"
         >
           Lock
         </button>

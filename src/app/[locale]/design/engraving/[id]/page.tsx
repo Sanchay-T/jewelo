@@ -12,6 +12,7 @@ import type { Id } from "../../../../../../convex/_generated/dataModel";
 export default function EngravingPage() {
   const router = useRouter();
   const params = useParams();
+  const locale = (params.locale as string) || "en";
   const designId = params.id as Id<"designs">;
   const data = useQuery(
     api.designs.getBeforeAfter,
@@ -27,7 +28,7 @@ export default function EngravingPage() {
       transition={{ duration: 0.3 }}
       className="min-h-screen bg-cream px-6 pt-4 pb-24 lg:pt-20 lg:pb-8"
     >
-      <div className="max-w-xl mx-auto">
+      <div className="max-w-xl mx-auto lg:max-w-4xl">
       <div className="h-4" />
       <StepIndicator currentStep={6} totalSteps={7} />
       <h2 className="font-display text-2xl mb-2">Your name, engraved</h2>
@@ -138,13 +139,16 @@ export default function EngravingPage() {
       </motion.div>
 
       <button
-        onClick={() => router.push(`/en/design/order/${designId}`)}
+        onClick={() => router.push(`/${locale}/design/order/${designId}`)}
         className="w-full bg-brown text-cream font-semibold py-4 rounded-xl mb-3 hover:bg-brown-dark transition"
       >
         Looks perfect — Review Price
       </button>
-      <button className="w-full border border-brown/20 text-text-secondary py-3 rounded-xl text-sm">
-        Try different placement
+      <button
+        onClick={() => router.push(`/${locale}/design/results/${designId}`)}
+        className="w-full border border-brown/20 text-text-secondary py-3 rounded-xl text-sm hover:bg-sand/50 transition"
+      >
+        Choose a different variation
       </button>
       </div>
 

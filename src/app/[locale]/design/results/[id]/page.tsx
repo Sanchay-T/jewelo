@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useQuery, useMutation } from "convex/react";
 import { motion, AnimatePresence } from "motion/react";
@@ -18,6 +18,7 @@ const FONT_OPTIONS_BY_LANGUAGE: Record<string, string[]> = {
 export default function ResultsPage() {
   const router = useRouter();
   const params = useParams();
+  const locale = (params.locale as string) || "en";
   const designId = params.id as Id<"designs">;
   const design = useQuery(
     api.designs.getWithVideos,
@@ -36,11 +37,6 @@ export default function ResultsPage() {
 
   const [regenOpen, setRegenOpen] = useState(false);
   const [selectedFont, setSelectedFont] = useState<string | null>(null);
-
-  // Reset font selection when sheet closes
-  useEffect(() => {
-    if (!regenOpen) setSelectedFont(null);
-  }, [regenOpen]);
 
   const productUrls = design?.productImageUrls || [];
   const onBodyUrls = design?.onBodyImageUrls || [];
@@ -68,20 +64,20 @@ export default function ResultsPage() {
   const handleSelect = async () => {
     if (!designId) return;
     await selectVariation({ designId, index: selectedIdx });
-    router.push(`/en/design/engraving/${designId}`);
+    router.push(`/${locale}/design/engraving/${designId}`);
   };
 
   const handleRegenerate = async () => {
     if (!designId || remaining <= 0) return;
     await regenerate({ designId });
-    router.push(`/en/design/crafting?designId=${designId}`);
+    router.push(`/${locale}/design/crafting?designId=${designId}`);
   };
 
   const handleRegenerateWithFont = async (font: string) => {
     if (!designId || remaining <= 0) return;
     await updatePreferences({ designId, font });
     await regenerate({ designId });
-    router.push(`/en/design/crafting?designId=${designId}`);
+    router.push(`/${locale}/design/crafting?designId=${designId}`);
   };
 
   return (
@@ -91,7 +87,7 @@ export default function ResultsPage() {
       transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
       className="min-h-screen bg-cream px-6 pt-4 pb-24 lg:pt-20 lg:pb-8"
     >
-      <div className="max-w-xl mx-auto">
+      <div className="max-w-xl mx-auto lg:max-w-4xl">
       <div className="h-4" />
       <StepIndicator currentStep={5} totalSteps={7} />
 
@@ -139,7 +135,7 @@ export default function ResultsPage() {
       </div>
 
       <div className="relative mb-4">
-        <div className="grid grid-cols-2 gap-3 lg:gap-4">
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
           {([0, 1, 2, 3] as const).map((i) => {
             const cardUrl = getUrlForCard(i);
             const hasProduct = !!productUrls[i];
@@ -239,7 +235,7 @@ export default function ResultsPage() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.75 }}
-            onClick={() => router.push(`/en/design/videos/${designId}`)}
+            onClick={() => router.push(`/${locale}/design/videos/${designId}`)}
             className="absolute -bottom-3 left-1/2 -translate-x-1/2 z-10 bg-white/90 backdrop-blur-sm border border-warm shadow-sm rounded-full px-4 py-2 text-sm text-brown font-medium flex items-center gap-1.5"
           >
             <Play size={14} fill="currentColor" />
@@ -278,7 +274,13 @@ export default function ResultsPage() {
           transition={{ delay: 1 }}
           className="text-center"
         >
-          <Sheet open={regenOpen} onOpenChange={setRegenOpen}>
+          <Sheet
+            open={regenOpen}
+            onOpenChange={(open) => {
+              setRegenOpen(open);
+              if (!open) setSelectedFont(null);
+            }}
+          >
             <SheetTrigger asChild>
               <button className="text-text-tertiary text-sm hover:text-text-secondary transition">
                 Not what you had in mind?

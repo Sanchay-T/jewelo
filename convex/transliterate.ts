@@ -1,6 +1,9 @@
 "use node";
 import { action } from "./_generated/server";
 import { v } from "convex/values";
+import { createLogger, serializeError } from "../src/lib/observability/logger";
+
+const logger = createLogger({ service: "convex.transliterate" });
 
 export const transliterate = action({
   args: {
@@ -8,11 +11,27 @@ export const transliterate = action({
     targetLanguage: v.string(),
   },
   handler: async (_ctx, { name, targetLanguage }) => {
+    const startedAt = Date.now();
+    logger.info("Transliteration requested", {
+      event: "transliterate.start",
+      route: "gemini/transliterate",
+      method: "POST",
+      requestId: name,
+    });
+
     if (!name.trim()) return "";
 
     const { GoogleGenAI } = await import("@google/genai");
     const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) throw new Error("GEMINI_API_KEY not set");
+    if (!apiKey) {
+      logger.error("Transliteration config missing", {
+        event: "transliterate.config_missing",
+        route: "gemini/transliterate",
+        method: "POST",
+        error: serializeError("GEMINI_API_KEY not set"),
+      });
+      throw new Error("GEMINI_API_KEY not set");
+    }
 
     const ai = new GoogleGenAI({ apiKey });
 
@@ -38,6 +57,15 @@ export const transliterate = action({
 
     const text =
       response.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "";
+
+    logger.info("Transliteration completed", {
+      event: "transliterate.success",
+      route: "gemini/transliterate",
+      method: "POST",
+      requestId: name,
+      durationMs: Date.now() - startedAt,
+    });
+
     return text || name;
   },
 });

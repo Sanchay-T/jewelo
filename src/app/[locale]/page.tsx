@@ -3,8 +3,12 @@ import Link from "next/link";
 import { motion } from "motion/react";
 import { BeforeAfterSlider } from "@/components/shared/BeforeAfterSlider";
 import { ContinueDesignBanner } from "@/components/shared/ContinueDesignBanner";
+import { useParams } from "next/navigation";
 
 export default function LandingPage() {
+  const params = useParams();
+  const locale = (params.locale as string) || "en";
+
   return (
     <div className="h-[100dvh] bg-cream relative flex flex-col">
       <div className="flex-1 flex flex-col px-6 pt-4 pb-20 overflow-hidden lg:pt-20 lg:pb-8 lg:px-12 xl:px-20">
@@ -62,14 +66,14 @@ export default function LandingPage() {
               className="flex-shrink-0 hidden lg:flex lg:items-center lg:gap-4"
             >
               <Link
-                href="/en/design/language"
+                href={`/${locale}/design/language`}
                 className="bg-brown text-cream font-semibold py-3.5 px-10 rounded-xl text-sm text-center hover:bg-brown-dark transition relative overflow-hidden group"
               >
                 <span className="relative z-10">Begin Designing</span>
                 <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
               </Link>
               <Link
-                href="/en/gallery"
+                href={`/${locale}/gallery`}
                 className="border border-brown/20 text-text-secondary py-3.5 px-10 rounded-xl text-sm text-center hover:bg-sand/50 transition"
               >
                 View Gallery
@@ -99,14 +103,14 @@ export default function LandingPage() {
           className="flex-shrink-0 lg:hidden"
         >
           <Link
-            href="/en/design/language"
+            href={`/${locale}/design/language`}
             className="block w-full bg-brown text-cream font-semibold py-3.5 rounded-xl text-sm text-center mb-2 hover:bg-brown-dark transition relative overflow-hidden group"
           >
             <span className="relative z-10">Begin Designing</span>
             <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
           </Link>
           <Link
-            href="/en/gallery"
+            href={`/${locale}/gallery`}
             className="block w-full border border-brown/20 text-text-secondary py-2.5 rounded-xl text-sm text-center hover:bg-sand/50 transition"
           >
             View Gallery

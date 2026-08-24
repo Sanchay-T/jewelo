@@ -1,61 +1,60 @@
 // ---------------------------------------------------------------------------
-// Variation modifiers — camera, lighting, and mood presets that turn a single
-// base prompt into four distinct product-photography angles.
+// Four maison-campaign product shots that share a pendant identity but differ
+// in camera, lighting, crop, and mood — the voice is editorial, not catalog.
 // ---------------------------------------------------------------------------
 
-/** Describes one variation's camera, lighting, and overall mood. */
 export interface VariationModifier {
-  /** Human-readable label for this variation (e.g. "Hero", "Macro"). */
   name: string;
-  /** Camera angle / framing instruction. */
   camera: string;
-  /** Lighting setup instruction. */
   lighting: string;
-  /** Overall mood and art-direction feel. */
+  crop: string;
+  mood: string;
   feel: string;
 }
 
-/**
- * Four standard product-photography variations.
- *
- * These are appended to the base generation prompt so the model produces
- * visually distinct images while keeping the same pendant design.
- */
 export const VARIATIONS: VariationModifier[] = [
   {
-    name: "Hero",
+    name: "Hero Monolith",
     camera:
-      "front-facing straight-on view, pendant centered in frame with even margins on all sides",
+      "Centered hero product shot with a straight-on luxury e-commerce framing.",
     lighting:
-      "even diffused studio lighting with twin soft-boxes at 45 degrees, minimal shadows, clean white bounce fill from below",
-    feel:
-      "clean catalog product shot — crisp, symmetrical, no drama, maximum clarity for e-commerce",
+      "Focused studio spotlight with crisp gold reflections and controlled shadow falloff.",
+    crop:
+      "Square crop with negative space around the pendant and chain.",
+    mood: "Quiet, expensive, architectural.",
+    feel: "Quiet, expensive, architectural.",
   },
   {
-    name: "Angled",
+    name: "Editorial Sweep",
     camera:
-      "3/4 turn showing the pendant at roughly 30-40 degrees from front, revealing side profile and depth",
+      "Three-quarter angle with gentle diagonal placement and a slightly closer crop.",
     lighting:
-      "key light from the right side at 45 degrees with subtle fill on the left, creating gentle shadows that reveal form",
-    feel:
-      "dimensional and sculptural — emphasises the 3D depth of the lettering and the thickness of the metal",
+      "Editorial side-light with soft falloff and a dark velvet background read.",
+    crop:
+      "Vertical editorial crop showing chain rhythm and pendant silhouette.",
+    mood: "Magazine-ready, tactile, intimate.",
+    feel: "Magazine-ready, tactile, intimate.",
   },
   {
-    name: "Macro",
+    name: "Macro Craft",
     camera:
-      "tight close-up crop on the engraved or embossed name, filling 70-80% of the frame with the text detail",
+      "Close macro product shot emphasising surface finish, stone rhythm, and letter edges.",
     lighting:
-      "focused spot light raking across the surface at a low angle to accentuate groove depth and surface texture",
-    feel:
-      "intimate detail shot — showcases craftsmanship, metal grain, and the physical depth of every letter stroke",
+      "Warm atelier close-up lighting with visible edge highlights and soft shadow detail.",
+    crop:
+      "Tight crop focused on pendant detail while preserving legibility of the full name.",
+    mood: "Craft-driven, precise, high detail.",
+    feel: "Craft-driven, precise, high detail.",
   },
   {
-    name: "Dramatic",
+    name: "Wearable Balance",
     camera:
-      "slightly lower angle looking up at the pendant, creating a sense of grandeur and presence",
+      "Product-on-chain composition showing how the pendant hangs naturally as a wearable piece.",
     lighting:
-      "warm directional light from upper-left with deep shadows on the right, dramatic fall-off into darkness",
-    feel:
-      "moody luxury editorial — evokes high-end magazine advertising with rich contrast and emotional impact",
+      "Balanced luxury product lighting with soft frontal glow and subtle background separation.",
+    crop:
+      "Medium crop showing the full chain top and pendant drop.",
+    mood: "Calm, giftable, real-world premium.",
+    feel: "Calm, giftable, real-world premium.",
   },
 ];

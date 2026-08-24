@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useCallback } from "react";
+import { useEffect } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useQuery } from "convex/react";
@@ -11,6 +11,7 @@ import type { Id } from "../../../../../../convex/_generated/dataModel";
 
 export default function ConfirmedPage() {
   const params = useParams();
+  const locale = (params.locale as string) || "en";
   const orderId = params.id as Id<"orders">;
   const order = useQuery(api.orders.get, orderId ? { orderId } : "skip");
   const { clearDesign } = useDesignFlow();
@@ -22,7 +23,7 @@ export default function ConfirmedPage() {
 
   const videoUrl = order?.videoUrl ?? null;
 
-  const handleShare = useCallback(async () => {
+  const handleShare = async () => {
     if (navigator.share && videoUrl) {
       try {
         await navigator.share({
@@ -34,7 +35,7 @@ export default function ConfirmedPage() {
         // User cancelled or share failed — silently ignore
       }
     }
-  }, [videoUrl, order?.design?.name]);
+  };
 
   return (
     <div className="min-h-screen bg-cream px-6 pt-4 pb-24 flex flex-col items-center lg:pt-20 lg:pb-8">
@@ -130,7 +131,7 @@ export default function ConfirmedPage() {
       </div>
 
       <Link
-        href="/en"
+        href={`/${locale}`}
         className="w-full bg-brown text-cream font-semibold py-4 rounded-xl text-center mb-3"
       >
         Design Another

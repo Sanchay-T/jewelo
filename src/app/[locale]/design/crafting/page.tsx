@@ -1,14 +1,18 @@
 "use client";
 import { useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams, useParams } from "next/navigation";
 import { useQuery, useAction } from "convex/react";
 import { motion, AnimatePresence } from "motion/react";
 import { api } from "../../../../../convex/_generated/api";
 import type { Id } from "../../../../../convex/_generated/dataModel";
 
+type SearchResult = { thumbnail: string; title: string };
+
 export default function CraftingPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const params = useParams();
+  const locale = (params.locale as string) || "en";
   const designId = searchParams.get("designId") as Id<"designs"> | null;
   const design = useQuery(
     api.designs.getWithImages,
@@ -22,26 +26,32 @@ export default function CraftingPage() {
   // Fetch inspiration images for the marquee
   useEffect(() => {
     searchImages({ query: "luxury jewelry collection", perPage: 20 })
-      .then((results: any) => {
+      .then((results: SearchResult[]) => {
         if (results?.length) {
           setScrollImages(
-            results.map((r: any) => ({ url: r.thumbnail, alt: r.title }))
+            results.map((r) => ({ url: r.thumbnail, alt: r.title }))
           );
         }
       })
       .catch(() => {});
-  }, []);
+  }, [searchImages]);
 
   // Auto-navigate on completion
   useEffect(() => {
     if (design?.status === "completed" && design._id) {
-      router.replace(`/en/design/results/${design._id}`);
+      router.replace(`/${locale}/design/results/${design._id}`);
     }
-  }, [design?.status, design?._id, router]);
+  }, [design?.status, design?._id, locale, router]);
 
   // Derive progress from actual image count (8 total: 4 product + 4 on-body)
-  const productCount = design?.productImageUrls?.length ?? 0;
-  const onBodyCount = design?.onBodyImageUrls?.length ?? 0;
+  const productUrls = (design?.productImageUrls || []).filter(
+    (url): url is string => Boolean(url)
+  );
+  const onBodyUrls = (design?.onBodyImageUrls || []).filter(
+    (url): url is string => Boolean(url)
+  );
+  const productCount = productUrls.length;
+  const onBodyCount = onBodyUrls.length;
   const totalImages = productCount + onBodyCount;
   const isFailed = design?.status === "failed";
   const isCompleted = design?.status === "completed";
@@ -81,7 +91,7 @@ export default function CraftingPage() {
       className="h-[100dvh] bg-cream flex flex-col overflow-hidden lg:pt-16"
     >
       {/* Main content — centered */}
-      <div className="flex-1 flex flex-col items-center justify-center px-6 max-w-lg mx-auto w-full">
+      <div className="flex-1 flex flex-col items-center justify-center px-6 max-w-lg lg:max-w-2xl mx-auto w-full">
         {/* Large circular spinner */}
         <div className="relative w-24 h-24 mb-6">
           <svg className="w-full h-full" viewBox="0 0 112 112">
@@ -126,7 +136,7 @@ export default function CraftingPage() {
         {productCount > 0 && (
           <div className="flex items-center justify-center gap-2 mb-4">
             <AnimatePresence>
-              {(design!.productImageUrls || []).map((url: string, i: number) => (
+              {productUrls.map((url: string, i: number) => (
                 <motion.div
                   key={url}
                   initial={{ opacity: 0, scale: 0.5 }}

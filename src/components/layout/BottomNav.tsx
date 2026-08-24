@@ -3,15 +3,16 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Home, Sparkles, Image, User } from "lucide-react";
 
-const tabs = [
-  { href: "/en", icon: Home, label: "Home" },
-  { href: "/en/design/language", icon: Sparkles, label: "Design" },
-  { href: "/en/gallery", icon: Image, label: "Gallery" },
-  { href: "/en/profile", icon: User, label: "Profile" },
-];
-
 export function BottomNav() {
   const pathname = usePathname();
+  const [, locale = "en"] = pathname.split("/");
+  const homeHref = `/${locale}`;
+  const tabs = [
+    { href: homeHref, icon: Home, label: "Home" },
+    { href: `/${locale}/design/language`, icon: Sparkles, label: "Design" },
+    { href: `/${locale}/gallery`, icon: Image, label: "Gallery" },
+    { href: `/${locale}/profile`, icon: User, label: "Profile" },
+  ];
 
   // Hide bottom nav during design flow (these pages have their own bottom bars)
   const isDesignFlow = pathname.includes("/design/");
@@ -25,7 +26,7 @@ export function BottomNav() {
           {tabs.map((tab) => {
             const isActive =
               pathname === tab.href ||
-              (tab.href !== "/en" && pathname.startsWith(tab.href));
+              (tab.href !== homeHref && pathname.startsWith(tab.href));
             return (
               <Link
                 key={tab.href}
@@ -50,7 +51,7 @@ export function BottomNav() {
       {/* Desktop top nav */}
       <nav className="hidden lg:block fixed top-0 left-0 right-0 bg-cream/80 backdrop-blur-xl border-b border-warm z-50">
         <div className="max-w-5xl mx-auto flex items-center justify-between px-8 py-3">
-          <Link href="/en" className="flex items-center gap-2">
+          <Link href={homeHref} className="flex items-center gap-2">
             <div className="w-7 h-7 rounded-full bg-brown flex items-center justify-center">
               <span className="text-cream text-[10px] font-bold">J</span>
             </div>
@@ -60,7 +61,7 @@ export function BottomNav() {
             {tabs.map((tab) => {
               const isActive =
                 pathname === tab.href ||
-                (tab.href !== "/en" && pathname.startsWith(tab.href));
+                (tab.href !== homeHref && pathname.startsWith(tab.href));
               return (
                 <Link
                   key={tab.href}

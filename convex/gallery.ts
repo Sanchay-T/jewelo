@@ -1,5 +1,6 @@
 import { query } from "./_generated/server";
 import { v } from "convex/values";
+import { getSelectedVariationIndex, getVariationSlotCount, normalizeStorageSlots } from "./lib/designMedia";
 
 export const getFeatured = query({
   handler: async (ctx) => {
@@ -31,13 +32,47 @@ export const getRecentCompleted = query({
 
     const results = [];
     for (const design of designs) {
-      if (design.productImageStorageIds && design.productImageStorageIds.length > 0) {
-        const idx = design.selectedVariationIndex ?? 0;
-        const storageId = design.productImageStorageIds[idx] || design.productImageStorageIds[0];
+      const slotCount = getVariationSlotCount(design);
+      const idx = getSelectedVariationIndex(design);
+      const storageId = normalizeStorageSlots(
+        design.productImageStorageIds,
+        slotCount
+      )[idx];
+      if (storageId) {
         const url = await ctx.storage.getUrl(storageId);
         if (url) {
           results.push({ _id: design._id, name: design.name, imageUrl: url });
         }
+      }
+    }
+    return results;
+  },
+});
+
+export const getRecentCompletedForSession = query({
+  args: { sessionId: v.string() },
+  handler: async (ctx, { sessionId }) => {
+    const designs = await ctx.db
+      .query("designs")
+      .withIndex("by_session_created", (q) => q.eq("sessionId", sessionId))
+      .order("desc")
+      .take(8);
+
+    const results = [];
+    for (const design of designs) {
+      if (design.status !== "completed") continue;
+
+      const slotCount = getVariationSlotCount(design);
+      const idx = getSelectedVariationIndex(design);
+      const storageId = normalizeStorageSlots(
+        design.productImageStorageIds,
+        slotCount
+      )[idx];
+      if (!storageId) continue;
+
+      const url = await ctx.storage.getUrl(storageId);
+      if (url) {
+        results.push({ _id: design._id, name: design.name, imageUrl: url });
       }
     }
     return results;

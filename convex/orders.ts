@@ -3,6 +3,7 @@ import { v } from "convex/values";
 import { internal } from "./_generated/api";
 import { calculatePrice } from "../src/lib/pricing";
 import type { Size, Karat, Style, Gemstone, MetalFinish } from "../src/lib/constants";
+import { getSelectedVariationIndex, getVariationSlotCount, normalizeStorageSlots, resolveSelectedVideoUrl } from "./lib/designMedia";
 
 export const create = mutation({
   args: {
@@ -38,6 +39,7 @@ export const create = mutation({
 
     const orderId = await ctx.db.insert("orders", {
       designId: args.designId,
+      sessionId: design.sessionId,
       customerName: args.customerName,
       customerPhone: args.customerPhone,
       customerEmail: args.customerEmail,
@@ -63,18 +65,51 @@ export const get = query({
   handler: async (ctx, { orderId }) => {
     const order = await ctx.db.get(orderId);
     if (!order) return null;
+
     const design = await ctx.db.get(order.designId);
-    const videoUrl = design?.videoStorageId
-      ? await ctx.storage.getUrl(design.videoStorageId)
-      : null;
+    const videoUrl = design ? await resolveSelectedVideoUrl(ctx, design) : null;
     return { ...order, design, videoUrl };
   },
 });
 
 export const getRecent = query({
   handler: async (ctx) => {
+    const orders = await ctx.db.query("orders").order("desc").take(10);
+
+    const results = [];
+    for (const order of orders) {
+      const design = await ctx.db.get(order.designId);
+      let imageUrl = null;
+      if (design) {
+        const selectedIdx = getSelectedVariationIndex(design);
+        const slotCount = getVariationSlotCount(design);
+        const storageId = normalizeStorageSlots(
+          design.productImageStorageIds,
+          slotCount
+        )[selectedIdx];
+        imageUrl = storageId ? await ctx.storage.getUrl(storageId) : null;
+      }
+      results.push({
+        _id: order._id,
+        status: order.status,
+        totalPrice: order.totalPrice,
+        currency: order.currency,
+        customerName: order.customerName,
+        createdAt: order.createdAt,
+        designName: design?.name || "Unknown",
+        imageUrl,
+      });
+    }
+    return results;
+  },
+});
+
+export const getRecentForSession = query({
+  args: { sessionId: v.string() },
+  handler: async (ctx, { sessionId }) => {
     const orders = await ctx.db
       .query("orders")
+      .withIndex("by_session_created", (q) => q.eq("sessionId", sessionId))
       .order("desc")
       .take(10);
 
@@ -82,10 +117,14 @@ export const getRecent = query({
     for (const order of orders) {
       const design = await ctx.db.get(order.designId);
       let imageUrl = null;
-      if (design?.productImageStorageIds?.length) {
-        const idx = design.selectedVariationIndex ?? 0;
-        const sid = design.productImageStorageIds[idx] || design.productImageStorageIds[0];
-        imageUrl = await ctx.storage.getUrl(sid);
+      if (design) {
+        const selectedIdx = getSelectedVariationIndex(design);
+        const slotCount = getVariationSlotCount(design);
+        const storageId = normalizeStorageSlots(
+          design.productImageStorageIds,
+          slotCount
+        )[selectedIdx];
+        imageUrl = storageId ? await ctx.storage.getUrl(storageId) : null;
       }
       results.push({
         _id: order._id,

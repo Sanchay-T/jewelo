@@ -1,46 +1,48 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useQuery, useAction } from "convex/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { motion, AnimatePresence } from "motion/react";
 import { api } from "../../../../convex/_generated/api";
-import { Search, X, ZoomIn, ZoomOut } from "lucide-react";
+import { X, ZoomIn, ZoomOut } from "lucide-react";
+
+type SearchImage = { url: string; alt: string; fullUrl: string };
+type SearchResult = { thumbnail?: string; imageUrl?: string; title?: string };
 
 const CATEGORIES = ["Pendants", "Rings", "Chains", "Earrings", "Bracelets"];
 
 export default function GalleryPage() {
   const router = useRouter();
+  const params = useParams();
+  const locale = (params.locale as string) || "en";
   const recentDesigns = useQuery(api.gallery.getRecentCompleted);
   const searchImages = useAction(api.search.execute);
 
   const [activeCategory, setActiveCategory] = useState("Pendants");
-  const [pexelsImages, setPexelsImages] = useState<
-    { url: string; alt: string; fullUrl: string }[]
-  >([]);
-  const [loading, setLoading] = useState(false);
+  const [pexelsImages, setPexelsImages] = useState<SearchImage[]>([]);
+  const [loading, setLoading] = useState(true);
   const [viewerUrl, setViewerUrl] = useState<string | null>(null);
   const [viewerZoom, setViewerZoom] = useState(1);
 
   useEffect(() => {
-    setLoading(true);
     searchImages({
       query: `gold ${activeCategory.toLowerCase()} jewelry`,
       perPage: 12,
     })
-      .then((results: any) => {
+      .then((results: SearchResult[]) => {
         if (Array.isArray(results) && results.length > 0) {
           setPexelsImages(
-            results.map((r: any) => ({
-              url: r.thumbnail || r.imageUrl,
+            results.map((r) => ({
+              url: r.thumbnail || r.imageUrl || "",
               alt: r.title || "Jewelry",
-              fullUrl: r.imageUrl,
+              fullUrl: r.imageUrl || r.thumbnail || "",
             }))
           );
         }
       })
       .catch((err) => console.error("Gallery search failed:", err))
       .finally(() => setLoading(false));
-  }, [activeCategory]);
+  }, [activeCategory, searchImages]);
 
   return (
     <div className="min-h-screen bg-cream pb-24 lg:pt-16 lg:pb-8">
@@ -136,7 +138,7 @@ export default function GalleryPage() {
                 <button
                   onClick={() =>
                     router.push(
-                      `/en/design/customize?lang=en&ref=${encodeURIComponent(img.fullUrl || img.url)}`
+                      `/${locale}/design/customize?lang=en&ref=${encodeURIComponent(img.fullUrl || img.url)}`
                     )
                   }
                   className="absolute bottom-2 left-2 right-2 bg-brown/90 backdrop-blur-sm text-cream text-[10px] font-medium py-1.5 rounded-lg text-center opacity-0 group-hover:opacity-100 transition-opacity"

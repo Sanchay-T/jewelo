@@ -1,7 +1,12 @@
 import type { NextConfig } from "next";
+import path from "path";
+
+const appRoot = path.dirname(new URL(import.meta.url).pathname);
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  turbopack: {
+    root: appRoot,
+  },
 };
 
 export default nextConfig;

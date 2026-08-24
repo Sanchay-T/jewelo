@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams, useParams } from "next/navigation";
 import { useAction, useMutation, useQuery } from "convex/react";
 import { api } from "../../../../../convex/_generated/api";
 import { SearchBar } from "@/components/design/SearchBar";
@@ -53,6 +53,8 @@ function buildSearchQuery(category: string, styleFamily: StyleFamily, complexity
 export default function InspirationPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const params = useParams();
+  const locale = (params.locale as string) || "en";
   const lang = searchParams.get("lang") || "en";
   const searchImages = useAction(api.search.execute);
   const randomTemplate = useMutation(api.templates.getRandom);
@@ -223,14 +225,14 @@ export default function InspirationPage() {
           gender,
           gemstones: templateGemstones.join(","),
         });
-        router.push(`/en/design/customize?${query.toString()}`);
+        router.push(`/${locale}/design/customize?${query.toString()}`);
       }
     } catch (err) {
       console.error("Upload failed:", err);
     } finally {
       setUploading(false);
     }
-  }, [generateUploadUrl, saveReference, router, lang, styleFamily, complexity, gender, jewelryType, templateGemstones]);
+  }, [generateUploadUrl, saveReference, router, locale, lang, styleFamily, complexity, gender, jewelryType, templateGemstones]);
 
   const handleInspireMe = async () => {
     setInspiring(true);
@@ -295,7 +297,7 @@ export default function InspirationPage() {
       gender,
       gemstones: templateGemstones.join(","),
     });
-    return `/en/design/customize?${query.toString()}`;
+    return `/${locale}/design/customize?${query.toString()}`;
   };
 
   return (
@@ -456,7 +458,7 @@ export default function InspirationPage() {
                   gender,
                   gemstones: templateGemstones.join(","),
                 });
-                router.push(`/en/design/from-scratch?${query.toString()}`);
+                router.push(`/${locale}/design/from-scratch?${query.toString()}`);
               }}
               className="w-full text-text-secondary text-sm py-2.5 rounded-xl border border-warm hover:bg-sand/50 transition"
             >

@@ -10,16 +10,22 @@ import { VersionHistory } from "../../../../components/admin/VersionHistory";
 import { useState } from "react";
 import Link from "next/link";
 
+type TemplateVersion = {
+  _id: string;
+  version: number;
+  name: string;
+  template: string;
+  isActive: boolean;
+  changeNote?: string;
+  createdAt: number;
+};
+
 function TemplateDetail() {
   const params = useParams();
   const slug = params.slug as string;
 
-  const versions = useQuery(api.prompts.getTemplateVersions, { slug });
-  const allPartials = useQuery(api.prompts.listPartials);
-  const partialDetails = useQuery(
-    api.prompts.getPartialVersions,
-    allPartials?.[0] ? { slug: allPartials[0].slug } : "skip",
-  );
+  const versions = useQuery(api.prompts.getTemplateVersions, { slug }) as TemplateVersion[] | undefined;
+  const allPartials = useQuery(api.prompts.listPartials) ?? [];
 
   // Collect all active partials for preview
   const activePartials = allPartials
@@ -76,9 +82,7 @@ function TemplateDetail() {
 
           <div>
             <VersionHistory
-              versions={versions as any}
-              type="template"
-              identifier={slug}
+              versions={versions}
               onSelect={(v) => setSelectedVersion(v.version)}
             />
           </div>

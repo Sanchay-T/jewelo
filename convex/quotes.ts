@@ -16,6 +16,7 @@ export const create = mutation({
 
     return await ctx.db.insert("quoteRequests", {
       designId: args.designId,
+      sessionId: design.sessionId,
       customerName: args.customerName,
       customerPhone: args.customerPhone,
       customerEmail: args.customerEmail,

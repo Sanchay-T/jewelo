@@ -8,6 +8,7 @@ import { ImmersiveVideoGallery } from "@/components/design/ImmersiveVideoGallery
 export default function VideosPage() {
   const params = useParams();
   const router = useRouter();
+  const locale = (params.locale as string) || "en";
   const designId = params.id as Id<"designs">;
 
   const design = useQuery(
@@ -27,7 +28,7 @@ export default function VideosPage() {
 
   const handleSelect = async (variationIndex: number) => {
     await selectVariation({ designId, index: variationIndex });
-    router.push(`/en/design/engraving/${designId}`);
+    router.push(`/${locale}/design/engraving/${designId}`);
   };
 
   return (

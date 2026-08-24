@@ -1,6 +1,9 @@
 "use node";
 import { action } from "./_generated/server";
 import { v } from "convex/values";
+import { createLogger, serializeError } from "../src/lib/observability/logger";
+
+const logger = createLogger({ service: "convex.search" });
 
 type ImageResult = {
   imageUrl: string;
@@ -12,61 +15,60 @@ type ImageResult = {
   source: string;
 };
 
-// ── Unsplash search ─────────────────────────────────────────────────
-async function searchUnsplash(
+// ── Pexels search ───────────────────────────────────────────────────
+async function searchPexels(
   query: string,
   count: number,
   pageNum: number,
-  accessKey: string,
+  apiKey: string,
 ): Promise<ImageResult[]> {
-  const url = `https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&per_page=${count}&page=${pageNum}&orientation=squarish`;
+  const startedAt = Date.now();
+  const url = `https://api.pexels.com/v1/search?query=${encodeURIComponent(query)}&per_page=${count}&page=${pageNum}`;
 
-  const response = await fetch(url, {
-    headers: {
-      Authorization: `Client-ID ${accessKey}`,
-      "Accept-Version": "v1",
-    },
+  logger.info("Searching Pexels", {
+    event: "search.request",
+    route: "https://api.pexels.com/v1/search",
+    method: "GET",
+    statusCode: 200,
   });
 
-  if (!response.ok) return [];
+  try {
+    const response = await fetch(url, {
+      headers: { Authorization: apiKey },
+    });
 
-  const data = await response.json();
-  if (!data.results || !Array.isArray(data.results)) return [];
+    logger.info("Pexels response", {
+      event: "search.response",
+      route: "https://api.pexels.com/v1/search",
+      method: "GET",
+      statusCode: response.status,
+      durationMs: Date.now() - startedAt,
+    });
 
-  return data.results.map((photo: any) => ({
-    imageUrl: photo.urls?.regular || photo.urls?.full,
-    thumbnail: photo.urls?.small || photo.urls?.thumb,
-    title: photo.alt_description || photo.description || "Jewelry",
-    width: photo.width || 0,
-    height: photo.height || 0,
-    photographer: photo.user?.name || "Unknown",
-    source: "unsplash",
-  }));
-}
+    if (!response.ok) return [];
 
-// ── Openverse search (free, no key required) ────────────────────────
-async function searchOpenverse(
-  query: string,
-  count: number,
-  pageNum: number,
-): Promise<ImageResult[]> {
-  const url = `https://api.openverse.org/v1/images/?q=${encodeURIComponent(query)}&page_size=${count}&page=${pageNum}&category=photograph`;
+    const data = await response.json();
+    if (!data.photos || !Array.isArray(data.photos)) return [];
 
-  const response = await fetch(url);
-  if (!response.ok) return [];
-
-  const data = await response.json();
-  if (!data.results || !Array.isArray(data.results)) return [];
-
-  return data.results.map((img: any) => ({
-    imageUrl: img.url,
-    thumbnail: img.thumbnail || img.url,
-    title: img.title || "Jewelry",
-    width: img.width || 0,
-    height: img.height || 0,
-    photographer: img.creator || "Unknown",
-    source: "openverse",
-  }));
+    return data.photos.map((photo: any) => ({
+      imageUrl: photo.src?.large2x || photo.src?.large || photo.src?.original,
+      thumbnail: photo.src?.medium || photo.src?.small,
+      title: photo.alt || "Jewelry",
+      width: photo.width || 0,
+      height: photo.height || 0,
+      photographer: photo.photographer || "Unknown",
+      source: "pexels",
+    }));
+  } catch (error) {
+    logger.error("Pexels search failed", {
+      event: "search.error",
+      route: "https://api.pexels.com/v1/search",
+      method: "GET",
+      error: serializeError(error),
+      durationMs: Date.now() - startedAt,
+    });
+    return [];
+  }
 }
 
 // ── Combined search action ──────────────────────────────────────────
@@ -79,29 +81,36 @@ export const execute = action({
     // Add jewelry context if not already present
     const hasJewelryTerm = /jewelry|pendant|ring|necklace|bracelet|earring|chain|gold|silver/i.test(query);
     const searchQuery = hasJewelryTerm ? query : `${query} gold jewelry`;
+    logger.info("Search action started", {
+      event: "search.action.start",
+      method: "POST",
+      route: "/api/search",
+      statusCode: 200,
+      requestId: searchQuery,
+    });
 
-    console.log("Search:", searchQuery);
-
-    const accessKey = process.env.UNSPLASH_ACCESS_KEY;
-
-    // Search both sources in parallel
-    const [unsplashResults, openverseResults] = await Promise.all([
-      accessKey
-        ? searchUnsplash(searchQuery, Math.ceil(count / 2), pageNum, accessKey)
-        : Promise.resolve([]),
-      searchOpenverse(searchQuery, Math.ceil(count / 2), pageNum),
-    ]);
-
-    // Interleave results: unsplash, openverse, unsplash, openverse...
-    const merged: ImageResult[] = [];
-    const maxLen = Math.max(unsplashResults.length, openverseResults.length);
-    for (let i = 0; i < maxLen; i++) {
-      if (i < unsplashResults.length) merged.push(unsplashResults[i]);
-      if (i < openverseResults.length) merged.push(openverseResults[i]);
+    const apiKey = process.env.PEXELS_API_KEY;
+    if (!apiKey) {
+      logger.error("PEXELS_API_KEY not set", {
+        event: "search.config_missing",
+        route: "/api/search",
+        method: "POST",
+        error: serializeError("PEXELS_API_KEY not set"),
+      });
+      throw new Error("PEXELS_API_KEY not set");
     }
 
-    console.log(`Results: ${unsplashResults.length} unsplash + ${openverseResults.length} openverse = ${merged.length} total`);
+    const results = await searchPexels(searchQuery, count, pageNum, apiKey);
 
-    return merged.slice(0, count);
+    logger.info("Search action completed", {
+      event: "search.action.done",
+      route: "/api/search",
+      method: "POST",
+      statusCode: 200,
+      requestId: searchQuery,
+      durationMs: results.length,
+    });
+
+    return results;
   },
 });

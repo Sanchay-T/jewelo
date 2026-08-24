@@ -35,7 +35,7 @@ export default defineSchema({
     ),
 
     // Generation status
-    status: v.string(), // "generating" | "analyzing" | "engraving" | "completed" | "failed"
+    status: v.string(), // "draft" | "generating" | "analyzing" | "engraving" | "completed" | "failed"
     analysisStep: v.optional(v.string()),
     analysisData: v.optional(
       v.object({
@@ -57,14 +57,14 @@ export default defineSchema({
     selectedImageIndex: v.optional(v.number()),
 
     // Results — product shots (4 studio images)
-    productImageStorageIds: v.optional(v.array(v.id("_storage"))),
+    productImageStorageIds: v.optional(v.array(v.union(v.id("_storage"), v.null()))),
     // Results — on-body shots (4 contextual images)
-    onBodyImageStorageIds: v.optional(v.array(v.id("_storage"))),
+    onBodyImageStorageIds: v.optional(v.array(v.union(v.id("_storage"), v.null()))),
     selectedVariationIndex: v.optional(v.number()), // 0-3 (which variation pair)
     regenerationsRemaining: v.number(),
 
     // Video (Veo 3.1 rotating animations — one per variation)
-    videoStorageIds: v.optional(v.array(v.id("_storage"))),
+    videoStorageIds: v.optional(v.array(v.union(v.id("_storage"), v.null()))),
     videoStatuses: v.optional(v.array(v.string())), // ["completed","generating","pending","failed"]
     videoOperationIds: v.optional(v.array(v.string())),
     // Legacy single-video fields (backward compat — remove after migration)
@@ -76,10 +76,71 @@ export default defineSchema({
     featured: v.optional(v.boolean()),
 
     // Metadata
+    source: v.optional(v.string()), // "customer" | "playground"
+    sessionId: v.optional(v.string()),
+    requestedPromptEnvironment: v.optional(v.string()),
+    requestedPromptRelease: v.optional(
+      v.object({
+        slug: v.string(),
+        version: v.number(),
+      })
+    ),
+    promptSnapshot: v.optional(
+      v.object({
+        environment: v.optional(v.string()),
+        mode: v.optional(v.string()),
+        release: v.optional(
+          v.object({
+            slug: v.string(),
+            version: v.number(),
+          })
+        ),
+        pipeline: v.optional(
+          v.object({
+            slug: v.string(),
+            version: v.number(),
+          })
+        ),
+        templates: v.array(
+          v.object({
+            slug: v.string(),
+            version: v.number(),
+          })
+        ),
+        partials: v.array(
+          v.object({
+            slug: v.string(),
+            version: v.number(),
+          })
+        ),
+        configs: v.array(
+          v.object({
+            key: v.string(),
+            version: v.number(),
+          })
+        ),
+        stages: v.optional(
+          v.array(
+            v.object({
+              stageKey: v.string(),
+              stageType: v.string(),
+              branch: v.string(),
+              templateSlug: v.string(),
+              templateVersion: v.optional(v.number()),
+              usedFallback: v.boolean(),
+              fallbackReason: v.optional(v.string()),
+            })
+          )
+        ),
+        capturedAt: v.number(),
+      })
+    ),
     createdAt: v.number(),
   })
     .index("by_status", ["status"])
     .index("by_featured", ["featured"])
+    .index("by_session_created", ["sessionId", "createdAt"])
+    .index("by_source_created", ["source", "createdAt"])
     .index("by_created", ["createdAt"]),
 
   goldPrices: defineTable({
@@ -97,6 +158,7 @@ export default defineSchema({
 
   orders: defineTable({
     designId: v.id("designs"),
+    sessionId: v.optional(v.string()),
     customerName: v.string(),
     customerPhone: v.string(),
     customerEmail: v.optional(v.string()),
@@ -118,6 +180,7 @@ export default defineSchema({
     createdAt: v.number(),
   })
     .index("by_status", ["status"])
+    .index("by_session_created", ["sessionId", "createdAt"])
     .index("by_design", ["designId"]),
 
   inspirationImages: defineTable({
@@ -168,6 +231,7 @@ export default defineSchema({
 
   quoteRequests: defineTable({
     designId: v.id("designs"),
+    sessionId: v.optional(v.string()),
     customerName: v.string(),
     customerPhone: v.string(),
     customerEmail: v.optional(v.string()),
@@ -180,6 +244,7 @@ export default defineSchema({
     updatedAt: v.number(),
   })
     .index("by_status", ["status"])
+    .index("by_session_created", ["sessionId", "createdAt"])
     .index("by_design", ["designId"]),
 
   // ── Prompt Management System ────────────────────────────────────────
@@ -217,4 +282,61 @@ export default defineSchema({
   })
     .index("by_key", ["key"])
     .index("by_key_active", ["key", "isActive"]),
+
+  promptPipelines: defineTable({
+    slug: v.string(),
+    version: v.number(),
+    name: v.string(),
+    description: v.optional(v.string()),
+    stages: v.array(
+      v.object({
+        stageKey: v.string(),
+        stageType: v.string(),
+        branch: v.string(),
+        templateSlug: v.string(),
+        note: v.optional(v.string()),
+      })
+    ),
+    createdAt: v.number(),
+  }).index("by_slug", ["slug"]),
+
+  promptReleases: defineTable({
+    slug: v.string(),
+    version: v.number(),
+    name: v.string(),
+    pipelineSlug: v.string(),
+    pipelineVersion: v.number(),
+    templateVersions: v.array(
+      v.object({
+        slug: v.string(),
+        version: v.number(),
+      })
+    ),
+    partialVersions: v.array(
+      v.object({
+        slug: v.string(),
+        version: v.number(),
+      })
+    ),
+    configVersions: v.array(
+      v.object({
+        key: v.string(),
+        version: v.number(),
+      })
+    ),
+    status: v.string(), // "draft" | "validated" | "archived"
+    validationErrors: v.array(v.string()),
+    validatedAt: v.optional(v.number()),
+    createdAt: v.number(),
+  })
+    .index("by_slug", ["slug"])
+    .index("by_status", ["status"]),
+
+  promptEnvironmentActivations: defineTable({
+    environment: v.string(), // "dev" | "staging" | "production"
+    releaseId: v.id("promptReleases"),
+    releaseSlug: v.string(),
+    releaseVersion: v.number(),
+    activatedAt: v.number(),
+  }).index("by_environment", ["environment"]),
 });

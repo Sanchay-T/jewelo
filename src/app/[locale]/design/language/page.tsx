@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { motion } from "motion/react";
 import { useDesignFlow } from "@/lib/DesignFlowContext";
 import { Check } from "lucide-react";
@@ -14,6 +14,8 @@ const languages = [
 export default function LanguagePage() {
   const [selected, setSelected] = useState<string | null>(null);
   const router = useRouter();
+  const params = useParams();
+  const locale = (params.locale as string) || "en";
   const { setLanguage } = useDesignFlow();
 
   return (
@@ -33,7 +35,7 @@ export default function LanguagePage() {
           transition={{ delay: 0.2 }}
           className="text-text-secondary text-sm mb-8"
         >
-          We&apos;ll pick the best fonts and AI for you.
+          We&apos;ll tune the design engine for your script. The app interface stays in English for now.
         </motion.p>
 
         <div className="space-y-3">
@@ -79,7 +81,7 @@ export default function LanguagePage() {
           onClick={() => {
             if (selected) {
               setLanguage(selected);
-              router.push(`/en/design/inspiration?lang=${selected}`);
+              router.push(`/${locale}/design/inspiration?lang=${selected}`);
             }
           }}
           disabled={!selected}

@@ -10,11 +10,20 @@ import { VersionHistory } from "../../../../components/admin/VersionHistory";
 import { useState } from "react";
 import Link from "next/link";
 
+type ConfigVersion = {
+  _id: string;
+  version: number;
+  data: string;
+  isActive: boolean;
+  changeNote?: string;
+  createdAt: number;
+};
+
 function ConfigDetail() {
   const params = useParams();
   const configKey = params.key as string;
 
-  const versions = useQuery(api.prompts.getConfigVersions, { key: configKey });
+  const versions = useQuery(api.prompts.getConfigVersions, { key: configKey }) as ConfigVersion[] | undefined;
   const [selectedVersion, setSelectedVersion] = useState<number | null>(null);
 
   if (!versions) {
@@ -64,11 +73,8 @@ function ConfigDetail() {
             <VersionHistory
               versions={versions.map((v) => ({
                 ...v,
-                _id: v._id as string,
                 name: `v${v.version}`,
               }))}
-              type="config"
-              identifier={configKey}
               onSelect={(v) => setSelectedVersion(v.version)}
             />
           </div>

@@ -19,6 +19,7 @@ const FALLBACK_GOLD_PRICE_PER_GRAM = 310;
 export default function ReviewPage() {
   const router = useRouter();
   const params = useParams();
+  const locale = (params.locale as string) || "en";
   const designId = params.id as Id<"designs">;
   const design = useQuery(
     api.designs.getWithImages,
@@ -37,6 +38,8 @@ export default function ReviewPage() {
   const [quoteSent, setQuoteSent] = useState(false);
   const [viewerUrl, setViewerUrl] = useState<string | null>(null);
   const [viewerZoom, setViewerZoom] = useState(1);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [galleryError, setGalleryError] = useState<string | null>(null);
 
   const pricePerGram = goldPrice?.pricePerGram || FALLBACK_GOLD_PRICE_PER_GRAM;
   const isLivePrice = !!goldPrice?.pricePerGram;
@@ -73,15 +76,18 @@ export default function ReviewPage() {
   const handleOrder = async () => {
     if (!designId || !customerName || !customerPhone) return;
     setLoading(true);
+    setActionError(null);
     try {
       const orderId = await createOrder({
         designId,
         customerName,
         customerPhone,
       });
-      router.push(`/en/design/confirmed/${orderId}`);
+      router.push(`/${locale}/design/confirmed/${orderId}`);
     } catch (err) {
       console.error("Order failed:", err);
+      setActionError("We could not place your order. Your details are still here, so you can retry.");
+    } finally {
       setLoading(false);
     }
   };
@@ -89,6 +95,7 @@ export default function ReviewPage() {
   const handleQuoteRequest = async () => {
     if (!designId || !customerName || !customerPhone || !quoteNotes.trim()) return;
     setQuoteLoading(true);
+    setActionError(null);
     try {
       await createQuote({
         designId,
@@ -100,6 +107,7 @@ export default function ReviewPage() {
       setQuoteSent(true);
     } catch (err) {
       console.error("Quote request failed:", err);
+      setActionError("We could not send your quote request. Please try again in a moment.");
     } finally {
       setQuoteLoading(false);
     }
@@ -226,6 +234,12 @@ export default function ReviewPage() {
         )}
       </div>
 
+      {actionError && (
+        <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {actionError}
+        </div>
+      )}
+
       <button
         onClick={handleOrder}
         disabled={!customerName || !customerPhone || loading}
@@ -237,7 +251,7 @@ export default function ReviewPage() {
       >
         {loading ? "Placing Order..." : "Place Order"}
       </button>
-      {quoteEligible && (
+      {quoteEligible ? (
         <button
           onClick={handleQuoteRequest}
           disabled={!customerName || !customerPhone || !quoteNotes.trim() || quoteLoading || quoteSent}
@@ -251,12 +265,22 @@ export default function ReviewPage() {
         >
           {quoteSent ? "Quote Requested" : quoteLoading ? "Requesting..." : "Request Custom Quote"}
         </button>
+      ) : (
+        <div className="mb-3 rounded-xl border border-warm bg-white px-4 py-3 text-sm text-text-secondary">
+          Custom quotes are available for larger or more complex pieces. This design can be ordered directly at the live price above.
+        </div>
       )}
       <button
         onClick={async () => {
           if (!designId || saved) return;
-          await saveToGallery({ designId });
-          setSaved(true);
+          setGalleryError(null);
+          try {
+            await saveToGallery({ designId });
+            setSaved(true);
+          } catch (err) {
+            console.error("Save to gallery failed:", err);
+            setGalleryError("We could not save this design right now. Please try again.");
+          }
         }}
         disabled={saved}
         className={`w-full border py-3 rounded-xl text-sm transition ${
@@ -267,6 +291,9 @@ export default function ReviewPage() {
       >
         {saved ? "Saved to Gallery" : "Save to Gallery"}
       </button>
+      {galleryError && (
+        <p className="mt-3 text-sm text-red-700">{galleryError}</p>
+      )}
       </div>
       </div>
       </div>

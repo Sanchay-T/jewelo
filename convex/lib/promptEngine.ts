@@ -1,14 +1,45 @@
 /**
- * Prompt Engine — fetches active templates, partials, and configs from Convex DB,
- * compiles Handlebars templates, and returns plain-text prompts for Gemini/Veo.
- *
- * Runs inside Convex "use node" actions. Falls back to hardcoded prompts on error.
+ * Prompt Engine — resolves the active prompt release bundle, compiles
+ * Handlebars templates with release-scoped partials/configs, and returns
+ * stage-specific prompts for Gemini/Veo.
  */
-import Handlebars from "handlebars";
+import Handlebars, { type HelperOptions } from "handlebars";
 import type { GenericActionCtx } from "convex/server";
 import type { DataModel } from "../_generated/dataModel";
+import {
+  buildPromptExecutionSnapshot,
+  getPromptEnvironment,
+  type PromptEnvironment,
+  type PromptExecutionSnapshot,
+  type PromptStageSnapshot,
+  type ResolvedPromptReleaseBundle,
+} from "./promptControl";
 
-// ── Types ─────────────────────────────────────────────────────────────
+export const PROMPT_STAGE_KEYS = {
+  productReference: "product.reference",
+  productFromScratch: "product.fromScratch",
+  onBodyChained: "onBody.chained",
+  videoMain: "video.main",
+  videoNegative: "video.negative",
+} as const;
+
+export type PromptStageKey = typeof PROMPT_STAGE_KEYS[keyof typeof PROMPT_STAGE_KEYS];
+
+export interface PromptExecutionOptions {
+  environment?: PromptEnvironment;
+  releaseOverride?: {
+    slug: string;
+    version: number;
+  } | null;
+}
+
+type PromptExecutionDesign = {
+  requestedPromptEnvironment?: string;
+  requestedPromptRelease?: {
+    slug: string;
+    version: number;
+  };
+};
 
 export interface DesignInputForEngine {
   name: string;
@@ -31,7 +62,6 @@ export interface DesignInputForEngine {
 }
 
 export interface PromptContext {
-  // Direct from design
   name: string;
   language: string;
   font: string;
@@ -46,8 +76,6 @@ export interface PromptContext {
   gemstones: string;
   finish: string;
   occasion: string;
-
-  // Computed from configs
   fontStyle: string;
   decoration: string;
   sizeFeel: string;
@@ -57,37 +85,61 @@ export interface PromptContext {
   isNamePendant: boolean;
   needsChain: boolean;
   chainDesc: string;
-
-  // Text reference
   charSpelling: string;
   charCount: number;
   languageNote: string;
   spellingCheck: string;
-
-  // Variation (optional — only for product/on-body)
   variationName?: string;
   variationCamera?: string;
   variationLighting?: string;
   variationFeel?: string;
-
-  // Body mapping (optional — only for on-body)
   bodyPart?: string;
   bodyFraming?: string;
   bodyPose?: string;
   bodyRules?: string;
-
-  // Context flags
   hasReference: boolean;
   referenceRule: string;
-
-  // Video (optional)
   videoMotion?: string;
   videoLighting?: string;
 }
 
-type Configs = Record<string, any>;
+type Configs = Record<string, unknown>;
 
-// ── Build prompt context from DesignInput + configs ───────────────────
+function registerDefaultHelpers(hbs: typeof Handlebars) {
+  hbs.registerHelper("unless", function (
+    this: unknown,
+    conditional: unknown,
+    options: HelperOptions
+  ) {
+    return conditional ? options.inverse(this) : options.fn(this);
+  });
+}
+
+function renderTemplate(
+  template: string,
+  partials: Array<{ slug: string; template?: string }>,
+  context: PromptContext,
+) {
+  const hbs = Handlebars.create();
+  registerDefaultHelpers(hbs);
+
+  for (const partial of partials) {
+    if (partial.template) {
+      hbs.registerPartial(partial.slug, partial.template);
+    }
+  }
+
+  return hbs.compile(template, { noEscape: true })(context);
+}
+
+function parseBundleConfigs(bundle: ResolvedPromptReleaseBundle): Configs {
+  const map: Configs = {};
+  for (const config of bundle.configs) {
+    if (!config.data) continue;
+    map[config.key] = JSON.parse(config.data);
+  }
+  return map;
+}
 
 export function buildPromptContext(
   design: DesignInputForEngine,
@@ -95,14 +147,19 @@ export function buildPromptContext(
   configs: Configs,
   extra?: { hasReference?: boolean },
 ): PromptContext {
-  const fontStyles = configs.fontStyles ?? {};
-  const backgroundStyles = configs.backgroundStyles ?? {};
-  const decorationStyles = configs.decorationStyles ?? {};
-  const sizeFeels = configs.sizeFeels ?? {};
-  const variations = configs.variations ?? [];
-  const bodyMapping = configs.bodyMapping ?? {};
-  const videoMotion = configs.videoMotion ?? {};
-  const videoLighting = configs.videoLighting ?? {};
+  const fontStyles = (configs.fontStyles ?? {}) as Record<string, string>;
+  const backgroundStyles = (configs.backgroundStyles ?? {}) as Record<string, string>;
+  const decorationStyles = (configs.decorationStyles ?? {}) as Record<string, string>;
+  const sizeFeels = (configs.sizeFeels ?? {}) as Record<string, string>;
+  const variations = (configs.variations ?? []) as Array<Record<string, string>>;
+  const bodyMapping = (configs.bodyMapping ?? {}) as Record<string, {
+    part?: string;
+    framing?: string;
+    pose?: string;
+    rules?: string;
+  }>;
+  const videoMotion = (configs.videoMotion ?? {}) as Record<string, string>;
+  const videoLighting = (configs.videoLighting ?? {}) as Record<string, string>;
 
   const metalType = design.metalType || "yellow";
   const metalLabel = metalType.replace(/_/g, " ");
@@ -110,7 +167,6 @@ export function buildPromptContext(
   const karat = design.karat || "18K";
   const isNamePendant = jewelryType === "name_pendant" || jewelryType === "pendant";
   const needsChain = ["pendant", "name_pendant", "necklace", "chain"].includes(jewelryType);
-
   const variation = variations[variationIndex % (variations.length || 1)] ?? {};
 
   const bodyMap = bodyMapping[jewelryType] ?? bodyMapping.pendant ?? {
@@ -122,7 +178,6 @@ export function buildPromptContext(
 
   const chars = [...design.name];
   const spelled = chars.join(" — ");
-
   let languageNote = "This is Latin text. Render each character exactly as specified with correct kerning.";
   if (design.language === "ar") {
     languageNote = "This is Arabic text. Render RIGHT-TO-LEFT with correct letter connections (initial, medial, final, isolated forms). Do NOT reverse the character order.";
@@ -139,10 +194,11 @@ export function buildPromptContext(
   const gemstoneList = (design.gemstones || []).filter(Boolean);
   const decoration =
     gemstoneList.length > 0
-      ? (gemstoneList.length === 1 && gemstoneList[0] === "diamond"
+      ? gemstoneList.length === 1 && gemstoneList[0] === "diamond"
         ? decorationStyles.gold_with_diamonds
-        : `gold set with ${gemstoneList.join(", ")} gemstones in mixed prong and bezel settings`)
+        : `gold set with ${gemstoneList.join(", ")} gemstones in mixed prong and bezel settings`
       : (decorationStyles[design.style] ?? "none, pure polished gold");
+
   const complexity = Math.max(1, Math.min(10, Math.round(design.complexity || 5)));
   const finish = design.additionalInfo?.metalFinish || "polished";
   const occasion = design.additionalInfo?.occasion || "";
@@ -192,53 +248,143 @@ export function buildPromptContext(
   };
 }
 
-// ── Compile a Handlebars template with partials ───────────────────────
-
-export async function compilePrompt(
+export async function fetchResolvedActivePromptBundle(
   ctx: GenericActionCtx<DataModel>,
-  slug: string,
-  context: PromptContext,
-  fallbackFn?: () => string,
-): Promise<string> {
-  try {
-    const { internal } = await import("../_generated/api");
-
-    // Fetch active template
-    const template = await ctx.runQuery(internal.prompts.getActiveTemplate, { slug });
-    if (!template) {
-      if (fallbackFn) return fallbackFn();
-      throw new Error(`No active template for slug: ${slug}`);
-    }
-
-    // Fetch all active partials
-    const partials = await ctx.runQuery(internal.prompts.getAllActivePartials, {});
-
-    // Create isolated Handlebars instance
-    const hbs = Handlebars.create();
-    hbs.registerHelper("unless", function (this: any, conditional: any, options: any) {
-      return conditional ? options.inverse(this) : options.fn(this);
-    });
-
-    // Register partials
-    for (const partial of partials) {
-      hbs.registerPartial(partial.slug, partial.template);
-    }
-
-    // Compile and execute
-    const compiled = hbs.compile(template.template, { noEscape: true });
-    return compiled(context);
-  } catch (err) {
-    console.error(`[promptEngine] Failed to compile "${slug}":`, err);
-    if (fallbackFn) return fallbackFn();
-    throw err;
-  }
+  environment?: PromptEnvironment,
+): Promise<ResolvedPromptReleaseBundle | null> {
+  const { internal } = await import("../_generated/api");
+  return await ctx.runQuery(internal.prompts.getResolvedActiveReleaseBundle, {
+    environment: environment ?? getPromptEnvironment(),
+  }) as ResolvedPromptReleaseBundle | null;
 }
 
-// ── Fetch all active configs as a map ─────────────────────────────────
-
-export async function fetchAllActiveConfigs(
+export async function fetchResolvedPromptBundleForExecution(
   ctx: GenericActionCtx<DataModel>,
-): Promise<Configs> {
+  options?: PromptExecutionOptions,
+): Promise<ResolvedPromptReleaseBundle | null> {
+  if (options?.releaseOverride) {
+    return await fetchResolvedPromptBundleByVersion(
+      ctx,
+      options.releaseOverride.slug,
+      options.releaseOverride.version,
+      options.environment
+    );
+  }
+
+  return await fetchResolvedActivePromptBundle(ctx, options?.environment);
+}
+
+export function getPromptExecutionOptionsForDesign(
+  design: PromptExecutionDesign
+): PromptExecutionOptions {
+  return {
+    environment: design.requestedPromptEnvironment as PromptEnvironment | undefined,
+    releaseOverride: design.requestedPromptRelease
+      ? {
+          slug: design.requestedPromptRelease.slug,
+          version: design.requestedPromptRelease.version,
+        }
+      : null,
+  };
+}
+
+export async function fetchResolvedPromptBundleByVersion(
+  ctx: GenericActionCtx<DataModel>,
+  slug: string,
+  version: number,
+  environment?: PromptEnvironment,
+): Promise<ResolvedPromptReleaseBundle | null> {
   const { internal } = await import("../_generated/api");
-  return await ctx.runQuery(internal.prompts.getAllActiveConfigs, {});
+  return await ctx.runQuery(internal.prompts.getReleaseBundleByVersion, {
+    slug,
+    version,
+    environment,
+  }) as ResolvedPromptReleaseBundle | null;
+}
+
+export function buildPromptSnapshotFromBundle(
+  bundle: ResolvedPromptReleaseBundle,
+  stages?: PromptStageSnapshot[],
+): PromptExecutionSnapshot {
+  return buildPromptExecutionSnapshot(bundle, stages);
+}
+
+export function getBundleConfigs(bundle: ResolvedPromptReleaseBundle): Configs {
+  return parseBundleConfigs(bundle);
+}
+
+export async function resolveStagePrompt(
+  ctx: GenericActionCtx<DataModel>,
+  stageKey: PromptStageKey,
+  context: PromptContext,
+  fallbackFn?: () => string,
+  bundle?: ResolvedPromptReleaseBundle | null,
+): Promise<{
+  prompt: string;
+  stageSnapshot: PromptStageSnapshot;
+  bundle: ResolvedPromptReleaseBundle | null;
+  configs: Configs;
+}> {
+  const resolvedBundle = bundle ?? await fetchResolvedActivePromptBundle(ctx);
+  const environment = resolvedBundle?.environment ?? getPromptEnvironment();
+  const allowFallback = resolvedBundle?.allowFallback ?? environment !== "production";
+
+  const fallback = (reason: string) => {
+    if (!fallbackFn || !allowFallback) {
+      throw new Error(reason);
+    }
+    return {
+      prompt: fallbackFn(),
+      stageSnapshot: {
+        stageKey,
+        stageType: "unknown",
+        branch: "always",
+        templateSlug: "fallback",
+        usedFallback: true,
+        fallbackReason: reason,
+      },
+      bundle: resolvedBundle,
+      configs: resolvedBundle ? parseBundleConfigs(resolvedBundle) : {},
+    };
+  };
+
+  if (!resolvedBundle) {
+    return fallback("No active prompt release is configured for this environment");
+  }
+
+  const stage = resolvedBundle.pipeline.stages.find((item) => item.stageKey === stageKey);
+  if (!stage) {
+    return fallback(`Stage "${stageKey}" is missing from pipeline ${resolvedBundle.pipeline.slug} v${resolvedBundle.pipeline.version}`);
+  }
+
+  const binding = resolvedBundle.release.templateVersions.find(
+    (item) => item.slug === stage.templateSlug
+  );
+  const template = resolvedBundle.templates.find(
+    (item) => item.slug === stage.templateSlug && item.version === binding?.version
+  );
+
+  if (!binding || !template?.template) {
+    return fallback(`Release ${resolvedBundle.release.slug} v${resolvedBundle.release.version} is missing template ${stage.templateSlug}`);
+  }
+
+  try {
+    const prompt = renderTemplate(template.template, resolvedBundle.partials, context);
+    return {
+      prompt,
+      stageSnapshot: {
+        stageKey: stage.stageKey,
+        stageType: stage.stageType,
+        branch: stage.branch,
+        templateSlug: stage.templateSlug,
+        templateVersion: binding.version,
+        usedFallback: false,
+      },
+      bundle: resolvedBundle,
+      configs: parseBundleConfigs(resolvedBundle),
+    };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    return fallback(`Failed to compile stage ${stageKey}: ${message}`);
+  }
 }
