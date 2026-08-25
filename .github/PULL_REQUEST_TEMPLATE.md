@@ -2,15 +2,16 @@
 
 - Goal:
 - Goal file:
+- Base: `rebuild/v2-first-principles`
 - Included:
 - Explicitly excluded:
 
 ## Locked-stack compliance
 
-- [ ] No architecture/vendor substitution.
-- [ ] No required Docker/local infrastructure added.
+- [ ] Next.js/Vercel + Supabase + Trigger.dev topology is preserved.
+- [ ] No Convex/Neon/Clerk/R2/Docker/local-service substitution.
 - [ ] Provider SDKs remain behind adapters.
-- [ ] Browser/server secret boundaries are preserved.
+- [ ] Browser/web/workflow secret boundaries are preserved.
 
 ## Verification packet
 
@@ -21,13 +22,21 @@
 ### Commands
 
 ```text
-command → result
+command → exit/result
 ```
 
-### Product/manual evidence
+### Managed environment
 
-- Routes/scenarios/devices:
-- Screenshots/recordings:
+- Vercel preview + git SHA:
+- Supabase project/branch:
+- Trigger environment/branch:
+- Provider mode:
+- Production access: none / approved exception
+
+### Product evidence
+
+- Routes/scenarios/viewports:
+- Screenshots/recording:
 - Console/network/accessibility:
 
 ### Failure evidence
@@ -41,19 +50,21 @@ command → result
 - Plan reviewer:
 - UX/security reviewer:
 - Adversarial reviewer:
-- Findings resolved or accepted:
+- Findings resolved/accepted:
 
 ## Risk and operations
 
-- Security/privacy:
-- Data/migration:
+- Security/privacy/RLS:
+- SQL/data/retention:
 - Provider/cost:
-- Rollback:
+- Rollback/cleanup:
 - Remaining risk/owner:
 
 ## Stop condition
 
 - [ ] No later goal was included.
-- [ ] This PR is draft until evidence is complete.
-- [ ] No paid service or production change occurred without approval.
-- [ ] The PR must not be merged by an agent.
+- [ ] Accepted stack was not silently reopened.
+- [ ] No secret or unrestricted production credential is present.
+- [ ] Real provider calls stayed inside goal and budget.
+- [ ] PR remains draft until evidence is complete.
+- [ ] Agent has not merged or begun the next goal.
