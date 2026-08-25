@@ -1,0 +1,14 @@
+{
+  "version": 2,
+  "status": "architecture-locked",
+  "decision_date": "2026-08-26",
+  "first_goal": "docs/goals/00-production-foundation.md",
+  "stack": [
+    "nextjs-16.2",
+    "vercel",
+    "supabase",
+    "trigger.dev",
+    "gpt-image-2",
+    "runway-gemini-omni-flash"
+  ]
+}
