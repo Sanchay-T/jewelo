@@ -26,11 +26,13 @@ cd jewelo-v2
 
 ## Run a phase interactively
 
+From the integration checkout:
+
 ```bash
-claude
+./scripts/start-phase.sh 00
 ```
 
-Then:
+This creates or reuses an isolated `phase/00-research-architecture` worktree and launches Claude Code inside it. Then invoke:
 
 ```text
 /phase-00

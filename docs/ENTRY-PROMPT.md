@@ -1,6 +1,6 @@
 # Claude Code entry prompt
 
-Paste this after cloning and checking out `rebuild/v2-first-principles`:
+Run `./scripts/start-phase.sh 00`, then paste this inside the Claude Code session opened in the Phase 00 worktree:
 
 ```text
 You are taking over Jewelo v2 as a staff-level product engineer and systems architect.

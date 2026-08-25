@@ -12,6 +12,7 @@
     "goals": "node scripts/list-goals.mjs",
     "verify": "bash scripts/verify-foundation.sh",
     "phase:new": "bash scripts/new-phase.sh",
+    "phase:start": "bash scripts/start-phase.sh",
     "goal": "bash scripts/run-goal.sh",
     "pr:draft": "bash scripts/open-pr.sh"
   }

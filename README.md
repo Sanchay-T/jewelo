@@ -11,10 +11,10 @@ git clone --branch rebuild/v2-first-principles --single-branch https://github.co
 cd jewelo-v2
 ./scripts/doctor.sh
 ./scripts/verify-foundation.sh
-claude
+./scripts/start-phase.sh 00
 ```
 
-Inside Claude Code:
+Inside the Claude Code session launched in the isolated Phase 00 worktree:
 
 ```text
 /phase-00

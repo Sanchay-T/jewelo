@@ -7,7 +7,7 @@ required=(
   docs/START-HERE.md docs/PRODUCT-CONTRACT.md docs/FROZEN-UX.md
   docs/AGENT-WORKFLOW.md docs/VERIFICATION.md docs/PHASE-ROADMAP.md
   docs/CLAUDE-CODE-SETUP.md docs/ENTRY-PROMPT.md
-  scripts/doctor.sh scripts/run-goal.sh scripts/new-phase.sh scripts/open-pr.sh
+  scripts/doctor.sh scripts/run-goal.sh scripts/new-phase.sh scripts/start-phase.sh scripts/open-pr.sh
 )
 for file in "${required[@]}"; do
   [[ -s "$file" ]] || { echo "missing or empty: $file" >&2; exit 1; }
