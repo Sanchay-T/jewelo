@@ -1,14 +1,15 @@
 {
-  "version": 2,
-  "status": "architecture-locked",
+  "version": 3,
+  "status": "pm-approved-implementation-ready",
   "decision_date": "2026-08-26",
   "first_goal": "docs/goals/00-production-foundation.md",
   "stack": [
     "nextjs-16.2",
     "vercel",
-    "supabase",
-    "trigger.dev",
-    "gpt-image-2",
-    "runway-gemini-omni-flash"
-  ]
+    "supabase-postgres-auth-storage-realtime",
+    "trigger-dev-v4",
+    "gpt-image-2-2026-04-21",
+    "runway-video-api"
+  ],
+  "local_infrastructure_required": false
 }
