@@ -13,4 +13,6 @@ playwright-report/
 *.log
 .vercel/
 .trigger/
+supabase/.temp/
+supabase/.branches/
 .worktrees/
