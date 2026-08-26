@@ -15,7 +15,7 @@ You are implementing a first-principles production rebuild. The architecture is 
 
 ## Binding decisions
 
-- Web: Next.js 16.2, React 19, strict TypeScript, Vercel.
+- Web: Next.js 16.2, React 19, strict TypeScript, DigitalOcean App Platform.
 - Repository: pnpm workspace + Turborepo.
 - Data platform: Supabase Mumbai — Postgres, Auth, Realtime, private Storage.
 - Workflow: Trigger.dev Cloud.

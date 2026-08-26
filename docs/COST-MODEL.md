@@ -74,7 +74,7 @@ New fal accounts start at two concurrent requests and may increase automatically
 
 - Supabase Pro begins at its published managed-service price and includes plan allowances for compute, storage, egress, and users; verify current pricing at provisioning time.
 - Trigger.dev plan selection is driven by environment concurrency, preview branches, retention, and observability.
-- Vercel, Sentry, PostHog, OpenAI, and fal are separate plan/usage costs.
+- DigitalOcean App Platform, Sentry, PostHog, OpenAI, and fal are separate plan/usage costs.
 - AI generation dominates ordinary application infrastructure for the foreseeable future.
 
 ## Monthly model-spend scenarios

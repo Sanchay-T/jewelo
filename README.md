@@ -8,7 +8,7 @@ This branch is the clean-room source of truth for rebuilding Jewelo from first p
 
 - Next.js 16.2 + React 19 + strict TypeScript
 - pnpm workspace + Turborepo
-- Vercel for web and preview deployments
+- DigitalOcean App Platform in Bangalore for staging and production web deployments
 - Supabase Mumbai for Postgres, Auth, Realtime, and private Storage
 - Trigger.dev Cloud for durable, parallel AI workflows
 - direct OpenAI `gpt-image-2-2026-04-21` for product and worn stills
@@ -120,5 +120,6 @@ A goal normally runs in an isolated worktree and ends in a draft PR into `rebuil
 - `docs/MEDIA-CONCURRENCY.md` — four-way fan-out, quotas, costs, and progressive UI contract.
 - `docs/DECISION-MATRIX.md` — why the selected stack won.
 - `docs/COST-MODEL.md` — dated unit economics and safeguards.
+- `docs/DIGITALOCEAN-DEPLOYMENT.md` — hosting, secrets, CI, deployment, and rollback runbook.
 - `docs/GOLD-PROMPT.md` — copy-paste first implementation prompt.
 - `docs/goals/` — bounded implementation goals.
