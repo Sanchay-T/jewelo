@@ -17,7 +17,7 @@ required=(
   apps/jobs/package.json apps/jobs/trigger.config.ts apps/jobs/src/trigger/foundation.ts
   supabase/config.toml supabase/seed.sql
   docs/runbooks/managed-development.md docs/proofs/goal-00-production-foundation.md
-  scripts/check-boundaries.mjs scripts/check-client-bundle.sh scripts/scan-secrets.sh
+  scripts/check-boundaries.mjs scripts/verify-supabase-project.mjs scripts/check-client-bundle.sh scripts/scan-secrets.sh
 )
 for file in "${required[@]}"; do
   [[ -s "$file" ]] || { echo "missing or empty foundation artifact: $file" >&2; exit 1; }
@@ -84,6 +84,8 @@ if output="$(env -u TRIGGER_ACCESS_TOKEN -u TRIGGER_PREVIEW_BRANCH JEWELO_CLOUD_
 fi
 grep -q "TRIGGER_PREVIEW_BRANCH" <<<"$output"
 echo "Trigger preview-branch guard proof passed."
+
+node scripts/verify-supabase-project.mjs --prove-negative
 
 if output="$(NEXT_PUBLIC_SUPABASE_URL=https://example.supabase.co pnpm --filter @jewelo/web build 2>&1)"; then
   echo "Web build unexpectedly accepted a partial public Supabase environment." >&2

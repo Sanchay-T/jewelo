@@ -9,7 +9,7 @@ Goal 00 uses managed development and preview services. Docker, `supabase start`,
 | `goal/*` pull request | preview deployment       | preview branch when available, otherwise persistent development project | preview branch  | forbidden         |
 | local goal worktree   | local Next.js or preview | persistent development project                                          | DEV environment | forbidden         |
 
-Set `JEWELO_CLOUD_TARGET=development` or `preview` before any database or workflow command. Guard scripts reject missing targets and project references that appear to be production.
+Set `JEWELO_CLOUD_TARGET=development` or `preview` before any database or workflow command. The Supabase guard verifies the authenticated remote project exists in Mumbai and that its remote name contains an explicit `dev`/`development` or `preview`/`branch`/`pr` marker matching the selected target.
 
 ## Local deterministic path
 
@@ -40,7 +40,7 @@ Never pass `--prod` during Goal 00. The preview must serve `/api/health` and `/a
 
 One-time authorization when not already configured:
 
-1. Create or select a non-production Jewelo Supabase project in Mumbai (`ap-south-1`).
+1. Create or select a non-production Jewelo Supabase project in Mumbai (`ap-south-1`). Its remote name must include `dev`/`development` for the development target or `preview`/`branch`/`pr` for the preview target.
 2. Run `pnpm exec supabase login`, or create a personal access token in Supabase Account → Access Tokens and export `SUPABASE_ACCESS_TOKEN`.
 3. Export `SUPABASE_PROJECT_REF` and `JEWELO_CLOUD_TARGET=development` (or `preview`).
 4. If linking requires it, export `SUPABASE_DB_PASSWORD` only in the local shell; never commit it.

@@ -24,26 +24,13 @@ if ! projects_json="$(pnpm exec supabase projects list --output json 2>/dev/null
   exit 2
 fi
 
-if ! JEWELO_PROJECTS_JSON="$projects_json" node - "$SUPABASE_PROJECT_REF" "$target" <<'NODE'
-const projects = JSON.parse(process.env.JEWELO_PROJECTS_JSON ?? "[]");
-const projectRef = process.argv[2];
-const target = process.argv[3];
-const project = projects.find((candidate) => candidate.id === projectRef);
-if (!project) throw new Error(`Supabase project ref ${projectRef} is not visible to the authenticated account`);
-if (project.region !== "ap-south-1") throw new Error(`Supabase project must be in Mumbai (ap-south-1), received ${project.region}`);
-const name = String(project.name ?? "").toLowerCase();
-const marker = target === "development" ? /(^|[-_ ])(dev|development)($|[-_ ])/ : /(^|[-_ ])(preview|branch|pr)($|[-_ ])/;
-if (!marker.test(name)) {
-  throw new Error(`Refusing ${target} command: authenticated project name '${project.name}' lacks an explicit ${target} safety marker`);
-}
-NODE
-then
+if ! JEWELO_PROJECTS_JSON="$projects_json" node scripts/verify-supabase-project.mjs "$SUPABASE_PROJECT_REF" "$target"; then
   echo "Supabase target verification failed; use a Mumbai project whose remote name explicitly contains development/dev or preview/branch/pr for the selected target." >&2
   exit 2
 fi
 
 if [[ "$action" == "types" ]]; then
-  generated_types="$(mktemp -t jewelo-database-types.XXXXXX.ts)"
+  generated_types="$(mktemp packages/data/src/.database.types.XXXXXX.ts)"
   cleanup_types() { rm -f "$generated_types"; }
   trap cleanup_types EXIT
   pnpm exec supabase gen types typescript --project-id "$SUPABASE_PROJECT_REF" >"$generated_types"
