@@ -3,7 +3,7 @@ name: digitalocean-staging
 on:
   push:
     branches:
-      - rebuild/v2-first-principles
+      - codex/digitalocean-staging-preview
   workflow_dispatch:
 
 permissions:
@@ -22,10 +22,10 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Require an integration-branch commit
+      - name: Require a deployment-branch commit
         run: |
-          git fetch origin rebuild/v2-first-principles --tags
-          git merge-base --is-ancestor "$GITHUB_SHA" origin/rebuild/v2-first-principles
+          git fetch origin codex/digitalocean-staging-preview --tags
+          git merge-base --is-ancestor "$GITHUB_SHA" origin/codex/digitalocean-staging-preview
       - uses: pnpm/action-setup@v4
         with:
           version: 11.23.0

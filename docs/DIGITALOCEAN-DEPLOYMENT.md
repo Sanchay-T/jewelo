@@ -31,8 +31,7 @@ evidence and approval for the higher possible spend.
 ## What happens from push to URL
 
 ```text
-developer branch
-  -> reviewed merge into rebuild/v2-first-principles
+codex/digitalocean-staging-preview push
   -> GitHub staging workflow verifies a clean checkout
   -> immutable jewelo-staging-<full SHA> Git tag
   -> App Platform builds that tag with Node 24 + pnpm
@@ -47,7 +46,8 @@ tested staging SHA + deployment ID + human production dispatch
   -> workflow summary publishes production URL and rollback command
 ```
 
-The staging workflow runs on pushes to `rebuild/v2-first-principles` only when
+The temporary staging workflow runs on pushes to
+`codex/digitalocean-staging-preview` only when
 the GitHub `Preview` environment variable `DIGITALOCEAN_DEPLOY_ENABLED` is
 `true`; it can also be dispatched manually. Code-only deployments change the
 Git source ref and preserve the app's encrypted environment.
@@ -169,8 +169,9 @@ Production cutover is a controlled transition, not another preview push:
 4. Confirm the staging app still has the expected encrypted configuration; run
    `pnpm verify`, `pnpm do:build`, health smoke, browser smoke, and the app's
    customer/operator acceptance flow.
-5. Set the GitHub `Preview` variable `DIGITALOCEAN_DEPLOY_ENABLED=true` only
-   after the integrated branch is the authoritative deploy source.
+5. Move the staging workflow trigger from the temporary preview branch to the
+   integration branch while retaining
+   `DIGITALOCEAN_DEPLOY_ENABLED=true`.
 6. Record the full tested commit SHA and its ACTIVE staging deployment ID.
 7. With explicit production approval, bootstrap `jewelo-production` using the
    production environment files.
