@@ -30,7 +30,6 @@ import type {
   SizeProfile,
   StoneCoverage,
 } from "@/lib/types";
-import { transliterateArabicName } from "./transliterate-arabic";
 
 type StageId =
   | "name-language"
@@ -59,7 +58,8 @@ const layouts: Array<{ id: PendantLayout; label: string }> = [
   { id: "interlocked", label: "Interlocked" },
 ];
 
-type ArabicReflectionStatus = "local" | "refining" | "refined" | "edited";
+type ArabicReflectionStatus =
+  "idle" | "refining" | "refined" | "edited" | "error";
 
 async function refineArabicName(name: string, signal: AbortSignal) {
   const response = await fetch("/api/transliterate", {
@@ -79,24 +79,24 @@ async function refineArabicName(name: string, signal: AbortSignal) {
 }
 
 function useArabicNameReflection(latinName: string, enabled: boolean) {
-  const [arabicText, setArabicText] = useState(() =>
-    transliterateArabicName(latinName),
+  const [arabicText, setArabicText] = useState("");
+  const [status, setStatus] = useState<ArabicReflectionStatus>(() =>
+    enabled && latinName.trim().length >= 2 ? "refining" : "idle",
   );
-  const [status, setStatus] = useState<ArabicReflectionStatus>("local");
+  const [retryToken, setRetryToken] = useState(0);
   const manuallyEdited = useRef(false);
 
   useEffect(() => {
     manuallyEdited.current = false;
-    setArabicText(transliterateArabicName(latinName));
-    setStatus("local");
-  }, [latinName]);
+    setArabicText("");
+    setStatus(enabled && latinName.trim().length >= 2 ? "refining" : "idle");
+  }, [enabled, latinName]);
 
   useEffect(() => {
     const name = latinName.trim();
     if (!enabled || name.length < 2) return;
     const controller = new AbortController();
     const timer = window.setTimeout(() => {
-      setStatus("refining");
       void refineArabicName(name, controller.signal)
         .then((refined) => {
           if (controller.signal.aborted || manuallyEdited.current) return;
@@ -106,14 +106,15 @@ function useArabicNameReflection(latinName: string, enabled: boolean) {
         .catch((error: unknown) => {
           if (controller.signal.aborted) return;
           void error;
-          setStatus("local");
+          setArabicText("");
+          setStatus("error");
         });
     }, 650);
     return () => {
       window.clearTimeout(timer);
       controller.abort();
     };
-  }, [enabled, latinName]);
+  }, [enabled, latinName, retryToken]);
 
   const editArabicText = useCallback((value: string) => {
     manuallyEdited.current = true;
@@ -121,7 +122,14 @@ function useArabicNameReflection(latinName: string, enabled: boolean) {
     setStatus("edited");
   }, []);
 
-  return { arabicText, editArabicText, status };
+  const retry = useCallback(() => {
+    manuallyEdited.current = false;
+    setArabicText("");
+    setStatus("refining");
+    setRetryToken((current) => current + 1);
+  }, []);
+
+  return { arabicText, editArabicText, retry, status };
 }
 
 function Option<const T extends string>({
@@ -159,10 +167,15 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
   const {
     arabicText: arabicOne,
     editArabicText: setArabicOne,
+    retry: retryArabicOne,
     status: arabicOneStatus,
-  } = useArabicNameReflection(nameOne, language === "ar");
-  const { arabicText: arabicTwo, editArabicText: setArabicTwo } =
-    useArabicNameReflection(nameTwo, language === "ar" && nameCount === 2);
+  } = useArabicNameReflection(nameOne, true);
+  const {
+    arabicText: arabicTwo,
+    editArabicText: setArabicTwo,
+    retry: retryArabicTwo,
+    status: arabicTwoStatus,
+  } = useArabicNameReflection(nameTwo, nameCount === 2);
   const [arabicStyle, setArabicStyle] = useState<ArabicStyle>("contemporary");
   const [layout, setLayout] = useState<PendantLayout>("connected-heart");
   const [metal, setMetal] = useState<MetalColor>("yellow");
@@ -190,6 +203,10 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
   );
   const needsOperatorReview =
     language === "ar" && !isProviderSupportedArabicStyle(arabicStyle);
+  const arabicPreviewPending =
+    language === "ar" &&
+    (arabicOneStatus === "refining" ||
+      (nameCount === 2 && arabicTwoStatus === "refining"));
   const visibleStages = useMemo(
     () =>
       language === "ar"
@@ -344,19 +361,30 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
                 transform: `rotate(${previewRotation}deg) scale(${previewZoom}) scaleX(${previewFace === "side" ? 0.22 : 1})`,
               }}
             >
-              {identity.lines.map((line, index) => (
-                <strong key={`${line}-${index}`}>{line}</strong>
-              ))}
-              {coverage !== "none" && (
-                <small>
-                  {coverage.replaceAll("-", " ")} ·{" "}
-                  {gemstone.replaceAll("-", " ")}
-                </small>
+              {arabicPreviewPending ? (
+                <span className="clm-preview-loader" role="status">
+                  <SpinnerGap className="clm-spin" size={30} />
+                  Preparing Arabic spelling…
+                </span>
+              ) : (
+                <>
+                  {identity.lines.map((line, index) => (
+                    <strong key={`${line}-${index}`}>{line}</strong>
+                  ))}
+                  {coverage !== "none" && (
+                    <small>
+                      {coverage.replaceAll("-", " ")} ·{" "}
+                      {gemstone.replaceAll("-", " ")}
+                    </small>
+                  )}
+                </>
               )}
             </div>
             <div className="clm-preview-caption">
               <strong dir={language === "ar" ? "rtl" : "ltr"}>
-                {identity.inline}
+                {arabicPreviewPending
+                  ? "Preparing Arabic spelling…"
+                  : identity.inline}
               </strong>
               <span>
                 18K {metal} gold · {coverage.replaceAll("-", " ")} ·{" "}
@@ -433,8 +461,19 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
                 </label>
                 <div className="clm-suggestion" aria-live="polite">
                   <div>
-                    <span>Live Arabic spelling</span>
-                    <strong dir="rtl">{arabicOne}</strong>
+                    <span>Arabic spelling</span>
+                    {arabicOneStatus === "refining" ? (
+                      <strong className="clm-arabic-loader">
+                        <SpinnerGap className="clm-spin" size={18} />
+                        Generating…
+                      </strong>
+                    ) : (
+                      <strong dir="rtl">
+                        {arabicOneStatus === "error"
+                          ? "Couldn’t generate spelling"
+                          : arabicOne || "Enter at least 2 letters"}
+                      </strong>
+                    )}
                     <small className="clm-reflection-status">
                       {arabicOneStatus === "refining" ? (
                         <>
@@ -447,14 +486,19 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
                         </>
                       ) : arabicOneStatus === "edited" ? (
                         "Edited by you"
+                      ) : arabicOneStatus === "error" ? (
+                        <button type="button" onClick={retryArabicOne}>
+                          Retry Luna
+                        </button>
                       ) : (
-                        "Updates as you type"
+                        "Waiting for a name"
                       )}
                     </small>
                   </div>
                   <button
                     type="button"
                     aria-label="Edit suggested Arabic spelling"
+                    disabled={!arabicOne || arabicOneStatus === "refining"}
                     onClick={() => {
                       setLanguage("ar");
                       requestAnimationFrame(() =>
@@ -473,6 +517,12 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
                         id="arabic-name-one"
                         dir="rtl"
                         value={arabicOne}
+                        disabled={arabicOneStatus === "refining"}
+                        placeholder={
+                          arabicOneStatus === "refining"
+                            ? "Luna is preparing the spelling…"
+                            : undefined
+                        }
                         onChange={(event) => setArabicOne(event.target.value)}
                       />
                     </label>
@@ -576,8 +626,23 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
                       <input
                         dir="rtl"
                         value={arabicOne}
+                        disabled={arabicOneStatus === "refining"}
+                        placeholder={
+                          arabicOneStatus === "refining"
+                            ? "Luna is preparing the spelling…"
+                            : undefined
+                        }
                         onChange={(event) => setArabicOne(event.target.value)}
                       />
+                      {arabicOneStatus === "error" && (
+                        <button
+                          type="button"
+                          className="clm-inline-retry"
+                          onClick={retryArabicOne}
+                        >
+                          Retry Luna
+                        </button>
+                      )}
                     </label>
                     {nameCount === 2 && (
                       <label className="clm-label">
@@ -586,8 +651,23 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
                           id="arabic-name-two"
                           dir="rtl"
                           value={arabicTwo}
+                          disabled={arabicTwoStatus === "refining"}
+                          placeholder={
+                            arabicTwoStatus === "refining"
+                              ? "Luna is preparing the spelling…"
+                              : undefined
+                          }
                           onChange={(event) => setArabicTwo(event.target.value)}
                         />
+                        {arabicTwoStatus === "error" && (
+                          <button
+                            type="button"
+                            className="clm-inline-retry"
+                            onClick={retryArabicTwo}
+                          >
+                            Retry Luna
+                          </button>
+                        )}
                       </label>
                     )}
                   </div>
