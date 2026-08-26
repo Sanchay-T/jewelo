@@ -76,7 +76,7 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
     locale === "ar" ? "naskh" : "script",
   );
   const [goldType, setGoldType] = useState("yellow");
-  const [karat, setKarat] = useState("21K");
+  const [karat, setKarat] = useState("18K");
   const [size, setSize] = useState("medium");
   const [lengthMm, setLengthMm] = useState(20);
   const [gemstones, setGemstones] = useState<string[]>(["diamond"]);
@@ -120,25 +120,64 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
       setError("Choose one PNG, JPEG, or WebP image up to 5 MB."),
   });
 
-  function approve() {
-    const design = createDesign({
-      approvedText: name,
-      language,
+  async function approve() {
+    const approvedName = {
+      approvedEnglishText: language === "en" ? name : null,
+      approvedArabicText: language === "ar" ? name : null,
+    };
+    const design = await createDesign({
+      jewelryType: "name-pendant",
+      nameCount: 1,
+      names: [approvedName],
+      arabicStyle:
+        language !== "ar"
+          ? "none"
+          : fontStyle === "diwani" || fontStyle === "kufi"
+            ? fontStyle
+            : "contemporary",
+      layout: "single-name",
       source,
-      referenceName,
+      referenceAsset: referenceName
+        ? { id: "draft-reference", fileName: referenceName }
+        : undefined,
+      metalKarat: "18K",
+      metalColor:
+        goldType === "rose" || goldType === "white" ? goldType : "yellow",
+      finish:
+        additional.metalFinish === "matte" || additional.metalFinish === "satin"
+          ? additional.metalFinish
+          : "polished",
+      stoneCoverage: gemstones.length ? "accent" : "none",
+      gemstone:
+        gemstones[0] === "ruby" || gemstones[0] === "emerald"
+          ? gemstones[0]
+          : gemstones[0] === "sapphire"
+            ? "blue-sapphire"
+            : gemstones.length
+              ? "natural-diamond"
+              : "none",
+      connector:
+        decoration === "minimal"
+          ? "none"
+          : decoration === "ornate"
+            ? "interlocked"
+            : "plain",
+      sizeProfile:
+        size === "small"
+          ? "delicate"
+          : size === "large"
+            ? "statement"
+            : "classic",
+      dimensions: {
+        widthMm: lengthMm,
+        heightMm: Math.round(lengthMm * 0.45 * 10) / 10,
+        thicknessMm: 1.2,
+      },
+      chain: { style: "cable", lengthCm: 45 },
       complexity,
-      stones: gemstones.length ? "diamond accents" : "none",
-      category,
-      fontStyle,
-      goldType,
-      karat,
-      size,
-      lengthMm,
-      gemstones,
-      decoration,
-      metalFinish: additional.metalFinish,
       occasion: additional.occasion,
       notes: additional.notes,
+      spellingConfirmed: true,
     });
     router.push(`/${locale}/design/crafting?designId=${design.id}`);
   }
@@ -431,7 +470,7 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
               )}
             </section>
             <div className="form-actions">
-              <button className="primary-button" onClick={approve}>
+              <button className="primary-button" onClick={() => void approve()}>
                 <ShieldCheck size={19} />
                 Approve revision
               </button>

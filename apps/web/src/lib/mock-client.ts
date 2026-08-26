@@ -1,19 +1,26 @@
 import type {
-  AssetLineage,
-  CanonicalIdentity,
-  Design,
+  ApproveRevisionInput,
+  CreateDraftInput,
+  DesignDraft,
   DesignInput,
   DesignRevision,
-  Direction,
-  GenerationRun,
-  JeweloClient,
-  RepresentationKind,
+  IdentityAnchor,
+  PresentationView,
   Role,
-  RunListener,
   ScenarioId,
-  SpikeState,
   TaskState,
+  UpdateDraftInput,
 } from "./types";
+import type {
+  Direction,
+  LegacyAssetLineage,
+  LegacyDesign as Design,
+  LegacyGenerationRun as GenerationRun,
+  LegacyJeweloClient,
+  LegacyRunListener as RunListener,
+  LegacySpikeState as SpikeState,
+  RepresentationKind,
+} from "./legacy-direction-compat";
 
 const STORAGE_KEY = "jewelo-ui-spike:v1";
 const NOW = "2026-08-26T10:00:00.000Z";
@@ -45,7 +52,7 @@ function hashText(value: string): string {
 export function createCanonicalIdentity(
   text: string,
   language: "en" | "ar",
-): CanonicalIdentity {
+): IdentityAnchor {
   const approvedText = text.normalize("NFKC").trim();
   const typography =
     language === "ar" ? "Noto Naskh Arabic" : "Playfair Display Italic";
@@ -69,7 +76,7 @@ function lineage(
   directionId: string,
   taskId: string,
   attempt = 1,
-): AssetLineage {
+): LegacyAssetLineage {
   return {
     revisionId,
     runId,
@@ -111,6 +118,26 @@ function representation(
     alt: `${kind} representation of the approved Layla yellow-gold pendant, ${directionId}`,
     lineage: lineage(revisionId, runId, directionId, taskId, attempt),
   };
+}
+
+function presentationView(kind: RepresentationKind): PresentationView {
+  if (kind === "product") return "studio";
+  if (kind === "worn") return "on_skin";
+  return "motion";
+}
+
+function projectPresentationAssets(directions: Direction[]) {
+  return directions.flatMap((item) =>
+    Object.values(item.representations).map((rep) => ({
+      id: rep.id,
+      view: presentationView(rep.kind),
+      state: rep.state,
+      assetUrl: rep.assetUrl,
+      posterUrl: rep.posterUrl,
+      alt: rep.alt,
+      lineage: rep.lineage,
+    })),
+  );
 }
 
 function direction(
@@ -199,13 +226,13 @@ function buildRun(
     direction(revisionId, runId, index + 1, states),
   );
   const fixtureCompatible =
-    revision.identity.language === "en" &&
-    revision.identity.approvedText.toLocaleLowerCase() === "layla";
+    revision.identityAnchor.language === "en" &&
+    revision.identityAnchor.approvedText.toLocaleLowerCase() === "layla";
   for (const item of directions) {
-    item.identityFingerprint = revision.identity.fingerprint;
+    item.identityFingerprint = revision.identityAnchor.fingerprint;
     for (const rep of Object.values(item.representations)) {
       rep.lineage.inputAssets = [
-        `canonical://${revision.identity.fingerprint}`,
+        `canonical://${revision.identityAnchor.fingerprint}`,
       ];
       if (!fixtureCompatible) {
         rep.state = "unavailable";
@@ -228,10 +255,13 @@ function buildRun(
     createdAt: NOW,
     status: "running",
     elapsedMs: scenario === "resume" ? 1_600 : scenario === "cancel" ? 800 : 0,
+    assets: projectPresentationAssets(directions),
     directions,
     tasks: directions.flatMap((item) =>
       Object.values(item.representations).map((rep) => ({
         id: rep.lineage.taskId,
+        view: presentationView(rep.kind),
+        assetId: rep.id,
         directionId: item.id,
         kind: rep.kind,
         state: rep.state,
@@ -368,12 +398,15 @@ function applyScenario(
   run.tasks = run.directions.flatMap((direction) =>
     Object.values(direction.representations).map((representation) => ({
       id: representation.lineage.taskId,
+      view: presentationView(representation.kind),
+      assetId: representation.id,
       directionId: direction.id,
       kind: representation.kind,
       state: representation.state,
       attempt: representation.lineage.attempt,
     })),
   );
+  run.assets = projectPresentationAssets(run.directions);
   if (run.status !== "cancelled") {
     const terminal = new Set<TaskState>([
       "ready",
@@ -407,8 +440,9 @@ function clone<T>(value: T): T {
   return structuredClone(value);
 }
 
-export class MockJeweloClient implements JeweloClient {
+export class MockJeweloClient implements LegacyJeweloClient {
   private state: SpikeState;
+  private drafts = new Map<string, DesignDraft>();
   private listeners = new Set<() => void>();
   private timers = new Map<string, ReturnType<typeof setInterval>>();
 
@@ -420,7 +454,7 @@ export class MockJeweloClient implements JeweloClient {
         : seedState();
   }
 
-  hydrate() {
+  async hydrate() {
     this.state = this.load();
     this.listeners.forEach((listener) => listener());
     return this.getState();
@@ -487,7 +521,7 @@ export class MockJeweloClient implements JeweloClient {
   getState() {
     return clone(this.state);
   }
-  setResumePath(path: string) {
+  async setResumePath(path: string) {
     if (this.state.resumePath === path) return this.getState();
     return this.commit({ ...this.state, resumePath: path });
   }
@@ -503,7 +537,7 @@ export class MockJeweloClient implements JeweloClient {
     );
   }
 
-  setRole(role: Role) {
+  async setRole(role: Role) {
     return this.commit({
       ...this.state,
       principal:
@@ -513,20 +547,57 @@ export class MockJeweloClient implements JeweloClient {
     });
   }
 
-  setScenario(scenario: ScenarioId) {
+  async setScenario(scenario: ScenarioId) {
     return this.commit({ ...this.state, scenario });
   }
 
-  createDesign(input: DesignInput) {
-    return this.approveRevision(input);
+  async createDraft(input: CreateDraftInput) {
+    const id = `draft-${this.drafts.size + 1}`;
+    const draft: DesignDraft = {
+      id,
+      ownerPrincipalId: this.state.principal.id,
+      locale: input.names[0].approvedArabicText ? "ar" : "en",
+      specification: { ...clone(input), spellingConfirmed: false },
+      createdAt: NOW,
+      updatedAt: NOW,
+    };
+    this.drafts.set(id, clone(draft));
+    return clone(draft);
   }
 
-  approveRevision(input: DesignInput) {
+  async updateDraft(draftId: string, input: UpdateDraftInput) {
+    const current = this.drafts.get(draftId);
+    if (!current) throw new Error("Unknown draft");
+    const draft: DesignDraft = {
+      ...current,
+      locale:
+        (input.names?.[0].approvedArabicText ??
+        current.specification.names[0].approvedArabicText)
+          ? "ar"
+          : "en",
+      specification: { ...current.specification, ...clone(input) },
+      updatedAt: NOW,
+    };
+    this.drafts.set(draftId, clone(draft));
+    return clone(draft);
+  }
+
+  async createDesign(input: DesignInput) {
+    const { spellingConfirmed, ...draftInput } = input;
+    void spellingConfirmed;
+    const draft = await this.createDraft(draftInput);
+    await this.updateDraft(draft.id, { spellingConfirmed: true });
+    return this.approveRevision({ draftId: draft.id, specification: input });
+  }
+
+  async approveRevision(approval: ApproveRevisionInput) {
+    if (!this.drafts.has(approval.draftId)) throw new Error("Unknown draft");
+    const input = approval.specification;
     const designId = `design-${this.state.designs.length + 1}`;
     const revisionId = `${designId}-revision-1`;
     const design: Design = {
       id: designId,
-      name: `${input.approvedText} pendant`,
+      name: `${input.names[0].approvedEnglishText ?? input.names[0].approvedArabicText} pendant`,
       createdAt: NOW,
       updatedAt: NOW,
       revisions: [
@@ -536,28 +607,13 @@ export class MockJeweloClient implements JeweloClient {
           createdAt: NOW,
           approvedAt: NOW,
           immutable: true,
-          identity: createCanonicalIdentity(input.approvedText, input.language),
-          specification: {
-            jewelryType: "name-pendant",
-            category: input.category ?? "Pendants",
-            metal: `${input.karat ?? "21K"} ${input.goldType ?? "yellow"} gold`,
-            finish: input.metalFinish ?? "polished",
-            stones: input.stones,
-            gemstones:
-              input.gemstones ?? (input.stones === "none" ? [] : ["diamond"]),
-            fontStyle: input.fontStyle ?? "script",
-            goldType: input.goldType ?? "yellow",
-            karat: input.karat ?? "21K",
-            size: input.size ?? "medium",
-            lengthMm: input.lengthMm ?? 20,
-            decoration: input.decoration ?? "balanced",
-            widthMm: input.lengthMm ?? 20,
-            complexity: input.complexity,
-            source: input.source,
-            referenceName: input.referenceName,
-            occasion: input.occasion,
-            notes: input.notes,
-          },
+          identityAnchor: createCanonicalIdentity(
+            input.names[0].approvedArabicText ??
+              input.names[0].approvedEnglishText ??
+              "",
+            input.names[0].approvedArabicText ? "ar" : "en",
+          ),
+          specification: clone(input),
         },
       ],
       runs: [],
@@ -575,12 +631,12 @@ export class MockJeweloClient implements JeweloClient {
       ...this.state,
       designs: [...this.state.designs, design],
       activeDesignId: design.id,
-      resumePath: `/${input.language}/design/new`,
+      resumePath: `/${input.names[0].approvedArabicText ? "ar" : "en"}/design/new`,
     });
     return clone(design);
   }
 
-  refineDesign(designId: string, note: string) {
+  async refineDesign(designId: string, note: string) {
     return this.updateDesign(designId, (design) => {
       if (design.order)
         throw new Error(
@@ -608,7 +664,7 @@ export class MockJeweloClient implements JeweloClient {
     });
   }
 
-  startRun(designId: string) {
+  async startRun(designId: string) {
     return this.updateDesign(designId, (design) => {
       if (design.order)
         throw new Error("Ordered designs cannot start another generation run.");
@@ -648,18 +704,18 @@ export class MockJeweloClient implements JeweloClient {
       .find((item) => item.id === runId);
     if (activeRun?.status === "running" && !this.timers.has(runId)) {
       const timer = setInterval(() => {
-        const updated = this.advanceRun(runId, 250);
-        if (updated.status !== "running") {
+        void this.advanceRun(runId, 250).then((updated) => {
+          if (updated.status === "running") return;
           clearInterval(timer);
           this.timers.delete(runId);
-        }
+        });
       }, 250);
       this.timers.set(runId, timer);
     }
     return unsubscribe;
   }
 
-  advanceRun(runId: string, elapsedMs: number) {
+  async advanceRun(runId: string, elapsedMs: number) {
     let changed: GenerationRun | undefined;
     const designs = this.state.designs.map((design) => {
       const run = design.runs.find((item) => item.id === runId);
@@ -679,7 +735,7 @@ export class MockJeweloClient implements JeweloClient {
     return clone(changed);
   }
 
-  retryTask(designId: string, taskId: string) {
+  async retryTask(designId: string, taskId: string) {
     return this.updateDesign(designId, (design) => {
       const run = design.runs.at(-1)!;
       const task = run.tasks.find((item) => item.id === taskId);
@@ -711,7 +767,7 @@ export class MockJeweloClient implements JeweloClient {
     });
   }
 
-  cancelTask(designId: string, taskId: string) {
+  async cancelTask(designId: string, taskId: string) {
     return this.updateDesign(designId, (design) => {
       const run = design.runs.at(-1)!;
       const task = run.tasks.find((item) => item.id === taskId);
@@ -729,7 +785,7 @@ export class MockJeweloClient implements JeweloClient {
     });
   }
 
-  selectDirection(designId: string, directionId: string) {
+  async selectDirection(designId: string, directionId: string) {
     return this.updateDesign(designId, (design) => {
       if (
         design.quote?.status === "issued" ||
@@ -756,7 +812,7 @@ export class MockJeweloClient implements JeweloClient {
     });
   }
 
-  calculateEstimate(designId: string) {
+  async calculateEstimate(designId: string) {
     return this.updateDesign(designId, (design) => {
       if (!design.selectedDirectionId)
         throw new Error("Select a direction first");
@@ -793,7 +849,7 @@ export class MockJeweloClient implements JeweloClient {
     });
   }
 
-  requestQuote(designId: string) {
+  async requestQuote(designId: string) {
     return this.updateDesign(designId, (design) => {
       if (!design.estimate) throw new Error("Estimate required");
       design.quote = {
@@ -810,7 +866,7 @@ export class MockJeweloClient implements JeweloClient {
     });
   }
 
-  issueQuote(designId: string) {
+  async issueQuote(designId: string) {
     return this.updateDesign(designId, (design) => {
       if (!design.quote) throw new Error("Quote request required");
       design.quote.status = "issued";
@@ -824,7 +880,7 @@ export class MockJeweloClient implements JeweloClient {
     });
   }
 
-  acceptQuote(designId: string) {
+  async acceptQuote(designId: string) {
     return this.updateDesign(designId, (design) => {
       if (!design.quote || design.quote.status !== "issued")
         throw new Error("Only a current issued quote can be accepted");
@@ -838,7 +894,7 @@ export class MockJeweloClient implements JeweloClient {
     });
   }
 
-  createOrder(designId: string) {
+  async createOrder(designId: string) {
     return this.updateDesign(designId, (design) => {
       if (!design.quote || design.quote.status !== "accepted")
         throw new Error("Accepted quote required");
@@ -861,7 +917,7 @@ export class MockJeweloClient implements JeweloClient {
     });
   }
 
-  updateFulfillment(designId: string) {
+  async updateFulfillment(designId: string) {
     const next = {
       confirmed: "in-production",
       "in-production": "quality-check",
@@ -876,7 +932,7 @@ export class MockJeweloClient implements JeweloClient {
     });
   }
 
-  reset() {
+  async reset() {
     if (typeof window !== "undefined")
       window.localStorage.removeItem(STORAGE_KEY);
     return this.commit(seedState());

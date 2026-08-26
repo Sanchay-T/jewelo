@@ -4,7 +4,12 @@ import Link from "next/link";
 import { useState } from "react";
 
 import { useJewelo } from "@/lib/jewelo-provider";
-import type { Design, Estimate, Order, Quote } from "@/lib/types";
+import type {
+  LegacyDesign as Design,
+  LegacyEstimate as Estimate,
+  LegacyOrder as Order,
+  LegacyQuote as Quote,
+} from "@/lib/legacy-direction-compat";
 
 import styles from "./CommerceExperience.module.css";
 
@@ -189,14 +194,14 @@ export function CommerceExperience({
   async function runAction(
     key: string,
     successMessage: string,
-    command: () => unknown,
+    command: () => Promise<unknown>,
   ) {
     setAction({ key, status: "loading", message: "" });
     try {
       await new Promise<void>((resolve) =>
         requestAnimationFrame(() => resolve()),
       );
-      command();
+      await command();
       refresh();
       setAction({ key, status: "success", message: successMessage });
     } catch (error) {

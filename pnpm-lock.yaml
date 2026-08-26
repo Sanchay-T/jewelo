@@ -75,6 +75,9 @@ importers:
       '@jewelo/config':
         specifier: workspace:*
         version: link:../../packages/config
+      '@jewelo/contracts':
+        specifier: workspace:*
+        version: link:../../packages/contracts
       '@phosphor-icons/react':
         specifier: 2.1.10
         version: 2.1.10(react-dom@19.2.8(react@19.2.8))(react@19.2.8)

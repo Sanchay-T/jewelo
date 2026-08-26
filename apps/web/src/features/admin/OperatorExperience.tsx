@@ -4,7 +4,8 @@ import Link from "next/link";
 import { type FormEvent, useMemo, useState } from "react";
 
 import { useJewelo } from "@/lib/jewelo-provider";
-import type { AuditEvent, Design } from "@/lib/types";
+import type { AuditEvent } from "@/lib/types";
+import type { LegacyDesign as Design } from "@/lib/legacy-direction-compat";
 
 import styles from "./OperatorExperience.module.css";
 
@@ -277,14 +278,14 @@ export function OperatorExperience({ locale }: { locale: Locale }) {
   async function runAction(
     key: string,
     successMessage: string,
-    command: () => unknown,
+    command: () => Promise<unknown>,
   ) {
     setAction({ key, status: "loading", message: "" });
     try {
       await new Promise<void>((resolve) =>
         requestAnimationFrame(() => resolve()),
       );
-      command();
+      await command();
       refresh();
       setAction({ key, status: "success", message: successMessage });
     } catch (error) {

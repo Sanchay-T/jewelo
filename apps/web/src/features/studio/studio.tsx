@@ -14,12 +14,12 @@ import {
   useState,
 } from "react";
 import { useJewelo } from "@/lib/jewelo-provider";
+import type { TaskState } from "@/lib/types";
 import type {
-  Design,
   Direction,
+  LegacyDesign as Design,
   RepresentationKind,
-  TaskState,
-} from "@/lib/types";
+} from "@/lib/legacy-direction-compat";
 import styles from "./studio.module.css";
 
 type Run = Design["runs"][number];
@@ -128,7 +128,7 @@ export function Studio({
   }, [client, refresh, run]);
 
   const act = useCallback(
-    async (key: string, success: string, action: () => unknown) => {
+    async (key: string, success: string, action: () => Promise<unknown>) => {
       setBusyAction(key);
       setError(undefined);
       try {
@@ -157,20 +157,20 @@ export function Studio({
   }, []);
 
   const startRun = useCallback(() => {
-    void act("new-run", "A fresh four-direction run was started.", () => {
-      const nextDesign = client.startRun(designId);
+    void act("new-run", "A fresh four-direction run was started.", async () => {
+      const nextDesign = await client.startRun(designId);
       const nextRun = nextDesign.runs.at(-1);
       if (nextRun) chooseRun(nextRun);
     });
   }, [act, chooseRun, client, designId]);
 
   const refine = useCallback(() => {
-    void act("refine", "A new revision and run were created.", () => {
-      client.refineDesign(
+    void act("refine", "A new revision and run were created.", async () => {
+      await client.refineDesign(
         designId,
         `Refinement from ${direction?.label ?? "current direction"}`,
       );
-      const nextDesign = client.startRun(designId);
+      const nextDesign = await client.startRun(designId);
       const nextRun = nextDesign.runs.at(-1);
       if (nextRun) chooseRun(nextRun);
     });
@@ -280,10 +280,12 @@ export function Studio({
         <main className={styles.inspector}>
           <div className={styles.mobileIdentity}>
             <span>Canonical identity</span>
-            <strong dir={revision.identity.language === "ar" ? "rtl" : "ltr"}>
-              {revision.identity.approvedText}
+            <strong
+              dir={revision.identityAnchor.language === "ar" ? "rtl" : "ltr"}
+            >
+              {revision.identityAnchor.approvedText}
             </strong>
-            <code>{revision.identity.fingerprint}</code>
+            <code>{revision.identityAnchor.fingerprint}</code>
           </div>
 
           <div
@@ -458,8 +460,8 @@ export function Studio({
             className={styles.primaryButton}
             disabled={!design.selectedDirectionId || busyAction === "commerce"}
             onClick={() =>
-              void act("commerce", "Opening estimate and quote.", () => {
-                if (!design.estimate) client.calculateEstimate(designId);
+              void act("commerce", "Opening estimate and quote.", async () => {
+                if (!design.estimate) await client.calculateEstimate(designId);
                 router.push(`/${locale}/commerce/${designId}`);
               })
             }
@@ -495,10 +497,10 @@ function IdentityCard({ revision }: { revision: Design["revisions"][number] }) {
   return (
     <div className={styles.identityCard}>
       <p className={styles.eyebrow}>Canonical identity</p>
-      <strong dir={revision.identity.language === "ar" ? "rtl" : "ltr"}>
-        {revision.identity.approvedText}
+      <strong dir={revision.identityAnchor.language === "ar" ? "rtl" : "ltr"}>
+        {revision.identityAnchor.approvedText}
       </strong>
-      <code>{revision.identity.fingerprint}</code>
+      <code>{revision.identityAnchor.fingerprint}</code>
       <span>✓ Approved geometry proof</span>
     </div>
   );
@@ -514,7 +516,9 @@ function SpecificationList({
     <dl className={styles.specifications}>
       <div>
         <dt>Metal</dt>
-        <dd>{specification.metal}</dd>
+        <dd>
+          {specification.metalKarat} {specification.metalColor} gold
+        </dd>
       </div>
       <div>
         <dt>Finish</dt>
@@ -522,11 +526,13 @@ function SpecificationList({
       </div>
       <div>
         <dt>Stones</dt>
-        <dd>{specification.stones}</dd>
+        <dd>
+          {specification.stoneCoverage} · {specification.gemstone}
+        </dd>
       </div>
       <div>
         <dt>Width</dt>
-        <dd>{specification.widthMm} mm</dd>
+        <dd>{specification.dimensions.widthMm} mm</dd>
       </div>
       <div>
         <dt>Complexity</dt>

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { MockJeweloClient, createCanonicalIdentity } from "./mock-client";
-import type { ScenarioId, SpikeState } from "./types";
+import type { DesignInput, ScenarioId } from "./types";
+import type { LegacySpikeState as SpikeState } from "./legacy-direction-compat";
 
 const scenarios: ScenarioId[] = [
   "fast-all",
@@ -23,15 +24,31 @@ function clientFor(scenario: ScenarioId) {
   return new MockJeweloClient(state, false);
 }
 
-function start(client: MockJeweloClient) {
-  const design = client.createDesign({
-    approvedText: "Layla",
-    language: "en",
+function designInput(name = "Layla"): DesignInput {
+  return {
+    jewelryType: "name-pendant",
+    nameCount: 1,
+    names: [{ approvedEnglishText: name, approvedArabicText: null }],
+    arabicStyle: "none",
+    layout: "single-name",
     source: "fresh",
+    metalKarat: "18K",
+    metalColor: "yellow",
+    finish: "polished",
+    stoneCoverage: "accent",
+    gemstone: "natural-diamond",
+    connector: "plain",
+    sizeProfile: "classic",
+    dimensions: { widthMm: 20, heightMm: 9, thicknessMm: 1.2 },
+    chain: { style: "cable", lengthCm: 45 },
     complexity: 5,
-    stones: "diamond accents",
-  });
-  return client.startRun(design.id).runs[0]!;
+    spellingConfirmed: true,
+  };
+}
+
+async function start(client: MockJeweloClient) {
+  const design = await client.createDesign(designInput());
+  return (await client.startRun(design.id)).runs[0]!;
 }
 
 describe("MockJeweloClient progressive contract", () => {
@@ -46,11 +63,11 @@ describe("MockJeweloClient progressive contract", () => {
 
   it.each(scenarios)(
     "constructs the %s fixture without external state",
-    (scenario) => {
+    async (scenario) => {
       const client = clientFor(scenario);
-      const run = start(client);
+      const run = await start(client);
       const fingerprint =
-        client.getDesign("design-1")!.revisions[0]!.identity.fingerprint;
+        client.getDesign("design-1")!.revisions[0]!.identityAnchor.fingerprint;
       expect(run.directions).toHaveLength(4);
       expect(run.tasks).toHaveLength(12);
       expect(
@@ -61,14 +78,14 @@ describe("MockJeweloClient progressive contract", () => {
     },
   );
 
-  it("reveals one verified product before its siblings finish", () => {
+  it("reveals one verified product before its siblings finish", async () => {
     const client = clientFor("fast-all");
-    const run = start(client);
+    const run = await start(client);
     expect(
-      client.advanceRun(run.id, 360).directions[0]!.representations.product
-        .state,
+      (await client.advanceRun(run.id, 360)).directions[0]!.representations
+        .product.state,
     ).toBe("verifying");
-    const progressive = client.advanceRun(run.id, 160);
+    const progressive = await client.advanceRun(run.id, 160);
     expect(progressive.directions[0]!.representations.product.state).toBe(
       "ready",
     );
@@ -84,10 +101,10 @@ describe("MockJeweloClient progressive contract", () => {
     ).toBe(true);
   });
 
-  it("lets a slow sibling finish independently", () => {
+  it("lets a slow sibling finish independently", async () => {
     const client = clientFor("slow-sibling");
-    const run = start(client);
-    const progressive = client.advanceRun(run.id, 1_400);
+    const run = await start(client);
+    const progressive = await client.advanceRun(run.id, 1_400);
     expect(
       progressive.directions
         .slice(0, 3)
@@ -100,17 +117,17 @@ describe("MockJeweloClient progressive contract", () => {
     );
   });
 
-  it("preserves ready siblings when one product fails", () => {
+  it("preserves ready siblings when one product fails", async () => {
     const client = clientFor("partial");
-    const partial = client.advanceRun(start(client).id, 2_000);
+    const partial = await client.advanceRun((await start(client)).id, 2_000);
     expect(partial.status).toBe("partial");
     expect(partial.directions[2]!.representations.product.state).toBe("failed");
     expect(partial.directions[0]!.representations.product.state).toBe("ready");
   });
 
-  it("holds excess motion work in queue when capacity is two", () => {
+  it("holds excess motion work in queue when capacity is two", async () => {
     const client = clientFor("quota-2");
-    const limited = client.advanceRun(start(client).id, 900);
+    const limited = await client.advanceRun((await start(client)).id, 900);
     const states = limited.directions.map(
       (direction) => direction.representations.motion.state,
     );
@@ -120,23 +137,23 @@ describe("MockJeweloClient progressive contract", () => {
     expect(states.filter((state) => state === "queued")).toHaveLength(2);
   });
 
-  it("retries one identity task without resetting siblings", () => {
+  it("retries one identity task without resetting siblings", async () => {
     const client = clientFor("retry");
-    const run = start(client);
-    const retrying = client.advanceRun(run.id, 900);
+    const run = await start(client);
+    const retrying = await client.advanceRun(run.id, 900);
     expect(retrying.directions[2]!.representations.product.state).toBe(
       "retrying",
     );
     expect(retrying.directions[0]!.representations.product.state).toBe("ready");
     expect(
-      client.advanceRun(run.id, 1_000).directions[2]!.representations.product
-        .state,
+      (await client.advanceRun(run.id, 1_000)).directions[2]!.representations
+        .product.state,
     ).toBe("ready");
   });
 
-  it("reconstructs resume state and cancels only unfinished work", () => {
+  it("reconstructs resume state and cancels only unfinished work", async () => {
     const resumedClient = clientFor("resume");
-    const resumed = start(resumedClient);
+    const resumed = await start(resumedClient);
     const reconstructed = new MockJeweloClient(
       resumedClient.getState(),
       false,
@@ -145,7 +162,10 @@ describe("MockJeweloClient progressive contract", () => {
     expect(reconstructed.elapsedMs).toBeGreaterThan(0);
 
     const cancelClient = clientFor("cancel");
-    const cancelled = cancelClient.advanceRun(start(cancelClient).id, 250);
+    const cancelled = await cancelClient.advanceRun(
+      (await start(cancelClient)).id,
+      250,
+    );
     expect(cancelled.status).toBe("cancelled");
     expect(cancelled.tasks.some((task) => task.state === "ready")).toBe(true);
     expect(cancelled.tasks.some((task) => task.state === "cancelled")).toBe(
@@ -153,16 +173,10 @@ describe("MockJeweloClient progressive contract", () => {
     );
   });
 
-  it("never assigns Layla fixtures to another canonical identity", () => {
+  it("never assigns Layla fixtures to another canonical identity", async () => {
     const client = clientFor("fast-all");
-    const design = client.createDesign({
-      approvedText: "Sarah",
-      language: "en",
-      source: "fresh",
-      complexity: 4,
-      stones: "none",
-    });
-    const run = client.startRun(design.id).runs[0]!;
+    const design = await client.createDesign(designInput("Sarah"));
+    const run = (await client.startRun(design.id)).runs[0]!;
     expect(
       run.directions
         .flatMap((direction) => Object.values(direction.representations))

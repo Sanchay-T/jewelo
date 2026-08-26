@@ -31,7 +31,7 @@ export function CraftingTransition({
   const run = design?.runs.at(-1);
 
   useEffect(() => {
-    if (design && design.runs.length === 0) client.startRun(design.id);
+    if (design && design.runs.length === 0) void client.startRun(design.id);
   }, [client, design]);
 
   useEffect(
@@ -70,7 +70,7 @@ export function CraftingTransition({
           <p className="eyebrow">Revision approved</p>
           <h1 className="display">
             Crafting directions for{" "}
-            {design.revisions.at(-1)?.identity.approvedText}
+            {design.revisions.at(-1)?.identityAnchor.approvedText}
           </h1>
           <p>
             {readyProducts > 0

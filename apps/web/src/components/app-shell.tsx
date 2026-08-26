@@ -65,7 +65,7 @@ function ScenarioDrawer() {
                 key={scenario}
                 aria-pressed={state.scenario === scenario}
                 onClick={() => {
-                  setScenario(scenario);
+                  void setScenario(scenario);
                   setOpen(false);
                 }}
               >
@@ -76,7 +76,7 @@ function ScenarioDrawer() {
           <button
             className="danger-button"
             style={{ width: "100%", marginTop: 10 }}
-            onClick={() => client.reset()}
+            onClick={() => void client.reset()}
           >
             Reset fixture state
           </button>
