@@ -13,6 +13,7 @@ playwright-report/
 *.log
 *.tsbuildinfo
 .vercel/
+.do/generated/
 .trigger/
 supabase/.temp/
 supabase/.branches/

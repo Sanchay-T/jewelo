@@ -5,7 +5,8 @@
   "description": "Jewelo v2 production monorepo",
   "packageManager": "pnpm@11.23.0",
   "engines": {
-    "node": ">=24 <25"
+    "node": ">=24 <25",
+    "pnpm": "11.23.0"
   },
   "scripts": {
     "build": "turbo run build",
@@ -13,6 +14,14 @@
     "db:push": "bash scripts/supabase-remote.sh push",
     "db:types": "bash scripts/supabase-remote.sh types",
     "dev": "turbo run dev --filter=@jewelo/web",
+    "do:bootstrap": "node scripts/digitalocean/bootstrap-app.mjs",
+    "do:build": "pnpm --filter @jewelo/web... build",
+    "do:check-env": "node scripts/digitalocean/check-env.mjs",
+    "do:deploy": "bash scripts/digitalocean/deploy.sh",
+    "do:github": "bash scripts/digitalocean/configure-github.sh",
+    "do:rollback": "bash scripts/digitalocean/rollback.sh",
+    "do:smoke": "bash scripts/digitalocean/smoke.sh",
+    "doctl": "bash scripts/digitalocean/doctl.sh",
     "doctor": "bash scripts/doctor.sh",
     "format": "prettier --write package.json pnpm-workspace.yaml turbo.json tsconfig.base.json eslint.config.mjs vercel.json apps packages scripts/*.mjs",
     "format:check": "prettier --check package.json pnpm-workspace.yaml turbo.json tsconfig.base.json eslint.config.mjs vercel.json apps packages scripts/*.mjs",
@@ -26,6 +35,7 @@
     "shopify:cli": "pnpm dlx @shopify/cli@4.7.0",
     "shopify:dev-mcp": "pnpm dlx @shopify/dev-mcp@1.14.5",
     "shopify:probe": "node scripts/shopify-readiness.mjs",
+    "start": "pnpm --filter @jewelo/web start",
     "test": "turbo run test",
     "test:e2e": "pnpm --filter @jewelo/web test:e2e",
     "typecheck": "turbo run typecheck",

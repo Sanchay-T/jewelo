@@ -14,7 +14,7 @@ This is the production architecture Jewelo v2 will implement. It was selected ag
 | Web | Next.js 16.2 App Router, React 19, strict TypeScript | Server Components by default; client components only for interaction/realtime. |
 | UI | Tailwind CSS 4, shadcn/Radix, Motion, React Hook Form, Zod, next-intl | WCAG AA, keyboard/touch, reduced motion, RTL-ready. |
 | Media UI | Embla Carousel, `react-zoom-pan-pinch`, `react-dropzone`, native video | Direction filmstrip, real inspection, accessible upload, short MP4 previews. |
-| Hosting | Vercel | Git preview deployments; no long AI work in request handlers. |
+| Hosting | DigitalOcean App Platform (`blr`) | Managed Node buildpacks, encrypted app secrets, staging sleep, one fixed production instance; no long AI work in request handlers. |
 | System of record | Supabase Postgres in Mumbai (`ap-south-1`) | SQL migrations + RLS + generated TypeScript DB types. |
 | Identity | Supabase Auth | Anonymous guest first; link email, phone, or OAuth later. |
 | Realtime | Supabase Realtime | Subscribe to run/task/asset milestones filtered by run or design. |
@@ -27,7 +27,7 @@ This is the production architecture Jewelo v2 will implement. It was selected ag
 | Selected final motion | `bytedance/seedance-2.0/image-to-video` | Optional 6-second standard-quality render for the selected direction. |
 | Observability | Sentry + PostHog + Trigger/provider traces | Correlate request, run, task, variation, provider-call and cost IDs; redact PII. |
 | Testing | Vitest, Playwright, MSW, axe, visual screenshots | Unit, contract, integration, browser, accessibility, concurrency and failure injection. |
-| CI/CD | GitHub Actions + Vercel/Supabase/Trigger preview integrations | Each goal PR receives isolated preview seams and a proof packet. |
+| CI/CD | GitHub Actions + DigitalOcean/Supabase/Trigger integrations | Staging deploys are gated until the integrated app exists; production is manual and commit-pinned. |
 
 ## Repository layout
 
@@ -146,7 +146,7 @@ The normal path is:
 
 ```text
 Git branch
-  -> Vercel preview
+  -> DigitalOcean staging app
   -> Supabase preview/persistent dev branch
   -> Trigger.dev preview/dev environment
   -> development OpenAI and fal credentials
@@ -159,7 +159,7 @@ Local Next.js execution is optional. Docker, local Postgres, local Storage, Kube
 - Supabase: standard Postgres dumps/migrations; Storage supports S3-compatible access.
 - Trigger.dev: business workflow contracts live in shared packages; replace orchestration without rewriting business data.
 - OpenAI/fal: provider ports and model profiles isolate vendor APIs.
-- Vercel: Next.js remains deployable to another Node-compatible host.
+- DigitalOcean App Platform: Next.js remains deployable to another Node-compatible host.
 
 ## Primary references
 
