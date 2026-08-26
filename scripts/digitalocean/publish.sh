@@ -25,7 +25,7 @@ current_branch="$(git branch --show-current)"
 
 git fetch origin "$expected_branch" --tags
 sha="$(git rev-parse HEAD)"
-remote_sha="$(git rev-parse "origin/$expected_branch")"
+remote_sha="$(git rev-parse FETCH_HEAD)"
 [[ "$sha" == "$remote_sha" ]] || {
   echo "Push $expected_branch before publishing staging." >&2
   exit 2
