@@ -942,6 +942,57 @@ export type Database = {
         Args: { p_specification: Json };
         Returns: Json;
       };
+      complete_shopify_order: {
+        Args: {
+          p_delivery_id: string;
+          p_quote_id: string;
+          p_shopify_order_id: string;
+        };
+        Returns: {
+          accepted_at: string;
+          accepted_total: number;
+          checkout_status: Database["public"]["Enums"]["checkout_status"];
+          created_at: string;
+          design_id: string;
+          id: string;
+          owner_principal_id: string;
+          quote_id: string;
+          revision_id: string;
+          shopify_draft_order_id: string | null;
+          shopify_order_id: string | null;
+          status: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "orders";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      operator_retry_generation_task: {
+        Args: { p_reason?: string; p_retry_key: string; p_task_id: string };
+        Returns: {
+          attempt: number;
+          cancel_requested_at: string | null;
+          created_at: string;
+          dispatch_idempotency_key: string;
+          id: string;
+          owner_principal_id: string;
+          presentation_view: string;
+          prompt_release: string;
+          provider_profile: string;
+          run_id: string;
+          status: Database["public"]["Enums"]["task_status"];
+          terminal_error_code: string | null;
+          updated_at: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "generation_tasks";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       reconcile_provider_attempt: {
         Args: {
           p_actual_cost_cents: number;

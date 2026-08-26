@@ -33,18 +33,32 @@ export async function POST(request: Request) {
         },
       );
     } else if (input.command === "review_task") {
-      result = await supabaseRequest(
-        admin,
-        `/rest/v1/generation_tasks?id=eq.${encodeURIComponent(input.targetId)}`,
-        {
-          method: "PATCH",
-          headers: { prefer: "return=representation" },
-          body: JSON.stringify({
-            status: input.payload?.decision === "retry" ? "retrying" : "failed",
-            terminal_error_code: input.payload?.reason,
-          }),
-        },
-      );
+      result =
+        input.payload?.decision === "retry"
+          ? await supabaseRequest(
+              admin,
+              "/rest/v1/rpc/operator_retry_generation_task",
+              {
+                method: "POST",
+                body: JSON.stringify({
+                  p_task_id: input.targetId,
+                  p_retry_key: input.idempotencyKey,
+                  p_reason: input.payload?.reason,
+                }),
+              },
+            )
+          : await supabaseRequest(
+              admin,
+              `/rest/v1/generation_tasks?id=eq.${encodeURIComponent(input.targetId)}`,
+              {
+                method: "PATCH",
+                headers: { prefer: "return=representation" },
+                body: JSON.stringify({
+                  status: "failed",
+                  terminal_error_code: input.payload?.reason,
+                }),
+              },
+            );
     } else if (input.command === "fulfillment_transition") {
       result = await supabaseRequest(
         admin,
