@@ -57,3 +57,4 @@ export function createSupabaseDataClient(url: string, publishableKey: string) {
 export type SupabaseDataClient = SupabaseClient<Database>;
 export type { RealtimeChannel };
 export type { Database } from "./database.types";
+export * from "./media-pipeline";

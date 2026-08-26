@@ -1,0 +1,66 @@
+{
+  "purpose": "Visual regression set: every discrete UI option (screens 02-09) proven by >=1 reviewable image. Single-axis coverage; composition guaranteed by chain-of-edits architecture.",
+  "review_gate_per_image": ["script exact vs silhouette", "scale delicate/true-to-tier", "chain threads INTO both rings", "nothing added"],
+  "edit_order_rule": "metal -> stones -> chain -> view/scene; each intermediate must pass gate before consumption",
+  "batches": [
+    {
+      "batch": 1,
+      "kind": "generate (gpt-image-2, 9:16, @pendantshape silhouette)",
+      "items": [
+        {"id": 1, "axis": "identity+size", "config": {"font": "classic/Amiri", "size": "delicate 22mm", "metal": "yellowGold", "chain": "cable", "stones": "none"}, "status": "EXISTS - current @approved"},
+        {"id": 2, "axis": "size", "config": {"size": "classic 30mm"}, "note": "new size-tier language: 'refined ~3.0cm'"},
+        {"id": 3, "axis": "size", "config": {"size": "statement 36mm"}, "note": "new size-tier language: 'confident ~3.6cm, never oversized'"},
+        {"id": 4, "axis": "identity", "config": {"font": "minimal/Scheherazade", "size": "delicate"}, "note": "requires local solver run, dilate_px=2, upload silhouette"}
+      ]
+    },
+    {
+      "batch": 2,
+      "kind": "edit (nano-banana-pro, @approved = item 1)",
+      "items": [
+        {"id": 5, "axis": "metal", "template": "METAL_EDIT", "value": "whiteGold"},
+        {"id": 6, "axis": "metal", "template": "METAL_EDIT", "value": "roseGold"},
+        {"id": 7, "axis": "stoneCoverage", "template": "STONE_EDIT", "value": "accent + labDiamond"},
+        {"id": 8, "axis": "stoneCoverage", "template": "STONE_EDIT", "value": "partialPave + labDiamond"},
+        {"id": 9, "axis": "stoneCoverage", "template": "STONE_EDIT", "value": "fullPave + labDiamond"},
+        {"id": 10, "axis": "gemstone", "template": "STONE_EDIT", "value": "fullPave + naturalDiamond"},
+        {"id": 11, "axis": "gemstone", "template": "STONE_EDIT", "value": "fullPave + ruby"},
+        {"id": 12, "axis": "gemstone", "template": "STONE_EDIT", "value": "fullPave + emerald"},
+        {"id": 13, "axis": "gemstone", "template": "STONE_EDIT", "value": "fullPave + blueSapphire"},
+        {"id": 14, "axis": "gemstone", "template": "STONE_EDIT", "value": "fullPave + pinkSapphire"},
+        {"id": 15, "axis": "chainStyle", "template": "CHAIN_EDIT (NEW) rendered as closeUp", "value": "rolo"},
+        {"id": 16, "axis": "chainStyle", "template": "CHAIN_EDIT (NEW) rendered as closeUp", "value": "box"},
+        {"id": 17, "axis": "chainStyle", "template": "CHAIN_EDIT (NEW) rendered as closeUp", "value": "fineCurb"}
+      ]
+    },
+    {
+      "batch": 3,
+      "kind": "edit (views + wear, @approved = item 1)",
+      "items": [
+        {"id": 18, "axis": "view+chainStyle", "template": "VIEW_EDITS.closeUp", "value": "closeUp (doubles as cable macro)"},
+        {"id": 19, "axis": "view", "template": "VIEW_EDITS.darkMood", "value": "darkMood"},
+        {"id": 20, "axis": "chainLengthCm", "template": "VIEW_EDITS.onModel + LENGTH slot (NEW)", "value": "40 - high at base of throat"},
+        {"id": 21, "axis": "chainLengthCm", "template": "VIEW_EDITS.onModel + LENGTH slot (NEW)", "value": "45 - at the collarbone"},
+        {"id": 22, "axis": "chainLengthCm", "template": "VIEW_EDITS.onModel + LENGTH slot (NEW)", "value": "50 - just below the collarbone"},
+        {"id": 23, "axis": "chainLengthCm", "template": "VIEW_EDITS.onModel + LENGTH slot (NEW)", "value": "55 - resting on the sternum"}
+      ]
+    },
+    {
+      "batch": 4,
+      "kind": "generate re-run (same studio prompt + REFINEMENT adjective)",
+      "items": [
+        {"id": 24, "axis": "refinement", "value": "minimal"},
+        {"id": 25, "axis": "refinement", "value": "bold"},
+        {"id": 26, "axis": "refinement", "value": "traditional"}
+      ],
+      "note": "elegant = base item 1"
+    }
+  ],
+  "blocked_options_no_image_possible": {
+    "reason": "fail upstream of rendering; generating examples would fake the solver (violates rule 1). Correct backend behaviour = disabled UI state.",
+    "arabicStyle": {"signature": "HELD - native reader sign-off", "kufi": "EXCLUDED - dot fusion corrupts identity", "contemporary": "GAP - font to source", "diwani": "GAP", "thuluth": "GAP", "organic": "GAP"},
+    "language": {"english": "GAP - no EN font vetted in solver"},
+    "layouts_two_name": ["sideBySide", "connectedHeart", "stacked", "stackedHeart", "infinity", "interlocked"],
+    "layouts_note": "solver extension, README open item 2"
+  },
+  "totals": {"images": 26, "fresh_generations": 3, "edits": 22, "existing": 1, "combos_covered_by_composition": 2736}
+}

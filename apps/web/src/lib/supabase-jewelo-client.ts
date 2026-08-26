@@ -27,6 +27,7 @@ import type {
   RepresentationKind,
 } from "./legacy-direction-compat";
 import type { DesignInput } from "./types";
+import { loadReferenceUrl } from "./reference-store";
 
 interface Session {
   access_token: string;
@@ -260,6 +261,7 @@ export class SupabaseJeweloClient implements LegacyJeweloClient {
   }
 
   async approveRevision(input: ApproveRevisionInput): Promise<LegacyDesign> {
+    await this.#ensureReferenceUploaded(input.specification);
     const created = await this.#request<{ approved_design_id: string }>(
       "/api/revisions/approve",
       {
@@ -678,56 +680,69 @@ export class SupabaseJeweloClient implements LegacyJeweloClient {
     const id = text(run.id);
     const revisionId = text(run.revision_id);
     const directionId = `${id}:studio`;
-    const taskRow = payload.generation_tasks.find((task) => task.run_id === id);
-    const assetRow = payload.assets.find((asset) => asset.run_id === id);
-    const taskId = text(taskRow?.id, `${id}:studio-task`);
-    const state = taskState(taskRow?.status);
-    const assetLineage: LegacyAssetLineage = assetRow
-      ? {
-          revisionId,
-          runId: id,
-          directionId,
-          taskId,
-          provider: text(assetRow.provider),
-          model: text(assetRow.model),
-          promptRelease: text(assetRow.prompt_release),
-          inputAssets: Array.isArray(assetRow.input_asset_ids)
-            ? assetRow.input_asset_ids.map(String)
-            : [],
-          attempt: Number(assetRow.attempt),
-          verificationResult:
-            assetRow.verification_result as LegacyAssetLineage["verificationResult"],
-        }
-      : emptyLineage(revisionId, id, directionId, taskId);
-    const product = representation(
-      "product",
-      assetRow ? "ready" : state,
-      assetLineage,
-      text(assetRow?.signed_url) || undefined,
+    const taskRows = payload.generation_tasks.filter(
+      (task) => task.run_id === id,
     );
-    const unavailable = (kind: "worn" | "motion") =>
-      representation(
-        kind,
-        "unavailable",
-        emptyLineage(revisionId, id, directionId, `${taskId}:${kind}`),
+    const assetRows = payload.assets.filter((asset) => asset.run_id === id);
+    const taskFor = (view: string) =>
+      taskRows.find((task) => text(task.presentation_view) === view);
+    const assetFor = (view: string) =>
+      assetRows.find((asset) => text(asset.presentation_view) === view) ??
+      (view === "studio" && assetRows.length === 1 ? assetRows[0] : undefined);
+    const lineage = (task: Row | undefined, asset: Row | undefined) => {
+      const taskId = text(
+        task?.id,
+        `${id}:${text(task?.presentation_view)}:task`,
       );
+      return asset
+        ? ({
+            revisionId,
+            runId: id,
+            directionId,
+            taskId,
+            provider: text(asset.provider),
+            model: text(asset.model),
+            promptRelease: text(asset.prompt_release),
+            inputAssets: Array.isArray(asset.input_asset_ids)
+              ? asset.input_asset_ids.map(String)
+              : [],
+            attempt: Number(asset.attempt),
+            verificationResult:
+              asset.verification_result as LegacyAssetLineage["verificationResult"],
+          } satisfies LegacyAssetLineage)
+        : emptyLineage(revisionId, id, directionId, taskId);
+    };
+    const mappedRepresentation = (kind: RepresentationKind, view: string) => {
+      const task = taskFor(view);
+      const asset = assetFor(view);
+      return representation(
+        kind,
+        asset ? "ready" : task ? taskState(task.status) : "unavailable",
+        lineage(task, asset),
+        text(asset?.signed_url) || undefined,
+      );
+    };
+    const product = mappedRepresentation("product", "studio");
+    const worn = mappedRepresentation("worn", "on_skin");
+    const motion = mappedRepresentation("motion", "motion_preview");
     const direction: Direction = {
       id: directionId,
-      label: "Studio",
-      brief: "Approved one-view studio presentation",
+      label: "Caleums views",
+      brief:
+        "Independent verified presentation views from one immutable identity",
       identityFingerprint:
         revisions.find((revision) => revision.id === revisionId)?.identityAnchor
           .fingerprint ?? "pending",
       representations: {
         product,
-        worn: unavailable("worn"),
-        motion: unavailable("motion"),
+        worn,
+        motion,
       },
     };
     return {
       id,
       revisionId,
-      label: "Studio view",
+      label: "Caleums presentation views",
       createdAt: text(run.created_at),
       status:
         run.status === "complete"
@@ -738,29 +753,39 @@ export class SupabaseJeweloClient implements LegacyJeweloClient {
               ? "partial"
               : "running",
       elapsedMs: 0,
-      tasks: [
-        {
-          id: taskId,
-          view: "studio",
-          state,
-          attempt: Number(taskRow?.attempt ?? 0),
-          assetId: assetRow ? text(assetRow.id) : undefined,
+      tasks: taskRows.map((task) => {
+        const storedView = text(task.presentation_view);
+        const view = publicPresentationView(storedView);
+        const asset = assetFor(storedView);
+        const kind: RepresentationKind =
+          view === "on_skin"
+            ? "worn"
+            : view.startsWith("motion")
+              ? "motion"
+              : "product";
+        return {
+          id: text(task.id),
+          view,
+          state: taskState(task.status),
+          attempt: Number(task.attempt ?? 0),
+          assetId: asset ? text(asset.id) : undefined,
           directionId,
-          kind: "product",
-        },
-      ],
-      assets: assetRow
-        ? [
-            {
-              id: text(assetRow.id),
-              view: "studio",
-              state: "ready",
-              assetUrl: text(assetRow.signed_url),
-              alt: product.alt,
-              lineage: assetLineage,
-            },
-          ]
-        : [],
+          kind,
+        };
+      }),
+      assets: assetRows.map((asset) => {
+        const storedView = text(asset.presentation_view);
+        const view = publicPresentationView(storedView);
+        const task = taskRows.find((row) => row.id === asset.task_id);
+        return {
+          id: text(asset.id),
+          view,
+          state: "ready" as const,
+          assetUrl: text(asset.signed_url),
+          alt: `Verified ${view.replaceAll("_", " ")} view of the approved pendant`,
+          lineage: lineage(task, asset),
+        };
+      }),
       directions: [direction],
     };
   }
@@ -803,6 +828,45 @@ export class SupabaseJeweloClient implements LegacyJeweloClient {
 
   async #ensureSession() {
     if (!this.#session) await this.hydrate();
+  }
+
+  async #ensureReferenceUploaded(specification: JewelrySpecification) {
+    const reference = specification.referenceAsset;
+    if (!reference) return;
+    await this.#ensureSession();
+    const local = await loadReferenceUrl(reference.id);
+    if (!local)
+      throw new Error("Approved inspiration reference is unavailable");
+    try {
+      const blob = await fetch(local.url).then((response) => response.blob());
+      const form = new FormData();
+      form.set("referenceId", reference.id);
+      form.set(
+        "file",
+        new File([blob], reference.fileName ?? "reference", {
+          type: blob.type,
+        }),
+      );
+      const current = await this.#ensureSupabase().auth.getSession();
+      const response = await fetch("/api/references", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: current.data.session
+          ? { authorization: `Bearer ${current.data.session.access_token}` }
+          : {},
+        body: form,
+      });
+      if (!response.ok) {
+        const body = (await response.json().catch(() => ({}))) as {
+          error?: string;
+        };
+        throw new Error(
+          body.error ?? `Reference upload failed:${response.status}`,
+        );
+      }
+    } finally {
+      local.revoke();
+    }
   }
 
   #ensureSupabase() {
@@ -855,4 +919,14 @@ export class SupabaseJeweloClient implements LegacyJeweloClient {
     }
     return response.json() as Promise<T>;
   }
+}
+
+function publicPresentationView(
+  value: string,
+): LegacyGenerationRun["tasks"][number]["view"] {
+  if (value === "motion_preview" || value === "motion_final") return "motion";
+  if (value === "studio_hero" || value === "billboard") return "studio";
+  if (["studio", "on_skin", "close_up", "dark", "motion"].includes(value))
+    return value as LegacyGenerationRun["tasks"][number]["view"];
+  return "studio";
 }

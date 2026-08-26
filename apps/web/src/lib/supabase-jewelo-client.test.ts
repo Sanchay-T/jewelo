@@ -144,9 +144,22 @@ describe("remote one-view client flow", () => {
             state.generation_tasks.push({
               id: "task-1",
               run_id: "run-1",
+              presentation_view: "studio",
               status: "queued",
               attempt: 0,
             });
+            for (const [id, presentation_view] of [
+              ["task-2", "on_skin"],
+              ["task-3", "close_up"],
+              ["task-4", "dark"],
+            ])
+              state.generation_tasks.push({
+                id,
+                run_id: "run-1",
+                presentation_view,
+                status: "queued",
+                attempt: 0,
+              });
             state.audit_events.push({
               id: 1,
               design_id: "design-1",
@@ -254,6 +267,7 @@ describe("remote one-view client flow", () => {
       run_id: "run-1",
       revision_id: "revision-1",
       task_id: "task-1",
+      presentation_view: "studio",
       provider: "mock",
       model: "mock-studio-v1",
       prompt_release: "studio-placeholder-v1",
@@ -274,6 +288,10 @@ describe("remote one-view client flow", () => {
         expect.objectContaining({ status: "complete" }),
       ),
     );
+    expect(client.getDesign("design-1")?.runs[0]?.tasks).toHaveLength(4);
+    expect(
+      client.getDesign("design-1")?.runs[0]?.tasks.map((task) => task.view),
+    ).toEqual(["studio", "on_skin", "close_up", "dark"]);
     unsubscribe();
 
     await client.selectDirection("design-1", "run-1:studio");

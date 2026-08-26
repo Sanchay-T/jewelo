@@ -1,6 +1,6 @@
 interface OutboxEvent {
   id: string;
-  payload: { taskId?: string };
+  payload: { taskId?: string; taskKind?: "still" | "video" };
   dispatch_idempotency_key: string;
   attempt_count: number;
 }
@@ -8,7 +8,7 @@ interface OutboxEvent {
 export async function dispatchPendingOutbox(
   environment: Record<string, string | undefined>,
   trigger: (
-    payload: { taskId: string },
+    payload: { taskId: string; taskKind?: "still" | "video" },
     options: { idempotencyKey: string },
   ) => Promise<unknown>,
   fetcher: typeof fetch = fetch,
@@ -26,7 +26,10 @@ export async function dispatchPendingOutbox(
   for (const event of events) {
     if (!event.payload.taskId) continue;
     await trigger(
-      { taskId: event.payload.taskId },
+      {
+        taskId: event.payload.taskId,
+        ...(event.payload.taskKind ? { taskKind: event.payload.taskKind } : {}),
+      },
       { idempotencyKey: event.dispatch_idempotency_key },
     );
     const published = await fetcher(
