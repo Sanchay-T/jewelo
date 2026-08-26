@@ -4,6 +4,7 @@ set -euo pipefail
 repo_root="$(git rev-parse --show-toplevel)"
 cd "$repo_root"
 
+[[ "${1:-}" == "--" ]] && shift
 environment="${1:-staging}"
 if [[ "$environment" != "staging" ]]; then
   echo "Direct publish currently supports staging only; production remains an explicit bootstrap and promotion." >&2
