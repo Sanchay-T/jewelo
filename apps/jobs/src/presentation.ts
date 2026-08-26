@@ -428,23 +428,26 @@ export class SupabasePresentationRepository implements PresentationRepository {
           throw new Error(`identity anchor upload failed:${upload.status}`);
       }
     }
-    await this.#request("/rest/v1/identity_artifacts", {
-      method: "POST",
-      headers: { prefer: "resolution=ignore-duplicates" },
-      body: JSON.stringify({
-        revision_id: revision.id,
-        owner_principal_id: ownerId,
-        engine_release: String(rendered.report.engineRelease),
-        font_release: String(rendered.report.fontSha256 ?? "existing-latin"),
-        approved_text: revision.identity_anchor.approvedText,
-        script: revision.identity_anchor.language,
-        fingerprint: rendered.fingerprint,
-        bucket_id: "identity-anchors",
-        object_path: `${basePath}.png`,
-        png_sha256: rendered.pngSha256,
-        validation_report: rendered.report,
-      }),
-    });
+    await this.#request(
+      "/rest/v1/identity_artifacts?on_conflict=revision_id,fingerprint",
+      {
+        method: "POST",
+        headers: { prefer: "resolution=ignore-duplicates,return=minimal" },
+        body: JSON.stringify({
+          revision_id: revision.id,
+          owner_principal_id: ownerId,
+          engine_release: String(rendered.report.engineRelease),
+          font_release: String(rendered.report.fontSha256 ?? "existing-latin"),
+          approved_text: revision.identity_anchor.approvedText,
+          script: revision.identity_anchor.language,
+          fingerprint: rendered.fingerprint,
+          bucket_id: "identity-anchors",
+          object_path: `${basePath}.png`,
+          png_sha256: rendered.pngSha256,
+          validation_report: rendered.report,
+        }),
+      },
+    );
     const artifacts = await this.#request<Array<{ id: string }>>(
       `/rest/v1/identity_artifacts?revision_id=eq.${revision.id}&fingerprint=eq.${rendered.fingerprint}&select=id`,
     );
