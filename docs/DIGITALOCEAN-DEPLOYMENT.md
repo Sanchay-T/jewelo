@@ -31,31 +31,29 @@ evidence and approval for the higher possible spend.
 ## What happens from push to URL
 
 ```text
-codex/digitalocean-staging-preview push
-  -> GitHub staging workflow verifies a clean checkout
+checkout codex/digitalocean-staging-preview
+  -> commit and push the branch
+  -> pnpm do:publish -- staging
+  -> local install, verification, and production web build
   -> immutable jewelo-staging-<full SHA> Git tag
   -> App Platform builds that tag with Node 24 + pnpm
   -> existing encrypted app environment is retained
   -> /api/health smoke test
-  -> workflow summary publishes URL + deployment ID + SHA
+  -> command reports URL + deployment ID + SHA
 
-tested staging SHA + deployment ID + human production dispatch
-  -> GitHub verifies both refer to an ACTIVE staging deployment
+tested staging SHA + deployment ID + explicit production command
   -> immutable jewelo-production-<full SHA> Git tag
   -> production deploy + /api/health smoke test
-  -> workflow summary publishes production URL and rollback command
+  -> command reports production URL and rollback deployment
 ```
 
-The temporary staging workflow runs on every push to
-`codex/digitalocean-staging-preview`; it can also be dispatched manually. The
-branch filter and GitHub `Preview` environment are the deployment controls.
-Code-only deployments change the Git source ref and preserve the app's
-encrypted environment.
+GitHub Actions is not part of the active deployment path. The direct publisher
+requires a clean, pushed `codex/digitalocean-staging-preview` checkout, creates
+an immutable tag, deploys it through the DigitalOcean API, and smoke-tests the
+result. Code-only deployments preserve the app's encrypted environment.
 
-Production never follows a branch automatically. The production workflow
-requires an exact 40-character commit SHA and the successful staging deployment
-ID for that same SHA. It rejects commits outside the integration branch,
-non-active staging deployments, and mismatched deployment evidence.
+Production never follows a branch automatically. It must use the exact commit
+and immutable source tag proven by an ACTIVE staging deployment.
 
 ## Secret and environment model
 
@@ -92,9 +90,8 @@ prefix.
 
 The upload allowlist excludes Trigger.dev, OpenAI, fal, database passwords, and
 other job-only credentials. Keep those in the job platform that executes the
-work. The GitHub `Preview` and `Production` environments contain the scoped
-`DIGITALOCEAN_ACCESS_TOKEN`; do not put application configuration in workflow
-YAML or GitHub output.
+work. The scoped DigitalOcean token stays in the ignored local `.env`; do not
+put application configuration or credentials in Git.
 
 Environment changes are configuration deployments, not ordinary code pushes:
 
@@ -122,16 +119,6 @@ pnpm doctl -- apps list
 The token has create/read/update access for the relevant DigitalOcean resources
 but no delete scope. Rotate it before its current 25 November 2026 expiry.
 
-With explicit authorization to update the repository environments, run:
-
-```bash
-pnpm do:github
-```
-
-That command configures environment-scoped GitHub deployment secrets and
-non-secret project/app variables. Token rotation must replace both GitHub
-environment secrets without printing the value.
-
 ## Staging operation
 
 Before final cutover, staging intentionally follows
@@ -141,7 +128,7 @@ Before final cutover, staging intentionally follows
 pnpm install --frozen-lockfile
 pnpm verify
 pnpm do:build
-pnpm do:smoke -- https://jewelo-staging-gqumd.ondigitalocean.app
+pnpm do:publish -- staging
 ```
 
 The Node buildpack does not always expose the same version behavior as a local
@@ -149,11 +136,9 @@ shell. Bootstrap injects `JEWELO_CLOUD_BUILD=1` at build time, and foundation
 verification uses that compatibility marker to require Node 24 without
 misclassifying unrelated local negative-proof checks.
 
-For a manual staging deployment, use GitHub Actions' `digitalocean-staging`
-workflow. Prefer it over a local deploy because it proves a fresh checkout and
-records the source tag, deployment ID, commit, health result, and URL together.
-Dispatch it only when the user has authorized a staging update in the current
-request.
+The publisher refuses the wrong branch, dirty worktrees, and unpushed commits.
+It records the source tag, deployment ID, commit, health result, and URL in its
+terminal output. Run it only when the user has authorized a staging update.
 
 ## Production cutover
 
@@ -169,12 +154,12 @@ Production cutover is a controlled transition, not another preview push:
 4. Confirm the staging app still has the expected encrypted configuration; run
    `pnpm verify`, `pnpm do:build`, health smoke, browser smoke, and the app's
    customer/operator acceptance flow.
-5. Move the staging workflow trigger from the temporary preview branch to the
-   integration branch.
+5. Change the direct publisher and App Platform source contract from the
+   temporary preview branch to the integration branch.
 6. Record the full tested commit SHA and its ACTIVE staging deployment ID.
 7. With explicit production approval, bootstrap `jewelo-production` using the
    production environment files.
-8. Dispatch `digitalocean-production` with that SHA and staging deployment ID.
+8. Deploy the exact tested immutable tag with the direct production command.
 9. Verify the published production URL, `/api/health`, browser flows,
    monitoring, and the recorded rollback deployment before any DNS change.
 
@@ -215,10 +200,10 @@ credential incident.
 | Spec validation rejects staging sleep | Inactivity sleep is not enabled for this account | Keep one fixed `apps-s-1vcpu-1gb` instance; do not claim scale-to-zero |
 | Cloud build reports the wrong Node version | Buildpack version behavior differed from local verification | Preserve the Node 24 pins and `JEWELO_CLOUD_BUILD=1` compatibility marker; inspect deployment build logs |
 | Bootstrap exits after creating/updating an app | The deployment did not become ACTIVE | Inspect the latest App Platform build/deploy logs; do not keep retrying blindly or report a URL as healthy |
-| Push does not deploy staging | Deployment gate is off or push was not to the integration branch | Check `DIGITALOCEAN_DEPLOY_ENABLED` and branch routing; use manual dispatch only for an intentional test |
-| Production dispatch rejects a SHA | SHA is not full length, is not in the integration branch, or does not match the ACTIVE staging deployment | Use the exact SHA and deployment ID from the successful staging workflow summary |
+| `do:publish` refuses staging | The checkout is dirty, unpushed, or on the wrong branch | Commit and push `codex/digitalocean-staging-preview`, then rerun the direct publisher |
+| Production source is rejected | The tag does not match the exact ACTIVE staging commit | Use the immutable tag and deployment ID reported by the successful staging publish |
 | App starts but health smoke fails | Build/start command, `PORT`, health route, or required environment is wrong | Inspect runtime logs, verify `pnpm start` honors injected `PORT`, validate environment names, then redeploy |
-| `doctl` wrapper cannot authenticate | Token is missing, expired, or absent from the current worktree's ignored `.env` | Restore/rotate the scoped token without printing it; update Preview and Production GitHub secrets |
+| `doctl` wrapper cannot authenticate | Token is missing, expired, or absent from the current worktree's ignored `.env` | Restore or rotate the scoped local token without printing it |
 
 Stop after one failed externally mutating retry unless the failure is clearly
 transient and the next action is safe. Preserve deployment IDs and logs as

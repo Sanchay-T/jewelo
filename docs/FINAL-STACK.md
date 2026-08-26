@@ -27,7 +27,7 @@ This is the production architecture Jewelo v2 will implement. It was selected ag
 | Selected final motion | `bytedance/seedance-2.0/image-to-video` | Optional 6-second standard-quality render for the selected direction. |
 | Observability | Sentry + PostHog + Trigger/provider traces | Correlate request, run, task, variation, provider-call and cost IDs; redact PII. |
 | Testing | Vitest, Playwright, MSW, axe, visual screenshots | Unit, contract, integration, browser, accessibility, concurrency and failure injection. |
-| CI/CD | GitHub Actions + DigitalOcean/Supabase/Trigger integrations | Staging deploys are gated until the integrated app exists; production is manual and commit-pinned. |
+| Delivery | Direct DigitalOcean publisher plus Supabase/Trigger integrations | Staging is one command from a clean pushed branch; production is manual and commit-pinned. |
 
 ## Repository layout
 
