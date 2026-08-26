@@ -35,8 +35,8 @@ checkout codex/digitalocean-staging-preview
   -> commit and push the branch
   -> pnpm do:publish -- staging
   -> local install, verification, and production web build
-  -> immutable jewelo-staging-<full SHA> Git tag
-  -> App Platform builds that tag with Node 24 + pnpm
+  -> matching immutable jewelo-staging-<full SHA> Git tag and release branch
+  -> App Platform builds the release branch with Node 24 + pnpm
   -> existing encrypted app environment is retained
   -> /api/health smoke test
   -> command reports URL + deployment ID + SHA
@@ -49,8 +49,8 @@ tested staging SHA + deployment ID + explicit production command
 
 GitHub Actions is not part of the active deployment path. The direct publisher
 requires a clean, pushed `codex/digitalocean-staging-preview` checkout, creates
-an immutable tag, deploys it through the DigitalOcean API, and smoke-tests the
-result. Code-only deployments preserve the app's encrypted environment.
+a matching immutable tag and release branch, rolls the allowlisted values back
+through encrypted App Platform configuration, and smoke-tests the result.
 
 Production never follows a branch automatically. It must use the exact commit
 and immutable source tag proven by an ACTIVE staging deployment.
@@ -137,8 +137,9 @@ verification uses that compatibility marker to require Node 24 without
 misclassifying unrelated local negative-proof checks.
 
 The publisher refuses the wrong branch, dirty worktrees, and unpushed commits.
-It records the source tag, deployment ID, commit, health result, and URL in its
-terminal output. Run it only when the user has authorized a staging update.
+It records the source tag/release branch, deployment ID, commit, health result,
+and URL in its terminal output. Run it only when the user has authorized a
+staging update.
 
 ## Production cutover
 

@@ -45,12 +45,13 @@ secretEnvs.push({
 });
 
 const target = contract.environments[environment];
+const sourceRef = process.env.JEWELO_SOURCE_REF ?? contract.integrationBranch;
 const service = {
   name: contract.service.name,
   environment_slug: contract.service.environmentSlug,
   git: {
     repo_clone_url: contract.repositoryCloneUrl,
-    branch: contract.integrationBranch,
+    branch: sourceRef,
   },
   source_dir: "/",
   build_command: contract.service.buildCommand,
