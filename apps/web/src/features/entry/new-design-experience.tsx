@@ -58,6 +58,18 @@ const layouts: Array<{ id: PendantLayout; label: string }> = [
   { id: "interlocked", label: "Interlocked" },
 ];
 
+const sizeWidths: Partial<Record<SizeProfile, number>> = {
+  delicate: 22,
+  classic: 30,
+  statement: 36,
+};
+
+function titleCaseOption(value: string) {
+  return value
+    .replaceAll("-", " ")
+    .replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
 type ArabicReflectionStatus =
   "idle" | "refining" | "refined" | "edited" | "error";
 
@@ -207,6 +219,13 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
     language === "ar" &&
     (arabicOneStatus === "refining" ||
       (nameCount === 2 && arabicTwoStatus === "refining"));
+  const previewScale =
+    (size === "delicate" ? 0.82 : size === "statement" ? 1.12 : 1) *
+    previewZoom;
+  const previewScript =
+    language === "ar"
+      ? (selectedArabicStyle?.label ?? titleCaseOption(arabicStyle))
+      : "English script";
   const visibleStages = useMemo(
     () =>
       language === "ar"
@@ -216,6 +235,25 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
   );
   const stageIndex = visibleStages.findIndex((item) => item.id === stage);
   const safeStageIndex = stageIndex < 0 ? 0 : stageIndex;
+
+  useEffect(() => {
+    setConfirmed(false);
+  }, [
+    arabicOne,
+    arabicStyle,
+    arabicTwo,
+    chain,
+    chainLength,
+    coverage,
+    gemstone,
+    language,
+    layout,
+    metal,
+    nameCount,
+    nameOne,
+    nameTwo,
+    size,
+  ]);
 
   function stageIsValid(id: StageId) {
     if (id === "name-language")
@@ -351,14 +389,30 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
             />
             <div className="clm-preview-badge">Live preview</div>
             <div
+              className="clm-live-chain"
+              data-chain={chain}
+              data-metal={metal}
+              aria-label={`${titleCaseOption(chain)} chain, ${chainLength} centimetres`}
+            >
+              <i />
+              <span>
+                {chain === "curb" ? "Fine curb" : titleCaseOption(chain)} ·{" "}
+                {chainLength} cm
+              </span>
+              <i />
+            </div>
+            <div
               className="clm-live-name"
               data-metal={metal}
               data-stones={coverage}
               data-layout={nameCount === 1 ? "single-name" : layout}
+              data-arabic-style={language === "ar" ? arabicStyle : undefined}
+              data-size={size}
+              data-gemstone={coverage === "none" ? "none" : gemstone}
               dir={language === "ar" ? "rtl" : "ltr"}
               aria-label={`Deterministic identity preview: ${identity.inline}`}
               style={{
-                transform: `rotate(${previewRotation}deg) scale(${previewZoom}) scaleX(${previewFace === "side" ? 0.22 : 1})`,
+                transform: `rotate(${previewRotation}deg) scale(${previewScale}) scaleX(${previewFace === "side" ? 0.22 : 1})`,
               }}
             >
               {arabicPreviewPending ? (
@@ -387,9 +441,24 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
                   : identity.inline}
               </strong>
               <span>
-                18K {metal} gold · {coverage.replaceAll("-", " ")} ·{" "}
-                {chainLength} cm
+                {previewScript} · {titleCaseOption(resolvedLayout)} · 18K{" "}
+                {metal} gold
               </span>
+              <div className="clm-preview-specs" aria-live="polite">
+                <small>{titleCaseOption(coverage)}</small>
+                <small>
+                  {coverage === "none"
+                    ? "No gemstone"
+                    : titleCaseOption(gemstone)}
+                </small>
+                <small>
+                  {titleCaseOption(size)} · {sizeWidths[size] ?? 30} mm
+                </small>
+                <small>
+                  {chain === "curb" ? "Fine curb" : titleCaseOption(chain)} ·{" "}
+                  {chainLength} cm
+                </small>
+              </div>
             </div>
             <div className="clm-view-controls">
               <button
@@ -548,7 +617,7 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
                       selected={arabicStyle === item.id}
                       onSelect={(value) => setArabicStyle(value as ArabicStyle)}
                     >
-                      <strong dir="rtl">{item.sample}</strong>
+                      <strong dir="rtl">{arabicOne}</strong>
                       <span>{item.label}</span>
                       <small className="clm-support-note">
                         {item.providerSupported
