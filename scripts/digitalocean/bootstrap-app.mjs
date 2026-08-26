@@ -37,6 +37,12 @@ secretEnvs.push({
   type: "GENERAL",
   value: "${APP_URL}",
 });
+secretEnvs.push({
+  key: "JEWELO_CLOUD_BUILD",
+  scope: "BUILD_TIME",
+  type: "GENERAL",
+  value: "1",
+});
 
 const target = contract.environments[environment];
 const service = {
@@ -121,14 +127,21 @@ const args = existing
       "json",
     ];
 
-const result = JSON.parse(
-  execFileSync("doctl", args, {
+let rawResult;
+try {
+  rawResult = execFileSync("doctl", args, {
     encoding: "utf8",
     env: childEnvironment,
     input: JSON.stringify(spec),
     maxBuffer: 16 * 1024 * 1024,
-  }),
-);
+  });
+} catch (error) {
+  console.error(
+    `${existing ? "update" : "creation"} of ${target.appName} did not become active; inspect its latest deployment logs`,
+  );
+  process.exit(error.status || 1);
+}
+const result = JSON.parse(rawResult);
 const app = Array.isArray(result) ? result[0] : result;
 console.log(`${existing ? "updated" : "created"} ${target.appName}`);
 console.log(`app_id=${app.id}`);
