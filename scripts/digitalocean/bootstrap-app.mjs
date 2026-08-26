@@ -3,6 +3,7 @@
 import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
+import { appSecretEnvs, readEnvFiles, validateWebEnv } from "./env-contract.mjs";
 
 const repositoryRoot = resolve(import.meta.dirname, "../..");
 const contract = JSON.parse(
@@ -10,81 +11,26 @@ const contract = JSON.parse(
 );
 const cliArguments = process.argv.slice(2);
 if (cliArguments[0] === "--") cliArguments.shift();
-const [environment, envFile] = cliArguments;
+const [environment, ...envFiles] = cliArguments;
 
-if (!contract.environments[environment] || !envFile) {
-  console.error("usage: pnpm do:bootstrap -- staging|production /absolute/path/to/.env");
+if (!contract.environments[environment] || !envFiles.length) {
+  console.error(
+    "usage: pnpm do:bootstrap -- staging|production /absolute/path/to/.env [...env files]",
+  );
   process.exit(2);
 }
 
-function parseEnv(contents) {
-  const values = new Map();
-  for (const originalLine of contents.split(/\r?\n/u)) {
-    const line = originalLine.trim();
-    if (!line || line.startsWith("#")) continue;
-    const match = /^(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)=(.*)$/u.exec(line);
-    if (!match) continue;
-    let value = match[2].trim();
-    if (
-      value.length >= 2 &&
-      ((value.startsWith('"') && value.endsWith('"')) ||
-        (value.startsWith("'") && value.endsWith("'")))
-    ) {
-      value = value.slice(1, -1);
-    }
-    values.set(match[1], value);
-  }
-  return values;
-}
-
-const buildConfig = [
-  "NEXT_PUBLIC_JEWELO_DATA_MODE",
-  "NEXT_PUBLIC_SUPABASE_URL",
-  "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY",
-  "NEXT_PUBLIC_POSTHOG_KEY",
-  "NEXT_PUBLIC_POSTHOG_HOST",
-  "NEXT_PUBLIC_SENTRY_DSN",
-];
-const runtimeConfig = [
-  "SUPABASE_URL",
-  "SUPABASE_PUBLISHABLE_KEY",
-  "SUPABASE_SERVICE_ROLE_KEY",
-  "SHOPIFY_STORE_DOMAIN",
-  "SHOPIFY_CLIENT_ID",
-  "SHOPIFY_CLIENT_SECRET",
-  "SHOPIFY_WEBHOOK_SECRET",
-  "OPERATOR_EMAIL",
-  "OPERATOR_PASSPHRASE",
-  "OPERATOR_SESSION_SECRET",
-];
-const required = new Set([
-  "NEXT_PUBLIC_JEWELO_DATA_MODE",
-  "NEXT_PUBLIC_SUPABASE_URL",
-  "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY",
-  "SUPABASE_URL",
-  "SUPABASE_SERVICE_ROLE_KEY",
-]);
-const values = parseEnv(readFileSync(envFile, "utf8"));
+const values = readEnvFiles(envFiles);
 const token = process.env.DIGITALOCEAN_ACCESS_TOKEN ?? values.get("DIGITALOCEAN_ACCESS_TOKEN");
 if (!token) throw new Error("DIGITALOCEAN_ACCESS_TOKEN is required");
 
-const missing = [...required].filter((name) => !values.get(name));
-if (missing.length) {
-  console.error(`missing required ${environment} values: ${missing.join(", ")}`);
+const environmentErrors = validateWebEnv(values);
+if (environmentErrors.length) {
+  for (const error of environmentErrors) console.error(error);
   process.exit(1);
 }
 
-const secretEnvs = [];
-for (const name of [...buildConfig, ...runtimeConfig]) {
-  const value = values.get(name);
-  if (!value) continue;
-  secretEnvs.push({
-    key: name,
-    scope: buildConfig.includes(name) ? "RUN_AND_BUILD_TIME" : "RUN_TIME",
-    type: "SECRET",
-    value,
-  });
-}
+const secretEnvs = appSecretEnvs(values);
 secretEnvs.push({
   key: "NEXT_PUBLIC_APP_URL",
   scope: "RUN_AND_BUILD_TIME",
