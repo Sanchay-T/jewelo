@@ -13,6 +13,11 @@ import {
 } from "@phosphor-icons/react";
 import { AppShell, CaleumsFooter } from "@/components/app-shell";
 import { useJewelo } from "@/lib/jewelo-provider";
+import {
+  arabicStyleLabel,
+  formatCaleumsPrice,
+  identityFromSpecification,
+} from "@/lib/ui-presentation";
 
 type Locale = "en" | "ar";
 
@@ -42,12 +47,27 @@ export function CommerceExperience({
   const run = design.runs.at(-1);
   const direction = run?.directions[0];
   const product = direction?.representations.product;
+  const studioTask = run?.tasks.find(
+    (task) =>
+      task.view === "studio" &&
+      (!direction || task.directionId === direction.id),
+  );
+  const studioAsset = run?.assets.find(
+    (candidate) =>
+      candidate.view === "studio" &&
+      (!studioTask || candidate.lineage.taskId === studioTask.id),
+  );
   const revision = design.revisions.at(-1);
   const spec = revision?.specification;
   const estimate = design.estimate;
   const quote = design.quote;
   const order = design.order;
-  const asset = product?.state === "ready" ? product.assetUrl : undefined;
+  const asset =
+    studioTask?.state === "ready" && studioAsset?.state === "ready"
+      ? studioAsset.assetUrl
+      : product?.state === "ready"
+        ? product.assetUrl
+        : undefined;
   const scenarios =
     process.env.NODE_ENV === "development" &&
     process.env.NEXT_PUBLIC_JEWELO_SCENARIOS === "1";
@@ -70,11 +90,8 @@ export function CommerceExperience({
     }
   }
   if (!revision || !spec) return null;
-  const approved = revision.identityAnchor.approvedText;
-  const price =
-    quote?.status === "issued" || quote?.status === "accepted"
-      ? quote.total
-      : (estimate?.high ?? 7950);
+  const identity = identityFromSpecification(spec);
+  const price = formatCaleumsPrice(design);
   return (
     <AppShell locale={locale}>
       <main className="clm-commerce">
@@ -90,27 +107,20 @@ export function CommerceExperience({
         <div className="clm-piece-layout">
           <aside className="clm-piece-summary">
             <p className="clm-kicker">Your piece</p>
-            <h2>{approved}</h2>
+            <h2 dir={spec.arabicStyle === "none" ? "ltr" : "rtl"}>
+              {identity.inline}
+            </h2>
             <p>Please review and confirm every design detail.</p>
             <dl className="clm-summary compact">
               <div>
                 <dt>Names</dt>
-                <dd>
-                  {spec.names
-                    .map(
-                      (item) =>
-                        item.approvedEnglishText ?? item.approvedArabicText,
-                    )
-                    .join(" & ")}
+                <dd dir={spec.arabicStyle === "none" ? "ltr" : "rtl"}>
+                  {identity.inline}
                 </dd>
               </div>
               <div>
                 <dt>Script</dt>
-                <dd>
-                  {spec.arabicStyle === "none"
-                    ? "English · connected script"
-                    : `Arabic · ${spec.arabicStyle}`}
-                </dd>
+                <dd>{arabicStyleLabel(spec.arabicStyle)}</dd>
               </div>
               <div>
                 <dt>Metal</dt>
@@ -141,7 +151,9 @@ export function CommerceExperience({
             {asset ? (
               <Image
                 src={asset}
-                alt={product?.alt ?? "Final Caleums pendant"}
+                alt={
+                  studioAsset?.alt ?? product?.alt ?? "Final Caleums pendant"
+                }
                 fill
                 priority
                 sizes="(max-width: 799px) 100vw, 52vw"
@@ -175,9 +187,7 @@ export function CommerceExperience({
                     ? "Estimate ready"
                     : "Awaiting estimate"}
             </p>
-            <strong className="clm-piece-price">
-              AED {price.toLocaleString()}
-            </strong>
+            <strong className="clm-piece-price">{price}</strong>
             <label className="clm-confirm compact">
               <input
                 type="checkbox"

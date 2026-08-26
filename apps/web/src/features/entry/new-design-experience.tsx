@@ -24,6 +24,13 @@ import {
   saveReference,
   validateReference,
 } from "@/lib/reference-store";
+import {
+  ARABIC_STYLE_OPTIONS,
+  arabicStyleLabel,
+  formatCaleumsPrice,
+  formatIdentity,
+  isProviderSupportedArabicStyle,
+} from "@/lib/ui-presentation";
 import type {
   ArabicStyle,
   ChainStyle,
@@ -43,22 +50,13 @@ const stageNames = [
   "Size & chain",
   "Review",
 ];
-const arabicStyles: Array<{ id: ArabicStyle; label: string; sample: string }> =
-  [
-    { id: "contemporary", label: "Contemporary", sample: "ليلى" },
-    { id: "diwani", label: "Diwani", sample: "ليلى" },
-    { id: "thuluth-inspired", label: "Thuluth inspired", sample: "ليلى" },
-    { id: "kufi", label: "Kufi", sample: "ليلى" },
-    { id: "signature", label: "Signature", sample: "ليلى" },
-    { id: "minimal", label: "Minimal", sample: "ليلى" },
-  ];
-const layouts: Array<{ id: PendantLayout; label: string; glyph: string }> = [
-  { id: "side-by-side", label: "Side by side", glyph: "Layla Mariam" },
-  { id: "connected-heart", label: "Connected heart", glyph: "Layla ♡ Mariam" },
-  { id: "stacked", label: "Stacked", glyph: "Layla\nMariam" },
-  { id: "stacked-heart", label: "Stacked + heart", glyph: "Layla ♡\nMariam" },
-  { id: "infinity", label: "Infinity", glyph: "Layla ∞ Mariam" },
-  { id: "interlocked", label: "Interlocked", glyph: "L  M" },
+const layouts: Array<{ id: PendantLayout; label: string }> = [
+  { id: "side-by-side", label: "Side by side" },
+  { id: "connected-heart", label: "Connected heart" },
+  { id: "stacked", label: "Stacked" },
+  { id: "stacked-heart", label: "Stacked + heart" },
+  { id: "infinity", label: "Infinity" },
+  { id: "interlocked", label: "Interlocked" },
 ];
 const inspirations = [
   {
@@ -144,6 +142,9 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
   const [size, setSize] = useState<SizeProfile>("classic");
   const [chain, setChain] = useState<ChainStyle>("cable");
   const [chainLength, setChainLength] = useState<40 | 45 | 50 | 55>(45);
+  const [previewRotation, setPreviewRotation] = useState(0);
+  const [previewZoom, setPreviewZoom] = useState(1);
+  const [previewFace, setPreviewFace] = useState<"front" | "side">("front");
   const [confirmed, setConfirmed] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string>();
@@ -163,22 +164,16 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
 
   const displayOne = language === "ar" ? arabicOne : nameOne;
   const displayTwo = language === "ar" ? arabicTwo : nameTwo;
-  const displayName =
-    nameCount === 2 ? `${displayOne} ♡ ${displayTwo}` : displayOne;
-  const previewLines =
-    nameCount === 1
-      ? [displayOne]
-      : layout === "stacked" || layout === "stacked-heart"
-        ? [displayOne, layout === "stacked-heart" ? "♡" : "", displayTwo]
-        : [
-            `${displayOne}${
-              layout === "connected-heart"
-                ? " ♡ "
-                : layout === "infinity"
-                  ? " ∞ "
-                  : "  "
-            }${displayTwo}`,
-          ];
+  const resolvedLayout = nameCount === 1 ? "single-name" : layout;
+  const identity = formatIdentity(
+    nameCount === 1 ? [displayOne] : [displayOne, displayTwo],
+    resolvedLayout,
+  );
+  const selectedArabicStyle = ARABIC_STYLE_OPTIONS.find(
+    (option) => option.id === arabicStyle,
+  );
+  const needsOperatorReview =
+    language === "ar" && !isProviderSupportedArabicStyle(arabicStyle);
   const previewImage = selectedInspiration
     ? inspirations.find((item) => item.id === selectedInspiration)?.src
     : "/fixtures/layla-direction-1-product.png";
@@ -311,7 +306,7 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
                   : "plain",
         sizeProfile: size,
         dimensions: {
-          widthMm: size === "delicate" ? 22 : size === "classic" ? 30 : 38,
+          widthMm: size === "delicate" ? 22 : size === "classic" ? 30 : 36,
           heightMm: size === "delicate" ? 9 : size === "classic" ? 12 : 15,
           thicknessMm: 1.2,
         },
@@ -378,9 +373,12 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
               data-stones={coverage}
               data-layout={nameCount === 1 ? "single-name" : layout}
               dir={language === "ar" ? "rtl" : "ltr"}
-              aria-label={`Deterministic identity preview: ${displayName}`}
+              aria-label={`Deterministic identity preview: ${identity.inline}`}
+              style={{
+                transform: `rotate(${previewRotation}deg) scale(${previewZoom}) scaleX(${previewFace === "side" ? 0.22 : 1})`,
+              }}
             >
-              {previewLines.map((line, index) => (
+              {identity.lines.map((line, index) => (
                 <strong key={`${line}-${index}`}>{line}</strong>
               ))}
               {coverage !== "none" && (
@@ -392,7 +390,7 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
             </div>
             <div className="clm-preview-caption">
               <strong dir={language === "ar" ? "rtl" : "ltr"}>
-                {displayName}
+                {identity.inline}
               </strong>
               <span>
                 18K {metal} gold · {coverage.replaceAll("-", " ")} ·{" "}
@@ -400,12 +398,35 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
               </span>
             </div>
             <div className="clm-view-controls">
-              <button type="button">Rotate</button>
-              <button type="button">Zoom</button>
-              <button type="button" aria-pressed>
+              <button
+                type="button"
+                onClick={() => setPreviewRotation((current) => current + 12)}
+              >
+                Rotate
+              </button>
+              <button
+                type="button"
+                aria-pressed={previewZoom > 1}
+                onClick={() =>
+                  setPreviewZoom((current) => (current > 1 ? 1 : 1.15))
+                }
+              >
+                Zoom
+              </button>
+              <button
+                type="button"
+                aria-pressed={previewFace === "front"}
+                onClick={() => setPreviewFace("front")}
+              >
                 Front
               </button>
-              <button type="button">Side</button>
+              <button
+                type="button"
+                aria-pressed={previewFace === "side"}
+                onClick={() => setPreviewFace("side")}
+              >
+                Side
+              </button>
             </div>
           </section>
 
@@ -518,7 +539,7 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
                       Choose your Arabic style
                     </p>
                     <div className="clm-style-grid">
-                      {arabicStyles.map((item) => (
+                      {ARABIC_STYLE_OPTIONS.map((item) => (
                         <Option
                           key={item.id}
                           value={item.id}
@@ -529,9 +550,26 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
                         >
                           <strong dir="rtl">{item.sample}</strong>
                           <span>{item.label}</span>
+                          <small className="clm-support-note">
+                            {item.providerSupported
+                              ? "Supported"
+                              : "Atelier review"}
+                          </small>
                         </Option>
                       ))}
                     </div>
+                    <p
+                      className={
+                        needsOperatorReview
+                          ? "clm-support-message review"
+                          : "clm-support-message"
+                      }
+                      role={needsOperatorReview ? "status" : undefined}
+                    >
+                      {needsOperatorReview
+                        ? `${selectedArabicStyle?.label} is reviewed by the atelier before any generation or provider spend.`
+                        : "Classic and Minimal can proceed directly to generation."}
+                    </p>
                   </div>
                 )}
                 {nameCount === 2 && (
@@ -547,7 +585,12 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
                             setLayout(value as PendantLayout)
                           }
                         >
-                          <strong>{item.glyph}</strong>
+                          <strong>
+                            {formatIdentity(
+                              [displayOne, displayTwo],
+                              item.id,
+                            ).lines.join("\n")}
+                          </strong>
                           <span>{item.label}</span>
                         </Option>
                       ))}
@@ -840,7 +883,7 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
                         onSelect={(value) => setSize(value as SizeProfile)}
                       >
                         <strong>{item}</strong>
-                        <span>~{[22, 30, 38][index]} mm</span>
+                        <span>~{[22, 30, 36][index]} mm</span>
                       </Option>
                     ),
                   )}
@@ -891,15 +934,15 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
                   <div>
                     <dt>Names</dt>
                     <dd dir={language === "ar" ? "rtl" : "ltr"}>
-                      {displayName}
+                      {identity.inline}
                     </dd>
                   </div>
                   <div>
                     <dt>Script</dt>
                     <dd>
-                      {language === "ar"
-                        ? `Arabic · ${arabicStyle}`
-                        : "English · connected script"}
+                      {arabicStyleLabel(
+                        language === "ar" ? arabicStyle : "none",
+                      )}
                     </dd>
                   </div>
                   <div>
@@ -926,7 +969,9 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
                   <div>
                     <dt>Size &amp; chain</dt>
                     <dd>
-                      {size} · {chain} · {chainLength} cm
+                      {size} (
+                      {size === "delicate" ? 22 : size === "classic" ? 30 : 36}{" "}
+                      mm) · {chain} · {chainLength} cm
                     </dd>
                   </div>
                 </dl>
@@ -946,10 +991,17 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
                   </span>
                 </label>
                 <div className="clm-estimate">
-                  <span>Estimated price</span>
-                  <strong>AED 7,950</strong>
+                  <span>Indicative price</span>
+                  <strong>{formatCaleumsPrice()}</strong>
                   <small>Final quote follows atelier review</small>
                 </div>
+                {needsOperatorReview && (
+                  <p className="clm-review-notice" role="status">
+                    This style will enter operator review. Generation stays
+                    stopped until the atelier approves a supported production
+                    path.
+                  </p>
+                )}
                 {error && (
                   <p className="clm-error" role="alert">
                     {error}
@@ -982,11 +1034,27 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
                 <button
                   type="button"
                   className="clm-primary"
-                  aria-label="Approve revision"
+                  aria-label={
+                    needsOperatorReview
+                      ? "Send to atelier review"
+                      : "Approve revision"
+                  }
                   disabled={!confirmed || saving}
-                  onClick={() => void approve()}
+                  onClick={() => {
+                    if (needsOperatorReview) {
+                      router.push(
+                        `/${locale}/operator?review=arabic-style&style=${encodeURIComponent(arabicStyle)}`,
+                      );
+                      return;
+                    }
+                    void approve();
+                  }}
                 >
-                  {saving ? "Approving…" : "See my pendant"}{" "}
+                  {saving
+                    ? "Approving…"
+                    : needsOperatorReview
+                      ? "Send for atelier review"
+                      : "See my pendant"}{" "}
                   <ArrowRight size={17} />
                 </button>
               )}
