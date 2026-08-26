@@ -5,6 +5,8 @@ import {
   type FoundationTaskResult,
 } from "@jewelo/contracts";
 
+export * from "./studio";
+
 export interface FoundationProvider {
   execute(input: FoundationTaskInput): Promise<FoundationTaskResult>;
 }
