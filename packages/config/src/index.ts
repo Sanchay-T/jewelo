@@ -29,6 +29,10 @@ export const trustedWebEnvSchema = z.object({
   SUPABASE_SERVICE_ROLE_KEY: nonEmpty,
 });
 
+export const triggerConfigEnvSchema = z.object({
+  TRIGGER_PROJECT_REF: nonEmpty,
+});
+
 export const jobsEnvSchema = trustedWebEnvSchema.extend({
   TRIGGER_PROJECT_REF: nonEmpty,
   TRIGGER_SECRET_KEY: nonEmpty,
@@ -46,6 +50,16 @@ export function parseBrowserEnv(input: Record<string, string | undefined>) {
     Object.entries(input).filter(([key]) => key.startsWith("NEXT_PUBLIC_")),
   );
   return browserEnvSchema.parse(exposed);
+}
+
+export function parseJobsEnv(input: Record<string, string | undefined>) {
+  return jobsEnvSchema.parse(input);
+}
+
+export function parseTriggerConfigEnv(
+  input: Record<string, string | undefined>,
+) {
+  return triggerConfigEnvSchema.parse(input);
 }
 
 export function assertBrowserSafeEnv(

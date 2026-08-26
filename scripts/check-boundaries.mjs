@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
+import ts from "typescript";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const proveNegative = process.argv.includes("--prove-negative");
@@ -39,8 +40,6 @@ const corePackages = new Set([
   "ui",
 ]);
 const providerPackages = /^(openai|@openai\/|@runwayml\/|runwayml)/;
-const importPattern =
-  /(?:import|export)\s+(?:[^"']*?\s+from\s+)?["']([^"']+)["']|require\(["']([^"']+)["']\)/g;
 
 function filesUnder(directory) {
   if (!fs.existsSync(directory)) return [];
@@ -57,22 +56,58 @@ function filesUnder(directory) {
 
 function ownerOf(file) {
   const normalized = file.split(path.sep).join("/");
-  const match = normalized.match(/\/packages\/([^/]+)\/src\//);
-  if (match) return { kind: "package", name: match[1] };
-  if (normalized.includes("/apps/jobs/")) return { kind: "app", name: "jobs" };
-  if (normalized.includes("/apps/web/")) return { kind: "app", name: "web" };
+  const packageMatch = normalized.match(/\/packages\/([^/]+)\/src(?:\/|$)/);
+  if (packageMatch) return { kind: "package", name: packageMatch[1] };
+  const appMatch = normalized.match(/\/apps\/([^/]+)(?:\/|$)/);
+  if (appMatch) return { kind: "app", name: appMatch[1] };
   return { kind: "unknown", name: "unknown" };
+}
+
+function importSpecifiers(file) {
+  const source = fs.readFileSync(file, "utf8");
+  const sourceFile = ts.createSourceFile(
+    file,
+    source,
+    ts.ScriptTarget.Latest,
+    true,
+  );
+  const specifiers = [];
+
+  function addString(node) {
+    if (node && ts.isStringLiteralLike(node)) specifiers.push(node.text);
+  }
+
+  function visit(node) {
+    if (ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) {
+      addString(node.moduleSpecifier);
+    } else if (ts.isCallExpression(node)) {
+      const isDynamicImport =
+        node.expression.kind === ts.SyntaxKind.ImportKeyword;
+      const isRequire =
+        ts.isIdentifier(node.expression) && node.expression.text === "require";
+      if (isDynamicImport || isRequire) addString(node.arguments[0]);
+    } else if (
+      ts.isImportTypeNode(node) &&
+      ts.isLiteralTypeNode(node.argument)
+    ) {
+      addString(node.argument.literal);
+    }
+    ts.forEachChild(node, visit);
+  }
+
+  visit(sourceFile);
+  return specifiers;
+}
+
+function sameOwner(left, right) {
+  return left.kind === right.kind && left.name === right.name;
 }
 
 function violationsFor(files) {
   const violations = [];
   for (const file of files) {
     const owner = ownerOf(file);
-    const source = fs.readFileSync(file, "utf8");
-    for (const match of source.matchAll(importPattern)) {
-      const imported = match[1] ?? match[2];
-      if (!imported) continue;
-
+    for (const imported of importSpecifiers(file)) {
       if (owner.kind === "package" && imported.startsWith("apps/")) {
         violations.push(
           `${path.relative(root, file)}: shared packages cannot import apps/*`,
@@ -83,6 +118,14 @@ function violationsFor(files) {
         if (!allowedInternal[owner.name]?.has(target)) {
           violations.push(
             `${path.relative(root, file)}: @jewelo/${owner.name} cannot import @jewelo/${target}`,
+          );
+        }
+      }
+      if (imported.startsWith(".")) {
+        const targetOwner = ownerOf(path.resolve(path.dirname(file), imported));
+        if (targetOwner.kind !== "unknown" && !sameOwner(owner, targetOwner)) {
+          violations.push(
+            `${path.relative(root, file)}: relative import crosses from ${owner.kind}/${owner.name} to ${targetOwner.kind}/${targetOwner.name}`,
           );
         }
       }
@@ -166,13 +209,22 @@ function dependencyViolations() {
 if (proveNegative) {
   const fixtureRoot = path.join(root, "scripts/fixtures/boundary-invalid");
   const violations = violationsFor(filesUnder(fixtureRoot));
-  if (violations.length === 0) {
+  const requiredProofs = [
+    "provider SDK",
+    "Supabase SDK",
+    "relative import crosses",
+  ];
+  if (
+    requiredProofs.some(
+      (proof) => !violations.some((violation) => violation.includes(proof)),
+    )
+  ) {
     console.error(
-      "Boundary negative proof failed: invalid fixture was accepted.",
+      "Boundary negative proof failed: one or more invalid fixture classes were accepted.",
     );
     process.exit(1);
   }
-  console.log("Boundary negative proof passed; rejected fixture:");
+  console.log("Boundary negative proof passed; rejected fixtures:");
   for (const violation of violations) console.log(`- ${violation}`);
   process.exit(0);
 }

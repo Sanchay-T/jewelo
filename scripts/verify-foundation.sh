@@ -34,6 +34,11 @@ for forbidden in docker-compose.yml Dockerfile convex neon minio kubernetes; do
   [[ ! -e "$forbidden" ]] || { echo "forbidden local/replacement infrastructure present: $forbidden" >&2; exit 1; }
 done
 
+for script in scripts/*.sh; do
+  bash -n "$script"
+done
+echo "Shell syntax verification passed."
+
 node - <<'NODE'
 const manifest = require("./package.json");
 const expected = ["dev", "lint", "typecheck", "test", "build", "verify", "db:types", "db:push", "jobs:dev", "jobs:deploy:preview", "format:check"];
@@ -79,6 +84,17 @@ if output="$(env -u TRIGGER_ACCESS_TOKEN -u TRIGGER_PREVIEW_BRANCH JEWELO_CLOUD_
 fi
 grep -q "TRIGGER_PREVIEW_BRANCH" <<<"$output"
 echo "Trigger preview-branch guard proof passed."
+
+if output="$(NEXT_PUBLIC_SUPABASE_URL=https://example.supabase.co pnpm --filter @jewelo/web build 2>&1)"; then
+  echo "Web build unexpectedly accepted a partial public Supabase environment." >&2
+  exit 1
+fi
+grep -q "must be set together" <<<"$output" || {
+  echo "Web build rejected the partial environment without the required pairing message:" >&2
+  echo "$output" >&2
+  exit 1
+}
+echo "Deployable web environment negative proof passed."
 
 git diff --check
 pnpm format:check

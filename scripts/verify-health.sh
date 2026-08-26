@@ -28,15 +28,19 @@ if [[ "$ready" != "1" ]]; then
 fi
 
 health="$(curl --fail --silent "http://127.0.0.1:${port}/api/health")"
-readiness="$(curl --fail --silent "http://127.0.0.1:${port}/api/readiness")"
+readiness_file="$(mktemp -t jewelo-readiness.XXXXXX.json)"
+readiness_status="$(curl --silent --output "$readiness_file" --write-out '%{http_code}' "http://127.0.0.1:${port}/api/readiness")"
+readiness="$(<"$readiness_file")"
+rm -f "$readiness_file"
 node -e '
 const health = JSON.parse(process.argv[1]);
 const readiness = JSON.parse(process.argv[2]);
+const readinessStatus = process.argv[3];
 if (health.status !== "ok" || health.service !== "jewelo-web") throw new Error("invalid health contract");
-if (readiness.status !== "ready" || readiness.connectivityChecked !== false) throw new Error("invalid readiness contract");
+if (readinessStatus !== "503" || readiness.status !== "not_ready" || readiness.connectivityChecked !== false) throw new Error("invalid readiness contract");
 for (const forbidden of ["secret", "token", "password", "key"]) {
   if (JSON.stringify({ health, readiness }).toLowerCase().includes(forbidden)) throw new Error(`health surface leaked ${forbidden}`);
 }
-' "$health" "$readiness"
+' "$health" "$readiness" "$readiness_status"
 
 echo "HTTP health proof passed on port ${port}."

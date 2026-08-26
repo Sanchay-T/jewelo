@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { assertBrowserSafeEnv, jobsEnvSchema, parseBrowserEnv } from "./index";
+import {
+  assertBrowserSafeEnv,
+  jobsEnvSchema,
+  parseBrowserEnv,
+  parseTriggerConfigEnv,
+} from "./index";
 
 describe("environment boundaries", () => {
   it("builds with a safe local browser default", () => {
@@ -36,5 +41,14 @@ describe("environment boundaries", () => {
         ]),
       );
     }
+  });
+
+  it("requires a Trigger project before loading its config", () => {
+    expect(() => parseTriggerConfigEnv({})).toThrow(/TRIGGER_PROJECT_REF/);
+    expect(
+      parseTriggerConfigEnv({ TRIGGER_PROJECT_REF: "proj_development" }),
+    ).toEqual({
+      TRIGGER_PROJECT_REF: "proj_development",
+    });
   });
 });

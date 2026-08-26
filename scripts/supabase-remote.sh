@@ -19,18 +19,40 @@ if [[ -z "${SUPABASE_PROJECT_REF:-}" ]]; then
   exit 2
 fi
 
-if ! pnpm exec supabase projects list --output json >/dev/null 2>&1; then
+if ! projects_json="$(pnpm exec supabase projects list --output json 2>/dev/null)"; then
   echo "Supabase authorization missing: run 'pnpm exec supabase login' or export SUPABASE_ACCESS_TOKEN, then retry." >&2
   exit 2
 fi
 
-if [[ "${SUPABASE_PROJECT_REF}" =~ (prod|production) ]]; then
-  echo "Refusing Supabase project ref that appears to target production." >&2
+if ! JEWELO_PROJECTS_JSON="$projects_json" node - "$SUPABASE_PROJECT_REF" "$target" <<'NODE'
+const projects = JSON.parse(process.env.JEWELO_PROJECTS_JSON ?? "[]");
+const projectRef = process.argv[2];
+const target = process.argv[3];
+const project = projects.find((candidate) => candidate.id === projectRef);
+if (!project) throw new Error(`Supabase project ref ${projectRef} is not visible to the authenticated account`);
+if (project.region !== "ap-south-1") throw new Error(`Supabase project must be in Mumbai (ap-south-1), received ${project.region}`);
+const name = String(project.name ?? "").toLowerCase();
+const marker = target === "development" ? /(^|[-_ ])(dev|development)($|[-_ ])/ : /(^|[-_ ])(preview|branch|pr)($|[-_ ])/;
+if (!marker.test(name)) {
+  throw new Error(`Refusing ${target} command: authenticated project name '${project.name}' lacks an explicit ${target} safety marker`);
+}
+NODE
+then
+  echo "Supabase target verification failed; use a Mumbai project whose remote name explicitly contains development/dev or preview/branch/pr for the selected target." >&2
   exit 2
 fi
 
 if [[ "$action" == "types" ]]; then
-  pnpm exec supabase gen types typescript --project-id "$SUPABASE_PROJECT_REF" > packages/data/src/database.types.ts
+  generated_types="$(mktemp -t jewelo-database-types.XXXXXX.ts)"
+  cleanup_types() { rm -f "$generated_types"; }
+  trap cleanup_types EXIT
+  pnpm exec supabase gen types typescript --project-id "$SUPABASE_PROJECT_REF" >"$generated_types"
+  if [[ ! -s "$generated_types" ]] || ! grep -q 'export type Database' "$generated_types"; then
+    echo "Supabase type generation returned invalid output; the checked-in database types were not changed." >&2
+    exit 1
+  fi
+  mv "$generated_types" packages/data/src/database.types.ts
+  trap - EXIT
   echo "Generated packages/data/src/database.types.ts from the ${target} Supabase branch."
   exit 0
 fi

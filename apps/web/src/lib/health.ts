@@ -13,10 +13,15 @@ export function readinessPayload(input: Record<string, string | undefined>) {
     input.TRIGGER_PROJECT_REF && input.TRIGGER_SECRET_KEY,
   );
 
+  const dependenciesConfigured = supabaseConfigured && triggerConfigured;
+
   return {
-    status: "ready",
+    status: "not_ready",
     service: "jewelo-web",
     connectivityChecked: false,
+    reason: dependenciesConfigured
+      ? "remote-connectivity-not-checked"
+      : "dependencies-not-configured",
     dependencies: {
       supabase: supabaseConfigured
         ? "configured-not-checked"

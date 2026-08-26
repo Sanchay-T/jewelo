@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@jewelo/ai": "workspace:*",
+    "@jewelo/config": "workspace:*",
     "@jewelo/contracts": "workspace:*",
     "@trigger.dev/sdk": "4.5.12"
   },

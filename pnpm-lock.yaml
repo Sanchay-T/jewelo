@@ -47,6 +47,9 @@ importers:
       '@jewelo/ai':
         specifier: workspace:*
         version: link:../../packages/ai
+      '@jewelo/config':
+        specifier: workspace:*
+        version: link:../../packages/config
       '@jewelo/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
