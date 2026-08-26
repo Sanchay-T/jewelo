@@ -64,6 +64,9 @@ export async function renderIdentityAnchor(
   pipelineRelease = "caleums-final-media-v1",
 ): Promise<RenderedIdentityAnchor> {
   if (anchor.language === "ar") {
+    const requestedStyle = String(specification.arabicStyle ?? "");
+    const certifiedStyle =
+      requestedStyle === "contemporary" ? "classic" : requestedStyle;
     const names = Array.isArray(specification.names)
       ? specification.names
           .map((value) =>
@@ -79,7 +82,7 @@ export async function renderIdentityAnchor(
       {
         approvedNames: names,
         language: "ar",
-        style: String(specification.arabicStyle ?? ""),
+        style: certifiedStyle,
         layout: String(specification.layout ?? "single-name"),
         connector: String(specification.connector ?? "none"),
         dimensions: dimensions(specification.dimensions),

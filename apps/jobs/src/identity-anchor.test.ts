@@ -79,6 +79,25 @@ describe("deterministic identity anchor", () => {
     60_000,
   );
 
+  it("maps the customer-facing Contemporary option to certified Classic", async () => {
+    const rendered = await renderIdentityAnchor(
+      {
+        approvedText: "ليلى",
+        language: "ar",
+        typography: "contemporary",
+        fingerprint: "seed-fingerprint",
+      },
+      {
+        names: [{ approvedArabicText: "ليلى" }],
+        arabicStyle: "contemporary",
+        layout: "single-name",
+        connector: "none",
+        dimensions: { widthMm: 30, heightMm: 12, thicknessMm: 1.2 },
+      },
+    );
+    expect(rendered.report).toMatchObject({ style: "classic", passed: true });
+  });
+
   it("routes unsupported Arabic styles and two-name layouts before spend", async () => {
     const anchor = {
       approvedText: "ليلى & نور",

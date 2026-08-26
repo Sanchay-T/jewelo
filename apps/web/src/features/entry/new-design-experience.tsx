@@ -173,7 +173,12 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
     (option) => option.id === arabicStyle,
   );
   const needsOperatorReview =
-    language === "ar" && !isProviderSupportedArabicStyle(arabicStyle);
+    language === "ar" &&
+    (nameCount === 2 || !isProviderSupportedArabicStyle(arabicStyle));
+  const operatorReviewReason =
+    language === "ar" && nameCount === 2
+      ? "Two-name Arabic layouts are reviewed by the atelier before any generation or provider spend."
+      : `${selectedArabicStyle?.label} is reviewed by the atelier before any generation or provider spend.`;
   const previewImage = selectedInspiration
     ? inspirations.find((item) => item.id === selectedInspiration)?.src
     : "/fixtures/layla-direction-1-product.png";
@@ -567,7 +572,7 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
                       role={needsOperatorReview ? "status" : undefined}
                     >
                       {needsOperatorReview
-                        ? `${selectedArabicStyle?.label} is reviewed by the atelier before any generation or provider spend.`
+                        ? operatorReviewReason
                         : "Classic and Minimal can proceed directly to generation."}
                     </p>
                   </div>
@@ -997,7 +1002,7 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
                 </div>
                 {needsOperatorReview && (
                   <p className="clm-review-notice" role="status">
-                    This style will enter operator review. Generation stays
+                    This design will enter operator review. Generation stays
                     stopped until the atelier approves a supported production
                     path.
                   </p>
@@ -1043,7 +1048,7 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
                   onClick={() => {
                     if (needsOperatorReview) {
                       router.push(
-                        `/${locale}/operator?review=arabic-style&style=${encodeURIComponent(arabicStyle)}`,
+                        `/${locale}/operator?review=${nameCount === 2 ? "arabic-two-name" : "arabic-style"}&style=${encodeURIComponent(arabicStyle)}`,
                       );
                       return;
                     }

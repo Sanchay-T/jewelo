@@ -327,7 +327,7 @@ begin
   insert into public.outbox_events(aggregate_type,aggregate_id,event_type,payload,dispatch_idempotency_key) values('task',v_task.id,'video.requested',jsonb_build_object('runId',p_run_id,'taskId',v_task.id,'taskKind','video'),'outbox:video:'||p_request_key);
   update public.principal_daily_usage set reserved_spend_cents=reserved_spend_cents+v_policy.video_reservation_cents where principal_id=v_run.owner_principal_id and usage_date=current_date;
   update public.generation_runs set reserved_spend_cents=reserved_spend_cents+v_policy.video_reservation_cents where id=p_run_id;
-  insert into public.audit_events(design_id,principal_id,actor_type,action,detail) values(v_run.design_id,v_run.owner_principal_id,'operator','video.requested',jsonb_build_object('taskId',v_task.id,'sourceTaskId',p_source_task_id,'kind',p_kind));
+  insert into public.audit_events(design_id,principal_id,actor_type,action,detail) values(v_run.design_id,v_run.owner_principal_id,'job','video.requested',jsonb_build_object('taskId',v_task.id,'sourceTaskId',p_source_task_id,'kind',p_kind));
   return v_task;
 end $$;
 

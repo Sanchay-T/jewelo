@@ -176,6 +176,49 @@ export async function pollVideoTask(
   return { status: "ready" as const };
 }
 
+export async function markVideoPollTimeout(
+  taskId: string,
+  environment: Record<string, string | undefined> = process.env,
+  fetcher: typeof fetch = fetch,
+) {
+  const config = parseJobsEnv(environment);
+  const api = supabase(
+    config.SUPABASE_URL,
+    config.SUPABASE_SERVICE_ROLE_KEY,
+    fetcher,
+  );
+  const context = await loadVideoContext(api, taskId);
+  if (["ready", "blocked", "cancelled"].includes(String(context.task.status)))
+    return { status: String(context.task.status) };
+  const reason = "video_poll_timeout_operator_review";
+  await api.rpc("reconcile_provider_attempt", {
+    p_task_id: taskId,
+    p_attempt: Number(context.task.attempt),
+    p_status: "ambiguous",
+    p_actual_cost_cents: Number(context.task.estimated_cost_cents ?? 0),
+    p_error_class: reason,
+    p_terminal: true,
+  });
+  await api.patch("generation_tasks", `id=eq.${taskId}`, {
+    status: "blocked",
+    terminal_error_code: reason,
+    provider_status_url: null,
+    provider_response_url: null,
+  });
+  await api.patch("generation_runs", `id=eq.${context.run.id}`, {
+    status: "partial",
+    operator_review_reason: reason,
+  });
+  await api.post("audit_events", {
+    design_id: context.run.design_id,
+    principal_id: context.task.owner_principal_id,
+    actor_type: "job",
+    action: "video.operator_review",
+    detail: { taskId, reason },
+  });
+  return { status: "operator_review" as const };
+}
+
 function supabase(url: string, key: string, fetcher: typeof fetch) {
   async function request<T>(path: string, init: RequestInit = {}) {
     const response = await fetcher(`${url}/rest/v1/${path}`, {

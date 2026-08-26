@@ -6,18 +6,16 @@
 
 **Seed SHA:** `efde7fb070fa05348f93e6ecee573c59d9c5b774`
 
-**Scope:** branch consolidation and final-v5 contract correction only
+**Scope:** final branch consolidation, contract reconciliation, and local proof
 
-This proof packet does not claim completion of Goal 02 or of the attached
-pipeline brief's real-provider E2E stopping condition. It records the required
-prior-branch review, prevents duplicate or stale cherry-picks, and freezes the
-newest verbal final-v5 topology for the later media and final-UI coordinators.
+This proof packet distinguishes integrated code from remote migration, paid
+provider, Shopify checkout, and browser acceptance. It records the reviewed
+branch sources and the final-v5 topology used by the combined branch.
 
 ## Branch and patch disposition
 
-No candidate commit was cherry-picked. Current HEAD already contains the
-accepted behavior through exact or conflict-adapted equivalents, except for the
-reference-UI finishing patch deliberately reserved for the final-UI pass.
+Earlier duplicate/superseded patches were not replayed. The two final scoped
+worker commits were reviewed and integrated on top of the frozen seed.
 
 | Source branch and tip                                                                                                  | Candidate             | Disposition                                                                                                                 | Evidence                                                                                                                                                                                 |
 | ---------------------------------------------------------------------------------------------------------------------- | --------------------- | --------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -27,8 +25,8 @@ reference-UI finishing patch deliberately reserved for the final-UI pass.
 | `codex/shopify-integration-ready` at `68438a94dbf4b0aaa4e55ad21a3b052784486164`                                        | later Shopify commits | Accepted through contained equivalents `5ad0af5`, `76c2eb0`, `6d962c0`, and `c1f3136`                                       | `git cherry` marks the source patches equivalent                                                                                                                                         |
 | `codex/caleums-prompt-registry` at `c5530f82a9e48231b48f04209f2d134845005a96`                                          | `c5530f8`             | Rejected as a duplicate cherry-pick; exactly patch-equivalent `4a9f995` is contained                                        | Stable patch ID for both is `eac46140da228f5b052fae21ebdab5558ee1dca7`                                                                                                                   |
 | `codex/digitalocean-production-deployment` at `798b32dcba0594339f256c9ac445f7e8833ed697`                               | `994678f`, `798b32d`  | Rejected as duplicate cherry-picks; functionally superseded by conflict-adapted `9837866`, `bebef00`, and later corrections | Range-diff maps both commits; current HEAD retains both workflows, the spec contract, environment allowlist/checker, bootstrap/deploy/smoke/rollback scripts, and the deployment runbook |
-| `codex/caleums-final-ui` at `efde7fb070fa05348f93e6ecee573c59d9c5b774`                                                 | none after seed       | Protected for later coordination; untouched                                                                                 | Branch tip equals the integration seed                                                                                                                                                   |
-| `codex/caleums-final-media` at `efde7fb070fa05348f93e6ecee573c59d9c5b774`                                              | none after seed       | Protected for later coordination; worktree untouched                                                                        | Branch tip equals the integration seed                                                                                                                                                   |
+| `codex/caleums-final-ui`                                                                                               | `18e7d54`             | Reviewed and integrated as `ca2bf5d`                                                                                        | Complete Caleums six-step UI, responsive studio, commerce, operator, and browser interaction evidence                                                                                    |
+| `codex/caleums-final-media`                                                                                            | `e8b3c00`             | Reviewed and conflict-adapted as `6541da4`                                                                                  | Deterministic identity, independent OpenAI stills, verification, style/prompt releases, private media, and fal motion                                                                    |
 
 The DigitalOcean source evolved after the adapted pair: unsupported staging
 sleep was removed, Node 24 buildpack behavior was isolated, encrypted config
@@ -55,7 +53,7 @@ that graph index, so their candidate and current sources were read directly.
 The 26 non-UI files changed by `9edb774` have byte-identical blobs in
 `3c73527`; only the operator component was conflict-adapted to the newer UI.
 
-## Final-v5 correction and deliberately deferred work
+## Final-v5 implementation and remaining external proof
 
 The newest attached text brief supersedes the seed contract's chained-edit
 topology. The corrected contract now requires one immutable deterministic
@@ -65,36 +63,37 @@ tasks for `packshot` (1:1), `worn` (4:5), `macroGift` (1:1), `darkEditorial`
 silhouette plus its own versioned private shot anchor; aspect is an API
 parameter. fal remains video-only and may start only from a verified still.
 
-The current implementation still contains pre-v5 media debt, including the
-`fal-image` queue, `FalStudioAdapter`, and `still.fal` provider profile. This
-review accepts none of those as final architecture and intentionally leaves
-their implementation to `codex/caleums-final-media`.
+The direct-OpenAI still pipeline, independent four-view fanout, versioned prompt
+and style registries, deterministic `caleums-arabic-v3` engine, and fal-only
+motion path are now integrated. The customer-facing Contemporary option maps to
+the certified Classic engine; unsupported Arabic styles and all Arabic two-name
+layouts stop for operator review before provider spend.
 
-Only the text brief is present in the attachment store. The referenced
-`caleums_pipeline_final.zip`, bundled fonts, regression masks, and deployable
-style-anchor files are absent. Therefore this pass cannot verify solver parity,
-font licensing/certification, regression output, anchor recovery, paid provider
-behavior, browser acceptance, or the real configure-to-motion E2E path.
-`<REHOST:...>` placeholders are not acceptable production anchors. Missing ZIP
-and anchor assets remain explicit dependencies for the media owner.
+The exact ZIP was recovered from
+`/Users/sanchay/Downloads/caleums_pipeline_final.zip`. Its fonts and regression
+sources are integrated, and the 17-name Classic/Minimal regression passes. Six
+approved style anchors were recovered into private local state with recorded
+SHA-256 lineage. They remain deliberately uncommitted and must be uploaded to
+the private `style-anchors` bucket and published after the pending Supabase
+migration. No expiring `<REHOST:...>` URL is used as a deployable asset.
 
 ## Verification
 
-| Command or proof                                                                                                                                | Result                                                                                                                                                     |
-| ----------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `pnpm exec prettier --check docs/CALEUMS-FINAL-E2E-CONTRACT.md docs/CALEUMS-FINAL-E2E-INTEGRATION-REVIEW.md`                                    | Passed                                                                                                                                                     |
-| Contract assertions for canonical PNG, direct OpenAI, no chained edits, all six shot/aspect mappings, anchors, retry limit, and operator review | Passed                                                                                                                                                     |
-| Changed-file allowlist plus `git diff --check`                                                                                                  | Passed; only this contract and proof packet changed                                                                                                        |
-| `pnpm --filter @jewelo/ai test`                                                                                                                 | Passed: 2 files, 11 tests                                                                                                                                  |
-| `pnpm --filter @jewelo/data test`                                                                                                               | Passed: 3 files, 20 tests                                                                                                                                  |
-| `pnpm --filter @jewelo/jobs test`                                                                                                               | Passed: 4 files, 11 tests                                                                                                                                  |
-| `pnpm --filter @jewelo/web test`                                                                                                                | Passed: 11 files, 44 tests; existing Vite future-config warning only                                                                                       |
-| `pnpm verify`                                                                                                                                   | Passed: environment guards, formatting, 13-package lint/typecheck/build, 14 test tasks, boundaries, secret scan, client-bundle scan, and HTTP health proof |
-| `pnpm do:build`                                                                                                                                 | Passed: DigitalOcean web dependency build and Next.js production build, 23 pages                                                                           |
+| Command or proof                                                                                                                                | Result                                                                                                                                        |
+| ----------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm exec prettier --check docs/CALEUMS-FINAL-E2E-CONTRACT.md docs/CALEUMS-FINAL-E2E-INTEGRATION-REVIEW.md`                                    | Passed                                                                                                                                        |
+| Contract assertions for canonical PNG, direct OpenAI, no chained edits, all six shot/aspect mappings, anchors, retry limit, and operator review | Passed                                                                                                                                        |
+| Changed-file allowlist plus `git diff --check`                                                                                                  | Passed; only this contract and proof packet changed                                                                                           |
+| `pnpm --filter @jewelo/ai test`                                                                                                                 | Passed: 2 files, 11 tests                                                                                                                     |
+| `pnpm --filter @jewelo/data test`                                                                                                               | Passed: 3 files, 20 tests                                                                                                                     |
+| `pnpm --filter @jewelo/jobs test`                                                                                                               | Passed: 4 files, 16 tests, including both certified Arabic styles                                                                             |
+| `pnpm --filter @jewelo/web test`                                                                                                                | Passed: 12 files, 48 tests; existing Vite future-config warning only                                                                          |
+| `pnpm verify`                                                                                                                                   | Passed after UI/media integration: guards, formatting, lint, types, tests, build, boundaries, secret and client-bundle scans, and HTTP health |
+| `pnpm do:build`                                                                                                                                 | Passed: DigitalOcean web dependency build and Next.js production build, 23 pages                                                              |
 
 The final handoff separately records the pushed commit SHA and verifies that
 only `origin/codex/caleums-final-e2e` moved.
 
-No paid provider call, cloud deployment, environment change, merge, production
-action, media-worktree change, or final-UI-worktree change is authorized or
-performed by this review.
+No paid provider call, cloud deployment, Shopify purchase, or merge into
+`rebuild/v2-first-principles` is claimed here. Those are separate browser and
+external-state acceptance gates.

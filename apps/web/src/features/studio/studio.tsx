@@ -44,6 +44,13 @@ const legacyPresentationCoordinates = {
   dark: { directionIndex: 3, kind: "product" },
 } as const;
 
+const motionViewDetails = {
+  id: "motion" as const,
+  label: "Motion",
+  treatment: "4 sec film",
+  ratio: "9:16" as const,
+};
+
 function stateCopy(state: TaskState | "pending") {
   if (state === "failed")
     return ["This view needs another try", "Ready siblings remain available."];
@@ -98,46 +105,56 @@ export function Studio({
   const [locallyCancelled, setLocallyCancelled] = useState<string[]>([]);
   const scenarioMode = process.env.NEXT_PUBLIC_JEWELO_SCENARIOS === "1";
 
-  const slots = useMemo(
-    () =>
-      PRESENTATION_VIEW_DETAILS.map((details) => {
-        const canonicalTask = run?.tasks.find(
-          (candidate) => candidate.view === details.id,
-        );
-        const legacyCoordinate = legacyPresentationCoordinates[details.id];
-        const legacyDirection =
-          run?.directions[legacyCoordinate.directionIndex];
-        const task =
-          canonicalTask ??
-          run?.tasks.find(
-            (candidate) =>
-              candidate.directionId === legacyDirection?.id &&
-              candidate.kind === legacyCoordinate.kind,
-          );
-        const asset =
-          run?.assets.find(
-            (candidate) => task && candidate.lineage.taskId === task.id,
-          ) ?? run?.assets.find((candidate) => candidate.view === details.id);
-        const backendState = safePresentationState(
-          task && locallyCancelled.includes(task.id)
-            ? "cancelled"
-            : (task?.state ?? asset?.state),
-        );
-        const ready =
-          backendState === "ready" &&
-          asset?.state === "ready" &&
-          Boolean(asset.assetUrl);
-        return {
-          ...details,
-          task,
-          asset,
-          ready,
-          state:
-            backendState === "ready" && !ready ? "verifying" : backendState,
-        };
-      }),
-    [locallyCancelled, run],
-  );
+  const slots = useMemo(() => {
+    const hasMotion = Boolean(
+      run?.tasks.some((candidate) => candidate.view === "motion") ||
+      run?.assets.some((candidate) => candidate.view === "motion"),
+    );
+    const detailsList = hasMotion
+      ? [...PRESENTATION_VIEW_DETAILS, motionViewDetails]
+      : PRESENTATION_VIEW_DETAILS;
+    return detailsList.map((details) => {
+      const canonicalTask = run?.tasks.find(
+        (candidate) => candidate.view === details.id,
+      );
+      const legacyCoordinate =
+        details.id === "motion"
+          ? undefined
+          : legacyPresentationCoordinates[details.id];
+      const legacyDirection = legacyCoordinate
+        ? run?.directions[legacyCoordinate.directionIndex]
+        : undefined;
+      const task =
+        canonicalTask ??
+        (legacyCoordinate
+          ? run?.tasks.find(
+              (candidate) =>
+                candidate.directionId === legacyDirection?.id &&
+                candidate.kind === legacyCoordinate.kind,
+            )
+          : undefined);
+      const asset =
+        run?.assets.find(
+          (candidate) => task && candidate.lineage.taskId === task.id,
+        ) ?? run?.assets.find((candidate) => candidate.view === details.id);
+      const backendState = safePresentationState(
+        task && locallyCancelled.includes(task.id)
+          ? "cancelled"
+          : (task?.state ?? asset?.state),
+      );
+      const ready =
+        backendState === "ready" &&
+        asset?.state === "ready" &&
+        Boolean(asset.assetUrl);
+      return {
+        ...details,
+        task,
+        asset,
+        ready,
+        state: backendState === "ready" && !ready ? "verifying" : backendState,
+      };
+    });
+  }, [locallyCancelled, run]);
   const selectedSlot =
     slots.find((slot) => slot.id === activeView) ?? slots[0]!;
   const studioSlot = slots.find((slot) => slot.id === "studio")!;
@@ -329,7 +346,19 @@ export function Studio({
             data-ratio={selectedSlot.ratio}
             aria-live="polite"
           >
-            {selectedSlot.ready && selectedSlot.asset?.assetUrl ? (
+            {selectedSlot.ready &&
+            selectedSlot.asset?.assetUrl &&
+            selectedSlot.id === "motion" ? (
+              <video
+                src={selectedSlot.asset.assetUrl}
+                aria-label={selectedSlot.asset.alt}
+                controls
+                muted
+                playsInline
+                preload="metadata"
+                poster={studioSlot.asset?.assetUrl}
+              />
+            ) : selectedSlot.ready && selectedSlot.asset?.assetUrl ? (
               <Image
                 src={selectedSlot.asset.assetUrl}
                 alt={selectedSlot.asset.alt}
@@ -345,7 +374,7 @@ export function Studio({
                 <span>{loadingCopy[1]}</span>
               </div>
             )}
-            {selectedSlot.ready && (
+            {selectedSlot.ready && selectedSlot.id !== "motion" && (
               <div className="clm-zoom">
                 <button
                   type="button"
@@ -377,7 +406,7 @@ export function Studio({
                 role="tab"
                 aria-selected={activeView === slot.id}
                 aria-controls="caleums-active-presentation"
-                disabled={!slot.ready}
+                disabled={!slot.task && !slot.asset}
                 onClick={() => {
                   setZoom(1);
                   setActiveView(slot.id);
@@ -453,7 +482,12 @@ export function Studio({
         <footer className="clm-studio-actions">
           <div>
             <strong>{identity.inline}</strong>
-            <span>Verified identity · four independent presentations</span>
+            <span>
+              Verified identity · four independent stills
+              {slots.some((slot) => slot.id === "motion")
+                ? " · motion from Studio"
+                : ""}
+            </span>
           </div>
           <button
             type="button"

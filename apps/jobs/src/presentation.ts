@@ -612,6 +612,38 @@ export class SupabasePresentationRepository implements PresentationRepository {
       }),
     });
     await this.markTask(input.task.id, "ready");
+    let motionPreview = "not_applicable";
+    if (input.task.presentation_view === "studio") {
+      try {
+        await this.#request("/rest/v1/rpc/request_video_task", {
+          method: "POST",
+          body: JSON.stringify({
+            p_run_id: input.run.id,
+            p_kind: "preview",
+            p_source_task_id: input.task.id,
+            p_request_key: `auto-preview:${input.run.id}:${input.task.id}`,
+          }),
+        });
+        motionPreview = "requested";
+      } catch (error) {
+        motionPreview = "operator_review";
+        await this.#request("/rest/v1/audit_events", {
+          method: "POST",
+          body: JSON.stringify({
+            design_id: input.run.design_id,
+            principal_id: input.task.owner_principal_id,
+            actor_type: "job",
+            action: "video.auto_request_failed",
+            detail: {
+              sourceTaskId: input.task.id,
+              reason: String(
+                error instanceof Error ? error.message : "unknown",
+              ).slice(0, 120),
+            },
+          }),
+        });
+      }
+    }
     await this.refreshRunStatus(input.run.id);
     await this.#request("/rest/v1/audit_events", {
       method: "POST",
@@ -620,7 +652,11 @@ export class SupabasePresentationRepository implements PresentationRepository {
         principal_id: input.task.owner_principal_id,
         actor_type: "job",
         action: "task.ready",
-        detail: { taskId: input.task.id, attempt: input.attempt },
+        detail: {
+          taskId: input.task.id,
+          attempt: input.attempt,
+          motionPreview,
+        },
       }),
     });
   }

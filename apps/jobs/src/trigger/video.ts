@@ -1,5 +1,5 @@
 import { queue, task } from "@trigger.dev/sdk";
-import { pollVideoTask, submitVideoTask } from "../video";
+import { markVideoPollTimeout, pollVideoTask, submitVideoTask } from "../video";
 
 const falVideoQueue = queue({
   name: "fal-video",
@@ -29,7 +29,7 @@ export const videoPollTask = task({
         },
       );
     if (result.status === "pending" && payload.pollCount >= 60)
-      throw new Error("video_poll_timeout_operator_review");
+      return markVideoPollTimeout(payload.taskId);
     return result;
   },
 });
