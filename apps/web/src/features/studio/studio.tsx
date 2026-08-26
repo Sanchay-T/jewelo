@@ -3,79 +3,24 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { AnimatePresence, motion, useReducedMotion } from "motion/react";
-import useEmblaCarousel from "embla-carousel-react";
-import { TransformComponent, TransformWrapper } from "react-zoom-pan-pinch";
+import { useEffect, useState } from "react";
 import {
-  type KeyboardEvent,
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+  ArrowLeft,
+  ArrowRight,
+  DownloadSimple,
+  FloppyDisk,
+  MagnifyingGlassMinus,
+  MagnifyingGlassPlus,
+  ShareNetwork,
+  Sparkle,
+  X,
+} from "@phosphor-icons/react";
+import { AppShell } from "@/components/app-shell";
 import { useJewelo } from "@/lib/jewelo-provider";
-import type { TaskState } from "@/lib/types";
-import type {
-  Direction,
-  LegacyDesign as Design,
-  RepresentationKind,
-} from "@/lib/legacy-direction-compat";
-import styles from "./studio.module.css";
+import { ENABLED_PRESENTATION_VIEWS } from "@/lib/types";
 
-type Run = Design["runs"][number];
-type Representation = Direction["representations"][RepresentationKind];
 type Locale = "en" | "ar";
-
-const KINDS: RepresentationKind[] = ["product", "worn", "motion"];
-const ACTIVE_STATES = new Set<string>([
-  "queued",
-  "generating",
-  "verifying",
-  "retrying",
-]);
-const RETRYABLE_STATES = new Set<string>(["failed"]);
-const REQUESTABLE_STATES = new Set<string>(["available_on_request"]);
-
-const STATE_COPY: Record<string, { label: string; detail: string }> = {
-  queued: {
-    label: "Queued",
-    detail:
-      "Waiting for real generation capacity. No progress has been invented.",
-  },
-  generating: {
-    label: "Generating",
-    detail: "Jewelo is creating this representation now.",
-  },
-  verifying: {
-    label: "Verifying",
-    detail: "Checking the pendant identity and media quality.",
-  },
-  ready: { label: "Ready", detail: "Verified and ready to inspect." },
-  retrying: {
-    label: "Retrying",
-    detail: "A bounded retry is running without affecting ready siblings.",
-  },
-  failed: {
-    label: "Failed",
-    detail: "This task stopped. Other completed work remains available.",
-  },
-  blocked: {
-    label: "Blocked",
-    detail: "This representation needs its product direction to pass first.",
-  },
-  cancelled: {
-    label: "Cancelled",
-    detail: "This task was cancelled. Completed media was preserved.",
-  },
-  unavailable: {
-    label: "Unavailable",
-    detail: "This representation is not included in the current run.",
-  },
-  available_on_request: {
-    label: "Available on request",
-    detail: "Request this representation when you want to generate it.",
-  },
-};
+const activeStates = new Set(["queued", "generating", "verifying", "retrying"]);
 
 export function Studio({
   locale,
@@ -84,917 +29,438 @@ export function Studio({
   locale: Locale;
   designId: string;
 }) {
-  const { client, state, design: activeDesign, refresh } = useJewelo();
   const router = useRouter();
-  const design =
-    state.designs.find((candidate) => candidate.id === designId) ??
-    (activeDesign?.id === designId ? activeDesign : undefined);
-  const isRtl = locale === "ar";
-  const reduceMotion = useReducedMotion();
-  const [selectedRunId, setSelectedRunId] = useState<string>();
-  const [selectedDirectionId, setSelectedDirectionId] = useState<string>();
-  const [kind, setKind] = useState<RepresentationKind>("product");
-  const [compare, setCompare] = useState(false);
-  const [busyAction, setBusyAction] = useState<string>();
-  const [announcement, setAnnouncement] = useState("");
-  const [error, setError] = useState<string>();
-
-  const latestRun = design?.runs.at(-1);
-  const run =
-    design?.runs.find((candidate) => candidate.id === selectedRunId) ??
-    latestRun;
-  const direction =
-    run?.directions.find((candidate) => candidate.id === selectedDirectionId) ??
-    run?.directions[0];
-  const representation = direction?.representations[kind];
-  const comparison =
-    representation?.state === "ready" && representation.assetUrl
-      ? run?.directions.find((candidate) => {
-          const candidateRepresentation = candidate.representations[kind];
-          return (
-            candidate.id !== direction?.id &&
-            candidateRepresentation.state === "ready" &&
-            Boolean(candidateRepresentation.assetUrl)
-          );
-        })
-      : undefined;
+  const { client, state, refresh } = useJewelo();
+  const design = state.designs.find((item) => item.id === designId);
+  const run = design?.runs.at(-1);
+  const direction = run?.directions[0];
   const revision =
-    design?.revisions.find((candidate) => candidate.id === run?.revisionId) ??
+    design?.revisions.find((item) => item.id === run?.revisionId) ??
     design?.revisions.at(-1);
-
-  useEffect(() => {
-    if (!run) return;
-    return client.subscribeToRun(run.id, () => refresh());
-  }, [client, refresh, run]);
-
-  const act = useCallback(
-    async (key: string, success: string, action: () => Promise<unknown>) => {
-      setBusyAction(key);
-      setError(undefined);
-      try {
-        await action();
-        refresh();
-        setAnnouncement(success);
-      } catch (actionError) {
-        const message =
-          actionError instanceof Error
-            ? actionError.message
-            : "Action unavailable";
-        setError(message);
-        setAnnouncement(message);
-      } finally {
-        setBusyAction(undefined);
-      }
-    },
-    [refresh],
+  const [zoom, setZoom] = useState(1);
+  const [busy, setBusy] = useState<string>();
+  const [message, setMessage] = useState("");
+  const [locallyCancelled, setLocallyCancelled] = useState<string[]>([]);
+  const scenarioMode = process.env.NEXT_PUBLIC_JEWELO_SCENARIOS === "1";
+  const visibleViews = run
+    ? ENABLED_PRESENTATION_VIEWS.filter((view) =>
+        run.tasks.some((task) => task.view === view),
+      )
+    : [];
+  const studioTask = run?.tasks.find(
+    (task) =>
+      task.view === "studio" &&
+      (!direction || task.directionId === direction.id),
   );
+  const presentationAsset = run?.assets.find(
+    (candidate) =>
+      candidate.view === "studio" &&
+      (!studioTask || candidate.lineage.taskId === studioTask.id),
+  );
+  const representation = direction?.representations.product;
+  useEffect(
+    () => (run ? client.subscribeToRun(run.id, refresh) : undefined),
+    [client, refresh, run],
+  );
+  useEffect(() => {
+    if (studioTask)
+      setMessage(`Studio task is ${studioTask.state.replaceAll("_", " ")}.`);
+  }, [studioTask?.state]);
 
-  const chooseRun = useCallback((nextRun: Run) => {
-    setSelectedRunId(nextRun.id);
-    setSelectedDirectionId(nextRun.directions[0]?.id);
-    setKind("product");
-    setAnnouncement(`${nextRun.label} opened.`);
-  }, []);
-
-  const startRun = useCallback(() => {
-    void act("new-run", "A fresh four-direction run was started.", async () => {
-      const nextDesign = await client.startRun(designId);
-      const nextRun = nextDesign.runs.at(-1);
-      if (nextRun) chooseRun(nextRun);
-    });
-  }, [act, chooseRun, client, designId]);
-
-  const refine = useCallback(() => {
-    void act("refine", "A new revision and run were created.", async () => {
-      await client.refineDesign(
-        designId,
-        `Refinement from ${direction?.label ?? "current direction"}`,
-      );
-      const nextDesign = await client.startRun(designId);
-      const nextRun = nextDesign.runs.at(-1);
-      if (nextRun) chooseRun(nextRun);
-    });
-  }, [act, chooseRun, client, designId, direction?.label]);
-
-  if (!design || !revision) {
-    return (
-      <main className={styles.empty} dir={isRtl ? "rtl" : "ltr"}>
-        <p className={styles.eyebrow}>Jewelo studio</p>
-        <h1>Design not found</h1>
-        <p>This saved design is not available in the current workspace.</p>
-        <Link className={styles.primaryButton} href={`/${locale}`}>
-          Return home
-        </Link>
-      </main>
+  async function action(
+    key: string,
+    work: () => Promise<unknown>,
+    success: string,
+  ) {
+    setBusy(key);
+    setMessage("");
+    try {
+      await work();
+      refresh();
+      setMessage(success);
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Action unavailable");
+    } finally {
+      setBusy(undefined);
+    }
+  }
+  async function continueToPiece() {
+    if (!direction) return;
+    await action(
+      "commerce",
+      async () => {
+        if (design?.selectedDirectionId !== direction.id)
+          await client.selectDirection(designId, direction.id);
+        if (!design?.estimate) await client.calculateEstimate(designId);
+        router.push(`/${locale}/commerce/${designId}`);
+      },
+      "Opening your final piece.",
+    );
+  }
+  async function regenerate() {
+    setLocallyCancelled([]);
+    await action(
+      "regenerate",
+      async () => {
+        await client.startRun(designId);
+      },
+      "A fresh Studio render has started.",
+    );
+  }
+  async function refine() {
+    await action(
+      "refine",
+      async () => {
+        await client.refineDesign(designId, "Caleums Studio refinement");
+        await client.startRun(designId);
+      },
+      "A refined revision is being rendered.",
     );
   }
 
-  if (!run) {
+  if (!design || !revision)
     return (
-      <main className={styles.empty} dir={isRtl ? "rtl" : "ltr"}>
-        <p className={styles.eyebrow}>Approved revision</p>
-        <h1>{design.name} is ready for directions.</h1>
-        <p>
-          Start four independent product directions. Each can reveal, retry, or
-          stop without blocking its siblings.
-        </p>
-        <button
-          className={styles.primaryButton}
-          disabled={busyAction === "new-run"}
-          onClick={startRun}
-        >
-          {busyAction === "new-run" ? "Starting…" : "Create four directions"}
-        </button>
-      </main>
-    );
-  }
-
-  if (!direction || !representation) {
-    return (
-      <main className={styles.empty} dir={isRtl ? "rtl" : "ltr"}>
-        <p className={styles.eyebrow}>Jewelo studio</p>
-        <h1>This run has no directions yet.</h1>
-        <p>
-          Live run updates will restore the studio when a direction is ready.
-        </p>
-        <button className={styles.secondaryButton} onClick={() => refresh()}>
-          Check again
-        </button>
-      </main>
-    );
-  }
-
-  const readyToSelect = direction.representations.product.state === "ready";
-  const currentSelected = design.selectedDirectionId === direction.id;
-  const activeCount = run.tasks.filter((task) =>
-    ACTIVE_STATES.has(task.state),
-  ).length;
-  const readyCount = run.tasks.filter((task) => task.state === "ready").length;
-
-  return (
-    <div className={styles.page} dir={isRtl ? "rtl" : "ltr"}>
-      <header className={styles.header}>
-        <div className={styles.titleGroup}>
-          <Link
-            className={styles.iconButton}
-            href={`/${locale}`}
-            aria-label="Back to home"
-          >
-            <ArrowIcon rtl={isRtl} />
+      <AppShell locale={locale}>
+        <main className="clm-empty">
+          <h1>Design not found</h1>
+          <Link className="clm-primary" href={`/${locale}`}>
+            Return home
           </Link>
-          <div>
-            <h1>{design.name}</h1>
-            <p>
-              Saved · Revision {revision.number} · {readyCount} ready
-              {activeCount > 0 ? ` · ${activeCount} active` : ""}
-            </p>
+        </main>
+      </AppShell>
+    );
+  if (!run || !direction)
+    return (
+      <AppShell locale={locale}>
+        <main className="clm-empty">
+          <p className="clm-kicker">Approved design</p>
+          <h1>Your piece is ready to render.</h1>
+          <button
+            className="clm-primary"
+            onClick={() => void client.startRun(designId)}
+          >
+            Create Studio result
+          </button>
+        </main>
+      </AppShell>
+    );
+  const spec = revision.specification;
+  const approved = revision.identityAnchor.approvedText;
+  const taskState = studioTask
+    ? locallyCancelled.includes(studioTask.id)
+      ? "cancelled"
+      : studioTask.state
+    : (representation?.state ?? "queued");
+  const asset =
+    taskState === "ready"
+      ? (presentationAsset?.assetUrl ?? representation?.assetUrl)
+      : undefined;
+  return (
+    <AppShell locale={locale}>
+      <main className="clm-studio">
+        <aside className="clm-studio-summary">
+          <Link className="clm-back" href={`/${locale}/design/new`}>
+            <ArrowLeft size={16} /> Back to design
+          </Link>
+          <p className="clm-kicker">Your design</p>
+          <h1>{approved}</h1>
+          <dl className="clm-summary compact">
+            <div>
+              <dt>Names</dt>
+              <dd>
+                {spec.names
+                  .map(
+                    (item) =>
+                      item.approvedEnglishText ?? item.approvedArabicText,
+                  )
+                  .join(" & ")}
+              </dd>
+            </div>
+            <div>
+              <dt>Script</dt>
+              <dd>
+                {spec.arabicStyle === "none"
+                  ? "English · connected script"
+                  : `Arabic · ${spec.arabicStyle}`}
+              </dd>
+            </div>
+            <div>
+              <dt>Layout</dt>
+              <dd>{spec.layout.replaceAll("-", " ")}</dd>
+            </div>
+            <div>
+              <dt>Metal</dt>
+              <dd>18K {spec.metalColor} gold</dd>
+            </div>
+            <div>
+              <dt>Stones</dt>
+              <dd>
+                {spec.stoneCoverage.replaceAll("-", " ")} ·{" "}
+                {spec.gemstone.replaceAll("-", " ")}
+              </dd>
+            </div>
+            <div>
+              <dt>Chain</dt>
+              <dd>
+                {spec.chain.style} · {spec.chain.lengthCm} cm
+              </dd>
+            </div>
+            <div>
+              <dt>Size</dt>
+              <dd>
+                {spec.sizeProfile} ({spec.dimensions.widthMm} mm)
+              </dd>
+            </div>
+          </dl>
+          <div className="clm-studio-save">
+            <button
+              type="button"
+              onClick={() => setMessage("Design saved in this mock workspace.")}
+            >
+              <FloppyDisk size={17} /> Save
+            </button>
+            <button
+              type="button"
+              onClick={() =>
+                void navigator.clipboard
+                  ?.writeText(window.location.href)
+                  .then(() => setMessage("Design link copied."))
+              }
+            >
+              <ShareNetwork size={17} /> Share
+            </button>
           </div>
-        </div>
-        <div className={styles.headerActions}>
-          <button
-            className={styles.secondaryButton}
-            disabled={!comparison}
-            aria-pressed={compare}
-            onClick={() => setCompare((current) => !current)}
-          >
-            {compare ? "Close compare" : "Compare"}
-          </button>
-          <StatusChip state={run.status as TaskState} label={run.status} />
-        </div>
-      </header>
-
-      <div className={styles.workspace}>
-        <aside className={styles.configure} aria-label="Design identity">
-          <SectionTitle label="Configure" detail="Identity locked" />
-          <IdentityCard revision={revision} />
-          <SpecificationList revision={revision} />
-          <button
-            className={styles.secondaryButton}
-            disabled={busyAction === "refine"}
-            onClick={refine}
-          >
-            {busyAction === "refine" ? "Refining…" : "Refine as new revision"}
-          </button>
+          <div className="clm-estimate">
+            <span>Estimated price</span>
+            <strong>AED 7,950</strong>
+            <small>Price updates after atelier review</small>
+          </div>
         </aside>
 
-        <main className={styles.inspector}>
-          <div className={styles.mobileIdentity}>
-            <span>Canonical identity</span>
-            <strong
-              dir={revision.identityAnchor.language === "ar" ? "rtl" : "ltr"}
-            >
-              {revision.identityAnchor.approvedText}
-            </strong>
-            <code>{revision.identityAnchor.fingerprint}</code>
-          </div>
-
-          <div
-            className={styles.tabs}
-            role="tablist"
-            aria-label="Representation"
-          >
-            {KINDS.map((candidate) => (
+        <section className="clm-studio-canvas">
+          <header>
+            <div>
+              <p className="clm-kicker">One considered result</p>
+              <h2>Studio 01</h2>
+            </div>
+            <span className="clm-state" data-state={taskState}>
+              {taskState.replaceAll("_", " ")}
+            </span>
+          </header>
+          <div className="clm-studio-media">
+            {asset ? (
+              <Image
+                src={asset}
+                alt={
+                  presentationAsset?.alt ??
+                  representation?.alt ??
+                  "Caleums pendant presentation"
+                }
+                fill
+                priority
+                sizes="(max-width: 799px) 100vw, 68vw"
+                style={{ transform: `scale(${zoom})` }}
+              />
+            ) : (
+              <div className="clm-studio-loading">
+                <Sparkle size={34} weight="duotone" />
+                <strong>
+                  {taskState === "failed"
+                    ? "This view needs another try"
+                    : taskState === "cancelled"
+                      ? "This view was cancelled"
+                      : taskState === "blocked"
+                        ? "This task is waiting on its dependency"
+                        : "Preparing this view"}
+                </strong>
+                <span>Ready media remains preserved.</span>
+              </div>
+            )}
+            <div className="clm-zoom">
               <button
-                id={`studio-tab-${candidate}`}
-                key={candidate}
-                role="tab"
-                aria-selected={kind === candidate}
-                aria-controls="studio-media-panel"
-                tabIndex={kind === candidate ? 0 : -1}
-                onClick={() => setKind(candidate)}
+                aria-label="Zoom out"
+                onClick={() => setZoom(Math.max(1, zoom - 0.15))}
               >
-                {capitalize(candidate)}
-                <StatusDot state={direction.representations[candidate].state} />
+                <MagnifyingGlassMinus size={18} />
+              </button>
+              <button
+                aria-label="Zoom in"
+                onClick={() => setZoom(Math.min(1.6, zoom + 0.15))}
+              >
+                <MagnifyingGlassPlus size={18} />
+              </button>
+              <span>{Math.round(zoom * 100)}%</span>
+            </div>
+          </div>
+          <div
+            className="clm-studio-tabs"
+            role="tablist"
+            aria-label="Presentation views"
+          >
+            {visibleViews.map((view) => (
+              <button key={view} role="tab" aria-selected>
+                <span>Studio</span>
+                <small>{taskState}</small>
               </button>
             ))}
           </div>
+          {scenarioMode && (
+            <details className="clm-task-audit">
+              <summary>Development task status audit</summary>
+              <p>
+                Frozen mock task states only. These do not add customer-facing
+                presentation directions.
+              </p>
+              <ul>
+                {run.tasks.map((task, index) => {
+                  const auditedState = locallyCancelled.includes(task.id)
+                    ? "cancelled"
+                    : task.state;
+                  return (
+                    <li key={task.id}>
+                      <span>
+                        Task {index + 1} · {auditedState.replaceAll("_", " ")}
+                      </span>
+                      {activeStates.has(auditedState) && (
+                        <button
+                          type="button"
+                          disabled={Boolean(busy)}
+                          aria-label={`Cancel task ${index + 1}`}
+                          onClick={() =>
+                            void action(
+                              `cancel-audit-${task.id}`,
+                              async () => {
+                                const result = await client.cancelTask(
+                                  designId,
+                                  task.id,
+                                );
+                                setLocallyCancelled((current) => [
+                                  ...new Set([...current, task.id]),
+                                ]);
+                                return result;
+                              },
+                              `Task ${index + 1} cancelled.`,
+                            )
+                          }
+                        >
+                          Cancel
+                        </button>
+                      )}
+                      {auditedState === "failed" && (
+                        <button
+                          type="button"
+                          disabled={Boolean(busy)}
+                          aria-label={`Retry task ${index + 1}`}
+                          onClick={() =>
+                            void action(
+                              `retry-audit-${task.id}`,
+                              async () => {
+                                const result = await client.retryTask(
+                                  designId,
+                                  task.id,
+                                );
+                                setLocallyCancelled((current) =>
+                                  current.filter((id) => id !== task.id),
+                                );
+                                return result;
+                              },
+                              `Task ${index + 1} retry completed.`,
+                            )
+                          }
+                        >
+                          Retry
+                        </button>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            </details>
+          )}
+        </section>
 
-          <AnimatePresence mode="wait" initial={!reduceMotion}>
-            <motion.section
-              id="studio-media-panel"
-              key={`${run.id}-${direction.id}-${kind}-${compare}`}
-              role="tabpanel"
-              aria-labelledby={`studio-tab-${kind}`}
-              className={styles.stagePanel}
-              initial={reduceMotion ? false : { opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={reduceMotion ? undefined : { opacity: 0 }}
-              transition={{ duration: reduceMotion ? 0 : 0.18 }}
-            >
-              {compare && comparison ? (
-                <CompareView
-                  first={direction}
-                  second={comparison}
-                  kind={kind}
-                />
-              ) : (
-                <MediaStage
-                  representation={representation}
-                  kind={kind}
-                  directionLabel={direction.label}
-                  onRequest={() =>
-                    void act(
-                      `request-${representation.lineage.taskId}`,
-                      `${capitalize(kind)} requested.`,
-                      () =>
-                        client.retryTask(
-                          designId,
-                          representation.lineage.taskId,
-                        ),
-                    )
-                  }
-                />
-              )}
-            </motion.section>
-          </AnimatePresence>
-
-          <div className={styles.mediaMeta}>
-            <span>
-              <strong>{direction.label}</strong> · {direction.brief}
-            </span>
-            <span>
-              Identity {direction.identityFingerprint} · attempt{" "}
-              {representation.lineage.attempt}
-            </span>
+        <footer className="clm-studio-actions">
+          <div>
+            <strong>{approved}</strong>
+            <span>Identity verified · Studio presentation</span>
           </div>
-
-          <div className={styles.mobileRail}>
-            <DirectionFilmstrip
-              run={run}
-              selectedId={direction.id}
-              isRtl={isRtl}
-              onSelect={setSelectedDirectionId}
-            />
-          </div>
-
-          <details className={styles.mobileDetails}>
-            <summary>Configuration and run details</summary>
-            <div className={styles.detailsBody}>
-              <IdentityCard revision={revision} />
-              <SpecificationList revision={revision} />
-              <RunHistory
-                design={design}
-                selectedRunId={run.id}
-                onSelect={chooseRun}
-              />
-            </div>
-          </details>
-        </main>
-
-        <aside className={styles.runRail} aria-label="Directions and run tasks">
-          <SectionTitle
-            label="Directions / run"
-            detail={`${readyCount} of ${run.tasks.length} tasks ready`}
-          />
-          <DirectionFilmstrip
-            run={run}
-            selectedId={direction.id}
-            isRtl={isRtl}
-            onSelect={setSelectedDirectionId}
-          />
-          <TaskRail
-            run={run}
-            direction={direction}
-            busyAction={busyAction}
-            onRetry={(taskId, label) =>
-              void act(`retry-${taskId}`, `${label} retry started.`, () =>
-                client.retryTask(designId, taskId),
-              )
-            }
-            onCancel={(taskId, label) =>
-              void act(`cancel-${taskId}`, `${label} cancelled.`, () =>
-                client.cancelTask(designId, taskId),
-              )
-            }
-          />
-          <RunHistory
-            design={design}
-            selectedRunId={run.id}
-            onSelect={chooseRun}
-          />
           <button
-            className={styles.secondaryButton}
-            disabled={busyAction === "new-run"}
-            onClick={startRun}
+            className="clm-secondary"
+            disabled={Boolean(busy)}
+            onClick={() => void refine()}
           >
-            {busyAction === "new-run" ? "Starting…" : "Create fresh run"}
-          </button>
-        </aside>
-      </div>
-
-      <footer className={styles.actionBar}>
-        <div className={styles.actionSummary}>
-          <strong>
-            {currentSelected ? "Selected direction" : direction.label}
-          </strong>
-          <span>
-            {readyToSelect
-              ? "Verified product ready for selection"
-              : `${STATE_COPY[direction.representations.product.state]?.label ?? direction.representations.product.state} product cannot be selected`}
-          </span>
-        </div>
-        {design.estimate && (
-          <div className={styles.estimate} aria-label="Estimate">
-            <strong>
-              {design.estimate.currency} {design.estimate.low.toLocaleString()}–
-              {design.estimate.high.toLocaleString()}
-            </strong>
-            <span>
-              {design.estimate.confidence} confidence · assumptions apply
-            </span>
-          </div>
-        )}
-        <div className={styles.footerActions}>
-          <button
-            className={styles.secondaryButton}
-            disabled={!readyToSelect || busyAction === "select"}
-            onClick={() =>
-              void act("select", `${direction.label} selected.`, () =>
-                client.selectDirection(designId, direction.id),
-              )
-            }
-          >
-            {currentSelected ? "Selected" : "Select direction"}
+            {busy === "refine" ? "Refining…" : "Refine"}
           </button>
           <button
-            className={styles.primaryButton}
-            disabled={!design.selectedDirectionId || busyAction === "commerce"}
-            onClick={() =>
-              void act("commerce", "Opening estimate and quote.", async () => {
-                if (!design.estimate) await client.calculateEstimate(designId);
-                router.push(`/${locale}/commerce/${designId}`);
-              })
-            }
+            className="clm-secondary"
+            disabled={Boolean(busy)}
+            onClick={() => void regenerate()}
           >
-            {busyAction === "commerce"
-              ? "Calculating…"
-              : design.estimate
-                ? "Open estimate & quote"
-                : "Calculate estimate & continue"}
+            {busy === "regenerate" ? "Starting…" : "Regenerate"}
           </button>
-        </div>
-      </footer>
-
-      {error && (
-        <div className={styles.errorToast} role="alert">
-          {error}
-          <button
-            aria-label="Dismiss error"
-            onClick={() => setError(undefined)}
-          >
-            ×
-          </button>
-        </div>
-      )}
-      <p className={styles.live} aria-live="polite" aria-atomic="true">
-        {announcement}
-      </p>
-    </div>
-  );
-}
-
-function IdentityCard({ revision }: { revision: Design["revisions"][number] }) {
-  return (
-    <div className={styles.identityCard}>
-      <p className={styles.eyebrow}>Canonical identity</p>
-      <strong dir={revision.identityAnchor.language === "ar" ? "rtl" : "ltr"}>
-        {revision.identityAnchor.approvedText}
-      </strong>
-      <code>{revision.identityAnchor.fingerprint}</code>
-      <span>✓ Approved geometry proof</span>
-    </div>
-  );
-}
-
-function SpecificationList({
-  revision,
-}: {
-  revision: Design["revisions"][number];
-}) {
-  const specification = revision.specification;
-  return (
-    <dl className={styles.specifications}>
-      <div>
-        <dt>Metal</dt>
-        <dd>
-          {specification.metalKarat} {specification.metalColor} gold
-        </dd>
-      </div>
-      <div>
-        <dt>Finish</dt>
-        <dd>{specification.finish}</dd>
-      </div>
-      <div>
-        <dt>Stones</dt>
-        <dd>
-          {specification.stoneCoverage} · {specification.gemstone}
-        </dd>
-      </div>
-      <div>
-        <dt>Width</dt>
-        <dd>{specification.dimensions.widthMm} mm</dd>
-      </div>
-      <div>
-        <dt>Complexity</dt>
-        <dd>{specification.complexity}/10</dd>
-      </div>
-    </dl>
-  );
-}
-
-function MediaStage({
-  representation,
-  kind,
-  directionLabel,
-  onRequest,
-}: {
-  representation: Representation;
-  kind: RepresentationKind;
-  directionLabel: string;
-  onRequest(): void;
-}) {
-  if (representation.state !== "ready" || !representation.assetUrl) {
-    return (
-      <div
-        className={`${styles.mediaStage} ${styles[kind]} ${styles.placeholder}`}
-        aria-busy={ACTIVE_STATES.has(representation.state)}
-      >
-        <StateArtwork state={representation.state} />
-        <StatusChip state={representation.state} />
-        <h2>
-          {STATE_COPY[representation.state]?.label ?? representation.state}
-        </h2>
-        <p>{STATE_COPY[representation.state]?.detail}</p>
-        {REQUESTABLE_STATES.has(representation.state) && (
-          <button className={styles.primaryButton} onClick={onRequest}>
-            Request {kind}
-          </button>
-        )}
-      </div>
-    );
-  }
-
-  const readyAssetUrl = representation.assetUrl;
-
-  if (kind === "motion") {
-    return (
-      <div className={`${styles.mediaStage} ${styles.motion}`}>
-        <video
-          src={readyAssetUrl}
-          poster={representation.posterUrl}
-          controls
-          loop
-          muted
-          playsInline
-          preload="metadata"
-          aria-label={representation.alt}
-        />
-        <span className={styles.verifiedBadge}>✓ Identity verified</span>
-      </div>
-    );
-  }
-
-  return (
-    <TransformWrapper
-      minScale={1}
-      maxScale={4}
-      centerOnInit
-      wheel={{ step: 0.12 }}
-      doubleClick={{ mode: "toggle" }}
-    >
-      {({ zoomIn, zoomOut, resetTransform }) => (
-        <div
-          className={`${styles.mediaStage} ${styles[kind]}`}
-          tabIndex={0}
-          aria-label={`${directionLabel} ${kind} inspection canvas. Use plus, minus, or zero to control zoom.`}
-          onKeyDown={(event) => {
-            if (event.key === "+" || event.key === "=") zoomIn();
-            if (event.key === "-") zoomOut();
-            if (event.key === "0") resetTransform();
-          }}
-        >
-          <TransformComponent
-            wrapperStyle={{ width: "100%", height: "100%" }}
-            contentStyle={{ width: "100%", height: "100%" }}
-          >
-            <Image
-              src={readyAssetUrl}
-              alt={representation.alt}
-              width={kind === "worn" ? 1024 : 1200}
-              height={kind === "worn" ? 1280 : 1200}
-              sizes="(max-width: 1023px) 94vw, 54vw"
-              priority
-              unoptimized
-              className={styles.inspectImage}
-            />
-          </TransformComponent>
-          <div className={styles.zoomControls} aria-label="Zoom controls">
-            <span className={styles.verifiedBadge}>✓ Verified</span>
-            <button aria-label="Zoom in" onClick={() => zoomIn()}>
-              +
-            </button>
-            <button aria-label="Zoom out" onClick={() => zoomOut()}>
-              −
-            </button>
-            <button aria-label="Reset zoom" onClick={() => resetTransform()}>
-              1:1
-            </button>
-          </div>
-        </div>
-      )}
-    </TransformWrapper>
-  );
-}
-
-function CompareView({
-  first,
-  second,
-  kind,
-}: {
-  first: Direction;
-  second: Direction;
-  kind: RepresentationKind;
-}) {
-  return (
-    <div className={`${styles.compareStage} ${styles[kind]}`}>
-      <ComparePane direction={first} kind={kind} />
-      <ComparePane direction={second} kind={kind} />
-    </div>
-  );
-}
-
-function ComparePane({
-  direction,
-  kind,
-}: {
-  direction: Direction;
-  kind: RepresentationKind;
-}) {
-  const representation = direction.representations[kind];
-  if (representation.state !== "ready" || !representation.assetUrl) {
-    return (
-      <figure>
-        <StateArtwork state={representation.state} />
-        <figcaption>{direction.label}</figcaption>
-      </figure>
-    );
-  }
-
-  return (
-    <figure>
-      {kind === "motion" ? (
-        <video
-          src={representation.assetUrl}
-          poster={representation.posterUrl}
-          controls
-          muted
-          playsInline
-          aria-label={representation.alt}
-        />
-      ) : (
-        <Image
-          src={representation.assetUrl}
-          alt={representation.alt}
-          fill
-          unoptimized
-          sizes="(max-width: 700px) 46vw, 28vw"
-        />
-      )}
-      <figcaption>{direction.label}</figcaption>
-    </figure>
-  );
-}
-
-function DirectionFilmstrip({
-  run,
-  selectedId,
-  isRtl,
-  onSelect,
-}: {
-  run: Run;
-  selectedId: string;
-  isRtl: boolean;
-  onSelect(id: string): void;
-}) {
-  const [viewportRef, embla] = useEmblaCarousel({
-    align: "start",
-    containScroll: "trimSnaps",
-    direction: isRtl ? "rtl" : "ltr",
-  });
-  const buttons = useRef(new Map<string, HTMLButtonElement>());
-  const selectedIndex = Math.max(
-    0,
-    run.directions.findIndex((candidate) => candidate.id === selectedId),
-  );
-
-  useEffect(() => {
-    embla?.scrollTo(selectedIndex);
-  }, [embla, selectedIndex]);
-
-  function move(fdelta: number) {
-    const next = Math.min(
-      run.directions.length - 1,
-      Math.max(0, selectedIndex + fdelta),
-    );
-    const nextDirection = run.directions[next];
-    if (!nextDirection) return;
-    onSelect(nextDirection.id);
-    buttons.current.get(nextDirection.id)?.focus();
-  }
-
-  function navigate(event: KeyboardEvent<HTMLButtonElement>) {
-    const previousKey = isRtl ? "ArrowRight" : "ArrowLeft";
-    const nextKey = isRtl ? "ArrowLeft" : "ArrowRight";
-    if (event.key === previousKey) {
-      event.preventDefault();
-      move(-1);
-    }
-    if (event.key === nextKey) {
-      event.preventDefault();
-      move(1);
-    }
-    if (event.key === "Home") {
-      event.preventDefault();
-      move(-selectedIndex);
-    }
-    if (event.key === "End") {
-      event.preventDefault();
-      move(run.directions.length - 1 - selectedIndex);
-    }
-  }
-
-  return (
-    <div className={styles.filmstrip} aria-label="Four design directions">
-      <div className={styles.filmstripControls}>
-        <span>Directions</span>
-        <div>
-          <button
-            aria-label="Previous direction"
-            disabled={selectedIndex === 0}
-            onClick={() => move(-1)}
-          >
-            <ArrowIcon rtl={!isRtl} />
-          </button>
-          <button
-            aria-label="Next direction"
-            disabled={selectedIndex === run.directions.length - 1}
-            onClick={() => move(1)}
-          >
-            <ArrowIcon rtl={isRtl} />
-          </button>
-        </div>
-      </div>
-      <div className={styles.emblaViewport} ref={viewportRef}>
-        <div className={styles.emblaContainer}>
-          {run.directions.map((candidate, index) => {
-            const product = candidate.representations.product;
-            return (
-              <div className={styles.emblaSlide} key={candidate.id}>
-                <button
-                  ref={(node) => {
-                    if (node) buttons.current.set(candidate.id, node);
-                    else buttons.current.delete(candidate.id);
-                  }}
-                  className={styles.directionCard}
-                  aria-current={
-                    candidate.id === selectedId ? "true" : undefined
-                  }
-                  aria-label={`${candidate.label}, product ${product.state}`}
-                  tabIndex={candidate.id === selectedId ? 0 : -1}
-                  onClick={() => onSelect(candidate.id)}
-                  onKeyDown={navigate}
-                >
-                  <span className={styles.directionThumb}>
-                    {product.state === "ready" && product.assetUrl ? (
-                      <Image
-                        src={product.assetUrl}
-                        alt=""
-                        fill
-                        unoptimized
-                        sizes="96px"
-                      />
-                    ) : (
-                      <StateArtwork state={product.state} compact />
-                    )}
-                  </span>
-                  <span className={styles.directionCopy}>
-                    <span>0{index + 1}</span>
-                    <strong>{candidate.label}</strong>
-                    <small>{candidate.brief}</small>
-                  </span>
-                  <span className={styles.stateRow}>
-                    {KINDS.map((candidateKind) => (
-                      <StatusChip
-                        key={candidateKind}
-                        state={candidate.representations[candidateKind].state}
-                        label={candidateKind.slice(0, 1).toUpperCase()}
-                      />
-                    ))}
-                  </span>
-                </button>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function TaskRail({
-  run,
-  direction,
-  busyAction,
-  onRetry,
-  onCancel,
-}: {
-  run: Run;
-  direction: Direction;
-  busyAction?: string;
-  onRetry(taskId: string, label: string): void;
-  onCancel(taskId: string, label: string): void;
-}) {
-  const tasks = run.tasks.filter((task) => task.directionId === direction.id);
-  return (
-    <section
-      className={styles.taskRail}
-      aria-label={`${direction.label} tasks`}
-    >
-      <h3>Task rail</h3>
-      {tasks.map((task) => {
-        const label = capitalize(task.kind);
-        const isActive = ACTIVE_STATES.has(task.state);
-        const canRetry = RETRYABLE_STATES.has(task.state);
-        return (
-          <div className={styles.taskItem} key={task.id}>
-            <div>
-              <strong>{label}</strong>
-              <StatusChip state={task.state} />
-            </div>
-            <span>Attempt {task.attempt}</span>
-            {(isActive || canRetry) && (
-              <div className={styles.taskActions}>
-                {canRetry && (
-                  <button
-                    disabled={busyAction === `retry-${task.id}`}
-                    onClick={() => onRetry(task.id, label)}
-                  >
-                    Retry
-                  </button>
-                )}
-                {isActive && (
-                  <button
-                    disabled={busyAction === `cancel-${task.id}`}
-                    onClick={() => onCancel(task.id, label)}
-                  >
-                    Cancel
-                  </button>
-                )}
-              </div>
-            )}
-          </div>
-        );
-      })}
-    </section>
-  );
-}
-
-function RunHistory({
-  design,
-  selectedRunId,
-  onSelect,
-}: {
-  design: Design;
-  selectedRunId: string;
-  onSelect(run: Run): void;
-}) {
-  return (
-    <section className={styles.history} aria-label="Run history">
-      <h3>Run history</h3>
-      <div>
-        {[...design.runs].reverse().map((run) => {
-          const revision = design.revisions.find(
-            (candidate) => candidate.id === run.revisionId,
-          );
-          return (
+          {studioTask && activeStates.has(taskState) && (
             <button
-              key={run.id}
-              aria-current={run.id === selectedRunId ? "true" : undefined}
-              onClick={() => onSelect(run)}
+              className="clm-secondary clm-task-action"
+              disabled={Boolean(busy)}
+              onClick={() =>
+                void action(
+                  "cancel-task",
+                  async () => {
+                    const result = await client.cancelTask(
+                      designId,
+                      studioTask.id,
+                    );
+                    setLocallyCancelled((current) => [
+                      ...new Set([...current, studioTask.id]),
+                    ]);
+                    return result;
+                  },
+                  "Studio task cancelled. Ready assets remain preserved.",
+                )
+              }
             >
-              <strong>{run.label}</strong>
-              <span>
-                Revision {revision?.number ?? "—"} · {run.status}
-              </span>
+              <X size={16} />{" "}
+              {busy === "cancel-task" ? "Cancelling…" : "Cancel task"}
             </button>
-          );
-        })}
-      </div>
-    </section>
+          )}
+          {studioTask && taskState === "failed" && (
+            <button
+              className="clm-secondary clm-task-action"
+              disabled={Boolean(busy)}
+              onClick={() =>
+                void action(
+                  "retry-task",
+                  () => client.retryTask(designId, studioTask.id),
+                  "Studio task retry started.",
+                )
+              }
+            >
+              {busy === "retry-task" ? "Retrying…" : "Retry task"}
+            </button>
+          )}
+          {asset && (
+            <a className="clm-secondary" href={asset} download>
+              <DownloadSimple size={17} /> Download
+            </a>
+          )}
+          <button
+            className="clm-primary"
+            disabled={taskState !== "ready" || Boolean(busy)}
+            onClick={() => void continueToPiece()}
+          >
+            {busy === "commerce" ? "Preparing…" : "Continue to your piece"}{" "}
+            <ArrowRight size={17} />
+          </button>
+        </footer>
+        {message && (
+          <p className="clm-toast" role="status">
+            {message}
+          </p>
+        )}
+        <p className="clm-sr-live" aria-live="polite" aria-atomic="true">
+          Studio presentation task {taskState}.
+        </p>
+      </main>
+    </AppShell>
   );
-}
-
-function StatusChip({ state, label }: { state: TaskState; label?: string }) {
-  const text = STATE_COPY[state]?.label ?? state;
-  return (
-    <span className={styles.statusChip} data-state={state} title={text}>
-      {label ? `${label} · ${text}` : text}
-    </span>
-  );
-}
-
-function StatusDot({ state }: { state: TaskState }) {
-  return (
-    <span className={styles.statusDot} data-state={state} aria-hidden="true" />
-  );
-}
-
-function StateArtwork({
-  state,
-  compact = false,
-}: {
-  state: TaskState;
-  compact?: boolean;
-}) {
-  const active = ACTIVE_STATES.has(state);
-  return (
-    <span
-      className={styles.stateArtwork}
-      data-active={active || undefined}
-      data-compact={compact || undefined}
-      aria-hidden="true"
-    >
-      <span />
-      <span />
-      <span />
-    </span>
-  );
-}
-
-function SectionTitle({ label, detail }: { label: string; detail: string }) {
-  return (
-    <div className={styles.sectionTitle}>
-      <h2>{label}</h2>
-      <span>{detail}</span>
-    </div>
-  );
-}
-
-function ArrowIcon({ rtl }: { rtl: boolean }) {
-  return (
-    <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
-      <path
-        d={rtl ? "m9 5 7 7-7 7" : "m15 5-7 7 7 7"}
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
-function capitalize(value: string) {
-  return value.charAt(0).toUpperCase() + value.slice(1);
 }
