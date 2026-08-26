@@ -16,7 +16,7 @@ Jewelo products.
 
 | Deployment | Shopify store | Status |
 | --- | --- | --- |
-| Local and Vercel Preview/Development | Burner development store | **Unresolved.** On 27 August 2026 the authenticated Shopify Admin showed “Create your first online store,” and Dev Dashboard returned `401` with no linked store or organization. Do not claim this environment is connected until a store appears and the probe passes. |
+| Local and Vercel Preview/Development | `Jewelo Checkout Dev` — `jewelo-checkout-dev.myshopify.com` | **Live-proven.** True Shopify dev store with generated test data and the bogus payment gateway. App/API, Draft Order, hosted checkout, test payment, Order creation, and metadata propagation passed on 27 August 2026. |
 | Vercel Production | Client store | Pending client invitation, app installation, secrets, and live acceptance proof. |
 
 Never point a Preview deployment at the client production store. Never point
@@ -101,11 +101,49 @@ offline token is used.
 8. Record the safe store identity here after validation:
 
 ```text
-Development store name: <pending>
-Permanent domain:       <pending>.myshopify.com
-Shopify organization:   <pending>
-Probe date/result:       <pending>
+Development store name: Jewelo Checkout Dev
+Permanent domain:       jewelo-checkout-dev.myshopify.com
+Shopify organization:   Jewelo Development
+Probe date/result:       27 August 2026 / passed on API 2026-07
 ```
+
+The authoritative development app is `Jewelo Checkout`, active version
+`jewelo-checkout-dev-1`, with only `read_orders` and `write_draft_orders`.
+
+Shopify dev stores are forced to remain storefront-password protected. The
+Preferences page has a password field but no disable control. This does not
+block Draft Order invoice checkout or test payments. Public storefront access
+requires transferring/activating the store on a paid plan; do not do that for
+this development environment.
+
+The separate `Jewelo Development` store at `rmizsa-vn.myshopify.com` is an
+unpaid trial created during validation. Its invoice URL correctly reached
+Shopify but checkout was blocked because the trial store was not taking orders.
+Do not use it as the canonical development target.
+
+## Live development-store proof — 27 August 2026
+
+- `pnpm shopify:probe` authenticated to exactly
+  `jewelo-checkout-dev.myshopify.com`, API `2026-07`, with both required
+  scopes.
+- The real adapter created Draft Order `#D11` with a custom AED-priced line,
+  a hosted Shopify checkout URL, quote note, deterministic tag, and both custom
+  attributes.
+- A delayed duplicate request reconciled to the existing Draft Order. Immediate
+  tag search was observed to be eventually consistent; the production lease
+  remains required before read-only reconciliation.
+- Shopify's first live mutation rejected the original
+  `jewelo-quote-<UUID>` tag because tags are limited to 40 characters. The
+  adapter now uses deterministic `jwq-<UUID>` tags, exactly 40 characters, with
+  regression coverage.
+- Shopify's Test Payment Gateway completed the ₹25.97 INR checkout without a
+  real charge and created paid test Order `#1001`.
+- The paid Order retained the quote note, `jwq-<UUID>` tag,
+  `caleums_quote_id`, and `jewelo_idempotency_key`.
+- The remaining unproved production boundary is delivery of Shopify's real
+  `orders/paid` webhook into a deployed Jewelo/Supabase environment. The app
+  version must be linked/deployed with the real Jewelo webhook URL before that
+  gate can pass.
 
 ## Agent procedure: swap Production to a client store
 
@@ -173,4 +211,3 @@ This phase synchronizes successful payment only. It does not synchronize
 refunds, cancellations, fulfillment, app uninstall, customer-account SSO, or
 Shopify Plus checkout UI extensions. Shopify owns the hosted checkout and
 payment record; Jewelo retains its existing UI and Supabase identity.
-

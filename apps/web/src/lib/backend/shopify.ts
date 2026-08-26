@@ -158,7 +158,7 @@ function quoteTag(quoteId: string) {
     )
   )
     throw new Error("Shopify Draft Order requires a UUID quote ID");
-  return `jewelo-quote-${quoteId.toLowerCase()}`;
+  return `jwq-${quoteId.toLowerCase()}`;
 }
 
 async function findExistingDraftOrder(

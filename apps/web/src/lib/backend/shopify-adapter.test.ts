@@ -91,7 +91,7 @@ describe("Shopify Admin adapter", () => {
     expect(mutationInputs).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          tags: ["jewelo-quote-11111111-1111-4111-8111-111111111111"],
+          tags: ["jwq-11111111-1111-4111-8111-111111111111"],
           customAttributes: expect.arrayContaining([
             {
               key: "caleums_quote_id",
@@ -101,6 +101,10 @@ describe("Shopify Admin adapter", () => {
         }),
       ]),
     );
+    const tags = mutationInputs.flatMap(
+      (mutationInput) => mutationInput.tags as string[],
+    );
+    expect(tags.every((tag) => tag.length <= 40)).toBe(true);
   });
 
   it("evicts a rejected token and retries a 401 exactly once", async () => {
