@@ -119,7 +119,7 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
   const router = useRouter();
   const { createDesign } = useJewelo();
   const [stage, setStage] = useState(0);
-  const [nameCount, setNameCount] = useState<1 | 2>(1);
+  const [nameCount] = useState<1 | 2>(1);
   const [nameOne, setNameOne] = useState("Layla");
   const [nameTwo, setNameTwo] = useState("Mariam");
   const [language, setLanguage] = useState<"en" | "ar">("en");
@@ -444,26 +444,7 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
                   <p>Choose the exact letters that will become your pendant.</p>
                 </header>
                 <label className="clm-label">
-                  How many names?
-                  <span className="clm-segmented">
-                    <button
-                      type="button"
-                      aria-pressed={nameCount === 1}
-                      onClick={() => setNameCount(1)}
-                    >
-                      One name
-                    </button>
-                    <button
-                      type="button"
-                      aria-pressed={nameCount === 2}
-                      onClick={() => setNameCount(2)}
-                    >
-                      Two names
-                    </button>
-                  </span>
-                </label>
-                <label className="clm-label">
-                  Name 1
+                  Name
                   <input
                     value={nameOne}
                     maxLength={18}
