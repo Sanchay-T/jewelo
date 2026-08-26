@@ -1,6 +1,12 @@
 -- Final media pipeline: independent OpenAI still siblings, deterministic
 -- identity artifacts, immutable prompt/style/model pins, and optional fal video.
 
+create or replace function public.prevent_final_media_history_mutation()
+returns trigger language plpgsql set search_path = '' as $$
+begin
+  raise exception 'final media history is immutable' using errcode = '55000';
+end $$;
+
 create table public.pipeline_releases (
   id text primary key,
   status text not null check (status in ('legacy','active','rolled_back')),
@@ -37,7 +43,7 @@ create table public.identity_artifacts (
     references public.design_revisions(id, owner_principal_id)
 );
 create trigger identity_artifacts_immutable before update or delete on public.identity_artifacts
-for each row execute function public.prevent_prompt_history_mutation();
+for each row execute function public.prevent_final_media_history_mutation();
 
 create table public.style_anchor_releases (
   id uuid primary key default gen_random_uuid(),
@@ -69,9 +75,9 @@ create table public.style_anchor_publication_events (
   published_at timestamptz not null default now()
 );
 create trigger style_anchor_releases_immutable before update or delete on public.style_anchor_releases
-for each row execute function public.prevent_prompt_history_mutation();
+for each row execute function public.prevent_final_media_history_mutation();
 create trigger style_anchor_publication_events_immutable before update or delete on public.style_anchor_publication_events
-for each row execute function public.prevent_prompt_history_mutation();
+for each row execute function public.prevent_final_media_history_mutation();
 
 insert into public.style_anchor_releases(id,profile,version,source_task_id,status,approval_note,created_by) values
   ('00000000-0000-0000-0000-000000000601','image.worn',1,'ee78f9a4-6ace-428c-9f12-4e6101188190','missing','Exact approved artifact was not present in authorized local sources','system:migration'),
@@ -147,11 +153,13 @@ alter table public.generation_tasks alter column pipeline_release set default 'c
 alter table public.generation_tasks alter column model_release set not null;
 alter table public.generation_tasks alter column model_release set default 'legacy';
 
+alter table public.assets disable trigger assets_immutable;
 alter table public.assets add column pipeline_release text references public.pipeline_releases(id);
 alter table public.assets add column identity_artifact_id uuid references public.identity_artifacts(id) on delete restrict;
 alter table public.assets add column style_anchor_release_id uuid references public.style_anchor_releases(id) on delete restrict;
 update public.assets set pipeline_release='caleums-one-view-v1';
 alter table public.assets alter column pipeline_release set not null;
+alter table public.assets enable trigger assets_immutable;
 alter table public.runtime_policy add column video_reservation_cents integer not null default 200 check (video_reservation_cents >= 0);
 
 alter table public.pipeline_releases enable row level security;
@@ -394,6 +402,7 @@ revoke all on function public.mark_task_pre_spend_blocked(uuid,text) from public
 revoke all on function public.request_video_task(uuid,text,uuid,text) from public,anon,authenticated;
 revoke all on function public.publish_style_anchor_release(uuid,uuid,text) from public,anon,authenticated;
 revoke all on function public.create_style_anchor_release(text,text,text,text,text,text,text) from public,anon,authenticated;
+revoke all on function public.prevent_final_media_history_mutation() from public,anon,authenticated;
 grant execute on function public.approve_and_start_studio(uuid,jsonb,text,text) to authenticated,service_role;
 grant execute on function public.start_studio_run(uuid,text) to authenticated,service_role;
 grant execute on function public.expand_final_media_run(uuid) to service_role;
