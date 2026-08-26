@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   ArrowLeft,
   ArrowRight,
@@ -28,6 +28,7 @@ import type {
   SizeProfile,
   StoneCoverage,
 } from "@/lib/types";
+import { transliterateArabicName } from "./transliterate-arabic";
 
 type StageId =
   | "name-language"
@@ -87,8 +88,12 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
   const [nameOne, setNameOne] = useState("Layla");
   const [nameTwo, setNameTwo] = useState("Mariam");
   const [language, setLanguage] = useState<"en" | "ar">("en");
-  const [arabicOne, setArabicOne] = useState("ليلى");
-  const [arabicTwo, setArabicTwo] = useState("مريم");
+  const [arabicOne, setArabicOne] = useState(() =>
+    transliterateArabicName("Layla"),
+  );
+  const [arabicTwo, setArabicTwo] = useState(() =>
+    transliterateArabicName("Mariam"),
+  );
   const [arabicStyle, setArabicStyle] = useState<ArabicStyle>("contemporary");
   const [layout, setLayout] = useState<PendantLayout>("connected-heart");
   const [metal, setMetal] = useState<MetalColor>("yellow");
@@ -103,6 +108,14 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
   const [confirmed, setConfirmed] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string>();
+
+  useEffect(() => {
+    setArabicOne(transliterateArabicName(nameOne));
+  }, [nameOne]);
+
+  useEffect(() => {
+    setArabicTwo(transliterateArabicName(nameTwo));
+  }, [nameTwo]);
 
   const displayOne = language === "ar" ? arabicOne : nameOne;
   const displayTwo = language === "ar" ? arabicTwo : nameTwo;
@@ -357,10 +370,11 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
                     </button>
                   </span>
                 </label>
-                <div className="clm-suggestion">
+                <div className="clm-suggestion" aria-live="polite">
                   <div>
-                    <span>Suggested Arabic spelling</span>
+                    <span>Live Arabic spelling</span>
                     <strong dir="rtl">{arabicOne}</strong>
+                    <small>Updates as you type</small>
                   </div>
                   <button
                     type="button"

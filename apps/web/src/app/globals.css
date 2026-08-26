@@ -538,7 +538,8 @@ video {
   margin-bottom: 8px;
 }
 .clm-suggestion span,
-.clm-suggestion strong {
+.clm-suggestion strong,
+.clm-suggestion small {
   display: block;
 }
 .clm-suggestion span {
@@ -548,6 +549,17 @@ video {
 .clm-suggestion strong {
   font-size: 1.2rem;
   margin-top: 4px;
+}
+.clm-suggestion small {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 0.56rem;
+}
+.clm-suggestion strong[dir="rtl"],
+.clm-live-name[dir="rtl"] strong,
+.clm-preview-caption strong[dir="rtl"],
+.clm-arabic-edits input[dir="rtl"] {
+  font-family: "Noto Naskh Arabic", "Geeza Pro", serif;
 }
 .clm-suggestion button {
   width: 44px;
