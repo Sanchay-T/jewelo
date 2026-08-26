@@ -30,6 +30,13 @@ const completionMigration = readFileSync(
   ),
   "utf8",
 );
+const promptMigration = readFileSync(
+  new URL(
+    "../../../supabase/migrations/20260827060000_caleums_prompt_registry.sql",
+    import.meta.url,
+  ),
+  "utf8",
+);
 
 function expectedFingerprint(
   language: "en" | "ar",
@@ -173,6 +180,94 @@ describe("Caleums migration security contract", () => {
     expect(completionMigration).toContain("'budgetOverride', false");
     expect(completionMigration).toContain(
       "grant execute on function public.operator_retry_generation_task(uuid,text,text) to service_role",
+    );
+  });
+
+  it("keeps prompt history and task snapshots immutable and server-only", () => {
+    expect(promptMigration).toContain("create table public.prompt_releases");
+    expect(promptMigration).toContain(
+      "create table public.generation_prompt_snapshots",
+    );
+    expect(promptMigration).toContain(
+      "prompt_releases_immutable before update or delete",
+    );
+    expect(promptMigration).toContain(
+      "generation_prompt_snapshots_immutable before update or delete",
+    );
+    expect(promptMigration).toContain(
+      "revoke all on table public.prompt_releases, public.prompt_profile_publications",
+    );
+    expect(promptMigration).not.toMatch(
+      /create policy .*prompt_(releases|profile_publications|publication_events)/i,
+    );
+  });
+
+  it("backfills the only known legacy key and aborts on any unmapped lineage", () => {
+    expect(promptMigration).toContain(
+      "where prompt_release = 'studio-placeholder-v1'",
+    );
+    expect(promptMigration).toContain(
+      "raise exception 'unmapped legacy prompt lineage remains'",
+    );
+    expect(promptMigration).toContain(
+      "legacy task % has incomplete prompt variables",
+    );
+    expect(promptMigration).toContain("'caleums-prompt-compiler-v1'");
+    expect(promptMigration).toContain(
+      "alter table public.generation_tasks alter column prompt_release_id set not null",
+    );
+    expect(promptMigration).toContain("on delete restrict");
+  });
+
+  it("serializes version creation/publication and records rollback-capable events", () => {
+    expect(promptMigration).toContain(
+      "pg_advisory_xact_lock(hashtextextended('prompt-release:' || p_profile, 0))",
+    );
+    expect(promptMigration).toContain(
+      "pg_advisory_xact_lock(hashtextextended('prompt-publication:' || v_release.profile, 0))",
+    );
+    expect(promptMigration).toContain(
+      "p_expected_current_release_id is distinct from v_current.release_id",
+    );
+    expect(promptMigration).toContain(
+      "on conflict on constraint prompt_profile_publications_pkey",
+    );
+    expect(promptMigration).toContain(
+      "values (v_release.profile, v_current.release_id, v_release.id",
+    );
+  });
+
+  it("pins both run creation paths before dispatch and includes the release in idempotency", () => {
+    expect(
+      promptMigration.match(
+        /where p\.profile = 'image\.studio' for share of p/g,
+      ),
+    ).toHaveLength(2);
+    expect(promptMigration).toContain(
+      "'task:' || v_run_id || ':studio:release:' || v_prompt.id",
+    );
+    expect(promptMigration).toContain(
+      "jsonb_build_object('runId', v_run_id, 'taskId', v_task_id, 'promptReleaseId', v_prompt.id)",
+    );
+    expect(promptMigration).not.toContain("studio-placeholder-v1', 'still.fal");
+  });
+
+  it("materializes once and returns the authoritative stored snapshot", () => {
+    expect(promptMigration).toContain("on conflict (task_id) do nothing");
+    expect(promptMigration).toContain(
+      "if v_pinned <> p_prompt_release_id then raise exception",
+    );
+    expect(promptMigration).toContain("compiled prompt checksum mismatch");
+    expect(promptMigration).toContain(
+      "select * into v_snapshot from public.generation_prompt_snapshots where task_id = p_task_id",
+    );
+  });
+
+  it("seeds usable publications for image and both future video profiles", () => {
+    for (const profile of ["image.studio", "video.preview", "video.final"])
+      expect(promptMigration).toContain(`'${profile}', 1`);
+    expect(promptMigration).not.toContain(
+      "PLACEHOLDER — coordinator-approved production prompt pending",
     );
   });
 });

@@ -6,6 +6,7 @@ import {
 } from "@jewelo/contracts";
 
 export * from "./studio";
+export * from "./prompt-registry";
 
 export interface FoundationProvider {
   execute(input: FoundationTaskInput): Promise<FoundationTaskResult>;

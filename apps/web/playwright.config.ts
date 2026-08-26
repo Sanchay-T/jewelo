@@ -48,7 +48,7 @@ export default defineConfig({
   ],
   webServer: {
     command:
-      "NEXT_PUBLIC_JEWELO_SCENARIOS=1 pnpm dev --hostname 127.0.0.1 --port 3200",
+      "NEXT_PUBLIC_JEWELO_SCENARIOS=1 NEXT_PUBLIC_JEWELO_DATA_MODE=mock pnpm dev --hostname 127.0.0.1 --port 3200",
     url: "http://127.0.0.1:3200/en",
     reuseExistingServer: true,
     timeout: 120000,
