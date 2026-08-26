@@ -1,6 +1,7 @@
 {
   "projectId": "8478845c-9f7b-4b68-89e6-3762b43a1119",
   "region": "blr",
+  "repositorySlug": "Sanchay-T/jewelo",
   "repositoryCloneUrl": "https://github.com/Sanchay-T/jewelo.git",
   "integrationBranch": "codex/digitalocean-staging-preview",
   "service": {

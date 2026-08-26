@@ -33,13 +33,10 @@ evidence and approval for the higher possible spend.
 ```text
 checkout codex/digitalocean-staging-preview
   -> commit and push the branch
-  -> pnpm do:publish -- staging
-  -> local install, verification, and production web build
-  -> matching immutable jewelo-staging-<full SHA> Git tag and release branch
-  -> App Platform builds the release branch with Node 24 + pnpm
+  -> DigitalOcean's native GitHub source detects the push
+  -> App Platform installs, verifies, and builds with Node 24 + pnpm
   -> existing encrypted app environment is retained
-  -> /api/health smoke test
-  -> command reports URL + deployment ID + SHA
+  -> the new revision replaces staging after its health check passes
 
 tested staging SHA + deployment ID + explicit production command
   -> immutable jewelo-production-<full SHA> Git tag
@@ -47,10 +44,13 @@ tested staging SHA + deployment ID + explicit production command
   -> command reports production URL and rollback deployment
 ```
 
-GitHub Actions is not part of the active deployment path. The direct publisher
-requires a clean, pushed `codex/digitalocean-staging-preview` checkout, creates
-a matching immutable tag and release branch, rolls the allowlisted values back
-through encrypted App Platform configuration, and smoke-tests the result.
+GitHub Actions is not part of the active deployment path. DigitalOcean's native
+GitHub source watches `codex/digitalocean-staging-preview` with
+`deploy_on_push: true`, so ordinary fetch/pull/commit/push is the staging
+release workflow. `pnpm do:publish -- staging` remains an explicit,
+commit-pinned recovery command that creates a matching immutable tag and
+release branch, rolls the allowlisted values through encrypted App Platform
+configuration, and smoke-tests the result.
 
 Production never follows a branch automatically. It must use the exact commit
 and immutable source tag proven by an ACTIVE staging deployment.
@@ -122,13 +122,15 @@ but no delete scope. Rotate it before its current 25 November 2026 expiry.
 ## Staging operation
 
 Before final cutover, staging intentionally follows
-`codex/digitalocean-staging-preview`. Verify and smoke it with:
+`codex/digitalocean-staging-preview`. The normal flow is:
 
 ```bash
+git pull --ff-only
 pnpm install --frozen-lockfile
 pnpm verify
 pnpm do:build
-pnpm do:publish -- staging
+git push origin codex/digitalocean-staging-preview
+pnpm do:smoke -- https://jewelo-staging-gqumd.ondigitalocean.app
 ```
 
 The Node buildpack does not always expose the same version behavior as a local
@@ -136,10 +138,10 @@ shell. Bootstrap injects `JEWELO_CLOUD_BUILD=1` at build time, and foundation
 verification uses that compatibility marker to require Node 24 without
 misclassifying unrelated local negative-proof checks.
 
-The publisher refuses the wrong branch, dirty worktrees, and unpushed commits.
-It records the source tag/release branch, deployment ID, commit, health result,
-and URL in its terminal output. Run it only when the user has authorized a
-staging update.
+App Platform builds every pushed commit and moves the staging app only after
+its configured health check passes. Use `pnpm do:publish -- staging` only when
+an explicit commit-pinned recovery release is required; it refuses the wrong
+branch, dirty worktrees, and unpushed commits.
 
 ## Production cutover
 

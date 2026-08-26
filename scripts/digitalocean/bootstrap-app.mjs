@@ -46,13 +46,25 @@ secretEnvs.push({
 
 const target = contract.environments[environment];
 const sourceRef = process.env.JEWELO_SOURCE_REF ?? contract.integrationBranch;
+const useNativeGitHubSource =
+  process.env.JEWELO_SOURCE_PROVIDER === "github" || sourceRef === contract.integrationBranch;
 const service = {
   name: contract.service.name,
   environment_slug: contract.service.environmentSlug,
-  git: {
-    repo_clone_url: contract.repositoryCloneUrl,
-    branch: sourceRef,
-  },
+  ...(useNativeGitHubSource
+    ? {
+        github: {
+          repo: contract.repositorySlug,
+          branch: sourceRef,
+          deploy_on_push: sourceRef === contract.integrationBranch,
+        },
+      }
+    : {
+        git: {
+          repo_clone_url: contract.repositoryCloneUrl,
+          branch: sourceRef,
+        },
+      }),
   source_dir: "/",
   build_command: contract.service.buildCommand,
   run_command: contract.service.runCommand,
