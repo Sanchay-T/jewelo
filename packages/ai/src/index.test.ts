@@ -1,10 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
-import {
-  FalStudioAdapter,
-  MockFoundationProvider,
-  STUDIO_PROMPT_FIXTURE,
-} from "./index";
+import { FalStudioAdapter, MockFoundationProvider } from "./index";
 
 describe("mock provider adapter", () => {
   it("recovers after an injected one-shot failure", async () => {
@@ -61,6 +57,7 @@ describe("studio provider policy", () => {
     );
     await adapter.generate({
       idempotencyKey: "attempt-1",
+      prompt: "Exact compiled task prompt",
       identityImageUrl: "https://signed.invalid/identity.png",
       identityFingerprint: "fingerprint",
       specification: {},
@@ -73,7 +70,7 @@ describe("studio provider policy", () => {
       "x-idempotency-key": "attempt-1",
     });
     expect(JSON.parse(String(request?.body))).toMatchObject({
-      prompt: STUDIO_PROMPT_FIXTURE.text,
+      prompt: "Exact compiled task prompt",
       image_url: "https://signed.invalid/identity.png",
       num_images: 1,
     });

@@ -52,7 +52,7 @@ describe("environment boundaries", () => {
     });
   });
 
-  it("fails closed when real providers use the placeholder prompt", () => {
+  it("accepts real mode only when provider credentials are server-side", () => {
     const result = jobsEnvSchema.safeParse({
       SUPABASE_URL: "https://example.supabase.co",
       SUPABASE_SERVICE_ROLE_KEY: "service-role-test",
@@ -62,12 +62,6 @@ describe("environment boundaries", () => {
       FAL_KEY: "fal-test",
       OPENAI_API_KEY: "openai-test",
     });
-    expect(result.success).toBe(false);
-    if (!result.success)
-      expect(result.error.issues).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({ path: ["STUDIO_PROMPT_RELEASE"] }),
-        ]),
-      );
+    expect(result.success).toBe(true);
   });
 });

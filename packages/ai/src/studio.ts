@@ -1,14 +1,6 @@
-export const STUDIO_PROMPT_FIXTURE = {
-  release: "studio-placeholder-v1",
-  text: [
-    "PLACEHOLDER — coordinator-approved production prompt pending.",
-    "Render one studio product photograph of the supplied immutable name-pendant identity.",
-    "Do not change spelling, glyph order, pendant contour, attachments, metal, or stones.",
-  ].join(" "),
-} as const;
-
 export interface StudioGenerationInput {
   idempotencyKey: string;
+  prompt: string;
   identityImageUrl: string;
   identityFingerprint: string;
   specification: Readonly<Record<string, unknown>>;
@@ -75,7 +67,7 @@ type Fetch = typeof fetch;
 export class FalStudioAdapter implements StudioGenerator {
   constructor(
     private readonly apiKey: string,
-    private readonly model = "openai/gpt-image-2/edit",
+    readonly model: string,
     private readonly fetcher: Fetch = fetch,
   ) {}
 
@@ -88,7 +80,7 @@ export class FalStudioAdapter implements StudioGenerator {
         "x-idempotency-key": input.idempotencyKey,
       },
       body: JSON.stringify({
-        prompt: STUDIO_PROMPT_FIXTURE.text,
+        prompt: input.prompt,
         image_url: input.identityImageUrl,
         num_images: 1,
         output_format: "png",

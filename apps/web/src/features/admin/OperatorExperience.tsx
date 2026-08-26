@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import type { FormEvent } from "react";
 import {
   ArrowRight,
@@ -13,11 +14,14 @@ import {
 } from "@phosphor-icons/react";
 import { CaleumsWordmark } from "@/components/app-shell";
 import { useJewelo } from "@/lib/jewelo-provider";
+import { PromptLibrary } from "./PromptLibrary";
 
 type Locale = "en" | "ar";
 
 export function OperatorExperience({ locale }: { locale: Locale }) {
   const { client, state, refresh } = useJewelo();
+  const searchParams = useSearchParams();
+  const tab = searchParams.get("tab") === "prompts" ? "prompts" : "queue";
   const [email, setEmail] = useState("");
   const [passphrase, setPassphrase] = useState("");
   const [filter, setFilter] = useState<"all" | "quotes" | "orders">("all");
@@ -136,137 +140,161 @@ export function OperatorExperience({ locale }: { locale: Locale }) {
           <SignOut size={17} /> Close queue
         </button>
       </header>
+      <nav className="clm-operator-nav" aria-label="Operator sections">
+        <Link
+          aria-current={tab === "queue" ? "page" : undefined}
+          href={`/${locale}/operator`}
+        >
+          Work queue
+        </Link>
+        <Link
+          aria-current={tab === "prompts" ? "page" : undefined}
+          href={`/${locale}/operator?tab=prompts`}
+        >
+          Prompt Library
+        </Link>
+      </nav>
       <div className="clm-operator-body">
-        <section className="clm-operator-heading">
-          <div>
-            <p className="clm-kicker">Today’s work</p>
-            <h1>Quotes, tasks and orders.</h1>
-            <p>A restrained view of the actions that need an operator.</p>
-          </div>
-          <div className="clm-operator-stats">
-            <div>
-              <Tag size={19} />
-              <strong>{quoteCount}</strong>
-              <span>Quote requests</span>
+        {tab === "prompts" ? (
+          <PromptLibrary />
+        ) : (
+          <>
+            <section className="clm-operator-heading">
+              <div>
+                <p className="clm-kicker">Today’s work</p>
+                <h1>Quotes, tasks and orders.</h1>
+                <p>A restrained view of the actions that need an operator.</p>
+              </div>
+              <div className="clm-operator-stats">
+                <div>
+                  <Tag size={19} />
+                  <strong>{quoteCount}</strong>
+                  <span>Quote requests</span>
+                </div>
+                <div>
+                  <Clock size={19} />
+                  <strong>{orderCount}</strong>
+                  <span>In progress</span>
+                </div>
+                <div>
+                  <CheckCircle size={19} />
+                  <strong>
+                    {
+                      state.designs.filter(
+                        (item) => item.order?.status === "ready",
+                      ).length
+                    }
+                  </strong>
+                  <span>Ready</span>
+                </div>
+              </div>
+            </section>
+            <div className="clm-queue-tabs">
+              {(["all", "quotes", "orders"] as const).map((item) => (
+                <button
+                  key={item}
+                  aria-pressed={filter === item}
+                  onClick={() => setFilter(item)}
+                >
+                  {item}
+                </button>
+              ))}
             </div>
-            <div>
-              <Clock size={19} />
-              <strong>{orderCount}</strong>
-              <span>In progress</span>
-            </div>
-            <div>
-              <CheckCircle size={19} />
-              <strong>
-                {
-                  state.designs.filter((item) => item.order?.status === "ready")
-                    .length
-                }
-              </strong>
-              <span>Ready</span>
-            </div>
-          </div>
-        </section>
-        <div className="clm-queue-tabs">
-          {(["all", "quotes", "orders"] as const).map((item) => (
-            <button
-              key={item}
-              aria-pressed={filter === item}
-              onClick={() => setFilter(item)}
-            >
-              {item}
-            </button>
-          ))}
-        </div>
-        {message && (
-          <p className="clm-status" role="status">
-            {message}
-          </p>
-        )}
-        <section className="clm-queue" aria-label="Operator work queue">
-          {queue.length === 0 ? (
-            <div className="clm-queue-empty">
-              <CheckCircle size={28} />
-              <h2>No work in this view</h2>
-              <p>
-                Customer quote requests and approved orders will appear here.
+            {message && (
+              <p className="clm-status" role="status">
+                {message}
               </p>
-            </div>
-          ) : (
-            queue.map((design) => {
-              const revision = design.revisions.at(-1);
-              const spec = revision?.specification;
-              const image =
-                design.runs.at(-1)?.directions[0]?.representations.product
-                  .assetUrl;
-              return (
-                <article key={design.id}>
-                  <div className="clm-queue-thumb">
-                    {image && <Image src={image} alt="" fill sizes="96px" />}
-                  </div>
-                  <div className="clm-queue-main">
-                    <div>
-                      <span
-                        className="clm-state"
-                        data-state={
-                          design.order?.status ?? design.quote?.status
-                        }
-                      >
-                        {design.order
-                          ? `Order · ${design.order.status.replaceAll("-", " ")}`
-                          : `Quote · ${design.quote?.status}`}
-                      </span>
-                      <h2>{design.name}</h2>
-                      <p>
-                        {spec
-                          ? `18K ${spec.metalColor} gold · ${spec.stoneCoverage.replaceAll("-", " ")} · ${spec.chain.lengthCm} cm`
-                          : design.id}
-                      </p>
-                    </div>
-                    <div className="clm-queue-actions">
-                      {design.quote?.status === "requested" && (
-                        <button
-                          className="clm-primary"
-                          disabled={Boolean(busy)}
-                          onClick={() =>
-                            void action(
-                              `quote-${design.id}`,
-                              () => client.issueQuote(design.id),
-                              `Quote issued for ${design.name}.`,
-                            )
-                          }
-                        >
-                          Issue quote
-                        </button>
-                      )}
-                      {design.order && design.order.status !== "ready" && (
-                        <button
-                          className="clm-primary"
-                          disabled={Boolean(busy)}
-                          onClick={() =>
-                            void action(
-                              `order-${design.id}`,
-                              () => client.updateFulfillment(design.id),
-                              `Fulfillment advanced for ${design.name}.`,
-                            )
-                          }
-                        >
-                          Advance task
-                        </button>
-                      )}
-                      <Link
-                        className="clm-secondary"
-                        href={`/${locale}/commerce/${design.id}`}
-                        onClick={() => void client.setRole("customer")}
-                      >
-                        Customer view <ArrowRight size={16} />
-                      </Link>
-                    </div>
-                  </div>
-                </article>
-              );
-            })
-          )}
-        </section>
+            )}
+            <section className="clm-queue" aria-label="Operator work queue">
+              {queue.length === 0 ? (
+                <div className="clm-queue-empty">
+                  <CheckCircle size={28} />
+                  <h2>No work in this view</h2>
+                  <p>
+                    Customer quote requests and approved orders will appear
+                    here.
+                  </p>
+                </div>
+              ) : (
+                queue.map((design) => {
+                  const revision = design.revisions.at(-1);
+                  const spec = revision?.specification;
+                  const image =
+                    design.runs.at(-1)?.directions[0]?.representations.product
+                      .assetUrl;
+                  return (
+                    <article key={design.id}>
+                      <div className="clm-queue-thumb">
+                        {image && (
+                          <Image src={image} alt="" fill sizes="96px" />
+                        )}
+                      </div>
+                      <div className="clm-queue-main">
+                        <div>
+                          <span
+                            className="clm-state"
+                            data-state={
+                              design.order?.status ?? design.quote?.status
+                            }
+                          >
+                            {design.order
+                              ? `Order · ${design.order.status.replaceAll("-", " ")}`
+                              : `Quote · ${design.quote?.status}`}
+                          </span>
+                          <h2>{design.name}</h2>
+                          <p>
+                            {spec
+                              ? `18K ${spec.metalColor} gold · ${spec.stoneCoverage.replaceAll("-", " ")} · ${spec.chain.lengthCm} cm`
+                              : design.id}
+                          </p>
+                        </div>
+                        <div className="clm-queue-actions">
+                          {design.quote?.status === "requested" && (
+                            <button
+                              className="clm-primary"
+                              disabled={Boolean(busy)}
+                              onClick={() =>
+                                void action(
+                                  `quote-${design.id}`,
+                                  () => client.issueQuote(design.id),
+                                  `Quote issued for ${design.name}.`,
+                                )
+                              }
+                            >
+                              Issue quote
+                            </button>
+                          )}
+                          {design.order && design.order.status !== "ready" && (
+                            <button
+                              className="clm-primary"
+                              disabled={Boolean(busy)}
+                              onClick={() =>
+                                void action(
+                                  `order-${design.id}`,
+                                  () => client.updateFulfillment(design.id),
+                                  `Fulfillment advanced for ${design.name}.`,
+                                )
+                              }
+                            >
+                              Advance task
+                            </button>
+                          )}
+                          <Link
+                            className="clm-secondary"
+                            href={`/${locale}/commerce/${design.id}`}
+                            onClick={() => void client.setRole("customer")}
+                          >
+                            Customer view <ArrowRight size={16} />
+                          </Link>
+                        </div>
+                      </div>
+                    </article>
+                  );
+                })
+              )}
+            </section>
+          </>
+        )}
       </div>
     </main>
   );
