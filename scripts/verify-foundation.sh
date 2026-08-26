@@ -17,7 +17,8 @@ required=(
   .claude/skills/goal/SKILL.md
   .claude/skills/ship-pr/SKILL.md scripts/doctor.sh scripts/new-goal.sh
   scripts/open-pr.sh scripts/digitalocean/bootstrap-app.mjs
-  scripts/digitalocean/common.sh scripts/digitalocean/configure-github.sh
+  scripts/digitalocean/check-env.mjs scripts/digitalocean/common.sh
+  scripts/digitalocean/configure-github.sh scripts/digitalocean/env-contract.mjs
   scripts/digitalocean/deploy.sh scripts/digitalocean/doctl.sh
   scripts/digitalocean/rollback.sh scripts/digitalocean/smoke.sh
 )
@@ -78,6 +79,8 @@ node scripts/list-goals.mjs >/dev/null
 for script in scripts/*.sh; do bash -n "$script"; done
 for script in scripts/digitalocean/*.sh; do bash -n "$script"; done
 node --check scripts/digitalocean/bootstrap-app.mjs
+node --check scripts/digitalocean/check-env.mjs
+node --check scripts/digitalocean/env-contract.mjs
 
 grep -q 'Supabase Postgres' docs/FINAL-STACK.md
 grep -q 'Trigger.dev Cloud' docs/FINAL-STACK.md

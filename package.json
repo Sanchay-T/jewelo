@@ -11,6 +11,7 @@
   "scripts": {
     "do:bootstrap": "node scripts/digitalocean/bootstrap-app.mjs",
     "do:build": "pnpm --filter @jewelo/web... build",
+    "do:check-env": "node scripts/digitalocean/check-env.mjs",
     "do:deploy": "bash scripts/digitalocean/deploy.sh",
     "do:github": "bash scripts/digitalocean/configure-github.sh",
     "do:rollback": "bash scripts/digitalocean/rollback.sh",
