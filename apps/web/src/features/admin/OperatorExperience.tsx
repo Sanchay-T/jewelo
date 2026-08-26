@@ -119,12 +119,14 @@ function QueueCard({
   busyKey,
   onIssue,
   onAdvance,
+  onOpenCustomer,
 }: {
   design: Design;
   locale: Locale;
   busyKey?: string;
   onIssue(): void;
   onAdvance(): void;
+  onOpenCustomer(): void;
 }) {
   const issueKey = `issue:${design.id}`;
   const fulfillmentKey = `fulfillment:${design.id}`;
@@ -180,6 +182,7 @@ function QueueCard({
         <Link
           className={styles.secondaryButton}
           href={`/${locale}/commerce/${design.id}`}
+          onClick={onOpenCustomer}
         >
           Open customer view →
         </Link>
@@ -192,7 +195,7 @@ function AuditHistory({
   events,
   locale,
 }: {
-  events: Array<AuditEvent & { designName: string }>;
+  events: Array<AuditEvent & { designId: string; designName: string }>;
   locale: Locale;
 }) {
   return (
@@ -207,7 +210,7 @@ function AuditHistory({
       {events.length ? (
         <ol className={styles.auditList}>
           {events.map((event) => (
-            <li key={`${event.designName}:${event.id}`}>
+            <li key={`${event.designId}:${event.id}`}>
               <span className={styles.auditMarker} aria-hidden="true" />
               <div className={styles.auditBody}>
                 <div>
@@ -250,6 +253,7 @@ export function OperatorExperience({ locale }: { locale: Locale }) {
         if (filter === "ready") return design.order?.status === "ready";
         return (
           design.quote?.status === "requested" ||
+          design.quote?.status === "issued" ||
           (Boolean(design.order) && design.order?.status !== "ready")
         );
       }),
@@ -262,6 +266,7 @@ export function OperatorExperience({ locale }: { locale: Locale }) {
         .flatMap((design) =>
           client.getAudit(design.id).map((event) => ({
             ...event,
+            designId: design.id,
             designName: design.name,
           })),
         )
@@ -322,6 +327,7 @@ export function OperatorExperience({ locale }: { locale: Locale }) {
   const activeCount = state.designs.filter(
     (design) =>
       design.quote?.status === "requested" ||
+      design.quote?.status === "issued" ||
       (design.order && design.order.status !== "ready"),
   ).length;
   const requestedCount = state.designs.filter(
@@ -447,6 +453,7 @@ export function OperatorExperience({ locale }: { locale: Locale }) {
                         () => client.issueQuote(design.id),
                       )
                     }
+                    onOpenCustomer={() => client.setRole("customer")}
                   />
                 ))
               ) : (

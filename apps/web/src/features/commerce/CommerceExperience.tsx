@@ -229,6 +229,11 @@ export function CommerceExperience({
   const estimate = design.estimate;
   const quote = design.quote;
   const order = design.order;
+  const scenariosEnabled =
+    process.env.NODE_ENV === "development" &&
+    process.env.NEXT_PUBLIC_JEWELO_SCENARIOS === "1";
+  const operatorActionNeeded =
+    quote?.status === "requested" || Boolean(order && order.status !== "ready");
   const activeKey = action.status === "loading" ? action.key : undefined;
   const currentStage = order
     ? fulfillmentStages.findIndex((stage) => stage.id === order.status)
@@ -245,6 +250,14 @@ export function CommerceExperience({
         </Link>
         <span aria-hidden="true">/</span>
         <span>Commercial path</span>
+        {scenariosEnabled && operatorActionNeeded ? (
+          <>
+            <span aria-hidden="true">/</span>
+            <Link className={styles.textLink} href={`/${locale}/operator`}>
+              Open operator console
+            </Link>
+          </>
+        ) : null}
       </nav>
 
       <header className={styles.hero}>
