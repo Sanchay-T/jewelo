@@ -20,18 +20,18 @@ check_cmd node required
 check_cmd corepack required
 check_cmd pnpm optional
 check_cmd gh optional
+check_cmd vercel optional
 check_cmd claude optional
 check_cmd codex optional
 
 if command -v node >/dev/null 2>&1; then
-  node_major="$(node -p 'process.versions.node.split(".")[0]')"
-  [[ "$node_major" == "24" ]] &&
-    ok "Node $(node --version) matches Node 24 LTS" ||
-    warn "Node $(node --version) does not match the locked Node 24 major"
+  [[ "$(node --version)" == "v24.18.1" ]] &&
+    ok "Node $(node --version) matches the exact runtime pin" ||
+    warn "Node $(node --version) does not match the locked v24.18.1 patch"
 fi
 
 if command -v pnpm >/dev/null 2>&1; then
-  ok "pnpm: $(pnpm --version)"
+  [[ "$(pnpm --version)" == "11.23.0" ]] && ok "pnpm 11.23.0 matches the package-manager pin" || warn "pnpm $(pnpm --version) does not match 11.23.0"
 fi
 if command -v gh >/dev/null 2>&1; then
   gh auth status >/dev/null 2>&1 && ok "GitHub CLI authenticated" || warn "GitHub CLI is not authenticated"

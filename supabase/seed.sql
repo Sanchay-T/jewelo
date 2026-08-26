@@ -1,0 +1,1 @@
+-- Goal 00 has no product schema and therefore no seed data.

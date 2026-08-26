@@ -1,0 +1,24 @@
+{
+  "name": "@jewelo/jobs",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "lint": "eslint src trigger.config.ts",
+    "test": "vitest run",
+    "trigger:deploy:preview": "trigger deploy --env preview",
+    "trigger:dev": "trigger dev start",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@jewelo/ai": "workspace:*",
+    "@jewelo/config": "workspace:*",
+    "@jewelo/contracts": "workspace:*",
+    "@trigger.dev/sdk": "4.5.12"
+  },
+  "devDependencies": {
+    "@trigger.dev/build": "4.5.12",
+    "trigger.dev": "4.5.12"
+  }
+}
