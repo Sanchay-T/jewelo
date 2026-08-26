@@ -47,18 +47,23 @@ export function CraftingTransition({
   const product = run?.directions[0]?.representations.product;
   const task = run?.tasks.find(
     (item) =>
-      item.directionId === run.directions[0]?.id && item.kind === "product",
+      item.view === "studio" && item.directionId === run.directions[0]?.id,
   );
-  const ready = product?.state === "ready" && product.assetUrl;
-  const failed = product?.state === "failed";
-  const cancelled = product?.state === "cancelled";
-  const completed = ready
-    ? 4
-    : product?.state === "verifying"
-      ? 3
-      : task
-        ? 2
-        : 1;
+  const studioAsset = run?.assets.find(
+    (asset) =>
+      asset.view === "studio" && (!task || asset.lineage.taskId === task.id),
+  );
+  const taskState = task?.state ?? product?.state;
+  const assetUrl =
+    taskState === "ready" && studioAsset?.state === "ready"
+      ? studioAsset.assetUrl
+      : taskState === "ready"
+        ? product?.assetUrl
+        : undefined;
+  const ready = Boolean(assetUrl);
+  const failed = taskState === "failed";
+  const cancelled = taskState === "cancelled";
+  const completed = ready ? 4 : taskState === "verifying" ? 3 : task ? 2 : 1;
   return (
     <AppShell locale={locale}>
       <main className="clm-generation">
@@ -137,8 +142,12 @@ export function CraftingTransition({
           {ready ? (
             <article className="clm-result-card">
               <Image
-                src={product.assetUrl!}
-                alt={product.alt}
+                src={assetUrl!}
+                alt={
+                  studioAsset?.alt ??
+                  product?.alt ??
+                  "Verified Caleums Studio presentation"
+                }
                 fill
                 priority
                 sizes="(max-width: 799px) 100vw, 60vw"

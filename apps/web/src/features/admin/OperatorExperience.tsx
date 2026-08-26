@@ -15,6 +15,8 @@ import {
 import { CaleumsWordmark } from "@/components/app-shell";
 import { useJewelo } from "@/lib/jewelo-provider";
 import { PromptLibrary } from "./PromptLibrary";
+import { arabicStyleLabel } from "@/lib/ui-presentation";
+import type { ArabicStyle } from "@/lib/types";
 
 type Locale = "en" | "ar";
 
@@ -22,6 +24,10 @@ export function OperatorExperience({ locale }: { locale: Locale }) {
   const { client, state, refresh } = useJewelo();
   const searchParams = useSearchParams();
   const tab = searchParams.get("tab") === "prompts" ? "prompts" : "queue";
+  const reviewStyle =
+    searchParams.get("review") === "arabic-style"
+      ? (searchParams.get("style") as ArabicStyle | null)
+      : null;
   const [email, setEmail] = useState("");
   const [passphrase, setPassphrase] = useState("");
   const [filter, setFilter] = useState<"all" | "quotes" | "orders">("all");
@@ -81,7 +87,9 @@ export function OperatorExperience({ locale }: { locale: Locale }) {
           <p className="clm-kicker">Atelier operations</p>
           <h1>Operator queue</h1>
           <p>
-            Review custom quotes and move approved pieces through fulfillment.
+            {reviewStyle
+              ? `${arabicStyleLabel(reviewStyle)} requires atelier review. No generation or provider spend has started.`
+              : "Review custom quotes and move approved pieces through fulfillment."}
           </p>
           <form onSubmit={login}>
             <label>
@@ -159,6 +167,22 @@ export function OperatorExperience({ locale }: { locale: Locale }) {
           <PromptLibrary />
         ) : (
           <>
+            {reviewStyle && (
+              <section className="clm-review-handoff" role="status">
+                <div>
+                  <p className="clm-kicker">Arabic style review</p>
+                  <h2>{arabicStyleLabel(reviewStyle)}</h2>
+                </div>
+                <p>
+                  This request stopped before generation. Confirm a supported
+                  Classic or Minimal production path with the customer before
+                  releasing provider work.
+                </p>
+                <span className="clm-state" data-state="blocked">
+                  Provider spend blocked
+                </span>
+              </section>
+            )}
             <section className="clm-operator-heading">
               <div>
                 <p className="clm-kicker">Today’s work</p>
