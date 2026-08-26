@@ -32,6 +32,7 @@ Programmatic viewport checks reported `documentElement.scrollWidth === documentE
 - Both approved Arabic name fields accepted independent edits (`ليان`, `نور`), and the live identity preview exposed `Deterministic identity preview: ليان ♡ نور`.
 - Arabic spelling is Luna-only: selecting Arabic showed “Generating…” and “Preparing Arabic spelling…” with spinners, kept Continue disabled, then populated `ليلى`, announced “AI-refined,” updated the deterministic pendant identity, and enabled Continue only after the server response. No approximate local transliteration was exposed and the browser reported no console errors.
 - Live configurator state was verified end to end with `Omran`: Luna returned `عمران`; the exact approved spelling replaced the static Arabic-style samples, remained selected after moving forward and back, and reached Review with the chosen Minimal style. Layout, white gold, accent ruby, statement 36 mm, rolo chain, and 55 cm choices each updated the persistent preview and its live specification chips immediately.
+- Post-dogfood fixes were replayed against the exact failed controls: Stacked + heart now renders a visible 33 px heart between the two 68 px names; Zoom toggles back to 1×; Side reaches `scaleX(0.22)`; every preview-control hit target resolves to its own button; and the English and One name buttons expose their concise accessible names. Evidence: `/tmp/caleums-step-audit-2026-08-27/10-stacked-heart-aligned.png`.
 - Progress-step buttons could not advance an incomplete specification; clearing the second Arabic spelling disabled both Continue and the next-stage jump.
 - The initial result used the frozen run task/asset data. The tablist exposed one Studio tab and no On you or Motion tab.
 - The development task audit exposed frozen failed and blocked states without presenting extra customer directions. Browser QA found one failed task, invoked Retry, and confirmed the retry control cleared while the live status announced completion.
@@ -96,3 +97,21 @@ Required fidelity surfaces passed: typography, spacing, ivory/gold/near-black to
 | P2       | Removed UI left unreachable inspiration-specific CSS rules | Deleted the orphaned desktop/tablet/mobile presentation rules        | Formatting, lint, typecheck, tests, boundary checks, and build all pass |
 
 No open P0, P1, or P2 differences remain for reference-step alignment.
+
+## Stacked-heart connector alignment — 2026-08-27
+
+- Source visual truth: `/Users/sanchay/Desktop/Snapzy/Snapzy_2026-08-27_05-14-12_222.png` (850 × 864 pixels).
+- Browser-rendered implementation: `/tmp/caleums-step-audit-2026-08-27/10-stacked-heart-aligned.png` (972 × 889 pixels at a 972 × 889 CSS viewport, DPR 1).
+- Focused same-input comparison: `/tmp/caleums-step-audit-2026-08-27/10-heart-comparison.png` (1724 × 912 pixels). The implementation preview was cropped to its 504 × 541 preview region and both panels were normalized to 850 × 864 without distorting their aspect ratio.
+- State: Arabic, two approved names (`عمران`, `مريم`), Stacked + heart, full pavé lab diamond, classic size, 18K yellow gold.
+
+The source and implementation now share the same connector composition: the outline heart is centered on the pendant axis, overlaps the lower edge of the first name, and leaves a small deliberate gap before the second name. Browser geometry measured a `0 px` center delta, `7.77 px` overlap with the first name, and `6.8 px` clearance above the second name. The connector is a Phosphor icon rather than a text glyph, so its stroke remains consistent across Arabic fonts and style choices.
+
+Required fidelity surfaces passed for this focused correction: the existing Arabic typography and pavé treatment remain intact; the name/heart/name spacing follows the reference rhythm; gold, ivory, and white-stone tokens are unchanged; the real chain/background fixture remains sharp; and the full-pavé label copy matches the selected state. No separate full-view issue was found because the change is confined to the pendant identity region; the focused comparison includes the complete preview area and its surrounding chain/caption context.
+
+| Severity | Difference found                                        | Fix                                                                                      | Post-fix evidence                                              |
+| -------- | ------------------------------------------------------- | ---------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| P1       | Heart behaved like a small standalone third text row    | Replaced the glyph with a dedicated outline icon and centered it on the pendant axis     | `/tmp/caleums-step-audit-2026-08-27/10-heart-comparison.png`   |
+| P2       | Gemstone underline styling could decorate the connector | Isolated the icon from name `<strong>` decoration and tuned overlap/clearance separately | 0 px center delta; 7.77 px top overlap; 6.8 px lower clearance |
+
+No open P0, P1, or P2 differences remain for the stacked-heart connector.

@@ -7,6 +7,7 @@ import {
   ArrowLeft,
   ArrowRight,
   Check,
+  Heart,
   PencilSimple,
   Sparkle,
   SpinnerGap,
@@ -422,9 +423,19 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
                 </span>
               ) : (
                 <>
-                  {identity.lines.map((line, index) => (
-                    <strong key={`${line}-${index}`}>{line}</strong>
-                  ))}
+                  {identity.lines.map((line, index) =>
+                    resolvedLayout === "stacked-heart" && line === "♡" ? (
+                      <span
+                        className="clm-heart-connector"
+                        key={`${line}-${index}`}
+                        aria-hidden="true"
+                      >
+                        <Heart weight="light" />
+                      </span>
+                    ) : (
+                      <strong key={`${line}-${index}`}>{line}</strong>
+                    ),
+                  )}
                   {coverage !== "none" && (
                     <small>
                       {coverage.replaceAll("-", " ")} ·{" "}
@@ -509,8 +520,8 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
                     onChange={(event) => setNameOne(event.target.value)}
                   />
                 </label>
-                <label className="clm-label">
-                  Choose language / script
+                <fieldset className="clm-label clm-choice-fieldset">
+                  <legend>Choose language / script</legend>
                   <span className="clm-segmented">
                     <button
                       type="button"
@@ -527,7 +538,7 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
                       العربية
                     </button>
                   </span>
-                </label>
+                </fieldset>
                 <div className="clm-suggestion" aria-live="polite">
                   <div>
                     <span>Arabic spelling</span>
@@ -649,8 +660,8 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
                   <h1>One name or two?</h1>
                   <p>Confirm every name, then choose how they connect.</p>
                 </header>
-                <label className="clm-label">
-                  How many names?
+                <fieldset className="clm-label clm-choice-fieldset">
+                  <legend>How many names?</legend>
                   <span className="clm-segmented">
                     <button
                       type="button"
@@ -667,7 +678,7 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
                       Two names
                     </button>
                   </span>
-                </label>
+                </fieldset>
                 <div className="clm-arabic-edits">
                   <label className="clm-label">
                     Name 1
