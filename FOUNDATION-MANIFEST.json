@@ -2,7 +2,7 @@
   "version": 4,
   "status": "pm-approved-implementation-ready",
   "decision_date": "2026-08-26",
-  "active_goal": "docs/goals/01-product-studio.md",
+  "active_goal": "docs/goals/02-supabase-domain.md",
   "stack": [
     "nextjs-16.2",
     "digitalocean-app-platform",

@@ -1,5 +1,9 @@
 # Jewelo v2 architecture
 
+The final Caleums parent/child asset graph and provider split are frozen in
+`docs/CALEUMS-FINAL-E2E-CONTRACT.md`. That contract overrides older pipeline
+examples below where they differ.
+
 ## System
 
 ```text

@@ -13,9 +13,9 @@ work into App Platform request handlers.
 | Region | Bangalore (`blr`) |
 | Live staging app | `jewelo-staging` (`ec09c9fd-84e4-45c5-b60a-fd62277af322`) |
 | Live staging URL | <https://jewelo-staging-gqumd.ondigitalocean.app> |
-| Staging source during preview | `codex/digitalocean-staging-preview` |
+| Authoritative deployment source | `rebuild/v2-first-principles` after reviewed integration |
 | Production app | `jewelo-production` (created only at approved cutover) |
-| Production deployment configuration | Draft PR [#9](https://github.com/Sanchay-T/jewelo/pull/9) |
+| Production deployment configuration | Repository workflows, scripts, and `infra/digitalocean/spec-contract.json`; not yet production-accepted |
 | Runtime | Node.js 24, pnpm 11.23.0, DigitalOcean Node buildpack |
 | Compute | One fixed shared 1-vCPU/1-GiB instance per app |
 
@@ -134,8 +134,8 @@ environment secrets without printing the value.
 
 ## Staging operation
 
-Before final cutover, staging intentionally follows
-`codex/digitalocean-staging-preview`. Verify and smoke it with:
+Staging follows the reviewed `rebuild/v2-first-principles` integration branch
+after its deployment gate is enabled. Verify and smoke it with:
 
 ```bash
 pnpm install --frozen-lockfile
@@ -159,13 +159,12 @@ request.
 
 Production cutover is a controlled transition, not another preview push:
 
-1. Complete and review the main web application on
-   `rebuild/v2-first-principles`.
-2. Review and merge deployment PR #9 into that integration branch. Do not merge
-   it automatically.
-3. Change the temporary App Platform source contract from
-   `codex/digitalocean-staging-preview` to `rebuild/v2-first-principles` as part
-   of the reviewed integration, then update staging with `pnpm do:bootstrap`.
+1. Complete and review the final E2E application on its integration seed and
+   feature branches; do not merge them automatically.
+2. After human-approved integration into `rebuild/v2-first-principles`, confirm
+   `infra/digitalocean/spec-contract.json` and both workflows target that exact
+   integration branch.
+3. Update staging with `pnpm do:bootstrap` only with explicit authorization.
 4. Confirm the staging app still has the expected encrypted configuration; run
    `pnpm verify`, `pnpm do:build`, health smoke, browser smoke, and the app's
    customer/operator acceptance flow.

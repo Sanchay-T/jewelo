@@ -6,13 +6,14 @@ Jewelo lets a customer configure a personalized piece, receive four coherent des
 
 Read in order:
 
-1. `docs/PRODUCT-CONTRACT.md`
-2. `docs/FROZEN-UX.md`
-3. `docs/UX-AUDIT.md`
-4. `docs/FINAL-STACK.md`
-5. `docs/ARCHITECTURE.md`
-6. `docs/MEDIA-CONCURRENCY.md`
-7. the active file in `docs/goals/`
+1. `docs/CALEUMS-FINAL-E2E-CONTRACT.md`
+2. `docs/PRODUCT-CONTRACT.md`
+3. `docs/FROZEN-UX.md`
+4. `docs/UX-AUDIT.md`
+5. `docs/FINAL-STACK.md`
+6. `docs/ARCHITECTURE.md`
+7. `docs/MEDIA-CONCURRENCY.md`
+8. the active file in `docs/goals/`
 
 The old implementation is not a source of architectural truth.
 

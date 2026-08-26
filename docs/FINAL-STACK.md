@@ -3,6 +3,10 @@
 **Decision date:** 26 August 2026  
 **Status:** locked for implementation
 
+For the final Caleums media graph and prompt profile set,
+`docs/CALEUMS-FINAL-E2E-CONTRACT.md` is authoritative over older four-variation
+examples retained in this stack decision record.
+
 This is the production architecture Jewelo v2 will implement. It was selected against the actual product workload: four progressively revealed design directions, exact pendant identity, long-running parallel media generation, private customer media, quotes/orders, low operational burden, and strong coding-agent control.
 
 ## Stack
@@ -14,7 +18,7 @@ This is the production architecture Jewelo v2 will implement. It was selected ag
 | Web | Next.js 16.2 App Router, React 19, strict TypeScript | Server Components by default; client components only for interaction/realtime. |
 | UI | Tailwind CSS 4, shadcn/Radix, Motion, React Hook Form, Zod, next-intl | WCAG AA, keyboard/touch, reduced motion, RTL-ready. |
 | Media UI | Embla Carousel, `react-zoom-pan-pinch`, `react-dropzone`, native video | Direction filmstrip, real inspection, accessible upload, short MP4 previews. |
-| Hosting | DigitalOcean App Platform (`blr`) | Managed Node buildpacks, encrypted app secrets, staging sleep, one fixed production instance; no long AI work in request handlers. |
+| Hosting | DigitalOcean App Platform (`blr`) | Managed Node buildpacks, encrypted app secrets, one fixed instance per environment; no long AI work in request handlers. |
 | System of record | Supabase Postgres in Mumbai (`ap-south-1`) | SQL migrations + RLS + generated TypeScript DB types. |
 | Identity | Supabase Auth | Anonymous guest first; link email, phone, or OAuth later. |
 | Realtime | Supabase Realtime | Subscribe to run/task/asset milestones filtered by run or design. |

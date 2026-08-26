@@ -1,5 +1,9 @@
 # Gold prompt — first implementation goal
 
+This is historical Goal 00 bootstrap guidance. For final Caleums integration,
+`docs/CALEUMS-FINAL-E2E-CONTRACT.md` is the authoritative media and provider
+contract.
+
 Paste the block below into Codex or Claude Code from the root of the `rebuild/v2-first-principles` checkout.
 
 ```text

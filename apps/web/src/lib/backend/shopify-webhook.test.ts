@@ -108,7 +108,7 @@ describe("Shopify paid-order webhook", () => {
   it("defines hash-conflict and retry semantics inside one SQL transaction", () => {
     const migration = readFileSync(
       new URL(
-        "../../../../../supabase/migrations/20260827060000_shopify_webhook_atomicity.sql",
+        "../../../../../supabase/migrations/20260827070000_shopify_webhook_atomicity.sql",
         import.meta.url,
       ),
       "utf8",
