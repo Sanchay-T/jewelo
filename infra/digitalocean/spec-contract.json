@@ -14,9 +14,8 @@
   "environments": {
     "staging": {
       "appName": "jewelo-staging",
-      "instanceSizeSlug": "apps-s-1vcpu-2gb",
-      "instanceCount": 1,
-      "inactivitySleepSeconds": 600
+      "instanceSizeSlug": "apps-s-1vcpu-1gb",
+      "instanceCount": 1
     },
     "production": {
       "appName": "jewelo-production",
