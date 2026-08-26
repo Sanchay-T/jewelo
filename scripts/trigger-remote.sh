@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
-cd "$(git rev-parse --show-toplevel)"
+repo_root="$(git rev-parse --show-toplevel)"
+cd "$repo_root"
 
 action="${1:-}"
 case "$action" in
@@ -32,5 +33,10 @@ fi
 if [[ "$action" == "deploy-preview" ]]; then
   pnpm --filter @jewelo/jobs exec trigger deploy --env preview --branch "$TRIGGER_PREVIEW_BRANCH" --project-ref "$TRIGGER_PROJECT_REF" --skip-update-check
 else
-  pnpm --filter @jewelo/jobs exec trigger dev start --project-ref "$TRIGGER_PROJECT_REF" --skip-update-check
+  trigger_env_file="${TRIGGER_ENV_FILE:-$repo_root/.env.local}"
+  if [[ ! -f "$trigger_env_file" ]]; then
+    echo "Trigger development env missing: $trigger_env_file" >&2
+    exit 2
+  fi
+  pnpm --filter @jewelo/jobs exec trigger dev start --project-ref "$TRIGGER_PROJECT_REF" --env-file "$trigger_env_file" --skip-update-check
 fi
