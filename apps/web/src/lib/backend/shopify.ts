@@ -5,6 +5,8 @@ export { shopifyConfigured, verifyShopifyHmac } from "./shopify-core";
 
 export interface DraftOrderInput {
   quoteId: string;
+  designId: string;
+  locale: "en" | "ar";
   idempotencyKey: string;
   title: string;
   amountAed: number;
@@ -23,7 +25,7 @@ export async function createShopifyDraftOrder(
     return {
       mode: "mock",
       draftOrderId: `mock:${input.quoteId}`,
-      checkoutUrl: `/checkout/mock/${input.quoteId}`,
+      checkoutUrl: `/${input.locale}/commerce/${input.designId}?checkout=mock`,
     };
   }
   const domain = process.env.SHOPIFY_STORE_DOMAIN!;
@@ -57,7 +59,7 @@ export async function createShopifyDraftOrder(
         query: `mutation CreateDraft($input: DraftOrderInput!) { draftOrderCreate(input: $input) { draftOrder { id invoiceUrl } userErrors { field message } } }`,
         variables: {
           input: {
-            note: `Jewelo quote ${input.quoteId}`,
+            note: `Caleums quote ${input.quoteId}`,
             customAttributes: [
               { key: "jewelo_quote_id", value: input.quoteId },
               { key: "jewelo_idempotency_key", value: input.idempotencyKey },

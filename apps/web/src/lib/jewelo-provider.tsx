@@ -9,7 +9,7 @@ import {
   useState,
 } from "react";
 import { usePathname } from "next/navigation";
-import { MockJeweloClient } from "./mock-client";
+import { createJeweloClient } from "./jewelo-client-factory";
 import type { DesignInput, Role, ScenarioId } from "./types";
 import type {
   LegacyDesign as Design,
@@ -30,7 +30,7 @@ interface JeweloContextValue {
 const JeweloContext = createContext<JeweloContextValue | null>(null);
 
 export function JeweloProvider({ children }: { children: React.ReactNode }) {
-  const client = useMemo(() => new MockJeweloClient(undefined, false), []);
+  const client = useMemo<JeweloClient>(() => createJeweloClient(), []);
   const pathname = usePathname();
   const [state, setState] = useState<SpikeState>(() => client.getState());
 

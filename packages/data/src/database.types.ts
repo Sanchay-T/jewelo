@@ -1010,6 +1010,14 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      start_studio_run: {
+        Args: { p_design_id: string; p_run_key: string };
+        Returns: {
+          outbox_id: string;
+          run_id: string;
+          task_id: string;
+        }[];
+      };
     };
     Enums: {
       checkout_status:

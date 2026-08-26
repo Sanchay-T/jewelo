@@ -16,11 +16,42 @@ export async function POST(request: Request) {
     const admin = adminConfig();
     const quotes = await supabaseRequest<Array<Record<string, unknown>>>(
       admin,
-      `/rest/v1/quotes?id=eq.${encodeURIComponent(quoteId)}&owner_principal_id=eq.${user.id}`,
+      `/rest/v1/quotes?id=eq.${encodeURIComponent(quoteId)}&owner_principal_id=eq.${user.id}&status=eq.accepted&expires_at=gt.${encodeURIComponent(new Date().toISOString())}`,
     );
     const quote = quotes[0];
     if (!quote)
-      return Response.json({ error: "Quote not found" }, { status: 404 });
+      return Response.json(
+        { error: "Accepted, unexpired quote required" },
+        { status: 409 },
+      );
+    const revisions = await supabaseRequest<
+      Array<{
+        draft_id: string;
+        specification: Record<string, unknown>;
+      }>
+    >(
+      admin,
+      `/rest/v1/design_revisions?id=eq.${String(quote.revision_id)}&owner_principal_id=eq.${user.id}&select=draft_id,specification`,
+    );
+    const revision = revisions[0];
+    const drafts = revision
+      ? await supabaseRequest<Array<{ spelling_confirmed: boolean }>>(
+          admin,
+          `/rest/v1/design_drafts?id=eq.${revision.draft_id}&owner_principal_id=eq.${user.id}&select=spelling_confirmed`,
+        )
+      : [];
+    if (
+      revision?.specification.spellingConfirmed !== true ||
+      drafts[0]?.spelling_confirmed !== true
+    )
+      return Response.json(
+        { error: "Persisted spelling confirmation required" },
+        { status: 409 },
+      );
+    const designs = await supabaseRequest<Array<{ locale: "en" | "ar" }>>(
+      admin,
+      `/rest/v1/designs?id=eq.${String(quote.design_id)}&owner_principal_id=eq.${user.id}&select=locale`,
+    );
     if (quote.shopify_draft_order_id)
       return Response.json({
         mode: String(quote.shopify_draft_order_id).startsWith("mock:")
@@ -73,8 +104,10 @@ export async function POST(request: Request) {
     try {
       result = await createShopifyDraftOrder({
         quoteId,
+        designId: String(quote.design_id),
+        locale: designs[0]?.locale ?? "en",
         idempotencyKey,
-        title: "Custom Jewelo name pendant",
+        title: "Custom Caleums name pendant",
         amountAed: Number(quote.total),
       });
     } catch (error) {
@@ -104,6 +137,31 @@ export async function POST(request: Request) {
       },
     );
     if (!updated[0]) throw new Error("Checkout reconciliation requires review");
+    if (result.mode === "mock") {
+      await supabaseRequest(admin, "/rest/v1/orders", {
+        method: "POST",
+        headers: { prefer: "resolution=ignore-duplicates" },
+        body: JSON.stringify({
+          design_id: quote.design_id,
+          revision_id: quote.revision_id,
+          quote_id: quote.id,
+          owner_principal_id: user.id,
+          status: "confirmed",
+          checkout_status: "completed",
+          accepted_total: quote.total,
+          shopify_draft_order_id: result.draftOrderId,
+          accepted_at: new Date().toISOString(),
+        }),
+      });
+      await supabaseRequest(
+        admin,
+        `/rest/v1/quotes?id=eq.${encodeURIComponent(quoteId)}`,
+        {
+          method: "PATCH",
+          body: JSON.stringify({ checkout_status: "completed" }),
+        },
+      );
+    }
     await supabaseRequest(admin, "/rest/v1/audit_events", {
       method: "POST",
       body: JSON.stringify({

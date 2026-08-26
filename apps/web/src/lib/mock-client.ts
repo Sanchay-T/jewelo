@@ -547,6 +547,10 @@ export class MockJeweloClient implements LegacyJeweloClient {
     });
   }
 
+  async loginOperator() {
+    return this.setRole("operator");
+  }
+
   async setScenario(scenario: ScenarioId) {
     return this.commit({ ...this.state, scenario });
   }

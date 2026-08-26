@@ -309,8 +309,8 @@ export function OperatorExperience({ locale }: { locale: Locale }) {
       });
       return;
     }
-    void runAction("login", "Fixture operator role enabled.", () =>
-      client.setRole("operator"),
+    void runAction("login", "Operator session opened.", () =>
+      client.loginOperator(email, passphrase),
     );
   }
 
@@ -346,7 +346,7 @@ export function OperatorExperience({ locale }: { locale: Locale }) {
         </Link>
         <div className={styles.operatorIdentity}>
           <div>
-            <span>Signed in as fixture role</span>
+            <span>Signed in as operator</span>
             <strong>{state.principal.name}</strong>
           </div>
           <button

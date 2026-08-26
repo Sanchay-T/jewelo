@@ -33,6 +33,9 @@ export const trustedWebEnvSchema = z.object({
   SHOPIFY_CLIENT_ID: nonEmpty.optional(),
   SHOPIFY_CLIENT_SECRET: nonEmpty.optional(),
   SHOPIFY_WEBHOOK_SECRET: nonEmpty.optional(),
+  OPERATOR_EMAIL: nonEmpty.optional(),
+  OPERATOR_PASSPHRASE: nonEmpty.optional(),
+  OPERATOR_SESSION_SECRET: nonEmpty.optional(),
 });
 
 export const triggerConfigEnvSchema = z.object({
@@ -60,6 +63,12 @@ export const jobsEnvSchema = trustedWebEnvSchema
   })
   .superRefine((value, context) => {
     if (value.PROVIDER_MODE === "real") {
+      if (value.STUDIO_PROMPT_RELEASE === "studio-placeholder-v1")
+        context.addIssue({
+          code: "custom",
+          path: ["STUDIO_PROMPT_RELEASE"],
+          message: "real provider mode requires an approved prompt release",
+        });
       for (const key of ["FAL_KEY", "OPENAI_API_KEY"] as const) {
         if (!value[key])
           context.addIssue({

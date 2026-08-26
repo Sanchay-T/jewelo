@@ -10,6 +10,7 @@ export async function POST(request: Request) {
     const input = (await request.json()) as {
       locale: "en" | "ar";
       specification: Record<string, unknown>;
+      designId?: string;
     };
     const rows = await supabaseRequest<Array<Record<string, unknown>>>(
       config,
@@ -19,6 +20,7 @@ export async function POST(request: Request) {
         headers: { prefer: "return=representation" },
         body: JSON.stringify({
           owner_principal_id: user.id,
+          design_id: input.designId,
           locale: input.locale,
           specification: input.specification,
           spelling_confirmed: false,
