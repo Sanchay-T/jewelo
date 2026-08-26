@@ -301,7 +301,8 @@ export class SupabasePresentationRepository implements PresentationRepository {
         `Supabase job request ${response.status}:${(await response.text()).slice(0, 300)}`,
       );
     if (response.status === 204) return undefined as T;
-    return response.json() as Promise<T>;
+    const body = await response.text();
+    return (body ? JSON.parse(body) : undefined) as T;
   }
   async load(taskId: string) {
     const tasks = await this.#request<TaskRow[]>(
@@ -420,8 +421,12 @@ export class SupabasePresentationRepository implements PresentationRepository {
           body: uploadBody,
         },
       );
-      if (!upload.ok && upload.status !== 409)
-        throw new Error(`identity anchor upload failed:${upload.status}`);
+      if (!upload.ok && upload.status !== 409) {
+        const detail = await upload.text();
+        const duplicate = /duplicate|already exists/i.test(detail);
+        if (!duplicate)
+          throw new Error(`identity anchor upload failed:${upload.status}`);
+      }
     }
     await this.#request("/rest/v1/identity_artifacts", {
       method: "POST",
