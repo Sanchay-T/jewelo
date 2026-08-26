@@ -2,16 +2,45 @@
   "name": "jewelo-v2",
   "version": "0.0.0",
   "private": true,
-  "description": "Implementation-ready Jewelo v2 clean-room specification",
+  "description": "Jewelo v2 production monorepo",
   "packageManager": "pnpm@11.23.0",
   "engines": {
     "node": ">=24 <25"
   },
   "scripts": {
+    "build": "turbo run build",
+    "boundaries": "node scripts/check-boundaries.mjs && node scripts/check-boundaries.mjs --prove-negative",
+    "db:push": "bash scripts/supabase-remote.sh push",
+    "db:types": "bash scripts/supabase-remote.sh types",
+    "dev": "turbo run dev --filter=@jewelo/web",
     "doctor": "bash scripts/doctor.sh",
+    "format": "prettier --write package.json pnpm-workspace.yaml turbo.json tsconfig.base.json eslint.config.mjs vercel.json apps packages scripts/check-boundaries.mjs docs/runbooks docs/proofs",
+    "format:check": "prettier --check package.json pnpm-workspace.yaml turbo.json tsconfig.base.json eslint.config.mjs vercel.json apps packages scripts/check-boundaries.mjs docs/runbooks docs/proofs",
     "goals": "node scripts/list-goals.mjs",
-    "verify": "bash scripts/verify-foundation.sh",
     "goal:new": "bash scripts/new-goal.sh",
-    "pr:draft": "bash scripts/open-pr.sh"
+    "jobs:deploy:preview": "bash scripts/trigger-remote.sh deploy-preview",
+    "jobs:dev": "bash scripts/trigger-remote.sh dev",
+    "lint": "turbo run lint",
+    "pr:draft": "bash scripts/open-pr.sh",
+    "secret:scan": "bash scripts/scan-secrets.sh",
+    "test": "turbo run test",
+    "typecheck": "turbo run typecheck",
+    "verify": "bash scripts/verify-foundation.sh",
+    "verify:bundle": "bash scripts/check-client-bundle.sh",
+    "verify:clean": "bash scripts/clean-install-proof.sh",
+    "verify:health": "bash scripts/verify-health.sh"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@types/node": "24.13.3",
+    "eslint": "10.9.1",
+    "globals": "17.11.0",
+    "next": "16.2.12",
+    "prettier": "3.9.6",
+    "supabase": "2.115.0",
+    "turbo": "2.10.12",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.68.0",
+    "vitest": "4.1.11"
   }
 }
