@@ -2,10 +2,18 @@
 set -euo pipefail
 cd "$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 
-[[ "$(node --version)" == "v24.18.1" ]] || {
-  echo "Node v24.18.1 is required; current: $(node --version)" >&2
-  exit 1
-}
+node_version="$(node --version)"
+if [[ "${JEWELO_CLOUD_BUILD:-0}" == "1" ]]; then
+  [[ "$node_version" == v24.* ]] || {
+    echo "DigitalOcean builds require Node 24; current: $node_version" >&2
+    exit 1
+  }
+else
+  [[ "$node_version" == "v24.18.1" ]] || {
+    echo "Node v24.18.1 is required locally; current: $node_version" >&2
+    exit 1
+  }
+fi
 [[ "$(pnpm --version)" == "11.23.0" ]] || {
   echo "pnpm 11.23.0 is required; current: $(pnpm --version)" >&2
   exit 1
