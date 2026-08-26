@@ -555,6 +555,22 @@ video {
   color: var(--muted);
   font-size: 0.56rem;
 }
+.clm-reflection-status {
+  min-height: 14px;
+  align-items: center;
+  gap: 4px;
+}
+.clm-reflection-status:has(svg) {
+  display: flex;
+}
+.clm-spin {
+  animation: clm-spin 0.8s linear infinite;
+}
+@keyframes clm-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
 .clm-suggestion strong[dir="rtl"],
 .clm-live-name[dir="rtl"] strong,
 .clm-preview-caption strong[dir="rtl"],

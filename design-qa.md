@@ -30,6 +30,7 @@ Programmatic viewport checks reported `documentElement.scrollWidth === documentE
 
 - Arabic progress labels read exactly: Name & language, Arabic style, Names & layout, Metal, Stones, Size & chain, Review. English intentionally omits only Arabic style and reports six steps.
 - Both approved Arabic name fields accepted independent edits (`ليان`, `نور`), and the live identity preview exposed `Deterministic identity preview: ليان ♡ نور`.
+- The restored two-layer Arabic reflector updated immediately while typing, then completed one server-side `gpt-5.6-luna` refinement in the UI: `Sanchay` rendered locally as `سانكهي`, refined to `سانشاي`, announced “AI-refined,” and updated the deterministic pendant identity without console errors.
 - Progress-step buttons could not advance an incomplete specification; clearing the second Arabic spelling disabled both Continue and the next-stage jump.
 - The initial result used the frozen run task/asset data. The tablist exposed one Studio tab and no On you or Motion tab.
 - The development task audit exposed frozen failed and blocked states without presenting extra customer directions. Browser QA found one failed task, invoked Retry, and confirmed the retry control cleared while the live status announced completion.
@@ -88,8 +89,8 @@ Browser interaction exercised the full English sequence and observed these headi
 
 Required fidelity surfaces passed: typography, spacing, ivory/gold/near-black tokens, real jewelry fixture quality, and source-aligned copy remain unchanged. The comparison was structural because the source is a multi-state storyboard rather than a single matching viewport; focused evidence was not needed because the progress labels and first reference panel remained readable in the combined input.
 
-| Severity | Difference found                                           | Fix                                                                 | Post-fix evidence                                                       |
-| -------- | ---------------------------------------------------------- | ------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| Severity | Difference found                                           | Fix                                                                  | Post-fix evidence                                                       |
+| -------- | ---------------------------------------------------------- | -------------------------------------------------------------------- | ----------------------------------------------------------------------- |
 | P1       | Inspiration appeared as a standalone configurator step     | Removed the panel, state, imports, persistence UI, and progress item | `/tmp/caleums-no-inspiration/reference-vs-implementation.png`           |
 | P2       | Removed UI left unreachable inspiration-specific CSS rules | Deleted the orphaned desktop/tablet/mobile presentation rules        | Formatting, lint, typecheck, tests, boundary checks, and build all pass |
 

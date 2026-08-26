@@ -7,6 +7,7 @@ import {
 
 export * from "./studio";
 export * from "./prompt-registry";
+export * from "./arabic-transliteration";
 
 export interface FoundationProvider {
   execute(input: FoundationTaskInput): Promise<FoundationTaskResult>;

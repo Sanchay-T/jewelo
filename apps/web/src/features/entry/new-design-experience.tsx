@@ -2,12 +2,14 @@
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowLeft,
   ArrowRight,
   Check,
   PencilSimple,
+  Sparkle,
+  SpinnerGap,
 } from "@phosphor-icons/react";
 import { AppShell } from "@/components/app-shell";
 import { useJewelo } from "@/lib/jewelo-provider";
@@ -56,6 +58,72 @@ const layouts: Array<{ id: PendantLayout; label: string }> = [
   { id: "infinity", label: "Infinity" },
   { id: "interlocked", label: "Interlocked" },
 ];
+
+type ArabicReflectionStatus = "local" | "refining" | "refined" | "edited";
+
+async function refineArabicName(name: string, signal: AbortSignal) {
+  const response = await fetch("/api/transliterate", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ name }),
+    signal,
+  });
+  if (!response.ok) throw new Error("Arabic refinement unavailable");
+  const result = (await response.json()) as {
+    arabicText?: unknown;
+    model?: unknown;
+  };
+  if (typeof result.arabicText !== "string" || !result.arabicText.trim())
+    throw new Error("Arabic refinement returned no spelling");
+  return result.arabicText.trim();
+}
+
+function useArabicNameReflection(latinName: string, enabled: boolean) {
+  const [arabicText, setArabicText] = useState(() =>
+    transliterateArabicName(latinName),
+  );
+  const [status, setStatus] = useState<ArabicReflectionStatus>("local");
+  const manuallyEdited = useRef(false);
+
+  useEffect(() => {
+    manuallyEdited.current = false;
+    setArabicText(transliterateArabicName(latinName));
+    setStatus("local");
+  }, [latinName]);
+
+  useEffect(() => {
+    const name = latinName.trim();
+    if (!enabled || name.length < 2) return;
+    const controller = new AbortController();
+    const timer = window.setTimeout(() => {
+      setStatus("refining");
+      void refineArabicName(name, controller.signal)
+        .then((refined) => {
+          if (controller.signal.aborted || manuallyEdited.current) return;
+          setArabicText(refined);
+          setStatus("refined");
+        })
+        .catch((error: unknown) => {
+          if (controller.signal.aborted) return;
+          void error;
+          setStatus("local");
+        });
+    }, 650);
+    return () => {
+      window.clearTimeout(timer);
+      controller.abort();
+    };
+  }, [enabled, latinName]);
+
+  const editArabicText = useCallback((value: string) => {
+    manuallyEdited.current = true;
+    setArabicText(value);
+    setStatus("edited");
+  }, []);
+
+  return { arabicText, editArabicText, status };
+}
+
 function Option<const T extends string>({
   selected,
   value,
@@ -88,12 +156,13 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
   const [nameOne, setNameOne] = useState("Layla");
   const [nameTwo, setNameTwo] = useState("Mariam");
   const [language, setLanguage] = useState<"en" | "ar">("en");
-  const [arabicOne, setArabicOne] = useState(() =>
-    transliterateArabicName("Layla"),
-  );
-  const [arabicTwo, setArabicTwo] = useState(() =>
-    transliterateArabicName("Mariam"),
-  );
+  const {
+    arabicText: arabicOne,
+    editArabicText: setArabicOne,
+    status: arabicOneStatus,
+  } = useArabicNameReflection(nameOne, language === "ar");
+  const { arabicText: arabicTwo, editArabicText: setArabicTwo } =
+    useArabicNameReflection(nameTwo, language === "ar" && nameCount === 2);
   const [arabicStyle, setArabicStyle] = useState<ArabicStyle>("contemporary");
   const [layout, setLayout] = useState<PendantLayout>("connected-heart");
   const [metal, setMetal] = useState<MetalColor>("yellow");
@@ -108,14 +177,6 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
   const [confirmed, setConfirmed] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string>();
-
-  useEffect(() => {
-    setArabicOne(transliterateArabicName(nameOne));
-  }, [nameOne]);
-
-  useEffect(() => {
-    setArabicTwo(transliterateArabicName(nameTwo));
-  }, [nameTwo]);
 
   const displayOne = language === "ar" ? arabicOne : nameOne;
   const displayTwo = language === "ar" ? arabicTwo : nameTwo;
@@ -374,7 +435,22 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
                   <div>
                     <span>Live Arabic spelling</span>
                     <strong dir="rtl">{arabicOne}</strong>
-                    <small>Updates as you type</small>
+                    <small className="clm-reflection-status">
+                      {arabicOneStatus === "refining" ? (
+                        <>
+                          <SpinnerGap className="clm-spin" size={12} />
+                          Refining with Luna…
+                        </>
+                      ) : arabicOneStatus === "refined" ? (
+                        <>
+                          <Sparkle size={12} weight="fill" /> AI-refined
+                        </>
+                      ) : arabicOneStatus === "edited" ? (
+                        "Edited by you"
+                      ) : (
+                        "Updates as you type"
+                      )}
+                    </small>
                   </div>
                   <button
                     type="button"
