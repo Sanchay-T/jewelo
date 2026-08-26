@@ -28,17 +28,48 @@ export const browserEnvSchema = z
 export const trustedWebEnvSchema = z.object({
   SUPABASE_URL: url,
   SUPABASE_SERVICE_ROLE_KEY: nonEmpty,
+  SUPABASE_PUBLISHABLE_KEY: nonEmpty.optional(),
+  SHOPIFY_STORE_DOMAIN: nonEmpty.optional(),
+  SHOPIFY_CLIENT_ID: nonEmpty.optional(),
+  SHOPIFY_CLIENT_SECRET: nonEmpty.optional(),
+  SHOPIFY_WEBHOOK_SECRET: nonEmpty.optional(),
 });
 
 export const triggerConfigEnvSchema = z.object({
   TRIGGER_PROJECT_REF: nonEmpty,
 });
 
-export const jobsEnvSchema = trustedWebEnvSchema.extend({
-  TRIGGER_PROJECT_REF: nonEmpty,
-  TRIGGER_SECRET_KEY: nonEmpty,
-  PROVIDER_MODE: z.literal("mock").default("mock"),
-});
+export const jobsEnvSchema = trustedWebEnvSchema
+  .extend({
+    TRIGGER_PROJECT_REF: nonEmpty,
+    TRIGGER_SECRET_KEY: nonEmpty,
+    PROVIDER_MODE: z.enum(["mock", "real"]).default("mock"),
+    FAL_KEY: nonEmpty.optional(),
+    FAL_IMAGE_MODEL: nonEmpty.default("openai/gpt-image-2/edit"),
+    OPENAI_API_KEY: nonEmpty.optional(),
+    OPENAI_VERIFIER_MODEL: nonEmpty.default("gpt-5.6-luna"),
+    STUDIO_PROMPT_RELEASE: nonEmpty.default("studio-placeholder-v1"),
+    FAL_CONCURRENCY_LIMIT: z.coerce.number().int().min(1).max(32).default(2),
+    VERIFIER_CONCURRENCY_LIMIT: z.coerce
+      .number()
+      .int()
+      .min(1)
+      .max(32)
+      .default(4),
+    MAX_PROVIDER_ATTEMPTS: z.coerce.number().int().min(1).max(3).default(3),
+  })
+  .superRefine((value, context) => {
+    if (value.PROVIDER_MODE === "real") {
+      for (const key of ["FAL_KEY", "OPENAI_API_KEY"] as const) {
+        if (!value[key])
+          context.addIssue({
+            code: "custom",
+            path: [key],
+            message: `${key} is required in real provider mode`,
+          });
+      }
+    }
+  });
 
 export const ciEnvSchema = z.object({
   CI: z.enum(["true", "false"]).optional(),

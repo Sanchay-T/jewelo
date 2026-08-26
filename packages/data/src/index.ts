@@ -1,4 +1,8 @@
-import { createClient } from "@supabase/supabase-js";
+import {
+  createClient,
+  type RealtimeChannel,
+  type SupabaseClient,
+} from "@supabase/supabase-js";
 
 import type { Database } from "./database.types";
 
@@ -41,8 +45,15 @@ export class MockFoundationDataStore implements FoundationDataStore {
 
 export function createSupabaseDataClient(url: string, publishableKey: string) {
   return createClient<Database>(url, publishableKey, {
-    auth: { persistSession: false },
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: false,
+      storageKey: "jewelo:anonymous-session:v1",
+    },
   });
 }
 
+export type SupabaseDataClient = SupabaseClient<Database>;
+export type { RealtimeChannel };
 export type { Database } from "./database.types";
