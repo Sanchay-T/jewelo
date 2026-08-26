@@ -10,6 +10,6 @@ export default defineConfig({
     "../../packages/identity/engines/caleums-arabic-v3/fonts/*.ttf",
     "../../packages/identity/engines/caleums-arabic-v3/manifest.json",
   ],
-  maxDuration: 60,
+  maxDuration: 300,
   runtime: "node",
 });
