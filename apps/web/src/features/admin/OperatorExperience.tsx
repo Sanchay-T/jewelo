@@ -55,8 +55,8 @@ export function OperatorExperience({ locale }: { locale: Locale }) {
     if (email && passphrase.length >= 4)
       void action(
         "login",
-        () => client.setRole("operator"),
-        "Operator fixture opened.",
+        () => client.loginOperator(email, passphrase),
+        "Operator session opened.",
       );
   }
 
@@ -77,8 +77,7 @@ export function OperatorExperience({ locale }: { locale: Locale }) {
           <p className="clm-kicker">Atelier operations</p>
           <h1>Operator queue</h1>
           <p>
-            Review custom quotes and move approved pieces through the mock
-            fulfillment flow.
+            Review custom quotes and move approved pieces through fulfillment.
           </p>
           <form onSubmit={login}>
             <label>
@@ -105,9 +104,7 @@ export function OperatorExperience({ locale }: { locale: Locale }) {
               {busy === "login" ? "Opening…" : "Open operator queue"}
             </button>
           </form>
-          <small>
-            Development fixture only. No real authentication or commerce action.
-          </small>
+          <small>Authorized atelier access only.</small>
           <Link href={`/${locale}`}>← Return to customer experience</Link>
         </section>
       </main>
@@ -125,14 +122,14 @@ export function OperatorExperience({ locale }: { locale: Locale }) {
         <Link href={`/${locale}`}>
           <CaleumsWordmark compact />
         </Link>
-        <span>Atelier operations</span>
+        <span>Signed in as operator · {state.principal.name}</span>
         <button
           type="button"
           onClick={() =>
             void action(
               "logout",
               () => client.setRole("customer"),
-              "Operator fixture closed.",
+              "Operator session closed.",
             )
           }
         >

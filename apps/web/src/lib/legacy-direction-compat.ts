@@ -79,6 +79,7 @@ export interface LegacyJeweloClient extends Omit<
   getState(): LegacySpikeState;
   setResumePath(path: string): Promise<LegacySpikeState>;
   setRole(role: Role): Promise<LegacySpikeState>;
+  loginOperator(email: string, passphrase: string): Promise<LegacySpikeState>;
   setScenario(scenario: ScenarioId): Promise<LegacySpikeState>;
   listDesigns(): LegacyDesign[];
   getDesign(id: string): LegacyDesign | undefined;

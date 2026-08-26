@@ -16,6 +16,13 @@ const correctiveMigration = readFileSync(
   ),
   "utf8",
 );
+const startRunMigration = readFileSync(
+  new URL(
+    "../../../supabase/migrations/20260827040000_caleums_start_run_rpc.sql",
+    import.meta.url,
+  ),
+  "utf8",
+);
 
 function expectedFingerprint(
   language: "en" | "ar",
@@ -118,5 +125,17 @@ describe("Caleums migration security contract", () => {
       "unique (owner_principal_id, checkout_idempotency_key)",
     );
     expect(migration).toContain("quotes_shopify_draft_order_unique");
+  });
+
+  it("starts later studio runs with the same quota, active-run, and privilege guards", () => {
+    expect(startRunMigration).toContain(
+      "create or replace function public.start_studio_run",
+    );
+    expect(startRunMigration).toContain("one active generation run allowed");
+    expect(startRunMigration).toContain("daily generation quota exceeded");
+    expect(startRunMigration).toContain("daily spend guard exceeded");
+    expect(startRunMigration).toContain(
+      "revoke all on function public.start_studio_run(uuid,text) from public, anon",
+    );
   });
 });
