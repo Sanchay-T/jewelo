@@ -15,7 +15,9 @@ describe("commercial workflow route policy", () => {
     expect(webhookRoute).toContain("verifyShopifyHmac");
     expect(webhookRoute).toContain('topic !== "orders/paid"');
     expect(webhookRoute).toContain('payload.financial_status !== "paid"');
-    expect(webhookRoute).toContain('"/rest/v1/rpc/complete_shopify_order"');
+    expect(webhookRoute).toContain(
+      '"/rest/v1/rpc/ingest_shopify_paid_webhook"',
+    );
   });
 
   it("routes operator retries through the idempotent outbox RPC", () => {

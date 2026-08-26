@@ -1,0 +1,16 @@
+# Template only. Link the real app with `pnpm shopify:cli app config link`
+# before renaming this file to shopify.app.toml.
+client_id = "replace-with-dev-dashboard-client-id"
+name = "Jewelo Checkout"
+application_url = "https://replace-with-deployed-jewelo-host"
+embedded = false
+
+[access_scopes]
+scopes = "read_orders,write_draft_orders"
+
+[webhooks]
+api_version = "2026-07"
+
+[[webhooks.subscriptions]]
+topics = ["orders/paid"]
+uri = "https://replace-with-deployed-jewelo-host/api/webhooks/shopify"
