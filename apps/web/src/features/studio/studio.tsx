@@ -5,10 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import useEmblaCarousel from "embla-carousel-react";
-import {
-  TransformComponent,
-  TransformWrapper,
-} from "react-zoom-pan-pinch";
+import { TransformComponent, TransformWrapper } from "react-zoom-pan-pinch";
 import {
   type KeyboardEvent,
   useCallback,
@@ -42,7 +39,8 @@ const REQUESTABLE_STATES = new Set<string>(["available_on_request"]);
 const STATE_COPY: Record<string, { label: string; detail: string }> = {
   queued: {
     label: "Queued",
-    detail: "Waiting for real generation capacity. No progress has been invented.",
+    detail:
+      "Waiting for real generation capacity. No progress has been invented.",
   },
   generating: {
     label: "Generating",
@@ -103,7 +101,8 @@ export function Studio({
 
   const latestRun = design?.runs.at(-1);
   const run =
-    design?.runs.find((candidate) => candidate.id === selectedRunId) ?? latestRun;
+    design?.runs.find((candidate) => candidate.id === selectedRunId) ??
+    latestRun;
   const direction =
     run?.directions.find((candidate) => candidate.id === selectedDirectionId) ??
     run?.directions[0];
@@ -119,9 +118,9 @@ export function Studio({
           );
         })
       : undefined;
-  const revision = design?.revisions.find(
-    (candidate) => candidate.id === run?.revisionId,
-  ) ?? design?.revisions.at(-1);
+  const revision =
+    design?.revisions.find((candidate) => candidate.id === run?.revisionId) ??
+    design?.revisions.at(-1);
 
   useEffect(() => {
     if (!run) return;
@@ -138,7 +137,9 @@ export function Studio({
         setAnnouncement(success);
       } catch (actionError) {
         const message =
-          actionError instanceof Error ? actionError.message : "Action unavailable";
+          actionError instanceof Error
+            ? actionError.message
+            : "Action unavailable";
         setError(message);
         setAnnouncement(message);
       } finally {
@@ -213,7 +214,9 @@ export function Studio({
       <main className={styles.empty} dir={isRtl ? "rtl" : "ltr"}>
         <p className={styles.eyebrow}>Jewelo studio</p>
         <h1>This run has no directions yet.</h1>
-        <p>Live run updates will restore the studio when a direction is ready.</p>
+        <p>
+          Live run updates will restore the studio when a direction is ready.
+        </p>
         <button className={styles.secondaryButton} onClick={() => refresh()}>
           Check again
         </button>
@@ -223,7 +226,9 @@ export function Studio({
 
   const readyToSelect = direction.representations.product.state === "ready";
   const currentSelected = design.selectedDirectionId === direction.id;
-  const activeCount = run.tasks.filter((task) => ACTIVE_STATES.has(task.state)).length;
+  const activeCount = run.tasks.filter((task) =>
+    ACTIVE_STATES.has(task.state),
+  ).length;
   const readyCount = run.tasks.filter((task) => task.state === "ready").length;
 
   return (
@@ -281,7 +286,11 @@ export function Studio({
             <code>{revision.identity.fingerprint}</code>
           </div>
 
-          <div className={styles.tabs} role="tablist" aria-label="Representation">
+          <div
+            className={styles.tabs}
+            role="tablist"
+            aria-label="Representation"
+          >
             {KINDS.map((candidate) => (
               <button
                 id={`studio-tab-${candidate}`}
@@ -326,7 +335,10 @@ export function Studio({
                       `request-${representation.lineage.taskId}`,
                       `${capitalize(kind)} requested.`,
                       () =>
-                        client.retryTask(designId, representation.lineage.taskId),
+                        client.retryTask(
+                          designId,
+                          representation.lineage.taskId,
+                        ),
                     )
                   }
                 />
@@ -410,7 +422,9 @@ export function Studio({
 
       <footer className={styles.actionBar}>
         <div className={styles.actionSummary}>
-          <strong>{currentSelected ? "Selected direction" : direction.label}</strong>
+          <strong>
+            {currentSelected ? "Selected direction" : direction.label}
+          </strong>
           <span>
             {readyToSelect
               ? "Verified product ready for selection"
@@ -442,9 +456,7 @@ export function Studio({
           </button>
           <button
             className={styles.primaryButton}
-            disabled={
-              !design.selectedDirectionId || busyAction === "commerce"
-            }
+            disabled={!design.selectedDirectionId || busyAction === "commerce"}
             onClick={() =>
               void act("commerce", "Opening estimate and quote.", () => {
                 if (!design.estimate) client.calculateEstimate(designId);
@@ -464,7 +476,10 @@ export function Studio({
       {error && (
         <div className={styles.errorToast} role="alert">
           {error}
-          <button aria-label="Dismiss error" onClick={() => setError(undefined)}>
+          <button
+            aria-label="Dismiss error"
+            onClick={() => setError(undefined)}
+          >
             ×
           </button>
         </div>
@@ -497,11 +512,26 @@ function SpecificationList({
   const specification = revision.specification;
   return (
     <dl className={styles.specifications}>
-      <div><dt>Metal</dt><dd>{specification.metal}</dd></div>
-      <div><dt>Finish</dt><dd>{specification.finish}</dd></div>
-      <div><dt>Stones</dt><dd>{specification.stones}</dd></div>
-      <div><dt>Width</dt><dd>{specification.widthMm} mm</dd></div>
-      <div><dt>Complexity</dt><dd>{specification.complexity}/10</dd></div>
+      <div>
+        <dt>Metal</dt>
+        <dd>{specification.metal}</dd>
+      </div>
+      <div>
+        <dt>Finish</dt>
+        <dd>{specification.finish}</dd>
+      </div>
+      <div>
+        <dt>Stones</dt>
+        <dd>{specification.stones}</dd>
+      </div>
+      <div>
+        <dt>Width</dt>
+        <dd>{specification.widthMm} mm</dd>
+      </div>
+      <div>
+        <dt>Complexity</dt>
+        <dd>{specification.complexity}/10</dd>
+      </div>
     </dl>
   );
 }
@@ -525,7 +555,9 @@ function MediaStage({
       >
         <StateArtwork state={representation.state} />
         <StatusChip state={representation.state} />
-        <h2>{STATE_COPY[representation.state]?.label ?? representation.state}</h2>
+        <h2>
+          {STATE_COPY[representation.state]?.label ?? representation.state}
+        </h2>
         <p>{STATE_COPY[representation.state]?.detail}</p>
         {REQUESTABLE_STATES.has(representation.state) && (
           <button className={styles.primaryButton} onClick={onRequest}>
@@ -592,9 +624,15 @@ function MediaStage({
           </TransformComponent>
           <div className={styles.zoomControls} aria-label="Zoom controls">
             <span className={styles.verifiedBadge}>✓ Verified</span>
-            <button aria-label="Zoom in" onClick={() => zoomIn()}>+</button>
-            <button aria-label="Zoom out" onClick={() => zoomOut()}>−</button>
-            <button aria-label="Reset zoom" onClick={() => resetTransform()}>1:1</button>
+            <button aria-label="Zoom in" onClick={() => zoomIn()}>
+              +
+            </button>
+            <button aria-label="Zoom out" onClick={() => zoomOut()}>
+              −
+            </button>
+            <button aria-label="Reset zoom" onClick={() => resetTransform()}>
+              1:1
+            </button>
           </div>
         </div>
       )}
@@ -701,9 +739,18 @@ function DirectionFilmstrip({
   function navigate(event: KeyboardEvent<HTMLButtonElement>) {
     const previousKey = isRtl ? "ArrowRight" : "ArrowLeft";
     const nextKey = isRtl ? "ArrowLeft" : "ArrowRight";
-    if (event.key === previousKey) { event.preventDefault(); move(-1); }
-    if (event.key === nextKey) { event.preventDefault(); move(1); }
-    if (event.key === "Home") { event.preventDefault(); move(-selectedIndex); }
+    if (event.key === previousKey) {
+      event.preventDefault();
+      move(-1);
+    }
+    if (event.key === nextKey) {
+      event.preventDefault();
+      move(1);
+    }
+    if (event.key === "Home") {
+      event.preventDefault();
+      move(-selectedIndex);
+    }
     if (event.key === "End") {
       event.preventDefault();
       move(run.directions.length - 1 - selectedIndex);
@@ -743,7 +790,9 @@ function DirectionFilmstrip({
                     else buttons.current.delete(candidate.id);
                   }}
                   className={styles.directionCard}
-                  aria-current={candidate.id === selectedId ? "true" : undefined}
+                  aria-current={
+                    candidate.id === selectedId ? "true" : undefined
+                  }
                   aria-label={`${candidate.label}, product ${product.state}`}
                   tabIndex={candidate.id === selectedId ? 0 : -1}
                   onClick={() => onSelect(candidate.id)}
@@ -801,7 +850,10 @@ function TaskRail({
 }) {
   const tasks = run.tasks.filter((task) => task.directionId === direction.id);
   return (
-    <section className={styles.taskRail} aria-label={`${direction.label} tasks`}>
+    <section
+      className={styles.taskRail}
+      aria-label={`${direction.label} tasks`}
+    >
       <h3>Task rail</h3>
       {tasks.map((task) => {
         const label = capitalize(task.kind);
@@ -865,7 +917,9 @@ function RunHistory({
               onClick={() => onSelect(run)}
             >
               <strong>{run.label}</strong>
-              <span>Revision {revision?.number ?? "—"} · {run.status}</span>
+              <span>
+                Revision {revision?.number ?? "—"} · {run.status}
+              </span>
             </button>
           );
         })}
@@ -884,7 +938,9 @@ function StatusChip({ state, label }: { state: TaskState; label?: string }) {
 }
 
 function StatusDot({ state }: { state: TaskState }) {
-  return <span className={styles.statusDot} data-state={state} aria-hidden="true" />;
+  return (
+    <span className={styles.statusDot} data-state={state} aria-hidden="true" />
+  );
 }
 
 function StateArtwork({
