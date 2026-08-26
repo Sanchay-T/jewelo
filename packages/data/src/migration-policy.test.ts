@@ -23,6 +23,13 @@ const startRunMigration = readFileSync(
   ),
   "utf8",
 );
+const completionMigration = readFileSync(
+  new URL(
+    "../../../supabase/migrations/20260827050000_caleums_completion_operator_retry.sql",
+    import.meta.url,
+  ),
+  "utf8",
+);
 
 function expectedFingerprint(
   language: "en" | "ar",
@@ -136,6 +143,36 @@ describe("Caleums migration security contract", () => {
     expect(startRunMigration).toContain("daily spend guard exceeded");
     expect(startRunMigration).toContain(
       "revoke all on function public.start_studio_run(uuid,text) from public, anon",
+    );
+  });
+
+  it("materializes a paid Shopify order once and audits only its creation", () => {
+    expect(completionMigration).toContain(
+      "create or replace function public.complete_shopify_order",
+    );
+    expect(completionMigration).toContain(
+      "where id = p_quote_id and status = 'accepted'",
+    );
+    expect(completionMigration).toContain("on conflict (quote_id) do nothing");
+    expect(completionMigration).toContain("if v_created then");
+    expect(completionMigration).toContain("'shopify.order_completed'");
+    expect(completionMigration).toContain(
+      "revoke all on function public.complete_shopify_order(uuid,text,text) from public, anon, authenticated",
+    );
+  });
+
+  it("turns an operator retry into one budget-respecting outbox event", () => {
+    expect(completionMigration).toContain(
+      "create or replace function public.operator_retry_generation_task",
+    );
+    expect(completionMigration).toContain(
+      "v_outbox_key := 'operator-retry:' || p_task_id || ':' || p_retry_key",
+    );
+    expect(completionMigration).toContain("'studio.operator_retry_requested'");
+    expect(completionMigration).toContain("if v_task.attempt >= 3 then");
+    expect(completionMigration).toContain("'budgetOverride', false");
+    expect(completionMigration).toContain(
+      "grant execute on function public.operator_retry_generation_task(uuid,text,text) to service_role",
     );
   });
 });

@@ -61,7 +61,7 @@ export async function createShopifyDraftOrder(
           input: {
             note: `Caleums quote ${input.quoteId}`,
             customAttributes: [
-              { key: "jewelo_quote_id", value: input.quoteId },
+              { key: "caleums_quote_id", value: input.quoteId },
               { key: "jewelo_idempotency_key", value: input.idempotencyKey },
             ],
             lineItems: [
