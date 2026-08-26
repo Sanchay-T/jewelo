@@ -1,0 +1,27 @@
+{
+  "projectId": "8478845c-9f7b-4b68-89e6-3762b43a1119",
+  "region": "blr",
+  "repositoryCloneUrl": "https://github.com/Sanchay-T/jewelo.git",
+  "integrationBranch": "rebuild/v2-first-principles",
+  "service": {
+    "name": "web",
+    "environmentSlug": "node-js",
+    "httpPort": 8080,
+    "buildCommand": "pnpm verify && pnpm do:build",
+    "runCommand": "pnpm start",
+    "healthPath": "/api/health"
+  },
+  "environments": {
+    "staging": {
+      "appName": "jewelo-staging",
+      "instanceSizeSlug": "apps-s-1vcpu-2gb",
+      "instanceCount": 1,
+      "inactivitySleepSeconds": 600
+    },
+    "production": {
+      "appName": "jewelo-production",
+      "instanceSizeSlug": "apps-s-1vcpu-1gb",
+      "instanceCount": 1
+    }
+  }
+}

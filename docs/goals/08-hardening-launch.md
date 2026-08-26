@@ -10,7 +10,7 @@ Production/staging environments, CI/CD, monitoring, budgets, backup/restore, ret
 
 ## Required work
 
-- Production Supabase Mumbai, Trigger, Vercel, OpenAI, Runway, Sentry, and PostHog configuration through least-privilege secrets.
+- Production Supabase Mumbai, Trigger, DigitalOcean App Platform, OpenAI, fal, Sentry, and PostHog configuration through least-privilege secrets.
 - Branch protection, required checks, dependency/secret/security scanning.
 - SLOs, traces, dashboards, alerts, and provider-cost reconciliation.
 - Load/fan-out/concurrency/realtime/media-delivery tests.

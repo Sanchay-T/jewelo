@@ -20,6 +20,8 @@ check_cmd node required
 check_cmd corepack required
 check_cmd pnpm optional
 check_cmd gh optional
+check_cmd hq-gh optional
+check_cmd doctl optional
 check_cmd claude optional
 check_cmd codex optional
 
@@ -35,6 +37,9 @@ if command -v pnpm >/dev/null 2>&1; then
 fi
 if command -v gh >/dev/null 2>&1; then
   gh auth status >/dev/null 2>&1 && ok "GitHub CLI authenticated" || warn "GitHub CLI is not authenticated"
+fi
+if command -v doctl >/dev/null 2>&1; then
+  ok "doctl: $(doctl version 2>/dev/null | head -n1 || echo installed)"
 fi
 if command -v claude >/dev/null 2>&1; then
   ok "Claude Code: $(claude --version 2>/dev/null | head -n1 || echo installed)"

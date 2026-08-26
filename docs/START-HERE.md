@@ -63,7 +63,7 @@ fal.ai is not Jewelo’s workflow engine. No autonomous media-agent framework co
 
 ## Managed-service policy
 
-Development uses Vercel previews, Supabase branches/persistent dev projects, Trigger.dev environments/preview branches, and development OpenAI/fal credentials. There is no required Docker or local infrastructure stack.
+Development uses local Next.js plus gated DigitalOcean staging, Supabase branches/persistent dev projects, Trigger.dev environments/preview branches, and development OpenAI/fal credentials. There is no required Docker or local infrastructure stack.
 
 Real preview-all launch requires:
 

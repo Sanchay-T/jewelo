@@ -13,7 +13,7 @@ For a bounded real development run, each verified product variation independentl
 - Implement the fal adapter with `@fal-ai/client` behind the motion provider port.
 - Pin preview endpoint `bytedance/seedance-2.0/fast/image-to-video`.
 - Pin final endpoint `bytedance/seedance-2.0/image-to-video`.
-- Use fal asynchronous queue/status/webhook behavior; do not block Vercel request handlers.
+- Use fal asynchronous queue/status/webhook behavior; do not block DigitalOcean web request handlers.
 - Use the approved product still as each fast preview’s start frame.
 - Generate preview profile:
   - four variations;

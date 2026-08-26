@@ -10,9 +10,16 @@ required=(
   docs/DECISION-REGISTER.md docs/AGENT-WORKFLOW.md docs/VERIFICATION.md
   docs/GOAL-ROADMAP.md docs/CLAUDE-CODE-SETUP.md docs/GOLD-PROMPT.md
   docs/ENTRY-PROMPT.md docs/PROMPT-PLAYBOOK.md docs/AI-MODEL-EVALUATION.md
-  docs/REFERENCES.md .claude/skills/goal/SKILL.md
+  docs/REFERENCES.md docs/DIGITALOCEAN-DEPLOYMENT.md
+  infra/digitalocean/spec-contract.json
+  .github/workflows/digitalocean-staging.yml
+  .github/workflows/digitalocean-production.yml
+  .claude/skills/goal/SKILL.md
   .claude/skills/ship-pr/SKILL.md scripts/doctor.sh scripts/new-goal.sh
-  scripts/open-pr.sh
+  scripts/open-pr.sh scripts/digitalocean/bootstrap-app.mjs
+  scripts/digitalocean/common.sh scripts/digitalocean/configure-github.sh
+  scripts/digitalocean/deploy.sh scripts/digitalocean/doctl.sh
+  scripts/digitalocean/rollback.sh scripts/digitalocean/smoke.sh
 )
 for file in "${required[@]}"; do
   [[ -s "$file" ]] || { echo "missing or empty: $file" >&2; exit 1; }
@@ -69,6 +76,8 @@ NODE
 
 node scripts/list-goals.mjs >/dev/null
 for script in scripts/*.sh; do bash -n "$script"; done
+for script in scripts/digitalocean/*.sh; do bash -n "$script"; done
+node --check scripts/digitalocean/bootstrap-app.mjs
 
 grep -q 'Supabase Postgres' docs/FINAL-STACK.md
 grep -q 'Trigger.dev Cloud' docs/FINAL-STACK.md
@@ -81,6 +90,14 @@ grep -q 'verified concurrency limit of at least four' docs/MEDIA-CONCURRENCY.md
 grep -q 'FAL_KEY' .env.example
 grep -q 'mcp.fal.ai/mcp' .mcp.json
 grep -q 'four preview requests overlap' docs/goals/06-real-motion.md
+grep -q 'DigitalOcean App Platform' docs/FINAL-STACK.md
+node - <<'NODE'
+const contract = require("./infra/digitalocean/spec-contract.json");
+const production = contract.environments?.production;
+if (production?.instanceCount !== 1 || production?.autoscaling) {
+  throw new Error("production must use one fixed managed instance");
+}
+NODE
 
 if grep -R -n \
   -E 'RUNWAYML_API_SECRET|gemini_omni_flash|Runway API|Runway adapter|selected-first Runway' \

@@ -5,13 +5,22 @@
   "description": "Implementation-ready Jewelo v2 clean-room specification",
   "packageManager": "pnpm@11.23.0",
   "engines": {
-    "node": ">=24 <25"
+    "node": ">=24 <25",
+    "pnpm": "11.23.0"
   },
   "scripts": {
+    "do:bootstrap": "node scripts/digitalocean/bootstrap-app.mjs",
+    "do:build": "pnpm --filter @jewelo/web... build",
+    "do:deploy": "bash scripts/digitalocean/deploy.sh",
+    "do:github": "bash scripts/digitalocean/configure-github.sh",
+    "do:rollback": "bash scripts/digitalocean/rollback.sh",
+    "do:smoke": "bash scripts/digitalocean/smoke.sh",
+    "doctl": "bash scripts/digitalocean/doctl.sh",
     "doctor": "bash scripts/doctor.sh",
     "goals": "node scripts/list-goals.mjs",
     "verify": "bash scripts/verify-foundation.sh",
     "goal:new": "bash scripts/new-goal.sh",
-    "pr:draft": "bash scripts/open-pr.sh"
+    "pr:draft": "bash scripts/open-pr.sh",
+    "start": "pnpm --filter @jewelo/web start"
   }
 }

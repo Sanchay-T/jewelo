@@ -5,7 +5,7 @@
   "first_goal": "docs/goals/00-production-foundation.md",
   "stack": [
     "nextjs-16.2",
-    "vercel",
+    "digitalocean-app-platform",
     "supabase-postgres-auth-storage-realtime",
     "trigger-dev-v4",
     "openai-gpt-image-2-2026-04-21",

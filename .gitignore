@@ -12,6 +12,7 @@ test-results/
 playwright-report/
 *.log
 .vercel/
+.do/generated/
 .trigger/
 supabase/.temp/
 supabase/.branches/
