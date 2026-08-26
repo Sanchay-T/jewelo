@@ -75,6 +75,9 @@ importers:
       '@fontsource/playfair-display':
         specifier: 5.2.8
         version: 5.2.8
+      '@jewelo/ai':
+        specifier: workspace:*
+        version: link:../../packages/ai
       '@jewelo/config':
         specifier: workspace:*
         version: link:../../packages/config

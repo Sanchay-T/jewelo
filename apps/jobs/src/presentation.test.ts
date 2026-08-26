@@ -1,9 +1,11 @@
 import { describe, expect, it, vi } from "vitest";
 import type {
   GeneratedMedia,
+  PromptVariableSnapshot,
   StudioGenerator,
   StudioVerifier,
 } from "@jewelo/ai";
+import { BASELINE_PROMPT_TEMPLATES } from "@jewelo/ai";
 import {
   executePresentationTask,
   type PresentationRepository,
@@ -12,6 +14,16 @@ import {
 function fixture() {
   const events: string[] = [];
   let attempt = 0;
+  let storedSnapshot:
+    | {
+        task_id: string;
+        prompt_release_id: string;
+        variable_snapshot: PromptVariableSnapshot;
+        compiled_prompt: string;
+        compiler_version: string;
+        sha256: string;
+      }
+    | undefined;
   const task = {
     id: "task-1",
     run_id: "run-1",
@@ -19,8 +31,9 @@ function fixture() {
     presentation_view: "studio" as const,
     status: "queued",
     attempt: 0,
-    dispatch_idempotency_key: "task:run-1:studio:v1",
-    prompt_release: "studio-placeholder-v1",
+    dispatch_idempotency_key: "task:run-1:studio:release:release-a",
+    prompt_release: "image.studio@v1",
+    prompt_release_id: "release-a",
   };
   const run = {
     id: "run-1",
@@ -31,7 +44,18 @@ function fixture() {
   };
   const revision = {
     id: "revision-1",
-    specification: {},
+    specification: {
+      arabicStyle: "none",
+      layout: "single-name",
+      metalKarat: "18K",
+      metalColor: "yellow",
+      finish: "polished",
+      stoneCoverage: "partial-pave",
+      gemstone: "lab-diamond",
+      sizeProfile: "classic",
+      dimensions: { widthMm: 34, heightMm: 12, thicknessMm: 1.2 },
+      chain: { style: "cable", lengthCm: 45 },
+    },
     identity_anchor: {
       approvedText: "Layla",
       language: "en" as const,
@@ -39,9 +63,32 @@ function fixture() {
       fingerprint: "fingerprint",
     },
   };
+  const release = {
+    id: "release-a",
+    profile: "image.studio" as const,
+    template: BASELINE_PROMPT_TEMPLATES["image.studio"],
+  };
   const repository: PresentationRepository = {
     async load() {
-      return { task: { ...task, attempt }, run, revision };
+      return {
+        task: { ...task, attempt },
+        run,
+        revision,
+        release,
+        snapshot: storedSnapshot,
+      };
+    },
+    async materializePromptSnapshot(input) {
+      events.push("snapshot");
+      storedSnapshot ??= {
+        task_id: input.task.id,
+        prompt_release_id: input.release.id,
+        variable_snapshot: input.variables,
+        compiled_prompt: input.compiledPrompt,
+        compiler_version: input.compilerVersion,
+        sha256: input.sha256,
+      };
+      return storedSnapshot;
     },
     async reserveAttempt() {
       attempt += 1;
@@ -72,7 +119,13 @@ function fixture() {
       events.push(input.terminal ? "operator_review" : "retry");
     },
   };
-  return { task, repository, events, getAttempt: () => attempt };
+  return {
+    task,
+    repository,
+    events,
+    getAttempt: () => attempt,
+    getSnapshot: () => storedSnapshot,
+  };
 }
 
 const media: GeneratedMedia = {
@@ -98,6 +151,7 @@ describe("generic presentation execution", () => {
       executePresentationTask("task-1", state.repository, generator, verifier),
     ).resolves.toEqual({ status: "ready", attempt: 1 });
     expect(state.events).toEqual([
+      "snapshot",
       "generating",
       "stored",
       "verifying",
@@ -127,7 +181,29 @@ describe("generic presentation execution", () => {
     ).resolves.toEqual({ status: "operator_review", attempt: 3 });
     expect(state.getAttempt()).toBe(3);
     expect(state.events.filter((item) => item === "retry")).toHaveLength(2);
+    expect(state.events.filter((item) => item === "snapshot")).toHaveLength(1);
     expect(state.events.at(-1)).toBe("operator_review");
+  });
+
+  it("pins release A through retries even after the live template becomes B", async () => {
+    const state = fixture();
+    const prompts: string[] = [];
+    const generator: StudioGenerator = {
+      generate: vi.fn(async (input) => {
+        prompts.push(input.prompt);
+        throw new Error("retry-me");
+      }),
+    };
+    const verifier = { verify: vi.fn() } as unknown as StudioVerifier;
+    await expect(
+      executePresentationTask("task-1", state.repository, generator, verifier),
+    ).rejects.toThrow("retry-me");
+    const pinned = state.getSnapshot()?.compiled_prompt;
+    await expect(
+      executePresentationTask("task-1", state.repository, generator, verifier),
+    ).rejects.toThrow("retry-me");
+    expect(prompts).toEqual([pinned, pinned]);
+    expect(pinned).toContain("Layla");
   });
 
   it("does not call a provider after cancellation", async () => {

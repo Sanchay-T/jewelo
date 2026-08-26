@@ -4,7 +4,11 @@ import {
   MockStudioGenerator,
   MockStudioVerifier,
   OpenAIStudioVerifier,
+  buildPromptVariableSnapshot,
+  compilePrompt,
   type GeneratedMedia,
+  type PromptProfile,
+  type PromptVariableSnapshot,
   type StudioGenerator,
   type StudioVerifier,
 } from "@jewelo/ai";
@@ -20,6 +24,7 @@ interface TaskRow {
   attempt: number;
   dispatch_idempotency_key: string;
   prompt_release: string;
+  prompt_release_id: string;
   cancel_requested_at?: string;
 }
 interface RunRow {
@@ -39,11 +44,36 @@ interface RevisionRow {
     fingerprint: string;
   };
 }
+interface PromptReleaseRow {
+  id: string;
+  profile: PromptProfile;
+  template: string;
+}
+interface PromptSnapshotRow {
+  task_id: string;
+  prompt_release_id: string;
+  variable_snapshot: PromptVariableSnapshot;
+  compiled_prompt: string;
+  compiler_version: string;
+  sha256: string;
+}
 
 export interface PresentationRepository {
-  load(
-    taskId: string,
-  ): Promise<{ task: TaskRow; run: RunRow; revision: RevisionRow }>;
+  load(taskId: string): Promise<{
+    task: TaskRow;
+    run: RunRow;
+    revision: RevisionRow;
+    release: PromptReleaseRow;
+    snapshot?: PromptSnapshotRow;
+  }>;
+  materializePromptSnapshot(input: {
+    task: TaskRow;
+    release: PromptReleaseRow;
+    variables: PromptVariableSnapshot;
+    compiledPrompt: string;
+    compilerVersion: string;
+    sha256: string;
+  }): Promise<PromptSnapshotRow>;
   reserveAttempt(
     task: TaskRow,
     provider: string,
@@ -91,15 +121,53 @@ export async function executePresentationTask(
   generator: StudioGenerator,
   verifier: StudioVerifier,
 ) {
-  const { task, run, revision } = await repository.load(taskId);
+  const {
+    task,
+    run,
+    revision,
+    release,
+    snapshot: existingSnapshot,
+  } = await repository.load(taskId);
   if (task.presentation_view !== "studio")
     throw new Error(`Disabled presentation view:${task.presentation_view}`);
   if (task.status === "ready") return { status: "deduplicated" as const };
   if (task.status === "cancelled" || task.cancel_requested_at)
     return { status: "cancelled" as const };
+  if (release.id !== task.prompt_release_id)
+    throw new Error("task_prompt_release_mismatch");
+  let snapshot = existingSnapshot;
+  if (!snapshot) {
+    const variables = buildPromptVariableSnapshot({
+      approvedName: revision.identity_anchor.approvedText,
+      language: revision.identity_anchor.language,
+      specification: revision.specification,
+      presentationView: task.presentation_view,
+    });
+    const compiled = compilePrompt({
+      profile: release.profile,
+      template: release.template,
+      variables,
+    });
+    snapshot = await repository.materializePromptSnapshot({
+      task,
+      release,
+      variables: compiled.variableSnapshot,
+      compiledPrompt: compiled.compiledPrompt,
+      compilerVersion: compiled.compilerVersion,
+      sha256: compiled.sha256,
+    });
+  }
+  if (
+    snapshot.task_id !== task.id ||
+    snapshot.prompt_release_id !== task.prompt_release_id ||
+    createHash("sha256")
+      .update(snapshot.compiled_prompt, "utf8")
+      .digest("hex") !== snapshot.sha256
+  )
+    throw new Error("prompt_snapshot_lineage_mismatch");
   const provider = generator instanceof MockStudioGenerator ? "mock" : "fal";
   const model =
-    provider === "mock" ? "mock-studio-v1" : "openai/gpt-image-2/edit";
+    generator instanceof FalStudioAdapter ? generator.model : "mock-studio-v1";
   const reservation = await repository.reserveAttempt(task, provider, model);
   if (reservation.duplicateComplete) return { status: "deduplicated" as const };
   let actualCostCents = 0;
@@ -115,6 +183,7 @@ export async function executePresentationTask(
     );
     const media = await generator.generate({
       idempotencyKey: reservation.idempotencyKey,
+      prompt: snapshot.compiled_prompt,
       identityImageUrl,
       identityFingerprint: revision.identity_anchor.fingerprint,
       specification: revision.specification,
@@ -198,7 +267,38 @@ export class SupabasePresentationRepository implements PresentationRepository {
     );
     const revision = revisions[0];
     if (!revision) throw new Error("revision_not_found");
-    return { task, run, revision };
+    const releases = await this.#request<PromptReleaseRow[]>(
+      `/rest/v1/prompt_releases?id=eq.${task.prompt_release_id}`,
+    );
+    const release = releases[0];
+    if (!release) throw new Error("prompt_release_not_found");
+    const snapshots = await this.#request<PromptSnapshotRow[]>(
+      `/rest/v1/generation_prompt_snapshots?task_id=eq.${task.id}`,
+    );
+    return { task, run, revision, release, snapshot: snapshots[0] };
+  }
+  async materializePromptSnapshot(input: {
+    task: TaskRow;
+    release: PromptReleaseRow;
+    variables: PromptVariableSnapshot;
+    compiledPrompt: string;
+    compilerVersion: string;
+    sha256: string;
+  }) {
+    return this.#request<PromptSnapshotRow>(
+      "/rest/v1/rpc/materialize_prompt_snapshot",
+      {
+        method: "POST",
+        body: JSON.stringify({
+          p_task_id: input.task.id,
+          p_prompt_release_id: input.release.id,
+          p_variable_snapshot: input.variables,
+          p_compiled_prompt: input.compiledPrompt,
+          p_compiler_version: input.compilerVersion,
+          p_sha256: input.sha256,
+        }),
+      },
+    );
   }
   async reserveAttempt(task: TaskRow, provider: string, model: string) {
     const attempt = task.attempt + 1;
@@ -334,6 +434,7 @@ export class SupabasePresentationRepository implements PresentationRepository {
         provider: input.media.provider,
         model: input.media.model,
         prompt_release: input.task.prompt_release,
+        prompt_release_id: input.task.prompt_release_id,
         identity_fingerprint: input.revision.identity_anchor.fingerprint,
         attempt: input.attempt,
         verification_result: input.verification,

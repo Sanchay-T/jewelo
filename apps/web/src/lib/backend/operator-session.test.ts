@@ -13,6 +13,7 @@ describe("operator session", () => {
     vi.stubEnv("OPERATOR_EMAIL", "operator@caleums.test");
     vi.stubEnv("OPERATOR_PASSPHRASE", "test-passphrase");
     vi.stubEnv("OPERATOR_SESSION_SECRET", "test-session-secret");
+    vi.stubEnv("NEXT_PUBLIC_JEWELO_DATA_MODE", "remote");
   });
 
   it("requires credentials and rejects a tampered HTTP-only session", () => {

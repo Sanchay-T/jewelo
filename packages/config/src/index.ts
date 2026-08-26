@@ -51,7 +51,6 @@ export const jobsEnvSchema = trustedWebEnvSchema
     FAL_IMAGE_MODEL: nonEmpty.default("openai/gpt-image-2/edit"),
     OPENAI_API_KEY: nonEmpty.optional(),
     OPENAI_VERIFIER_MODEL: nonEmpty.default("gpt-5.6-luna"),
-    STUDIO_PROMPT_RELEASE: nonEmpty.default("studio-placeholder-v1"),
     FAL_CONCURRENCY_LIMIT: z.coerce.number().int().min(1).max(32).default(2),
     VERIFIER_CONCURRENCY_LIMIT: z.coerce
       .number()
@@ -63,12 +62,6 @@ export const jobsEnvSchema = trustedWebEnvSchema
   })
   .superRefine((value, context) => {
     if (value.PROVIDER_MODE === "real") {
-      if (value.STUDIO_PROMPT_RELEASE === "studio-placeholder-v1")
-        context.addIssue({
-          code: "custom",
-          path: ["STUDIO_PROMPT_RELEASE"],
-          message: "real provider mode requires an approved prompt release",
-        });
       for (const key of ["FAL_KEY", "OPENAI_API_KEY"] as const) {
         if (!value[key])
           context.addIssue({

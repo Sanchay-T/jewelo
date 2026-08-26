@@ -56,6 +56,7 @@ export type Database = {
           owner_principal_id: string;
           presentation_view: string;
           prompt_release: string;
+          prompt_release_id: string;
           provider: string;
           revision_id: string;
           run_id: string;
@@ -78,6 +79,7 @@ export type Database = {
           owner_principal_id: string;
           presentation_view: string;
           prompt_release: string;
+          prompt_release_id: string;
           provider: string;
           revision_id: string;
           run_id: string;
@@ -100,6 +102,7 @@ export type Database = {
           owner_principal_id?: string;
           presentation_view?: string;
           prompt_release?: string;
+          prompt_release_id?: string;
           provider?: string;
           revision_id?: string;
           run_id?: string;
@@ -120,6 +123,13 @@ export type Database = {
             isOneToOne: false;
             referencedRelation: "designs";
             referencedColumns: ["id", "owner_principal_id"];
+          },
+          {
+            foreignKeyName: "assets_prompt_release_fk";
+            columns: ["prompt_release_id"];
+            isOneToOne: false;
+            referencedRelation: "prompt_releases";
+            referencedColumns: ["id"];
           },
           {
             foreignKeyName: "assets_revision_id_fkey";
@@ -446,6 +456,51 @@ export type Database = {
           },
         ];
       };
+      generation_prompt_snapshots: {
+        Row: {
+          compiled_prompt: string;
+          compiler_version: string;
+          created_at: string;
+          prompt_release_id: string;
+          sha256: string;
+          task_id: string;
+          variable_snapshot: Json;
+        };
+        Insert: {
+          compiled_prompt: string;
+          compiler_version: string;
+          created_at?: string;
+          prompt_release_id: string;
+          sha256: string;
+          task_id: string;
+          variable_snapshot: Json;
+        };
+        Update: {
+          compiled_prompt?: string;
+          compiler_version?: string;
+          created_at?: string;
+          prompt_release_id?: string;
+          sha256?: string;
+          task_id?: string;
+          variable_snapshot?: Json;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "generation_prompt_snapshots_prompt_release_id_fkey";
+            columns: ["prompt_release_id"];
+            isOneToOne: false;
+            referencedRelation: "prompt_releases";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "generation_prompt_snapshots_task_id_fkey";
+            columns: ["task_id"];
+            isOneToOne: true;
+            referencedRelation: "generation_tasks";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       generation_tasks: {
         Row: {
           attempt: number;
@@ -456,6 +511,7 @@ export type Database = {
           owner_principal_id: string;
           presentation_view: string;
           prompt_release: string;
+          prompt_release_id: string;
           provider_profile: string;
           run_id: string;
           status: Database["public"]["Enums"]["task_status"];
@@ -471,6 +527,7 @@ export type Database = {
           owner_principal_id: string;
           presentation_view: string;
           prompt_release: string;
+          prompt_release_id: string;
           provider_profile: string;
           run_id: string;
           status?: Database["public"]["Enums"]["task_status"];
@@ -486,6 +543,7 @@ export type Database = {
           owner_principal_id?: string;
           presentation_view?: string;
           prompt_release?: string;
+          prompt_release_id?: string;
           provider_profile?: string;
           run_id?: string;
           status?: Database["public"]["Enums"]["task_status"];
@@ -493,6 +551,13 @@ export type Database = {
           updated_at?: string;
         };
         Relationships: [
+          {
+            foreignKeyName: "generation_tasks_prompt_release_fk";
+            columns: ["prompt_release_id"];
+            isOneToOne: false;
+            referencedRelation: "prompt_releases";
+            referencedColumns: ["id"];
+          },
           {
             foreignKeyName: "generation_tasks_run_id_fkey";
             columns: ["run_id"];
@@ -648,6 +713,110 @@ export type Database = {
         };
         Relationships: [];
       };
+      prompt_profile_publications: {
+        Row: {
+          profile: string;
+          published_at: string;
+          published_by: string;
+          release_id: string;
+        };
+        Insert: {
+          profile: string;
+          published_at?: string;
+          published_by: string;
+          release_id: string;
+        };
+        Update: {
+          profile?: string;
+          published_at?: string;
+          published_by?: string;
+          release_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "prompt_profile_publications_release_id_fkey";
+            columns: ["release_id"];
+            isOneToOne: false;
+            referencedRelation: "prompt_releases";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      prompt_publication_events: {
+        Row: {
+          id: number;
+          previous_release_id: string | null;
+          profile: string;
+          published_at: string;
+          published_by: string;
+          release_id: string;
+        };
+        Insert: {
+          id?: never;
+          previous_release_id?: string | null;
+          profile: string;
+          published_at?: string;
+          published_by: string;
+          release_id: string;
+        };
+        Update: {
+          id?: never;
+          previous_release_id?: string | null;
+          profile?: string;
+          published_at?: string;
+          published_by?: string;
+          release_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "prompt_publication_events_previous_release_id_fkey";
+            columns: ["previous_release_id"];
+            isOneToOne: false;
+            referencedRelation: "prompt_releases";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "prompt_publication_events_release_id_fkey";
+            columns: ["release_id"];
+            isOneToOne: false;
+            referencedRelation: "prompt_releases";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      prompt_releases: {
+        Row: {
+          change_note: string;
+          created_at: string;
+          created_by: string;
+          id: string;
+          parsed_variables: string[];
+          profile: string;
+          template: string;
+          version: number;
+        };
+        Insert: {
+          change_note: string;
+          created_at?: string;
+          created_by: string;
+          id?: string;
+          parsed_variables: string[];
+          profile: string;
+          template: string;
+          version: number;
+        };
+        Update: {
+          change_note?: string;
+          created_at?: string;
+          created_by?: string;
+          id?: string;
+          parsed_variables?: string[];
+          profile?: string;
+          template?: string;
+          version?: number;
+        };
+        Relationships: [];
+      };
       profiles: {
         Row: {
           created_at: string;
@@ -680,6 +849,7 @@ export type Database = {
           provider: string;
           provider_idempotency_key: string;
           provider_request_id: string | null;
+          prompt_release_id: string;
           status: string;
           task_id: string;
         };
@@ -696,6 +866,7 @@ export type Database = {
           provider: string;
           provider_idempotency_key: string;
           provider_request_id?: string | null;
+          prompt_release_id: string;
           status: string;
           task_id: string;
         };
@@ -712,10 +883,18 @@ export type Database = {
           provider?: string;
           provider_idempotency_key?: string;
           provider_request_id?: string | null;
+          prompt_release_id?: string;
           status?: string;
           task_id?: string;
         };
         Relationships: [
+          {
+            foreignKeyName: "provider_attempts_prompt_release_fk";
+            columns: ["prompt_release_id"];
+            isOneToOne: false;
+            referencedRelation: "prompt_releases";
+            referencedColumns: ["id"];
+          },
           {
             foreignKeyName: "provider_attempts_task_id_fkey";
             columns: ["task_id"];
@@ -925,6 +1104,7 @@ export type Database = {
           owner_principal_id: string;
           presentation_view: string;
           prompt_release: string;
+          prompt_release_id: string;
           provider_profile: string;
           run_id: string;
           status: Database["public"]["Enums"]["task_status"];
@@ -941,6 +1121,31 @@ export type Database = {
       canonical_identity_anchor: {
         Args: { p_specification: Json };
         Returns: Json;
+      };
+      create_prompt_release: {
+        Args: {
+          p_change_note: string;
+          p_created_by: string;
+          p_parsed_variables: string[];
+          p_profile: string;
+          p_template: string;
+        };
+        Returns: {
+          change_note: string;
+          created_at: string;
+          created_by: string;
+          id: string;
+          parsed_variables: string[];
+          profile: string;
+          template: string;
+          version: number;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "prompt_releases";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
       };
       complete_shopify_order: {
         Args: {
@@ -980,6 +1185,7 @@ export type Database = {
           owner_principal_id: string;
           presentation_view: string;
           prompt_release: string;
+          prompt_release_id: string;
           provider_profile: string;
           run_id: string;
           status: Database["public"]["Enums"]["task_status"];
@@ -992,6 +1198,45 @@ export type Database = {
           isOneToOne: true;
           isSetofReturn: false;
         };
+      };
+      materialize_prompt_snapshot: {
+        Args: {
+          p_compiled_prompt: string;
+          p_compiler_version: string;
+          p_prompt_release_id: string;
+          p_sha256: string;
+          p_task_id: string;
+          p_variable_snapshot: Json;
+        };
+        Returns: {
+          compiled_prompt: string;
+          compiler_version: string;
+          created_at: string;
+          prompt_release_id: string;
+          sha256: string;
+          task_id: string;
+          variable_snapshot: Json;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "generation_prompt_snapshots";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      publish_prompt_release: {
+        Args: {
+          p_expected_current_release_id: string;
+          p_published_by: string;
+          p_release_id: string;
+        };
+        Returns: {
+          previous_release_id: string;
+          profile: string;
+          published_at: string;
+          release_id: string;
+          version: number;
+        }[];
       };
       reconcile_provider_attempt: {
         Args: {
@@ -1027,6 +1272,7 @@ export type Database = {
           owner_principal_id: string;
           presentation_view: string;
           prompt_release: string;
+          prompt_release_id: string;
           provider_profile: string;
           run_id: string;
           status: Database["public"]["Enums"]["task_status"];
