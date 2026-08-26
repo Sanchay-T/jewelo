@@ -15,7 +15,6 @@ concurrency:
 
 jobs:
   verify-deploy:
-    if: github.event_name == 'workflow_dispatch' || vars.DIGITALOCEAN_DEPLOY_ENABLED == 'true'
     environment: Preview
     runs-on: ubuntu-latest
     steps:

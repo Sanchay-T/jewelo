@@ -46,11 +46,11 @@ tested staging SHA + deployment ID + human production dispatch
   -> workflow summary publishes production URL and rollback command
 ```
 
-The temporary staging workflow runs on pushes to
-`codex/digitalocean-staging-preview` only when
-the GitHub `Preview` environment variable `DIGITALOCEAN_DEPLOY_ENABLED` is
-`true`; it can also be dispatched manually. Code-only deployments change the
-Git source ref and preserve the app's encrypted environment.
+The temporary staging workflow runs on every push to
+`codex/digitalocean-staging-preview`; it can also be dispatched manually. The
+branch filter and GitHub `Preview` environment are the deployment controls.
+Code-only deployments change the Git source ref and preserve the app's
+encrypted environment.
 
 Production never follows a branch automatically. The production workflow
 requires an exact 40-character commit SHA and the successful staging deployment
@@ -170,8 +170,7 @@ Production cutover is a controlled transition, not another preview push:
    `pnpm verify`, `pnpm do:build`, health smoke, browser smoke, and the app's
    customer/operator acceptance flow.
 5. Move the staging workflow trigger from the temporary preview branch to the
-   integration branch while retaining
-   `DIGITALOCEAN_DEPLOY_ENABLED=true`.
+   integration branch.
 6. Record the full tested commit SHA and its ACTIVE staging deployment ID.
 7. With explicit production approval, bootstrap `jewelo-production` using the
    production environment files.
