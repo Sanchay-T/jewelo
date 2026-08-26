@@ -55,6 +55,8 @@ jobs:
           token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
       - id: deploy
         name: Deploy staging source revision
+        env:
+          DIGITALOCEAN_ACCESS_TOKEN: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
         run: bash scripts/digitalocean/deploy.sh staging "${{ steps.source.outputs.tag }}"
       - name: Smoke test staging
         run: bash scripts/digitalocean/smoke.sh "${{ steps.deploy.outputs.service_url }}"

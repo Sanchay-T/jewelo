@@ -88,6 +88,8 @@ jobs:
           fi
       - id: deploy
         name: Deploy the immutable production source tag
+        env:
+          DIGITALOCEAN_ACCESS_TOKEN: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
         run: bash scripts/digitalocean/deploy.sh production "${{ steps.source.outputs.tag }}"
       - name: Smoke test production
         run: bash scripts/digitalocean/smoke.sh "${{ steps.deploy.outputs.service_url }}"
