@@ -423,18 +423,19 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
                 </span>
               ) : (
                 <>
-                  {identity.lines.map((line, index) =>
-                    resolvedLayout === "stacked-heart" && line === "♡" ? (
-                      <span
-                        className="clm-heart-connector"
-                        key={`${line}-${index}`}
-                        aria-hidden="true"
-                      >
-                        <Heart weight="light" />
-                      </span>
-                    ) : (
+                  {resolvedLayout === "stacked-heart" ? (
+                    <div
+                      className="clm-stacked-heart-simple"
+                      aria-hidden="true"
+                    >
+                      <strong>{identity.lines[0]}</strong>
+                      <Heart className="clm-heart-between" weight="light" />
+                      <strong>{identity.lines[2]}</strong>
+                    </div>
+                  ) : (
+                    identity.lines.map((line, index) => (
                       <strong key={`${line}-${index}`}>{line}</strong>
-                    ),
+                    ))
                   )}
                   {coverage !== "none" && (
                     <small>
