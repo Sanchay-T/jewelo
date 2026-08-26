@@ -117,7 +117,7 @@ echo "Trigger preview-branch guard proof passed."
 
 node scripts/verify-supabase-project.mjs --prove-negative
 
-if output="$(env -u NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY NEXT_PUBLIC_SUPABASE_URL=https://example.supabase.co pnpm --filter @jewelo/web build 2>&1)"; then
+if output="$(env -u NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY NODE_ENV=test NEXT_PUBLIC_SUPABASE_URL=https://example.supabase.co pnpm --filter @jewelo/web build 2>&1)"; then
   echo "Web build unexpectedly accepted a partial public Supabase environment." >&2
   exit 1
 fi

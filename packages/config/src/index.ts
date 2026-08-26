@@ -6,6 +6,7 @@ const nonEmpty = z.string().min(1);
 export const browserEnvSchema = z
   .object({
     NEXT_PUBLIC_APP_URL: url.default("http://localhost:3000"),
+    NEXT_PUBLIC_JEWELO_DATA_MODE: z.enum(["mock", "remote"]).default("mock"),
     NEXT_PUBLIC_SUPABASE_URL: url.optional(),
     NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: nonEmpty.optional(),
     NEXT_PUBLIC_POSTHOG_KEY: nonEmpty.optional(),

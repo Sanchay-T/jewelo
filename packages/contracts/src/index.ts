@@ -1,5 +1,8 @@
 import { z } from "zod";
 
+export * from "./backend";
+export * from "./domain";
+
 export const foundationTaskInputSchema = z.object({
   requestId: z.string().min(1),
   message: z.string().min(1).max(200),

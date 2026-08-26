@@ -1,9 +1,28 @@
 "use client";
 
 import React from "react";
+import Image from "next/image";
 import Link from "next/link";
-import { House, Sparkle } from "@phosphor-icons/react";
+import {
+  Bag,
+  Diamond,
+  Gift,
+  Hammer,
+  Heart,
+  Leaf,
+  ShieldCheck,
+  Sparkle,
+  UserCircle,
+} from "@phosphor-icons/react";
 import { useJewelo } from "@/lib/jewelo-provider";
+
+export function CaleumsWordmark({ compact = false }: { compact?: boolean }) {
+  return (
+    <span className="clm-wordmark" data-compact={compact || undefined}>
+      CALEUMS
+    </span>
+  );
+}
 
 export function AppShell({
   locale,
@@ -13,27 +32,87 @@ export function AppShell({
   children: React.ReactNode;
 }) {
   return (
-    <div className="site-shell">
-      <header className="topbar">
-        <Link className="brand" href={`/${locale}`} aria-label="Jewelo home">
-          <span className="brand-mark">J</span>
-          <span className="display">Jewelo</span>
+    <div className="clm-site-shell">
+      <header className="clm-topbar">
+        <Link href={`/${locale}`} aria-label="Caleums home">
+          <CaleumsWordmark />
         </Link>
-        <nav className="nav-links" aria-label="Primary navigation">
-          <Link className="nav-link" href={`/${locale}`}>
-            <House size={17} />
-            Home
-          </Link>
-          <Link className="nav-link" href={`/${locale}/design/new`}>
-            <Sparkle size={17} />
-            Create
-          </Link>
+        <nav className="clm-nav" aria-label="Primary navigation">
+          <Link href={`/${locale}/design/new`}>Create yours</Link>
+          <Link href={`/${locale}/operator`}>Atelier</Link>
         </nav>
-        <span className="tiny muted">No account needed</span>
+        <div className="clm-header-tools">
+          <button
+            type="button"
+            aria-label="Saved designs"
+            title="Saved designs"
+          >
+            <Heart size={19} />
+          </button>
+          <button type="button" aria-label="Account" title="Account">
+            <UserCircle size={20} />
+          </button>
+          <button type="button" aria-label="Shopping bag" title="Shopping bag">
+            <Bag size={19} />
+          </button>
+        </div>
       </header>
       {children}
       <ScenarioDrawer />
     </div>
+  );
+}
+
+export function CaleumsFooter() {
+  return (
+    <footer className="clm-trust-strip">
+      <div className="clm-trust-item">
+        <Gift size={20} />
+        <div>
+          <strong>Made to order</strong>
+          <span>Just for you</span>
+        </div>
+      </div>
+      <div className="clm-trust-item">
+        <Hammer size={20} />
+        <div>
+          <strong>Handcrafted</strong>
+          <span>By expert artisans</span>
+        </div>
+      </div>
+      <div className="clm-trust-item">
+        <Diamond size={20} />
+        <div>
+          <strong>Solid 18K gold</strong>
+          <span>Never plated</span>
+        </div>
+      </div>
+      <div className="clm-trust-item">
+        <Leaf size={20} />
+        <div>
+          <strong>Lab grown diamonds</strong>
+          <span>Ethical &amp; sustainable</span>
+        </div>
+      </div>
+      <div className="clm-trust-item">
+        <ShieldCheck size={20} />
+        <div>
+          <strong>Secure checkout</strong>
+          <span>Worldwide shipping</span>
+        </div>
+      </div>
+      <div className="clm-footer-brand">
+        <div>
+          <Image
+            src="/brand/caleums-monogram.jpg"
+            alt="Caleums monogram"
+            width={30}
+            height={30}
+          />
+          <span>Handcrafted in Dubai</span>
+        </div>
+      </div>
+    </footer>
   );
 }
 
@@ -54,41 +133,35 @@ function ScenarioDrawer() {
     "cancel",
   ] as const;
   return (
-    <aside className="scenario-drawer" aria-label="Development scenarios">
+    <aside className="clm-scenario" aria-label="Development scenarios">
       {open && (
-        <div className="scenario-panel">
-          <h2>Fixture scenarios</h2>
-          <p>Development-only. These states never call a backend.</p>
-          <div className="scenario-list">
-            {scenarios.map((scenario) => (
-              <button
-                key={scenario}
-                aria-pressed={state.scenario === scenario}
-                onClick={() => {
-                  setScenario(scenario);
-                  setOpen(false);
-                }}
-              >
-                {scenario}
-              </button>
-            ))}
-          </div>
-          <button
-            className="danger-button"
-            style={{ width: "100%", marginTop: 10 }}
-            onClick={() => client.reset()}
-          >
-            Reset fixture state
+        <div className="clm-scenario-panel">
+          <strong>Mock scenario</strong>
+          <p>Development only · no provider calls</p>
+          {scenarios.map((scenario) => (
+            <button
+              key={scenario}
+              aria-pressed={state.scenario === scenario}
+              onClick={() => {
+                void setScenario(scenario);
+                setOpen(false);
+              }}
+            >
+              {scenario}
+            </button>
+          ))}
+          <button className="danger" onClick={() => void client.reset()}>
+            Reset fixture
           </button>
         </div>
       )}
       <button
-        className="scenario-trigger"
+        className="clm-scenario-trigger"
         aria-label="Toggle fixture scenarios"
         aria-expanded={open}
         onClick={() => setOpen((value) => !value)}
       >
-        <Sparkle size={22} weight="fill" />
+        <Sparkle size={20} weight="fill" />
       </button>
     </aside>
   );

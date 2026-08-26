@@ -3,20 +3,22 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect } from "react";
-import { Sparkle } from "@phosphor-icons/react";
+import {
+  ArrowClockwise,
+  ArrowRight,
+  Check,
+  SpinnerGap,
+  X,
+} from "@phosphor-icons/react";
 import { AppShell } from "@/components/app-shell";
 import { useJewelo } from "@/lib/jewelo-provider";
 import type { Locale } from "@/lib/types";
 
-const fixtures = [
-  "/fixtures/layla-direction-1-product.png",
-  "/fixtures/layla-direction-2-worn.png",
-  "/fixtures/layla-direction-3-product.png",
-  "/fixtures/layla-direction-4-worn.png",
-  "/fixtures/layla-direction-2-product.png",
-  "/fixtures/layla-direction-1-worn.png",
-  "/fixtures/layla-direction-4-product.png",
-  "/fixtures/layla-direction-3-worn.png",
+const progress = [
+  "Reading your approved spelling",
+  "Building the pendant geometry",
+  "Rendering the Studio presentation",
+  "Verifying every detail",
 ];
 
 export function CraftingTransition({
@@ -29,11 +31,9 @@ export function CraftingTransition({
   const { client, state, refresh } = useJewelo();
   const design = state.designs.find((item) => item.id === designId);
   const run = design?.runs.at(-1);
-
   useEffect(() => {
-    if (design && design.runs.length === 0) client.startRun(design.id);
+    if (design && design.runs.length === 0) void client.startRun(design.id);
   }, [client, design]);
-
   useEffect(
     () => (run ? client.subscribeToRun(run.id, refresh) : undefined),
     [client, refresh, run],
@@ -42,104 +42,133 @@ export function CraftingTransition({
   if (!design)
     return (
       <AppShell locale={locale}>
-        <main className="not-found">
-          <div>
-            <h1 className="display">Design not found</h1>
-            <Link className="primary-button" href={`/${locale}/design/new`}>
-              Start a design
-            </Link>
-          </div>
+        <main className="clm-empty">
+          <h1>Design not found</h1>
+          <Link className="clm-primary" href={`/${locale}/design/new`}>
+            Start a design
+          </Link>
         </main>
       </AppShell>
     );
-
-  const readyProducts =
-    run?.directions.filter(
-      (direction) => direction.representations.product.state === "ready",
-    ).length ?? 0;
-  const verifying = run?.tasks.some((task) => task.state === "verifying");
-  const row = [...fixtures, ...fixtures];
-
+  const product = run?.directions[0]?.representations.product;
+  const task = run?.tasks.find(
+    (item) =>
+      item.directionId === run.directions[0]?.id && item.kind === "product",
+  );
+  const ready = product?.state === "ready" && product.assetUrl;
+  const failed = product?.state === "failed";
+  const cancelled = product?.state === "cancelled";
+  const completed = ready
+    ? 4
+    : product?.state === "verifying"
+      ? 3
+      : task
+        ? 2
+        : 1;
   return (
     <AppShell locale={locale}>
-      <main className="crafting-transition">
-        <section className="crafting-message" aria-live="polite">
-          <div className="crafting-spinner" aria-hidden="true">
-            <Sparkle size={32} weight="fill" />
-          </div>
-          <p className="eyebrow">Revision approved</p>
-          <h1 className="display">
-            Crafting directions for{" "}
-            {design.revisions.at(-1)?.identity.approvedText}
+      <main className="clm-generation">
+        <section className="clm-generation-copy" aria-live="polite">
+          <p className="clm-kicker">Your Caleums design</p>
+          <h1>
+            {ready
+              ? "Your pendant is ready."
+              : failed
+                ? "The Studio render needs another try."
+                : cancelled
+                  ? "Generation was cancelled."
+                  : "Bringing your piece to life."}
           </h1>
           <p>
-            {readyProducts > 0
-              ? `${readyProducts} of 4 product directions ready. You can enter the studio while siblings continue.`
-              : verifying
-                ? "Verifying the first pendant against your exact identity…"
-                : "Building four independent jewelry directions…"}
+            {ready
+              ? "One considered Studio result, built from your approved pendant identity."
+              : "Your work is durable. You can leave this page and return without losing the approved design."}
           </p>
-          <div
-            className="task-dots"
-            aria-label={`${readyProducts} of 4 product directions ready`}
-          >
-            {[0, 1, 2, 3].map((index) => (
-              <span
-                key={index}
-                data-ready={index < readyProducts || undefined}
-              />
+          <ol className="clm-progress-list">
+            {progress.map((label, index) => (
+              <li
+                key={label}
+                data-complete={index < completed || undefined}
+                data-current={(index === completed && !ready) || undefined}
+              >
+                <span>
+                  {index < completed ? (
+                    <Check size={14} weight="bold" />
+                  ) : index === completed && !ready ? (
+                    <SpinnerGap size={15} />
+                  ) : (
+                    index + 1
+                  )}
+                </span>
+                <strong>{label}</strong>
+              </li>
             ))}
-          </div>
-          {readyProducts > 0 ? (
-            <Link
-              className="primary-button"
-              href={`/${locale}/studio/${design.id}`}
+          </ol>
+          {!ready && !failed && !cancelled && (
+            <button
+              className="clm-secondary"
+              type="button"
+              onClick={() => {
+                const active = run?.tasks.find((item) =>
+                  ["queued", "generating", "verifying", "retrying"].includes(
+                    item.state,
+                  ),
+                );
+                if (active) void client.cancelTask(design.id, active.id);
+              }}
             >
-              Enter the studio
-            </Link>
-          ) : (
-            <button className="primary-button" disabled>
-              Studio opens with the first verified direction
+              <X size={16} /> Cancel generation
             </button>
           )}
-          <p className="tiny muted">
-            This local transition makes no provider calls. Fixture tasks
-            continue progressively and remain resumable.
-          </p>
+          {failed && task && (
+            <button
+              className="clm-primary"
+              type="button"
+              onClick={() => void client.retryTask(design.id, task.id)}
+            >
+              <ArrowClockwise size={17} /> Retry Studio render
+            </button>
+          )}
+          {cancelled && (
+            <button
+              className="clm-primary"
+              type="button"
+              onClick={() => void client.startRun(design.id)}
+            >
+              <ArrowClockwise size={17} /> Start again
+            </button>
+          )}
         </section>
-        <section
-          className="fixture-marquee"
-          aria-label="Jewelry direction inspiration"
-        >
-          <p className="eyebrow">Your directions are taking shape</p>
-          <div className="marquee-window">
-            <div className="marquee-row left">
-              {row.map((src, index) => (
-                <div className="marquee-tile" key={`left-${index}`}>
-                  <Image
-                    src={src}
-                    alt="Jewelo pendant direction fixture"
-                    width={144}
-                    height={144}
-                  />
-                </div>
-              ))}
+        <section className="clm-generation-stage">
+          {ready ? (
+            <article className="clm-result-card">
+              <Image
+                src={product.assetUrl!}
+                alt={product.alt}
+                fill
+                priority
+                sizes="(max-width: 799px) 100vw, 60vw"
+              />
+              <span>01 · Studio</span>
+              <Link
+                className="clm-result-open"
+                href={`/${locale}/studio/${design.id}`}
+              >
+                Open Studio result <ArrowRight size={17} />
+              </Link>
+            </article>
+          ) : (
+            <div className="clm-result-skeleton">
+              <div />
+              <span>
+                {failed
+                  ? "Render paused"
+                  : cancelled
+                    ? "Cancelled"
+                    : "Creating your Studio result"}
+              </span>
             </div>
-          </div>
-          <div className="marquee-window">
-            <div className="marquee-row right">
-              {row.toReversed().map((src, index) => (
-                <div className="marquee-tile" key={`right-${index}`}>
-                  <Image
-                    src={src}
-                    alt="Jewelo worn jewelry fixture"
-                    width={144}
-                    height={144}
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
+          )}
         </section>
       </main>
     </AppShell>

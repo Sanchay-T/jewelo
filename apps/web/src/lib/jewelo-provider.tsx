@@ -10,22 +10,20 @@ import {
 } from "react";
 import { usePathname } from "next/navigation";
 import { MockJeweloClient } from "./mock-client";
+import type { DesignInput, Role, ScenarioId } from "./types";
 import type {
-  Design,
-  DesignInput,
-  JeweloClient,
-  Role,
-  ScenarioId,
-  SpikeState,
-} from "./types";
+  LegacyDesign as Design,
+  LegacyJeweloClient as JeweloClient,
+  LegacySpikeState as SpikeState,
+} from "./legacy-direction-compat";
 
 interface JeweloContextValue {
   client: JeweloClient;
   state: SpikeState;
   design?: Design;
-  createDesign(input: DesignInput): Design;
-  setRole(role: Role): void;
-  setScenario(scenario: ScenarioId): void;
+  createDesign(input: DesignInput): Promise<Design>;
+  setRole(role: Role): Promise<void>;
+  setScenario(scenario: ScenarioId): Promise<void>;
   refresh(): void;
 }
 
@@ -45,12 +43,12 @@ export function JeweloProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const unsubscribe = client.onChange(refresh);
-    client.hydrate();
+    void client.hydrate();
     return unsubscribe;
   }, [client, refresh]);
 
   useEffect(() => {
-    if (!/^\/(en|ar)\/?$/.test(pathname)) client.setResumePath(pathname);
+    if (!/^\/(en|ar)\/?$/.test(pathname)) void client.setResumePath(pathname);
   }, [client, pathname]);
 
   const value = useMemo<JeweloContextValue>(
@@ -60,14 +58,23 @@ export function JeweloProvider({ children }: { children: React.ReactNode }) {
       design: state.activeDesignId
         ? state.designs.find((item) => item.id === state.activeDesignId)
         : undefined,
-      createDesign(input) {
-        return client.approveRevision(input);
+      async createDesign(input) {
+        const { spellingConfirmed, ...draftInput } = input;
+        void spellingConfirmed;
+        const created = await client.createDraft(draftInput);
+        const draft = await client.updateDraft(created.id, {
+          spellingConfirmed: true,
+        });
+        return client.approveRevision({
+          draftId: draft.id,
+          specification: input,
+        });
       },
-      setRole(role) {
-        client.setRole(role);
+      async setRole(role) {
+        await client.setRole(role);
       },
-      setScenario(scenario) {
-        client.setScenario(scenario);
+      async setScenario(scenario) {
+        await client.setScenario(scenario);
       },
       refresh,
     }),

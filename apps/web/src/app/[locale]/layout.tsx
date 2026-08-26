@@ -1,6 +1,12 @@
 import { notFound } from "next/navigation";
 import { LocaleDocument } from "@/components/locale-document";
 
+export const metadata = {
+  title: "Caleums — Your name. Made precious.",
+  description:
+    "Design and approve a personalized 18K gold Caleums name pendant.",
+};
+
 export function generateStaticParams() {
   return [{ locale: "en" }, { locale: "ar" }];
 }
