@@ -320,7 +320,7 @@ video {
 }
 .clm-config-progress > div {
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
   margin-top: 8px;
   gap: 5px;
 }
@@ -2043,7 +2043,17 @@ video {
   .clm-config-progress {
     padding: 10px 14px 3px;
     margin: 0;
-    overflow: hidden;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .clm-config-progress::-webkit-scrollbar {
+    display: none;
+  }
+  .clm-config-progress > div {
+    width: max-content;
+    grid-template-columns: none;
+    grid-auto-flow: column;
+    grid-auto-columns: 44px;
   }
   .clm-config-progress small {
     display: none;

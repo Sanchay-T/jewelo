@@ -1,6 +1,6 @@
 # Caleums reference UI — design QA
 
-Final result: **passed**
+final result: passed
 
 ## Visual authority and comparison input
 
@@ -13,22 +13,22 @@ The matched comparison preserves the screenshot's warm ivory field, near-black a
 
 ## Matched viewport evidence
 
-| Viewport | State | Capture | Result |
-| --- | --- | --- | --- |
-| 1440 × 900 | configurator / name | `/tmp/caleums-config-1440x900.jpg` | Passed; persistent right preview and no horizontal overflow |
-| 1024 × 768 | configurator / name | `/tmp/caleums-config-1024x768.jpg` | Passed; usable split proportions and no clipping |
-| 834 × 1112 | configurator / name | `/tmp/caleums-config-834x1112.jpg` | Passed; tablet split remains legible and actions visible |
-| 390 × 844 | configurator / name | `/tmp/caleums-config-390x844.jpg` | Passed; preview precedes controls and sticky actions remain visible |
-| 360 × 640 | configurator / name | `/tmp/caleums-config-360x640.jpg` | Passed; zero page overflow, 44 px targets, sticky actions visible |
-| 390 × 844 | landing / marquee | `/tmp/caleums-landing-390x844.jpg` | Passed; both real-image rows remain present below the hero |
-| 360 × 640 | Studio / ready | `/tmp/caleums-studio-360x640-final.jpg` | Passed; primary and refinement actions fit without horizontal scrolling |
-| 360 × 640 | commerce / final piece | `/tmp/caleums-commerce-360x640.jpg` | Passed; image-first mobile composition and no page overflow |
+| Viewport   | State                  | Capture                                 | Result                                                                  |
+| ---------- | ---------------------- | --------------------------------------- | ----------------------------------------------------------------------- |
+| 1440 × 900 | configurator / name    | `/tmp/caleums-config-1440x900.jpg`      | Passed; persistent right preview and no horizontal overflow             |
+| 1024 × 768 | configurator / name    | `/tmp/caleums-config-1024x768.jpg`      | Passed; usable split proportions and no clipping                        |
+| 834 × 1112 | configurator / name    | `/tmp/caleums-config-834x1112.jpg`      | Passed; tablet split remains legible and actions visible                |
+| 390 × 844  | configurator / name    | `/tmp/caleums-config-390x844.jpg`       | Passed; preview precedes controls and sticky actions remain visible     |
+| 360 × 640  | configurator / name    | `/tmp/caleums-config-360x640.jpg`       | Passed; zero page overflow, 44 px targets, sticky actions visible       |
+| 390 × 844  | landing / marquee      | `/tmp/caleums-landing-390x844.jpg`      | Passed; both real-image rows remain present below the hero              |
+| 360 × 640  | Studio / ready         | `/tmp/caleums-studio-360x640-final.jpg` | Passed; primary and refinement actions fit without horizontal scrolling |
+| 360 × 640  | commerce / final piece | `/tmp/caleums-commerce-360x640.jpg`     | Passed; image-first mobile composition and no page overflow             |
 
 Programmatic viewport checks reported `documentElement.scrollWidth === documentElement.clientWidth` at all five required sizes. A mobile interactive-element audit found no visible button, link, input, select, or textarea smaller than 44 px in either dimension after the final fixes.
 
 ## Required interaction evidence
 
-- Progress labels read exactly: Name & script, Inspiration, Metal, Stones, Size & chain, Review.
+- Arabic progress labels read exactly: Name & language, Arabic style, Names & layout, Inspiration, Metal, Stones, Size & chain, Review. English intentionally omits only Arabic style and reports seven steps.
 - Both approved Arabic name fields accepted independent edits (`ليان`, `نور`), and the live identity preview exposed `Deterministic identity preview: ليان ♡ نور`.
 - Progress-step buttons could not advance an incomplete specification; clearing the second Arabic spelling disabled both Continue and the next-stage jump.
 - Inspiration search (`fine`), Minimal filtering, template selection, removal, and Inspire Me all updated the selected reference state.
@@ -44,16 +44,34 @@ Programmatic viewport checks reported `documentElement.scrollWidth === documentE
 
 ## Difference history and disposition
 
-| Severity | Difference found | Fix | Final |
-| --- | --- | --- | --- |
-| P0 | None | — | Passed |
-| P1 | Progress labels described obsolete panels | Replaced with the six real stages and guarded every jump | Passed |
-| P1 | Suggested Arabic spelling was not editable for both names | Added independent editable fields and functional pencil focus controls | Passed |
-| P1 | Preview stayed on a static Layla identity | Added deterministic approved-text/layout/metal/stone overlay; fixture is presentation backdrop only | Passed |
-| P1 | Studio exposed hard-coded future views | Derived tab visibility from enabled run task data; only Studio appears | Passed |
-| P1 | Task retry/cancel and blocked/failed status were not testable | Restored task commands, live state copy, and a development-only frozen-task audit | Passed |
-| P1 | Removing an upload only hid the component | Deleted `draft-reference` from IndexedDB and verified removal across reload | Passed |
-| P2 | 360 px Studio footer clipped actions and the scenario trigger overlapped feedback | Compacted the sticky footer and moved the development trigger above transient status | Passed |
-| P2 | Mobile progress/header controls included sub-44 px targets | Raised their minimum dimensions to 44 px and re-audited | Passed |
+| Severity | Difference found                                                                  | Fix                                                                                                 | Final  |
+| -------- | --------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- | ------ |
+| P0       | None                                                                              | —                                                                                                   | Passed |
+| P1       | Progress labels described obsolete panels                                         | Replaced with the six real stages and guarded every jump                                            | Passed |
+| P1       | Suggested Arabic spelling was not editable for both names                         | Added independent editable fields and functional pencil focus controls                              | Passed |
+| P1       | Preview stayed on a static Layla identity                                         | Added deterministic approved-text/layout/metal/stone overlay; fixture is presentation backdrop only | Passed |
+| P1       | Studio exposed hard-coded future views                                            | Derived tab visibility from enabled run task data; only Studio appears                              | Passed |
+| P1       | Task retry/cancel and blocked/failed status were not testable                     | Restored task commands, live state copy, and a development-only frozen-task audit                   | Passed |
+| P1       | Removing an upload only hid the component                                         | Deleted `draft-reference` from IndexedDB and verified removal across reload                         | Passed |
+| P2       | 360 px Studio footer clipped actions and the scenario trigger overlapped feedback | Compacted the sticky footer and moved the development trigger above transient status                | Passed |
+| P2       | Mobile progress/header controls included sub-44 px targets                        | Raised their minimum dimensions to 44 px and re-audited                                             | Passed |
 
 No open P0, P1, or P2 visual differences remain in the scoped reference comparison.
+
+## Isolated configurator-step correction — 2026-08-27
+
+- Source visual truth: `docs/reference/caleums-name-studio.png` (1402 × 1122, DPR 1 source screenshot).
+- Browser-rendered implementation: `/tmp/caleums-isolated/01-name-language-final.jpg`, `/tmp/caleums-isolated/02-arabic-style-final.jpg`, and `/tmp/caleums-isolated/03-names-layout-final.jpg` at a 1440 × 900 CSS viewport, DPR 1.
+- Same-input full-view comparison: `/tmp/caleums-isolated/reference-vs-isolated.jpg` (2300 × 1508), inspected at original resolution.
+- Focused evidence: the first three source configurator scenes and their corresponding rendered screens were readable in the combined comparison; no additional crop was needed.
+
+The earlier implementation combined name count, language, Arabic style, and layout into one panel. The revised flow isolates every visible choice group from the reference: Name & language, Arabic style, Names & layout, Inspiration, Metal, Stones, Size & chain, and Review. English skips only the inapplicable Arabic-style step. Forward progress remains limited to the next valid panel, while completed panels remain revisitable.
+
+Required fidelity surfaces passed: Instrument Sans/editorial serif hierarchy remains unchanged; the control/preview split, ivory/gold/near-black palette, real jewelry imagery, thin selected borders, labels, and action copy stay consistent with the source. The responsive audit at 1440 × 900, 1024 × 768, 834 × 1112, 390 × 844, and 360 × 640 reported zero page-level horizontal overflow and zero visible interactive targets below 44 px. Mobile uses an internal, scrollbar-free progress rail for the eight isolated steps.
+
+| Severity | Difference found                                                                                                 | Fix                                                                                                       | Post-fix evidence                                                                     |
+| -------- | ---------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| P1       | Arabic style and names/layout were combined into the first panel instead of isolated as in the source storyboard | Split them into dedicated conditional screens with independent progress labels and validation             | `/tmp/caleums-isolated/reference-vs-isolated.jpg`                                     |
+| P2       | Eight mobile progress targets compressed below 44 px                                                             | Changed the mobile progress rail to 44 px columns with internal horizontal scrolling and no page overflow | `/tmp/caleums-isolated/02-arabic-style-390x844.jpg`; all five viewport metrics passed |
+
+No open P0, P1, or P2 differences remain for the isolated-step correction.
