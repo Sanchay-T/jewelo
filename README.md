@@ -1,36 +1,124 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Jewelo v2 — implementation-ready rebuild
 
-## Getting Started
+This branch is the clean-room source of truth for rebuilding Jewelo from first principles. The product journey, UX behavior, production architecture, concurrency contract, model strategy, and modular implementation goals are already decided.
 
-First, run the development server:
+**Current status:** architecture locked; implementation has not started.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## Locked production stack
+
+- Next.js 16.2 + React 19 + strict TypeScript
+- pnpm workspace + Turborepo
+- Vercel for web and preview deployments
+- Supabase Mumbai for Postgres, Auth, Realtime, and private Storage
+- Trigger.dev Cloud for durable, parallel AI workflows
+- direct OpenAI `gpt-image-2-2026-04-21` for product and worn stills
+- fal.ai for video inference
+- Seedance 2.0 Fast for four 4-second motion previews
+- Seedance 2.0 Standard for an optional selected final motion
+- Sentry + PostHog for reliability and product analytics
+- Motion + Embla + `react-zoom-pan-pinch` + `react-dropzone` for the progressive media experience
+
+Read `docs/FINAL-STACK.md`, `docs/ARCHITECTURE.md`, and `docs/MEDIA-CONCURRENCY.md` before changing implementation decisions.
+
+## Fast-result contract
+
+```text
+four product stills start concurrently
+  each verified product appears immediately
+    each independently unlocks:
+      worn still + fast Seedance preview concurrently
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+There is no “wait for the entire batch” barrier. A slow or failed sibling cannot delay a successful variation.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Provider quotas remain honest:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- OpenAI concurrency/IPM is validated before real launch;
+- fal preview-all mode requires a verified account concurrency limit of at least four;
+- below a provider limit, Trigger queues excess work and the UI shows `queued` rather than fake progress.
 
-## Learn More
+## Open-source framework decision
 
-To learn more about Next.js, take a look at the following resources:
+No autonomous media-agent framework sits in the production path. Genblaze was the strongest open-source pipeline candidate reviewed, but it would add Python and duplicate Trigger.dev’s durable workflow responsibilities. Jewelo keeps deterministic typed workflows and borrows only provenance ideas.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+fal.ai is the managed inference gateway for Seedance—not the business workflow engine. Trigger.dev owns fan-out, retries, idempotency, fairness, cancellation, and recovery. Supabase owns durable customer-visible truth.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Start
 
-## Deploy on Vercel
+```bash
+git clone --branch rebuild/v2-first-principles --single-branch \
+  https://github.com/Sanchay-T/jewelo.git jewelo-v2
+cd jewelo-v2
+corepack enable
+pnpm verify
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Claude Code
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+claude
+```
+
+Then run:
+
+```text
+/goal 00
+```
+
+### Codex
+
+Open Codex in this checkout and paste the complete prompt from:
+
+```text
+docs/GOLD-PROMPT.md
+```
+
+Both paths execute `docs/goals/00-production-foundation.md`. The agent implements the decided stack; it does not reopen architecture research.
+
+## Human API boundary
+
+The agent owns routine engineering: files, tests, migrations, preview deploys, provider test calls, logs, debugging, draft PRs, and proof packets.
+
+The human is required only for:
+
+- first-time account creation or OAuth authorization;
+- supplying development/production secrets;
+- purchasing/approving OpenAI and fal quota or billing;
+- accepting legal, privacy, retention, and manufacturing claims;
+- irreversible production actions;
+- merging and launch approval.
+
+Normal development must not require Docker, a local database, local object-storage emulators, Kubernetes, or self-hosting.
+
+## Goal branches
+
+```text
+main
+  └── rebuild/v2-first-principles
+        ├── goal/00-production-foundation
+        ├── goal/01-product-studio
+        ├── goal/02-supabase-domain
+        ├── goal/03-durable-generation
+        ├── goal/04-identity-prompt-qa
+        ├── goal/05-real-still-generation
+        ├── goal/06-real-motion
+        ├── goal/07-commerce-operator
+        └── goal/08-hardening-launch
+```
+
+A goal normally runs in an isolated worktree and ends in a draft PR into `rebuild/v2-first-principles`. The umbrella PR to `main` remains draft until Goal 08 passes.
+
+## Repository map
+
+- `CLAUDE.md` — always-loaded coding-agent contract.
+- `AGENTS.md` — tool-neutral agent rules.
+- `.claude/skills/goal/SKILL.md` — Claude Code `/goal` skill.
+- `docs/PRODUCT-CONTRACT.md` — frozen business journey.
+- `docs/FROZEN-UX.md` and `docs/UX-AUDIT.md` — approved experience and corrections.
+- `docs/FINAL-STACK.md` — binding technology choices.
+- `docs/ARCHITECTURE.md` — system boundaries, data flow, and scaling behavior.
+- `docs/MEDIA-CONCURRENCY.md` — four-way fan-out, quotas, costs, and progressive UI contract.
+- `docs/DECISION-MATRIX.md` — why the selected stack won.
+- `docs/COST-MODEL.md` — dated unit economics and safeguards.
+- `docs/GOLD-PROMPT.md` — copy-paste first implementation prompt.
+- `docs/goals/` — bounded implementation goals.
