@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import useEmblaCarousel from "embla-carousel-react";
 import {
@@ -86,6 +87,7 @@ export function Studio({
   designId: string;
 }) {
   const { client, state, design: activeDesign, refresh } = useJewelo();
+  const router = useRouter();
   const design =
     state.designs.find((candidate) => candidate.id === designId) ??
     (activeDesign?.id === designId ? activeDesign : undefined);
@@ -441,19 +443,20 @@ export function Studio({
           <button
             className={styles.primaryButton}
             disabled={
-              !design.selectedDirectionId || busyAction === "estimate"
+              !design.selectedDirectionId || busyAction === "commerce"
             }
             onClick={() =>
-              void act("estimate", "Estimate calculated.", () =>
-                client.calculateEstimate(designId),
-              )
+              void act("commerce", "Opening estimate and quote.", () => {
+                if (!design.estimate) client.calculateEstimate(designId);
+                router.push(`/${locale}/commerce/${designId}`);
+              })
             }
           >
-            {busyAction === "estimate"
+            {busyAction === "commerce"
               ? "Calculating…"
               : design.estimate
-                ? "Refresh estimate"
-                : "Calculate estimate"}
+                ? "Open estimate & quote"
+                : "Calculate estimate & continue"}
           </button>
         </div>
       </footer>
