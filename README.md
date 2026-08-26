@@ -1,96 +1,52 @@
-# Jewelo v2 — implementation-ready rebuild
+# Jewelo v2
 
-This branch is the clean-room source of truth for rebuilding Jewelo from first principles. The product journey, UX behavior, production architecture, service boundaries, model strategy, and modular implementation goals are already decided.
+Jewelo v2 is a first-principles production rebuild. The architecture is locked: Next.js/Vercel, Supabase Mumbai, Trigger.dev Cloud, direct OpenAI still generation, and Runway motion behind narrow adapters.
 
-**Current status:** architecture locked; implementation has not started.
+This branch implements Goal 00 only: the production repository foundation and managed-service seams. It deliberately contains no customer studio, product database schema, or real provider call.
 
-## Locked production stack
+## Runtime
 
-- Next.js 16.2 + React 19 + strict TypeScript
-- pnpm workspace + Turborepo
-- Vercel for web and preview deployments
-- Supabase Mumbai for Postgres, Auth, Realtime, and private Storage
-- Trigger.dev Cloud for durable, parallel AI workflows
-- OpenAI GPT Image 2 snapshot for product and worn stills
-- Runway API with `gemini_omni_flash` for selected 9:16 motion; `seedance2` is the fallback profile
-- Sentry + PostHog for reliability and product analytics
+- Node.js `24.18.1`
+- pnpm `11.23.0`
+- Next.js `16.2.12` / React `19.2.8`
+- Turborepo `2.10.12`
 
-Read `docs/FINAL-STACK.md` and `docs/ARCHITECTURE.md` before changing implementation decisions.
-
-## Start
+Use mise and Corepack so local execution matches CI:
 
 ```bash
-git clone --branch rebuild/v2-first-principles --single-branch \
-  https://github.com/Sanchay-T/jewelo.git jewelo-v2
-cd jewelo-v2
+mise install
 corepack enable
+corepack prepare pnpm@11.23.0 --activate
+pnpm install --frozen-lockfile
 pnpm verify
 ```
 
-### Claude Code
+## Root commands
 
 ```bash
-claude
+pnpm dev
+pnpm lint
+pnpm typecheck
+pnpm test
+pnpm build
+pnpm verify
+pnpm verify:clean
+pnpm db:types
+pnpm db:push
+pnpm jobs:dev
+pnpm jobs:deploy:preview
 ```
 
-Then run:
+Cloud commands fail early with an exact authorization instruction when a non-production environment is not configured. They never fall back to production.
+
+## Repository layout
 
 ```text
-/goal 00
+apps/web       minimal Next.js health/readiness surface
+apps/jobs      Trigger.dev task wrappers
+packages/*     narrow domain, contract, adapter, config, and testing packages
+supabase/      remote migration/configuration seam; no local service requirement
+docs/runbooks  managed development and architecture-boundary operation
 ```
 
-### Codex
-
-Open Codex in this checkout and paste the complete prompt from:
-
-```text
-docs/GOLD-PROMPT.md
-```
-
-Both paths execute `docs/goals/00-production-foundation.md`. The agent implements the decided stack; it does not reopen architecture research.
-
-## Human API boundary
-
-The agent owns routine engineering: files, tests, migrations, preview deploys, provider test calls, logs, debugging, draft PRs, and proof packets.
-
-The human is required only for:
-
-- first-time account creation or OAuth authorization;
-- supplying development/production secrets;
-- accepting billing, legal, privacy, retention, and manufacturing claims;
-- irreversible production actions;
-- merging and launch approval.
-
-Normal development must not require Docker, a local database, local object-storage emulators, Kubernetes, or self-hosting.
-
-## Goal branches
-
-```text
-main
-  └── rebuild/v2-first-principles
-        ├── goal/00-production-foundation
-        ├── goal/01-product-studio
-        ├── goal/02-supabase-domain
-        ├── goal/03-durable-generation
-        ├── goal/04-identity-prompt-qa
-        ├── goal/05-real-still-generation
-        ├── goal/06-real-motion
-        ├── goal/07-commerce-operator
-        └── goal/08-hardening-launch
-```
-
-A goal normally runs in an isolated worktree and ends in a draft PR into `rebuild/v2-first-principles`. The umbrella PR to `main` remains draft until Goal 08 passes.
-
-## Repository map
-
-- `CLAUDE.md` — always-loaded coding-agent contract.
-- `AGENTS.md` — tool-neutral agent rules.
-- `.claude/skills/goal/SKILL.md` — Claude Code `/goal` skill.
-- `docs/PRODUCT-CONTRACT.md` — frozen business journey.
-- `docs/FROZEN-UX.md` and `docs/UX-AUDIT.md` — approved experience and corrections.
-- `docs/FINAL-STACK.md` — binding technology choices.
-- `docs/ARCHITECTURE.md` — system boundaries, data flow, and scaling behavior.
-- `docs/DECISION-MATRIX.md` — why the selected stack won.
-- `docs/COST-MODEL.md` — dated unit economics and safeguards.
-- `docs/GOLD-PROMPT.md` — copy-paste first implementation prompt.
-- `docs/goals/` — bounded implementation goals.
+See [docs/START-HERE.md](docs/START-HERE.md), [docs/FINAL-STACK.md](docs/FINAL-STACK.md), [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), and [docs/runbooks/managed-development.md](docs/runbooks/managed-development.md).

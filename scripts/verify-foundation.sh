@@ -2,91 +2,111 @@
 set -euo pipefail
 cd "$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 
+[[ "$(node --version)" == "v24.18.1" ]] || {
+  echo "Node v24.18.1 is required; current: $(node --version)" >&2
+  exit 1
+}
+[[ "$(pnpm --version)" == "11.23.0" ]] || {
+  echo "pnpm 11.23.0 is required; current: $(pnpm --version)" >&2
+  exit 1
+}
+
 required=(
-  README.md CLAUDE.md AGENTS.md package.json .mcp.json .env.example
-  docs/START-HERE.md docs/STACK-DECISION.md docs/ARCHITECTURE.md
-  docs/RESEARCH-EVIDENCE.md docs/DECISION-REGISTER.md docs/PRODUCT-CONTRACT.md
-  docs/FROZEN-UX.md docs/UX-AUDIT.md docs/AGENT-WORKFLOW.md
-  docs/AGENT-CONTROL-PLANE.md docs/VERIFICATION.md docs/GOAL-ROADMAP.md
-  docs/CLAUDE-CODE-SETUP.md docs/GOLD-PROMPTS.md docs/ENTRY-PROMPT.md
-  docs/OPERATING-ASSUMPTIONS.md docs/REPOSITORY-STRUCTURE.md
-  docs/PROMPT-PLAYBOOK.md docs/AI-MODEL-EVALUATION.md docs/REFERENCES.md
-  .claude/skills/goal/SKILL.md .claude/skills/ship-pr/SKILL.md
-  scripts/doctor.sh scripts/new-goal.sh scripts/open-pr.sh
+  .nvmrc .tool-versions pnpm-lock.yaml turbo.json tsconfig.base.json eslint.config.mjs vercel.json
+  apps/web/package.json apps/web/src/app/page.tsx apps/web/src/app/api/health/route.ts
+  apps/jobs/package.json apps/jobs/trigger.config.ts apps/jobs/src/trigger/foundation.ts
+  supabase/config.toml supabase/seed.sql
+  docs/runbooks/managed-development.md docs/proofs/goal-00-production-foundation.md
+  scripts/check-boundaries.mjs scripts/verify-supabase-project.mjs scripts/check-client-bundle.sh scripts/scan-secrets.sh
 )
 for file in "${required[@]}"; do
-  [[ -s "$file" ]] || { echo "missing or empty: $file" >&2; exit 1; }
+  [[ -s "$file" ]] || { echo "missing or empty foundation artifact: $file" >&2; exit 1; }
 done
 
-for id in 00 01 02 03 04 05 06 07 08; do
-  shopt -s nullglob
-  goals=(docs/goals/${id}-*.md)
-  shopt -u nullglob
-  [[ "${#goals[@]}" -eq 1 && -s "${goals[0]}" ]] || {
-    echo "expected exactly one goal for ${id}, found ${#goals[@]}" >&2
+for package_name in domain contracts data identity ai media pricing ui observability config testing; do
+  [[ -s "packages/${package_name}/package.json" && -s "packages/${package_name}/src/index.ts" ]] || {
+    echo "missing approved package scaffold: packages/${package_name}" >&2
     exit 1
   }
 done
 
-grep -q '^name: goal$' .claude/skills/goal/SKILL.md || { echo "missing /goal skill name" >&2; exit 1; }
-grep -q '^disable-model-invocation: true$' .claude/skills/goal/SKILL.md || { echo "/goal must be user invoked" >&2; exit 1; }
-grep -q 'Do not ask the human to choose the stack' .claude/skills/goal/SKILL.md || { echo "/goal still delegates PM decision" >&2; exit 1; }
-
-obsolete=(
-  docs/PROVISIONAL-STACK.md docs/FINAL-STACK.md docs/AI-WORKFLOW.md
-  docs/GOLD-PROMPT.md docs/REPO-BLUEPRINT.md docs/PHASE-ROADMAP.md
-  docs/goals/00-research-architecture.md docs/goals/01-repo-foundation.md
-  docs/goals/02-ux-prototype.md docs/goals/03-domain-data-realtime.md
-  docs/goals/04-workflows-mocks.md docs/goals/05-image-identity.md
-  docs/goals/07-commerce.md scripts/run-goal.sh scripts/new-phase.sh scripts/start-phase.sh
-)
-for path in "${obsolete[@]}"; do
-  [[ ! -e "$path" ]] || { echo "obsolete artifact remains: $path" >&2; exit 1; }
+for forbidden in docker-compose.yml Dockerfile convex neon minio kubernetes; do
+  [[ ! -e "$forbidden" ]] || { echo "forbidden local/replacement infrastructure present: $forbidden" >&2; exit 1; }
 done
 
-find .claude/skills -mindepth 1 -maxdepth 1 -type d ! -name goal ! -name adversarial-review ! -name ship-pr -print -quit |
-  grep -q . && { echo "stale phase skill remains" >&2; exit 1; } || true
-
-for agent in plan-reviewer adversarial-reviewer ux-verifier security-reviewer; do
-  [[ -s ".claude/agents/$agent.md" ]] || { echo "missing reviewer: $agent" >&2; exit 1; }
+for script in scripts/*.sh; do
+  bash -n "$script"
 done
-
-for legacy in convex src/app src/components docker-compose.yml; do
-  [[ ! -e "$legacy" ]] || { echo "legacy/local-infra path present before Goal 00: $legacy" >&2; exit 1; }
-done
+echo "Shell syntax verification passed."
 
 node - <<'NODE'
-const p = require("./package.json");
-if (!p.private) throw new Error("package must be private");
-if (p.packageManager !== "pnpm@11.23.0") throw new Error("unexpected pnpm pin");
-if (p.engines?.node !== ">=24 <25") throw new Error("Node 24 must be pinned");
-if (p.scripts?.goal || p.scripts?.["phase:new"] || p.scripts?.["phase:start"]) {
-  throw new Error("obsolete wrapper script remains");
+const manifest = require("./package.json");
+const expected = ["dev", "lint", "typecheck", "test", "build", "verify", "db:types", "db:push", "jobs:dev", "jobs:deploy:preview", "format:check"];
+for (const command of expected) {
+  if (!manifest.scripts?.[command]) throw new Error(`missing root command: ${command}`);
 }
-if (p.scripts?.["goal:new"] !== "bash scripts/new-goal.sh") {
-  throw new Error("goal:new helper missing");
-}
+if (manifest.packageManager !== "pnpm@11.23.0") throw new Error("pnpm pin drift");
+if (manifest.engines?.node !== ">=24 <25") throw new Error("Node engine drift");
 NODE
 
-node scripts/list-goals.mjs >/dev/null
-for script in scripts/*.sh; do bash -n "$script"; done
+assert_guard_fails() {
+  local label="$1"
+  local expected="$2"
+  shift 2
+  local output
+  if output="$(env -u SUPABASE_ACCESS_TOKEN -u SUPABASE_PROJECT_REF -u TRIGGER_ACCESS_TOKEN -u TRIGGER_PROJECT_REF -u JEWELO_CLOUD_TARGET "$@" 2>&1)"; then
+    echo "${label} unexpectedly succeeded without cloud authorization." >&2
+    exit 1
+  fi
+  grep -q "$expected" <<<"$output" || {
+    echo "${label} failed without the required actionable message:" >&2
+    echo "$output" >&2
+    exit 1
+  }
+  echo "${label} guard proof passed."
+}
 
-grep -q 'Supabase + Trigger' docs/STACK-DECISION.md
-grep -q 'Supabase PostgreSQL' docs/ARCHITECTURE.md
-grep -q 'Trigger.dev v4 Cloud' docs/ARCHITECTURE.md
-grep -q 'gpt-image-2-2026-04-21' docs/ARCHITECTURE.md
-grep -q 'Runway' docs/ARCHITECTURE.md
-grep -q 'Goal 00 is repository and managed-development foundation implementation' docs/START-HERE.md
-grep -q 'Do not research or renegotiate the stack' docs/ENTRY-PROMPT.md
+assert_guard_fails "db:types" "JEWELO_CLOUD_TARGET" bash scripts/supabase-remote.sh types
+assert_guard_fails "db:push" "JEWELO_CLOUD_TARGET" bash scripts/supabase-remote.sh push
+assert_guard_fails "jobs:dev" "JEWELO_CLOUD_TARGET" bash scripts/trigger-remote.sh dev
+assert_guard_fails "jobs:deploy:preview" "JEWELO_CLOUD_TARGET" bash scripts/trigger-remote.sh deploy-preview
 
-if grep -R -n --exclude='STACK-DECISION.md' --exclude='RESEARCH-EVIDENCE.md' \
-  -E 'Convex Cloud|Clerk operator|Cloudflare R2|research and finalize architecture' \
-  README.md CLAUDE.md AGENTS.md docs .claude package.json 2>/dev/null; then
-  echo "contradictory active stack instruction remains" >&2
+if output="$(JEWELO_CLOUD_TARGET=production bash scripts/supabase-remote.sh push 2>&1)"; then
+  echo "Supabase production-default guard unexpectedly succeeded." >&2
   exit 1
 fi
+grep -q "production is never a Goal 00 default" <<<"$output"
+echo "Supabase production-default rejection passed."
 
-count="$(find docs/previews -maxdepth 1 -type f \( -name '*.png' -o -name '*.webp' \) 2>/dev/null | wc -l | tr -d ' ')"
-[[ "$count" -ge 5 ]] || { echo "expected at least 5 UX previews, found $count" >&2; exit 1; }
+if output="$(env -u TRIGGER_ACCESS_TOKEN -u TRIGGER_PREVIEW_BRANCH JEWELO_CLOUD_TARGET=preview TRIGGER_PROJECT_REF=proj_nonproduction bash scripts/trigger-remote.sh deploy-preview 2>&1)"; then
+  echo "Trigger preview-branch guard unexpectedly succeeded." >&2
+  exit 1
+fi
+grep -q "TRIGGER_PREVIEW_BRANCH" <<<"$output"
+echo "Trigger preview-branch guard proof passed."
 
-echo "PM-owned Supabase/Trigger foundation verified"
+node scripts/verify-supabase-project.mjs --prove-negative
+
+if output="$(NEXT_PUBLIC_SUPABASE_URL=https://example.supabase.co pnpm --filter @jewelo/web build 2>&1)"; then
+  echo "Web build unexpectedly accepted a partial public Supabase environment." >&2
+  exit 1
+fi
+grep -q "must be set together" <<<"$output" || {
+  echo "Web build rejected the partial environment without the required pairing message:" >&2
+  echo "$output" >&2
+  exit 1
+}
+echo "Deployable web environment negative proof passed."
+
+git diff --check
+pnpm format:check
+pnpm lint
+pnpm typecheck
+pnpm test
+pnpm build
+pnpm boundaries
+pnpm secret:scan
+pnpm verify:bundle
+pnpm verify:health
+
+echo "Goal 00 deterministic foundation verification passed."
