@@ -51,8 +51,23 @@ find_app_id() {
     let input = "";
     process.stdin.on("data", (chunk) => input += chunk);
     process.stdin.on("end", () => {
-      const app = JSON.parse(input).find((value) => value.spec?.name === process.env.APP_NAME);
-      if (!app) process.exit(1);
+      let apps;
+      try {
+        apps = JSON.parse(input);
+      } catch (error) {
+        console.error(`Could not parse DigitalOcean app list: ${error.message}`);
+        process.exit(1);
+      }
+      const app = apps.find((value) => value.spec?.name === process.env.APP_NAME);
+      if (!app) {
+        console.error(
+          `${process.env.APP_NAME} is not visible; visible apps: ${apps
+            .map((value) => value.spec?.name)
+            .filter(Boolean)
+            .join(", ") || "none"}`,
+        );
+        process.exit(1);
+      }
       process.stdout.write(app.id);
     });
   '

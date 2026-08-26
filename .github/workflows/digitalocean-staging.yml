@@ -25,6 +25,20 @@ jobs:
         run: |
           git fetch origin codex/digitalocean-staging-preview --tags
           git merge-base --is-ancestor "$GITHUB_SHA" origin/codex/digitalocean-staging-preview
+      - uses: digitalocean/action-doctl@v2
+        with:
+          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+      - name: Require access to the staging app
+        env:
+          DIGITALOCEAN_ACCESS_TOKEN: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+        run: |
+          app_id="$(doctl apps list --output json | jq -r '.[] | select(.spec.name == "jewelo-staging") | .id')"
+          test -n "$app_id" || {
+            echo "The GitHub Preview token cannot see jewelo-staging." >&2
+            echo "Visible app names:" >&2
+            doctl apps list --output json | jq -r '.[].spec.name' >&2
+            exit 1
+          }
       - uses: pnpm/action-setup@v4
         with:
           version: 11.23.0
@@ -49,9 +63,6 @@ jobs:
             git push origin "refs/tags/${tag}"
           fi
           echo "tag=$tag" >> "$GITHUB_OUTPUT"
-      - uses: digitalocean/action-doctl@v2
-        with:
-          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
       - id: deploy
         name: Deploy staging source revision
         env:
