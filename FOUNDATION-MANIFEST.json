@@ -2,19 +2,14 @@
   "version": 4,
   "status": "pm-approved-implementation-ready",
   "decision_date": "2026-08-26",
-  "first_goal": "docs/goals/00-production-foundation.md",
+  "active_goal": "docs/goals/01-product-studio.md",
   "stack": [
     "nextjs-16.2",
     "vercel",
     "supabase-postgres-auth-storage-realtime",
     "trigger-dev-v4",
-    "openai-gpt-image-2-2026-04-21",
-    "fal-ai",
-    "bytedance-seedance-2.0-fast-preview",
-    "bytedance-seedance-2.0-standard-final"
+    "gpt-image-2-2026-04-21-direct-openai",
+    "fal-seedance-2-fast-and-standard"
   ],
-  "product_media_profile": "four-products-four-worn-four-fast-motion-previews",
-  "target_variation_concurrency": 4,
-  "local_infrastructure_required": false,
-  "autonomous_media_agent_framework": false
+  "local_infrastructure_required": false
 }
