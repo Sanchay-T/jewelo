@@ -1,5 +1,9 @@
 # Shopify checkout integration
 
+For the exact agent handoff that swaps the unchanged application between the
+burner development store and a client store, see
+[`SHOPIFY-STORE-SWAP-RUNBOOK.md`](./SHOPIFY-STORE-SWAP-RUNBOOK.md).
+
 ## Supported production shape
 
 Jewelo keeps its existing UI and Supabase identity. An accepted Jewelo quote is
