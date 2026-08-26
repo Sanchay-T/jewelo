@@ -24,7 +24,7 @@ Read, in order:
 
 Execute Goal 00 exactly.
 
-The fixed stack is Next.js 16.2/React 19 on Vercel; pnpm/Turborepo; Supabase Mumbai for Postgres/Auth/Realtime/private Storage; Trigger.dev Cloud for durable jobs; direct OpenAI GPT Image 2 for stills; fal.ai for Seedance video inference; Seedance 2.0 Fast for four previews and Seedance 2.0 Standard for the selected final upgrade; Sentry/PostHog for observability.
+The fixed stack is Next.js 16.2/React 19 on DigitalOcean App Platform in Bangalore; pnpm/Turborepo; Supabase Mumbai for Postgres/Auth/Realtime/private Storage; Trigger.dev Cloud for durable jobs; direct OpenAI GPT Image 2 for stills; fal.ai for Seedance video inference; Seedance 2.0 Fast for four previews and Seedance 2.0 Standard for the selected final upgrade; Sentry/PostHog for observability.
 
 The locked media pipeline is:
 

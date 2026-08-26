@@ -1,8 +1,25 @@
 {
   "mcpServers": {
-    "vercel": {
+    "digitalocean-apps": {
       "type": "http",
-      "url": "https://mcp.vercel.com/"
+      "url": "https://apps.mcp.digitalocean.com/mcp",
+      "headers": {
+        "Authorization": "Bearer ${DIGITALOCEAN_ACCESS_TOKEN:-not-configured}"
+      }
+    },
+    "digitalocean-docr": {
+      "type": "http",
+      "url": "https://docr.mcp.digitalocean.com/mcp",
+      "headers": {
+        "Authorization": "Bearer ${DIGITALOCEAN_ACCESS_TOKEN:-not-configured}"
+      }
+    },
+    "digitalocean-docs": {
+      "type": "http",
+      "url": "https://docs.mcp.digitalocean.com/mcp",
+      "headers": {
+        "Authorization": "Bearer ${DIGITALOCEAN_ACCESS_TOKEN:-not-configured}"
+      }
     },
     "supabase": {
       "type": "http",

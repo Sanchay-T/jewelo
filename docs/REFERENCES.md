@@ -6,7 +6,9 @@ Accessed 26 August 2026.
 
 - Next.js 16.2 release: https://nextjs.org/blog/next-16-2
 - Next.js deployment: https://nextjs.org/docs/app/getting-started/deploying
-- Vercel MCP: https://vercel.com/docs/mcp/vercel-mcp
+- DigitalOcean App Platform: https://docs.digitalocean.com/products/app-platform/
+- DigitalOcean MCP: https://docs.digitalocean.com/reference/mcp/
+- `doctl`: https://docs.digitalocean.com/reference/doctl/
 
 ## Supabase
 

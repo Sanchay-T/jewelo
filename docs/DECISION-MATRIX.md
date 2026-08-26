@@ -72,7 +72,7 @@ Genblaze is the strongest open-source media-pipeline candidate reviewed. It has 
 
 ### Why provider calls do not live in request handlers
 
-The pipeline exceeds normal web-request lifetimes and must survive browser closure, deploys, provider queues, callbacks, retries, and partial failure. Vercel request handlers create/authorize commands; Trigger jobs perform media work.
+The pipeline exceeds normal web-request lifetimes and must survive browser closure, deploys, provider queues, callbacks, retries, and partial failure. DigitalOcean App Platform request handlers create/authorize commands; Trigger jobs perform media work.
 
 ## Model/gateway decision
 
