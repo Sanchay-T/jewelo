@@ -7,9 +7,13 @@ import {
   ArrowLeft,
   Bag,
   Check,
+  CheckCircle,
+  Clock,
   DownloadSimple,
   Heart,
+  PaperPlaneTilt,
   ShareNetwork,
+  ShieldCheck,
 } from "@phosphor-icons/react";
 import { AppShell, CaleumsFooter } from "@/components/app-shell";
 import { useJewelo } from "@/lib/jewelo-provider";
@@ -184,6 +188,7 @@ export function CommerceExperience({
                 checked={confirmed}
                 onChange={(event) => setConfirmed(event.target.checked)}
               />
+              <ShieldCheck className="clm-confirm-icon" size={19} />
               <span>
                 <strong>
                   I confirm the spelling and details above are correct.
@@ -202,12 +207,13 @@ export function CommerceExperience({
                   )
                 }
               >
+                <PaperPlaneTilt size={17} />
                 {busy === "request" ? "Requesting…" : "Request final quote"}
               </button>
             )}
             {quote?.status === "requested" && (
               <button className="clm-primary full" disabled>
-                Atelier reviewing your quote
+                <Clock size={17} /> Atelier reviewing your quote
               </button>
             )}
             {quote?.status === "issued" && (
@@ -222,6 +228,7 @@ export function CommerceExperience({
                   )
                 }
               >
+                <CheckCircle size={17} />
                 {busy === "accept"
                   ? "Accepting…"
                   : "Accept AED " + quote.total.toLocaleString()}

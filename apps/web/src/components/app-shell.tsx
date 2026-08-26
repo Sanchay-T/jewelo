@@ -3,7 +3,17 @@
 import React from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Bag, Heart, Sparkle, UserCircle } from "@phosphor-icons/react";
+import {
+  Bag,
+  Diamond,
+  Gift,
+  Hammer,
+  Heart,
+  Leaf,
+  ShieldCheck,
+  Sparkle,
+  UserCircle,
+} from "@phosphor-icons/react";
 import { useJewelo } from "@/lib/jewelo-provider";
 
 export function CaleumsWordmark({ compact = false }: { compact?: boolean }) {
@@ -32,13 +42,17 @@ export function AppShell({
           <Link href={`/${locale}/operator`}>Atelier</Link>
         </nav>
         <div className="clm-header-tools">
-          <button type="button" aria-label="Saved designs">
+          <button
+            type="button"
+            aria-label="Saved designs"
+            title="Saved designs"
+          >
             <Heart size={19} />
           </button>
-          <button type="button" aria-label="Account">
+          <button type="button" aria-label="Account" title="Account">
             <UserCircle size={20} />
           </button>
-          <button type="button" aria-label="Shopping bag">
+          <button type="button" aria-label="Shopping bag" title="Shopping bag">
             <Bag size={19} />
           </button>
         </div>
@@ -52,34 +66,51 @@ export function AppShell({
 export function CaleumsFooter() {
   return (
     <footer className="clm-trust-strip">
-      <div>
-        <strong>Made to order</strong>
-        <span>Just for you</span>
+      <div className="clm-trust-item">
+        <Gift size={20} />
+        <div>
+          <strong>Made to order</strong>
+          <span>Just for you</span>
+        </div>
       </div>
-      <div>
-        <strong>Handcrafted</strong>
-        <span>By expert artisans</span>
+      <div className="clm-trust-item">
+        <Hammer size={20} />
+        <div>
+          <strong>Handcrafted</strong>
+          <span>By expert artisans</span>
+        </div>
       </div>
-      <div>
-        <strong>Solid 18K gold</strong>
-        <span>Never plated</span>
+      <div className="clm-trust-item">
+        <Diamond size={20} />
+        <div>
+          <strong>Solid 18K gold</strong>
+          <span>Never plated</span>
+        </div>
       </div>
-      <div>
-        <strong>Lab grown diamonds</strong>
-        <span>Ethical &amp; sustainable</span>
+      <div className="clm-trust-item">
+        <Leaf size={20} />
+        <div>
+          <strong>Lab grown diamonds</strong>
+          <span>Ethical &amp; sustainable</span>
+        </div>
       </div>
-      <div>
-        <strong>Secure checkout</strong>
-        <span>Worldwide shipping</span>
+      <div className="clm-trust-item">
+        <ShieldCheck size={20} />
+        <div>
+          <strong>Secure checkout</strong>
+          <span>Worldwide shipping</span>
+        </div>
       </div>
       <div className="clm-footer-brand">
-        <Image
-          src="/brand/caleums-monogram.jpg"
-          alt="Caleums monogram"
-          width={30}
-          height={30}
-        />
-        <span>Handcrafted in Dubai</span>
+        <div>
+          <Image
+            src="/brand/caleums-monogram.jpg"
+            alt="Caleums monogram"
+            width={30}
+            height={30}
+          />
+          <span>Handcrafted in Dubai</span>
+        </div>
       </div>
     </footer>
   );

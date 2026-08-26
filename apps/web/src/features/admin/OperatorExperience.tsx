@@ -5,9 +5,12 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import type { FormEvent } from "react";
 import {
+  ArrowClockwise,
+  ArrowLeft,
   ArrowRight,
   CheckCircle,
   Clock,
+  PaperPlaneTilt,
   SignOut,
   Tag,
 } from "@phosphor-icons/react";
@@ -103,12 +106,15 @@ export function OperatorExperience({ locale }: { locale: Locale }) {
             </label>
             <button className="clm-primary full" disabled={busy === "login"}>
               {busy === "login" ? "Opening…" : "Open operator queue"}
+              <ArrowRight size={17} />
             </button>
           </form>
           <small>
             Development fixture only. No real authentication or commerce action.
           </small>
-          <Link href={`/${locale}`}>← Return to customer experience</Link>
+          <Link href={`/${locale}`}>
+            <ArrowLeft size={15} /> Return to customer experience
+          </Link>
         </section>
       </main>
     );
@@ -238,7 +244,7 @@ export function OperatorExperience({ locale }: { locale: Locale }) {
                             )
                           }
                         >
-                          Issue quote
+                          <PaperPlaneTilt size={16} /> Issue quote
                         </button>
                       )}
                       {design.order && design.order.status !== "ready" && (
@@ -253,7 +259,7 @@ export function OperatorExperience({ locale }: { locale: Locale }) {
                             )
                           }
                         >
-                          Advance task
+                          <ArrowClockwise size={16} /> Advance task
                         </button>
                       )}
                       <Link

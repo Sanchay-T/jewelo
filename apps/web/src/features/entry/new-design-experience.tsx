@@ -7,11 +7,15 @@ import { useEffect, useMemo, useState } from "react";
 import {
   ArrowLeft,
   ArrowRight,
+  ArrowClockwise,
   Camera,
   Check,
+  Cube,
+  Eye,
   ImageSquare,
   MagicWand,
   MagnifyingGlass,
+  MagnifyingGlassPlus,
   PencilSimple,
   Sparkle,
   Trash,
@@ -357,6 +361,13 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
                     setStage(index);
                 }}
               >
+                <span className="clm-step-marker" aria-hidden="true">
+                  {index < stage ? (
+                    <Check size={12} weight="bold" />
+                  ) : (
+                    index + 1
+                  )}
+                </span>
                 <i /> <small>{label}</small>
               </button>
             ))}
@@ -371,7 +382,9 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
               priority
               sizes="(max-width: 799px) 100vw, 58vw"
             />
-            <div className="clm-preview-badge">Live preview</div>
+            <div className="clm-preview-badge">
+              <Eye size={15} /> Live preview
+            </div>
             <div
               className="clm-live-name"
               data-metal={metal}
@@ -400,12 +413,18 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
               </span>
             </div>
             <div className="clm-view-controls">
-              <button type="button">Rotate</button>
-              <button type="button">Zoom</button>
-              <button type="button" aria-pressed>
-                Front
+              <button type="button">
+                <ArrowClockwise size={15} /> Rotate
               </button>
-              <button type="button">Side</button>
+              <button type="button">
+                <MagnifyingGlassPlus size={15} /> Zoom
+              </button>
+              <button type="button" aria-pressed>
+                <Eye size={15} /> Front
+              </button>
+              <button type="button">
+                <Cube size={15} /> Side
+              </button>
             </div>
           </section>
 
@@ -610,7 +629,7 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
                         setSelectedInspiration("studio");
                       }}
                     >
-                      Inspire me
+                      <MagicWand size={17} /> Inspire me
                     </button>
                   </div>
                 )}

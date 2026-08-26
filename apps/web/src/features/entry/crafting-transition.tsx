@@ -3,7 +3,13 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect } from "react";
-import { ArrowRight, Check, SpinnerGap, X } from "@phosphor-icons/react";
+import {
+  ArrowClockwise,
+  ArrowRight,
+  Check,
+  SpinnerGap,
+  X,
+} from "@phosphor-icons/react";
 import { AppShell } from "@/components/app-shell";
 import { useJewelo } from "@/lib/jewelo-provider";
 import type { Locale } from "@/lib/types";
@@ -120,7 +126,7 @@ export function CraftingTransition({
               type="button"
               onClick={() => void client.retryTask(design.id, task.id)}
             >
-              Retry Studio render
+              <ArrowClockwise size={17} /> Retry Studio render
             </button>
           )}
           {cancelled && (
@@ -129,7 +135,7 @@ export function CraftingTransition({
               type="button"
               onClick={() => void client.startRun(design.id)}
             >
-              Start again
+              <ArrowClockwise size={17} /> Start again
             </button>
           )}
         </section>

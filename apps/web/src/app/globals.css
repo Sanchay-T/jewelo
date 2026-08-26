@@ -51,6 +51,10 @@ a {
 button {
   cursor: pointer;
 }
+button svg,
+a svg {
+  flex: none;
+}
 button:disabled {
   cursor: not-allowed;
   opacity: 0.45;
@@ -105,6 +109,24 @@ video {
   display: flex;
   align-items: center;
 }
+.clm-nav a {
+  position: relative;
+}
+.clm-nav a::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 8px;
+  height: 1px;
+  background: var(--gold);
+  transform: scaleX(0);
+  transition: transform 0.18s ease;
+}
+.clm-nav a:hover::after,
+.clm-nav a:focus-visible::after {
+  transform: scaleX(1);
+}
 .clm-header-tools {
   justify-self: end;
   display: flex;
@@ -118,6 +140,14 @@ video {
   place-items: center;
   background: transparent;
   color: var(--ink);
+  transition:
+    background 0.18s ease,
+    color 0.18s ease;
+}
+.clm-header-tools button:hover,
+.clm-header-tools button:focus-visible {
+  background: var(--gold-pale);
+  color: #755621;
 }
 .clm-kicker {
   margin: 0 0 14px;
@@ -277,6 +307,14 @@ video {
 .clm-trust-strip > div {
   min-width: 0;
 }
+.clm-trust-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.clm-trust-item > svg {
+  color: var(--gold);
+}
 .clm-trust-strip strong,
 .clm-trust-strip span {
   display: block;
@@ -296,6 +334,11 @@ video {
   gap: 9px;
   align-items: center;
   justify-content: flex-end;
+}
+.clm-footer-brand > div {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 .clm-footer-brand img {
   border-radius: 50%;
@@ -329,6 +372,24 @@ video {
   padding: 0;
   color: var(--muted);
 }
+.clm-step-marker {
+  width: 22px;
+  height: 22px;
+  margin-bottom: 6px;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+  background: var(--ivory);
+  font-size: 0.58rem;
+  font-style: normal;
+}
+.clm-config-progress button[data-active] .clm-step-marker {
+  border-color: var(--gold);
+  background: var(--gold);
+  color: #fff;
+}
 .clm-config-progress i {
   height: 3px;
   width: 100%;
@@ -340,7 +401,7 @@ video {
 }
 .clm-config-progress small {
   display: block;
-  font-size: 0.58rem;
+  font-size: 0.62rem;
   margin-top: 7px;
 }
 .clm-config-shell {
@@ -400,7 +461,10 @@ video {
   left: 18px;
   padding: 8px 11px;
   background: rgba(255, 253, 249, 0.9);
-  font-size: 0.62rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.64rem;
   text-transform: uppercase;
   letter-spacing: 0.1em;
 }
@@ -467,7 +531,7 @@ video {
 }
 .clm-preview-caption span {
   color: var(--muted);
-  font-size: 0.7rem;
+  font-size: 0.73rem;
   text-transform: capitalize;
 }
 .clm-view-controls {
@@ -482,10 +546,25 @@ video {
   border: 1px solid var(--line);
   padding: 0 12px;
   background: var(--paper);
-  font-size: 0.62rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 0.64rem;
+  color: var(--muted);
+  transition:
+    border-color 0.18s ease,
+    color 0.18s ease,
+    background 0.18s ease;
 }
 .clm-view-controls button[aria-pressed] {
   border-color: var(--gold);
+  background: #fbf6ec;
+  color: #755621;
+}
+.clm-view-controls button:hover {
+  border-color: var(--gold);
+  color: var(--ink);
 }
 .clm-label {
   display: grid;
@@ -502,6 +581,12 @@ video {
   background: transparent;
   padding: 0 13px;
   color: var(--ink);
+  font-size: 0.76rem;
+}
+.clm-label input::placeholder,
+.clm-search input::placeholder,
+.clm-operator-login input::placeholder {
+  color: #8a8278;
 }
 .clm-label-heading {
   font-size: 0.68rem;
@@ -574,7 +659,7 @@ video {
 }
 .clm-option span,
 .clm-option strong {
-  font-size: 0.65rem;
+  font-size: 0.69rem;
 }
 .clm-option .clm-check {
   position: absolute;
@@ -840,11 +925,11 @@ video {
 }
 .clm-summary dt {
   color: var(--muted);
-  font-size: 0.63rem;
+  font-size: 0.66rem;
 }
 .clm-summary dd {
   margin: 0;
-  font-size: 0.69rem;
+  font-size: 0.72rem;
   text-transform: capitalize;
 }
 .clm-summary.compact div {
@@ -870,7 +955,7 @@ video {
   display: block;
 }
 .clm-confirm strong {
-  font-size: 0.7rem;
+  font-size: 0.72rem;
 }
 .clm-confirm small {
   margin-top: 3px;
@@ -880,6 +965,10 @@ video {
 .clm-confirm.compact {
   padding: 0;
   border: 0;
+  align-items: center;
+}
+.clm-confirm-icon {
+  color: var(--gold);
 }
 .clm-estimate {
   padding: 15px 0;
@@ -1111,7 +1200,7 @@ video {
   padding: 0 10px;
   background: #e8e2d8;
   color: #5d584f;
-  font-size: 0.58rem;
+  font-size: 0.62rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
 }
@@ -1190,10 +1279,17 @@ video {
   border-color: var(--gold);
 }
 .clm-studio-tabs span {
-  font-size: 0.7rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.72rem;
 }
 .clm-studio-tabs small {
-  font-size: 0.56rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 2px;
+  font-size: 0.6rem;
   color: var(--muted);
   text-transform: capitalize;
 }
@@ -1232,7 +1328,7 @@ video {
 }
 .clm-task-audit button {
   min-width: 58px;
-  min-height: 36px;
+  min-height: 44px;
   border: 1px solid var(--gold);
   background: var(--paper);
   color: var(--ink);
@@ -1331,7 +1427,7 @@ video {
 }
 .clm-piece-summary > p:not(.clm-kicker) {
   color: var(--muted);
-  font-size: 0.68rem;
+  font-size: 0.72rem;
   line-height: 1.5;
   margin-bottom: 24px;
 }
@@ -1353,7 +1449,7 @@ video {
   display: flex;
   align-items: center;
   gap: 10px;
-  font-size: 0.61rem;
+  font-size: 0.65rem;
 }
 .clm-atelier-mark img {
   border-radius: 50%;
@@ -1448,6 +1544,12 @@ video {
   color: var(--muted);
   margin-top: 12px;
 }
+.clm-operator-login a {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
 .clm-operator {
   min-height: 100dvh;
   background: #f2eee7;
@@ -1519,7 +1621,7 @@ video {
   font-size: 1.5rem;
 }
 .clm-operator-stats span {
-  font-size: 0.56rem;
+  font-size: 0.61rem;
   color: var(--muted);
 }
 .clm-queue-tabs {
@@ -1560,7 +1662,7 @@ video {
 .clm-queue-main p {
   margin: 0;
   color: var(--muted);
-  font-size: 0.63rem;
+  font-size: 0.68rem;
 }
 .clm-queue-actions {
   display: flex;

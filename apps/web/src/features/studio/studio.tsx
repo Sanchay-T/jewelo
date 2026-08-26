@@ -5,10 +5,14 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
+  ArrowClockwise,
   ArrowLeft,
   ArrowRight,
+  CheckCircle,
   DownloadSimple,
   FloppyDisk,
+  ImageSquare,
+  MagicWand,
   MagnifyingGlassMinus,
   MagnifyingGlassPlus,
   ShareNetwork,
@@ -299,8 +303,13 @@ export function Studio({
           >
             {visibleViews.map((view) => (
               <button key={view} role="tab" aria-selected>
-                <span>Studio</span>
-                <small>{taskState}</small>
+                <span>
+                  <ImageSquare size={16} /> Studio
+                </span>
+                <small>
+                  {taskState === "ready" && <CheckCircle size={12} />}
+                  {taskState}
+                </small>
               </button>
             ))}
           </div>
@@ -389,6 +398,7 @@ export function Studio({
             disabled={Boolean(busy)}
             onClick={() => void refine()}
           >
+            <MagicWand size={17} />
             {busy === "refine" ? "Refining…" : "Refine"}
           </button>
           <button
@@ -396,6 +406,7 @@ export function Studio({
             disabled={Boolean(busy)}
             onClick={() => void regenerate()}
           >
+            <ArrowClockwise size={17} />
             {busy === "regenerate" ? "Starting…" : "Regenerate"}
           </button>
           {studioTask && activeStates.has(taskState) && (
@@ -435,6 +446,7 @@ export function Studio({
                 )
               }
             >
+              <ArrowClockwise size={16} />
               {busy === "retry-task" ? "Retrying…" : "Retry task"}
             </button>
           )}
