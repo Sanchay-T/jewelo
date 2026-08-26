@@ -50,9 +50,11 @@ bootstrap command sends values directly to App Platform as encrypted `SECRET`
 variables and never writes a generated spec containing plaintext secrets.
 
 ```bash
-pnpm do:bootstrap -- staging /absolute/path/to/staging.env
+pnpm do:check-env -- staging /absolute/path/to/.env /absolute/path/to/.env.local
+pnpm do:bootstrap -- staging /absolute/path/to/.env /absolute/path/to/.env.local
+pnpm do:check-env -- production /absolute/path/to/.env /absolute/path/to/.env.local
 JEWELO_ALLOW_PRODUCTION_BOOTSTRAP=yes \
-  pnpm do:bootstrap -- production /absolute/path/to/production.env
+  pnpm do:bootstrap -- production /absolute/path/to/.env /absolute/path/to/.env.local
 pnpm do:github
 ```
 
@@ -74,6 +76,15 @@ bundle even though their source copy is encrypted at rest.
 
 Trigger.dev, OpenAI, fal, and job-only credentials remain in the job platform
 and are not duplicated into the web app.
+
+Files are layered in command order, so a final environment-specific file can
+override shared values without creating a generated plaintext spec. The
+environment checker validates required Supabase/web values, requires the
+remote data client, rejects partial Shopify/operator groups, and reports only
+configuration names and feature status. It never prints values. After the
+initial bootstrap, ordinary source deploys update only the immutable Git source
+tag; App Platform preserves the encrypted environment. Configuration changes
+use the bootstrap command again and create a new deployment revision.
 
 After the integrated application passes bootstrap and smoke testing, set the
 GitHub `Preview` environment variable `DIGITALOCEAN_DEPLOY_ENABLED=true`. Until
