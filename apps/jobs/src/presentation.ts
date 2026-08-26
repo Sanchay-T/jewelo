@@ -1,9 +1,10 @@
 import { createHash } from "node:crypto";
 import {
-  FalStudioAdapter,
   MockStudioGenerator,
   MockStudioVerifier,
+  OpenAIStillAdapter,
   OpenAIStudioVerifier,
+  PRESENTATION_ASPECT_RATIO,
   buildPromptVariableSnapshot,
   compilePrompt,
   type GeneratedMedia,
@@ -19,12 +20,16 @@ interface TaskRow {
   id: string;
   run_id: string;
   owner_principal_id: string;
-  presentation_view: "studio";
+  presentation_view:
+    "studio" | "on_skin" | "close_up" | "dark" | "studio_hero" | "billboard";
   status: string;
   attempt: number;
   dispatch_idempotency_key: string;
   prompt_release: string;
   prompt_release_id: string;
+  style_anchor_release_id: string;
+  pipeline_release: string;
+  aspect_ratio: "1:1" | "4:5" | "9:16" | "16:9";
   cancel_requested_at?: string;
 }
 interface RunRow {
@@ -103,6 +108,8 @@ export interface PresentationRepository {
     media: GeneratedMedia;
     stored: { bucket: string; path: string; checksum: string };
     verification: Record<string, unknown>;
+    identityFingerprint: string;
+    identityArtifactId: string;
   }): Promise<void>;
   fail(input: {
     task: TaskRow;
@@ -112,7 +119,21 @@ export interface PresentationRepository {
     terminal: boolean;
     actualCostCents: number;
   }): Promise<void>;
-  signedIdentityUrl(revision: RevisionRow, ownerId: string): Promise<string>;
+  signedIdentityUrl(
+    revision: RevisionRow,
+    ownerId: string,
+    taskId: string,
+  ): Promise<{ url: string; fingerprint: string; artifactId: string }>;
+  signedStyleAnchorUrl(task: TaskRow): Promise<string>;
+  signedInspirationUrl(
+    revision: RevisionRow,
+    ownerId: string,
+  ): Promise<string | undefined>;
+  blockPreSpend(input: {
+    task: TaskRow;
+    run: RunRow;
+    error: unknown;
+  }): Promise<void>;
 }
 
 export async function executePresentationTask(
@@ -128,8 +149,6 @@ export async function executePresentationTask(
     release,
     snapshot: existingSnapshot,
   } = await repository.load(taskId);
-  if (task.presentation_view !== "studio")
-    throw new Error(`Disabled presentation view:${task.presentation_view}`);
   if (task.status === "ready") return { status: "deduplicated" as const };
   if (task.status === "cancelled" || task.cancel_requested_at)
     return { status: "cancelled" as const };
@@ -165,9 +184,30 @@ export async function executePresentationTask(
       .digest("hex") !== snapshot.sha256
   )
     throw new Error("prompt_snapshot_lineage_mismatch");
-  const provider = generator instanceof MockStudioGenerator ? "mock" : "fal";
+  let identity: { url: string; fingerprint: string; artifactId: string };
+  let styleAnchorUrl: string;
+  let inspirationImageUrl: string | undefined;
+  try {
+    // Identity and exact style release existence are hard pre-spend gates.
+    identity = await repository.signedIdentityUrl(
+      revision,
+      task.owner_principal_id,
+      task.id,
+    );
+    styleAnchorUrl = await repository.signedStyleAnchorUrl(task);
+    inspirationImageUrl = await repository.signedInspirationUrl(
+      revision,
+      task.owner_principal_id,
+    );
+  } catch (error) {
+    await repository.blockPreSpend({ task, run, error });
+    return { status: "operator_review" as const, attempt: task.attempt };
+  }
+  const provider = generator instanceof MockStudioGenerator ? "mock" : "openai";
   const model =
-    generator instanceof FalStudioAdapter ? generator.model : "mock-studio-v1";
+    generator instanceof OpenAIStillAdapter
+      ? generator.model
+      : "mock-openai-still-v1";
   const reservation = await repository.reserveAttempt(task, provider, model);
   if (reservation.duplicateComplete) return { status: "deduplicated" as const };
   let actualCostCents = 0;
@@ -175,17 +215,16 @@ export async function executePresentationTask(
     await repository.markTask(task.id, "generating", {
       attempt: reservation.attempt,
     });
-    // Persist the deterministic identity anchor in every mode. Mock execution
-    // must exercise the same private-storage lineage without making a paid call.
-    const identityImageUrl = await repository.signedIdentityUrl(
-      revision,
-      task.owner_principal_id,
-    );
     const media = await generator.generate({
       idempotencyKey: reservation.idempotencyKey,
       prompt: snapshot.compiled_prompt,
-      identityImageUrl,
-      identityFingerprint: revision.identity_anchor.fingerprint,
+      identityImageUrl: identity.url,
+      styleAnchorUrl,
+      inspirationImageUrl,
+      identityFingerprint: identity.fingerprint,
+      aspectRatio:
+        task.aspect_ratio ?? PRESENTATION_ASPECT_RATIO[task.presentation_view],
+      presentationView: task.presentation_view,
       specification: revision.specification,
     });
     actualCostCents = media.estimatedCostCents;
@@ -199,10 +238,20 @@ export async function executePresentationTask(
     await repository.markTask(task.id, "verifying");
     const verification = await verifier.verify({
       approvedText: revision.identity_anchor.approvedText,
-      identityFingerprint: revision.identity_anchor.fingerprint,
+      identityFingerprint: identity.fingerprint,
+      identityImageUrl: identity.url,
+      presentationView: task.presentation_view,
+      specification: revision.specification,
       media,
     });
-    if (!verification.passed || !verification.exactText)
+    if (
+      !verification.passed ||
+      !verification.exactText ||
+      !verification.exactScript ||
+      !verification.exactlyTwoConnectedRings ||
+      !verification.correctShot ||
+      !verification.noAddedIdentityElements
+    )
       throw new Error("identity_verification_failed");
     await repository.complete({
       task,
@@ -212,6 +261,8 @@ export async function executePresentationTask(
       media,
       stored,
       verification: verification as unknown as Record<string, unknown>,
+      identityFingerprint: identity.fingerprint,
+      identityArtifactId: identity.artifactId,
     });
     return { status: "ready" as const, attempt: reservation.attempt };
   } catch (error) {
@@ -233,6 +284,7 @@ export class SupabasePresentationRepository implements PresentationRepository {
   constructor(
     private readonly url: string,
     private readonly key: string,
+    private readonly allowMockAnchors = false,
   ) {}
   async #request<T>(path: string, init: RequestInit = {}): Promise<T> {
     const response = await fetch(`${this.url}${path}`, {
@@ -330,8 +382,11 @@ export class SupabasePresentationRepository implements PresentationRepository {
       body: JSON.stringify({ status, ...detail }),
     });
   }
-  async signedIdentityUrl(revision: RevisionRow, ownerId: string) {
-    const basePath = `principal/${ownerId}/revision/${revision.id}/identity-${revision.identity_anchor.fingerprint}`;
+  async signedIdentityUrl(
+    revision: RevisionRow,
+    ownerId: string,
+    taskId: string,
+  ) {
     const rendered = await renderIdentityAnchor(
       {
         approvedText: revision.identity_anchor.approvedText,
@@ -340,11 +395,14 @@ export class SupabasePresentationRepository implements PresentationRepository {
         fingerprint: revision.identity_anchor.fingerprint,
       },
       revision.specification,
+      "caleums-final-media-v1",
     );
-    for (const [extension, body, contentType] of [
-      ["svg", rendered.svg, "image/svg+xml"],
+    const basePath = `principal/${ownerId}/revision/${revision.id}/identity-${rendered.fingerprint}`;
+    const bodies: Array<[string, Buffer, string]> = [
       ["png", rendered.png, "image/png"],
-    ] as const) {
+    ];
+    if (rendered.svg) bodies.unshift(["svg", rendered.svg, "image/svg+xml"]);
+    for (const [extension, body, contentType] of bodies) {
       const uploadBody = body.buffer.slice(
         body.byteOffset,
         body.byteOffset + body.byteLength,
@@ -365,6 +423,32 @@ export class SupabasePresentationRepository implements PresentationRepository {
       if (!upload.ok && upload.status !== 409)
         throw new Error(`identity anchor upload failed:${upload.status}`);
     }
+    await this.#request("/rest/v1/identity_artifacts", {
+      method: "POST",
+      headers: { prefer: "resolution=ignore-duplicates" },
+      body: JSON.stringify({
+        revision_id: revision.id,
+        owner_principal_id: ownerId,
+        engine_release: String(rendered.report.engineRelease),
+        font_release: String(rendered.report.fontSha256 ?? "existing-latin"),
+        approved_text: revision.identity_anchor.approvedText,
+        script: revision.identity_anchor.language,
+        fingerprint: rendered.fingerprint,
+        bucket_id: "identity-anchors",
+        object_path: `${basePath}.png`,
+        png_sha256: rendered.pngSha256,
+        validation_report: rendered.report,
+      }),
+    });
+    const artifacts = await this.#request<Array<{ id: string }>>(
+      `/rest/v1/identity_artifacts?revision_id=eq.${revision.id}&fingerprint=eq.${rendered.fingerprint}&select=id`,
+    );
+    const artifactId = artifacts[0]?.id;
+    if (!artifactId) throw new Error("identity_artifact_lineage_missing");
+    await this.#request(`/rest/v1/generation_tasks?id=eq.${taskId}`, {
+      method: "PATCH",
+      body: JSON.stringify({ identity_artifact_id: artifactId }),
+    });
     const path = `${basePath}.png`;
     const result = await this.#request<{
       signedURL?: string;
@@ -375,9 +459,81 @@ export class SupabasePresentationRepository implements PresentationRepository {
     });
     const signed = result.signedURL ?? result.signedUrl;
     if (!signed) throw new Error("identity_anchor_missing");
+    const url = signed.startsWith("http")
+      ? signed
+      : `${this.url}/storage/v1${signed}`;
+    return { url, fingerprint: rendered.fingerprint, artifactId };
+  }
+  async signedStyleAnchorUrl(task: TaskRow) {
+    if (!task.style_anchor_release_id)
+      throw new Error(`style_anchor_missing:${task.presentation_view}`);
+    const releases = await this.#request<
+      Array<{
+        id: string;
+        source_task_id: string;
+        bucket_id?: string;
+        object_path?: string;
+        checksum_sha256?: string;
+        status: string;
+      }>
+    >(`/rest/v1/style_anchor_releases?id=eq.${task.style_anchor_release_id}`);
+    const release = releases[0];
+    if (
+      !release ||
+      release.status !== "published" ||
+      !release.bucket_id ||
+      !release.object_path ||
+      !release.checksum_sha256
+    ) {
+      if (this.allowMockAnchors)
+        return "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=";
+      throw new Error(
+        `style_anchor_missing:${release?.source_task_id ?? task.presentation_view}`,
+      );
+    }
+    return this.signedStorageUrl(release.bucket_id, release.object_path);
+  }
+  async signedInspirationUrl(revision: RevisionRow, ownerId: string) {
+    const reference = revision.specification.referenceAsset;
+    if (!reference || typeof reference !== "object") return undefined;
+    const id = String((reference as Record<string, unknown>).id ?? "");
+    const fileName = String(
+      (reference as Record<string, unknown>).fileName ?? "reference",
+    ).replaceAll(/[^a-zA-Z0-9._-]/g, "_");
+    if (!id) throw new Error("inspiration_reference_missing");
+    return this.signedStorageUrl(
+      "references",
+      `principal/${ownerId}/${id}/${fileName}`,
+    ).catch(() => {
+      throw new Error(`inspiration_reference_missing:${id}`);
+    });
+  }
+  async signedStorageUrl(bucket: string, path: string) {
+    const result = await this.#request<{
+      signedURL?: string;
+      signedUrl?: string;
+    }>(`/storage/v1/object/sign/${bucket}/${path}`, {
+      method: "POST",
+      body: JSON.stringify({ expiresIn: 300 }),
+    });
+    const signed = result.signedURL ?? result.signedUrl;
+    if (!signed) throw new Error("signed_storage_url_missing");
     return signed.startsWith("http")
       ? signed
       : `${this.url}/storage/v1${signed}`;
+  }
+  async blockPreSpend(input: { task: TaskRow; run: RunRow; error: unknown }) {
+    const message =
+      input.error instanceof Error
+        ? input.error.message
+        : "pre_spend_gate_failed";
+    await this.#request("/rest/v1/rpc/mark_task_pre_spend_blocked", {
+      method: "POST",
+      body: JSON.stringify({
+        p_task_id: input.task.id,
+        p_reason: message.slice(0, 300),
+      }),
+    });
   }
   async storeProviderOutput(input: {
     task: TaskRow;
@@ -389,7 +545,7 @@ export class SupabasePresentationRepository implements PresentationRepository {
     const checksum = createHash("sha256")
       .update(input.media.bytes)
       .digest("hex");
-    const path = `principal/${input.task.owner_principal_id}/design/${input.run.design_id}/revision/${input.revision.id}/run/${input.run.id}/studio/attempt-${input.attempt}-${checksum.slice(0, 12)}.png`;
+    const path = `principal/${input.task.owner_principal_id}/design/${input.run.design_id}/revision/${input.revision.id}/run/${input.run.id}/${input.task.presentation_view}/attempt-${input.attempt}-${checksum.slice(0, 12)}.png`;
     const response = await fetch(
       `${this.url}/storage/v1/object/generated-assets/${path}`,
       {
@@ -415,6 +571,8 @@ export class SupabasePresentationRepository implements PresentationRepository {
     media: GeneratedMedia;
     stored: { bucket: string; path: string; checksum: string };
     verification: Record<string, unknown>;
+    identityFingerprint: string;
+    identityArtifactId: string;
   }) {
     await this.#request("/rest/v1/assets", {
       method: "POST",
@@ -425,7 +583,7 @@ export class SupabasePresentationRepository implements PresentationRepository {
         run_id: input.run.id,
         task_id: input.task.id,
         owner_principal_id: input.task.owner_principal_id,
-        presentation_view: "studio",
+        presentation_view: input.task.presentation_view,
         bucket_id: input.stored.bucket,
         object_path: input.stored.path,
         mime_type: input.media.mimeType,
@@ -435,9 +593,12 @@ export class SupabasePresentationRepository implements PresentationRepository {
         model: input.media.model,
         prompt_release: input.task.prompt_release,
         prompt_release_id: input.task.prompt_release_id,
-        identity_fingerprint: input.revision.identity_anchor.fingerprint,
+        identity_fingerprint: input.identityFingerprint,
+        identity_artifact_id: input.identityArtifactId,
         attempt: input.attempt,
         verification_result: input.verification,
+        pipeline_release: input.task.pipeline_release,
+        style_anchor_release_id: input.task.style_anchor_release_id,
       }),
     });
     await this.#request("/rest/v1/rpc/reconcile_provider_attempt", {
@@ -451,10 +612,7 @@ export class SupabasePresentationRepository implements PresentationRepository {
       }),
     });
     await this.markTask(input.task.id, "ready");
-    await this.#request(`/rest/v1/generation_runs?id=eq.${input.run.id}`, {
-      method: "PATCH",
-      body: JSON.stringify({ status: "complete" }),
-    });
+    await this.refreshRunStatus(input.run.id);
     await this.#request("/rest/v1/audit_events", {
       method: "POST",
       body: JSON.stringify({
@@ -493,13 +651,7 @@ export class SupabasePresentationRepository implements PresentationRepository {
       input.terminal ? { terminal_error_code: message.slice(0, 120) } : {},
     );
     if (input.terminal)
-      await this.#request(`/rest/v1/generation_runs?id=eq.${input.run.id}`, {
-        method: "PATCH",
-        body: JSON.stringify({
-          status: "operator_review",
-          operator_review_reason: message.slice(0, 300),
-        }),
-      });
+      await this.refreshRunStatus(input.run.id, message.slice(0, 300));
     await this.#request("/rest/v1/audit_events", {
       method: "POST",
       body: JSON.stringify({
@@ -515,6 +667,29 @@ export class SupabasePresentationRepository implements PresentationRepository {
       }),
     });
   }
+  async refreshRunStatus(runId: string, reviewReason?: string) {
+    const tasks = await this.#request<Array<{ status: string }>>(
+      `/rest/v1/generation_tasks?run_id=eq.${runId}&select=status`,
+    );
+    const terminal = tasks.every((task) =>
+      ["ready", "blocked", "cancelled", "failed"].includes(task.status),
+    );
+    const ready = tasks.filter((task) => task.status === "ready").length;
+    const status = terminal
+      ? ready === tasks.length
+        ? "complete"
+        : "partial"
+      : ready > 0
+        ? "partial"
+        : "running";
+    await this.#request(`/rest/v1/generation_runs?id=eq.${runId}`, {
+      method: "PATCH",
+      body: JSON.stringify({
+        status,
+        ...(reviewReason ? { operator_review_reason: reviewReason } : {}),
+      }),
+    });
+  }
 }
 
 export function productionPresentationDependencies(
@@ -524,6 +699,7 @@ export function productionPresentationDependencies(
   const repository = new SupabasePresentationRepository(
     config.SUPABASE_URL,
     config.SUPABASE_SERVICE_ROLE_KEY,
+    config.PROVIDER_MODE === "mock",
   );
   if (config.PROVIDER_MODE === "mock")
     return {
@@ -533,7 +709,11 @@ export function productionPresentationDependencies(
     };
   return {
     repository,
-    generator: new FalStudioAdapter(config.FAL_KEY!, config.FAL_IMAGE_MODEL),
+    generator: new OpenAIStillAdapter(
+      config.OPENAI_API_KEY!,
+      config.OPENAI_IMAGE_MODEL,
+      config.OPENAI_STILL_ESTIMATED_COST_CENTS,
+    ),
     verifier: new OpenAIStudioVerifier(
       config.OPENAI_API_KEY!,
       config.OPENAI_VERIFIER_MODEL,

@@ -33,4 +33,33 @@ describe("scheduled outbox dispatch", () => {
     );
     expect(fetcher.mock.calls[1]?.[1]).toMatchObject({ method: "PATCH" });
   });
+
+  it("preserves the durable video dispatch kind", async () => {
+    const trigger = vi.fn(async () => ({ id: "video-run" }));
+    const fetcher = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(
+        Response.json([
+          {
+            id: "event-video",
+            payload: { taskId: "task-video", taskKind: "video" },
+            dispatch_idempotency_key: "dispatch-video",
+            attempt_count: 0,
+          },
+        ]),
+      )
+      .mockResolvedValueOnce(new Response(null, { status: 204 }));
+    await dispatchPendingOutbox(
+      {
+        SUPABASE_URL: "https://example.supabase.co",
+        SUPABASE_SERVICE_ROLE_KEY: "service-role-test",
+      },
+      trigger,
+      fetcher,
+    );
+    expect(trigger).toHaveBeenCalledWith(
+      { taskId: "task-video", taskKind: "video" },
+      { idempotencyKey: "dispatch-video" },
+    );
+  });
 });

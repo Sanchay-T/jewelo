@@ -1,0 +1,60 @@
+{
+  "engineRelease": "caleums-arabic-v3",
+  "sourceBundle": "caleums_pipeline_final.zip",
+  "sourceBundleReviewedAt": "2026-08-27",
+  "runtime": {
+    "language": "typescript",
+    "shapingRequirement": "Pango/FreeType/Fribidi/HarfBuzz through sharp/libvips",
+    "pythonReferenceOnly": true,
+    "lockedSharpVersion": "0.34.5"
+  },
+  "fonts": [
+    {
+      "file": "fonts/Amiri-Regular.ttf",
+      "family": "Amiri",
+      "sha256": "b092096eb992aebe59084b0cb5cf0015ae82c7e76b0aac5e7d60ae5113af5f54",
+      "spdxLicense": "OFL-1.1",
+      "approval": "live",
+      "style": "classic"
+    },
+    {
+      "file": "fonts/ScheherazadeNew-Regular.ttf",
+      "family": "Scheherazade New",
+      "sha256": "794bac8dc9e83d1d620bc471ea694f5f31d0965ce8006490a79dfc51a2d283b3",
+      "spdxLicense": "OFL-1.1",
+      "approval": "live",
+      "style": "minimal",
+      "minimumDilationPixels": 2
+    },
+    {
+      "file": "fonts/ArefRuqaa-Regular.ttf",
+      "sha256": "ceb786d83ba92f35e96efcd8623c2858d288e0c543c8761ba35b1020989464f9",
+      "approval": "held_native_reader_review"
+    },
+    {
+      "file": "fonts/reemkufi.ttf",
+      "sha256": "33ead1986cd48c138c4d906c9e5a6341877268461f97623409a2014de1cd4aa4",
+      "approval": "excluded_dot_identity_corruption"
+    },
+    {
+      "file": "fonts/cairo.ttf",
+      "sha256": "667c987182391c91f4e57a2f455b1794fb5e3ee6ca4ef3383e86bb690fa9c964",
+      "approval": "unapproved"
+    },
+    {
+      "file": "fonts/rakkas.ttf",
+      "sha256": "54278882e4774c14d50c3b555f127d0fe586366d5b787316ebbcbd8108829e60",
+      "approval": "unapproved"
+    }
+  ],
+  "referenceChecksums": {
+    "reference/solver.py": "1f0f28593636aaf398941cd3ed5521d70d9c56911521ed3e6686e7ae7f1287d6",
+    "reference/names_dataset.py": "132bf2640d12604d9aae9b2754628e3a2f6d07eb687c3e248614f5a3bf9d96ed",
+    "reference/render_regression_manifest.json.raw": "89b123b05fcb79fa2ef4b7928d8be227488c7ec02f3b8a1a6998da4df0be51d4"
+  },
+  "approvalRules": {
+    "arabicNameCount": 1,
+    "liveStyles": ["classic", "minimal"],
+    "unsupportedDisposition": "operator_review_before_provider_reservation"
+  }
+}

@@ -48,10 +48,26 @@ export const jobsEnvSchema = trustedWebEnvSchema
     TRIGGER_SECRET_KEY: nonEmpty,
     PROVIDER_MODE: z.enum(["mock", "real"]).default("mock"),
     FAL_KEY: nonEmpty.optional(),
-    FAL_IMAGE_MODEL: nonEmpty.default("openai/gpt-image-2/edit"),
     OPENAI_API_KEY: nonEmpty.optional(),
+    OPENAI_IMAGE_MODEL: z
+      .literal("gpt-image-2-2026-04-21")
+      .default("gpt-image-2-2026-04-21"),
     OPENAI_VERIFIER_MODEL: nonEmpty.default("gpt-5.6-luna"),
-    FAL_CONCURRENCY_LIMIT: z.coerce.number().int().min(1).max(32).default(2),
+    PIPELINE_RELEASE: z
+      .literal("caleums-final-media-v1")
+      .default("caleums-final-media-v1"),
+    OPENAI_STILL_CONCURRENCY_LIMIT: z.coerce
+      .number()
+      .int()
+      .min(1)
+      .max(32)
+      .default(2),
+    FAL_VIDEO_CONCURRENCY_LIMIT: z.coerce
+      .number()
+      .int()
+      .min(1)
+      .max(32)
+      .default(2),
     VERIFIER_CONCURRENCY_LIMIT: z.coerce
       .number()
       .int()
@@ -59,6 +75,12 @@ export const jobsEnvSchema = trustedWebEnvSchema
       .max(32)
       .default(4),
     MAX_PROVIDER_ATTEMPTS: z.coerce.number().int().min(1).max(3).default(3),
+    OPENAI_STILL_ESTIMATED_COST_CENTS: z.coerce
+      .number()
+      .int()
+      .min(1)
+      .default(20),
+    FAL_VIDEO_ESTIMATED_COST_CENTS: z.coerce.number().int().min(1).default(40),
   })
   .superRefine((value, context) => {
     if (value.PROVIDER_MODE === "real") {

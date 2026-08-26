@@ -34,6 +34,9 @@ function fixture() {
     dispatch_idempotency_key: "task:run-1:studio:release:release-a",
     prompt_release: "image.studio@v1",
     prompt_release_id: "release-a",
+    style_anchor_release_id: "style-a",
+    pipeline_release: "caleums-final-media-v1",
+    aspect_ratio: "1:1" as const,
   };
   const run = {
     id: "run-1",
@@ -102,7 +105,20 @@ function fixture() {
       events.push(status);
     },
     async signedIdentityUrl() {
-      return "https://signed.invalid/identity.png";
+      return {
+        url: "https://signed.invalid/identity.png",
+        fingerprint: "fingerprint",
+        artifactId: "identity-artifact",
+      };
+    },
+    async signedStyleAnchorUrl() {
+      return "https://signed.invalid/style.png";
+    },
+    async signedInspirationUrl() {
+      return undefined;
+    },
+    async blockPreSpend() {
+      events.push("pre_spend_blocked");
     },
     async storeProviderOutput() {
       events.push("stored");
@@ -144,7 +160,18 @@ describe("generic presentation execution", () => {
     const verifier: StudioVerifier = {
       verify: vi.fn(async () => {
         state.events.push("verified");
-        return { passed: true, exactText: true, identityScore: 1, notes: "ok" };
+        return {
+          passed: true,
+          exactText: true,
+          exactScript: true,
+          identityScore: 1,
+          correctMetalAndStones: true,
+          coherentPendant: true,
+          exactlyTwoConnectedRings: true,
+          correctShot: true,
+          noAddedIdentityElements: true,
+          notes: "ok",
+        };
       }),
     };
     await expect(
@@ -219,5 +246,27 @@ describe("generic presentation execution", () => {
       executePresentationTask("task-1", state.repository, generator, verifier),
     ).resolves.toEqual({ status: "cancelled" });
     expect(generator.generate).not.toHaveBeenCalled();
+  });
+
+  it("blocks a missing exact style anchor before reserving or calling a provider", async () => {
+    const state = fixture();
+    state.repository.signedStyleAnchorUrl = vi.fn(async () => {
+      throw new Error(
+        "style_anchor_missing:ddd3862a-05cb-4b95-9b6b-aa8d6453293b",
+      );
+    });
+    state.repository.reserveAttempt = vi.fn();
+    const generator: StudioGenerator = {
+      generate: vi.fn(),
+    } as unknown as StudioGenerator;
+    const verifier: StudioVerifier = {
+      verify: vi.fn(),
+    } as unknown as StudioVerifier;
+    await expect(
+      executePresentationTask("task-1", state.repository, generator, verifier),
+    ).resolves.toEqual({ status: "operator_review", attempt: 0 });
+    expect(state.repository.reserveAttempt).not.toHaveBeenCalled();
+    expect(generator.generate).not.toHaveBeenCalled();
+    expect(state.events).toContain("pre_spend_blocked");
   });
 });

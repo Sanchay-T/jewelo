@@ -2,8 +2,15 @@ import { createHash } from "node:crypto";
 
 export const PROMPT_PROFILES = [
   "image.studio",
+  "image.packshot",
+  "image.worn",
+  "image.macro_gift",
+  "image.dark_editorial",
+  "image.studio_hero",
+  "image.billboard",
   "video.preview",
   "video.final",
+  "verification.image",
 ] as const;
 export type PromptProfile = (typeof PROMPT_PROFILES)[number];
 
@@ -26,12 +33,16 @@ export const PROMPT_VARIABLES = {
   chain_style: "Approved chain style",
   chain_length: "Approved chain length",
   presentation_view: "Requested presentation view",
+  inspiration_rule: "Pinned optional inspiration handling",
 } as const;
 export type PromptVariable = keyof typeof PROMPT_VARIABLES;
 export type PromptVariableSnapshot = Record<PromptVariable, string>;
 
-const REQUIRED_VARIABLES = Object.freeze(
+const PRODUCT_VARIABLES = Object.freeze(
   Object.keys(PROMPT_VARIABLES) as PromptVariable[],
+);
+const LEGACY_VARIABLES = PRODUCT_VARIABLES.filter(
+  (variable) => variable !== "inspiration_rule",
 );
 
 export const PROMPT_PROFILE_REGISTRY: Readonly<
@@ -46,8 +57,10 @@ export const PROMPT_PROFILE_REGISTRY: Readonly<
   PROMPT_PROFILES.map((profile) => [
     profile,
     {
-      allowedVariables: REQUIRED_VARIABLES,
-      requiredVariables: REQUIRED_VARIABLES,
+      allowedVariables:
+        profile === "image.studio" ? LEGACY_VARIABLES : PRODUCT_VARIABLES,
+      requiredVariables:
+        profile === "image.studio" ? LEGACY_VARIABLES : PRODUCT_VARIABLES,
     },
   ]),
 ) as Record<
@@ -67,19 +80,73 @@ export const BASELINE_PROMPT_TEMPLATES: Readonly<
     "Use {{metal_karat}} {{metal_color}} metal with a {{finish}} finish, {{stone_coverage}} {{gemstone}}, {{size_profile}} scale, and approved dimensions {{dimensions}}.",
     "Show the pendant on its {{chain_style}} chain at {{chain_length}}. Do not invent, remove, or reshape identity details.",
   ].join(" "),
+  "image.packshot": imageTemplate(
+    "Catalogue photograph of the full necklace against a neutral ivory cream background, both sides of the chain falling naturally toward the pendant with slightly different curves and a soft accurate shadow beneath it.",
+  ),
+  "image.worn": imageTemplate(
+    "Jewellery-focused photograph of a woman wearing the necklace at {{chain_length}}, with a modest neckline, natural skin and fabric texture, an asymmetric chain drape and a thin soft shadow.",
+  ),
+  "image.macro_gift": imageTemplate(
+    "Macro product photograph of the necklace laid on black suede, the chain following a loose natural curve, with resolved suede fibres, deep soft edge shadows and shallow depth of field.",
+  ),
+  "image.dark_editorial": imageTemplate(
+    "Elegant editorial jewellery photograph at the neck and collarbone against a near-black setting, with one warm directional spotlight on the necklace and everything else in deep soft shadow.",
+  ),
+  "image.studio_hero": imageTemplate(
+    "Studio photograph of the necklace against a warm ivory-grey seamless paper sweep, lit by one upper-left softbox and a right bounce card, with asymmetric falloff and a soft accurate shadow.",
+  ),
+  "image.billboard": imageTemplate(
+    "Campaign photograph of the necklace toward the right of a matte-black paper sweep, lit by one narrow warm spotlight with subtle metal rim light and calm empty darkness to the left.",
+  ),
   "video.preview": [
     "Create a restrained silent {{presentation_view}} motion preview from the approved still for {{approved_name}} ({{language}}; Arabic style: {{arabic_style}}).",
     "Keep {{layout}} geometry, spelling and attachments unchanged throughout every frame.",
     "Preserve {{metal_karat}} {{metal_color}} metal, {{finish}} finish, {{stone_coverage}} {{gemstone}}, {{size_profile}} scale, {{dimensions}}, and the {{chain_style}} chain at {{chain_length}}.",
-    "Use only subtle product-camera movement and controlled specular light; no morphing or new objects.",
+    "Use only subtle product-camera movement and controlled specular light; no morphing or new objects. {{inspiration_rule}}",
   ].join(" "),
   "video.final": [
     "Create a polished silent {{presentation_view}} final product film from the approved still for {{approved_name}} ({{language}}; Arabic style: {{arabic_style}}).",
     "Keep exact spelling, {{layout}} geometry and attachments stable for the full shot.",
     "Preserve {{metal_karat}} {{metal_color}} metal, {{finish}} finish, {{stone_coverage}} {{gemstone}}, {{size_profile}} scale, {{dimensions}}, and the {{chain_style}} chain at {{chain_length}}.",
-    "Use elegant, restrained camera motion and realistic light only; do not morph the pendant or introduce unapproved details.",
+    "Use elegant, restrained camera motion and realistic light only; do not morph the pendant or introduce unapproved details. {{inspiration_rule}}",
+  ].join(" "),
+  "verification.image": [
+    "Verify the supplied generated image against the immutable silhouette and approved configuration for {{approved_name}} ({{language}}; Arabic style: {{arabic_style}}).",
+    "Require exact spelling and script, the same identity and {{layout}} geometry, exactly two connected jump rings with coherent {{chain_style}} chain attachment at {{chain_length}}, {{metal_karat}} {{metal_color}} {{finish}} metal, {{stone_coverage}} {{gemstone}}, {{size_profile}} dimensions {{dimensions}}, and the requested {{presentation_view}} shot.",
+    "Reject any added letters, names, charms, duplicate pendants, missing or third rings, malformed chain attachment, incoherent pendant, or wrong shot. {{inspiration_rule}}",
   ].join(" "),
 };
+
+export const PRESENTATION_PROFILE = {
+  studio: "image.packshot",
+  on_skin: "image.worn",
+  close_up: "image.macro_gift",
+  dark: "image.dark_editorial",
+  studio_hero: "image.studio_hero",
+  billboard: "image.billboard",
+  motion_preview: "video.preview",
+  motion_final: "video.final",
+} as const satisfies Readonly<Record<string, PromptProfile>>;
+
+export const PRESENTATION_ASPECT_RATIO = {
+  studio: "1:1",
+  on_skin: "4:5",
+  close_up: "1:1",
+  dark: "9:16",
+  studio_hero: "9:16",
+  billboard: "16:9",
+  motion_preview: "9:16",
+  motion_final: "9:16",
+} as const;
+
+export const STYLE_ANCHOR_SOURCE_TASK_IDS = {
+  "image.worn": "ee78f9a4-6ace-428c-9f12-4e6101188190",
+  "image.packshot": "ddd3862a-05cb-4b95-9b6b-aa8d6453293b",
+  "image.macro_gift": "44f3b981-18bd-4dbf-892e-dcf3f4c9c817",
+  "image.dark_editorial": "ba0b8433-f0f2-4458-82c9-5d3ce88081d6",
+  "image.studio_hero": "d0c0bac4-d2e4-481c-8fff-c658acd807ac",
+  "image.billboard": "f7de6e1b-4278-4866-97ac-865abeb89560",
+} as const;
 
 export interface PromptTemplateValidation {
   profile: PromptProfile;
@@ -159,6 +226,9 @@ export function buildPromptVariableSnapshot(input: {
     chain_style: scalar(chain.style),
     chain_length: `${scalar(chain.lengthCm)} cm`,
     presentation_view: scalar(input.presentationView),
+    inspiration_rule: specification.referenceAsset
+      ? "Use the optional third input only as customer inspiration; never copy text, identity, branding or unapproved objects from it."
+      : "No customer inspiration input is approved for this task.",
   };
 }
 
@@ -210,4 +280,14 @@ function scalar(value: unknown): string {
   if (typeof value === "string" || typeof value === "number")
     return String(value).trim();
   return "";
+}
+
+function imageTemplate(scene: string): string {
+  return [
+    scene,
+    "The first supplied image is the ONE AND ONLY geometry law: reproduce its exact black pendant silhouette, character order, fused marks and two hollow jump rings without adding, removing, separating or redrawing anything.",
+    "The second supplied image is a style reference only: match its framing, light, palette, setting and mood, but never copy its pendant, name, letterforms, text or objects.",
+    "The piece is a personalised pendant for {{approved_name}} ({{language}}; Arabic style {{arabic_style}}), preserving {{layout}} geometry. Render {{metal_karat}} {{metal_color}} metal with a {{finish}} finish, {{stone_coverage}} {{gemstone}}, {{size_profile}} scale and approved dimensions {{dimensions}}. Use its {{chain_style}} chain at {{chain_length}}.",
+    "Requested presentation view: {{presentation_view}}. The pendant is the sharpest visual hero. Stones are placed into approved stroke areas, never coated over letterform boundaries. The chain threads into both jump rings with no gap. Real unretouched photograph with faint grain; no artificial glow, text, logos, watermarks, extra jewellery, charms, letters, names or duplicate pendants. {{inspiration_rule}}",
+  ].join(" ");
 }

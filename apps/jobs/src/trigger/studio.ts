@@ -4,18 +4,19 @@ import {
   productionPresentationDependencies,
 } from "../presentation";
 import { dispatchPendingOutbox } from "../outbox";
+import { videoSubmissionTask } from "./video";
 
-const falImageQueue = queue({
-  name: "fal-image",
+const openAIImageQueue = queue({
+  name: "openai-image",
   concurrencyLimit: Math.max(
     1,
-    Math.min(32, Number(process.env.FAL_CONCURRENCY_LIMIT ?? 2)),
+    Math.min(32, Number(process.env.OPENAI_STILL_CONCURRENCY_LIMIT ?? 2)),
   ),
 });
 
 export const studioPresentationTask = task({
   id: "presentation-task-v1",
-  queue: falImageQueue,
+  queue: openAIImageQueue,
   retry: {
     maxAttempts: 3,
     factor: 2,
@@ -49,6 +50,8 @@ export const outboxRecoveryTask = schedules.task({
   },
   run: async () =>
     dispatchPendingOutbox(process.env, (payload, options) =>
-      studioPresentationTask.trigger(payload, options),
+      payload.taskKind === "video"
+        ? videoSubmissionTask.trigger({ taskId: payload.taskId }, options)
+        : studioPresentationTask.trigger({ taskId: payload.taskId }, options),
     ),
 });

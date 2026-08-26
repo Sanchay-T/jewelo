@@ -4,34 +4,34 @@
 
 **Pipeline brief:** final v5, 27 August 2026
 
+**Pipeline release:** `caleums-final-media-v1`
+
 **Applies to:** final Caleums implementation, verification, and release work
 
-This document is the authoritative final E2E contract. When an older goal,
-architecture example, provider adapter, prompt profile, or deployment note
-conflicts with it, this document wins. Historical goal documents remain useful
-as implementation evidence, but they do not redefine this topology.
+This document supersedes older goal examples, the one-view seed, the ZIP's
+Runway transport notes, and every Studio-parent or chained-edit graph. The ZIP
+remains authoritative for the approved identity solver, prompt semantics, shot
+pack, ratios, and anchor source task IDs. Its expiring `<REHOST:taskId>` values
+are identifiers, never usable assets.
 
-## Customer and UI contract
+## Customer and browser contract
 
-The Caleums reference UI is authoritative. Its form state is deterministic and
-serializable, and the approved name is rendered in the Arabic preview before
-generation. Reloading or reconnecting reconstructs the current run from
-backend state; the UI never substitutes hard-coded provider progress.
-
-The browser renders persisted run, task, and asset milestones progressively:
+The browser persists an invisible anonymous Supabase Auth session, reconstructs
+designs/runs/tasks/assets after reload, receives Realtime changes with polling
+fallback, and renders sibling milestones progressively. It never selects a
+provider, model, prompt, style anchor, solver, or paid-call parameter.
 
 ```text
 queued -> generating -> verifying -> ready
-                     -> retrying
-                     -> failed
+                     -> retrying -> blocked/operator review
                      -> cancelled
 ```
 
-No provider key, Supabase service-role key, raw provider payload, private
-prompt, or durable provider URL may reach browser code or browser-delivered
-state.
+Provider keys, the Supabase service-role key, raw provider payloads, private
+prompt templates, private object paths, and durable provider URLs are
+server-only. Browser media access uses short-lived owner-scoped signed URLs.
 
-## Identity and media graph
+## Deterministic identity gate
 
 The versioned deterministic solver and immutable canonical pendant PNG own
 approved spelling, Unicode/script normalization, glyph order, pendant geometry,
@@ -40,97 +40,111 @@ the deterministic validation report, and be stored privately before any model
 call. Models render and verify that identity; they never decide or silently
 alter it.
 
-Every still presentation is an independent, idempotent direct-OpenAI task:
+`caleums-arabic-v3` is the versioned Arabic identity engine. It preserves the
+exact approved NFC characters and uses Pango/Fribidi/HarfBuzz/FreeType shaping,
+the checksum-pinned ZIP font, fused marks/groups, two physically connected
+hollow jump rings, and a hard exactly-one-connected-component mask gate. It
+stores an immutable PNG, checksum, solver/font/runtime report, and fingerprint
+before provider-attempt reservation.
 
-```text
-deterministic specification + identity anchor
-  -> immutable canonical pendant PNG
-       +-> packshot       1:1  (OpenAI GPT Image 2)
-       +-> worn           4:5  (OpenAI GPT Image 2)
-       +-> macroGift      1:1  (OpenAI GPT Image 2)
-       +-> darkEditorial  9:16 (OpenAI GPT Image 2)
-       +-> studioHero     9:16 (OpenAI GPT Image 2)
-       +-> billboard      16:9 (OpenAI GPT Image 2)
-       `-> optional video from a verified still (fal Seedance)
-```
+Only one-name Arabic `classic`/Amiri and `minimal`/Scheherazade New are live.
+Signature, Kufi, Contemporary, Diwani, Thuluth-inspired, every unapproved font,
+and all two-name Arabic layouts enter explicit operator review before spend.
+The customer-facing Contemporary selection is the UI alias for certified
+`classic`; all other unsupported selections are visibly review-only. English
+retains the existing deterministic renderer.
 
-There are no chained image edits. No generated still is the geometry authority
-or a required input for another still. Each view receives the same immutable
-pendant silhouette, its own immutable versioned shot-specific style anchor,
-the customer configuration through a versioned prompt, and the aspect ratio as
-an API parameter rather than prompt prose. Enabled views may run concurrently,
-appear progressively, and fail independently.
+## Independent still graph
 
-All still generation calls OpenAI GPT Image 2 directly from a trusted server or
-job runtime using `OPENAI_API_KEY`. fal is forbidden for stills. Verification
-gates exact identity and spelling before a still can reach `ready` or be used
-as a video input.
+There is no Studio-parent image graph and no chained still edit. Each still is
+an independent idempotent OpenAI Images edit request receiving, in this order:
 
-fal handles optional video only, using the existing server-side `FAL_KEY`
-convention and a verified still as input. Seedance submissions use
-`generate_audio:false`; video failure cannot block image inspection, quoting,
-or ordering, and video cannot replace or redefine the canonical identity.
+1. the same immutable deterministic silhouette;
+2. the exact pinned shot-specific style anchor;
+3. an optional owner-approved inspiration image, if one exists;
+4. the task's immutable compiled prompt and customer configuration;
+5. canvas size/aspect as an API request parameter, never prompt prose.
 
-The live certified Arabic styles from the final-v5 brief are `classic` with
-Amiri and `minimal` with Scheherazade New. Fonts or Arabic/two-name combinations
-that are missing, held, excluded, or not regression-certified must route to
-explicit operator review rather than being described as production-verified.
-Existing certified Latin handling remains in force.
+Default customer fanout is concurrent and progressive:
 
-## Prompt, anchor, verification, and lineage contract
+| UI view  | Task profile           | Ratio | Provider/model                  |
+| -------- | ---------------------- | ----: | ------------------------------- |
+| Studio   | `image.packshot`       |   1:1 | OpenAI `gpt-image-2-2026-04-21` |
+| On Skin  | `image.worn`           |   4:5 | OpenAI `gpt-image-2-2026-04-21` |
+| Close Up | `image.macro_gift`     |   1:1 | OpenAI `gpt-image-2-2026-04-21` |
+| Dark     | `image.dark_editorial` |  9:16 | OpenAI `gpt-image-2-2026-04-21` |
 
-The versioned registries cover image prompts, video prompts, verification
-prompts, and style-anchor releases. The six supported image shot identifiers
-and aspect mappings are `packshot` (1:1), `worn` (4:5), `macroGift` (1:1),
-`darkEditorial` (9:16), `studioHero` (9:16), and `billboard` (16:9). A release
-may enable only the subset required by the current UI, but it cannot silently
-rename a shot or change its aspect contract.
+`image.studio_hero` (9:16) and `image.billboard` (16:9) are registered admin
+profiles but are not part of default customer fanout. A failed sibling never
+deletes or invalidates ready siblings.
 
-Prompt and anchor releases are immutable, have one atomically published
-release, retain append-only publication history, and support authenticated
-admin draft, validation, publish, rollback, and history operations.
-Publication changes affect only newly created tasks. Approved style anchors
-must be rehosted in durable private storage and pinned by release. Generated
-outputs are never promoted automatically into style anchors, and placeholder
-`<REHOST:...>` values are not deployable assets.
+OpenAI verification compares each generated still with the identity silhouette
+and approved configuration. `ready` requires exact spelling/script and identity,
+correct metal/stones and shot, a coherent pendant, exactly two connected jump
+rings with chain attachment, and no added letters, names, charms, or duplicates.
+Provider output is copied immediately into private Supabase Storage before the
+verification transition.
 
-Every task freezes its complete snapshot before its first provider reservation:
-design revision, approved spelling, canonical identity asset and fingerprint,
-solver release and validation report, pipeline strategy/release, prompt release
-and compiled checksum, style-anchor release, shot and API aspect ratio,
-provider/model, and idempotency key. Every attempt and immutable output records
-attempt number, input asset IDs, verification result, status and error class,
-timing, cost, output checksum, and storage lineage. A retry reuses the task
-snapshot; a new creative decision creates a new task/run rather than mutating
-history.
+## Style anchors
 
-Verification fails closed on spelling/script, silhouette identity, metal,
-stone treatment, connected jump rings and chain attachment, duplicate or added
-elements, and shot composition. A task may make at most two automatic attempts;
-continued failure routes to operator review. Cancellation, audit, cost, and
-successful sibling state remain durable throughout.
+Style anchors are immutable private-storage releases with checksum, source task
+ID, approval note, publication pointer, and append-only publication history.
+They are never inferred, regenerated, substituted, or auto-promoted. A task pins
+the exact release at creation. Missing or incomplete releases fail before spend
+with `style_anchor_missing:<sourceTaskId>`.
 
-## Durable system boundaries
+The authoritative source task IDs are:
 
-- Supabase is the system of record for identity, revisions, runs, tasks,
-  immutable assets, prompt lineage, usage, commerce, audit, and outbox state.
-- Trigger.dev owns durable dispatch, dependency release, queues, retries,
-  idempotency, cancellation, and outbox reconciliation.
-- Shopify owns Draft Orders, hosted checkout, payment, and order webhooks.
-  Jewelo uses deterministic reconciliation and atomically records signed,
-  idempotent webhook outcomes in Supabase.
-- DigitalOcean App Platform hosts only the Next.js web unit. Long-running model
-  work stays in Trigger.dev jobs.
+- worn `ee78f9a4-6ace-428c-9f12-4e6101188190`
+- packshot `ddd3862a-05cb-4b95-9b6b-aa8d6453293b`
+- macro gift `44f3b981-18bd-4dbf-892e-dcf3f4c9c817`
+- dark editorial `ba0b8433-f0f2-4458-82c9-5d3ce88081d6`
+- studio hero `d0c0bac4-d2e4-481c-8fff-c658acd807ac`
+- billboard `f7de6e1b-4278-4866-97ac-865abeb89560`
 
-Provider calls are server-side adapter concerns. Domain contracts contain no
-provider SDK types, browser routes do not poll providers, and service-role or
-provider credentials are never exposed through `NEXT_PUBLIC_*` configuration.
+## Prompt and lineage registry
 
-## Seed gate
+Managed immutable profiles are `image.packshot`, `image.worn`,
+`image.macro_gift`, `image.dark_editorial`, `image.studio_hero`,
+`image.billboard`, `video.preview`, `video.final`, and
+`verification.image`. `image.studio` remains readable only for legacy seeded
+tasks. Draft/validate/publish/rollback/history reject unknown, malformed, or
+missing `{{variables}}`; publication affects only new tasks.
 
-This contract freezes the target; it does not claim every item is implemented
-at the integration seed. Feature work may fill missing profiles, adapters, task
-dependencies, and acceptance evidence, but it must not change this graph
-without an explicit product decision. Mock mode remains a first-class,
-zero-cost path and must exercise the same task, lineage, security, and UI-state
-contracts without paid provider calls.
+Every run pins the pipeline, identity engine/font, provider model, prompt and
+style releases. Every task pins its ratio, dependency/input asset IDs, compiled
+prompt snapshot/checksum, dispatch key, reservation, attempts, cost, and output
+lineage. The initial call plus at most two automatic retries is the complete
+paid-attempt budget. Cancellation and ambiguous callbacks cannot create another
+paid attempt with the same idempotency key.
+
+## Motion
+
+Motion alone derives from one verified still. fal Seedance preview is 4 seconds,
+9:16; optional final is 6 seconds. Both are 720p and submit
+`generate_audio:false`. Submission request/status/result URLs are durable
+server-side task lineage; Trigger polls with bounded idempotent runs, then copies
+the output to private Storage. Motion failure never blocks quote, checkout,
+order, or fulfillment.
+
+## Durable boundaries and commercial safety
+
+- Supabase owns identity, revisions, releases, runs/tasks, immutable assets,
+  usage, commerce lineage, audit, outbox, RLS, Realtime, and private Storage.
+- Trigger.dev owns outbox dispatch, provider-specific concurrency, durable
+  polling, retry/cancel/resume, and recovery. No Redis or custom queue server.
+- OpenAI handles all still generation and still verification server-side.
+- fal handles video only.
+- Shopify retains Draft Order/checkout/payment ownership; the accepted,
+  unexpired, spelling-confirmed quote and webhook-deduplication gates remain.
+
+Run creation reserves all default sibling cost atomically. Each provider attempt
+reconciles only its own reservation and actual cost once; retry reservation is
+guarded again. A pre-spend identity/anchor gate releases that task's reservation.
+One active run per principal/design, daily quota, maximum reserved spend,
+idempotency constraints, and ordered audit events remain mandatory.
+
+Mock is the default zero-cost mode and exercises task/lineage/storage/state
+transitions with an explicit mock anchor. Real mode remains fail-closed until
+all exact anchors, credentials, account concurrency, budgets, and coordinator
+paid-smoke approval are present.

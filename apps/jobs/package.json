@@ -15,6 +15,7 @@
     "@jewelo/ai": "workspace:*",
     "@jewelo/config": "workspace:*",
     "@jewelo/contracts": "workspace:*",
+    "@jewelo/identity": "workspace:*",
     "@trigger.dev/sdk": "4.5.12",
     "sharp": "0.34.5"
   },
