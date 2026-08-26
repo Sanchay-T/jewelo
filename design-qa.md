@@ -28,11 +28,9 @@ Programmatic viewport checks reported `documentElement.scrollWidth === documentE
 
 ## Required interaction evidence
 
-- Arabic progress labels read exactly: Name & language, Arabic style, Names & layout, Inspiration, Metal, Stones, Size & chain, Review. English intentionally omits only Arabic style and reports seven steps.
+- Arabic progress labels read exactly: Name & language, Arabic style, Names & layout, Metal, Stones, Size & chain, Review. English intentionally omits only Arabic style and reports six steps.
 - Both approved Arabic name fields accepted independent edits (`ليان`, `نور`), and the live identity preview exposed `Deterministic identity preview: ليان ♡ نور`.
 - Progress-step buttons could not advance an incomplete specification; clearing the second Arabic spelling disabled both Continue and the next-stage jump.
-- Inspiration search (`fine`), Minimal filtering, template selection, removal, and Inspire Me all updated the selected reference state.
-- An uploaded fixture survived a page reload via IndexedDB. After Remove, a second reload showed no restored preview and Continue remained disabled in Upload mode (`initiallyUploaded: 1`, `restored: 1`, `afterDeletion: 0`).
 - The initial result used the frozen run task/asset data. The tablist exposed one Studio tab and no On you or Motion tab.
 - The development task audit exposed frozen failed and blocked states without presenting extra customer directions. Browser QA found one failed task, invoked Retry, and confirmed the retry control cleared while the live status announced completion.
 - The active Studio task exposed Cancel task and invoked the existing `cancelTask` command. The UI now retains an explicit cancelled presentation state locally if the legacy mock timer advances the same task again, disables commerce continuation, and preserves ready sibling assets.
@@ -65,13 +63,34 @@ No open P0, P1, or P2 visual differences remain in the scoped reference comparis
 - Same-input full-view comparison: `/tmp/caleums-isolated/reference-vs-isolated.jpg` (2300 × 1508), inspected at original resolution.
 - Focused evidence: the first three source configurator scenes and their corresponding rendered screens were readable in the combined comparison; no additional crop was needed.
 
-The earlier implementation combined name count, language, Arabic style, and layout into one panel. The revised flow isolates every visible choice group from the reference: Name & language, Arabic style, Names & layout, Inspiration, Metal, Stones, Size & chain, and Review. English skips only the inapplicable Arabic-style step. Forward progress remains limited to the next valid panel, while completed panels remain revisitable.
+The earlier implementation combined name count, language, Arabic style, and layout into one panel. The revised flow isolates every visible choice group from the reference: Name & language, Arabic style, Names & layout, Metal, Stones, Size & chain, and Review. English skips only the inapplicable Arabic-style step. Forward progress remains limited to the next valid panel, while completed panels remain revisitable.
 
-Required fidelity surfaces passed: Instrument Sans/editorial serif hierarchy remains unchanged; the control/preview split, ivory/gold/near-black palette, real jewelry imagery, thin selected borders, labels, and action copy stay consistent with the source. The responsive audit at 1440 × 900, 1024 × 768, 834 × 1112, 390 × 844, and 360 × 640 reported zero page-level horizontal overflow and zero visible interactive targets below 44 px. Mobile uses an internal, scrollbar-free progress rail for the eight isolated steps.
+Required fidelity surfaces passed: Instrument Sans/editorial serif hierarchy remains unchanged; the control/preview split, ivory/gold/near-black palette, real jewelry imagery, thin selected borders, labels, and action copy stay consistent with the source. The responsive audit at 1440 × 900, 1024 × 768, 834 × 1112, 390 × 844, and 360 × 640 reported zero page-level horizontal overflow and zero visible interactive targets below 44 px. Mobile uses an internal, scrollbar-free progress rail for the isolated steps.
 
 | Severity | Difference found                                                                                                 | Fix                                                                                                       | Post-fix evidence                                                                     |
 | -------- | ---------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
 | P1       | Arabic style and names/layout were combined into the first panel instead of isolated as in the source storyboard | Split them into dedicated conditional screens with independent progress labels and validation             | `/tmp/caleums-isolated/reference-vs-isolated.jpg`                                     |
-| P2       | Eight mobile progress targets compressed below 44 px                                                             | Changed the mobile progress rail to 44 px columns with internal horizontal scrolling and no page overflow | `/tmp/caleums-isolated/02-arabic-style-390x844.jpg`; all five viewport metrics passed |
+| P2       | Mobile progress targets compressed below 44 px                                                                   | Changed the mobile progress rail to 44 px columns with internal horizontal scrolling and no page overflow | `/tmp/caleums-isolated/02-arabic-style-390x844.jpg`; all five viewport metrics passed |
 
 No open P0, P1, or P2 differences remain for the isolated-step correction.
+
+## Reference-step alignment — Inspiration removal — 2026-08-27
+
+- Source visual truth: `docs/reference/caleums-name-studio.png` (1402 × 1122).
+- Browser-rendered implementation: `/tmp/caleums-no-inspiration/implementation-1440x900.png` at 1440 × 900 CSS pixels, DPR 1.
+- Mobile evidence: `/tmp/caleums-no-inspiration/implementation-390x844.png` at 390 × 844 CSS pixels, DPR 1.
+- Same-input comparison: `/tmp/caleums-no-inspiration/reference-vs-implementation.png` (2880 × 900), visually inspected at original resolution.
+- State: configurator Step 1, English script selected; source storyboard and rendered progress sequence visible together.
+
+The supplied storyboard contains Name & language, conditional Arabic style, Names & layout, Metal, Stones, Size & chain, and Live editor/review. The extra Inspiration panel was therefore a P1 information-architecture mismatch. It and its search/filter/template/upload state were removed. New designs submit through the existing `fresh` source contract without adding or changing shared contracts.
+
+Browser interaction exercised the full English sequence and observed these headings in order: “Let’s start with your name”, “One name or two?”, “Choose your metal”, “Add your light”, “Make it yours to wear”, and “Every detail, exactly right”. English reports Step 1 of 6; Arabic reports Step 1 of 7 and inserts only Arabic Style. At 390 × 844 the document width remained exactly 390 px with the six English progress labels and no page-level horizontal overflow.
+
+Required fidelity surfaces passed: typography, spacing, ivory/gold/near-black tokens, real jewelry fixture quality, and source-aligned copy remain unchanged. The comparison was structural because the source is a multi-state storyboard rather than a single matching viewport; focused evidence was not needed because the progress labels and first reference panel remained readable in the combined input.
+
+| Severity | Difference found                                           | Fix                                                                 | Post-fix evidence                                                       |
+| -------- | ---------------------------------------------------------- | ------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| P1       | Inspiration appeared as a standalone configurator step     | Removed the panel, state, imports, persistence UI, and progress item | `/tmp/caleums-no-inspiration/reference-vs-implementation.png`           |
+| P2       | Removed UI left unreachable inspiration-specific CSS rules | Deleted the orphaned desktop/tablet/mobile presentation rules        | Formatting, lint, typecheck, tests, boundary checks, and build all pass |
+
+No open P0, P1, or P2 differences remain for reference-step alignment.

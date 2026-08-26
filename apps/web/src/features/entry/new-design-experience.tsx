@@ -2,28 +2,15 @@
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useDropzone } from "react-dropzone";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import {
   ArrowLeft,
   ArrowRight,
-  Camera,
   Check,
-  ImageSquare,
-  MagicWand,
-  MagnifyingGlass,
   PencilSimple,
-  Sparkle,
-  Trash,
-  UploadSimple,
 } from "@phosphor-icons/react";
 import { AppShell } from "@/components/app-shell";
 import { useJewelo } from "@/lib/jewelo-provider";
-import {
-  loadReferenceUrl,
-  saveReference,
-  validateReference,
-} from "@/lib/reference-store";
 import {
   ARABIC_STYLE_OPTIONS,
   arabicStyleLabel,
@@ -46,7 +33,6 @@ type StageId =
   | "name-language"
   | "arabic-style"
   | "names-layout"
-  | "inspiration"
   | "metal"
   | "stones"
   | "size-chain"
@@ -56,7 +42,6 @@ const allStages: Array<{ id: StageId; label: string }> = [
   { id: "name-language", label: "Name & language" },
   { id: "arabic-style", label: "Arabic style" },
   { id: "names-layout", label: "Names & layout" },
-  { id: "inspiration", label: "Inspiration" },
   { id: "metal", label: "Metal" },
   { id: "stones", label: "Stones" },
   { id: "size-chain", label: "Size & chain" },
@@ -70,39 +55,6 @@ const layouts: Array<{ id: PendantLayout; label: string }> = [
   { id: "infinity", label: "Infinity" },
   { id: "interlocked", label: "Interlocked" },
 ];
-const inspirations = [
-  {
-    id: "studio",
-    label: "Fine script",
-    filter: "Minimal",
-    src: "/fixtures/layla-direction-1-product.png",
-  },
-  {
-    id: "worn",
-    label: "On mood",
-    filter: "Elegant",
-    src: "/fixtures/layla-direction-1-worn.png",
-  },
-  {
-    id: "botanical",
-    label: "Botanical",
-    filter: "Bold",
-    src: "/fixtures/layla-direction-2-product.png",
-  },
-  {
-    id: "diamond",
-    label: "Diamond rhythm",
-    filter: "Elegant",
-    src: "/fixtures/layla-direction-3-product.png",
-  },
-  {
-    id: "gallery",
-    label: "Gallery minimal",
-    filter: "Minimal",
-    src: "/fixtures/layla-direction-4-product.png",
-  },
-];
-
 function Option<const T extends string>({
   selected,
   value,
@@ -139,15 +91,6 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
   const [arabicTwo, setArabicTwo] = useState("مريم");
   const [arabicStyle, setArabicStyle] = useState<ArabicStyle>("contemporary");
   const [layout, setLayout] = useState<PendantLayout>("connected-heart");
-  const [source, setSource] = useState<"fresh" | "inspiration" | "upload">(
-    "fresh",
-  );
-  const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState("All");
-  const [selectedInspiration, setSelectedInspiration] = useState<string>();
-  const [referenceName, setReferenceName] = useState<string>();
-  const [referencePreview, setReferencePreview] = useState<string>();
-  const [uploadError, setUploadError] = useState<string>();
   const [metal, setMetal] = useState<MetalColor>("yellow");
   const [coverage, setCoverage] = useState<StoneCoverage>("full-pave");
   const [gemstone, setGemstone] = useState<Gemstone>("lab-diamond");
@@ -161,19 +104,6 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string>();
 
-  useEffect(() => {
-    if (source !== "upload" || referencePreview) return;
-    let active = true;
-    void loadReferenceUrl("draft-reference").then((stored) => {
-      if (!active || !stored) return;
-      setReferenceName("Saved reference");
-      setReferencePreview(stored.url);
-    });
-    return () => {
-      active = false;
-    };
-  }, [referencePreview, source]);
-
   const displayOne = language === "ar" ? arabicOne : nameOne;
   const displayTwo = language === "ar" ? arabicTwo : nameTwo;
   const resolvedLayout = nameCount === 1 ? "single-name" : layout;
@@ -186,18 +116,6 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
   );
   const needsOperatorReview =
     language === "ar" && !isProviderSupportedArabicStyle(arabicStyle);
-  const previewImage = selectedInspiration
-    ? inspirations.find((item) => item.id === selectedInspiration)?.src
-    : "/fixtures/layla-direction-1-product.png";
-  const filtered = useMemo(
-    () =>
-      inspirations.filter(
-        (item) =>
-          (filter === "All" || item.filter === filter) &&
-          item.label.toLowerCase().includes(search.toLowerCase()),
-      ),
-    [filter, search],
-  );
   const visibleStages = useMemo(
     () =>
       language === "ar"
@@ -207,59 +125,6 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
   );
   const stageIndex = visibleStages.findIndex((item) => item.id === stage);
   const safeStageIndex = stageIndex < 0 ? 0 : stageIndex;
-
-  async function receiveFile(file?: File) {
-    if (!file) return;
-    try {
-      validateReference(file);
-      await saveReference("draft-reference", file);
-      setReferenceName(file.name);
-      setReferencePreview(URL.createObjectURL(file));
-      setUploadError(undefined);
-      setSource("upload");
-    } catch (caught) {
-      setUploadError(
-        caught instanceof Error
-          ? caught.message
-          : "Reference could not be saved.",
-      );
-    }
-  }
-  const dropzone = useDropzone({
-    accept: {
-      "image/png": [".png"],
-      "image/jpeg": [".jpg", ".jpeg"],
-      "image/webp": [".webp"],
-    },
-    maxFiles: 1,
-    maxSize: 5 * 1024 * 1024,
-    onDrop: (files) => void receiveFile(files[0]),
-    onDropRejected: () =>
-      setUploadError("Choose one PNG, JPEG, or WebP image up to 5 MB."),
-  });
-
-  async function removeReference() {
-    if (referencePreview) URL.revokeObjectURL(referencePreview);
-    await new Promise<void>((resolve) => {
-      const request = indexedDB.open("jewelo-ui-spike", 1);
-      request.onerror = () => resolve();
-      request.onsuccess = () => {
-        const database = request.result;
-        const transaction = database.transaction("references", "readwrite");
-        transaction.objectStore("references").delete("draft-reference");
-        transaction.oncomplete = () => {
-          database.close();
-          resolve();
-        };
-        transaction.onerror = () => {
-          database.close();
-          resolve();
-        };
-      };
-    });
-    setReferenceName(undefined);
-    setReferencePreview(undefined);
-  }
 
   function stageIsValid(id: StageId) {
     if (id === "name-language")
@@ -271,8 +136,6 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
         (language === "en" ||
           (arabicOne.trim() && (nameCount === 1 || arabicTwo.trim()))),
       );
-    if (id === "inspiration")
-      return source !== "upload" || Boolean(referenceName);
     return true;
   }
 
@@ -317,15 +180,7 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
         names,
         arabicStyle: language === "ar" ? arabicStyle : "none",
         layout: nameCount === 1 ? "single-name" : layout,
-        source,
-        referenceAsset: referenceName
-          ? { id: "draft-reference", fileName: referenceName }
-          : selectedInspiration
-            ? {
-                id: selectedInspiration,
-                fileName: `${selectedInspiration}.png`,
-              }
-            : undefined,
+        source: "fresh",
         metalKarat: "18K",
         metalColor: metal,
         finish: "polished",
@@ -350,9 +205,6 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
         chain: { style: chain, lengthCm: chainLength },
         complexity:
           coverage === "full-pave" ? 8 : coverage === "partial-pave" ? 6 : 4,
-        notes: selectedInspiration
-          ? `Inspiration: ${selectedInspiration}`
-          : undefined,
         spellingConfirmed: true,
       });
       router.push(`/${locale}/design/crafting?designId=${design.id}`);
@@ -400,7 +252,7 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
         <div className="clm-config-shell">
           <section className="clm-preview" aria-label="Live pendant preview">
             <Image
-              src={previewImage ?? "/fixtures/layla-direction-1-product.png"}
+              src="/fixtures/layla-direction-1-product.png"
               alt="Live preview of the approved Caleums name pendant"
               fill
               priority
@@ -678,176 +530,6 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
                   <p className="clm-support-message">
                     One name uses the classic single-name layout.
                   </p>
-                )}
-              </>
-            )}
-
-            {stage === "inspiration" && (
-              <>
-                <header>
-                  <p className="clm-kicker">Find your direction</p>
-                  <h1>Choose how to begin</h1>
-                  <p>
-                    Start fresh, find a mood, or bring a reference of your own.
-                  </p>
-                </header>
-                <div className="clm-source-tabs">
-                  <Option
-                    value="fresh"
-                    selected={source === "fresh"}
-                    onSelect={(value) => setSource(value as typeof source)}
-                  >
-                    <Sparkle size={21} />
-                    <span>Fresh</span>
-                  </Option>
-                  <Option
-                    value="inspiration"
-                    selected={source === "inspiration"}
-                    onSelect={(value) => setSource(value as typeof source)}
-                  >
-                    <ImageSquare size={21} />
-                    <span>Inspiration</span>
-                  </Option>
-                  <Option
-                    value="upload"
-                    selected={source === "upload"}
-                    onSelect={(value) => setSource(value as typeof source)}
-                  >
-                    <Camera size={21} />
-                    <span>Upload</span>
-                  </Option>
-                </div>
-                {source === "fresh" && (
-                  <div className="clm-inspire-card">
-                    <MagicWand size={30} />
-                    <div>
-                      <strong>I know the details I want</strong>
-                      <p>
-                        Continue with your selected script, layout, and
-                        material.
-                      </p>
-                    </div>
-                    <button
-                      type="button"
-                      className="clm-secondary"
-                      onClick={() => {
-                        setSource("inspiration");
-                        setSelectedInspiration("studio");
-                      }}
-                    >
-                      Inspire me
-                    </button>
-                  </div>
-                )}
-                {source === "inspiration" && (
-                  <>
-                    <div className="clm-search">
-                      <MagnifyingGlass size={18} />
-                      <input
-                        aria-label="Search inspiration"
-                        placeholder="Search styles"
-                        value={search}
-                        onChange={(event) => setSearch(event.target.value)}
-                      />
-                    </div>
-                    <div className="clm-filters">
-                      {["All", "Minimal", "Elegant", "Bold"].map((item) => (
-                        <button
-                          type="button"
-                          key={item}
-                          aria-pressed={filter === item}
-                          onClick={() => setFilter(item)}
-                        >
-                          {item}
-                        </button>
-                      ))}
-                    </div>
-                    <div className="clm-template-grid">
-                      {filtered.map((item) => (
-                        <button
-                          type="button"
-                          key={item.id}
-                          aria-pressed={selectedInspiration === item.id}
-                          onClick={() => setSelectedInspiration(item.id)}
-                        >
-                          <Image
-                            src={item.src}
-                            alt={`${item.label} pendant inspiration`}
-                            width={190}
-                            height={150}
-                          />
-                          <span>{item.label}</span>
-                        </button>
-                      ))}
-                    </div>
-                    {selectedInspiration && (
-                      <div className="clm-selected-ref">
-                        <Image
-                          src={
-                            inspirations.find(
-                              (item) => item.id === selectedInspiration,
-                            )?.src ?? ""
-                          }
-                          alt="Selected reference"
-                          width={60}
-                          height={60}
-                        />
-                        <div>
-                          <span>Selected reference</span>
-                          <strong>
-                            {
-                              inspirations.find(
-                                (item) => item.id === selectedInspiration,
-                              )?.label
-                            }
-                          </strong>
-                        </div>
-                        <button
-                          type="button"
-                          aria-label="Remove selected reference"
-                          onClick={() => setSelectedInspiration(undefined)}
-                        >
-                          <Trash size={18} />
-                        </button>
-                      </div>
-                    )}
-                  </>
-                )}
-                {source === "upload" && (
-                  <div className="clm-upload" {...dropzone.getRootProps()}>
-                    <input {...dropzone.getInputProps()} />
-                    {referencePreview ? (
-                      <Image
-                        src={referencePreview}
-                        alt="Uploaded reference preview"
-                        width={120}
-                        height={120}
-                        unoptimized
-                      />
-                    ) : (
-                      <UploadSimple size={30} />
-                    )}
-                    <strong>
-                      {referenceName ??
-                        (dropzone.isDragActive
-                          ? "Drop your reference here"
-                          : "Choose or drop a reference")}
-                    </strong>
-                    <span>PNG, JPEG or WebP · up to 5 MB</span>
-                    {referenceName && (
-                      <button
-                        type="button"
-                        className="clm-secondary"
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          void removeReference();
-                        }}
-                      >
-                        Remove
-                      </button>
-                    )}
-                    {uploadError && <p role="alert">{uploadError}</p>}
-                  </div>
                 )}
               </>
             )}

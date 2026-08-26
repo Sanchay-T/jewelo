@@ -376,8 +376,7 @@ video {
   font-weight: 400;
   line-height: 1;
 }
-.clm-controls header > p:last-child,
-.clm-inspire-card p {
+.clm-controls header > p:last-child {
   color: var(--muted);
   font-size: 0.78rem;
   line-height: 1.55;
@@ -500,7 +499,6 @@ video {
   margin: 0 0 17px;
 }
 .clm-label input,
-.clm-search input,
 .clm-operator-login input {
   min-height: 46px;
   border: 1px solid var(--line);
@@ -519,7 +517,6 @@ video {
   gap: 6px;
 }
 .clm-segmented button,
-.clm-filters button,
 .clm-queue-tabs button {
   min-height: 44px;
   border: 1px solid var(--line);
@@ -527,7 +524,6 @@ video {
   font-size: 0.68rem;
 }
 .clm-segmented button[aria-pressed="true"],
-.clm-filters button[aria-pressed="true"],
 .clm-queue-tabs button[aria-pressed="true"] {
   border-color: var(--gold);
   color: #755621;
@@ -640,131 +636,14 @@ video {
   font-family: Georgia, serif;
   font-weight: 400;
 }
-.clm-source-tabs {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 7px;
-}
-.clm-source-tabs .clm-option {
-  flex-direction: column;
-  justify-content: center;
-  min-height: 88px;
-}
-.clm-inspire-card {
-  border: 1px solid var(--line);
-  margin-top: 18px;
-  padding: 18px;
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  gap: 14px;
-  align-items: center;
-}
-.clm-inspire-card strong {
-  font-size: 0.78rem;
-}
-.clm-search {
-  margin: 18px 0 9px;
-  min-height: 46px;
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  padding: 0 12px;
-  border: 1px solid var(--line);
-}
-.clm-search input {
-  border: 0;
-  min-width: 0;
-  flex: 1;
-  padding: 0;
-}
-.clm-filters,
 .clm-queue-tabs {
   display: flex;
   gap: 6px;
   flex-wrap: wrap;
 }
-.clm-filters button,
 .clm-queue-tabs button {
   padding: 0 15px;
 }
-.clm-template-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
-  margin-top: 12px;
-}
-.clm-template-grid button {
-  min-height: 44px;
-  border: 1px solid var(--line);
-  padding: 0;
-  background: transparent;
-  overflow: hidden;
-  text-align: start;
-}
-.clm-template-grid button[aria-pressed="true"] {
-  border: 2px solid var(--gold);
-}
-.clm-template-grid img {
-  aspect-ratio: 1.25;
-  width: 100%;
-  object-fit: cover;
-}
-.clm-template-grid span {
-  min-height: 37px;
-  display: flex;
-  align-items: center;
-  padding: 0 9px;
-  font-size: 0.62rem;
-}
-.clm-selected-ref {
-  margin-top: 10px;
-  border: 1px solid var(--gold);
-  display: grid;
-  grid-template-columns: 60px 1fr 44px;
-  align-items: center;
-  gap: 11px;
-}
-.clm-selected-ref img {
-  width: 60px;
-  height: 60px;
-  object-fit: cover;
-}
-.clm-selected-ref span,
-.clm-selected-ref strong {
-  display: block;
-  font-size: 0.62rem;
-}
-.clm-selected-ref span {
-  color: var(--muted);
-}
-.clm-selected-ref button {
-  width: 44px;
-  height: 44px;
-  border: 0;
-  background: transparent;
-}
-.clm-upload {
-  border: 1px dashed #b7aa98;
-  min-height: 240px;
-  margin-top: 18px;
-  padding: 26px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  text-align: center;
-}
-.clm-upload > span {
-  color: var(--muted);
-  font-size: 0.64rem;
-}
-.clm-upload img {
-  width: 120px;
-  height: 120px;
-  object-fit: cover;
-}
-.clm-upload p,
 .clm-error {
   color: var(--danger);
   font-size: 0.7rem;
@@ -1962,9 +1841,6 @@ video {
   .clm-layout-grid {
     grid-template-columns: repeat(2, 1fr);
   }
-  .clm-template-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
   .clm-gem-grid {
     grid-template-columns: repeat(2, 1fr);
   }
@@ -2115,9 +1991,6 @@ video {
   .clm-four-grid {
     grid-template-columns: repeat(2, 1fr);
   }
-  .clm-template-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
   .clm-config-actions {
     position: fixed;
     z-index: 25;
@@ -2129,12 +2002,6 @@ video {
   }
   .clm-config-actions .clm-primary {
     min-width: 155px;
-  }
-  .clm-inspire-card {
-    grid-template-columns: auto 1fr;
-  }
-  .clm-inspire-card .clm-secondary {
-    grid-column: 1/-1;
   }
   .clm-generation {
     display: flex;
