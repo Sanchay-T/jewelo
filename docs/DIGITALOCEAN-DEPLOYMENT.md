@@ -95,12 +95,11 @@ deploying a fake app.
 
 | Environment | Size | Scaling | Approximate base cost |
 | --- | --- | --- | ---: |
-| Staging | Shared 1 vCPU, 2 GiB | One instance; sleeps after 10 idle minutes | Up to $25/month |
+| Staging | Shared 1 vCPU, 1 GiB | One fixed preview instance | $12/month |
 | Production | Shared 1 vCPU, 1 GiB | One fixed managed instance | $12/month |
 
-DigitalOcean does not allow scale-to-zero and request autoscaling on the same
-service. The staging contract therefore favors the requested low idle cost and
-2-GiB build/runtime headroom. Production uses one fixed managed instance so the
+Inactivity sleep is not enabled for this DigitalOcean account, so staging uses
+one fixed 1-GiB preview instance. Production uses one fixed managed instance so the
 baseline compute bill is predictable. Enable autoscaling only after staging
 load evidence proves it is needed and an explicit higher spend ceiling is
 approved.
