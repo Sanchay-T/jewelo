@@ -106,11 +106,17 @@ export function Studio({
     run?.directions.find((candidate) => candidate.id === selectedDirectionId) ??
     run?.directions[0];
   const representation = direction?.representations[kind];
-  const comparison = run?.directions.find(
-    (candidate) =>
-      candidate.id !== direction?.id &&
-      candidate.representations[kind].state === "ready",
-  );
+  const comparison =
+    representation?.state === "ready" && representation.assetUrl
+      ? run?.directions.find((candidate) => {
+          const candidateRepresentation = candidate.representations[kind];
+          return (
+            candidate.id !== direction?.id &&
+            candidateRepresentation.state === "ready" &&
+            Boolean(candidateRepresentation.assetUrl)
+          );
+        })
+      : undefined;
   const revision = design?.revisions.find(
     (candidate) => candidate.id === run?.revisionId,
   ) ?? design?.revisions.at(-1);
@@ -618,6 +624,15 @@ function ComparePane({
   kind: RepresentationKind;
 }) {
   const representation = direction.representations[kind];
+  if (representation.state !== "ready" || !representation.assetUrl) {
+    return (
+      <figure>
+        <StateArtwork state={representation.state} />
+        <figcaption>{direction.label}</figcaption>
+      </figure>
+    );
+  }
+
   return (
     <figure>
       {kind === "motion" ? (
@@ -631,7 +646,7 @@ function ComparePane({
         />
       ) : (
         <Image
-          src={representation.assetUrl ?? ""}
+          src={representation.assetUrl}
           alt={representation.alt}
           fill
           unoptimized
