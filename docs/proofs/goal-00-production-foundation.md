@@ -17,7 +17,7 @@
 | Environment and browser-secret separation           | Context schemas, real Next partial-env build rejection, and `.next/static` forbidden-key scan passed                             |
 | Package/import boundaries                           | 31 source files passed; static/dynamic provider and relative cross-package invalid fixtures were rejected                        |
 | Mock data/media/provider contracts                  | Success plus injected one-shot failure→successful recovery passed                                                                |
-| CI parity                                           | Workflow installs pnpm before setup-node caching, installs the frozen lockfile on Node 24.18.1, and runs `pnpm verify`           |
+| CI parity                                           | PR #2 `foundation-ci/verify` passed after installing pnpm before setup-node caching and running frozen install + `pnpm verify`   |
 | Managed preview seams                               | Vercel preview `dpl_A1W9hzVyafq6mtESNxT4UtPXBDe3` is `READY`; Supabase/Trigger exact authorization actions documented            |
 
 ## Commands and results
@@ -41,6 +41,7 @@ Supabase conflicting production+development/preview name fixtures → expected r
 Trigger preview without branch guard → expected rejection
 partial NEXT_PUBLIC_SUPABASE_* production build → expected pairing rejection
 pnpm verify:clean → PASS from committed clean checkout with zero Turbo cache hits
+PR #2 foundation-ci/verify, Vercel, Vercel Preview Comments, GitGuardian → PASS
 ```
 
 ## Runtime and cloud evidence
@@ -69,7 +70,8 @@ pnpm verify:clean → PASS from committed clean checkout with zero Turbo cache h
 - Plan review: conditional no-go resolved before implementation by adding explicit boundaries, negative fixtures, cloud guards, context-specific environment validation, browser-bundle inspection, and criterion-mapped proof.
 - Initial adversarial review: no-go findings were addressed with deployable-entrypoint environment validation, authenticated Supabase metadata guards, AST import analysis, atomic type generation, truthful readiness, clean-checkout proof, and corrected CI setup ordering.
 - Fresh adversarial re-review at `d2dc943`: no-go identified conflicting production+development project names, a cross-filesystem temporary type file, stale proof text, and the absent draft PR.
-- The conflicting-name guard now rejects production markers before accepting target markers, with positive and negative fixtures. Type generation now creates its validated candidate beside the destination before rename. Proof text is current; final re-review follows the draft PR.
+- The conflicting-name guard now rejects production markers before accepting target markers, with positive and negative fixtures. Type generation now creates its validated candidate beside the destination before rename.
+- Final fresh adversarial re-review: **GO** at `8d4e928`; no remaining code or proof defects. PR #2 was confirmed open, draft, mergeable, and based on `rebuild/v2-first-principles`.
 
 ## Impact
 
