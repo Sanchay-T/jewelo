@@ -124,7 +124,7 @@ export interface PresentationRepository {
     verification: Record<string, unknown>;
     identityFingerprint: string;
     identityArtifactId: string;
-  }): Promise<void>;
+  }): Promise<TransitionOutcome | void>;
   fail(input: {
     task: TaskRow;
     run: RunRow;
@@ -222,13 +222,24 @@ export async function executePresentationTask(
   const model = generator instanceof OpenAIStillAdapter
     ? generator.model
     : "mock-openai-still-v1";
-  const reservation = checkpoint
-    ? {
-        attempt: task.attempt,
-        idempotencyKey: `${task.dispatch_idempotency_key}:attempt:${task.attempt}`,
-        duplicateComplete: false,
-      }
-    : await repository.reserveAttempt(task, provider, model);
+  let reservation: {
+    attempt: number;
+    idempotencyKey: string;
+    duplicateComplete: boolean;
+  };
+  try {
+    // Reservation itself raises `task cancelled`; that is a clean stop.
+    reservation = checkpoint
+      ? {
+          attempt: task.attempt,
+          idempotencyKey: `${task.dispatch_idempotency_key}:attempt:${task.attempt}`,
+          duplicateComplete: false,
+        }
+      : await repository.reserveAttempt(task, provider, model);
+  } catch (error) {
+    if (isTaskCancelled(error)) return { status: "cancelled" as const };
+    throw error;
+  }
   if (reservation.duplicateComplete) return { status: "deduplicated" as const };
   let actualCostCents = 0;
   try {
@@ -290,7 +301,7 @@ export async function executePresentationTask(
       !verification.noAddedIdentityElements
     )
       throw new Error("identity_verification_failed");
-    await repository.complete({
+    const completed = await repository.complete({
       task,
       run,
       revision,
@@ -301,6 +312,7 @@ export async function executePresentationTask(
       identityFingerprint: identity.fingerprint,
       identityArtifactId: identity.artifactId,
     });
+    if (completed === "cancelled") return { status: "cancelled" as const };
     return { status: "ready" as const, attempt: reservation.attempt };
   } catch (error) {
     if (isTaskCancelled(error)) return { status: "cancelled" as const };
@@ -710,7 +722,15 @@ export class SupabasePresentationRepository implements PresentationRepository {
     verification: Record<string, unknown>;
     identityFingerprint: string;
     identityArtifactId: string;
-  }) {
+  }): Promise<TransitionOutcome> {
+    // Claim `ready` first: a task cancelled mid-verification must not gain an
+    // asset, a motion request, or a `task.ready` audit event.
+    const ready = await this.transitionTask(
+      input.task.id,
+      ["generating", "verifying"],
+      "ready",
+    );
+    if (ready === "cancelled") return "cancelled";
     await this.#request("/rest/v1/assets", {
       method: "POST",
       headers: { prefer: "resolution=ignore-duplicates" },
@@ -748,11 +768,6 @@ export class SupabasePresentationRepository implements PresentationRepository {
         p_terminal: true,
       }),
     });
-    await this.transitionTask(
-      input.task.id,
-      ["generating", "verifying"],
-      "ready",
-    );
     let motionPreview = "not_applicable";
     if (input.task.presentation_view === "studio") {
       try {
@@ -807,6 +822,7 @@ export class SupabasePresentationRepository implements PresentationRepository {
         },
       }),
     });
+    return "applied";
   }
   async fail(input: {
     task: TaskRow;

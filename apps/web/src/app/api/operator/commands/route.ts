@@ -51,13 +51,25 @@ export async function POST(request: Request) {
             )
           : await supabaseRequest(
               admin,
-              `/rest/v1/generation_tasks?id=eq.${encodeURIComponent(input.targetId)}`,
+              "/rest/v1/rpc/transition_generation_task",
               {
-                method: "PATCH",
-                headers: { prefer: "return=representation" },
+                method: "POST",
                 body: JSON.stringify({
-                  status: "failed",
-                  terminal_error_code: input.payload?.reason,
+                  p_task_id: input.targetId,
+                  p_from: [
+                    "blocked",
+                    "failed",
+                    "retrying",
+                    "queued",
+                    "generating",
+                    "verifying",
+                  ],
+                  p_to: "failed",
+                  p_patch: {
+                    terminal_error_code: String(
+                      input.payload?.reason ?? "operator_rejected",
+                    ).slice(0, 120),
+                  },
                 }),
               },
             );

@@ -6,6 +6,26 @@ import {
   supabaseRequest,
 } from "../../../lib/backend/supabase-rest";
 
+// Customer-visible task columns only: dispatch keys, provider URLs and
+// reservation accounting stay server-side.
+const TASK_COLUMNS = [
+  "id",
+  "run_id",
+  "owner_principal_id",
+  "presentation_view",
+  "status",
+  "attempt",
+  "task_profile",
+  "aspect_ratio",
+  "terminal_error_code",
+  "cancel_requested_at",
+  "created_at",
+  "updated_at",
+  "input_asset_ids",
+  "prompt_release",
+  "model_release",
+].join(",");
+
 const DESIGN_SCOPED = new Set([
   "design_drafts",
   "design_revisions",
@@ -47,7 +67,9 @@ export async function GET(request: Request) {
       tables.map((table) =>
         supabaseRequest<Array<Record<string, unknown>>>(
           config,
-          `/rest/v1/${table}?select=*&order=created_at${scope(table)}`,
+          `/rest/v1/${table}?select=${
+            table === "generation_tasks" ? TASK_COLUMNS : "*"
+          }&order=created_at${scope(table)}`,
           {},
           bearer,
         ),
@@ -56,6 +78,17 @@ export async function GET(request: Request) {
     const rows = Object.fromEntries(
       tables.map((table, index) => [table, results[index] ?? []]),
     );
+    if (designId) {
+      // generation_tasks has no design_id column; scope it through its run.
+      const runIds = new Set(
+        (rows.generation_runs as Array<Record<string, unknown>>).map((run) =>
+          String(run.id),
+        ),
+      );
+      rows.generation_tasks = (
+        rows.generation_tasks as Array<Record<string, unknown>>
+      ).filter((task) => runIds.has(String(task.run_id)));
+    }
     const assets = await Promise.all(
       (rows.assets as Array<Record<string, unknown>>).map(async (asset) => {
         const path = String(asset.object_path);

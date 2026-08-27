@@ -7,7 +7,11 @@ interface SupabaseConfig {
 
 function requireValue(name: string): string {
   const value = process.env[name];
-  if (!value) throw new Error(`${name} is required`);
+  if (!value) {
+    // A missing server credential is an operator problem, never a client hint.
+    console.error("server_configuration_missing", name);
+    throw new ApiError("Internal error", 500, "internal");
+  }
   return value;
 }
 
@@ -30,7 +34,7 @@ export function adminConfig(): SupabaseConfig {
 export function bearerFrom(request: Request): string {
   const authorization = request.headers.get("authorization");
   if (!authorization?.startsWith("Bearer "))
-    throw new Response("Unauthorized", { status: 401 });
+    throw new ApiError("Unauthorized", 401, "unauthenticated");
   return authorization.slice(7);
 }
 
@@ -52,8 +56,10 @@ export async function supabaseRequest<T>(
   });
   if (!response.ok)
     throw supabaseFailure(response.status, await response.text());
-  if (response.status === 204) return undefined as T;
-  return response.json() as Promise<T>;
+  // PostgREST answers 201/204 with an empty body unless representation is
+  // requested; parsing that as JSON is what turned committed writes into 500s.
+  const payload = await response.text();
+  return (payload ? (JSON.parse(payload) as T) : (undefined as T));
 }
 
 export async function authenticatedUser(request: Request) {
@@ -97,12 +103,14 @@ function supabaseFailure(status: number, body: string): ApiError {
   if (code === "P0001")
     return /one active generation run/i.test(message)
       ? new ApiError(message, 409, "run_active")
-      : /spend guard|generation limit|budget exhausted/i.test(message)
+      : /spend guard|generation limit/i.test(message)
         ? new ApiError(message, 429, "spend_guard")
         : new ApiError(message, 409, "state_conflict");
   if (code === "P0002" || code === "PGRST116" || status === 404)
     return new ApiError(message || "Not found", 404, "not_found");
-  if (["PGRST202", "PGRST102", "22P02", "23502"].includes(code))
+  if (code === "23505")
+    return new ApiError(message || "State conflict", 409, "state_conflict");
+  if (["PGRST202", "PGRST102", "22P02", "23502", "22023"].includes(code))
     return new ApiError(message || "Invalid input", 422, "invalid_input");
   if (status === 401 || status === 403)
     return new ApiError(
@@ -121,7 +129,7 @@ const PLAIN_ERROR_RULES: Array<[RegExp, number, string]> = [
   [/unauthorized|authentication required/i, 401, "unauthenticated"],
   [/not found/i, 404, "not_found"],
   [/required|invalid|unknown action|malformed|must be/i, 422, "invalid_input"],
-  [/only a current|cannot|already|active/i, 409, "state_conflict"],
+  [/only a current|cannot|already|active|expired/i, 409, "state_conflict"],
 ];
 
 function errorResponse(error: string, status: number, code: string): Response {

@@ -14,6 +14,12 @@ export type ImmediateDispatchState =
   | "partially_pending"
   | "pending";
 
+/** Fixed vocabulary: a dispatch failure never echoes provider or env detail. */
+export type ImmediateDispatchErrorCode =
+  | "not_configured"
+  | "rejected"
+  | "dispatch_failed";
+
 export async function dispatchDurableOutbox(
   aggregateId: string,
 ): Promise<OutboxDispatchSummary> {
@@ -35,7 +41,7 @@ export async function attemptImmediateDispatch(aggregateId: string): Promise<{
   dispatchState: ImmediateDispatchState;
   acceptedCount: number;
   pendingCount: number;
-  errorCode?: string;
+  errorCode?: ImmediateDispatchErrorCode;
 }> {
   try {
     const summary = await dispatchDurableOutbox(aggregateId);
@@ -59,7 +65,11 @@ export async function attemptImmediateDispatch(aggregateId: string): Promise<{
       dispatchState: "pending",
       acceptedCount: 0,
       pendingCount: 1,
-      errorCode: /^[\w.:-]{1,80}$/.test(message) ? message : "dispatch_failed",
+      errorCode: message.startsWith("trigger_dispatch_not_configured")
+        ? "not_configured"
+        : message.startsWith("trigger_dispatch_rejected")
+          ? "rejected"
+          : "dispatch_failed",
     };
   }
 }

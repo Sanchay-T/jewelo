@@ -90,6 +90,8 @@ export async function POST(
       );
       const snapshot = snapshots[0];
       if (!snapshot) throw new Error("Estimate required");
+      if (Date.parse(String(snapshot.expires_at)) < Date.now())
+        throw new Error("Estimate expired; request a new estimate");
       const low = Number(snapshot.low_amount);
       const high = Number(snapshot.high_amount);
       const rows = await supabaseRequest<Array<Record<string, unknown>>>(
