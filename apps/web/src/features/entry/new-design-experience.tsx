@@ -542,13 +542,15 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
         </div>
         <div className="clm-config-shell">
           <section className="clm-preview" aria-label="Live pendant preview">
-            <Image
-              src="/fixtures/layla-direction-1-product.png"
-              alt="Live preview of the approved Caleums name pendant"
-              fill
-              priority
-              sizes="(max-width: 799px) 100vw, 58vw"
-            />
+            <div className="clm-preview-frame">
+              <Image
+                src="/fixtures/layla-direction-1-product.png"
+                alt="Live preview of the approved Caleums name pendant"
+                fill
+                priority
+                sizes="(max-width: 799px) 100vw, 58vw"
+              />
+            </div>
             <div className="clm-preview-badge">Live preview</div>
             <div
               className="clm-live-chain"
@@ -694,6 +696,11 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
                       العربية
                     </button>
                   </span>
+                  <small className="clm-field-hint">
+                    {language === "en"
+                      ? "Choose العربية to see the Arabic spelling and live preview."
+                      : "Choose English to return to the Latin script preview."}
+                  </small>
                 </fieldset>
                 {language === "ar" && (
                   <div className="clm-arabic-approved" aria-live="polite">

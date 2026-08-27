@@ -74,16 +74,24 @@ function PresentationCard({
     <article className="clm-presentation-card" data-state={card.state}>
       <div className="clm-presentation-media">
         {ready ? (
-          <Image
-            src={card.assetUrl!}
-            alt={card.alt}
-            fill
-            // All four cards belong to one grid the customer scrolls as a
-            // unit; iOS Safari never triggers lazy loading for the lower two.
-            priority={primary}
-            loading={primary ? undefined : "eager"}
-            sizes="(max-width: 799px) 100vw, (max-width: 1100px) 50vw, 25vw"
-          />
+          <a
+            className="clm-media-open"
+            href={card.assetUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={`Open the ${card.label} view full screen`}
+          >
+            <Image
+              src={card.assetUrl!}
+              alt={card.alt}
+              fill
+              // All four cards belong to one grid the customer scrolls as a
+              // unit; iOS Safari never triggers lazy loading for the lower two.
+              priority={primary}
+              loading={primary ? undefined : "eager"}
+              sizes="(max-width: 799px) 100vw, (max-width: 1100px) 50vw, 25vw"
+            />
+          </a>
         ) : (
           <div className="clm-presentation-placeholder" role="status">
             {activeStates.has(card.state) ? (

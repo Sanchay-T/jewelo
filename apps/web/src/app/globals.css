@@ -398,7 +398,13 @@ video {
   min-height: min(640px, calc(100dvh - 177px));
   background: #f1ebe1;
 }
-.clm-preview > img {
+.clm-preview-frame {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+.clm-preview > img,
+.clm-preview-frame > img {
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -1635,6 +1641,22 @@ video {
 .clm-presentation-media img {
   object-fit: cover;
 }
+.clm-media-open {
+  position: absolute;
+  inset: 0;
+  display: block;
+}
+.clm-media-open:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: -3px;
+}
+.clm-field-hint {
+  margin-top: 8px;
+  display: block;
+  color: var(--muted);
+  font-size: 0.62rem;
+  line-height: 1.5;
+}
 .clm-presentation-number {
   position: absolute;
   top: 10px;
@@ -1812,6 +1834,16 @@ video {
 }
 .clm-piece-image img {
   object-fit: cover;
+}
+.clm-piece-image > div {
+  position: absolute;
+  inset: 0;
+  padding: 24px;
+  display: grid;
+  place-content: center;
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.72rem;
 }
 .clm-buy-panel {
   display: flex;
@@ -2519,7 +2551,7 @@ video {
     max-height: 42vh;
     aspect-ratio: 1.2;
     position: sticky;
-    top: 62px;
+    top: 0;
     z-index: 5;
     border-bottom: 1px solid var(--line);
   }
@@ -2551,9 +2583,21 @@ video {
   }
   .clm-controls {
     order: 2;
-    padding: 26px 18px 10px;
+    padding: 26px 18px 26px;
     max-height: none;
     overflow: visible;
+  }
+  .clm-controls button,
+  .clm-controls input,
+  .clm-controls label,
+  .clm-controls .clm-option {
+    scroll-margin-top: 46vh;
+    scroll-margin-bottom: 104px;
+  }
+  input:not([type="checkbox"]):not([type="radio"]),
+  textarea,
+  select {
+    font-size: 16px;
   }
   .clm-controls h1 {
     font-size: 2.1rem;
@@ -2780,7 +2824,7 @@ video {
     min-height: 245px;
   }
   .clm-controls {
-    padding: 22px 14px 6px;
+    padding: 22px 14px 22px;
   }
   .clm-controls h1 {
     font-size: 1.85rem;
@@ -2849,6 +2893,12 @@ video {
   }
   .clm-scenario {
     position: relative;
+  }
+  .clm-crafting-grid {
+    grid-template-columns: 1fr;
+  }
+  .clm-piece-image {
+    min-height: 260px;
   }
 }
 @media (prefers-reduced-motion: reduce) {
