@@ -4,7 +4,7 @@ import {
   hasOperatorSession,
   operatorSessionCookie,
 } from "../../../../lib/backend/operator-session";
-import { jsonError } from "../../../../lib/backend/supabase-rest";
+import { jsonError, readJson } from "../../../../lib/backend/supabase-rest";
 
 export async function GET(request: Request) {
   try {
@@ -16,13 +16,13 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const { email, passphrase } = (await request.json()) as {
+    const { email, passphrase } = await readJson<{
       email: string;
       passphrase: string;
-    };
+    }>(request, ["email", "passphrase"]);
     if (!authenticateOperator(email, passphrase))
       return Response.json(
-        { error: "Invalid operator credentials" },
+        { error: "Invalid operator credentials", code: "unauthenticated" },
         { status: 401 },
       );
     return Response.json(

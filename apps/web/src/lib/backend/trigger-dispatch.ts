@@ -35,6 +35,7 @@ export async function attemptImmediateDispatch(aggregateId: string): Promise<{
   dispatchState: ImmediateDispatchState;
   acceptedCount: number;
   pendingCount: number;
+  errorCode?: string;
 }> {
   try {
     const summary = await dispatchDurableOutbox(aggregateId);
@@ -50,8 +51,16 @@ export async function attemptImmediateDispatch(aggregateId: string): Promise<{
       acceptedCount,
       pendingCount,
     };
-  } catch {
-    return { dispatchState: "pending", acceptedCount: 0, pendingCount: 1 };
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "trigger_dispatch_failed";
+    console.error("immediate_dispatch_failed", { aggregateId, error: message });
+    return {
+      dispatchState: "pending",
+      acceptedCount: 0,
+      pendingCount: 1,
+      errorCode: /^[\w.:-]{1,80}$/.test(message) ? message : "dispatch_failed",
+    };
   }
 }
 
@@ -72,7 +81,6 @@ export async function triggerTask(
         ? "video-submit-v1"
         : "video-poll-v1";
   const baseUrl = process.env.TRIGGER_API_URL ?? "https://api.trigger.dev";
-  const branch = process.env.TRIGGER_DEV_BRANCH;
   const response = await fetcher(
     `${baseUrl}/api/v1/tasks/${taskIdentifier}/trigger`,
     {
@@ -80,7 +88,6 @@ export async function triggerTask(
       headers: {
         authorization: `Bearer ${triggerKey}`,
         "content-type": "application/json",
-        ...(branch ? { "x-trigger-branch": branch } : {}),
       },
       body: JSON.stringify({
         payload:

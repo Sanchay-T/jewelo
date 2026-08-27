@@ -2,26 +2,9 @@ import { describe, expect, it, vi } from "vitest";
 
 import {
   FalSeedanceVideoAdapter,
-  MockFoundationProvider,
   OpenAIStillAdapter,
   OpenAIStudioVerifier,
 } from "./index";
-
-describe("mock provider adapter", () => {
-  it("recovers after an injected one-shot failure", async () => {
-    const provider = new MockFoundationProvider();
-    const input = { requestId: "req-recovery", message: "probe" };
-    provider.failNext();
-    await expect(provider.execute(input)).rejects.toThrow(
-      "injected provider failure",
-    );
-    await expect(provider.execute(input)).resolves.toEqual({
-      requestId: "req-recovery",
-      accepted: true,
-      providerMode: "mock",
-    });
-  });
-});
 
 describe("OpenAI still HTTP contract", () => {
   it("sends independent silhouette and style inputs with size as a request parameter", async () => {

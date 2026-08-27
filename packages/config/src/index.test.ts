@@ -36,8 +36,6 @@ describe("environment boundaries", () => {
         expect.arrayContaining([
           "SUPABASE_URL",
           "SUPABASE_SERVICE_ROLE_KEY",
-          "TRIGGER_PROJECT_REF",
-          "TRIGGER_SECRET_KEY",
         ]),
       );
     }
@@ -56,8 +54,6 @@ describe("environment boundaries", () => {
     const result = jobsEnvSchema.safeParse({
       SUPABASE_URL: "https://example.supabase.co",
       SUPABASE_SERVICE_ROLE_KEY: "service-role-test",
-      TRIGGER_PROJECT_REF: "proj_test",
-      TRIGGER_SECRET_KEY: "trigger-test",
       PROVIDER_MODE: "real",
       FAL_KEY: "fal-test",
       OPENAI_API_KEY: "openai-test",

@@ -71,7 +71,11 @@ function assertExactKeys(input: Record<string, unknown>, allowed: string[]) {
 function failure(error: unknown, id: string) {
   if (error instanceof Response)
     return Response.json(
-      { error: error.statusText || "Request rejected", requestId: id },
+      {
+        error: error.statusText || "Request rejected",
+        code: error.status === 403 ? "forbidden" : "unauthenticated",
+        requestId: id,
+      },
       { status: error.status, headers: { "cache-control": "no-store" } },
     );
   const message = error instanceof Error ? error.message : "Unexpected error";
@@ -83,7 +87,18 @@ function failure(error: unknown, id: string) {
         ? 404
         : 400;
   return Response.json(
-    { error: message, requestId: id },
+    {
+      error: message,
+      code:
+        status === 401
+          ? "unauthenticated"
+          : status === 409
+            ? "state_conflict"
+            : status === 404
+              ? "not_found"
+              : "invalid_input",
+      requestId: id,
+    },
     { status, headers: { "cache-control": "no-store" } },
   );
 }

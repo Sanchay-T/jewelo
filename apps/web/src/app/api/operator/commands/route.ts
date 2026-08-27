@@ -1,6 +1,7 @@
 import {
   adminConfig,
   jsonError,
+  readJson,
   supabaseRequest,
 } from "../../../../lib/backend/supabase-rest";
 import { requireOperatorSession } from "../../../../lib/backend/operator-session";
@@ -10,13 +11,13 @@ export async function POST(request: Request) {
   try {
     requireOperatorSession(request);
     const admin = adminConfig();
-    const input = (await request.json()) as {
+    const input = await readJson<{
       command: string;
       designId: string;
       targetId: string;
       payload?: Record<string, unknown>;
       idempotencyKey: string;
-    };
+    }>(request, ["command", "designId", "targetId", "idempotencyKey"]);
     let result: unknown;
     if (input.command === "issue_quote") {
       result = await supabaseRequest(
@@ -82,7 +83,7 @@ export async function POST(request: Request) {
       });
     } else
       return Response.json(
-        { error: "Unknown operator command" },
+        { error: "Unknown operator command", code: "not_found" },
         { status: 404 },
       );
     await supabaseRequest(admin, "/rest/v1/audit_events", {
@@ -109,7 +110,7 @@ export async function POST(request: Request) {
     const dispatch = dispatchAggregateId
       ? await attemptImmediateDispatch(dispatchAggregateId)
       : undefined;
-    return Response.json({ result, ...(dispatch ?? {}) });
+    return Response.json({ ...(resultRecord ?? {}), ...(dispatch ?? {}) });
   } catch (error) {
     return jsonError(error);
   }

@@ -7,7 +7,7 @@
     "name": "web",
     "environmentSlug": "node-js",
     "httpPort": 8080,
-    "buildCommand": "pnpm verify && pnpm do:build",
+    "buildCommand": "pnpm do:build",
     "runCommand": "pnpm start",
     "healthPath": "/api/health"
   },

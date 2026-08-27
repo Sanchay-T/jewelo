@@ -25,7 +25,7 @@ export const videoPollTask = task({
         { taskId: payload.taskId, pollCount: payload.pollCount + 1 },
         {
           delay: "10s",
-          idempotencyKey: `video-poll:${payload.taskId}:${payload.pollCount + 1}`,
+          idempotencyKey: `${result.pollKeyPrefix}:${payload.pollCount + 1}`,
         },
       );
     if (result.status === "pending" && payload.pollCount >= 60)
@@ -50,10 +50,7 @@ export const videoSubmissionTask = task({
     if (result.status === "submitted")
       await videoPollTask.trigger(
         { taskId: payload.taskId, pollCount: 0 },
-        {
-          delay: "10s",
-          idempotencyKey: `video-poll:${payload.taskId}:${result.attempt}:0`,
-        },
+        { delay: "10s", idempotencyKey: `${result.pollKeyPrefix}:0` },
       );
     return result;
   },

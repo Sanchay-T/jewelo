@@ -104,8 +104,9 @@ function fixture() {
         duplicateComplete: false,
       };
     },
-    async markTask(_id, status) {
-      events.push(status);
+    async transitionTask(_id, _from, to) {
+      events.push(to);
+      return "applied";
     },
     async signedIdentityUrl() {
       return {

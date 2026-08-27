@@ -45,8 +45,8 @@ export const triggerConfigEnvSchema = z.object({
 
 export const jobsEnvSchema = trustedWebEnvSchema
   .extend({
-    TRIGGER_PROJECT_REF: nonEmpty,
-    TRIGGER_SECRET_KEY: nonEmpty,
+    TRIGGER_PROJECT_REF: nonEmpty.optional(),
+    TRIGGER_SECRET_KEY: nonEmpty.optional(),
     PROVIDER_MODE: z.enum(["mock", "real"]).default("mock"),
     FAL_KEY: nonEmpty.optional(),
     OPENAI_API_KEY: nonEmpty.optional(),
@@ -54,9 +54,6 @@ export const jobsEnvSchema = trustedWebEnvSchema
       .literal("gpt-image-2-2026-04-21")
       .default("gpt-image-2-2026-04-21"),
     OPENAI_VERIFIER_MODEL: nonEmpty.default("gpt-5.6-luna"),
-    PIPELINE_RELEASE: z
-      .literal("caleums-final-media-v1")
-      .default("caleums-final-media-v1"),
     OPENAI_STILL_CONCURRENCY_LIMIT: z.coerce
       .number()
       .int()
@@ -69,13 +66,6 @@ export const jobsEnvSchema = trustedWebEnvSchema
       .min(1)
       .max(32)
       .default(2),
-    VERIFIER_CONCURRENCY_LIMIT: z.coerce
-      .number()
-      .int()
-      .min(1)
-      .max(32)
-      .default(4),
-    MAX_PROVIDER_ATTEMPTS: z.coerce.number().int().min(1).max(3).default(3),
     OPENAI_STILL_ESTIMATED_COST_CENTS: z.coerce
       .number()
       .int()

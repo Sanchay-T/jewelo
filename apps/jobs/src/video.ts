@@ -7,8 +7,15 @@ import {
   type PromptProfile,
 } from "@jewelo/ai";
 import { parseJobsEnv } from "@jewelo/config";
+import { isDuplicateObject } from "@jewelo/media";
+import { isTaskCancelled } from "./presentation";
 
 type Row = Record<string, unknown>;
+
+/** Poll idempotency keys are one shape everywhere a poll run is triggered. */
+function pollKeyPrefix(task: Row, attempt: number) {
+  return `${task.dispatch_idempotency_key}:poll:${attempt}`;
+}
 
 export async function submitVideoTask(
   taskId: string,
@@ -79,12 +86,22 @@ export async function submitVideoTask(
       provider_request_id: submission.requestId,
     },
   );
-  await api.patch("generation_tasks", `id=eq.${taskId}`, {
-    status: "generating",
-    provider_status_url: submission.statusUrl,
-    provider_response_url: submission.responseUrl,
-  });
-  return { status: "submitted" as const, attempt, submission };
+  const started = await api.transition(
+    taskId,
+    ["queued", "retrying", "generating"],
+    "generating",
+    {
+      provider_status_url: submission.statusUrl,
+      provider_response_url: submission.responseUrl,
+    },
+  );
+  if (started === "cancelled") return { status: "cancelled" as const };
+  return {
+    status: "submitted" as const,
+    attempt,
+    submission,
+    pollKeyPrefix: pollKeyPrefix(context.task, attempt),
+  };
 }
 
 export async function pollVideoTask(
@@ -98,8 +115,11 @@ export async function pollVideoTask(
     config.SUPABASE_SERVICE_ROLE_KEY,
     fetcher,
   );
+  // Every poll re-reads durable task state so cancellation stops the chain.
   const context = await loadVideoContext(api, taskId);
   if (context.task.status === "ready") return { status: "ready" as const };
+  if (context.task.status === "cancelled" || context.task.cancel_requested_at)
+    return { status: "cancelled" as const };
   if (!context.task.provider_status_url || !context.task.provider_response_url)
     throw new Error("video_poll_lineage_missing");
   const attempts = await api.get<Row[]>(
@@ -124,7 +144,11 @@ export async function pollVideoTask(
     fetcher,
   );
   const result = await adapter.poll(submission);
-  if (result.state === "pending") return { status: "pending" as const };
+  if (result.state === "pending")
+    return {
+      status: "pending" as const,
+      pollKeyPrefix: pollKeyPrefix(context.task, Number(context.task.attempt)),
+    };
   if (result.state === "failed") {
     const terminal = Number(context.task.attempt) >= 3;
     await api.rpc("reconcile_provider_attempt", {
@@ -135,12 +159,17 @@ export async function pollVideoTask(
       p_error_class: result.error,
       p_terminal: terminal,
     });
-    await api.patch("generation_tasks", `id=eq.${taskId}`, {
-      status: terminal ? "blocked" : "retrying",
-      terminal_error_code: terminal ? result.error.slice(0, 120) : null,
-      provider_status_url: null,
-      provider_response_url: null,
-    });
+    const transition = await api.transition(
+      taskId,
+      ["queued", "generating", "verifying", "retrying"],
+      terminal ? "blocked" : "retrying",
+      {
+        terminal_error_code: terminal ? result.error.slice(0, 120) : null,
+        provider_status_url: null,
+        provider_response_url: null,
+      },
+    );
+    if (transition === "cancelled") return { status: "cancelled" as const };
     if (!terminal)
       await api.post(
         "outbox_events",
@@ -190,7 +219,7 @@ export async function markVideoPollTimeout(
   const context = await loadVideoContext(api, taskId);
   if (["ready", "blocked", "cancelled"].includes(String(context.task.status)))
     return { status: String(context.task.status) };
-  const reason = "video_poll_timeout_operator_review";
+  const reason = "video_poll_timeout";
   await api.rpc("reconcile_provider_attempt", {
     p_task_id: taskId,
     p_attempt: Number(context.task.attempt),
@@ -199,16 +228,16 @@ export async function markVideoPollTimeout(
     p_error_class: reason,
     p_terminal: true,
   });
-  await api.patch("generation_tasks", `id=eq.${taskId}`, {
-    status: "blocked",
-    terminal_error_code: reason,
-    provider_status_url: null,
-    provider_response_url: null,
-  });
-  await api.patch("generation_runs", `id=eq.${context.run.id}`, {
-    status: "partial",
-    operator_review_reason: reason,
-  });
+  await api.transition(
+    taskId,
+    ["queued", "generating", "verifying", "retrying"],
+    "blocked",
+    {
+      terminal_error_code: reason,
+      provider_status_url: null,
+      provider_response_url: null,
+    },
+  );
   await api.post("audit_events", {
     design_id: context.run.design_id,
     principal_id: context.task.owner_principal_id,
@@ -230,13 +259,38 @@ function supabase(url: string, key: string, fetcher: typeof fetch) {
         ...init.headers,
       },
     });
+    // PostgREST answers 201/204 with an empty body; JSON.parse must not run on it.
+    const body = response.status === 204 ? "" : await response.text();
     if (!response.ok)
-      throw new Error(`Supabase video request failed:${response.status}`);
-    if (response.status === 204) return undefined as T;
-    return response.json() as Promise<T>;
+      throw new Error(
+        `Supabase video request failed:${response.status}:${body.slice(0, 300)}`,
+      );
+    return (body ? JSON.parse(body) : undefined) as T;
   }
   return {
     get: <T>(path: string) => request<T>(path),
+    async transition(
+      taskId: string,
+      from: readonly string[],
+      to: string,
+      patch: Record<string, unknown> = {},
+    ): Promise<"applied" | "cancelled"> {
+      try {
+        await request("rpc/transition_generation_task", {
+          method: "POST",
+          body: JSON.stringify({
+            p_task_id: taskId,
+            p_from: from,
+            p_to: to,
+            p_patch: patch,
+          }),
+        });
+        return "applied";
+      } catch (error) {
+        if (isTaskCancelled(error)) return "cancelled";
+        throw error;
+      }
+    },
     rpc: <T = unknown>(name: string, body: Record<string, unknown>) =>
       request<T>(`rpc/${name}`, { method: "POST", body: JSON.stringify(body) }),
     patch: (table: string, filter: string, body: Record<string, unknown>) =>
@@ -371,7 +425,9 @@ async function completeVideo(
       body: Buffer.from(media.bytes),
     },
   );
-  if (!upload.ok && upload.status !== 409)
+  const uploadBody = await upload.text();
+  // A duplicate object means this exact media is already stored: continue as success.
+  if (!upload.ok && !isDuplicateObject(upload, uploadBody))
     throw new Error(`video upload failed:${upload.status}`);
   await api.post(
     "assets",
@@ -412,9 +468,10 @@ async function completeVideo(
     p_actual_cost_cents: media.estimatedCostCents,
     p_terminal: true,
   });
-  await api.patch("generation_tasks", `id=eq.${context.task.id}`, {
-    status: "ready",
-    provider_status_url: null,
-    provider_response_url: null,
-  });
+  await api.transition(
+    String(context.task.id),
+    ["queued", "generating", "verifying"],
+    "ready",
+    { provider_status_url: null, provider_response_url: null },
+  );
 }

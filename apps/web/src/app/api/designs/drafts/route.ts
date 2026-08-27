@@ -1,17 +1,18 @@
 import {
   authenticatedUser,
   jsonError,
+  readJson,
   supabaseRequest,
 } from "../../../../lib/backend/supabase-rest";
 
 export async function POST(request: Request) {
   try {
     const { bearer, config, user } = await authenticatedUser(request);
-    const input = (await request.json()) as {
+    const input = await readJson<{
       locale: "en" | "ar";
       specification: Record<string, unknown>;
       designId?: string;
-    };
+    }>(request, ["locale", "specification"]);
     const rows = await supabaseRequest<Array<Record<string, unknown>>>(
       config,
       "/rest/v1/design_drafts",

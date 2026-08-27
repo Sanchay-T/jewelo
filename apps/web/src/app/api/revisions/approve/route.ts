@@ -1,6 +1,7 @@
 import {
   authenticatedUser,
   jsonError,
+  readJson,
   supabaseRequest,
 } from "../../../../lib/backend/supabase-rest";
 import { attemptImmediateDispatch } from "../../../../lib/backend/trigger-dispatch";
@@ -8,11 +9,11 @@ import { attemptImmediateDispatch } from "../../../../lib/backend/trigger-dispat
 export async function POST(request: Request) {
   try {
     const { bearer, config } = await authenticatedUser(request);
-    const input = (await request.json()) as {
+    const input = await readJson<{
       draftId: string;
       specification: Record<string, unknown>;
       idempotencyKey: string;
-    };
+    }>(request, ["draftId", "specification", "idempotencyKey"]);
     const result = await supabaseRequest<
       Array<{
         approved_design_id: string;
@@ -51,7 +52,14 @@ export async function POST(request: Request) {
         canonical_identity_anchor: revisions[0]?.identity_anchor,
         ...dispatch,
       },
-      { status: 201 },
+      {
+        status:
+          dispatch.acceptedCount === 0 && dispatch.pendingCount === 0
+            ? 200
+            : dispatch.dispatchState === "accepted"
+              ? 201
+              : 202,
+      },
     );
   } catch (error) {
     return jsonError(error);

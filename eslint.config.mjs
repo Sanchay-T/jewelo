@@ -9,7 +9,6 @@ export default tseslint.config(
       "**/coverage/**",
       "**/dist/**",
       "**/node_modules/**",
-      "scripts/fixtures/**",
     ],
   },
   js.configs.recommended,

@@ -22,3 +22,10 @@ node -e '
   if (!value || typeof value !== "object") throw new Error("health response must be JSON");
 ' "$response_file"
 echo "health check passed: $base_url/api/health"
+
+readiness_status="$(curl --silent --show-error --location \
+  --connect-timeout 10 --max-time 30 \
+  --output "$response_file" --write-out '%{http_code}' "$base_url/api/readiness")"
+[[ "$readiness_status" == "200" ]] || { echo "readiness failed with HTTP $readiness_status" >&2; exit 1; }
+grep -q '"keyEnvironment":"prod"' "$response_file" || { echo "readiness is not bound to a prod Trigger key" >&2; exit 1; }
+echo "readiness check passed: $base_url/api/readiness"

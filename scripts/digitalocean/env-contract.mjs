@@ -1,3 +1,6 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
+
 export const buildConfig = [
   "NEXT_PUBLIC_JEWELO_DATA_MODE",
   "NEXT_PUBLIC_SUPABASE_URL",
@@ -11,6 +14,8 @@ export const runtimeConfig = [
   "SUPABASE_URL",
   "SUPABASE_PUBLISHABLE_KEY",
   "SUPABASE_SERVICE_ROLE_KEY",
+  "TRIGGER_SECRET_KEY",
+  "OPENAI_API_KEY",
   "SHOPIFY_STORE_DOMAIN",
   "SHOPIFY_CLIENT_ID",
   "SHOPIFY_CLIENT_SECRET",
@@ -20,31 +25,7 @@ export const runtimeConfig = [
   "OPERATOR_SESSION_SECRET",
 ];
 
-export const requiredWebConfig = [
-  "NEXT_PUBLIC_JEWELO_DATA_MODE",
-  "NEXT_PUBLIC_SUPABASE_URL",
-  "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY",
-  "SUPABASE_URL",
-  "SUPABASE_SERVICE_ROLE_KEY",
-];
-
-export const jobOnlyConfig = [
-  "TRIGGER_SECRET_KEY",
-  "OPENAI_API_KEY",
-  "FAL_KEY",
-  "SUPABASE_DB_PASSWORD",
-  "SUPABASE_ACCESS_TOKEN",
-];
-
-const completeGroups = {
-  shopify: [
-    "SHOPIFY_STORE_DOMAIN",
-    "SHOPIFY_CLIENT_ID",
-    "SHOPIFY_CLIENT_SECRET",
-    "SHOPIFY_WEBHOOK_SECRET",
-  ],
-  operator: ["OPERATOR_EMAIL", "OPERATOR_PASSPHRASE", "OPERATOR_SESSION_SECRET"],
-};
+export const requiredWebConfig = [...new Set([...buildConfig, ...runtimeConfig])];
 
 export function parseEnv(contents) {
   const values = new Map();
@@ -81,35 +62,17 @@ export function validateWebEnv(values) {
   const missing = requiredWebConfig.filter((name) => !values.get(name));
   if (missing.length) errors.push(`missing required web values: ${missing.join(", ")}`);
 
-  if (
-    values.get("NEXT_PUBLIC_JEWELO_DATA_MODE") &&
-    values.get("NEXT_PUBLIC_JEWELO_DATA_MODE") !== "remote"
-  ) {
+  const dataMode = values.get("NEXT_PUBLIC_JEWELO_DATA_MODE");
+  if (dataMode && dataMode !== "remote") {
     errors.push("NEXT_PUBLIC_JEWELO_DATA_MODE must select the remote data client");
   }
-
-  for (const [label, names] of Object.entries(completeGroups)) {
-    const configured = names.filter((name) => values.get(name));
-    if (configured.length > 0 && configured.length !== names.length) {
-      const groupMissing = names.filter((name) => !values.get(name));
-      errors.push(`incomplete ${label} configuration; missing: ${groupMissing.join(", ")}`);
-    }
-  }
-
-  if (values.get("NEXT_PUBLIC_POSTHOG_KEY") && !values.get("NEXT_PUBLIC_POSTHOG_HOST")) {
-    errors.push("NEXT_PUBLIC_POSTHOG_HOST is required when PostHog is enabled");
-  }
-
-  const uploaded = new Set([...buildConfig, ...runtimeConfig]);
-  const leaked = jobOnlyConfig.filter((name) => uploaded.has(name));
-  if (leaked.length) errors.push(`job-only values entered the web allowlist: ${leaked.join(", ")}`);
 
   return errors;
 }
 
 export function appSecretEnvs(values) {
   const envs = [];
-  for (const name of [...buildConfig, ...runtimeConfig]) {
+  for (const name of requiredWebConfig) {
     const value = values.get(name);
     if (!value) continue;
     envs.push({
@@ -121,16 +84,3 @@ export function appSecretEnvs(values) {
   }
   return envs;
 }
-
-export function featureStatus(values) {
-  return {
-    supabase: requiredWebConfig.every((name) => values.get(name)),
-    observability: Boolean(
-      values.get("NEXT_PUBLIC_POSTHOG_KEY") || values.get("NEXT_PUBLIC_SENTRY_DSN"),
-    ),
-    shopify: completeGroups.shopify.every((name) => values.get(name)),
-    operator: completeGroups.operator.every((name) => values.get(name)),
-  };
-}
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";

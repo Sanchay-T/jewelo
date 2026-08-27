@@ -1,6 +1,7 @@
 import {
   authenticatedUser,
   jsonError,
+  readJson,
   supabaseRequest,
 } from "../../../../../lib/backend/supabase-rest";
 import { attemptImmediateDispatch } from "../../../../../lib/backend/trigger-dispatch";
@@ -12,9 +13,10 @@ export async function POST(
   try {
     const { designId } = await context.params;
     const { bearer, config } = await authenticatedUser(request);
-    const { idempotencyKey } = (await request.json()) as {
-      idempotencyKey: string;
-    };
+    const { idempotencyKey } = await readJson<{ idempotencyKey: string }>(
+      request,
+      ["idempotencyKey"],
+    );
     const rows = await supabaseRequest<Array<Record<string, unknown>>>(
       config,
       "/rest/v1/rpc/start_studio_run",

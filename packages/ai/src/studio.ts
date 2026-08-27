@@ -49,6 +49,9 @@ export interface StudioVerifier {
 
 export class MockStudioGenerator implements StudioGenerator {
   async generate(input: StudioGenerationInput): Promise<GeneratedMedia> {
+    // Deterministic zero-cost failure hook for mock end-to-end verification.
+    if (input.prompt.includes("MOCKFAIL"))
+      throw new Error("mock_generation_failed");
     const transparentPng = Buffer.from(
       "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M/wHwAF/gL+X8tZAAAAAElFTkSuQmCC",
       "base64",
@@ -126,6 +129,7 @@ export class OpenAIStillAdapter implements StudioGenerator {
           "Idempotency-Key": input.idempotencyKey,
         },
         body: form,
+        signal: AbortSignal.timeout(180_000),
       },
     );
     if (!response.ok)

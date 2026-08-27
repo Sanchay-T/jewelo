@@ -7,17 +7,12 @@ const environment = parseTriggerConfigEnv(process.env);
 const jobEnvironmentKeys = [
   "SUPABASE_URL",
   "SUPABASE_SERVICE_ROLE_KEY",
-  "PROVIDER_MODE",
   "OPENAI_API_KEY",
   "OPENAI_IMAGE_MODEL",
   "OPENAI_VERIFIER_MODEL",
-  "PIPELINE_RELEASE",
   "FAL_KEY",
-  "FAL_VIDEO_PREVIEW_MODEL",
-  "FAL_VIDEO_FINAL_MODEL",
   "OPENAI_STILL_CONCURRENCY_LIMIT",
   "FAL_VIDEO_CONCURRENCY_LIMIT",
-  "MAX_PROVIDER_ATTEMPTS",
   "OPENAI_STILL_ESTIMATED_COST_CENTS",
   "FAL_VIDEO_ESTIMATED_COST_CENTS",
 ] as const;
@@ -33,14 +28,9 @@ export default defineConfig({
     extensions: [
       syncEnvVars(
         () => {
-          const required: string[] = [
-            "SUPABASE_URL",
-            "SUPABASE_SERVICE_ROLE_KEY",
-            "PROVIDER_MODE",
-          ];
-          if (process.env.PROVIDER_MODE === "real")
-            required.push("OPENAI_API_KEY", "FAL_KEY");
-          const missing = required.filter((name) => !process.env[name]);
+          const missing = ["SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY"].filter(
+            (name) => !process.env[name],
+          );
           if (missing.length > 0)
             throw new Error(
               `Trigger deployment environment missing: ${missing.join(", ")}`,
@@ -55,6 +45,6 @@ export default defineConfig({
       ),
     ],
   },
-  maxDuration: 300,
+  maxDuration: 600,
   runtime: "node",
 });

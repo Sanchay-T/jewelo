@@ -2,6 +2,7 @@ import {
   adminConfig,
   authenticatedUser,
   jsonError,
+  readJson,
   supabaseRequest,
 } from "../../../../../lib/backend/supabase-rest";
 
@@ -11,15 +12,15 @@ export async function POST(
 ) {
   try {
     const { designId } = await context.params;
-    const { user } = await authenticatedUser(request);
-    const input = (await request.json()) as {
-      command: "request_quote" | "accept_quote" | "set_resume";
+    const { user, bearer, config } = await authenticatedUser(request);
+    const input = await readJson<{
+      command: "estimate" | "request_quote" | "accept_quote" | "set_resume";
       quoteId?: string;
-      estimate?: Record<string, unknown>;
+      revisionId?: string;
       resumePath?: string;
       idempotencyKey?: string;
       checkoutIdempotencyKey?: string;
-    };
+    }>(request, ["command"]);
     const admin = adminConfig();
     const designs = await supabaseRequest<
       Array<{ active_revision_id: string }>
@@ -29,7 +30,10 @@ export async function POST(
     );
     const design = designs[0];
     if (!design)
-      return Response.json({ error: "Design not found" }, { status: 404 });
+      return Response.json(
+        { error: "Design not found", code: "not_found" },
+        { status: 404 },
+      );
 
     if (input.command === "set_resume") {
       if (!input.resumePath?.startsWith("/"))
@@ -46,8 +50,22 @@ export async function POST(
       return Response.json(rows[0]);
     }
 
+    const revisionId = input.revisionId ?? design.active_revision_id;
+
+    if (input.command === "estimate") {
+      const snapshot = await supabaseRequest<Record<string, unknown>>(
+        config,
+        "/rest/v1/rpc/estimate_revision",
+        {
+          method: "POST",
+          body: JSON.stringify({ p_revision_id: revisionId }),
+        },
+        bearer,
+      );
+      return Response.json(snapshot, { status: 201 });
+    }
+
     if (input.command === "request_quote") {
-      if (!input.estimate) throw new Error("Estimate required");
       if (!input.idempotencyKey) throw new Error("Idempotency key required");
       const existing = await supabaseRequest<Array<Record<string, unknown>>>(
         admin,
@@ -58,12 +76,22 @@ export async function POST(
         Array<{ specification: Record<string, unknown> }>
       >(
         admin,
-        `/rest/v1/design_revisions?id=eq.${design.active_revision_id}&owner_principal_id=eq.${user.id}&select=specification`,
+        `/rest/v1/design_revisions?id=eq.${encodeURIComponent(revisionId)}&owner_principal_id=eq.${user.id}&select=specification`,
       );
       if (revisions[0]?.specification.spellingConfirmed !== true)
         throw new Error("Persisted spelling confirmation required");
-      const low = Number(input.estimate.low);
-      const high = Number(input.estimate.high);
+      const snapshots = await supabaseRequest<
+        Array<Record<string, unknown>>
+      >(
+        config,
+        `/rest/v1/price_snapshots?revision_id=eq.${encodeURIComponent(revisionId)}&select=*&order=created_at.desc&limit=1`,
+        {},
+        bearer,
+      );
+      const snapshot = snapshots[0];
+      if (!snapshot) throw new Error("Estimate required");
+      const low = Number(snapshot.low_amount);
+      const high = Number(snapshot.high_amount);
       const rows = await supabaseRequest<Array<Record<string, unknown>>>(
         admin,
         "/rest/v1/quotes",
@@ -72,12 +100,12 @@ export async function POST(
           headers: { prefer: "return=representation" },
           body: JSON.stringify({
             design_id: designId,
-            revision_id: design.active_revision_id,
+            revision_id: revisionId,
             owner_principal_id: user.id,
             status: "requested",
-            currency: "AED",
+            currency: String(snapshot.currency ?? "AED"),
             total: Math.round((low + high) / 2),
-            snapshot: input.estimate,
+            snapshot,
             checkout_idempotency_key: input.idempotencyKey,
             expires_at: new Date(Date.now() + 7 * 86400_000).toISOString(),
           }),

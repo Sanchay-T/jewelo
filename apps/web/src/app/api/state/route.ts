@@ -6,12 +6,31 @@ import {
   supabaseRequest,
 } from "../../../lib/backend/supabase-rest";
 
+const DESIGN_SCOPED = new Set([
+  "design_drafts",
+  "design_revisions",
+  "generation_runs",
+  "assets",
+  "quotes",
+  "orders",
+  "audit_events",
+]);
+
 export async function GET(request: Request) {
   try {
     const operator = hasOperatorSession(request);
-    const customer = await authenticatedUser(request);
-    const config = operator ? adminConfig() : customer.config;
-    const bearer = operator ? config.key : customer.bearer;
+    const customer = operator ? null : await authenticatedUser(request);
+    const config = customer ? customer.config : adminConfig();
+    const bearer = customer ? customer.bearer : config.key;
+    const designId = new URL(request.url).searchParams.get("designId");
+    const scope = (table: string) => {
+      if (!designId) return "";
+      if (table === "designs")
+        return `&id=eq.${encodeURIComponent(designId)}`;
+      if (DESIGN_SCOPED.has(table))
+        return `&design_id=eq.${encodeURIComponent(designId)}`;
+      return "";
+    };
     const tables = [
       "designs",
       "design_drafts",
@@ -19,6 +38,7 @@ export async function GET(request: Request) {
       "generation_runs",
       "generation_tasks",
       "assets",
+      "price_snapshots",
       "quotes",
       "orders",
       "audit_events",
@@ -27,7 +47,7 @@ export async function GET(request: Request) {
       tables.map((table) =>
         supabaseRequest<Array<Record<string, unknown>>>(
           config,
-          `/rest/v1/${table}?select=*&order=created_at`,
+          `/rest/v1/${table}?select=*&order=created_at${scope(table)}`,
           {},
           bearer,
         ),
@@ -60,11 +80,13 @@ export async function GET(request: Request) {
         };
       }),
     );
+    const { price_snapshots: estimates, ...rest } = rows;
     return Response.json(
       {
         role: operator ? "operator" : "customer",
-        principalId: operator ? "operator-session" : customer.user.id,
-        ...rows,
+        principalId: customer ? customer.user.id : "operator-session",
+        ...rest,
+        estimates,
         assets,
       },
       { headers: { "cache-control": "no-store" } },

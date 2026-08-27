@@ -13,7 +13,7 @@ export async function POST(
     const { taskId, action } = await context.params;
     const { bearer, config } = await authenticatedUser(request);
     if (!["retry", "cancel"].includes(action))
-      return Response.json({ error: "Unknown action" }, { status: 404 });
+      throw new Error("Unknown action not found");
     const input =
       action === "retry"
         ? ((await request.json().catch(() => ({}))) as {
@@ -31,7 +31,7 @@ export async function POST(
             p_retry_key: input.idempotencyKey ?? crypto.randomUUID(),
           }
         : { p_task_id: taskId };
-    const result = await supabaseRequest<Record<string, unknown>>(
+    const row = await supabaseRequest<Record<string, unknown>>(
       config,
       path,
       { method: "POST", body: JSON.stringify(body) },
@@ -41,7 +41,7 @@ export async function POST(
       action === "retry"
         ? await attemptImmediateDispatch(taskId)
         : undefined;
-    return Response.json({ result, ...(dispatch ?? {}) });
+    return Response.json({ ...row, ...(dispatch ?? {}) });
   } catch (error) {
     return jsonError(error);
   }

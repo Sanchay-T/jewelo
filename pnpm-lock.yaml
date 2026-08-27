@@ -59,6 +59,9 @@ importers:
       '@jewelo/identity':
         specifier: workspace:*
         version: link:../../packages/identity
+      '@jewelo/media':
+        specifier: workspace:*
+        version: link:../../packages/media
       '@trigger.dev/sdk':
         specifier: 4.5.12
         version: 4.5.12(react@19.2.8)(supports-color@10.2.2)(zod@4.4.3)

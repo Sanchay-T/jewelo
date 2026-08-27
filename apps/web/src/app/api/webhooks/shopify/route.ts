@@ -13,22 +13,37 @@ export async function POST(request: Request) {
   try {
     const declaredLength = Number(request.headers.get("content-length") ?? "0");
     if (declaredLength > 1_000_000)
-      return Response.json({ error: "Payload too large" }, { status: 413 });
+      return Response.json(
+        { error: "Payload too large", code: "payload_too_large" },
+        { status: 413 },
+      );
     const raw = new Uint8Array(await request.arrayBuffer());
     if (raw.byteLength > 1_000_000)
-      return Response.json({ error: "Payload too large" }, { status: 413 });
+      return Response.json(
+        { error: "Payload too large", code: "payload_too_large" },
+        { status: 413 },
+      );
     if (!verifyShopifyHmac(raw, request.headers.get("x-shopify-hmac-sha256")))
-      return Response.json({ error: "Invalid signature" }, { status: 401 });
+      return Response.json(
+        { error: "Invalid signature", code: "unauthenticated" },
+        { status: 401 },
+      );
     const deliveryId = request.headers.get("x-shopify-webhook-id");
     if (!deliveryId)
-      return Response.json({ error: "Missing delivery ID" }, { status: 400 });
+      return Response.json(
+        { error: "Missing delivery ID", code: "invalid_input" },
+        { status: 400 },
+      );
     const topic = request.headers.get("x-shopify-topic");
     const shopDomain = request.headers.get("x-shopify-shop-domain");
     const configuredDomain = parseShopifyDomain(
       process.env.SHOPIFY_STORE_DOMAIN,
     );
     if (shopDomain?.toLowerCase() !== configuredDomain)
-      return Response.json({ error: "Unexpected shop" }, { status: 401 });
+      return Response.json(
+        { error: "Unexpected shop", code: "unauthenticated" },
+        { status: 401 },
+      );
     const rawText = new TextDecoder().decode(raw);
     const payloadSha256 = createHash("sha256").update(raw).digest("hex");
     const payload = JSON.parse(rawText) as {

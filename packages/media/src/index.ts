@@ -35,3 +35,16 @@ export class MockMediaStore implements MediaStore {
     }
   }
 }
+
+/**
+ * Supabase Storage reports an existing object either as HTTP 409 or as HTTP 400
+ * carrying a 409 status code in its JSON body. Both mean the immutable object is
+ * already stored, which is a tolerated idempotent outcome, not an upload failure.
+ */
+export function isDuplicateObject(response: Response, bodyText: string): boolean {
+  if (response.status === 409) return true;
+  return (
+    response.status === 400 &&
+    (bodyText.includes('"statusCode":"409"') || bodyText.includes("Duplicate"))
+  );
+}

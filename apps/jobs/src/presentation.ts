@@ -14,6 +14,7 @@ import {
   type StudioVerifier,
 } from "@jewelo/ai";
 import { parseJobsEnv } from "@jewelo/config";
+import { isDuplicateObject } from "@jewelo/media";
 import { renderIdentityAnchor } from "./identity-anchor";
 
 interface TaskRow {
@@ -67,6 +68,13 @@ interface StoredOutput {
   stored: { bucket: string; path: string; checksum: string };
 }
 
+export type TransitionOutcome = "applied" | "cancelled";
+
+/** The transition RPC raises `task cancelled`; that is a clean stop, not a failure. */
+export function isTaskCancelled(error: unknown): boolean {
+  return error instanceof Error && /task cancelled/i.test(error.message);
+}
+
 export interface PresentationRepository {
   load(taskId: string): Promise<{
     task: TaskRow;
@@ -93,11 +101,12 @@ export interface PresentationRepository {
     idempotencyKey: string;
     duplicateComplete: boolean;
   }>;
-  markTask(
+  transitionTask(
     taskId: string,
-    status: string,
-    detail?: Record<string, unknown>,
-  ): Promise<void>;
+    from: readonly string[],
+    to: string,
+    patch?: Record<string, unknown>,
+  ): Promise<TransitionOutcome>;
   storeProviderOutput(input: {
     task: TaskRow;
     run: RunRow;
@@ -230,9 +239,13 @@ export async function executePresentationTask(
       stored = checkpoint.stored;
       actualCostCents = media.estimatedCostCents;
     } else {
-      await repository.markTask(task.id, "generating", {
-        attempt: reservation.attempt,
-      });
+      const started = await repository.transitionTask(
+        task.id,
+        ["queued", "retrying", "generating"],
+        "generating",
+        { attempt: reservation.attempt },
+      );
+      if (started === "cancelled") return { status: "cancelled" as const };
       media = await generator.generate({
         idempotencyKey: reservation.idempotencyKey,
         prompt: snapshot.compiled_prompt,
@@ -254,7 +267,12 @@ export async function executePresentationTask(
         media,
       });
     }
-    await repository.markTask(task.id, "verifying");
+    const verifying = await repository.transitionTask(
+      task.id,
+      ["generating", "verifying"],
+      "verifying",
+    );
+    if (verifying === "cancelled") return { status: "cancelled" as const };
     const verification = await verifier.verify({
       approvedText: revision.identity_anchor.approvedText,
       identityFingerprint: identity.fingerprint,
@@ -285,6 +303,7 @@ export async function executePresentationTask(
     });
     return { status: "ready" as const, attempt: reservation.attempt };
   } catch (error) {
+    if (isTaskCancelled(error)) return { status: "cancelled" as const };
     const terminal = reservation.attempt >= 3;
     await repository.fail({
       task,
@@ -445,15 +464,27 @@ export class SupabasePresentationRepository implements PresentationRepository {
       },
     };
   }
-  async markTask(
+  async transitionTask(
     taskId: string,
-    status: string,
-    detail: Record<string, unknown> = {},
-  ) {
-    await this.#request(`/rest/v1/generation_tasks?id=eq.${taskId}`, {
-      method: "PATCH",
-      body: JSON.stringify({ status, ...detail }),
-    });
+    from: readonly string[],
+    to: string,
+    patch: Record<string, unknown> = {},
+  ): Promise<TransitionOutcome> {
+    try {
+      await this.#request("/rest/v1/rpc/transition_generation_task", {
+        method: "POST",
+        body: JSON.stringify({
+          p_task_id: taskId,
+          p_from: from,
+          p_to: to,
+          p_patch: patch,
+        }),
+      });
+      return "applied";
+    } catch (error) {
+      if (isTaskCancelled(error)) return "cancelled";
+      throw error;
+    }
   }
   async signedIdentityUrl(
     revision: RevisionRow,
@@ -493,12 +524,9 @@ export class SupabasePresentationRepository implements PresentationRepository {
           body: uploadBody,
         },
       );
-      if (!upload.ok && upload.status !== 409) {
-        const detail = await upload.text();
-        const duplicate = /duplicate|already exists/i.test(detail);
-        if (!duplicate)
-          throw new Error(`identity anchor upload failed:${upload.status}`);
-      }
+      const uploadDetail = await upload.text();
+      if (!upload.ok && !isDuplicateObject(upload, uploadDetail))
+        throw new Error(`identity anchor upload failed:${upload.status}`);
     }
     await this.#request(
       "/rest/v1/identity_artifacts?on_conflict=revision_id,fingerprint",
@@ -639,7 +667,8 @@ export class SupabasePresentationRepository implements PresentationRepository {
         body: Buffer.from(input.media.bytes),
       },
     );
-    if (!response.ok && response.status !== 409)
+    const uploadBody = await response.text();
+    if (!response.ok && !isDuplicateObject(response, uploadBody))
       throw new Error(`asset upload failed:${response.status}`);
     await this.#request(
       "/rest/v1/provider_output_checkpoints?on_conflict=task_id,attempt",
@@ -719,7 +748,11 @@ export class SupabasePresentationRepository implements PresentationRepository {
         p_terminal: true,
       }),
     });
-    await this.markTask(input.task.id, "ready");
+    await this.transitionTask(
+      input.task.id,
+      ["generating", "verifying"],
+      "ready",
+    );
     let motionPreview = "not_applicable";
     if (input.task.presentation_view === "studio") {
       try {
@@ -735,6 +768,9 @@ export class SupabasePresentationRepository implements PresentationRepository {
         motionPreview = "requested";
       } catch (error) {
         motionPreview = "operator_review";
+        const reason = String(
+          error instanceof Error ? error.message : "unknown",
+        ).slice(0, 120);
         await this.#request("/rest/v1/audit_events", {
           method: "POST",
           body: JSON.stringify({
@@ -742,17 +778,21 @@ export class SupabasePresentationRepository implements PresentationRepository {
             principal_id: input.task.owner_principal_id,
             actor_type: "job",
             action: "video.auto_request_failed",
-            detail: {
-              sourceTaskId: input.task.id,
-              reason: String(
-                error instanceof Error ? error.message : "unknown",
-              ).slice(0, 120),
-            },
+            detail: { sourceTaskId: input.task.id, reason },
+          }),
+        });
+        // The still stays ready; only the run carries the visible motion failure.
+        await this.#request(`/rest/v1/generation_runs?id=eq.${input.run.id}`, {
+          method: "PATCH",
+          body: JSON.stringify({
+            operator_review_reason: `video_request_failed:${reason}`.slice(
+              0,
+              300,
+            ),
           }),
         });
       }
     }
-    await this.refreshRunStatus(input.run.id);
     await this.#request("/rest/v1/audit_events", {
       method: "POST",
       body: JSON.stringify({
@@ -789,13 +829,12 @@ export class SupabasePresentationRepository implements PresentationRepository {
         p_terminal: input.terminal,
       }),
     });
-    await this.markTask(
+    await this.transitionTask(
       input.task.id,
+      ["queued", "generating", "verifying", "retrying"],
       input.terminal ? "blocked" : "retrying",
       input.terminal ? { terminal_error_code: message.slice(0, 120) } : {},
     );
-    if (input.terminal)
-      await this.refreshRunStatus(input.run.id, message.slice(0, 300));
     await this.#request("/rest/v1/audit_events", {
       method: "POST",
       body: JSON.stringify({
@@ -808,29 +847,6 @@ export class SupabasePresentationRepository implements PresentationRepository {
           attempt: input.attempt,
           error: message.slice(0, 120),
         },
-      }),
-    });
-  }
-  async refreshRunStatus(runId: string, reviewReason?: string) {
-    const tasks = await this.#request<Array<{ status: string }>>(
-      `/rest/v1/generation_tasks?run_id=eq.${runId}&select=status`,
-    );
-    const terminal = tasks.every((task) =>
-      ["ready", "blocked", "cancelled", "failed"].includes(task.status),
-    );
-    const ready = tasks.filter((task) => task.status === "ready").length;
-    const status = terminal
-      ? ready === tasks.length
-        ? "complete"
-        : "partial"
-      : ready > 0
-        ? "partial"
-        : "running";
-    await this.#request(`/rest/v1/generation_runs?id=eq.${runId}`, {
-      method: "PATCH",
-      body: JSON.stringify({
-        status,
-        ...(reviewReason ? { operator_review_reason: reviewReason } : {}),
       }),
     });
   }

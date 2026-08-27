@@ -6,16 +6,17 @@ import {
   adminConfig,
   authenticatedUser,
   jsonError,
+  readJson,
   supabaseRequest,
 } from "../../../lib/backend/supabase-rest";
 
 export async function POST(request: Request) {
   try {
     const { user } = await authenticatedUser(request);
-    const { quoteId, idempotencyKey } = (await request.json()) as {
+    const { quoteId, idempotencyKey } = await readJson<{
       quoteId: string;
       idempotencyKey: string;
-    };
+    }>(request, ["quoteId", "idempotencyKey"]);
     const admin = adminConfig();
     const quotes = await supabaseRequest<Array<Record<string, unknown>>>(
       admin,
@@ -24,7 +25,7 @@ export async function POST(request: Request) {
     const quote = quotes[0];
     if (!quote)
       return Response.json(
-        { error: "Accepted, unexpired quote required" },
+        { error: "Accepted, unexpired quote required", code: "state_conflict" },
         { status: 409 },
       );
     const revisions = await supabaseRequest<
@@ -48,7 +49,10 @@ export async function POST(request: Request) {
       drafts[0]?.spelling_confirmed !== true
     )
       return Response.json(
-        { error: "Persisted spelling confirmation required" },
+        {
+          error: "Persisted spelling confirmation required",
+          code: "state_conflict",
+        },
         { status: 409 },
       );
     const designs = await supabaseRequest<Array<{ locale: "en" | "ar" }>>(
@@ -65,7 +69,7 @@ export async function POST(request: Request) {
       });
     if (quote.checkout_idempotency_key !== idempotencyKey)
       return Response.json(
-        { error: "Checkout idempotency key mismatch" },
+        { error: "Checkout idempotency key mismatch", code: "state_conflict" },
         { status: 409 },
       );
     const reservation = await supabaseRequest<{

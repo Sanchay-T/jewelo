@@ -1,6 +1,7 @@
 import {
   authenticatedUser,
   jsonError,
+  readJson,
   supabaseRequest,
 } from "../../../../../lib/backend/supabase-rest";
 
@@ -11,7 +12,7 @@ export async function PATCH(
   try {
     const { draftId } = await context.params;
     const { bearer, config } = await authenticatedUser(request);
-    const input = (await request.json()) as Record<string, unknown>;
+    const input = await readJson<Record<string, unknown>>(request);
     const rows = await supabaseRequest<Array<Record<string, unknown>>>(
       config,
       `/rest/v1/design_drafts?id=eq.${encodeURIComponent(draftId)}`,
@@ -27,7 +28,10 @@ export async function PATCH(
       bearer,
     );
     if (!rows[0])
-      return Response.json({ error: "Draft not found" }, { status: 404 });
+      return Response.json(
+        { error: "Draft not found", code: "not_found" },
+        { status: 404 },
+      );
     return Response.json(rows[0]);
   } catch (error) {
     return jsonError(error);
