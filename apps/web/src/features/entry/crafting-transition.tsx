@@ -36,16 +36,24 @@ function CraftingCard({
     <article className="clm-crafting-card" data-state={card.state}>
       <div className="clm-crafting-card-media">
         {ready ? (
-          <Image
-            src={card.assetUrl!}
-            alt={card.alt}
-            fill
-            // One scrollable grid: iOS Safari never triggers lazy loading for
-            // the lower two cards, so every card loads eagerly.
-            priority={primary}
-            loading={primary ? undefined : "eager"}
-            sizes="(max-width: 799px) 100vw, (max-width: 1100px) 50vw, 25vw"
-          />
+          <a
+            className="clm-media-open"
+            href={card.assetUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={`Open the ${card.label} view full screen`}
+          >
+            <Image
+              src={card.assetUrl!}
+              alt={card.alt}
+              fill
+              // One scrollable grid: iOS Safari never triggers lazy loading for
+              // the lower two cards, so every card loads eagerly.
+              priority={primary}
+              loading={primary ? undefined : "eager"}
+              sizes="(max-width: 799px) 100vw, (max-width: 1100px) 50vw, 25vw"
+            />
+          </a>
         ) : (
           <div className="clm-crafting-skeleton" aria-hidden="true">
             <i />
@@ -164,6 +172,7 @@ export function CraftingTransition({
   const failed = taskState === "failed";
   const cancelled = taskState === "cancelled";
   const blocked = taskState === "blocked" || taskState === "unavailable";
+  const running = !ready && !failed && !cancelled && !blocked;
   const completed = ready
     ? 4
     : replay
@@ -206,12 +215,12 @@ export function CraftingTransition({
               <li
                 key={label}
                 data-complete={index < completed || undefined}
-                data-current={(index === completed && !ready) || undefined}
+                data-current={(index === completed && running) || undefined}
               >
                 <span>
                   {index < completed ? (
                     <Check size={14} weight="bold" />
-                  ) : index === completed && !ready ? (
+                  ) : index === completed && running ? (
                     <SpinnerGap size={15} />
                   ) : (
                     index + 1
