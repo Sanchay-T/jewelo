@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
-import { existsSync } from "node:fs";
-import { resolve } from "node:path";
+import { existsSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { dirname, join, resolve } from "node:path";
 import {
   CALEUMS_ARABIC_ENGINE_RELEASE,
   solveArabicIdentity,
@@ -129,6 +130,7 @@ class SharpArabicRasterizer implements ArabicIdentityRasterizer {
     // Pango/HarfBuzz/FriBidi shaping through sharp's text input with an explicit
     // font file: librsvg ignores data-URI @font-face in the deployed container
     // and rendered a blank raster.
+    pinFontconfig();
     const text = sharp({
       text: {
         text: `<span font_family="${input.fontFile.startsWith("Amiri") ? "Amiri" : "Scheherazade New"}" size="${input.fontSize * 1024}">${xml(input.approvedText)}</span>`,
@@ -178,6 +180,21 @@ class SharpArabicRasterizer implements ArabicIdentityRasterizer {
       freetype: sharp.versions.freetype ?? "unknown",
     };
   }
+}
+
+// The deployed container ships system Arabic fonts; fontconfig would resolve
+// "Amiri" to those instead of the pinned file. Point fontconfig at our fonts
+// directory only, before the first render initialises it.
+function pinFontconfig(): void {
+  if (process.env.CALEUMS_FONTCONFIG_PINNED) return;
+  const dir = dirname(fontPath("Amiri-Regular.ttf"));
+  const conf = join(tmpdir(), "caleums-fonts.conf");
+  writeFileSync(
+    conf,
+    `<?xml version="1.0"?><!DOCTYPE fontconfig SYSTEM "fonts.dtd"><fontconfig><dir>${dir}</dir><cachedir>${tmpdir()}/caleums-fc-cache</cachedir></fontconfig>`,
+  );
+  process.env.FONTCONFIG_FILE = conf;
+  process.env.CALEUMS_FONTCONFIG_PINNED = "1";
 }
 
 function fontPath(file: string): string {
