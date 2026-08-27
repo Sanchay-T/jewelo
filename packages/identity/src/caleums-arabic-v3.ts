@@ -28,7 +28,10 @@ export interface RasterMask {
 export interface ArabicIdentityRasterizer {
   typeset(input: {
     approvedText: string;
-    fontFile: "Amiri-Regular.ttf" | "ScheherazadeNew-Regular.ttf";
+    fontFile:
+      | "Amiri-Regular.ttf"
+      | "ScheherazadeNew-Regular.ttf"
+      | "NotoNaskhArabic-Regular.ttf";
     fontSize: number;
     padding: number;
   }): Promise<RasterMask>;
@@ -67,7 +70,7 @@ export class IdentitySolverError extends Error {
       | "unsupported_arabic_two_name"
       | "approved_text_missing"
       | "identity_mask_empty"
-  | "identity_fuse_failed"
+      | "identity_fuse_failed"
       | "identity_component_gate_failed",
     message: string = code,
   ) {
@@ -78,9 +81,11 @@ export class IdentitySolverError extends Error {
 
 const LIVE_STYLES = {
   classic: {
-    fontFile: "Amiri-Regular.ttf",
+    // Amiri stacks lam-ya under HarfBuzz; Noto Naskh keeps the flat form the
+    // approved renders used.
+    fontFile: "NotoNaskhArabic-Regular.ttf",
     fontSha256:
-      "b092096eb992aebe59084b0cb5cf0015ae82c7e76b0aac5e7d60ae5113af5f54",
+      "67b5a525a661b607971fbd3f96a81b89d3a768e74534fca84f18ac97e6fab72f",
     dilationPixels: 0,
   },
   minimal: {
