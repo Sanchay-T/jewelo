@@ -7,7 +7,7 @@ import {
   PRESENTATION_ASPECT_RATIO,
   buildPromptVariableSnapshot,
   compilePrompt,
-  normalizeIdentityText,
+  identityTextMatches,
   type GeneratedMedia,
   type PromptProfile,
   type PromptVariableSnapshot,
@@ -120,6 +120,14 @@ export interface PresentationRepository {
     attempt: number;
     media: GeneratedMedia;
   }): Promise<{ bucket: string; path: string; checksum: string }>;
+  /** Keeps a name-rejected still in private storage for inspection. */
+  storeRejectedOutput?(input: {
+    task: TaskRow;
+    run: RunRow;
+    revision: RevisionRow;
+    attempt: number;
+    media: GeneratedMedia;
+  }): Promise<string>;
   complete(input: {
     task: TaskRow;
     run: RunRow;
@@ -139,6 +147,7 @@ export interface PresentationRepository {
     error: unknown;
     terminal: boolean;
     actualCostCents: number;
+    rejectedObjectPaths?: readonly string[];
   }): Promise<void>;
   signedIdentityUrl(
     revision: RevisionRow,
@@ -210,9 +219,7 @@ export async function executePresentationTask(
       variables: compiled.variableSnapshot,
       compiledPrompt,
       compilerVersion: compiled.compilerVersion,
-      sha256: createHash("sha256")
-        .update(compiledPrompt, "utf8")
-        .digest("hex"),
+      sha256: createHash("sha256").update(compiledPrompt, "utf8").digest("hex"),
     });
   }
   if (
@@ -224,7 +231,7 @@ export async function executePresentationTask(
   )
     throw new Error("prompt_snapshot_lineage_mismatch");
   let identity: { url: string; fingerprint: string; artifactId: string };
-  let styleAnchorUrl: string;
+  let styleAnchorUrl: string | undefined;
   let inspirationImageUrl: string | undefined;
   let reference: { url: string; assetId: string } | undefined;
   try {
@@ -240,7 +247,12 @@ export async function executePresentationTask(
       task.owner_principal_id,
       task.id,
     );
-    styleAnchorUrl = await repository.signedStyleAnchorUrl(task);
+    // The studio still gets NO style photo: every wrong name today was copied
+    // from the anchor. Dependent views inherit the studio still as reference.
+    styleAnchorUrl =
+      task.presentation_view === "studio"
+        ? undefined
+        : await repository.signedStyleAnchorUrl(task);
     inspirationImageUrl = await repository.signedInspirationUrl(
       revision,
       task.owner_principal_id,
@@ -278,6 +290,9 @@ export async function executePresentationTask(
   // Undefined until an attempt actually reaches the provider, so a failure
   // before that never reconciles a sibling attempt's cost.
   let actualCostCents: number | undefined;
+  // Name-rejected stills are kept in private storage so an operator can see
+  // what the model actually engraved; they never become assets.
+  const rejectedObjectPaths: string[] = [];
   try {
     // A studio still whose engraved name is not the approved one is regenerated
     // in place: at most two extra paid attempts, then operator review.
@@ -345,13 +360,29 @@ export async function executePresentationTask(
         throw new Error("identity_verification_failed");
       const record = verification as unknown as Record<string, unknown>;
       if (nameReader && task.presentation_view === "studio") {
-        const readText = await nameReader.read(media);
         const expected = revision.identity_anchor.approvedText;
+        const reading = await nameReader.read(media, expected);
+        const readText = reading.text;
+        const latinExpected = /^[\p{Script=Latin}\s'-]+$/u.test(expected);
+        const scriptOk = latinExpected
+          ? !/\p{Script=Arabic}/u.test(readText)
+          : /\p{Script=Arabic}/u.test(readText);
         const passed =
-          normalizeIdentityText(readText) === normalizeIdentityText(expected);
+          scriptOk &&
+          (reading.matches || identityTextMatches(readText, expected));
         record.nameCheck = { passed, readText, expected };
         if (!passed) {
           const terminal = regeneration >= 2 || reservation.attempt >= 3;
+          if (repository.storeRejectedOutput)
+            rejectedObjectPaths.push(
+              await repository.storeRejectedOutput({
+                task,
+                run,
+                revision,
+                attempt: reservation.attempt,
+                media,
+              }),
+            );
           await repository.fail({
             task,
             run,
@@ -359,6 +390,7 @@ export async function executePresentationTask(
             error: new Error(`name_mismatch:${readText}`),
             terminal,
             actualCostCents: actualCostCents ?? 0,
+            rejectedObjectPaths,
           });
           if (terminal)
             return {
@@ -375,6 +407,8 @@ export async function executePresentationTask(
           continue;
         }
       }
+      if (rejectedObjectPaths.length)
+        record.rejectedObjectPaths = [...rejectedObjectPaths];
       const completed = await repository.complete({
         task,
         run,
@@ -400,6 +434,7 @@ export async function executePresentationTask(
       error,
       terminal,
       actualCostCents: actualCostCents ?? 0,
+      rejectedObjectPaths,
     });
     if (!terminal) throw error;
     return { status: "operator_review" as const, attempt: reservation.attempt };
@@ -713,8 +748,8 @@ export class SupabasePresentationRepository implements PresentationRepository {
     if (!response.ok)
       throw new Error(`style_anchor_unreadable:${release.source_task_id}`);
     const lowPassed = await sharp(Buffer.from(await response.arrayBuffer()))
-      .resize(512, null, { fit: "inside" })
-      .blur(8)
+      .resize(256, null, { fit: "inside" })
+      .blur(20)
       .resize(1024, null, { fit: "inside" })
       .png()
       .toBuffer();
@@ -832,6 +867,35 @@ export class SupabasePresentationRepository implements PresentationRepository {
     )
       throw new Error("provider_output_checkpoint_conflict");
     return { bucket: "generated-assets", path, checksum };
+  }
+  async storeRejectedOutput(input: {
+    task: TaskRow;
+    run: RunRow;
+    revision: RevisionRow;
+    attempt: number;
+    media: GeneratedMedia;
+  }) {
+    const checksum = createHash("sha256")
+      .update(input.media.bytes)
+      .digest("hex");
+    const path = `principal/${input.task.owner_principal_id}/design/${input.run.design_id}/revision/${input.revision.id}/run/${input.run.id}/${input.task.presentation_view}/rejected-attempt-${input.attempt}-${checksum.slice(0, 12)}.png`;
+    const response = await fetch(
+      `${this.url}/storage/v1/object/generated-assets/${path}`,
+      {
+        method: "POST",
+        headers: {
+          apikey: this.key,
+          authorization: `Bearer ${this.key}`,
+          "content-type": input.media.mimeType,
+          "x-upsert": "false",
+        },
+        body: Buffer.from(input.media.bytes),
+      },
+    );
+    const uploadBody = await response.text();
+    if (!response.ok && !isDuplicateObject(response, uploadBody))
+      throw new Error(`rejected asset upload failed:${response.status}`);
+    return path;
   }
   async complete(input: {
     task: TaskRow;
@@ -959,6 +1023,7 @@ export class SupabasePresentationRepository implements PresentationRepository {
     error: unknown;
     terminal: boolean;
     actualCostCents: number;
+    rejectedObjectPaths?: readonly string[];
   }) {
     const message =
       input.error instanceof Error ? input.error.message : "unknown";
@@ -990,6 +1055,9 @@ export class SupabasePresentationRepository implements PresentationRepository {
           taskId: input.task.id,
           attempt: input.attempt,
           error: message.slice(0, 120),
+          ...(input.rejectedObjectPaths?.length
+            ? { rejectedObjectPaths: input.rejectedObjectPaths }
+            : {}),
         },
       }),
     });

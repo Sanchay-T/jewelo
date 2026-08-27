@@ -4,7 +4,7 @@ export interface StudioGenerationInput {
   /** Verified sibling still whose pendant the new scene must reproduce. */
   referenceImageUrl?: string;
   identityImageUrl: string;
-  styleAnchorUrl: string;
+  styleAnchorUrl?: string;
   inspirationImageUrl?: string;
   identityFingerprint: string;
   aspectRatio: "1:1" | "4:5" | "9:16" | "16:9";
@@ -108,7 +108,9 @@ export class OpenAIStillAdapter implements StudioGenerator {
         ? ([[input.referenceImageUrl, "reference.png"]] as const)
         : []),
       [input.identityImageUrl, "identity.png"],
-      [input.styleAnchorUrl, "style-anchor.png"],
+      ...(input.styleAnchorUrl
+        ? ([[input.styleAnchorUrl, "style-anchor.png"]] as const)
+        : []),
       ...(input.inspirationImageUrl
         ? ([[input.inspirationImageUrl, "inspiration.png"]] as const)
         : []),
@@ -263,7 +265,10 @@ export class OpenAIStudioVerifier implements StudioVerifier {
 
 /** Reads the letters actually engraved on a generated pendant. */
 export interface StudioNameReader {
-  read(media: GeneratedMedia): Promise<string>;
+  read(
+    media: GeneratedMedia,
+    expected: string,
+  ): Promise<{ text: string; matches: boolean }>;
 }
 
 /**
@@ -274,8 +279,47 @@ export function normalizeIdentityText(value: string): string {
   return value
     .normalize("NFD")
     .replaceAll(/\p{M}/gu, "")
-    .replaceAll(/[\sـ]/gu, "")
+    .replaceAll(/[^\p{L}]/gu, "")
+    .replaceAll("ـ", "")
+    .toLowerCase()
     .normalize("NFC");
+}
+
+/**
+ * A serif Latin render can lose or swap a single glyph to the reader without
+ * being a different name, so a five-letter-or-longer Latin name passes within
+ * one Damerau-Levenshtein edit. Arabic identity stays exact.
+ */
+export function identityTextMatches(
+  readText: string,
+  approvedText: string,
+): boolean {
+  const read = normalizeIdentityText(readText);
+  const approved = normalizeIdentityText(approvedText);
+  if (read === approved) return true;
+  if (approved.length < 5 || !/^[a-z]+$/.test(approved)) return false;
+  return damerauLevenshteinDistance(read, approved) <= 1;
+}
+
+function damerauLevenshteinDistance(a: string, b: string): number {
+  const rows = Array.from({ length: a.length + 1 }, (_row, index) =>
+    Array.from({ length: b.length + 1 }, (_cell, column) =>
+      index === 0 ? column : column === 0 ? index : 0,
+    ),
+  );
+  for (let i = 1; i <= a.length; i += 1)
+    for (let j = 1; j <= b.length; j += 1) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      let distance = Math.min(
+        rows[i - 1]![j]! + 1,
+        rows[i]![j - 1]! + 1,
+        rows[i - 1]![j - 1]! + cost,
+      );
+      if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1])
+        distance = Math.min(distance, rows[i - 2]![j - 2]! + 1);
+      rows[i]![j] = distance;
+    }
+  return rows[a.length]![b.length]!;
 }
 
 export class OpenAINameReader implements StudioNameReader {
@@ -285,7 +329,10 @@ export class OpenAINameReader implements StudioNameReader {
     private readonly fetcher: Fetch = fetch,
   ) {}
 
-  async read(media: GeneratedMedia): Promise<string> {
+  async read(
+    media: GeneratedMedia,
+    expected: string,
+  ): Promise<{ text: string; matches: boolean }> {
     const base64 = Buffer.from(media.bytes).toString("base64");
     const response = await this.fetcher("https://api.openai.com/v1/responses", {
       method: "POST",
@@ -301,7 +348,7 @@ export class OpenAINameReader implements StudioNameReader {
             content: [
               {
                 type: "input_text",
-                text: 'Transcribe EXACTLY the Arabic (or Latin) text written on the pendant. Reply with JSON {"text": "..."} only.',
+                text: `The approved name for this pendant is "${expected}". Read the name written on the pendant carefully (it may be cursive, pavé, or Arabic calligraphy). Reply with JSON {"text": "<what is written>", "matches": <true if it spells exactly the approved name, letter for letter, in the same script; otherwise false>} only.`,
               },
               {
                 type: "input_image",
@@ -318,8 +365,11 @@ export class OpenAINameReader implements StudioNameReader {
             schema: {
               type: "object",
               additionalProperties: false,
-              properties: { text: { type: "string" } },
-              required: ["text"],
+              properties: {
+                text: { type: "string" },
+                matches: { type: "boolean" },
+              },
+              required: ["text", "matches"],
             },
           },
         },
@@ -329,10 +379,11 @@ export class OpenAINameReader implements StudioNameReader {
       throw new Error(`OpenAI name read failed:${response.status}`);
     const parsed = JSON.parse(extractResponseText(await response.json())) as {
       text?: unknown;
+      matches?: unknown;
     };
-    if (typeof parsed.text !== "string")
+    if (typeof parsed.text !== "string" || typeof parsed.matches !== "boolean")
       throw new Error("OpenAI name read was malformed");
-    return parsed.text;
+    return { text: parsed.text, matches: parsed.matches };
   }
 }
 
