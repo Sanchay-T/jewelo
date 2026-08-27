@@ -78,7 +78,7 @@ async function recoverStaleTasks(
   const url = environment.SUPABASE_URL;
   const key = environment.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !key) throw new Error("Supabase jobs configuration missing");
-  const staleBefore = new Date(Date.now() - 7 * 60 * 1_000).toISOString();
+  const staleBefore = new Date(Date.now() - 2 * 60 * 1_000).toISOString();
   const response = await fetch(
     `${url}/rest/v1/rpc/recover_stale_generation_tasks`,
     {
