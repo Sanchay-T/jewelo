@@ -12,6 +12,7 @@ import {
   adaptPresentationCards,
   applyPresentationReplay,
   applySamplePresentationAssets,
+  presentationStatusLabel,
   type PresentationCardModel,
 } from "@/features/studio/presentation-cards";
 
@@ -22,8 +23,15 @@ const progress = [
   "Verifying every detail",
 ];
 
-function CraftingCard({ card }: { card: PresentationCardModel }) {
+function CraftingCard({
+  card,
+  statusLabel,
+}: {
+  card: PresentationCardModel;
+  statusLabel: string;
+}) {
   const ready = card.state === "ready" && Boolean(card.assetUrl);
+  const primary = card.id === "studio" || card.id === "on_skin";
   return (
     <article className="clm-crafting-card" data-state={card.state}>
       <div className="clm-crafting-card-media">
@@ -32,7 +40,10 @@ function CraftingCard({ card }: { card: PresentationCardModel }) {
             src={card.assetUrl!}
             alt={card.alt}
             fill
-            priority={card.id === "studio" || card.id === "on_skin"}
+            // One scrollable grid: iOS Safari never triggers lazy loading for
+            // the lower two cards, so every card loads eagerly.
+            priority={primary}
+            loading={primary ? undefined : "eager"}
             sizes="(max-width: 799px) 100vw, (max-width: 1100px) 50vw, 25vw"
           />
         ) : (
@@ -50,19 +61,23 @@ function CraftingCard({ card }: { card: PresentationCardModel }) {
           <small>{card.treatment}</small>
         </div>
         <span className="clm-state" data-state={card.state}>
-          {card.state.replaceAll("_", " ")}
+          {statusLabel}
         </span>
       </footer>
       {!ready && (
         <div className="clm-crafting-card-progress" role="status">
           <SpinnerGap className="clm-spin" size={14} />
-          {card.state === "blocked"
-            ? "Awaiting approval"
-            : card.state === "failed"
-              ? "Needs retry"
-              : card.state === "cancelled"
-                ? "Cancelled"
-                : "Preparing presentation"}
+          {statusLabel === "Waiting for studio"
+            ? "Waiting for studio"
+            : card.state === "blocked"
+              ? statusLabel === "Spelling check failed - retry"
+                ? statusLabel
+                : "Awaiting approval"
+              : card.state === "failed"
+                ? "Needs retry"
+                : card.state === "cancelled"
+                  ? "Cancelled"
+                  : "Preparing presentation"}
         </div>
       )}
     </article>
@@ -270,7 +285,11 @@ export function CraftingTransition({
           </header>
           <div className="clm-crafting-grid" aria-live="polite">
             {cards.map((card) => (
-              <CraftingCard key={card.id} card={card} />
+              <CraftingCard
+                key={card.id}
+                card={card}
+                statusLabel={presentationStatusLabel(card, cards)}
+              />
             ))}
           </div>
           {primaryReady && (

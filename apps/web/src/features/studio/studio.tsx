@@ -28,6 +28,7 @@ import {
   adaptPresentationCards,
   applySamplePresentationAssets,
   isPrimaryReady,
+  presentationStatusLabel,
   type PresentationCardModel,
 } from "./presentation-cards";
 
@@ -38,7 +39,11 @@ const activeStates = new Set<TaskState>([
   "retrying",
 ]);
 
-function stateCopy(state: TaskState) {
+function stateCopy(state: TaskState, statusLabel: string) {
+  if (statusLabel === "Waiting for studio")
+    return "It starts as soon as the Studio view is verified.";
+  if (statusLabel === "Spelling check failed - retry")
+    return "The approved spelling did not verify. Retry to render again.";
   if (state === "failed") return "This presentation needs another try.";
   if (state === "cancelled") return "This presentation was cancelled.";
   if (state === "blocked") return "Waiting for its verified parent task.";
@@ -52,16 +57,19 @@ function stateCopy(state: TaskState) {
 
 function PresentationCard({
   card,
+  statusLabel,
   busy,
   onCancel,
   onRetry,
 }: {
   card: PresentationCardModel;
+  statusLabel: string;
   busy?: string;
   onCancel(card: PresentationCardModel): void;
   onRetry(card: PresentationCardModel): void;
 }) {
   const ready = card.state === "ready" && Boolean(card.assetUrl);
+  const primary = card.id === "studio" || card.id === "on_skin";
   return (
     <article className="clm-presentation-card" data-state={card.state}>
       <div className="clm-presentation-media">
@@ -70,7 +78,10 @@ function PresentationCard({
             src={card.assetUrl!}
             alt={card.alt}
             fill
-            priority={card.id === "studio" || card.id === "on_skin"}
+            // All four cards belong to one grid the customer scrolls as a
+            // unit; iOS Safari never triggers lazy loading for the lower two.
+            priority={primary}
+            loading={primary ? undefined : "eager"}
             sizes="(max-width: 799px) 100vw, (max-width: 1100px) 50vw, 25vw"
           />
         ) : (
@@ -80,8 +91,8 @@ function PresentationCard({
             ) : (
               <Sparkle size={30} weight="duotone" />
             )}
-            <strong>{card.state.replaceAll("_", " ")}</strong>
-            <span>{stateCopy(card.state)}</span>
+            <strong>{statusLabel}</strong>
+            <span>{stateCopy(card.state, statusLabel)}</span>
           </div>
         )}
         <span className="clm-presentation-number">{card.number}</span>
@@ -92,7 +103,7 @@ function PresentationCard({
           <span>{card.treatment}</span>
         </div>
         <span className="clm-state" data-state={card.state}>
-          {card.state.replaceAll("_", " ")}
+          {statusLabel}
         </span>
       </footer>
       <div className="clm-presentation-actions">
@@ -368,6 +379,7 @@ export function Studio({
               <PresentationCard
                 key={card.id}
                 card={card}
+                statusLabel={presentationStatusLabel(card, cards)}
                 busy={busy}
                 onCancel={(selected) => {
                   if (!selected.task) return;
@@ -480,7 +492,13 @@ export function Studio({
         )}
         <p className="clm-sr-live" aria-live="polite" aria-atomic="true">
           Presentation tasks:{" "}
-          {cards.map((card) => `${card.label} ${card.state}`).join(", ")}.
+          {cards
+            .map(
+              (card) =>
+                `${card.label} ${presentationStatusLabel(card, cards)}`,
+            )
+            .join(", ")}
+          .
         </p>
       </main>
     </AppShell>

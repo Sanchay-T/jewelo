@@ -67,6 +67,15 @@
       "spdxLicense": "OFL-1.1",
       "approval": "live",
       "style": "kufi"
+    },
+    {
+      "file": "fonts/GreatVibes-Regular.ttf",
+      "family": "Great Vibes",
+      "sha256": "8d509802186f1b51572531ecf313e8098f9a5bfdfaca93f0c9b34467f9982d15",
+      "spdxLicense": "OFL-1.1",
+      "approval": "live",
+      "style": "latin",
+      "note": "Latin name stencil face pinned 2026-08-27: the container has no customer typography or DejaVu Sans, so the unpinned stencil rendered blank."
     }
   ],
   "referenceChecksums": {

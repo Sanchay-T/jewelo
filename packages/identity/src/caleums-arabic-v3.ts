@@ -90,7 +90,7 @@ const LIVE_STYLES = {
     fontFile: "NotoNaskhArabic-Regular.ttf",
     fontSha256:
       "67b5a525a661b607971fbd3f96a81b89d3a768e74534fca84f18ac97e6fab72f",
-    dilationPixels: 0,
+    dilationPixels: 1,
   },
   minimal: {
     fontFile: "ScheherazadeNew-Regular.ttf",
@@ -99,17 +99,20 @@ const LIVE_STYLES = {
     dilationPixels: 2,
   },
   // Opened to all customers on 2026-08-27: no atelier gate on style.
+  // Aref Ruqaa slopes the baseline, so the stencil stopped reading as one
+  // horizontal pendant; both styles render on the certified Naskh face and
+  // reach the model as a style word through {{arabic_style}} instead.
   diwani: {
-    fontFile: "ArefRuqaa-Regular.ttf",
+    fontFile: "NotoNaskhArabic-Regular.ttf",
     fontSha256:
-      "ceb786d83ba92f35e96efcd8623c2858d288e0c543c8761ba35b1020989464f9",
-    dilationPixels: 2,
+      "67b5a525a661b607971fbd3f96a81b89d3a768e74534fca84f18ac97e6fab72f",
+    dilationPixels: 1,
   },
   signature: {
-    fontFile: "ArefRuqaa-Regular.ttf",
+    fontFile: "NotoNaskhArabic-Regular.ttf",
     fontSha256:
-      "ceb786d83ba92f35e96efcd8623c2858d288e0c543c8761ba35b1020989464f9",
-    dilationPixels: 2,
+      "67b5a525a661b607971fbd3f96a81b89d3a768e74534fca84f18ac97e6fab72f",
+    dilationPixels: 1,
   },
   kufi: {
     fontFile: "NotoKufiArabic-Regular.ttf",
