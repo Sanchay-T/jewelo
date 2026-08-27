@@ -359,7 +359,7 @@ export async function executePresentationTask(
       )
         throw new Error("identity_verification_failed");
       const record = verification as unknown as Record<string, unknown>;
-      if (nameReader && task.presentation_view === "studio") {
+      if (nameReader) {
         const expected = revision.identity_anchor.approvedText;
         const reading = await nameReader.read(media, expected);
         const readText = reading.text;
