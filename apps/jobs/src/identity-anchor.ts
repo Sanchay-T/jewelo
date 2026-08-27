@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync } from "node:fs";
 import { resolve } from "node:path";
 import {
   CALEUMS_ARABIC_ENGINE_RELEASE,
@@ -126,11 +126,20 @@ class SharpArabicRasterizer implements ArabicIdentityRasterizer {
     fontSize: number;
     padding: number;
   }): Promise<RasterMask> {
-    const font = readFileSync(fontPath(input.fontFile)).toString("base64");
-    const svg = Buffer.from(
-      `<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="900"><style>@font-face{font-family:CaleumsArabic;src:url(data:font/ttf;base64,${font}) format('truetype')}</style><rect width="1800" height="900" fill="white"/><text x="900" y="620" text-anchor="middle" direction="rtl" unicode-bidi="plaintext" lang="ar" font-family="CaleumsArabic" font-size="${input.fontSize}" fill="black">${xml(input.approvedText)}</text></svg>`,
-    );
-    const { data, info } = await sharp(svg)
+    // Pango/HarfBuzz/FriBidi shaping through sharp's text input with an explicit
+    // font file: librsvg ignores data-URI @font-face in the deployed container
+    // and rendered a blank raster.
+    const text = sharp({
+      text: {
+        text: `<span font_family="CaleumsArabic" size="${input.fontSize * 1024}">${xml(input.approvedText)}</span>`,
+        fontfile: fontPath(input.fontFile),
+        width: 1800,
+        align: "centre",
+        rgba: true,
+        dpi: 72,
+      },
+    });
+    const { data, info } = await text
       .flatten({ background: "white" })
       .trim({ background: "white", threshold: 1 })
       .extend({

@@ -66,7 +66,8 @@ export class IdentitySolverError extends Error {
       | "unsupported_arabic_style"
       | "unsupported_arabic_two_name"
       | "approved_text_missing"
-      | "identity_fuse_failed"
+      | "identity_mask_empty"
+  | "identity_fuse_failed"
       | "identity_component_gate_failed",
     message: string = code,
   ) {
@@ -118,6 +119,11 @@ export async function solveArabicIdentity(
     padding: 186,
   });
   const componentsBefore = components(mask).length;
+  if (componentsBefore === 0)
+    throw new IdentitySolverError(
+      "identity_mask_empty",
+      `${approvedText}: rasterizer produced no ink`,
+    );
   const fused = fuse(mask, Math.max(3, Math.floor(560 / 45)));
   for (let index = 0; index < style.dilationPixels; index += 1)
     dilate(fused.mask);

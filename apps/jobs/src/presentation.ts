@@ -219,9 +219,10 @@ export async function executePresentationTask(
   }
   const checkpoint = await repository.loadStoredOutput(task);
   const provider = generator instanceof MockStudioGenerator ? "mock" : "openai";
-  const model = generator instanceof OpenAIStillAdapter
-    ? generator.model
-    : "mock-openai-still-v1";
+  const model =
+    generator instanceof OpenAIStillAdapter
+      ? generator.model
+      : "mock-openai-still-v1";
   let reservation: {
     attempt: number;
     idempotencyKey: string;
@@ -265,7 +266,8 @@ export async function executePresentationTask(
         inspirationImageUrl,
         identityFingerprint: identity.fingerprint,
         aspectRatio:
-          task.aspect_ratio ?? PRESENTATION_ASPECT_RATIO[task.presentation_view],
+          task.aspect_ratio ??
+          PRESENTATION_ASPECT_RATIO[task.presentation_view],
         presentationView: task.presentation_view,
         specification: revision.specification,
       });
@@ -456,7 +458,9 @@ export class SupabasePresentationRepository implements PresentationRepository {
     );
     const response = await fetch(signedUrl);
     if (!response.ok)
-      throw new Error(`stored_provider_output_download_failed:${response.status}`);
+      throw new Error(
+        `stored_provider_output_download_failed:${response.status}`,
+      );
     return {
       media: {
         provider: attempt.provider,
@@ -540,26 +544,34 @@ export class SupabasePresentationRepository implements PresentationRepository {
       if (!upload.ok && !isDuplicateObject(upload, uploadDetail))
         throw new Error(`identity anchor upload failed:${upload.status}`);
     }
-    await this.#request(
-      "/rest/v1/identity_artifacts?on_conflict=revision_id,fingerprint",
-      {
-        method: "POST",
-        headers: { prefer: "resolution=ignore-duplicates,return=minimal" },
-        body: JSON.stringify({
-          revision_id: revision.id,
-          owner_principal_id: ownerId,
-          engine_release: String(rendered.report.engineRelease),
-          font_release: String(rendered.report.fontSha256 ?? "existing-latin"),
-          approved_text: revision.identity_anchor.approvedText,
-          script: revision.identity_anchor.language,
-          fingerprint: rendered.fingerprint,
-          bucket_id: "identity-anchors",
-          object_path: `${basePath}.png`,
-          png_sha256: rendered.pngSha256,
-          validation_report: rendered.report,
-        }),
-      },
-    );
+    // Four sibling tasks race to insert the same artifact; a loser can hit the
+    // (bucket_id, object_path) unique key instead of the on_conflict target.
+    try {
+      await this.#request(
+        "/rest/v1/identity_artifacts?on_conflict=revision_id,fingerprint",
+        {
+          method: "POST",
+          headers: { prefer: "resolution=ignore-duplicates,return=minimal" },
+          body: JSON.stringify({
+            revision_id: revision.id,
+            owner_principal_id: ownerId,
+            engine_release: String(rendered.report.engineRelease),
+            font_release: String(
+              rendered.report.fontSha256 ?? "existing-latin",
+            ),
+            approved_text: revision.identity_anchor.approvedText,
+            script: revision.identity_anchor.language,
+            fingerprint: rendered.fingerprint,
+            bucket_id: "identity-anchors",
+            object_path: `${basePath}.png`,
+            png_sha256: rendered.pngSha256,
+            validation_report: rendered.report,
+          }),
+        },
+      );
+    } catch (error) {
+      if (!String(error).includes("23505")) throw error;
+    }
     const artifacts = await this.#request<Array<{ id: string }>>(
       `/rest/v1/identity_artifacts?revision_id=eq.${revision.id}&fingerprint=eq.${rendered.fingerprint}&select=id`,
     );
