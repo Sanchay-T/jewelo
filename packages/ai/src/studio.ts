@@ -274,8 +274,47 @@ export function normalizeIdentityText(value: string): string {
   return value
     .normalize("NFD")
     .replaceAll(/\p{M}/gu, "")
-    .replaceAll(/[\sـ]/gu, "")
+    .replaceAll(/[^\p{L}]/gu, "")
+    .replaceAll("ـ", "")
+    .toLowerCase()
     .normalize("NFC");
+}
+
+/**
+ * A serif Latin render can lose or swap a single glyph to the reader without
+ * being a different name, so a five-letter-or-longer Latin name passes within
+ * one Damerau-Levenshtein edit. Arabic identity stays exact.
+ */
+export function identityTextMatches(
+  readText: string,
+  approvedText: string,
+): boolean {
+  const read = normalizeIdentityText(readText);
+  const approved = normalizeIdentityText(approvedText);
+  if (read === approved) return true;
+  if (approved.length < 5 || !/^[a-z]+$/.test(approved)) return false;
+  return damerauLevenshteinDistance(read, approved) <= 1;
+}
+
+function damerauLevenshteinDistance(a: string, b: string): number {
+  const rows = Array.from({ length: a.length + 1 }, (_row, index) =>
+    Array.from({ length: b.length + 1 }, (_cell, column) =>
+      index === 0 ? column : column === 0 ? index : 0,
+    ),
+  );
+  for (let i = 1; i <= a.length; i += 1)
+    for (let j = 1; j <= b.length; j += 1) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      let distance = Math.min(
+        rows[i - 1]![j]! + 1,
+        rows[i]![j - 1]! + 1,
+        rows[i - 1]![j - 1]! + cost,
+      );
+      if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1])
+        distance = Math.min(distance, rows[i - 2]![j - 2]! + 1);
+      rows[i]![j] = distance;
+    }
+  return rows[a.length]![b.length]!;
 }
 
 export class OpenAINameReader implements StudioNameReader {

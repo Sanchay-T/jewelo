@@ -73,9 +73,17 @@
       "family": "Great Vibes",
       "sha256": "8d509802186f1b51572531ecf313e8098f9a5bfdfaca93f0c9b34467f9982d15",
       "spdxLicense": "OFL-1.1",
+      "approval": "retired",
+      "note": "Retired 2026-08-27: the cursive stencil was unreproducible by the image model and misread by the name reader; replaced by Playfair Display."
+    },
+    {
+      "file": "fonts/PlayfairDisplay-SemiBold.ttf",
+      "family": "Playfair Display",
+      "sha256": "c40f2293766a503bc70cce9e512ef844a4ccb7cbcde792fe2ea31d191917d8d6",
+      "spdxLicense": "OFL-1.1",
       "approval": "live",
       "style": "latin",
-      "note": "Latin name stencil face pinned 2026-08-27: the container has no customer typography or DejaVu Sans, so the unpinned stencil rendered blank."
+      "note": "Latin name stencil face pinned 2026-08-27, replacing Great Vibes: a clean serif rendered at weight 700 with -0.04em tracking so the glyphs fuse into one pendant body."
     }
   ],
   "referenceChecksums": {
