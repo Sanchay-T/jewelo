@@ -1,9 +1,8 @@
 import { defineConfig } from "@trigger.dev/sdk";
 import { syncEnvVars } from "@trigger.dev/build/extensions/core";
-import { loadRootEnv, parseTriggerConfigEnv } from "@jewelo/config";
+import { loadRootEnv } from "@jewelo/config";
 
 loadRootEnv();
-const environment = parseTriggerConfigEnv(process.env);
 const jobEnvironmentKeys = [
   "SUPABASE_URL",
   "SUPABASE_SERVICE_ROLE_KEY",
@@ -18,7 +17,8 @@ const jobEnvironmentKeys = [
 ] as const;
 
 export default defineConfig({
-  project: environment.TRIGGER_PROJECT_REF,
+  // Literal fallback: the deployed worker has no TRIGGER_PROJECT_REF (reserved name, never synced).
+  project: process.env.TRIGGER_PROJECT_REF ?? "proj_xlvgghocsckjlnkuaibo",
   dirs: ["./src/trigger"],
   additionalFiles: [
     "../../packages/identity/engines/caleums-arabic-v3/fonts/*.ttf",
