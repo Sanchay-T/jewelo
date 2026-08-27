@@ -14,7 +14,7 @@ export const PROMPT_PROFILES = [
 ] as const;
 export type PromptProfile = (typeof PROMPT_PROFILES)[number];
 
-export const PROMPT_COMPILER_VERSION = "caleums-prompt-compiler-v1";
+export const PROMPT_COMPILER_VERSION = "caleums-prompt-compiler-v2";
 export const MAX_PROMPT_TEMPLATE_LENGTH = 12_000;
 export const MAX_COMPILED_PROMPT_LENGTH = 16_000;
 
@@ -34,15 +34,22 @@ export const PROMPT_VARIABLES = {
   chain_length: "Approved chain length",
   presentation_view: "Requested presentation view",
   inspiration_rule: "Pinned optional inspiration handling",
+  piece_spec: "Complete immutable pendant specification",
+  drape: "Approved worn-view chain drape",
 } as const;
 export type PromptVariable = keyof typeof PROMPT_VARIABLES;
 export type PromptVariableSnapshot = Record<PromptVariable, string>;
 
 const PRODUCT_VARIABLES = Object.freeze(
-  Object.keys(PROMPT_VARIABLES) as PromptVariable[],
+  (Object.keys(PROMPT_VARIABLES) as PromptVariable[]).filter(
+    (variable) => variable !== "piece_spec" && variable !== "drape",
+  ),
 );
 const LEGACY_VARIABLES = PRODUCT_VARIABLES.filter(
   (variable) => variable !== "inspiration_rule",
+);
+const ALL_VARIABLES = Object.freeze(
+  Object.keys(PROMPT_VARIABLES) as PromptVariable[],
 );
 
 export const PROMPT_PROFILE_REGISTRY: Readonly<
@@ -57,8 +64,7 @@ export const PROMPT_PROFILE_REGISTRY: Readonly<
   PROMPT_PROFILES.map((profile) => [
     profile,
     {
-      allowedVariables:
-        profile === "image.studio" ? LEGACY_VARIABLES : PRODUCT_VARIABLES,
+      allowedVariables: ALL_VARIABLES,
       requiredVariables:
         profile === "image.studio" ? LEGACY_VARIABLES : PRODUCT_VARIABLES,
     },
@@ -194,9 +200,13 @@ export function validatePromptTemplate(
   );
   if (unknown.length)
     throw new Error(`Unknown prompt variable: ${unknown.join(", ")}`);
-  const missing = PROMPT_PROFILE_REGISTRY[profile].requiredVariables.filter(
-    (variable) => !variables.includes(variable),
-  );
+  // Compact prompt-sheet releases may deliberately collapse the immutable
+  // form fields into piece_spec. Legacy templates retain the stricter field-
+  // by-field contract so accidentally dropping one still fails publication.
+  const required = variables.includes("piece_spec")
+    ? (["piece_spec"] as const)
+    : PROMPT_PROFILE_REGISTRY[profile].requiredVariables;
+  const missing = required.filter((variable) => !variables.includes(variable));
   if (missing.length)
     throw new Error(`Missing required prompt variables: ${missing.join(", ")}`);
   return { profile, variables: variables as PromptVariable[] };
@@ -211,6 +221,17 @@ export function buildPromptVariableSnapshot(input: {
   const specification = input.specification;
   const dimensions = asObject(specification.dimensions);
   const chain = asObject(specification.chain);
+  const pieceSpec = [
+    `name=${scalar(input.approvedName)}`,
+    `language=${scalar(input.language)}`,
+    `arabic_style=${scalar(specification.arabicStyle)}`,
+    `layout=${scalar(specification.layout)}`,
+    `metal=${scalar(specification.metalKarat)} ${scalar(specification.metalColor)} ${scalar(specification.finish)}`,
+    `stones=${scalar(specification.stoneCoverage)} ${scalar(specification.gemstone)}`,
+    `size=${scalar(specification.sizeProfile)}; dimensions=${scalar(dimensions.widthMm)} × ${scalar(dimensions.heightMm)} × ${scalar(dimensions.thicknessMm)} mm`,
+    `chain=${scalar(chain.style)}; length=${scalar(chain.lengthCm)} cm`,
+    `view=${scalar(input.presentationView)}`,
+  ].join("; ");
   return {
     approved_name: scalar(input.approvedName),
     language: scalar(input.language),
@@ -229,6 +250,8 @@ export function buildPromptVariableSnapshot(input: {
     inspiration_rule: specification.referenceAsset
       ? "Use the optional third input only as customer inspiration; never copy text, identity, branding or unapproved objects from it."
       : "No customer inspiration input is approved for this task.",
+    piece_spec: pieceSpec,
+    drape: `Natural asymmetric ${scalar(chain.style)} chain drape at ${scalar(chain.lengthCm)} cm, with the pendant centered at the approved scale.`,
   };
 }
 
@@ -239,8 +262,7 @@ export function compilePrompt(input: {
 }): CompiledPrompt {
   const parsed = validatePromptTemplate(input.profile, input.template);
   const snapshot = { ...input.variables };
-  for (const variable of PROMPT_PROFILE_REGISTRY[input.profile]
-    .requiredVariables) {
+  for (const variable of parsed.variables) {
     const value = snapshot[variable]?.trim();
     if (!value) throw new Error(`Missing required prompt value: ${variable}`);
     if (value.length > 512)

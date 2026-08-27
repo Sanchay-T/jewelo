@@ -38,7 +38,9 @@ export const videoSubmissionTask = task({
   id: "video-submit-v1",
   queue: falVideoQueue,
   retry: {
-    maxAttempts: 3,
+    // A process retry cannot prove whether fal accepted a paid submission.
+    // Durable recovery resumes polling only after a request id was stored.
+    maxAttempts: 1,
     factor: 2,
     minTimeoutInMs: 2_000,
     maxTimeoutInMs: 30_000,

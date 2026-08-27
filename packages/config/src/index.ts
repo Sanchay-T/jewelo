@@ -1,3 +1,4 @@
+export * from "./load-env";
 import { z } from "zod";
 
 const url = z.url();

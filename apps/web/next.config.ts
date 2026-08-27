@@ -1,11 +1,14 @@
 import type { NextConfig } from "next";
-import { parseBrowserEnv } from "@jewelo/config";
+import { loadRootEnv, parseBrowserEnv } from "@jewelo/config";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const workspaceRoot = path.resolve(
   fileURLToPath(new URL("../..", import.meta.url)),
 );
+// Must run before anything reads process.env, including Next inlining
+// NEXT_PUBLIC_* into the client bundle.
+loadRootEnv();
 parseBrowserEnv(process.env);
 
 const nextConfig: NextConfig = {

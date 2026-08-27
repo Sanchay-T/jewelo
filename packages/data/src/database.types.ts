@@ -111,6 +111,13 @@ export type Database = {
         };
         Relationships: [
           {
+            foreignKeyName: "provider_output_checkpoints_task_id_attempt_fkey";
+            columns: ["task_id", "attempt"];
+            isOneToOne: true;
+            referencedRelation: "provider_attempts";
+            referencedColumns: ["task_id", "attempt"];
+          },
+          {
             foreignKeyName: "assets_design_id_fkey";
             columns: ["design_id"];
             isOneToOne: false;
@@ -652,10 +659,13 @@ export type Database = {
           event_type: string;
           id: string;
           last_error: string | null;
+          lease_id: string | null;
           locked_at: string | null;
           payload: Json;
           published_at: string | null;
           state: string;
+          task_identifier: string | null;
+          trigger_run_id: string | null;
         };
         Insert: {
           aggregate_id: string;
@@ -667,10 +677,13 @@ export type Database = {
           event_type: string;
           id?: string;
           last_error?: string | null;
+          lease_id?: string | null;
           locked_at?: string | null;
           payload: Json;
           published_at?: string | null;
           state?: string;
+          task_identifier?: string | null;
+          trigger_run_id?: string | null;
         };
         Update: {
           aggregate_id?: string;
@@ -682,10 +695,13 @@ export type Database = {
           event_type?: string;
           id?: string;
           last_error?: string | null;
+          lease_id?: string | null;
           locked_at?: string | null;
           payload?: Json;
           published_at?: string | null;
           state?: string;
+          task_identifier?: string | null;
+          trigger_run_id?: string | null;
         };
         Relationships: [];
       };
@@ -834,6 +850,63 @@ export type Database = {
           role?: string;
         };
         Relationships: [];
+      };
+      provider_output_checkpoints: {
+        Row: {
+          attempt: number;
+          bucket_id: string;
+          byte_size: number;
+          checksum_sha256: string;
+          created_at: string;
+          mime_type: string;
+          object_path: string;
+          owner_principal_id: string;
+          provider_request_id: string | null;
+          state: string;
+          task_id: string;
+        };
+        Insert: {
+          attempt: number;
+          bucket_id: string;
+          byte_size: number;
+          checksum_sha256: string;
+          created_at?: string;
+          mime_type: string;
+          object_path: string;
+          owner_principal_id: string;
+          provider_request_id?: string | null;
+          state?: string;
+          task_id: string;
+        };
+        Update: {
+          attempt?: number;
+          bucket_id?: string;
+          byte_size?: number;
+          checksum_sha256?: string;
+          created_at?: string;
+          mime_type?: string;
+          object_path?: string;
+          owner_principal_id?: string;
+          provider_request_id?: string | null;
+          state?: string;
+          task_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "provider_output_checkpoints_task_id_fkey";
+            columns: ["task_id"];
+            isOneToOne: false;
+            referencedRelation: "generation_tasks";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "provider_output_checkpoints_task_id_owner_principal_id_fkey";
+            columns: ["task_id", "owner_principal_id"];
+            isOneToOne: false;
+            referencedRelation: "generation_tasks";
+            referencedColumns: ["id", "owner_principal_id"];
+          },
+        ];
       };
       provider_attempts: {
         Row: {
@@ -1077,6 +1150,14 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      ack_outbox_event: {
+        Args: {
+          p_event_id: string;
+          p_lease_id: string;
+          p_trigger_run_id: string;
+        };
+        Returns: undefined;
+      };
       approve_and_start_studio: {
         Args: {
           p_approval_key: string;
@@ -1116,6 +1197,37 @@ export type Database = {
           to: "generation_tasks";
           isOneToOne: true;
           isSetofReturn: false;
+        };
+      };
+      claim_outbox_event: {
+        Args: {
+          p_event_id: string;
+          p_lease_id: string;
+          p_lease_seconds: number;
+        };
+        Returns: {
+          aggregate_id: string;
+          aggregate_type: string;
+          attempt_count: number;
+          available_at: string;
+          created_at: string;
+          dispatch_idempotency_key: string;
+          event_type: string;
+          id: string;
+          last_error: string | null;
+          lease_id: string | null;
+          locked_at: string | null;
+          payload: Json;
+          published_at: string | null;
+          state: string;
+          task_identifier: string | null;
+          trigger_run_id: string | null;
+        }[];
+        SetofOptions: {
+          from: "*";
+          to: "outbox_events";
+          isOneToOne: false;
+          isSetofReturn: true;
         };
       };
       canonical_identity_anchor: {
@@ -1224,6 +1336,15 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      nack_outbox_event: {
+        Args: {
+          p_available_at: string;
+          p_error: string;
+          p_event_id: string;
+          p_lease_id: string;
+        };
+        Returns: undefined;
+      };
       publish_prompt_release: {
         Args: {
           p_expected_current_release_id: string;
@@ -1248,6 +1369,14 @@ export type Database = {
           p_terminal?: boolean;
         };
         Returns: undefined;
+      };
+      recover_stale_generation_tasks: {
+        Args: { p_limit?: number; p_stale_before: string };
+        Returns: {
+          outbox_id: string | null;
+          recovery_action: string;
+          task_id: string;
+        }[];
       };
       reserve_provider_attempt: {
         Args: {

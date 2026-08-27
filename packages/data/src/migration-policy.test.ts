@@ -37,6 +37,13 @@ const promptMigration = readFileSync(
   ),
   "utf8",
 );
+const triggerRecoveryMigration = readFileSync(
+  new URL(
+    "../../../supabase/migrations/20260827110000_trigger_dispatch_stale_recovery.sql",
+    import.meta.url,
+  ),
+  "utf8",
+);
 
 function expectedFingerprint(
   language: "en" | "ar",
@@ -269,5 +276,82 @@ describe("Caleums migration security contract", () => {
     expect(promptMigration).not.toContain(
       "PLACEHOLDER — coordinator-approved production prompt pending",
     );
+  });
+
+  it("leases outbox events so immediate and scheduled dispatch cannot both win", () => {
+    expect(triggerRecoveryMigration).toContain("add column lease_id uuid");
+    expect(triggerRecoveryMigration).toContain("add column trigger_run_id text");
+    expect(triggerRecoveryMigration).toContain("add column task_identifier text");
+    expect(triggerRecoveryMigration).toContain(
+      "where oe.id = p_event_id\n    and oe.published_at is null",
+    );
+    expect(triggerRecoveryMigration).toContain(
+      "where id = p_event_id and state = 'dispatching' and lease_id = p_lease_id",
+    );
+    expect(triggerRecoveryMigration).toContain(
+      "raise exception 'outbox lease lost'",
+    );
+  });
+
+  it("keeps unverified provider outputs as server-only durable checkpoints", () => {
+    expect(triggerRecoveryMigration).toContain(
+      "create table public.provider_output_checkpoints",
+    );
+    expect(triggerRecoveryMigration).toContain(
+      "primary key (task_id, attempt)",
+    );
+    expect(triggerRecoveryMigration).toContain(
+      "check (state = 'stored_unverified')",
+    );
+    expect(triggerRecoveryMigration).toContain(
+      "revoke all on table public.provider_output_checkpoints\n  from public, anon, authenticated",
+    );
+  });
+
+  it("recovers stale tasks without automatically repeating ambiguous paid work", () => {
+    expect(triggerRecoveryMigration).toContain(
+      "v_row.attempt = 0 and v_row.status = 'queued'",
+    );
+    expect(triggerRecoveryMigration).toContain(
+      "v_row.status = 'retrying'\n      and v_row.attempt_status = 'failed'",
+    );
+    expect(triggerRecoveryMigration).toContain(
+      "v_row.attempt_provider = 'fal'\n      and v_row.attempt_status = 'submitted'",
+    );
+    expect(triggerRecoveryMigration).toContain(
+      "v_row.attempt_status in ('reserved', 'submitted', 'ambiguous')",
+    );
+    expect(triggerRecoveryMigration).toContain(
+      "terminal_error_code = 'operator_review_ambiguous_paid_request'",
+    );
+    expect(triggerRecoveryMigration).toContain(
+      "'conservativeCostCents', v_charge, 'paidRequestRepeated', false",
+    );
+  });
+
+  it("leaves terminal stale tasks outside the recovery scan", () => {
+    expect(triggerRecoveryMigration).toContain(
+      "t.status in ('queued', 'generating', 'verifying', 'retrying')",
+    );
+    for (const terminal of ["ready", "blocked", "failed", "cancelled"])
+      expect(triggerRecoveryMigration).not.toContain(
+        `t.status in ('queued', 'generating', 'verifying', 'retrying', '${terminal}')`,
+      );
+  });
+
+  it("exposes all dispatch and stale-recovery RPCs only to service_role", () => {
+    for (const signature of [
+      "public.claim_outbox_event(uuid,uuid,integer)",
+      "public.ack_outbox_event(uuid,uuid,text)",
+      "public.nack_outbox_event(uuid,uuid,text,timestamptz)",
+      "public.recover_stale_generation_tasks(timestamptz,integer)",
+    ]) {
+      expect(triggerRecoveryMigration).toContain(
+        `revoke all on function ${signature}`,
+      );
+      expect(triggerRecoveryMigration).toContain(
+        `grant execute on function ${signature}`,
+      );
+    }
   });
 });

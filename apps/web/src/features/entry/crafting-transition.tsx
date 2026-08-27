@@ -53,17 +53,27 @@ export function CraftingTransition({
     (asset) =>
       asset.view === "studio" && (!task || asset.lineage.taskId === task.id),
   );
+  const firstReadyAsset = run?.assets.find(
+    (asset) => asset.state === "ready" && Boolean(asset.assetUrl),
+  );
+  const visibleAsset =
+    studioAsset?.state === "ready" && studioAsset.assetUrl
+      ? studioAsset
+      : firstReadyAsset;
   const taskState = task?.state ?? product?.state;
-  const assetUrl =
-    taskState === "ready" && studioAsset?.state === "ready"
-      ? studioAsset.assetUrl
-      : taskState === "ready"
-        ? product?.assetUrl
-        : undefined;
+  const assetUrl = visibleAsset?.assetUrl;
   const ready = Boolean(assetUrl);
-  const failed = taskState === "failed";
+  const failed = taskState === "failed" || taskState === "blocked";
   const cancelled = taskState === "cancelled";
   const completed = ready ? 4 : taskState === "verifying" ? 3 : task ? 2 : 1;
+  const viewLabel =
+    visibleAsset?.view === "on_skin"
+      ? "On Skin"
+      : visibleAsset?.view === "close_up"
+        ? "Close Up"
+        : visibleAsset?.view === "dark"
+          ? "Dark"
+          : "Studio";
   return (
     <AppShell locale={locale}>
       <main className="clm-generation">
@@ -71,7 +81,7 @@ export function CraftingTransition({
           <p className="clm-kicker">Your Caleums design</p>
           <h1>
             {ready
-              ? "Your pendant is ready."
+              ? "Your first view is ready."
               : failed
                 ? "The Studio render needs another try."
                 : cancelled
@@ -80,7 +90,7 @@ export function CraftingTransition({
           </h1>
           <p>
             {ready
-              ? "One considered Studio result, built from your approved pendant identity."
+              ? "Open your studio now. The remaining views continue independently in the background."
               : "Your work is durable. You can leave this page and return without losing the approved design."}
           </p>
           <ol className="clm-progress-list">
@@ -144,20 +154,20 @@ export function CraftingTransition({
               <Image
                 src={assetUrl!}
                 alt={
-                  studioAsset?.alt ??
+                  visibleAsset?.alt ??
                   product?.alt ??
-                  "Verified Caleums Studio presentation"
+                  "Verified Caleums pendant presentation"
                 }
                 fill
                 priority
                 sizes="(max-width: 799px) 100vw, 60vw"
               />
-              <span>01 · Studio</span>
+              <span>01 · {viewLabel}</span>
               <Link
                 className="clm-result-open"
                 href={`/${locale}/studio/${design.id}`}
               >
-                Open Studio result <ArrowRight size={17} />
+                Open results <ArrowRight size={17} />
               </Link>
             </article>
           ) : (

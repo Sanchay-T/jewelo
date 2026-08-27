@@ -53,6 +53,9 @@ importers:
       '@jewelo/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
+      '@jewelo/data':
+        specifier: workspace:*
+        version: link:../../packages/data
       '@jewelo/identity':
         specifier: workspace:*
         version: link:../../packages/identity

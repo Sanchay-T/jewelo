@@ -3,6 +3,7 @@ import {
   jsonError,
   supabaseRequest,
 } from "../../../../../lib/backend/supabase-rest";
+import { attemptImmediateDispatch } from "../../../../../lib/backend/trigger-dispatch";
 
 export async function POST(
   request: Request,
@@ -36,7 +37,11 @@ export async function POST(
       { method: "POST", body: JSON.stringify(body) },
       bearer,
     );
-    return Response.json(result);
+    const dispatch =
+      action === "retry"
+        ? await attemptImmediateDispatch(taskId)
+        : undefined;
+    return Response.json({ result, ...(dispatch ?? {}) });
   } catch (error) {
     return jsonError(error);
   }

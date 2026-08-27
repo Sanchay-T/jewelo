@@ -93,6 +93,9 @@ function fixture() {
       };
       return storedSnapshot;
     },
+    async loadStoredOutput() {
+      return undefined;
+    },
     async reserveAttempt() {
       attempt += 1;
       return {
@@ -140,6 +143,9 @@ function fixture() {
     repository,
     events,
     getAttempt: () => attempt,
+    setAttempt: (value: number) => {
+      attempt = value;
+    },
     getSnapshot: () => storedSnapshot,
   };
 }
@@ -185,6 +191,46 @@ describe("generic presentation execution", () => {
       "verified",
       "complete",
     ]);
+  });
+
+  it("resumes verification from a stored checkpoint without regenerating", async () => {
+    const state = fixture();
+    state.setAttempt(1);
+    state.repository.loadStoredOutput = async () => ({
+      media,
+      stored: {
+        bucket: "generated-assets",
+        path: "stored-unverified.png",
+        checksum: "checkpoint-checksum",
+      },
+    });
+    const generate = vi.fn(async () => media);
+    const verifier: StudioVerifier = {
+      verify: vi.fn(async () => ({
+        passed: true,
+        exactText: true,
+        exactScript: true,
+        identityScore: 1,
+        correctMetalAndStones: true,
+        coherentPendant: true,
+        exactlyTwoConnectedRings: true,
+        correctShot: true,
+        noAddedIdentityElements: true,
+        notes: "checkpoint verified",
+      })),
+    };
+    await expect(
+      executePresentationTask(
+        "task-1",
+        state.repository,
+        { generate },
+        verifier,
+      ),
+    ).resolves.toEqual({ status: "ready", attempt: 1 });
+    expect(generate).not.toHaveBeenCalled();
+    expect(state.events).not.toContain("stored");
+    expect(state.events).toContain("verifying");
+    expect(state.events).toContain("complete");
   });
 
   it("allows an initial call and two retries before operator review", async () => {

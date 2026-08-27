@@ -62,6 +62,10 @@ interface PromptSnapshotRow {
   compiler_version: string;
   sha256: string;
 }
+interface StoredOutput {
+  media: GeneratedMedia;
+  stored: { bucket: string; path: string; checksum: string };
+}
 
 export interface PresentationRepository {
   load(taskId: string): Promise<{
@@ -79,6 +83,7 @@ export interface PresentationRepository {
     compilerVersion: string;
     sha256: string;
   }): Promise<PromptSnapshotRow>;
+  loadStoredOutput(task: TaskRow): Promise<StoredOutput | undefined>;
   reserveAttempt(
     task: TaskRow,
     provider: string,
@@ -203,38 +208,52 @@ export async function executePresentationTask(
     await repository.blockPreSpend({ task, run, error });
     return { status: "operator_review" as const, attempt: task.attempt };
   }
+  const checkpoint = await repository.loadStoredOutput(task);
   const provider = generator instanceof MockStudioGenerator ? "mock" : "openai";
-  const model =
-    generator instanceof OpenAIStillAdapter
-      ? generator.model
-      : "mock-openai-still-v1";
-  const reservation = await repository.reserveAttempt(task, provider, model);
+  const model = generator instanceof OpenAIStillAdapter
+    ? generator.model
+    : "mock-openai-still-v1";
+  const reservation = checkpoint
+    ? {
+        attempt: task.attempt,
+        idempotencyKey: `${task.dispatch_idempotency_key}:attempt:${task.attempt}`,
+        duplicateComplete: false,
+      }
+    : await repository.reserveAttempt(task, provider, model);
   if (reservation.duplicateComplete) return { status: "deduplicated" as const };
   let actualCostCents = 0;
   try {
-    await repository.markTask(task.id, "generating", {
-      attempt: reservation.attempt,
-    });
-    const media = await generator.generate({
-      idempotencyKey: reservation.idempotencyKey,
-      prompt: snapshot.compiled_prompt,
-      identityImageUrl: identity.url,
-      styleAnchorUrl,
-      inspirationImageUrl,
-      identityFingerprint: identity.fingerprint,
-      aspectRatio:
-        task.aspect_ratio ?? PRESENTATION_ASPECT_RATIO[task.presentation_view],
-      presentationView: task.presentation_view,
-      specification: revision.specification,
-    });
-    actualCostCents = media.estimatedCostCents;
-    const stored = await repository.storeProviderOutput({
-      task,
-      run,
-      revision,
-      attempt: reservation.attempt,
-      media,
-    });
+    let media: GeneratedMedia;
+    let stored: StoredOutput["stored"];
+    if (checkpoint) {
+      media = checkpoint.media;
+      stored = checkpoint.stored;
+      actualCostCents = media.estimatedCostCents;
+    } else {
+      await repository.markTask(task.id, "generating", {
+        attempt: reservation.attempt,
+      });
+      media = await generator.generate({
+        idempotencyKey: reservation.idempotencyKey,
+        prompt: snapshot.compiled_prompt,
+        identityImageUrl: identity.url,
+        styleAnchorUrl,
+        inspirationImageUrl,
+        identityFingerprint: identity.fingerprint,
+        aspectRatio:
+          task.aspect_ratio ?? PRESENTATION_ASPECT_RATIO[task.presentation_view],
+        presentationView: task.presentation_view,
+        specification: revision.specification,
+      });
+      actualCostCents = media.estimatedCostCents;
+      stored = await repository.storeProviderOutput({
+        task,
+        run,
+        revision,
+        attempt: reservation.attempt,
+        media,
+      });
+    }
     await repository.markTask(task.id, "verifying");
     const verification = await verifier.verify({
       approvedText: revision.identity_anchor.approvedText,
@@ -371,6 +390,59 @@ export class SupabasePresentationRepository implements PresentationRepository {
       attempt: rows[0]?.attempt_number ?? attempt,
       idempotencyKey,
       duplicateComplete: rows[0]?.duplicate_complete ?? false,
+    };
+  }
+  async loadStoredOutput(task: TaskRow): Promise<StoredOutput | undefined> {
+    if (task.attempt < 1) return undefined;
+    const checkpoints = await this.#request<
+      Array<{
+        bucket_id: string;
+        object_path: string;
+        mime_type: string;
+        checksum_sha256: string;
+        provider_request_id?: string;
+      }>
+    >(
+      `/rest/v1/provider_output_checkpoints?task_id=eq.${task.id}&attempt=eq.${task.attempt}`,
+    );
+    const checkpoint = checkpoints[0];
+    if (!checkpoint) return undefined;
+    const attempts = await this.#request<
+      Array<{
+        provider: "mock" | "openai" | "fal";
+        model: string;
+        provider_request_id?: string;
+        estimated_cost_cents: number;
+      }>
+    >(
+      `/rest/v1/provider_attempts?task_id=eq.${task.id}&attempt=eq.${task.attempt}`,
+    );
+    const attempt = attempts[0];
+    if (!attempt) throw new Error("provider_attempt_checkpoint_missing");
+    const signedUrl = await this.signedStorageUrl(
+      checkpoint.bucket_id,
+      checkpoint.object_path,
+    );
+    const response = await fetch(signedUrl);
+    if (!response.ok)
+      throw new Error(`stored_provider_output_download_failed:${response.status}`);
+    return {
+      media: {
+        provider: attempt.provider,
+        model: attempt.model,
+        requestId:
+          checkpoint.provider_request_id ??
+          attempt.provider_request_id ??
+          `recovered:${task.id}:${task.attempt}`,
+        bytes: new Uint8Array(await response.arrayBuffer()),
+        mimeType: checkpoint.mime_type,
+        estimatedCostCents: attempt.estimated_cost_cents,
+      },
+      stored: {
+        bucket: checkpoint.bucket_id,
+        path: checkpoint.object_path,
+        checksum: checkpoint.checksum_sha256,
+      },
     };
   }
   async markTask(
@@ -569,6 +641,34 @@ export class SupabasePresentationRepository implements PresentationRepository {
     );
     if (!response.ok && response.status !== 409)
       throw new Error(`asset upload failed:${response.status}`);
+    await this.#request(
+      "/rest/v1/provider_output_checkpoints?on_conflict=task_id,attempt",
+      {
+        method: "POST",
+        headers: { prefer: "resolution=ignore-duplicates,return=minimal" },
+        body: JSON.stringify({
+          task_id: input.task.id,
+          attempt: input.attempt,
+          owner_principal_id: input.task.owner_principal_id,
+          bucket_id: "generated-assets",
+          object_path: path,
+          mime_type: input.media.mimeType,
+          byte_size: input.media.bytes.byteLength,
+          checksum_sha256: checksum,
+          provider_request_id: input.media.requestId,
+        }),
+      },
+    );
+    const checkpoints = await this.#request<
+      Array<{ object_path: string; checksum_sha256: string }>
+    >(
+      `/rest/v1/provider_output_checkpoints?task_id=eq.${input.task.id}&attempt=eq.${input.attempt}&select=object_path,checksum_sha256`,
+    );
+    if (
+      checkpoints[0]?.object_path !== path ||
+      checkpoints[0]?.checksum_sha256 !== checksum
+    )
+      throw new Error("provider_output_checkpoint_conflict");
     return { bucket: "generated-assets", path, checksum };
   }
   async complete(input: {

@@ -5,23 +5,22 @@ cd "$repo_root"
 
 action="${1:-}"
 case "$action" in
-  dev|deploy-preview) ;;
-  *) echo "usage: $0 dev|deploy-preview" >&2; exit 2 ;;
+  dev|deploy-development|deploy-production) ;;
+  *) echo "usage: $0 dev|deploy-development|deploy-production" >&2; exit 2 ;;
 esac
 
+trigger_env_file="${TRIGGER_ENV_FILE:-$repo_root/.env.local}"
+if [[ ! -f "$trigger_env_file" ]]; then
+  echo "Trigger environment file missing: $trigger_env_file" >&2
+  exit 2
+fi
+set -a
+# shellcheck disable=SC1090
+source "$trigger_env_file"
+set +a
 target="${JEWELO_CLOUD_TARGET:-}"
-if [[ "$target" != "development" && "$target" != "preview" ]]; then
-  echo "Refusing Trigger command: set JEWELO_CLOUD_TARGET=development or preview; production is never a Goal 00 default." >&2
-  exit 2
-fi
-
-if [[ -z "${TRIGGER_PROJECT_REF:-}" ]]; then
-  echo "Trigger project missing: export TRIGGER_PROJECT_REF for the Jewelo development/preview project." >&2
-  exit 2
-fi
-
-if [[ "$action" == "deploy-preview" && ( "$target" != "preview" || -z "${TRIGGER_PREVIEW_BRANCH:-}" ) ]]; then
-  echo "Preview deployment requires JEWELO_CLOUD_TARGET=preview and TRIGGER_PREVIEW_BRANCH=<goal-branch>." >&2
+if [[ "$target" != "development" && "$target" != "production" ]]; then
+  echo "Refusing Trigger command: set JEWELO_CLOUD_TARGET=development or production." >&2
   exit 2
 fi
 
@@ -30,13 +29,23 @@ if ! pnpm --filter @jewelo/jobs exec trigger whoami >/dev/null 2>&1; then
   exit 2
 fi
 
-if [[ "$action" == "deploy-preview" ]]; then
-  pnpm --filter @jewelo/jobs exec trigger deploy --env preview --branch "$TRIGGER_PREVIEW_BRANCH" --project-ref "$TRIGGER_PROJECT_REF" --skip-update-check
-else
-  trigger_env_file="${TRIGGER_ENV_FILE:-$repo_root/.env.local}"
-  if [[ ! -f "$trigger_env_file" ]]; then
-    echo "Trigger development env missing: $trigger_env_file" >&2
+if [[ "$action" == "dev" ]]; then
+  if [[ "$target" != "development" || -z "${TRIGGER_PROJECT_REF:-}" || -z "${TRIGGER_DEV_BRANCH:-}" ]]; then
+    echo "Development requires JEWELO_CLOUD_TARGET=development, TRIGGER_PROJECT_REF and TRIGGER_DEV_BRANCH." >&2
     exit 2
   fi
-  pnpm --filter @jewelo/jobs exec trigger dev start --project-ref "$TRIGGER_PROJECT_REF" --env-file "$trigger_env_file" --skip-update-check
+  pnpm --filter @jewelo/jobs exec trigger dev start --branch "$TRIGGER_DEV_BRANCH" --project-ref "$TRIGGER_PROJECT_REF" --env-file "$trigger_env_file" --skip-update-check
+elif [[ "$action" == "deploy-development" ]]; then
+  if [[ "$target" != "development" || -z "${TRIGGER_PROJECT_REF:-}" ]]; then
+    echo "Cloud development requires the dedicated development TRIGGER_PROJECT_REF." >&2
+    exit 2
+  fi
+  external_id="${TRIGGER_DEPLOYMENT_ID:-$(git rev-parse HEAD)}"
+  pnpm --filter @jewelo/jobs exec trigger deploy --env prod --project-ref "$TRIGGER_PROJECT_REF" --env-file "$trigger_env_file" --external-id "$external_id" --skip-promotion --skip-update-check
+else
+  if [[ "$target" != "production" || -z "${TRIGGER_PRODUCTION_PROJECT_REF:-}" || -z "${TRIGGER_DEPLOYMENT_ID:-}" ]]; then
+    echo "Production requires JEWELO_CLOUD_TARGET=production, TRIGGER_PRODUCTION_PROJECT_REF and a pinned TRIGGER_DEPLOYMENT_ID." >&2
+    exit 2
+  fi
+  pnpm --filter @jewelo/jobs exec trigger deploy --env prod --project-ref "$TRIGGER_PRODUCTION_PROJECT_REF" --env-file "$trigger_env_file" --external-id "$TRIGGER_DEPLOYMENT_ID" --skip-promotion --skip-update-check
 fi

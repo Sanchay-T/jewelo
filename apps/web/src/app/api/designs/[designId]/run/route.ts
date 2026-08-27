@@ -3,6 +3,7 @@ import {
   jsonError,
   supabaseRequest,
 } from "../../../../../lib/backend/supabase-rest";
+import { attemptImmediateDispatch } from "../../../../../lib/backend/trigger-dispatch";
 
 export async function POST(
   request: Request,
@@ -26,7 +27,10 @@ export async function POST(
       },
       bearer,
     );
-    return Response.json(rows[0], { status: 201 });
+    const created = rows[0];
+    if (!created?.run_id) throw new Error("Run RPC returned no result");
+    const dispatch = await attemptImmediateDispatch(String(created.run_id));
+    return Response.json({ ...created, ...dispatch }, { status: 201 });
   } catch (error) {
     return jsonError(error);
   }

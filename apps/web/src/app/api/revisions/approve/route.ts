@@ -3,6 +3,7 @@ import {
   jsonError,
   supabaseRequest,
 } from "../../../../lib/backend/supabase-rest";
+import { attemptImmediateDispatch } from "../../../../lib/backend/trigger-dispatch";
 
 export async function POST(request: Request) {
   try {
@@ -35,6 +36,7 @@ export async function POST(request: Request) {
     );
     const created = result[0];
     if (!created) throw new Error("Approval RPC returned no result");
+    const dispatch = await attemptImmediateDispatch(created.run_id);
     const revisions = await supabaseRequest<
       Array<{ identity_anchor: Record<string, unknown> }>
     >(
@@ -47,6 +49,7 @@ export async function POST(request: Request) {
       {
         ...created,
         canonical_identity_anchor: revisions[0]?.identity_anchor,
+        ...dispatch,
       },
       { status: 201 },
     );

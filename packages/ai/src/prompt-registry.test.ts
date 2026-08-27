@@ -77,6 +77,23 @@ describe("versioned prompt registry", () => {
     ).toThrow("Missing required prompt variables: chain_length");
   });
 
+  it("supports compact versioned prompt-sheet aliases", () => {
+    const compact = compilePrompt({
+      profile: "video.preview",
+      template: "Animate this exact approved pendant: {{piece_spec}}",
+      variables,
+    });
+    expect(compact.compiledPrompt).toContain("name=Layla");
+    expect(compact.compiledPrompt).not.toContain("{{");
+
+    const worn = compilePrompt({
+      profile: "image.worn",
+      template: "Render {{piece_spec}} with {{drape}}",
+      variables,
+    });
+    expect(worn.compiledPrompt).toContain("Natural asymmetric cable chain");
+  });
+
   it("rejects missing values and placeholder injection in values", () => {
     expect(() =>
       compilePrompt({

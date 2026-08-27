@@ -4,6 +4,7 @@ import {
   supabaseRequest,
 } from "../../../../lib/backend/supabase-rest";
 import { requireOperatorSession } from "../../../../lib/backend/operator-session";
+import { attemptImmediateDispatch } from "../../../../lib/backend/trigger-dispatch";
 
 export async function POST(request: Request) {
   try {
@@ -96,7 +97,19 @@ export async function POST(request: Request) {
         },
       }),
     });
-    return Response.json(result);
+    const resultRecord = Array.isArray(result)
+      ? (result[0] as Record<string, unknown> | undefined)
+      : (result as Record<string, unknown> | undefined);
+    const dispatchAggregateId =
+      input.command === "request_video"
+        ? String(resultRecord?.id ?? "")
+        : input.command === "review_task" && input.payload?.decision === "retry"
+          ? input.targetId
+          : "";
+    const dispatch = dispatchAggregateId
+      ? await attemptImmediateDispatch(dispatchAggregateId)
+      : undefined;
+    return Response.json({ result, ...(dispatch ?? {}) });
   } catch (error) {
     return jsonError(error);
   }
