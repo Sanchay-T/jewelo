@@ -133,7 +133,8 @@ class SharpArabicRasterizer implements ArabicIdentityRasterizer {
       text: {
         text: `<span font_family="CaleumsArabic" size="${input.fontSize * 1024}">${xml(input.approvedText)}</span>`,
         fontfile: fontPath(input.fontFile),
-        width: 1800,
+        width: 6000,
+        wrap: "none",
         align: "centre",
         rgba: true,
         dpi: 72,

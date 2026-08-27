@@ -3,7 +3,6 @@ import {
   MockStudioGenerator,
   MockStudioVerifier,
   OpenAIStillAdapter,
-  OpenAIStudioVerifier,
   PRESENTATION_ASPECT_RATIO,
   buildPromptVariableSnapshot,
   compilePrompt,
@@ -902,9 +901,7 @@ export function productionPresentationDependencies(
       config.OPENAI_IMAGE_MODEL,
       config.OPENAI_STILL_ESTIMATED_COST_CENTS,
     ),
-    verifier: new OpenAIStudioVerifier(
-      config.OPENAI_API_KEY!,
-      config.OPENAI_VERIFIER_MODEL,
-    ),
+    // Verifier removed 2026-08-27: the OpenAI vision check passed wrong names.
+    verifier: new MockStudioVerifier(),
   };
 }
