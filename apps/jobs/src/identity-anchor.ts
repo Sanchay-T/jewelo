@@ -61,7 +61,6 @@ export function identityAnchorSvg(
     `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="600" viewBox="0 0 1200 600">`,
     `<metadata>${xml(JSON.stringify({ fingerprint: anchor.fingerprint, layout, connector }))}</metadata>`,
     `<rect width="1200" height="600" fill="transparent"/>`,
-    `<path d="M40 300 H255 M945 300 H1160" stroke="#111" stroke-width="10" fill="none"/>`,
     `<circle cx="255" cy="300" r="16" fill="none" stroke="#111" stroke-width="8"/>`,
     `<circle cx="945" cy="300" r="16" fill="none" stroke="#111" stroke-width="8"/>`,
     `<text x="600" y="${baseline}" text-anchor="middle" direction="${direction}" unicode-bidi="bidi-override" font-family="Playfair Display" font-weight="700" letter-spacing="-0.04em" font-size="${fontSize}" fill="#111">${xml(anchor.approvedText)}</text>`,
