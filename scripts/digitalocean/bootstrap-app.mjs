@@ -51,7 +51,6 @@ const service = {
   git: {
     repo_clone_url: contract.repositoryCloneUrl,
     branch: contract.integrationBranch,
-    deploy_on_push: true,
   },
   source_dir: "/",
   build_command: contract.service.buildCommand,
