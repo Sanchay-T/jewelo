@@ -231,7 +231,7 @@ export async function executePresentationTask(
   )
     throw new Error("prompt_snapshot_lineage_mismatch");
   let identity: { url: string; fingerprint: string; artifactId: string };
-  let styleAnchorUrl: string;
+  let styleAnchorUrl: string | undefined;
   let inspirationImageUrl: string | undefined;
   let reference: { url: string; assetId: string } | undefined;
   try {
@@ -247,7 +247,12 @@ export async function executePresentationTask(
       task.owner_principal_id,
       task.id,
     );
-    styleAnchorUrl = await repository.signedStyleAnchorUrl(task);
+    // The studio still gets NO style photo: every wrong name today was copied
+    // from the anchor. Dependent views inherit the studio still as reference.
+    styleAnchorUrl =
+      task.presentation_view === "studio"
+        ? undefined
+        : await repository.signedStyleAnchorUrl(task);
     inspirationImageUrl = await repository.signedInspirationUrl(
       revision,
       task.owner_principal_id,
@@ -358,8 +363,13 @@ export async function executePresentationTask(
         const expected = revision.identity_anchor.approvedText;
         const reading = await nameReader.read(media, expected);
         const readText = reading.text;
+        const latinExpected = /^[\p{Script=Latin}\s'-]+$/u.test(expected);
+        const scriptOk = latinExpected
+          ? !/\p{Script=Arabic}/u.test(readText)
+          : /\p{Script=Arabic}/u.test(readText);
         const passed =
-          reading.matches || identityTextMatches(readText, expected);
+          scriptOk &&
+          (reading.matches || identityTextMatches(readText, expected));
         record.nameCheck = { passed, readText, expected };
         if (!passed) {
           const terminal = regeneration >= 2 || reservation.attempt >= 3;
@@ -738,8 +748,8 @@ export class SupabasePresentationRepository implements PresentationRepository {
     if (!response.ok)
       throw new Error(`style_anchor_unreadable:${release.source_task_id}`);
     const lowPassed = await sharp(Buffer.from(await response.arrayBuffer()))
-      .resize(512, null, { fit: "inside" })
-      .blur(8)
+      .resize(256, null, { fit: "inside" })
+      .blur(20)
       .resize(1024, null, { fit: "inside" })
       .png()
       .toBuffer();

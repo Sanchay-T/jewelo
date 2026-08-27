@@ -4,7 +4,7 @@ export interface StudioGenerationInput {
   /** Verified sibling still whose pendant the new scene must reproduce. */
   referenceImageUrl?: string;
   identityImageUrl: string;
-  styleAnchorUrl: string;
+  styleAnchorUrl?: string;
   inspirationImageUrl?: string;
   identityFingerprint: string;
   aspectRatio: "1:1" | "4:5" | "9:16" | "16:9";
@@ -108,7 +108,9 @@ export class OpenAIStillAdapter implements StudioGenerator {
         ? ([[input.referenceImageUrl, "reference.png"]] as const)
         : []),
       [input.identityImageUrl, "identity.png"],
-      [input.styleAnchorUrl, "style-anchor.png"],
+      ...(input.styleAnchorUrl
+        ? ([[input.styleAnchorUrl, "style-anchor.png"]] as const)
+        : []),
       ...(input.inspirationImageUrl
         ? ([[input.inspirationImageUrl, "inspiration.png"]] as const)
         : []),
