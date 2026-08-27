@@ -14,6 +14,7 @@ import {
 } from "@jewelo/ai";
 import { parseJobsEnv } from "@jewelo/config";
 import { isDuplicateObject } from "@jewelo/media";
+import sharp from "sharp";
 import { renderIdentityAnchor } from "./identity-anchor";
 
 interface TaskRow {
@@ -622,7 +623,23 @@ export class SupabasePresentationRepository implements PresentationRepository {
         `style_anchor_missing:${release?.source_task_id ?? task.presentation_view}`,
       );
     }
-    return this.signedStorageUrl(release.bucket_id, release.object_path);
+    const signed = await this.signedStorageUrl(
+      release.bucket_id,
+      release.object_path,
+    );
+    if (task.presentation_view !== "dark") return signed;
+    // The dark anchor is 9:16 and canvas-matched, so it out-competes the landscape
+    // silhouette; the low-pass keeps its light, palette and mood but drops letterforms.
+    const response = await fetch(signed);
+    if (!response.ok)
+      throw new Error(`style_anchor_unreadable:${release.source_task_id}`);
+    const lowPassed = await sharp(Buffer.from(await response.arrayBuffer()))
+      .resize(512, null, { fit: "inside" })
+      .blur(8)
+      .resize(1024, null, { fit: "inside" })
+      .png()
+      .toBuffer();
+    return `data:image/png;base64,${lowPassed.toString("base64")}`;
   }
   async signedInspirationUrl(revision: RevisionRow, ownerId: string) {
     const reference = revision.specification.referenceAsset;

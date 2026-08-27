@@ -134,9 +134,7 @@ class SharpArabicRasterizer implements ArabicIdentityRasterizer {
     // librsvg text layout (Pango without the lam-ya stacking libvips' text
     // input applies); the pinned fontconfig makes the family resolve to the
     // bundled file in every environment.
-    const family = input.fontFile.startsWith("Amiri")
-      ? "Amiri"
-      : "Scheherazade New";
+    const family = FONT_FAMILIES[input.fontFile] ?? "Noto Naskh Arabic";
     const text = sharp(
       Buffer.from(
         `<svg xmlns="http://www.w3.org/2000/svg" width="6000" height="1400"><rect width="6000" height="1400" fill="white"/><text x="3000" y="900" text-anchor="middle" direction="rtl" unicode-bidi="plaintext" lang="ar" font-family="${family}" font-size="${input.fontSize}" fill="black">${xml(input.approvedText)}</text></svg>`,
@@ -196,6 +194,15 @@ function pinFontconfig(): void {
   process.env.FONTCONFIG_FILE = conf;
   process.env.CALEUMS_FONTCONFIG_PINNED = "1";
 }
+
+const FONT_FAMILIES: Record<string, string> = {
+  "NotoNaskhArabic-Regular.ttf": "Noto Naskh Arabic",
+  "Amiri-Regular.ttf": "Amiri",
+  "ScheherazadeNew-Regular.ttf": "Scheherazade New",
+  "ArefRuqaa-Regular.ttf": "Aref Ruqaa",
+  "NotoKufiArabic-Regular.ttf": "Noto Kufi Arabic",
+  "rakkas.ttf": "Rakkas",
+};
 
 function fontPath(file: string): string {
   const relative = `packages/identity/engines/${CALEUMS_ARABIC_ENGINE_RELEASE}/fonts/${file}`;

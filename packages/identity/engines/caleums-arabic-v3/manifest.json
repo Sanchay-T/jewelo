@@ -37,7 +37,10 @@
     {
       "file": "fonts/ArefRuqaa-Regular.ttf",
       "sha256": "ceb786d83ba92f35e96efcd8623c2858d288e0c543c8761ba35b1020989464f9",
-      "approval": "held_native_reader_review"
+      "approval": "live",
+      "family": "Aref Ruqaa",
+      "spdxLicense": "OFL-1.1",
+      "style": "diwani, signature"
     },
     {
       "file": "fonts/reemkufi.ttf",
@@ -52,7 +55,18 @@
     {
       "file": "fonts/rakkas.ttf",
       "sha256": "54278882e4774c14d50c3b555f127d0fe586366d5b787316ebbcbd8108829e60",
-      "approval": "unapproved"
+      "approval": "live",
+      "family": "Rakkas",
+      "spdxLicense": "OFL-1.1",
+      "style": "thuluth-inspired"
+    },
+    {
+      "file": "fonts/NotoKufiArabic-Regular.ttf",
+      "family": "Noto Kufi Arabic",
+      "sha256": "494f6b61469d7a02a2d63f0fc4930bb007388d8cfe551de5eb98354e100889f3",
+      "spdxLicense": "OFL-1.1",
+      "approval": "live",
+      "style": "kufi"
     }
   ],
   "referenceChecksums": {

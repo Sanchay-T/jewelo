@@ -24,6 +24,7 @@ import {
 import type {
   ArabicStyle,
   ChainStyle,
+  DesignInput,
   Gemstone,
   Locale,
   MetalColor,
@@ -183,7 +184,7 @@ function Option<const T extends string>({
 
 export function NewDesignExperience({ locale }: { locale: Locale }) {
   const router = useRouter();
-  const { createDesign } = useJewelo();
+  const { client, createDesign } = useJewelo();
   const [stage, setStage] = useState<ConfiguratorStageId>("name-language");
   const [nameCount, setNameCount] = useState<1 | 2>(1);
   const [nameOne, setNameOne] = useState("Layla");
@@ -217,6 +218,7 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string>();
   const [draftRestored, setDraftRestored] = useState(false);
+  const [reviewSent, setReviewSent] = useState(false);
 
   const displayOne =
     language === "ar" ? (nameOne.trim() ? arabicOne : "") : nameOne;
@@ -386,61 +388,65 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
     if (next && stageIsValid(stage)) setStage(next);
   }
 
+  function buildSpecification(): DesignInput {
+    const names =
+      nameCount === 1
+        ? ([
+            {
+              approvedEnglishText: nameOne,
+              approvedArabicText: language === "ar" ? arabicOne : null,
+            },
+          ] as const)
+        : ([
+            {
+              approvedEnglishText: nameOne,
+              approvedArabicText: language === "ar" ? arabicOne : null,
+            },
+            {
+              approvedEnglishText: nameTwo,
+              approvedArabicText: language === "ar" ? arabicTwo : null,
+            },
+          ] as const);
+    return {
+      jewelryType: "name-pendant",
+      nameCount,
+      names,
+      arabicStyle: language === "ar" ? arabicStyle : "none",
+      layout: nameCount === 1 ? "single-name" : layout,
+      source: "fresh",
+      metalKarat: "18K",
+      metalColor: metal,
+      finish: "polished",
+      stoneCoverage: coverage,
+      gemstone: coverage === "none" ? "none" : gemstone,
+      connector:
+        nameCount === 1
+          ? "none"
+          : layout === "connected-heart" || layout === "stacked-heart"
+            ? "heart"
+            : layout === "infinity"
+              ? "infinity"
+              : layout === "interlocked"
+                ? "interlocked"
+                : "plain",
+      sizeProfile: size,
+      dimensions: {
+        widthMm: size === "delicate" ? 22 : size === "classic" ? 30 : 36,
+        heightMm: size === "delicate" ? 9 : size === "classic" ? 12 : 15,
+        thicknessMm: 1.2,
+      },
+      chain: { style: chain, lengthCm: chainLength },
+      complexity:
+        coverage === "full-pave" ? 8 : coverage === "partial-pave" ? 6 : 4,
+      spellingConfirmed: true,
+    };
+  }
+
   async function approve() {
     setSaving(true);
     setError(undefined);
     try {
-      const names =
-        nameCount === 1
-          ? ([
-              {
-                approvedEnglishText: nameOne,
-                approvedArabicText: language === "ar" ? arabicOne : null,
-              },
-            ] as const)
-          : ([
-              {
-                approvedEnglishText: nameOne,
-                approvedArabicText: language === "ar" ? arabicOne : null,
-              },
-              {
-                approvedEnglishText: nameTwo,
-                approvedArabicText: language === "ar" ? arabicTwo : null,
-              },
-            ] as const);
-      const design = await createDesign({
-        jewelryType: "name-pendant",
-        nameCount,
-        names,
-        arabicStyle: language === "ar" ? arabicStyle : "none",
-        layout: nameCount === 1 ? "single-name" : layout,
-        source: "fresh",
-        metalKarat: "18K",
-        metalColor: metal,
-        finish: "polished",
-        stoneCoverage: coverage,
-        gemstone: coverage === "none" ? "none" : gemstone,
-        connector:
-          nameCount === 1
-            ? "none"
-            : layout === "connected-heart" || layout === "stacked-heart"
-              ? "heart"
-              : layout === "infinity"
-                ? "infinity"
-                : layout === "interlocked"
-                  ? "interlocked"
-                  : "plain",
-        sizeProfile: size,
-        dimensions: {
-          widthMm: size === "delicate" ? 22 : size === "classic" ? 30 : 36,
-          heightMm: size === "delicate" ? 9 : size === "classic" ? 12 : 15,
-          thicknessMm: 1.2,
-        },
-        chain: { style: chain, lengthCm: chainLength },
-        complexity:
-          coverage === "full-pave" ? 8 : coverage === "partial-pave" ? 6 : 4,
-        spellingConfirmed: true,
-      });
+      const design = await createDesign(buildSpecification());
       clearConfiguratorDraft(window.sessionStorage);
       const replay =
         process.env.NODE_ENV === "development" &&
@@ -454,6 +460,27 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
           ? caught.message
           : "The design could not be approved.",
       );
+      setSaving(false);
+    }
+  }
+
+  async function sendForAtelierReview() {
+    setSaving(true);
+    setError(undefined);
+    try {
+      const { spellingConfirmed, ...draftInput } = buildSpecification();
+      void spellingConfirmed;
+      const draft = await client.createDraft(draftInput);
+      await client.updateDraft(draft.id, { spellingConfirmed: true });
+      clearConfiguratorDraft(window.sessionStorage);
+      setReviewSent(true);
+    } catch (caught) {
+      setError(
+        caught instanceof Error
+          ? caught.message
+          : "The review request could not be saved.",
+      );
+    } finally {
       setSaving(false);
     }
   }
@@ -1053,7 +1080,7 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
               </>
             )}
 
-            {stage === "review" && (
+            {stage === "review" && !reviewSent && (
               <>
                 <header>
                   <p className="clm-kicker">Review your design</p>
@@ -1130,51 +1157,77 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
               </>
             )}
 
-            <div className="clm-config-actions">
-              <button type="button" className="clm-back" onClick={goBack}>
-                <ArrowLeft size={17} /> Back
-              </button>
-              {stage !== "review" ? (
-                <button
-                  type="button"
-                  className="clm-primary"
-                  aria-label={
-                    stage === "size-chain" ? "Review identity" : "Continue"
-                  }
-                  disabled={!stageIsValid(stage)}
-                  onClick={goForward}
-                >
-                  Continue <ArrowRight size={17} />
+            {stage === "review" && reviewSent && (
+              <>
+                <header>
+                  <p className="clm-kicker">Atelier review</p>
+                  <h1>Sent for atelier review</h1>
+                  <p role="status">
+                    Arabic ·{" "}
+                    {selectedArabicStyle?.label ?? titleCaseOption(arabicStyle)}{" "}
+                    is hand-finished by our atelier. We have your approved
+                    spelling and will contact you before any piece is made.
+                  </p>
+                </header>
+                <div className="clm-config-actions">
+                  <button
+                    type="button"
+                    className="clm-primary"
+                    onClick={() => setReviewSent(false)}
+                  >
+                    <ArrowLeft size={17} /> Back to design
+                  </button>
+                </div>
+              </>
+            )}
+
+            {!reviewSent && (
+              <div className="clm-config-actions">
+                <button type="button" className="clm-back" onClick={goBack}>
+                  <ArrowLeft size={17} /> Back
                 </button>
-              ) : (
-                <button
-                  type="button"
-                  className="clm-primary"
-                  aria-label={
-                    needsOperatorReview
-                      ? "Send to atelier review"
-                      : "Approve revision"
-                  }
-                  disabled={!confirmed || saving}
-                  onClick={() => {
-                    if (needsOperatorReview) {
-                      router.push(
-                        `/${locale}/operator?review=${nameCount === 2 ? "arabic-two-name" : "arabic-style"}&style=${encodeURIComponent(arabicStyle)}`,
-                      );
-                      return;
+                {stage !== "review" ? (
+                  <button
+                    type="button"
+                    className="clm-primary"
+                    aria-label={
+                      stage === "size-chain" ? "Review identity" : "Continue"
                     }
-                    void approve();
-                  }}
-                >
-                  {saving
-                    ? "Approving…"
-                    : needsOperatorReview
-                      ? "Send for atelier review"
-                      : "See my pendant"}{" "}
-                  <ArrowRight size={17} />
-                </button>
-              )}
-            </div>
+                    disabled={!stageIsValid(stage)}
+                    onClick={goForward}
+                  >
+                    Continue <ArrowRight size={17} />
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    className="clm-primary"
+                    aria-label={
+                      needsOperatorReview
+                        ? "Send to atelier review"
+                        : "Approve revision"
+                    }
+                    disabled={!confirmed || saving}
+                    onClick={() => {
+                      if (needsOperatorReview) {
+                        void sendForAtelierReview();
+                        return;
+                      }
+                      void approve();
+                    }}
+                  >
+                    {saving
+                      ? needsOperatorReview
+                        ? "Sending…"
+                        : "Approving…"
+                      : needsOperatorReview
+                        ? "Send for atelier review"
+                        : "See my pendant"}{" "}
+                    <ArrowRight size={17} />
+                  </button>
+                )}
+              </div>
+            )}
           </section>
         </div>
       </main>

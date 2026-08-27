@@ -2,7 +2,8 @@ import { createHash } from "node:crypto";
 
 export const CALEUMS_ARABIC_ENGINE_RELEASE = "caleums-arabic-v3" as const;
 
-export type CaleumsArabicStyle = "classic" | "minimal";
+export type CaleumsArabicStyle =
+  "classic" | "minimal" | "diwani" | "thuluth-inspired" | "kufi" | "signature";
 
 export interface IdentitySolverInput {
   approvedNames: readonly string[];
@@ -31,7 +32,10 @@ export interface ArabicIdentityRasterizer {
     fontFile:
       | "Amiri-Regular.ttf"
       | "ScheherazadeNew-Regular.ttf"
-      | "NotoNaskhArabic-Regular.ttf";
+      | "NotoNaskhArabic-Regular.ttf"
+      | "ArefRuqaa-Regular.ttf"
+      | "NotoKufiArabic-Regular.ttf"
+      | "rakkas.ttf";
     fontSize: number;
     padding: number;
   }): Promise<RasterMask>;
@@ -93,6 +97,31 @@ const LIVE_STYLES = {
     fontSha256:
       "794bac8dc9e83d1d620bc471ea694f5f31d0965ce8006490a79dfc51a2d283b3",
     dilationPixels: 2,
+  },
+  // Opened to all customers on 2026-08-27: no atelier gate on style.
+  diwani: {
+    fontFile: "ArefRuqaa-Regular.ttf",
+    fontSha256:
+      "ceb786d83ba92f35e96efcd8623c2858d288e0c543c8761ba35b1020989464f9",
+    dilationPixels: 2,
+  },
+  signature: {
+    fontFile: "ArefRuqaa-Regular.ttf",
+    fontSha256:
+      "ceb786d83ba92f35e96efcd8623c2858d288e0c543c8761ba35b1020989464f9",
+    dilationPixels: 2,
+  },
+  kufi: {
+    fontFile: "NotoKufiArabic-Regular.ttf",
+    fontSha256:
+      "494f6b61469d7a02a2d63f0fc4930bb007388d8cfe551de5eb98354e100889f3",
+    dilationPixels: 1,
+  },
+  "thuluth-inspired": {
+    fontFile: "rakkas.ttf",
+    fontSha256:
+      "54278882e4774c14d50c3b555f127d0fe586366d5b787316ebbcbd8108829e60",
+    dilationPixels: 1,
   },
 } as const;
 
