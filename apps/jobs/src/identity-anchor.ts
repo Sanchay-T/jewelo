@@ -131,17 +131,17 @@ class SharpArabicRasterizer implements ArabicIdentityRasterizer {
     // font file: librsvg ignores data-URI @font-face in the deployed container
     // and rendered a blank raster.
     pinFontconfig();
-    const text = sharp({
-      text: {
-        text: `<span font_family="${input.fontFile.startsWith("Amiri") ? "Amiri" : "Scheherazade New"}" size="${input.fontSize * 1024}">${xml(input.approvedText)}</span>`,
-        fontfile: fontPath(input.fontFile),
-        width: 6000,
-        wrap: "none",
-        align: "centre",
-        rgba: true,
-        dpi: 72,
-      },
-    });
+    // librsvg text layout (Pango without the lam-ya stacking libvips' text
+    // input applies); the pinned fontconfig makes the family resolve to the
+    // bundled file in every environment.
+    const family = input.fontFile.startsWith("Amiri")
+      ? "Amiri"
+      : "Scheherazade New";
+    const text = sharp(
+      Buffer.from(
+        `<svg xmlns="http://www.w3.org/2000/svg" width="6000" height="1400"><rect width="6000" height="1400" fill="white"/><text x="3000" y="900" text-anchor="middle" direction="rtl" unicode-bidi="plaintext" lang="ar" font-family="${family}" font-size="${input.fontSize}" fill="black">${xml(input.approvedText)}</text></svg>`,
+      ),
+    );
     const { data, info } = await text
       .flatten({ background: "white" })
       .trim({ background: "white", threshold: 1 })
