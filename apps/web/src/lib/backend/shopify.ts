@@ -1,4 +1,5 @@
 import "server-only";
+import { ApiError } from "./supabase-rest";
 import {
   parseShopifyDomain,
   SHOPIFY_API_VERSION,
@@ -215,7 +216,7 @@ export async function reconcileShopifyDraftOrder(
   input: DraftOrderInput,
 ): Promise<DraftOrderResult | undefined> {
   if (!shopifyConfigured())
-    throw new Error("Shopify is not completely configured");
+    throw new ApiError("Checkout is not available yet", 503, "checkout_unavailable");
   const domain = parseShopifyDomain(process.env.SHOPIFY_STORE_DOMAIN);
   return findExistingDraftOrder(domain, input);
 }
@@ -235,7 +236,7 @@ export async function createShopifyDraftOrder(
       process.env.SHOPIFY_MOCK_MODE !== "true" ||
       partialConfiguration
     )
-      throw new Error("Shopify is not completely configured");
+      throw new ApiError("Checkout is not available yet", 503, "checkout_unavailable");
     return {
       mode: "mock",
       draftOrderId: `mock:${input.quoteId}`,
