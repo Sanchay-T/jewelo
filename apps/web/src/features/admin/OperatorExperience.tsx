@@ -21,6 +21,68 @@ import type { ArabicStyle } from "@/lib/types";
 type Locale = "en" | "ar";
 
 export function OperatorExperience({ locale }: { locale: Locale }) {
+  const copy =
+    locale === "ar"
+      ? {
+          operations: "عمليات المشغل",
+          queue: "قائمة عمل المشغل",
+          intro: "راجع عروض القطع المخصصة وتابع الطلبات المعتمدة حتى التسليم.",
+          email: "البريد الإلكتروني للموظف",
+          phrase: "عبارة الدخول",
+          opening: "جارٍ الفتح…",
+          open: "فتح قائمة العمل",
+          authorized: "للموظفين المخولين فقط.",
+          customer: "العودة إلى تجربة العميل",
+          signed: "تم تسجيل الدخول كمشغل",
+          close: "إغلاق القائمة",
+          workQueue: "قائمة العمل",
+          prompts: "مكتبة التعليمات",
+          today: "عمل اليوم",
+          heading: "عروض الأسعار والمهام والطلبات.",
+          subheading: "عرض واضح للإجراءات التي تحتاج إلى تدخل المشغل.",
+          quoteRequests: "طلبات التسعير",
+          progress: "قيد التنفيذ",
+          ready: "جاهز",
+          all: "الكل",
+          quotes: "عروض الأسعار",
+          orders: "الطلبات",
+          empty: "لا توجد مهام في هذا العرض",
+          emptyBody: "ستظهر هنا طلبات التسعير والطلبات المعتمدة.",
+          issue: "إصدار السعر",
+          advance: "تحديث المهمة",
+          customerView: "عرض العميل",
+        }
+      : {
+          operations: "Atelier operations",
+          queue: "Operator queue",
+          intro:
+            "Review custom quotes and move approved pieces through fulfillment.",
+          email: "Staff email",
+          phrase: "Access phrase",
+          opening: "Opening…",
+          open: "Open operator queue",
+          authorized: "Authorized atelier access only.",
+          customer: "Return to customer experience",
+          signed: "Signed in as operator",
+          close: "Close queue",
+          workQueue: "Work queue",
+          prompts: "Prompt Library",
+          today: "Today’s work",
+          heading: "Quotes, tasks and orders.",
+          subheading: "A restrained view of the actions that need an operator.",
+          quoteRequests: "Quote requests",
+          progress: "In progress",
+          ready: "Ready",
+          all: "All",
+          quotes: "Quotes",
+          orders: "Orders",
+          empty: "No work in this view",
+          emptyBody:
+            "Customer quote requests and approved orders will appear here.",
+          issue: "Issue quote",
+          advance: "Advance task",
+          customerView: "Customer view",
+        };
   const { client, state, refresh } = useJewelo();
   const searchParams = useSearchParams();
   const tab = searchParams.get("tab") === "prompts" ? "prompts" : "queue";
@@ -62,12 +124,22 @@ export function OperatorExperience({ locale }: { locale: Locale }) {
   }
   function login(event: FormEvent) {
     event.preventDefault();
-    if (email && passphrase.length >= 4)
-      void action(
-        "login",
-        () => client.loginOperator(email, passphrase),
-        "Operator session opened.",
-      );
+    if (!email || passphrase.length < 4) return;
+    setBusy("login");
+    setMessage("");
+    void client
+      .loginOperator(email, passphrase)
+      .then(() => {
+        const target = new URL(window.location.href);
+        target.searchParams.set("session", "opened");
+        window.location.assign(target.toString());
+      })
+      .catch((error: unknown) => {
+        setMessage(
+          error instanceof Error ? error.message : "Action unavailable",
+        );
+        setBusy(undefined);
+      });
   }
 
   if (state.principal.role !== "operator")
@@ -84,16 +156,16 @@ export function OperatorExperience({ locale }: { locale: Locale }) {
             height={48}
           />
           <CaleumsWordmark />
-          <p className="clm-kicker">Atelier operations</p>
-          <h1>Operator queue</h1>
+          <p className="clm-kicker">{copy.operations}</p>
+          <h1>{copy.queue}</h1>
           <p>
             {reviewStyle
               ? `${arabicStyleLabel(reviewStyle)} requires atelier review. No generation or provider spend has started.`
-              : "Review custom quotes and move approved pieces through fulfillment."}
+              : copy.intro}
           </p>
           <form onSubmit={login}>
             <label>
-              Staff email
+              {copy.email}
               <input
                 required
                 type="email"
@@ -103,7 +175,7 @@ export function OperatorExperience({ locale }: { locale: Locale }) {
               />
             </label>
             <label>
-              Access phrase
+              {copy.phrase}
               <input
                 required
                 type="password"
@@ -113,11 +185,11 @@ export function OperatorExperience({ locale }: { locale: Locale }) {
               />
             </label>
             <button className="clm-primary full" disabled={busy === "login"}>
-              {busy === "login" ? "Opening…" : "Open operator queue"}
+              {busy === "login" ? copy.opening : copy.open}
             </button>
           </form>
-          <small>Authorized atelier access only.</small>
-          <Link href={`/${locale}`}>← Return to customer experience</Link>
+          <small>{copy.authorized}</small>
+          <Link href={`/${locale}`}>← {copy.customer}</Link>
         </section>
       </main>
     );
@@ -134,7 +206,9 @@ export function OperatorExperience({ locale }: { locale: Locale }) {
         <Link href={`/${locale}`}>
           <CaleumsWordmark compact />
         </Link>
-        <span>Signed in as operator · {state.principal.name}</span>
+        <span>
+          {copy.signed} · {state.principal.name}
+        </span>
         <button
           type="button"
           onClick={() =>
@@ -145,7 +219,7 @@ export function OperatorExperience({ locale }: { locale: Locale }) {
             )
           }
         >
-          <SignOut size={17} /> Close queue
+          <SignOut size={17} /> {copy.close}
         </button>
       </header>
       <nav className="clm-operator-nav" aria-label="Operator sections">
@@ -153,13 +227,13 @@ export function OperatorExperience({ locale }: { locale: Locale }) {
           aria-current={tab === "queue" ? "page" : undefined}
           href={`/${locale}/operator`}
         >
-          Work queue
+          {copy.workQueue}
         </Link>
         <Link
           aria-current={tab === "prompts" ? "page" : undefined}
           href={`/${locale}/operator?tab=prompts`}
         >
-          Prompt Library
+          {copy.prompts}
         </Link>
       </nav>
       <div className="clm-operator-body">
@@ -185,20 +259,20 @@ export function OperatorExperience({ locale }: { locale: Locale }) {
             )}
             <section className="clm-operator-heading">
               <div>
-                <p className="clm-kicker">Today’s work</p>
-                <h1>Quotes, tasks and orders.</h1>
-                <p>A restrained view of the actions that need an operator.</p>
+                <p className="clm-kicker">{copy.today}</p>
+                <h1>{copy.heading}</h1>
+                <p>{copy.subheading}</p>
               </div>
               <div className="clm-operator-stats">
                 <div>
                   <Tag size={19} />
                   <strong>{quoteCount}</strong>
-                  <span>Quote requests</span>
+                  <span>{copy.quoteRequests}</span>
                 </div>
                 <div>
                   <Clock size={19} />
                   <strong>{orderCount}</strong>
-                  <span>In progress</span>
+                  <span>{copy.progress}</span>
                 </div>
                 <div>
                   <CheckCircle size={19} />
@@ -209,7 +283,7 @@ export function OperatorExperience({ locale }: { locale: Locale }) {
                       ).length
                     }
                   </strong>
-                  <span>Ready</span>
+                  <span>{copy.ready}</span>
                 </div>
               </div>
             </section>
@@ -220,7 +294,7 @@ export function OperatorExperience({ locale }: { locale: Locale }) {
                   aria-pressed={filter === item}
                   onClick={() => setFilter(item)}
                 >
-                  {item}
+                  {copy[item]}
                 </button>
               ))}
             </div>
@@ -233,11 +307,8 @@ export function OperatorExperience({ locale }: { locale: Locale }) {
               {queue.length === 0 ? (
                 <div className="clm-queue-empty">
                   <CheckCircle size={28} />
-                  <h2>No work in this view</h2>
-                  <p>
-                    Customer quote requests and approved orders will appear
-                    here.
-                  </p>
+                  <h2>{copy.empty}</h2>
+                  <p>{copy.emptyBody}</p>
                 </div>
               ) : (
                 queue.map((design) => {
@@ -285,7 +356,7 @@ export function OperatorExperience({ locale }: { locale: Locale }) {
                                 )
                               }
                             >
-                              Issue quote
+                              {copy.issue}
                             </button>
                           )}
                           {design.order && design.order.status !== "ready" && (
@@ -300,7 +371,7 @@ export function OperatorExperience({ locale }: { locale: Locale }) {
                                 )
                               }
                             >
-                              Advance task
+                              {copy.advance}
                             </button>
                           )}
                           <Link
@@ -308,7 +379,7 @@ export function OperatorExperience({ locale }: { locale: Locale }) {
                             href={`/${locale}/commerce/${design.id}`}
                             onClick={() => void client.setRole("customer")}
                           >
-                            Customer view <ArrowRight size={16} />
+                            {copy.customerView} <ArrowRight size={16} />
                           </Link>
                         </div>
                       </div>

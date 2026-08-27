@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowLeft,
   Bag,
@@ -18,6 +18,11 @@ import {
   formatCaleumsPrice,
   identityFromSpecification,
 } from "@/lib/ui-presentation";
+import {
+  adaptPresentationCards,
+  isPrimaryReady,
+} from "@/features/studio/presentation-cards";
+import { deriveCommerceReadiness } from "./commerce-readiness";
 
 type Locale = "en" | "ar";
 
@@ -33,6 +38,43 @@ export function CommerceExperience({
   const [confirmed, setConfirmed] = useState(false);
   const [busy, setBusy] = useState<string>();
   const [message, setMessage] = useState("");
+  const estimateAttempted = useRef(false);
+  const run = design?.runs.at(-1);
+  const direction = run?.directions[0];
+  const cards = useMemo(() => adaptPresentationCards(run), [run]);
+  const primaryReady = isPrimaryReady(cards);
+
+  useEffect(() => {
+    if (
+      !design ||
+      !direction ||
+      !primaryReady ||
+      design.estimate ||
+      design.quote ||
+      estimateAttempted.current
+    )
+      return;
+    estimateAttempted.current = true;
+    setBusy("estimate");
+    void (async () => {
+      try {
+        if (design.selectedDirectionId !== direction.id)
+          await client.selectDirection(design.id, direction.id);
+        await client.calculateEstimate(design.id);
+        refresh();
+        setMessage("Your estimate is ready.");
+      } catch (error) {
+        setMessage(
+          error instanceof Error
+            ? error.message
+            : "Return to Studio to prepare this design.",
+        );
+      } finally {
+        setBusy(undefined);
+      }
+    })();
+  }, [client, design, direction, primaryReady, refresh]);
+
   if (!design)
     return (
       <AppShell locale={locale}>
@@ -44,8 +86,6 @@ export function CommerceExperience({
         </main>
       </AppShell>
     );
-  const run = design.runs.at(-1);
-  const direction = run?.directions[0];
   const product = direction?.representations.product;
   const studioTask = run?.tasks.find(
     (task) =>
@@ -62,12 +102,7 @@ export function CommerceExperience({
   const estimate = design.estimate;
   const quote = design.quote;
   const order = design.order;
-  const asset =
-    studioTask?.state === "ready" && studioAsset?.state === "ready"
-      ? studioAsset.assetUrl
-      : product?.state === "ready"
-        ? product.assetUrl
-        : undefined;
+  const asset = cards.find((card) => card.id === "studio")?.assetUrl;
   const scenarios =
     process.env.NODE_ENV === "development" &&
     process.env.NEXT_PUBLIC_JEWELO_SCENARIOS === "1";
@@ -91,7 +126,16 @@ export function CommerceExperience({
   }
   if (!revision || !spec) return null;
   const identity = identityFromSpecification(spec);
-  const price = formatCaleumsPrice(design);
+  const price =
+    estimate || quote || order ? formatCaleumsPrice(design) : "Not available";
+  const { spellingLocked, spellingConfirmed, quoteReady } =
+    deriveCommerceReadiness({
+      hasAsset: Boolean(asset),
+      hasEstimate: Boolean(estimate),
+      confirmed,
+      quoteAccepted: quote?.status === "accepted",
+      ordered: Boolean(order),
+    });
   return (
     <AppShell locale={locale}>
       <main className="clm-commerce">
@@ -188,22 +232,44 @@ export function CommerceExperience({
                     : "Awaiting estimate"}
             </p>
             <strong className="clm-piece-price">{price}</strong>
-            <label className="clm-confirm compact">
+            <label
+              className="clm-confirm compact"
+              data-locked={spellingLocked || undefined}
+            >
               <input
                 type="checkbox"
-                checked={confirmed}
+                checked={spellingConfirmed}
+                disabled={spellingLocked}
                 onChange={(event) => setConfirmed(event.target.checked)}
               />
               <span>
                 <strong>
-                  I confirm the spelling and details above are correct.
+                  {spellingLocked
+                    ? "Spelling and details confirmed and locked."
+                    : "I confirm the spelling and details above are correct."}
                 </strong>
               </span>
             </label>
+            {(!asset || !estimate) && !quote && (
+              <div className="clm-commerce-recovery" role="status">
+                <strong>
+                  {!asset
+                    ? "A verified Studio presentation is required."
+                    : "Preparing your estimate…"}
+                </strong>
+                <span>
+                  Quote actions stay locked until the pendant and price are both
+                  ready.
+                </span>
+                <Link href={`/${locale}/studio/${designId}`}>
+                  Return to Studio
+                </Link>
+              </div>
+            )}
             {!quote && (
               <button
                 className="clm-primary full"
-                disabled={!confirmed || Boolean(busy)}
+                disabled={!quoteReady || Boolean(busy)}
                 onClick={() =>
                   void action(
                     "request",
@@ -223,7 +289,7 @@ export function CommerceExperience({
             {quote?.status === "issued" && (
               <button
                 className="clm-primary full"
-                disabled={!confirmed || Boolean(busy)}
+                disabled={!spellingConfirmed || Boolean(busy)}
                 onClick={() =>
                   void action(
                     "accept",
@@ -240,7 +306,7 @@ export function CommerceExperience({
             {quote?.status === "accepted" && !order && (
               <button
                 className="clm-primary full"
-                disabled={!confirmed || Boolean(busy)}
+                disabled={!spellingConfirmed || Boolean(busy)}
                 onClick={() =>
                   void action(
                     "bag",

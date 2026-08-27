@@ -7,7 +7,9 @@ import {
   ArrowLeft,
   ArrowRight,
   Check,
+  Diamond,
   Heart,
+  Minus,
   PencilSimple,
   Sparkle,
   SpinnerGap,
@@ -16,8 +18,6 @@ import { AppShell } from "@/components/app-shell";
 import { useJewelo } from "@/lib/jewelo-provider";
 import {
   ARABIC_STYLE_OPTIONS,
-  arabicStyleLabel,
-  formatCaleumsPrice,
   formatIdentity,
   isProviderSupportedArabicStyle,
 } from "@/lib/ui-presentation";
@@ -31,25 +31,18 @@ import type {
   SizeProfile,
   StoneCoverage,
 } from "@/lib/types";
+import {
+  CONSTRUCTION_STAGES,
+  clearConfiguratorDraft,
+  configuratorReviewSummary,
+  isNameStageValid,
+  navigationSequence,
+  readConfiguratorDraft,
+  writeConfiguratorDraft,
+  type ConfiguratorDraftV1,
+  type ConfiguratorStageId,
+} from "./configurator-draft";
 
-type StageId =
-  | "name-language"
-  | "arabic-style"
-  | "names-layout"
-  | "metal"
-  | "stones"
-  | "size-chain"
-  | "review";
-
-const allStages: Array<{ id: StageId; label: string }> = [
-  { id: "name-language", label: "Name & language" },
-  { id: "arabic-style", label: "Arabic style" },
-  { id: "names-layout", label: "Names & layout" },
-  { id: "metal", label: "Metal" },
-  { id: "stones", label: "Stones" },
-  { id: "size-chain", label: "Size & chain" },
-  { id: "review", label: "Review" },
-];
 const layouts: Array<{ id: PendantLayout; label: string }> = [
   { id: "side-by-side", label: "Side by side" },
   { id: "connected-heart", label: "Connected heart" },
@@ -98,8 +91,13 @@ function useArabicNameReflection(latinName: string, enabled: boolean) {
   );
   const [retryToken, setRetryToken] = useState(0);
   const manuallyEdited = useRef(false);
+  const restoredForName = useRef<string | null>(null);
 
   useEffect(() => {
+    if (restoredForName.current === latinName) {
+      restoredForName.current = null;
+      return;
+    }
     manuallyEdited.current = false;
     setArabicText("");
     setStatus(enabled && latinName.trim().length >= 2 ? "refining" : "idle");
@@ -107,7 +105,7 @@ function useArabicNameReflection(latinName: string, enabled: boolean) {
 
   useEffect(() => {
     const name = latinName.trim();
-    if (!enabled || name.length < 2) return;
+    if (!enabled || name.length < 2 || manuallyEdited.current) return;
     const controller = new AbortController();
     const timer = window.setTimeout(() => {
       void refineArabicName(name, controller.signal)
@@ -142,7 +140,21 @@ function useArabicNameReflection(latinName: string, enabled: boolean) {
     setRetryToken((current) => current + 1);
   }, []);
 
-  return { arabicText, editArabicText, retry, status };
+  const restore = useCallback(
+    (
+      value: string,
+      restoredLatinName: string,
+      restoredStatus: "refined" | "edited" = "refined",
+    ) => {
+      restoredForName.current = restoredLatinName;
+      manuallyEdited.current = Boolean(value);
+      setArabicText(value);
+      setStatus(value ? restoredStatus : "idle");
+    },
+    [],
+  );
+
+  return { arabicText, editArabicText, restore, retry, status };
 }
 
 function Option<const T extends string>({
@@ -172,7 +184,7 @@ function Option<const T extends string>({
 export function NewDesignExperience({ locale }: { locale: Locale }) {
   const router = useRouter();
   const { createDesign } = useJewelo();
-  const [stage, setStage] = useState<StageId>("name-language");
+  const [stage, setStage] = useState<ConfiguratorStageId>("name-language");
   const [nameCount, setNameCount] = useState<1 | 2>(1);
   const [nameOne, setNameOne] = useState("Layla");
   const [nameTwo, setNameTwo] = useState("Mariam");
@@ -180,12 +192,14 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
   const {
     arabicText: arabicOne,
     editArabicText: setArabicOne,
+    restore: restoreArabicOne,
     retry: retryArabicOne,
     status: arabicOneStatus,
   } = useArabicNameReflection(nameOne, true);
   const {
     arabicText: arabicTwo,
     editArabicText: setArabicTwo,
+    restore: restoreArabicTwo,
     retry: retryArabicTwo,
     status: arabicTwoStatus,
   } = useArabicNameReflection(nameTwo, nameCount === 2);
@@ -197,20 +211,23 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
   const [size, setSize] = useState<SizeProfile>("classic");
   const [chain, setChain] = useState<ChainStyle>("cable");
   const [chainLength, setChainLength] = useState<40 | 45 | 50 | 55>(45);
-  const [previewRotation, setPreviewRotation] = useState(0);
   const [previewZoom, setPreviewZoom] = useState(1);
   const [previewFace, setPreviewFace] = useState<"front" | "side">("front");
   const [confirmed, setConfirmed] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string>();
+  const [draftRestored, setDraftRestored] = useState(false);
 
-  const displayOne = language === "ar" ? arabicOne : nameOne;
-  const displayTwo = language === "ar" ? arabicTwo : nameTwo;
+  const displayOne =
+    language === "ar" ? (nameOne.trim() ? arabicOne : "") : nameOne;
+  const displayTwo =
+    language === "ar" ? (nameTwo.trim() ? arabicTwo : "") : nameTwo;
   const resolvedLayout = nameCount === 1 ? "single-name" : layout;
   const identity = formatIdentity(
     nameCount === 1 ? [displayOne] : [displayOne, displayTwo],
     resolvedLayout,
   );
+  const emptyIdentity = { inline: "", lines: ["", "", ""] };
   const selectedArabicStyle = ARABIC_STYLE_OPTIONS.find(
     (option) => option.id === arabicStyle,
   );
@@ -227,15 +244,85 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
     language === "ar"
       ? (selectedArabicStyle?.label ?? titleCaseOption(arabicStyle))
       : "English script";
-  const visibleStages = useMemo(
-    () =>
-      language === "ar"
-        ? allStages
-        : allStages.filter((item) => item.id !== "arabic-style"),
-    [language],
-  );
-  const stageIndex = visibleStages.findIndex((item) => item.id === stage);
+  const sequence = useMemo(() => navigationSequence(language), [language]);
+  const stageIndex = sequence.indexOf(stage);
   const safeStageIndex = stageIndex < 0 ? 0 : stageIndex;
+  const constructionIndex =
+    stage === "review"
+      ? CONSTRUCTION_STAGES.length - 1
+      : CONSTRUCTION_STAGES.findIndex((item) => item.id === stage);
+
+  useEffect(() => {
+    const draft = readConfiguratorDraft(window.sessionStorage);
+    if (draft) {
+      setStage(draft.stage);
+      setNameCount(draft.nameCount);
+      setNameOne(draft.nameOne);
+      setNameTwo(draft.nameTwo);
+      setLanguage(draft.language);
+      setArabicStyle(draft.arabicStyle);
+      setLayout(draft.layout);
+      setMetal(draft.metal);
+      setCoverage(draft.coverage);
+      setGemstone(draft.gemstone);
+      setSize(draft.size);
+      setChain(draft.chain);
+      setChainLength(draft.chainLength);
+      restoreArabicOne(draft.arabicOne, draft.nameOne, draft.arabicOneStatus);
+      restoreArabicTwo(draft.arabicTwo, draft.nameTwo, draft.arabicTwoStatus);
+      setDraftRestored(true);
+      return;
+    }
+    setDraftRestored(true);
+  }, [restoreArabicOne, restoreArabicTwo]);
+
+  useEffect(() => {
+    if (!draftRestored) return;
+    const draft: ConfiguratorDraftV1 = {
+      version: 1,
+      stage,
+      nameCount,
+      nameOne,
+      nameTwo,
+      language,
+      arabicOne,
+      arabicTwo,
+      arabicOneStatus: arabicOneStatus === "edited" ? "edited" : "refined",
+      arabicTwoStatus: arabicTwoStatus === "edited" ? "edited" : "refined",
+      arabicStyle,
+      layout,
+      metal,
+      coverage,
+      gemstone,
+      size,
+      chain,
+      chainLength,
+    };
+    writeConfiguratorDraft(window.sessionStorage, draft);
+  }, [
+    arabicOne,
+    arabicOneStatus,
+    arabicStyle,
+    arabicTwo,
+    arabicTwoStatus,
+    chain,
+    chainLength,
+    coverage,
+    draftRestored,
+    gemstone,
+    language,
+    layout,
+    metal,
+    nameCount,
+    nameOne,
+    nameTwo,
+    size,
+    stage,
+  ]);
+
+  useEffect(() => {
+    if (language === "en" && stage === "arabic-style") setStage("names-layout");
+  }, [language, stage]);
 
   useEffect(() => {
     setConfirmed(false);
@@ -256,17 +343,33 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
     size,
   ]);
 
-  function stageIsValid(id: StageId) {
-    if (id === "name-language")
-      return Boolean(nameOne.trim() && (language === "en" || arabicOne.trim()));
-    if (id === "names-layout")
-      return Boolean(
-        nameOne.trim() &&
-        (nameCount === 1 || nameTwo.trim()) &&
-        (language === "en" ||
-          (arabicOne.trim() && (nameCount === 1 || arabicTwo.trim()))),
-      );
+  const namesValid = isNameStageValid({
+    language,
+    nameCount,
+    nameOne,
+    nameTwo,
+    arabicOne,
+    arabicTwo,
+  });
+  const primaryNameValid = Boolean(
+    nameOne.trim() && (language === "en" || arabicOne.trim()),
+  );
+  const previewIdentity = namesValid ? identity : emptyIdentity;
+
+  function stageIsValid(id: ConfiguratorStageId) {
+    if (id === "name-language") return primaryNameValid;
+    if (id === "names-layout") return namesValid;
     return true;
+  }
+
+  function updateNameOne(value: string) {
+    setNameOne(value);
+    if (!value.trim()) setArabicOne("");
+  }
+
+  function updateNameTwo(value: string) {
+    setNameTwo(value);
+    if (!value.trim()) setArabicTwo("");
   }
 
   function goBack() {
@@ -274,12 +377,12 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
       router.push(`/${locale}`);
       return;
     }
-    setStage(visibleStages[safeStageIndex - 1]!.id);
+    setStage(sequence[safeStageIndex - 1]!);
   }
 
   function goForward() {
-    const next = visibleStages[safeStageIndex + 1];
-    if (next && stageIsValid(stage)) setStage(next.id);
+    const next = sequence[safeStageIndex + 1];
+    if (next && stageIsValid(stage)) setStage(next);
   }
 
   async function approve() {
@@ -337,7 +440,13 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
           coverage === "full-pave" ? 8 : coverage === "partial-pave" ? 6 : 4,
         spellingConfirmed: true,
       });
-      router.push(`/${locale}/design/crafting?designId=${design.id}`);
+      clearConfiguratorDraft(window.sessionStorage);
+      const replay =
+        process.env.NODE_ENV === "development" &&
+        process.env.NEXT_PUBLIC_JEWELO_SCENARIOS === "1"
+          ? "&replay=1"
+          : "";
+      router.push(`/${locale}/design/crafting?designId=${design.id}${replay}`);
     } catch (caught) {
       setError(
         caught instanceof Error
@@ -348,35 +457,59 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
     }
   }
 
+  const reviewSummary = configuratorReviewSummary({
+    version: 1,
+    stage,
+    nameCount,
+    nameOne,
+    nameTwo,
+    language,
+    arabicOne,
+    arabicTwo,
+    arabicStyle,
+    layout,
+    metal,
+    coverage,
+    gemstone,
+    size,
+    chain,
+    chainLength,
+  });
+
   return (
     <AppShell locale={locale}>
       <main className="clm-config-page" dir={locale === "ar" ? "rtl" : "ltr"}>
         <div className="clm-config-progress">
           <span>
-            Step {safeStageIndex + 1} of {visibleStages.length}
+            {stage === "review"
+              ? "Live Editor · Review"
+              : `Step ${constructionIndex + 1} of ${CONSTRUCTION_STAGES.length}`}
           </span>
           <div>
-            {visibleStages.map((item, index) => (
-              <button
-                key={item.id}
-                aria-label={`Go to ${item.label}`}
-                aria-current={stage === item.id ? "step" : undefined}
-                data-active={index <= safeStageIndex || undefined}
-                disabled={
-                  index > safeStageIndex &&
-                  (index !== safeStageIndex + 1 || !stageIsValid(stage))
-                }
-                onClick={() => {
-                  if (
-                    index <= safeStageIndex ||
-                    (index === safeStageIndex + 1 && stageIsValid(stage))
-                  )
-                    setStage(item.id);
-                }}
-              >
-                <i /> <small>{item.label}</small>
-              </button>
-            ))}
+            {CONSTRUCTION_STAGES.map((item, index) => {
+              const notApplicable =
+                item.id === "arabic-style" && language === "en";
+              const futureLocked = !primaryNameValid
+                ? index > 0
+                : !namesValid
+                  ? index > 2
+                  : false;
+              return (
+                <button
+                  key={item.id}
+                  aria-label={`${item.label}${notApplicable ? ", not applicable for English" : ""}`}
+                  aria-current={stage === item.id ? "step" : undefined}
+                  data-active={
+                    (index <= constructionIndex && !notApplicable) || undefined
+                  }
+                  data-not-applicable={notApplicable || undefined}
+                  disabled={notApplicable || futureLocked}
+                  onClick={() => setStage(item.id)}
+                >
+                  <i /> <small>{item.label}</small>
+                </button>
+              );
+            })}
           </div>
         </div>
         <div className="clm-config-shell">
@@ -411,9 +544,9 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
               data-size={size}
               data-gemstone={coverage === "none" ? "none" : gemstone}
               dir={language === "ar" ? "rtl" : "ltr"}
-              aria-label={`Deterministic identity preview: ${identity.inline}`}
+              aria-label={`Deterministic identity preview: ${previewIdentity.inline}`}
               style={{
-                transform: `rotate(${previewRotation}deg) scale(${previewScale}) scaleX(${previewFace === "side" ? 0.22 : 1})`,
+                transform: `scale(${previewScale}) scaleX(${previewFace === "side" ? 0.22 : 1})`,
               }}
             >
               {arabicPreviewPending ? (
@@ -428,12 +561,12 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
                       className="clm-stacked-heart-simple"
                       aria-hidden="true"
                     >
-                      <strong>{identity.lines[0]}</strong>
+                      <strong>{previewIdentity.lines[0]}</strong>
                       <Heart className="clm-heart-between" weight="light" />
-                      <strong>{identity.lines[2]}</strong>
+                      <strong>{previewIdentity.lines[2]}</strong>
                     </div>
                   ) : (
-                    identity.lines.map((line, index) => (
+                    previewIdentity.lines.map((line, index) => (
                       <strong key={`${line}-${index}`}>{line}</strong>
                     ))
                   )}
@@ -450,7 +583,7 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
               <strong dir={language === "ar" ? "rtl" : "ltr"}>
                 {arabicPreviewPending
                   ? "Preparing Arabic spelling…"
-                  : identity.inline}
+                  : previewIdentity.inline}
               </strong>
               <span>
                 {previewScript} · {titleCaseOption(resolvedLayout)} · 18K{" "}
@@ -473,12 +606,6 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
               </div>
             </div>
             <div className="clm-view-controls">
-              <button
-                type="button"
-                onClick={() => setPreviewRotation((current) => current + 12)}
-              >
-                Rotate
-              </button>
               <button
                 type="button"
                 aria-pressed={previewZoom > 1}
@@ -518,7 +645,7 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
                   <input
                     value={nameOne}
                     maxLength={18}
-                    onChange={(event) => setNameOne(event.target.value)}
+                    onChange={(event) => updateNameOne(event.target.value)}
                   />
                 </label>
                 <fieldset className="clm-label clm-choice-fieldset">
@@ -540,60 +667,22 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
                     </button>
                   </span>
                 </fieldset>
-                <div className="clm-suggestion" aria-live="polite">
-                  <div>
-                    <span>Arabic spelling</span>
-                    {arabicOneStatus === "refining" ? (
-                      <strong className="clm-arabic-loader">
-                        <SpinnerGap className="clm-spin" size={18} />
-                        Generating…
-                      </strong>
-                    ) : (
-                      <strong dir="rtl">
-                        {arabicOneStatus === "error"
-                          ? "Couldn’t generate spelling"
-                          : arabicOne || "Enter at least 2 letters"}
-                      </strong>
-                    )}
-                    <small className="clm-reflection-status">
-                      {arabicOneStatus === "refining" ? (
-                        <>
-                          <SpinnerGap className="clm-spin" size={12} />
-                          Refining with Luna…
-                        </>
-                      ) : arabicOneStatus === "refined" ? (
-                        <>
-                          <Sparkle size={12} weight="fill" /> AI-refined
-                        </>
-                      ) : arabicOneStatus === "edited" ? (
-                        "Edited by you"
-                      ) : arabicOneStatus === "error" ? (
-                        <button type="button" onClick={retryArabicOne}>
-                          Retry Luna
-                        </button>
-                      ) : (
-                        "Waiting for a name"
-                      )}
-                    </small>
-                  </div>
-                  <button
-                    type="button"
-                    aria-label="Edit suggested Arabic spelling"
-                    disabled={!arabicOne || arabicOneStatus === "refining"}
-                    onClick={() => {
-                      setLanguage("ar");
-                      requestAnimationFrame(() =>
-                        document.getElementById("arabic-name-one")?.focus(),
-                      );
-                    }}
-                  >
-                    <PencilSimple size={17} />
-                  </button>
-                </div>
                 {language === "ar" && (
-                  <div className="clm-arabic-edits">
-                    <label className="clm-label">
-                      Approved Arabic spelling 1
+                  <div className="clm-arabic-approved" aria-live="polite">
+                    <label className="clm-label" htmlFor="arabic-name-one">
+                      <span className="clm-approved-label">
+                        Approved Arabic spelling
+                        {arabicOneStatus === "refined" && (
+                          <small>
+                            <Sparkle size={12} weight="fill" /> AI refined
+                          </small>
+                        )}
+                        {arabicOneStatus === "edited" && (
+                          <small>
+                            <PencilSimple size={12} /> Edited by you
+                          </small>
+                        )}
+                      </span>
                       <input
                         id="arabic-name-one"
                         dir="rtl"
@@ -607,6 +696,21 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
                         onChange={(event) => setArabicOne(event.target.value)}
                       />
                     </label>
+                    {arabicOneStatus === "refining" && (
+                      <span className="clm-reflection-status">
+                        <SpinnerGap className="clm-spin" size={14} />
+                        Refining spelling…
+                      </span>
+                    )}
+                    {arabicOneStatus === "error" && (
+                      <button
+                        type="button"
+                        className="clm-inline-retry"
+                        onClick={retryArabicOne}
+                      >
+                        Retry Arabic refinement
+                      </button>
+                    )}
                   </div>
                 )}
               </>
@@ -686,7 +790,7 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
                     <input
                       value={nameOne}
                       maxLength={18}
-                      onChange={(event) => setNameOne(event.target.value)}
+                      onChange={(event) => updateNameOne(event.target.value)}
                     />
                   </label>
                   {nameCount === 2 && (
@@ -695,7 +799,7 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
                       <input
                         value={nameTwo}
                         maxLength={18}
-                        onChange={(event) => setNameTwo(event.target.value)}
+                        onChange={(event) => updateNameTwo(event.target.value)}
                       />
                     </label>
                   )}
@@ -837,14 +941,21 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
                       selected={coverage === item}
                       onSelect={(value) => setCoverage(value as StoneCoverage)}
                     >
-                      <span className="clm-stone-sample">
-                        {item === "none"
-                          ? "—"
-                          : item === "accent"
-                            ? "✦"
-                            : item === "partial-pave"
-                              ? "✦✦✦—"
-                              : "✦✦✦✦✦"}
+                      <span className="clm-stone-sample" aria-hidden="true">
+                        {item === "none" ? (
+                          <Minus size={24} />
+                        ) : (
+                          Array.from({
+                            length:
+                              item === "accent"
+                                ? 1
+                                : item === "partial-pave"
+                                  ? 3
+                                  : 5,
+                          }).map((_, index) => (
+                            <Sparkle key={index} size={15} weight="fill" />
+                          ))
+                        )}
                       </span>
                       <span>{item.replaceAll("-", " ")}</span>
                     </Option>
@@ -870,7 +981,13 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
                           selected={gemstone === item}
                           onSelect={(value) => setGemstone(value as Gemstone)}
                         >
-                          <i data-gem={item} />
+                          <Diamond
+                            className="clm-gem-icon"
+                            data-gem={item}
+                            size={24}
+                            weight="duotone"
+                            aria-hidden="true"
+                          />
                           <span>{item.replaceAll("-", " ")}</span>
                         </Option>
                       ))}
@@ -949,45 +1066,28 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
                   <div>
                     <dt>Names</dt>
                     <dd dir={language === "ar" ? "rtl" : "ltr"}>
-                      {identity.inline}
+                      {reviewSummary.names}
                     </dd>
                   </div>
                   <div>
                     <dt>Script</dt>
-                    <dd>
-                      {arabicStyleLabel(
-                        language === "ar" ? arabicStyle : "none",
-                      )}
-                    </dd>
+                    <dd>{reviewSummary.script}</dd>
                   </div>
                   <div>
                     <dt>Layout</dt>
-                    <dd>
-                      {nameCount === 1
-                        ? "Single name"
-                        : layout.replaceAll("-", " ")}
-                    </dd>
+                    <dd>{reviewSummary.layout}</dd>
                   </div>
                   <div>
                     <dt>Metal</dt>
-                    <dd>18K {metal} gold</dd>
+                    <dd>{reviewSummary.metal}</dd>
                   </div>
                   <div>
                     <dt>Stones</dt>
-                    <dd>
-                      {coverage.replaceAll("-", " ")} ·{" "}
-                      {coverage === "none"
-                        ? "none"
-                        : gemstone.replaceAll("-", " ")}
-                    </dd>
+                    <dd>{reviewSummary.stones}</dd>
                   </div>
                   <div>
                     <dt>Size &amp; chain</dt>
-                    <dd>
-                      {size} (
-                      {size === "delicate" ? 22 : size === "classic" ? 30 : 36}{" "}
-                      mm) · {chain} · {chainLength} cm
-                    </dd>
+                    <dd>{reviewSummary.sizeAndChain}</dd>
                   </div>
                 </dl>
                 <label className="clm-confirm">
@@ -1006,9 +1106,11 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
                   </span>
                 </label>
                 <div className="clm-estimate">
-                  <span>Indicative price</span>
-                  <strong>{formatCaleumsPrice()}</strong>
-                  <small>Final quote follows atelier review</small>
+                  <span>Price estimate</span>
+                  <strong>Calculated after Studio verification</strong>
+                  <small>
+                    Your price estimate carries into the final quote.
+                  </small>
                 </div>
                 {needsOperatorReview && (
                   <p className="clm-review-notice" role="status">
