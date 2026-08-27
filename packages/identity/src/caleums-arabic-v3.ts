@@ -2,7 +2,8 @@ import { createHash } from "node:crypto";
 
 export const CALEUMS_ARABIC_ENGINE_RELEASE = "caleums-arabic-v3" as const;
 
-export type CaleumsArabicStyle = "classic" | "minimal";
+export type CaleumsArabicStyle =
+  "classic" | "minimal" | "diwani" | "thuluth-inspired" | "kufi" | "signature";
 
 export interface IdentitySolverInput {
   approvedNames: readonly string[];
@@ -28,7 +29,13 @@ export interface RasterMask {
 export interface ArabicIdentityRasterizer {
   typeset(input: {
     approvedText: string;
-    fontFile: "Amiri-Regular.ttf" | "ScheherazadeNew-Regular.ttf";
+    fontFile:
+      | "Amiri-Regular.ttf"
+      | "ScheherazadeNew-Regular.ttf"
+      | "NotoNaskhArabic-Regular.ttf"
+      | "ArefRuqaa-Regular.ttf"
+      | "NotoKufiArabic-Regular.ttf"
+      | "rakkas.ttf";
     fontSize: number;
     padding: number;
   }): Promise<RasterMask>;
@@ -67,7 +74,7 @@ export class IdentitySolverError extends Error {
       | "unsupported_arabic_two_name"
       | "approved_text_missing"
       | "identity_mask_empty"
-  | "identity_fuse_failed"
+      | "identity_fuse_failed"
       | "identity_component_gate_failed",
     message: string = code,
   ) {
@@ -78,9 +85,11 @@ export class IdentitySolverError extends Error {
 
 const LIVE_STYLES = {
   classic: {
-    fontFile: "Amiri-Regular.ttf",
+    // Amiri stacks lam-ya under HarfBuzz; Noto Naskh keeps the flat form the
+    // approved renders used.
+    fontFile: "NotoNaskhArabic-Regular.ttf",
     fontSha256:
-      "b092096eb992aebe59084b0cb5cf0015ae82c7e76b0aac5e7d60ae5113af5f54",
+      "67b5a525a661b607971fbd3f96a81b89d3a768e74534fca84f18ac97e6fab72f",
     dilationPixels: 0,
   },
   minimal: {
@@ -88,6 +97,31 @@ const LIVE_STYLES = {
     fontSha256:
       "794bac8dc9e83d1d620bc471ea694f5f31d0965ce8006490a79dfc51a2d283b3",
     dilationPixels: 2,
+  },
+  // Opened to all customers on 2026-08-27: no atelier gate on style.
+  diwani: {
+    fontFile: "ArefRuqaa-Regular.ttf",
+    fontSha256:
+      "ceb786d83ba92f35e96efcd8623c2858d288e0c543c8761ba35b1020989464f9",
+    dilationPixels: 2,
+  },
+  signature: {
+    fontFile: "ArefRuqaa-Regular.ttf",
+    fontSha256:
+      "ceb786d83ba92f35e96efcd8623c2858d288e0c543c8761ba35b1020989464f9",
+    dilationPixels: 2,
+  },
+  kufi: {
+    fontFile: "NotoKufiArabic-Regular.ttf",
+    fontSha256:
+      "494f6b61469d7a02a2d63f0fc4930bb007388d8cfe551de5eb98354e100889f3",
+    dilationPixels: 1,
+  },
+  "thuluth-inspired": {
+    fontFile: "rakkas.ttf",
+    fontSha256:
+      "54278882e4774c14d50c3b555f127d0fe586366d5b787316ebbcbd8108829e60",
+    dilationPixels: 1,
   },
 } as const;
 

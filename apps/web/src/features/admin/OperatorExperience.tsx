@@ -15,7 +15,10 @@ import {
 import { CaleumsWordmark } from "@/components/app-shell";
 import { useJewelo } from "@/lib/jewelo-provider";
 import { PromptLibrary } from "./PromptLibrary";
-import { arabicStyleLabel } from "@/lib/ui-presentation";
+import {
+  arabicStyleLabel,
+  isProviderSupportedArabicStyle,
+} from "@/lib/ui-presentation";
 import type { ArabicStyle } from "@/lib/types";
 
 type Locale = "en" | "ar";
@@ -105,6 +108,13 @@ export function OperatorExperience({ locale }: { locale: Locale }) {
       }),
     [filter, state.designs],
   );
+  const reviewDrafts = client.listDrafts().filter((draft) => {
+    const spec = draft.specification;
+    if (spec.arabicStyle === "none") return false;
+    return (
+      spec.nameCount === 2 || !isProviderSupportedArabicStyle(spec.arabicStyle)
+    );
+  });
   async function action(
     key: string,
     work: () => Promise<unknown>,
@@ -255,6 +265,31 @@ export function OperatorExperience({ locale }: { locale: Locale }) {
                 <span className="clm-state" data-state="blocked">
                   Provider spend blocked
                 </span>
+              </section>
+            )}
+            {reviewDrafts.length > 0 && (
+              <section
+                className="clm-review-handoff"
+                aria-label="Atelier review"
+              >
+                <div>
+                  <p className="clm-kicker">Atelier review</p>
+                  <h2>{reviewDrafts.length} awaiting the atelier</h2>
+                </div>
+                <ul>
+                  {reviewDrafts.map((draft) => (
+                    <li key={draft.id}>
+                      {draft.specification.names
+                        .map(
+                          (name) =>
+                            name.approvedArabicText ?? name.approvedEnglishText,
+                        )
+                        .join(" · ")}{" "}
+                      — {arabicStyleLabel(draft.specification.arabicStyle)} ·{" "}
+                      {new Date(draft.createdAt).toLocaleString(locale)}
+                    </li>
+                  ))}
+                </ul>
               </section>
             )}
             <section className="clm-operator-heading">

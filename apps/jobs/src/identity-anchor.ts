@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
-import { existsSync } from "node:fs";
-import { resolve } from "node:path";
+import { existsSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { dirname, join, resolve } from "node:path";
 import {
   CALEUMS_ARABIC_ENGINE_RELEASE,
   solveArabicIdentity,
@@ -129,16 +130,16 @@ class SharpArabicRasterizer implements ArabicIdentityRasterizer {
     // Pango/HarfBuzz/FriBidi shaping through sharp's text input with an explicit
     // font file: librsvg ignores data-URI @font-face in the deployed container
     // and rendered a blank raster.
-    const text = sharp({
-      text: {
-        text: `<span font_family="CaleumsArabic" size="${input.fontSize * 1024}">${xml(input.approvedText)}</span>`,
-        fontfile: fontPath(input.fontFile),
-        width: 1800,
-        align: "centre",
-        rgba: true,
-        dpi: 72,
-      },
-    });
+    pinFontconfig();
+    // librsvg text layout (Pango without the lam-ya stacking libvips' text
+    // input applies); the pinned fontconfig makes the family resolve to the
+    // bundled file in every environment.
+    const family = FONT_FAMILIES[input.fontFile] ?? "Noto Naskh Arabic";
+    const text = sharp(
+      Buffer.from(
+        `<svg xmlns="http://www.w3.org/2000/svg" width="6000" height="1400"><rect width="6000" height="1400" fill="white"/><text x="3000" y="900" text-anchor="middle" direction="rtl" unicode-bidi="plaintext" lang="ar" font-family="${family}" font-size="${input.fontSize}" fill="black">${xml(input.approvedText)}</text></svg>`,
+      ),
+    );
     const { data, info } = await text
       .flatten({ background: "white" })
       .trim({ background: "white", threshold: 1 })
@@ -178,6 +179,30 @@ class SharpArabicRasterizer implements ArabicIdentityRasterizer {
     };
   }
 }
+
+// The deployed container ships system Arabic fonts; fontconfig would resolve
+// "Amiri" to those instead of the pinned file. Point fontconfig at our fonts
+// directory only, before the first render initialises it.
+function pinFontconfig(): void {
+  if (process.env.CALEUMS_FONTCONFIG_PINNED) return;
+  const dir = dirname(fontPath("Amiri-Regular.ttf"));
+  const conf = join(tmpdir(), "caleums-fonts.conf");
+  writeFileSync(
+    conf,
+    `<?xml version="1.0"?><!DOCTYPE fontconfig SYSTEM "fonts.dtd"><fontconfig><dir>${dir}</dir><cachedir>${tmpdir()}/caleums-fc-cache</cachedir></fontconfig>`,
+  );
+  process.env.FONTCONFIG_FILE = conf;
+  process.env.CALEUMS_FONTCONFIG_PINNED = "1";
+}
+
+const FONT_FAMILIES: Record<string, string> = {
+  "NotoNaskhArabic-Regular.ttf": "Noto Naskh Arabic",
+  "Amiri-Regular.ttf": "Amiri",
+  "ScheherazadeNew-Regular.ttf": "Scheherazade New",
+  "ArefRuqaa-Regular.ttf": "Aref Ruqaa",
+  "NotoKufiArabic-Regular.ttf": "Noto Kufi Arabic",
+  "rakkas.ttf": "Rakkas",
+};
 
 function fontPath(file: string): string {
   const relative = `packages/identity/engines/${CALEUMS_ARABIC_ENGINE_RELEASE}/fonts/${file}`;

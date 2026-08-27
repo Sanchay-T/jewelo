@@ -221,16 +221,19 @@ export function buildPromptVariableSnapshot(input: {
   const specification = input.specification;
   const dimensions = asObject(specification.dimensions);
   const chain = asObject(specification.chain);
+  const connector = scalar(specification.connector);
   const pieceSpec = [
     `name=${scalar(input.approvedName)}`,
     `language=${scalar(input.language)}`,
-    `arabic_style=${scalar(specification.arabicStyle)}`,
-    `layout=${scalar(specification.layout)}`,
-    `metal=${scalar(specification.metalKarat)} ${scalar(specification.metalColor)} ${scalar(specification.finish)}`,
-    `stones=${scalar(specification.stoneCoverage)} ${scalar(specification.gemstone)}`,
+    `arabic_style=${prose(ARABIC_STYLE_PROSE, specification.arabicStyle)}`,
+    `layout=${prose(LAYOUT_PROSE, specification.layout)}`,
+    ...(connector && connector !== "none"
+      ? [`connector=${prose(CONNECTOR_PROSE, connector)}`]
+      : []),
+    `metal=${scalar(specification.metalKarat)} ${scalar(specification.metalColor)} gold, ${prose(FINISH_PROSE, specification.finish)}`,
+    `stones=${stonePhrase(scalar(specification.stoneCoverage), prose(GEMSTONE_PROSE, specification.gemstone))}`,
     `size=${scalar(specification.sizeProfile)}; dimensions=${scalar(dimensions.widthMm)} × ${scalar(dimensions.heightMm)} × ${scalar(dimensions.thicknessMm)} mm`,
-    `chain=${scalar(chain.style)}; length=${scalar(chain.lengthCm)} cm`,
-    `view=${scalar(input.presentationView)}`,
+    `chain=${prose(CHAIN_PROSE, chain.style)}; length=${scalar(chain.lengthCm)} cm`,
   ].join("; ");
   return {
     approved_name: scalar(input.approvedName),
@@ -290,6 +293,66 @@ export function compilePrompt(input: {
     sha256: createHash("sha256").update(compiledPrompt, "utf8").digest("hex"),
     variableSnapshot: snapshot,
   };
+}
+
+// Photographic prose for the immutable enum tokens. Unknown values pass through
+// unchanged so an older revision still compiles.
+const ARABIC_STYLE_PROSE: Readonly<Record<string, string>> = {
+  contemporary: "classic",
+};
+const LAYOUT_PROSE: Readonly<Record<string, string>> = {
+  "single-name": "single name",
+  "side-by-side": "two names side by side",
+  "connected-heart": "two names joined by a heart",
+  stacked: "two names stacked",
+  "stacked-heart": "two names stacked with a heart",
+  infinity: "two names joined by an infinity symbol",
+  interlocked: "two names interlocked",
+};
+const CONNECTOR_PROSE: Readonly<Record<string, string>> = {
+  heart: "joined by a heart",
+  infinity: "joined by an infinity symbol",
+  plain: "joined by a plain bar",
+  interlocked: "interlocked directly",
+};
+const FINISH_PROSE: Readonly<Record<string, string>> = {
+  polished: "high-polished",
+  matte: "matte brushed",
+  satin: "satin",
+};
+const GEMSTONE_PROSE: Readonly<Record<string, string>> = {
+  none: "",
+  "lab-diamond": "lab-grown white diamonds",
+  "natural-diamond": "natural white diamonds",
+  ruby: "deep red rubies",
+  emerald: "green emeralds",
+  "blue-sapphire": "blue sapphires",
+  "pink-sapphire": "pink sapphires",
+};
+const CHAIN_PROSE: Readonly<Record<string, string>> = {
+  cable: "flat oval cable-link chain",
+  rolo: "round rolo-link chain",
+  box: "square box-link chain",
+  curb: "fine curb-link chain",
+  "fine-curb": "fine curb-link chain",
+};
+const STONE_COVERAGE_PROSE: Readonly<Record<string, string>> = {
+  none: "no stones, solid metal",
+  accent: "a few accent {gem}",
+  "partial-pave": "partially pavé-set with {gem}",
+  "full-pave": "fully pavé-set with {gem}",
+};
+
+function prose(map: Readonly<Record<string, string>>, value: unknown): string {
+  const token = scalar(value);
+  return map[token] ?? token;
+}
+
+function stonePhrase(coverage: string, gem: string): string {
+  const phrase = STONE_COVERAGE_PROSE[coverage];
+  if (phrase === undefined) return [coverage, gem].filter(Boolean).join(" ");
+  if (!phrase.includes("{gem}")) return phrase;
+  return gem ? phrase.replace("{gem}", gem) : "no stones, solid metal";
 }
 
 function asObject(value: unknown): Record<string, unknown> {

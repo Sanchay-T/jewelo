@@ -240,6 +240,10 @@ export class SupabaseJeweloClient implements LegacyJeweloClient {
     return design ? structuredClone(design) : undefined;
   }
 
+  listDrafts(): DesignDraft[] {
+    return structuredClone([...this.#drafts.values()]);
+  }
+
   async createDraft(input: CreateDraftInput): Promise<DesignDraft> {
     const row = await this.#request<Row>("/api/designs/drafts", {
       method: "POST",

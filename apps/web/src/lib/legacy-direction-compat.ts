@@ -2,6 +2,7 @@ import type {
   AssetLineage,
   ApproveRevisionInput,
   Design,
+  DesignDraft,
   DesignInput,
   DesignRevision,
   Estimate,
@@ -84,6 +85,7 @@ export interface LegacyJeweloClient extends Omit<
   listDesigns(): LegacyDesign[];
   getDesign(id: string): LegacyDesign | undefined;
   createDesign(input: DesignInput): Promise<LegacyDesign>;
+  listDrafts(): DesignDraft[];
   approveRevision(input: ApproveRevisionInput): Promise<LegacyDesign>;
   refineDesign(designId: string, note: string): Promise<LegacyDesign>;
   startRun(designId: string): Promise<LegacyDesign>;

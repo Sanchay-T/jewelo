@@ -567,6 +567,10 @@ export class MockJeweloClient implements LegacyJeweloClient {
     return this.commit({ ...this.state, scenario });
   }
 
+  listDrafts() {
+    return clone([...this.drafts.values()]);
+  }
+
   async createDraft(input: CreateDraftInput) {
     const id = `draft-${this.drafts.size + 1}`;
     const draft: DesignDraft = {

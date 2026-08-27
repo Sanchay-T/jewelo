@@ -10,12 +10,20 @@
   },
   "fonts": [
     {
+      "file": "fonts/NotoNaskhArabic-Regular.ttf",
+      "family": "Noto Naskh Arabic",
+      "sha256": "67b5a525a661b607971fbd3f96a81b89d3a768e74534fca84f18ac97e6fab72f",
+      "spdxLicense": "OFL-1.1",
+      "approval": "live",
+      "style": "classic",
+      "note": "Replaces Amiri for classic on 2026-08-27: Amiri stacks lam-ya in HarfBuzz; approved renders were flat."
+    },
+    {
       "file": "fonts/Amiri-Regular.ttf",
       "family": "Amiri",
       "sha256": "b092096eb992aebe59084b0cb5cf0015ae82c7e76b0aac5e7d60ae5113af5f54",
       "spdxLicense": "OFL-1.1",
-      "approval": "live",
-      "style": "classic"
+      "approval": "retired"
     },
     {
       "file": "fonts/ScheherazadeNew-Regular.ttf",
@@ -29,7 +37,10 @@
     {
       "file": "fonts/ArefRuqaa-Regular.ttf",
       "sha256": "ceb786d83ba92f35e96efcd8623c2858d288e0c543c8761ba35b1020989464f9",
-      "approval": "held_native_reader_review"
+      "approval": "live",
+      "family": "Aref Ruqaa",
+      "spdxLicense": "OFL-1.1",
+      "style": "diwani, signature"
     },
     {
       "file": "fonts/reemkufi.ttf",
@@ -44,7 +55,18 @@
     {
       "file": "fonts/rakkas.ttf",
       "sha256": "54278882e4774c14d50c3b555f127d0fe586366d5b787316ebbcbd8108829e60",
-      "approval": "unapproved"
+      "approval": "live",
+      "family": "Rakkas",
+      "spdxLicense": "OFL-1.1",
+      "style": "thuluth-inspired"
+    },
+    {
+      "file": "fonts/NotoKufiArabic-Regular.ttf",
+      "family": "Noto Kufi Arabic",
+      "sha256": "494f6b61469d7a02a2d63f0fc4930bb007388d8cfe551de5eb98354e100889f3",
+      "spdxLicense": "OFL-1.1",
+      "approval": "live",
+      "style": "kufi"
     }
   ],
   "referenceChecksums": {
@@ -54,7 +76,10 @@
   },
   "approvalRules": {
     "arabicNameCount": 1,
-    "liveStyles": ["classic", "minimal"],
+    "liveStyles": [
+      "classic",
+      "minimal"
+    ],
     "unsupportedDisposition": "operator_review_before_provider_reservation"
   }
 }

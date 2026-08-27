@@ -24,19 +24,19 @@ export const ARABIC_STYLE_OPTIONS: ReadonlyArray<{
     providerSupported: true,
   },
   { id: "minimal", label: "Minimal", sample: "أسماء", providerSupported: true },
-  { id: "diwani", label: "Diwani", sample: "أسماء", providerSupported: false },
+  { id: "diwani", label: "Diwani", sample: "أسماء", providerSupported: true },
   {
     id: "thuluth-inspired",
     label: "Thuluth inspired",
     sample: "أسماء",
-    providerSupported: false,
+    providerSupported: true,
   },
-  { id: "kufi", label: "Kufi", sample: "أسماء", providerSupported: false },
+  { id: "kufi", label: "Kufi", sample: "أسماء", providerSupported: true },
   {
     id: "signature",
     label: "Signature",
     sample: "أسماء",
-    providerSupported: false,
+    providerSupported: true,
   },
 ];
 
