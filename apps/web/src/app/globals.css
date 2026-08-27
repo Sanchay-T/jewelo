@@ -514,9 +514,13 @@ video {
   line-height: 0.78;
   text-decoration: none !important;
 }
+.clm-stacked-heart-simple strong:last-child {
+  margin-top: -1.6rem;
+}
 .clm-heart-between {
   width: clamp(2rem, 3.5vw, 3.5rem);
   height: clamp(2rem, 3.5vw, 3.5rem);
+  margin-top: 0.3rem;
   color: currentColor;
   filter: drop-shadow(0 2px 3px rgba(76, 52, 18, 0.14));
 }

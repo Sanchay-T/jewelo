@@ -101,17 +101,17 @@ No open P0, P1, or P2 differences remain for reference-step alignment.
 ## Stacked-heart connector alignment — 2026-08-27
 
 - Source visual truth: `/Users/sanchay/Desktop/Snapzy/Snapzy_2026-08-27_05-14-12_222.png` (850 × 864 pixels).
-- Browser-rendered implementation: `/tmp/caleums-step-audit-2026-08-27/14-stacked-heart-simple.png` (972 × 889 pixels at a 972 × 889 CSS viewport, DPR 1).
-- Focused same-input comparison: `/tmp/caleums-step-audit-2026-08-27/14-heart-simple-comparison.png` (1724 × 912 pixels). The implementation preview was cropped to its 504 × 541 preview region and both panels were normalized to 850 × 864 without distorting their aspect ratio.
+- Browser-rendered implementation: `/tmp/caleums-step-audit-2026-08-27/17-stacked-heart-spacing-final.png` (957 × 875 pixels at a 957 × 875 CSS viewport, DPR 1).
+- Focused same-input comparison: `/tmp/caleums-step-audit-2026-08-27/17-heart-spacing-comparison.png` (1724 × 912 pixels). The latest user capture and implementation preview were cropped to their pendant regions and normalized to 850 × 864 without distorting their aspect ratio.
 - State: Arabic, two approved names (`عمران`, `مريم`), Stacked + heart, full pavé lab diamond, classic size, 18K yellow gold.
 
-Following the final user clarification, the implementation intentionally simplifies the source treatment to exactly three centered elements: first name, one outline heart, and second name. Connector-specific pavé bars and overlap geometry were removed. Browser geometry measured a `0.01 px` center delta and equal `3.19 px` spacing above and below the 34 px Phosphor heart.
+Following the final user clarification, the implementation intentionally simplifies the source treatment to exactly three centered elements: first name, one outline heart, and second name. Connector-specific pavé bars and overlap geometry were removed. The Arabic font's asymmetric ascender space was compensated in normal layout margins so the visible breathing room above and below the 34 px Phosphor heart is balanced. Browser geometry retained a `0.01 px` horizontal center delta.
 
 Required fidelity surfaces passed for this focused correction: the existing Arabic typography remains intact; the name/heart/name group is evenly centered; gold and ivory tokens are unchanged; the real chain/background fixture remains sharp; and the selected full-pavé label copy remains visible without adding decoration to the names. No separate full-view issue was found because the change is confined to the pendant identity region; the focused comparison includes the complete preview area and its surrounding chain/caption context.
 
-| Severity | Difference found                                       | Fix                                                                                 | Post-fix evidence                                                   |
-| -------- | ------------------------------------------------------ | ----------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
-| P1       | Heart placement drifted through repeated offset tuning | Reduced the layout to a centered three-item group using the existing Phosphor heart | `/tmp/caleums-step-audit-2026-08-27/14-heart-simple-comparison.png` |
-| P2       | Pavé decoration added visual bars around both names    | Disabled name decoration only for Stacked + heart, leaving one clean connector      | 0.01 px center delta; equal 3.19 px gaps                            |
+| Severity | Difference found                                          | Fix                                                                                 | Post-fix evidence                                                    |
+| -------- | --------------------------------------------------------- | ----------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| P1       | Heart placement drifted through repeated offset tuning    | Reduced the layout to a centered three-item group using the existing Phosphor heart | `/tmp/caleums-step-audit-2026-08-27/17-heart-spacing-comparison.png` |
+| P2       | Arabic font metrics left excess visible space below heart | Balanced the second row margin and added breathing room above the icon              | 0.01 px horizontal center delta; final browser capture inspected     |
 
 No open P0, P1, or P2 differences remain for the stacked-heart connector.
