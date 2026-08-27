@@ -515,7 +515,7 @@ video {
   text-decoration: none !important;
 }
 .clm-stacked-heart-simple strong:last-child {
-  margin-top: -1.6rem;
+  margin-top: -0.5rem;
 }
 .clm-heart-between {
   width: clamp(2rem, 3.5vw, 3.5rem);
