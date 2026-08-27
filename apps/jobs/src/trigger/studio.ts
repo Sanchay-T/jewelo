@@ -33,6 +33,7 @@ export const studioPresentationTask = task({
       dependencies.repository,
       dependencies.generator,
       dependencies.verifier,
+      dependencies.nameReader,
     );
     if (result.status === "ready")
       await dispatchPendingOutbox(process.env, dispatchOutboxEvent);

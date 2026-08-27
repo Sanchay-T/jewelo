@@ -2,14 +2,17 @@ import { createHash } from "node:crypto";
 import {
   MockStudioGenerator,
   MockStudioVerifier,
+  OpenAINameReader,
   OpenAIStillAdapter,
   PRESENTATION_ASPECT_RATIO,
   buildPromptVariableSnapshot,
   compilePrompt,
+  normalizeIdentityText,
   type GeneratedMedia,
   type PromptProfile,
   type PromptVariableSnapshot,
   type StudioGenerator,
+  type StudioNameReader,
   type StudioVerifier,
 } from "@jewelo/ai";
 import { parseJobsEnv } from "@jewelo/config";
@@ -32,6 +35,8 @@ interface TaskRow {
   pipeline_release: string;
   aspect_ratio: "1:1" | "4:5" | "9:16" | "16:9";
   cancel_requested_at?: string;
+  /** Set on the three model views: the studio still they must reproduce. */
+  dependency_task_id?: string | null;
 }
 interface RunRow {
   id: string;
@@ -96,6 +101,7 @@ export interface PresentationRepository {
     task: TaskRow,
     provider: string,
     model: string,
+    attemptOverride?: number,
   ): Promise<{
     attempt: number;
     idempotencyKey: string;
@@ -124,6 +130,7 @@ export interface PresentationRepository {
     verification: Record<string, unknown>;
     identityFingerprint: string;
     identityArtifactId: string;
+    inputAssetIds?: readonly string[];
   }): Promise<TransitionOutcome | void>;
   fail(input: {
     task: TaskRow;
@@ -139,6 +146,10 @@ export interface PresentationRepository {
     taskId: string,
   ): Promise<{ url: string; fingerprint: string; artifactId: string }>;
   signedStyleAnchorUrl(task: TaskRow): Promise<string>;
+  /** Ready still of `dependency_task_id`; undefined while it is not ready yet. */
+  signedDependencyStillUrl?(
+    task: TaskRow,
+  ): Promise<{ url: string; assetId: string } | undefined>;
   signedInspirationUrl(
     revision: RevisionRow,
     ownerId: string,
@@ -150,11 +161,20 @@ export interface PresentationRepository {
   }): Promise<void>;
 }
 
+/**
+ * The three model views edit the approved studio still, so the compiled prompt
+ * has to name the extra first image before the published template's own
+ * "first image is the only source for the pendant" rule is read.
+ */
+export const DEPENDENT_REFERENCE_RULE =
+  "REFERENCE: the first supplied image is the finished pendant photographed in the studio; reproduce this exact object - same letterforms, same metal, same stones, same chain - in the new scene. The second image is its black stencil (identical shape). The third image is style only.";
+
 export async function executePresentationTask(
   taskId: string,
   repository: PresentationRepository,
   generator: StudioGenerator,
   verifier: StudioVerifier,
+  nameReader?: StudioNameReader,
 ) {
   const {
     task,
@@ -181,13 +201,18 @@ export async function executePresentationTask(
       template: release.template,
       variables,
     });
+    const compiledPrompt = task.dependency_task_id
+      ? `${DEPENDENT_REFERENCE_RULE} ${compiled.compiledPrompt}`
+      : compiled.compiledPrompt;
     snapshot = await repository.materializePromptSnapshot({
       task,
       release,
       variables: compiled.variableSnapshot,
-      compiledPrompt: compiled.compiledPrompt,
+      compiledPrompt,
       compilerVersion: compiled.compilerVersion,
-      sha256: compiled.sha256,
+      sha256: createHash("sha256")
+        .update(compiledPrompt, "utf8")
+        .digest("hex"),
     });
   }
   if (
@@ -201,7 +226,14 @@ export async function executePresentationTask(
   let identity: { url: string; fingerprint: string; artifactId: string };
   let styleAnchorUrl: string;
   let inspirationImageUrl: string | undefined;
+  let reference: { url: string; assetId: string } | undefined;
   try {
+    if (task.dependency_task_id) {
+      reference = await repository.signedDependencyStillUrl?.(task);
+      // A recovery dispatch can arrive before the studio still exists; wait for
+      // the release instead of spending on a scene with no pendant to copy.
+      if (!reference) return { status: "deferred" as const };
+    }
     // Identity and exact style release existence are hard pre-spend gates.
     identity = await repository.signedIdentityUrl(
       revision,
@@ -242,80 +274,122 @@ export async function executePresentationTask(
     throw error;
   }
   if (reservation.duplicateComplete) return { status: "deduplicated" as const };
-  let actualCostCents = 0;
+  const inputAssetIds = reference ? [reference.assetId] : [];
+  // Undefined until an attempt actually reaches the provider, so a failure
+  // before that never reconciles a sibling attempt's cost.
+  let actualCostCents: number | undefined;
   try {
-    let media: GeneratedMedia;
-    let stored: StoredOutput["stored"];
-    if (checkpoint) {
-      media = checkpoint.media;
-      stored = checkpoint.stored;
-      actualCostCents = media.estimatedCostCents;
-    } else {
-      const started = await repository.transitionTask(
+    // A studio still whose engraved name is not the approved one is regenerated
+    // in place: at most two extra paid attempts, then operator review.
+    for (let regeneration = 0; ; regeneration += 1) {
+      const resumable = regeneration === 0 ? checkpoint : undefined;
+      let media: GeneratedMedia;
+      let stored: StoredOutput["stored"];
+      if (resumable) {
+        media = resumable.media;
+        stored = resumable.stored;
+        actualCostCents = media.estimatedCostCents;
+      } else {
+        const started = await repository.transitionTask(
+          task.id,
+          ["queued", "retrying", "generating"],
+          "generating",
+          { attempt: reservation.attempt, input_asset_ids: inputAssetIds },
+        );
+        if (started === "cancelled") return { status: "cancelled" as const };
+        media = await generator.generate({
+          idempotencyKey: reservation.idempotencyKey,
+          prompt: snapshot.compiled_prompt,
+          referenceImageUrl: reference?.url,
+          identityImageUrl: identity.url,
+          styleAnchorUrl,
+          inspirationImageUrl,
+          identityFingerprint: identity.fingerprint,
+          aspectRatio:
+            task.aspect_ratio ??
+            PRESENTATION_ASPECT_RATIO[task.presentation_view],
+          presentationView: task.presentation_view,
+          specification: revision.specification,
+        });
+        actualCostCents = media.estimatedCostCents;
+        stored = await repository.storeProviderOutput({
+          task,
+          run,
+          revision,
+          attempt: reservation.attempt,
+          media,
+        });
+      }
+      const verifying = await repository.transitionTask(
         task.id,
-        ["queued", "retrying", "generating"],
-        "generating",
-        { attempt: reservation.attempt },
+        ["generating", "verifying"],
+        "verifying",
       );
-      if (started === "cancelled") return { status: "cancelled" as const };
-      media = await generator.generate({
-        idempotencyKey: reservation.idempotencyKey,
-        prompt: snapshot.compiled_prompt,
-        identityImageUrl: identity.url,
-        styleAnchorUrl,
-        inspirationImageUrl,
+      if (verifying === "cancelled") return { status: "cancelled" as const };
+      const verification = await verifier.verify({
+        approvedText: revision.identity_anchor.approvedText,
         identityFingerprint: identity.fingerprint,
-        aspectRatio:
-          task.aspect_ratio ??
-          PRESENTATION_ASPECT_RATIO[task.presentation_view],
+        identityImageUrl: identity.url,
         presentationView: task.presentation_view,
         specification: revision.specification,
+        media,
       });
-      actualCostCents = media.estimatedCostCents;
-      stored = await repository.storeProviderOutput({
+      if (
+        !verification.passed ||
+        !verification.exactText ||
+        !verification.exactScript ||
+        !verification.exactlyTwoConnectedRings ||
+        !verification.correctShot ||
+        !verification.noAddedIdentityElements
+      )
+        throw new Error("identity_verification_failed");
+      const record = verification as unknown as Record<string, unknown>;
+      if (nameReader && task.presentation_view === "studio") {
+        const readText = await nameReader.read(media);
+        const expected = revision.identity_anchor.approvedText;
+        const passed =
+          normalizeIdentityText(readText) === normalizeIdentityText(expected);
+        record.nameCheck = { passed, readText, expected };
+        if (!passed) {
+          const terminal = regeneration >= 2 || reservation.attempt >= 3;
+          await repository.fail({
+            task,
+            run,
+            attempt: reservation.attempt,
+            error: new Error(`name_mismatch:${readText}`),
+            terminal,
+            actualCostCents: actualCostCents ?? 0,
+          });
+          if (terminal)
+            return {
+              status: "operator_review" as const,
+              attempt: reservation.attempt,
+            };
+          reservation = await repository.reserveAttempt(
+            task,
+            provider,
+            model,
+            reservation.attempt + 1,
+          );
+          actualCostCents = undefined;
+          continue;
+        }
+      }
+      const completed = await repository.complete({
         task,
         run,
         revision,
         attempt: reservation.attempt,
         media,
+        stored,
+        verification: record,
+        identityFingerprint: identity.fingerprint,
+        identityArtifactId: identity.artifactId,
+        inputAssetIds,
       });
+      if (completed === "cancelled") return { status: "cancelled" as const };
+      return { status: "ready" as const, attempt: reservation.attempt };
     }
-    const verifying = await repository.transitionTask(
-      task.id,
-      ["generating", "verifying"],
-      "verifying",
-    );
-    if (verifying === "cancelled") return { status: "cancelled" as const };
-    const verification = await verifier.verify({
-      approvedText: revision.identity_anchor.approvedText,
-      identityFingerprint: identity.fingerprint,
-      identityImageUrl: identity.url,
-      presentationView: task.presentation_view,
-      specification: revision.specification,
-      media,
-    });
-    if (
-      !verification.passed ||
-      !verification.exactText ||
-      !verification.exactScript ||
-      !verification.exactlyTwoConnectedRings ||
-      !verification.correctShot ||
-      !verification.noAddedIdentityElements
-    )
-      throw new Error("identity_verification_failed");
-    const completed = await repository.complete({
-      task,
-      run,
-      revision,
-      attempt: reservation.attempt,
-      media,
-      stored,
-      verification: verification as unknown as Record<string, unknown>,
-      identityFingerprint: identity.fingerprint,
-      identityArtifactId: identity.artifactId,
-    });
-    if (completed === "cancelled") return { status: "cancelled" as const };
-    return { status: "ready" as const, attempt: reservation.attempt };
   } catch (error) {
     if (isTaskCancelled(error)) return { status: "cancelled" as const };
     const terminal = reservation.attempt >= 3;
@@ -325,7 +399,7 @@ export async function executePresentationTask(
       attempt: reservation.attempt,
       error,
       terminal,
-      actualCostCents,
+      actualCostCents: actualCostCents ?? 0,
     });
     if (!terminal) throw error;
     return { status: "operator_review" as const, attempt: reservation.attempt };
@@ -405,8 +479,13 @@ export class SupabasePresentationRepository implements PresentationRepository {
       },
     );
   }
-  async reserveAttempt(task: TaskRow, provider: string, model: string) {
-    const attempt = task.attempt + 1;
+  async reserveAttempt(
+    task: TaskRow,
+    provider: string,
+    model: string,
+    attemptOverride?: number,
+  ) {
+    const attempt = attemptOverride ?? task.attempt + 1;
     const idempotencyKey = `${task.dispatch_idempotency_key}:attempt:${attempt}`;
     const rows = await this.#request<
       Array<{ attempt_number: number; duplicate_complete: boolean }>
@@ -627,9 +706,9 @@ export class SupabasePresentationRepository implements PresentationRepository {
       release.bucket_id,
       release.object_path,
     );
-    if (task.presentation_view !== "dark") return signed;
-    // The dark anchor is 9:16 and canvas-matched, so it out-competes the landscape
-    // silhouette; the low-pass keeps its light, palette and mood but drops letterforms.
+    // Every anchor carries a different customer's name; the low-pass keeps its
+    // light, palette and mood while destroying the letterforms the model kept
+    // copying into the pendant.
     const response = await fetch(signed);
     if (!response.ok)
       throw new Error(`style_anchor_unreadable:${release.source_task_id}`);
@@ -640,6 +719,20 @@ export class SupabasePresentationRepository implements PresentationRepository {
       .png()
       .toBuffer();
     return `data:image/png;base64,${lowPassed.toString("base64")}`;
+  }
+  async signedDependencyStillUrl(task: TaskRow) {
+    if (!task.dependency_task_id) return undefined;
+    const assets = await this.#request<
+      Array<{ id: string; bucket_id: string; object_path: string }>
+    >(
+      `/rest/v1/assets?task_id=eq.${task.dependency_task_id}&provider=in.(openai,mock)&select=id,bucket_id,object_path&order=created_at.desc&limit=1`,
+    );
+    const asset = assets[0];
+    if (!asset) return undefined;
+    return {
+      url: await this.signedStorageUrl(asset.bucket_id, asset.object_path),
+      assetId: asset.id,
+    };
   }
   async signedInspirationUrl(revision: RevisionRow, ownerId: string) {
     const reference = revision.specification.referenceAsset;
@@ -750,6 +843,7 @@ export class SupabasePresentationRepository implements PresentationRepository {
     verification: Record<string, unknown>;
     identityFingerprint: string;
     identityArtifactId: string;
+    inputAssetIds?: readonly string[];
   }): Promise<TransitionOutcome> {
     // Claim `ready` first: a task cancelled mid-verification must not gain an
     // asset, a motion request, or a `task.ready` audit event.
@@ -784,6 +878,7 @@ export class SupabasePresentationRepository implements PresentationRepository {
         verification_result: input.verification,
         pipeline_release: input.task.pipeline_release,
         style_anchor_release_id: input.task.style_anchor_release_id,
+        input_asset_ids: input.inputAssetIds ?? [],
       }),
     });
     await this.#request("/rest/v1/rpc/reconcile_provider_attempt", {
@@ -798,6 +893,11 @@ export class SupabasePresentationRepository implements PresentationRepository {
     });
     let motionPreview = "not_applicable";
     if (input.task.presentation_view === "studio") {
+      // The three model views only become dispatchable once this still exists.
+      await this.#request("/rest/v1/rpc/release_dependent_tasks", {
+        method: "POST",
+        body: JSON.stringify({ p_source_task_id: input.task.id }),
+      });
       try {
         await this.#request("/rest/v1/rpc/request_video_task", {
           method: "POST",
@@ -910,6 +1010,7 @@ export function productionPresentationDependencies(
       repository,
       generator: new MockStudioGenerator(),
       verifier: new MockStudioVerifier(),
+      nameReader: undefined as StudioNameReader | undefined,
     };
   return {
     repository,
@@ -920,5 +1021,10 @@ export function productionPresentationDependencies(
     ),
     // Verifier removed 2026-08-27: the OpenAI vision check passed wrong names.
     verifier: new MockStudioVerifier(),
+    // Narrow replacement: transcribe the engraved name and regenerate on drift.
+    nameReader: new OpenAINameReader(
+      config.OPENAI_API_KEY!,
+      config.OPENAI_VERIFIER_MODEL,
+    ) as StudioNameReader | undefined,
   };
 }

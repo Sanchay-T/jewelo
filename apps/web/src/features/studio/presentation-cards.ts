@@ -1,12 +1,9 @@
 import type {
   LegacyGenerationRun,
+  LegacyGenerationTask,
   Representation,
 } from "../../lib/legacy-direction-compat";
-import type {
-  PresentationTask,
-  PresentationView,
-  TaskState,
-} from "../../lib/types";
+import type { PresentationView, TaskState } from "../../lib/types";
 
 export const PRESENTATION_CARDS = [
   { id: "studio", number: "01", label: "Studio", treatment: "Clean ivory" },
@@ -40,7 +37,7 @@ export interface PresentationCardModel {
   number: string;
   label: string;
   treatment: string;
-  task?: PresentationTask;
+  task?: LegacyGenerationTask;
   state: TaskState;
   assetUrl?: string;
   alt: string;
@@ -106,6 +103,23 @@ export function adaptPresentationCards(
 export function isPrimaryReady(cards: PresentationCardModel[]) {
   const studio = cards.find((card) => card.id === "studio");
   return studio?.state === "ready" && Boolean(studio.assetUrl);
+}
+
+// The backend runs studio first: on_skin/close_up/dark stay `queued` behind a
+// dependency on the studio task, so "Queued" reads as if nothing is happening.
+export function presentationStatusLabel(
+  card: PresentationCardModel,
+  cards: PresentationCardModel[],
+) {
+  if (
+    card.id === "studio" &&
+    card.state === "blocked" &&
+    card.task?.terminalErrorCode?.startsWith("name_mismatch")
+  )
+    return "Spelling check failed - retry";
+  if (card.state === "queued" && card.id !== "studio" && !isPrimaryReady(cards))
+    return "Waiting for studio";
+  return card.state.replaceAll("_", " ");
 }
 
 export function applyPresentationReplay(

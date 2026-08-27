@@ -54,6 +54,13 @@ function text(value: unknown, fallback = "") {
   return typeof value === "string" ? value : fallback;
 }
 
+// /api/state mints a fresh 5-minute signed URL for every asset on every call,
+// and subscribeToRun re-loads state every 3s. Handing the browser a new src on
+// each poll restarts every <Image> download, so cards that are not `priority`
+// never finish decoding on iOS Safari. Reuse one URL per asset and rotate it a
+// minute before the 300s signature expires.
+const SIGNED_URL_TTL_MS = 240_000;
+
 function estimateFromSnapshot(row: Row, directionId: string): LegacyEstimate {
   return {
     id: text(row.id),
@@ -148,6 +155,7 @@ export class SupabaseJeweloClient implements LegacyJeweloClient {
   #drafts = new Map<string, DesignDraft>();
   #session?: Session;
   #supabase?: SupabaseDataClient;
+  #signedUrls = new Map<string, { url: string; issuedAt: number }>();
   #state: LegacySpikeState = {
     version: 1,
     engine: "jewelo-working-app",
@@ -385,9 +393,16 @@ export class SupabaseJeweloClient implements LegacyJeweloClient {
       refresh();
     });
     const pollingFallback = window.setInterval(refresh, 3000);
+    // iOS Safari suspends timers for a backgrounded tab, so a signed media URL
+    // can be expired by the time the customer comes back. Re-load immediately.
+    const onVisible = () => {
+      if (document.visibilityState === "visible") refresh();
+    };
+    document.addEventListener("visibilitychange", onVisible);
     return () => {
       stopped = true;
       window.clearInterval(pollingFallback);
+      document.removeEventListener("visibilitychange", onVisible);
       if (channel) void this.#ensureSupabase().removeChannel(channel);
     };
   }
@@ -555,12 +570,29 @@ export class SupabaseJeweloClient implements LegacyJeweloClient {
     this.#state.designs = [];
     this.#state.activeDesignId = undefined;
     this.#drafts.clear();
+    this.#signedUrls.clear();
     this.#emit();
     return this.getState();
   }
 
+  #stabiliseSignedUrls(assets: Row[] = []) {
+    const now = Date.now();
+    for (const asset of assets) {
+      const id = text(asset.id);
+      const fresh = text(asset.signed_url);
+      if (!id || !fresh) continue;
+      const cached = this.#signedUrls.get(id);
+      if (cached && now - cached.issuedAt < SIGNED_URL_TTL_MS) {
+        asset.signed_url = cached.url;
+        continue;
+      }
+      this.#signedUrls.set(id, { url: fresh, issuedAt: now });
+    }
+  }
+
   async #loadState(activeDesignId = this.#state.activeDesignId) {
     const payload = await this.#request<StatePayload>("/api/state");
+    this.#stabiliseSignedUrls(payload.assets);
     this.#drafts.clear();
     for (const row of payload.design_drafts)
       this.#rememberDraft(
@@ -796,6 +828,7 @@ export class SupabaseJeweloClient implements LegacyJeweloClient {
           assetId: asset ? text(asset.id) : undefined,
           directionId,
           kind,
+          terminalErrorCode: text(task.terminal_error_code) || undefined,
         };
       }),
       assets: assetRows.map((asset) => {

@@ -1,6 +1,8 @@
 export interface StudioGenerationInput {
   idempotencyKey: string;
   prompt: string;
+  /** Verified sibling still whose pendant the new scene must reproduce. */
+  referenceImageUrl?: string;
   identityImageUrl: string;
   styleAnchorUrl: string;
   inspirationImageUrl?: string;
@@ -102,6 +104,9 @@ export class OpenAIStillAdapter implements StudioGenerator {
     form.set("quality", "high");
     form.set("output_format", "png");
     const references = [
+      ...(input.referenceImageUrl
+        ? ([[input.referenceImageUrl, "reference.png"]] as const)
+        : []),
       [input.identityImageUrl, "identity.png"],
       [input.styleAnchorUrl, "style-anchor.png"],
       ...(input.inspirationImageUrl
@@ -253,6 +258,81 @@ export class OpenAIStudioVerifier implements StudioVerifier {
     )
       throw new Error("OpenAI verification was malformed");
     return parsed;
+  }
+}
+
+/** Reads the letters actually engraved on a generated pendant. */
+export interface StudioNameReader {
+  read(media: GeneratedMedia): Promise<string>;
+}
+
+/**
+ * Comparison form for an approved name: NFC, no combining marks, no tatweel and
+ * no whitespace, so only the letters themselves decide a mismatch.
+ */
+export function normalizeIdentityText(value: string): string {
+  return value
+    .normalize("NFD")
+    .replaceAll(/\p{M}/gu, "")
+    .replaceAll(/[\sـ]/gu, "")
+    .normalize("NFC");
+}
+
+export class OpenAINameReader implements StudioNameReader {
+  constructor(
+    private readonly apiKey: string,
+    private readonly model: string,
+    private readonly fetcher: Fetch = fetch,
+  ) {}
+
+  async read(media: GeneratedMedia): Promise<string> {
+    const base64 = Buffer.from(media.bytes).toString("base64");
+    const response = await this.fetcher("https://api.openai.com/v1/responses", {
+      method: "POST",
+      headers: {
+        authorization: `Bearer ${this.apiKey}`,
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        model: this.model,
+        input: [
+          {
+            role: "user",
+            content: [
+              {
+                type: "input_text",
+                text: 'Transcribe EXACTLY the Arabic (or Latin) text written on the pendant. Reply with JSON {"text": "..."} only.',
+              },
+              {
+                type: "input_image",
+                image_url: `data:${media.mimeType};base64,${base64}`,
+              },
+            ],
+          },
+        ],
+        text: {
+          format: {
+            type: "json_schema",
+            name: "caleums_pendant_text",
+            strict: true,
+            schema: {
+              type: "object",
+              additionalProperties: false,
+              properties: { text: { type: "string" } },
+              required: ["text"],
+            },
+          },
+        },
+      }),
+    });
+    if (!response.ok)
+      throw new Error(`OpenAI name read failed:${response.status}`);
+    const parsed = JSON.parse(extractResponseText(await response.json())) as {
+      text?: unknown;
+    };
+    if (typeof parsed.text !== "string")
+      throw new Error("OpenAI name read was malformed");
+    return parsed.text;
   }
 }
 

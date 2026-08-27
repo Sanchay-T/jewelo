@@ -44,6 +44,7 @@ export interface Direction {
 export interface LegacyGenerationTask extends PresentationTask {
   directionId: string;
   kind: RepresentationKind;
+  terminalErrorCode?: string;
 }
 export interface LegacyGenerationRun extends GenerationRun {
   tasks: LegacyGenerationTask[];

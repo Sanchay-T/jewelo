@@ -41,10 +41,15 @@ export function identityAnchorSvg(
 ) {
   const layout = String(specification.layout ?? "single-name");
   const connector = String(specification.connector ?? "none");
+  // Great Vibes is the pinned Latin face. Measured advances: 0.95em for a
+  // leading capital, 0.317em per following lowercase letter; cap the size so
+  // its 0.851em ascender and 0.401em descender stay inside the 600px canvas.
+  const characters = Math.max(2, [...anchor.approvedText.trim()].length);
   const fontSize = Math.max(
-    84,
-    Math.min(190, 720 / Math.max(4, [...anchor.approvedText].length)),
+    90,
+    Math.min(340, 800 / (0.95 + 0.317 * (characters - 1))),
   );
+  const baseline = Math.round(300 + fontSize * 0.22);
   const direction = anchor.language === "ar" ? "rtl" : "ltr";
   return [
     `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="600" viewBox="0 0 1200 600">`,
@@ -53,8 +58,7 @@ export function identityAnchorSvg(
     `<path d="M40 300 H255 M945 300 H1160" stroke="#111" stroke-width="10" fill="none"/>`,
     `<circle cx="255" cy="300" r="16" fill="none" stroke="#111" stroke-width="8"/>`,
     `<circle cx="945" cy="300" r="16" fill="none" stroke="#111" stroke-width="8"/>`,
-    `<text x="600" y="330" text-anchor="middle" direction="${direction}" unicode-bidi="bidi-override" font-family="${xml(anchor.typography)}, DejaVu Sans" font-size="${fontSize}" font-weight="500" fill="#111">${xml(anchor.approvedText)}</text>`,
-    `<text x="600" y="540" text-anchor="middle" font-family="DejaVu Sans" font-size="20" fill="#111">${xml(`${layout}|${connector}|${anchor.fingerprint}`)}</text>`,
+    `<text x="600" y="${baseline}" text-anchor="middle" direction="${direction}" unicode-bidi="bidi-override" font-family="Great Vibes" font-size="${fontSize}" fill="#111">${xml(anchor.approvedText)}</text>`,
     `</svg>`,
   ].join("");
 }
@@ -99,6 +103,10 @@ export async function renderIdentityAnchor(
     };
   }
 
+  // librsvg resolves "Great Vibes" only through the pinned fonts directory; the
+  // deployed container has neither the customer typography nor DejaVu Sans, so
+  // the unpinned stencil rendered blank.
+  pinFontconfig();
   const svg = identityAnchorSvg(anchor, specification);
   const png = await sharp(Buffer.from(svg))
     .png({ compressionLevel: 9, adaptiveFiltering: false, palette: false })
@@ -202,6 +210,7 @@ const FONT_FAMILIES: Record<string, string> = {
   "ArefRuqaa-Regular.ttf": "Aref Ruqaa",
   "NotoKufiArabic-Regular.ttf": "Noto Kufi Arabic",
   "rakkas.ttf": "Rakkas",
+  "GreatVibes-Regular.ttf": "Great Vibes",
 };
 
 function fontPath(file: string): string {
