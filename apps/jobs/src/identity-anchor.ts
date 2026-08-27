@@ -131,7 +131,7 @@ class SharpArabicRasterizer implements ArabicIdentityRasterizer {
     // and rendered a blank raster.
     const text = sharp({
       text: {
-        text: `<span font_family="CaleumsArabic" size="${input.fontSize * 1024}" font_features="calt 0, liga 0, dlig 0, clig 0, cswh 0, mset 0">${xml(input.approvedText)}</span>`,
+        text: `<span font_family="CaleumsArabic" size="${input.fontSize * 1024}" font_features="rclt 0, calt 0, liga 0, dlig 0, clig 0, cswh 0, mset 0, curs 0">${xml(input.approvedText)}</span>`,
         fontfile: fontPath(input.fontFile),
         width: 6000,
         wrap: "none",
