@@ -538,6 +538,11 @@ export class MockJeweloClient implements LegacyJeweloClient {
   }
 
   async setRole(role: Role) {
+    if (role === "customer")
+      await fetch("/api/operator/session", {
+        method: "DELETE",
+        credentials: "same-origin",
+      });
     return this.commit({
       ...this.state,
       principal:
@@ -547,7 +552,14 @@ export class MockJeweloClient implements LegacyJeweloClient {
     });
   }
 
-  async loginOperator() {
+  async loginOperator(email: string, passphrase: string) {
+    const response = await fetch("/api/operator/session", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ email, passphrase }),
+    });
+    if (!response.ok) throw new Error("Invalid operator credentials");
     return this.setRole("operator");
   }
 

@@ -3,6 +3,7 @@
 You are implementing a first-principles production rebuild. The architecture is already decided by the product manager. Preserve the approved customer outcome and follow the locked stack; do not inherit assumptions from the old backend.
 
 @docs/START-HERE.md
+@docs/CALEUMS-FINAL-E2E-CONTRACT.md
 @docs/PRODUCT-CONTRACT.md
 @docs/FROZEN-UX.md
 @docs/UX-AUDIT.md
@@ -15,7 +16,7 @@ You are implementing a first-principles production rebuild. The architecture is 
 
 ## Binding decisions
 
-- Web: Next.js 16.2, React 19, strict TypeScript, Vercel.
+- Web: Next.js 16.2, React 19, strict TypeScript, DigitalOcean App Platform.
 - Repository: pnpm workspace + Turborepo.
 - Data platform: Supabase Mumbai — Postgres, Auth, Realtime, private Storage.
 - Workflow: Trigger.dev Cloud.
@@ -26,6 +27,9 @@ You are implementing a first-principles production rebuild. The architecture is 
 - Media UI: Motion, Embla Carousel, `react-zoom-pan-pinch`, `react-dropzone`, native short-form video.
 
 These may change only after an explicit user instruction or a proved blocking incompatibility. An agent must not substitute Convex, Neon, Clerk, Firebase, R2, Runway, another workflow engine, another image model, or another video gateway because it prefers that vendor.
+
+For final Caleums integration, `docs/CALEUMS-FINAL-E2E-CONTRACT.md` overrides
+older goal examples that describe a different media graph or provider split.
 
 ## Non-negotiable engineering rules
 

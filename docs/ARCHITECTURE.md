@@ -1,5 +1,9 @@
 # Jewelo v2 architecture
 
+The final Caleums parent/child asset graph and provider split are frozen in
+`docs/CALEUMS-FINAL-E2E-CONTRACT.md`. That contract overrides older pipeline
+examples below where they differ.
+
 ## System
 
 ```text
@@ -7,7 +11,7 @@ Browser
   |
   | HTTPS / Supabase Realtime
   v
-Next.js on Vercel
+Next.js on DigitalOcean App Platform
   |-- authenticated command routes
   |-- server-rendered reads
   |-- signed media access
@@ -315,10 +319,10 @@ fal URLs are public by default unless ACLs are configured and are retained only 
 ## Environments
 
 ```text
-development  -> persistent Supabase dev + Trigger DEV + Vercel local/preview + dev provider keys
-preview      -> Supabase PR branch + Trigger preview branch + Vercel preview + contract providers
+development  -> persistent Supabase dev + Trigger DEV + local Next.js + dev provider keys
+preview      -> Supabase PR branch + Trigger preview branch + DigitalOcean staging + contract providers
 staging      -> persistent Supabase staging + Trigger STAGING + bounded OpenAI/fal validation
-production   -> Supabase Mumbai prod + Trigger PROD + Vercel prod + approved provider quotas
+production   -> Supabase Mumbai prod + Trigger PROD + DigitalOcean production + approved provider quotas
 ```
 
 Production data is never copied into previews. Seed only synthetic fixtures.

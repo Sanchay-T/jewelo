@@ -39,7 +39,7 @@ Also prove:
 - preview/development service setup is documented;
 - CI runs the same checks.
 
-If credentials are authorized, prove Vercel/Supabase/Trigger development or preview connections. If a credential is the sole blocker, provide the exact one-time action without pretending the integration is verified.
+If credentials are authorized, prove DigitalOcean/Supabase/Trigger development or staging connections. If a credential is the sole blocker, provide the exact one-time action without pretending the integration is verified.
 
 ## UI goals
 

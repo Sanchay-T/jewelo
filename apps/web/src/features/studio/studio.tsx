@@ -2,25 +2,129 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
+  ArrowClockwise,
   ArrowLeft,
   ArrowRight,
   DownloadSimple,
   FloppyDisk,
-  MagnifyingGlassMinus,
-  MagnifyingGlassPlus,
+  MagicWand,
   ShareNetwork,
   Sparkle,
+  SpinnerGap,
   X,
 } from "@phosphor-icons/react";
 import { AppShell } from "@/components/app-shell";
 import { useJewelo } from "@/lib/jewelo-provider";
-import { ENABLED_PRESENTATION_VIEWS } from "@/lib/types";
+import {
+  arabicStyleLabel,
+  formatCaleumsPrice,
+  identityFromSpecification,
+} from "@/lib/ui-presentation";
+import type { Locale, TaskState } from "@/lib/types";
+import {
+  adaptPresentationCards,
+  applySamplePresentationAssets,
+  isPrimaryReady,
+  type PresentationCardModel,
+} from "./presentation-cards";
 
-type Locale = "en" | "ar";
-const activeStates = new Set(["queued", "generating", "verifying", "retrying"]);
+const activeStates = new Set<TaskState>([
+  "queued",
+  "generating",
+  "verifying",
+  "retrying",
+]);
+
+function stateCopy(state: TaskState) {
+  if (state === "failed") return "This presentation needs another try.";
+  if (state === "cancelled") return "This presentation was cancelled.";
+  if (state === "blocked") return "Waiting for its verified parent task.";
+  if (state === "unavailable" || state === "available_on_request")
+    return "This presentation is not available yet.";
+  if (state === "verifying") return "Checking the approved identity.";
+  if (state === "retrying") return "Trying this presentation again.";
+  if (state === "generating") return "Rendering this presentation.";
+  return "Queued for presentation.";
+}
+
+function PresentationCard({
+  card,
+  busy,
+  onCancel,
+  onRetry,
+}: {
+  card: PresentationCardModel;
+  busy?: string;
+  onCancel(card: PresentationCardModel): void;
+  onRetry(card: PresentationCardModel): void;
+}) {
+  const ready = card.state === "ready" && Boolean(card.assetUrl);
+  return (
+    <article className="clm-presentation-card" data-state={card.state}>
+      <div className="clm-presentation-media">
+        {ready ? (
+          <Image
+            src={card.assetUrl!}
+            alt={card.alt}
+            fill
+            priority={card.id === "studio" || card.id === "on_skin"}
+            sizes="(max-width: 799px) 100vw, (max-width: 1100px) 50vw, 25vw"
+          />
+        ) : (
+          <div className="clm-presentation-placeholder" role="status">
+            {activeStates.has(card.state) ? (
+              <SpinnerGap className="clm-spin" size={30} />
+            ) : (
+              <Sparkle size={30} weight="duotone" />
+            )}
+            <strong>{card.state.replaceAll("_", " ")}</strong>
+            <span>{stateCopy(card.state)}</span>
+          </div>
+        )}
+        <span className="clm-presentation-number">{card.number}</span>
+      </div>
+      <footer>
+        <div>
+          <strong>{card.label}</strong>
+          <span>{card.treatment}</span>
+        </div>
+        <span className="clm-state" data-state={card.state}>
+          {card.state.replaceAll("_", " ")}
+        </span>
+      </footer>
+      <div className="clm-presentation-actions">
+        {ready && (
+          <a href={card.assetUrl} download>
+            <DownloadSimple size={16} /> Download
+          </a>
+        )}
+        {card.task && activeStates.has(card.state) && (
+          <button
+            type="button"
+            disabled={Boolean(busy)}
+            onClick={() => onCancel(card)}
+          >
+            <X size={16} />
+            {busy === `cancel-${card.task.id}` ? "Cancelling…" : "Cancel"}
+          </button>
+        )}
+        {card.task && card.state === "failed" && (
+          <button
+            type="button"
+            disabled={Boolean(busy)}
+            onClick={() => onRetry(card)}
+          >
+            <ArrowClockwise size={16} />
+            {busy === `retry-${card.task.id}` ? "Retrying…" : "Retry"}
+          </button>
+        )}
+      </div>
+    </article>
+  );
+}
 
 export function Studio({
   locale,
@@ -30,6 +134,7 @@ export function Studio({
   designId: string;
 }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { client, state, refresh } = useJewelo();
   const design = state.designs.find((item) => item.id === designId);
   const run = design?.runs.at(-1);
@@ -37,35 +142,68 @@ export function Studio({
   const revision =
     design?.revisions.find((item) => item.id === run?.revisionId) ??
     design?.revisions.at(-1);
-  const [zoom, setZoom] = useState(1);
   const [busy, setBusy] = useState<string>();
-  const [message, setMessage] = useState("");
-  const [locallyCancelled, setLocallyCancelled] = useState<string[]>([]);
+  const [actionMessage, setActionMessage] = useState("");
+  const [locallyCancelled, setLocallyCancelled] = useState<Set<string>>(
+    new Set(),
+  );
+  const estimateRequested = useRef(false);
   const scenarioMode = process.env.NEXT_PUBLIC_JEWELO_SCENARIOS === "1";
-  const visibleViews = run
-    ? ENABLED_PRESENTATION_VIEWS.filter((view) =>
-        run.tasks.some((task) => task.view === view),
-      )
-    : [];
-  const studioTask = run?.tasks.find(
-    (task) =>
-      task.view === "studio" &&
-      (!direction || task.directionId === direction.id),
-  );
-  const presentationAsset = run?.assets.find(
-    (candidate) =>
-      candidate.view === "studio" &&
-      (!studioTask || candidate.lineage.taskId === studioTask.id),
-  );
-  const representation = direction?.representations.product;
+  const samplePresentation = scenarioMode && searchParams.get("sample") === "1";
+  const cards = useMemo(() => {
+    const adapted = adaptPresentationCards(run, locallyCancelled);
+    return samplePresentation
+      ? applySamplePresentationAssets(adapted, true)
+      : adapted;
+  }, [locallyCancelled, run, samplePresentation]);
+  const primaryReady = isPrimaryReady(cards);
+  const ordered = Boolean(design?.order);
+
   useEffect(
     () => (run ? client.subscribeToRun(run.id, refresh) : undefined),
     [client, refresh, run],
   );
   useEffect(() => {
-    if (studioTask)
-      setMessage(`Studio task is ${studioTask.state.replaceAll("_", " ")}.`);
-  }, [studioTask?.state]);
+    estimateRequested.current = false;
+  }, [revision?.id, run?.id]);
+  useEffect(() => {
+    if (!run) return;
+    const stored = window.sessionStorage.getItem(
+      `caleums:cancelled-tasks:${run.id}`,
+    );
+    try {
+      setLocallyCancelled(
+        new Set(stored ? (JSON.parse(stored) as string[]) : []),
+      );
+    } catch {
+      setLocallyCancelled(new Set());
+    }
+  }, [run]);
+  useEffect(() => {
+    if (
+      !design ||
+      !direction ||
+      direction.representations.product.state !== "ready" ||
+      !primaryReady ||
+      design.estimate ||
+      estimateRequested.current
+    )
+      return;
+    estimateRequested.current = true;
+    void (async () => {
+      if (design.selectedDirectionId !== direction.id)
+        await client.selectDirection(design.id, direction.id);
+      await client.calculateEstimate(design.id);
+    })()
+      .then(() => {
+        setActionMessage("");
+        refresh();
+      })
+      .catch(() => {
+        estimateRequested.current = false;
+        setActionMessage("The price estimate could not be calculated yet.");
+      });
+  }, [client, design, direction, primaryReady, refresh]);
 
   async function action(
     key: string,
@@ -73,48 +211,57 @@ export function Studio({
     success: string,
   ) {
     setBusy(key);
-    setMessage("");
+    setActionMessage("");
     try {
       await work();
       refresh();
-      setMessage(success);
+      setActionMessage(success);
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Action unavailable");
+      setActionMessage(
+        error instanceof Error ? error.message : "Action unavailable",
+      );
     } finally {
       setBusy(undefined);
     }
   }
+
+  function pinCancelled(taskId: string) {
+    if (!run) return;
+    setLocallyCancelled((current) => {
+      const next = new Set(current).add(taskId);
+      window.sessionStorage.setItem(
+        `caleums:cancelled-tasks:${run.id}`,
+        JSON.stringify([...next]),
+      );
+      return next;
+    });
+  }
+
+  function clearCancelled(taskId: string) {
+    if (!run) return;
+    setLocallyCancelled((current) => {
+      const next = new Set(current);
+      next.delete(taskId);
+      window.sessionStorage.setItem(
+        `caleums:cancelled-tasks:${run.id}`,
+        JSON.stringify([...next]),
+      );
+      return next;
+    });
+  }
+
   async function continueToPiece() {
-    if (!direction) return;
+    if (!direction || !primaryReady || !design?.estimate) return;
     await action(
       "commerce",
       async () => {
-        if (design?.selectedDirectionId !== direction.id)
+        if (design.selectedDirectionId !== direction.id)
           await client.selectDirection(designId, direction.id);
-        if (!design?.estimate) await client.calculateEstimate(designId);
+        await client.calculateEstimate(designId);
+        refresh();
         router.push(`/${locale}/commerce/${designId}`);
       },
       "Opening your final piece.",
-    );
-  }
-  async function regenerate() {
-    setLocallyCancelled([]);
-    await action(
-      "regenerate",
-      async () => {
-        await client.startRun(designId);
-      },
-      "A fresh Studio render has started.",
-    );
-  }
-  async function refine() {
-    await action(
-      "refine",
-      async () => {
-        await client.refineDesign(designId, "Caleums Studio refinement");
-        await client.startRun(designId);
-      },
-      "A refined revision is being rendered.",
     );
   }
 
@@ -139,50 +286,36 @@ export function Studio({
             className="clm-primary"
             onClick={() => void client.startRun(designId)}
           >
-            Create Studio result
+            Create presentation set
           </button>
         </main>
       </AppShell>
     );
+
   const spec = revision.specification;
-  const approved = revision.identityAnchor.approvedText;
-  const taskState = studioTask
-    ? locallyCancelled.includes(studioTask.id)
-      ? "cancelled"
-      : studioTask.state
-    : (representation?.state ?? "queued");
-  const asset =
-    taskState === "ready"
-      ? (presentationAsset?.assetUrl ?? representation?.assetUrl)
-      : undefined;
+  const identity = identityFromSpecification(spec);
   return (
     <AppShell locale={locale}>
-      <main className="clm-studio">
+      <main
+        className="clm-studio clm-studio-set"
+        dir={locale === "ar" ? "rtl" : "ltr"}
+      >
         <aside className="clm-studio-summary">
           <Link className="clm-back" href={`/${locale}/design/new`}>
             <ArrowLeft size={16} /> Back to design
           </Link>
           <p className="clm-kicker">Your design</p>
-          <h1>{approved}</h1>
+          <h1 dir={spec.arabicStyle === "none" ? "ltr" : "rtl"}>
+            {identity.inline}
+          </h1>
           <dl className="clm-summary compact">
             <div>
               <dt>Names</dt>
-              <dd>
-                {spec.names
-                  .map(
-                    (item) =>
-                      item.approvedEnglishText ?? item.approvedArabicText,
-                  )
-                  .join(" & ")}
-              </dd>
+              <dd>{identity.inline}</dd>
             </div>
             <div>
               <dt>Script</dt>
-              <dd>
-                {spec.arabicStyle === "none"
-                  ? "English · connected script"
-                  : `Arabic · ${spec.arabicStyle}`}
-              </dd>
+              <dd>{arabicStyleLabel(spec.arabicStyle)}</dd>
             </div>
             <div>
               <dt>Layout</dt>
@@ -215,7 +348,9 @@ export function Studio({
           <div className="clm-studio-save">
             <button
               type="button"
-              onClick={() => setMessage("Design saved in this mock workspace.")}
+              onClick={() =>
+                setActionMessage("Design saved in this workspace.")
+              }
             >
               <FloppyDisk size={17} /> Save
             </button>
@@ -224,7 +359,7 @@ export function Studio({
               onClick={() =>
                 void navigator.clipboard
                   ?.writeText(window.location.href)
-                  .then(() => setMessage("Design link copied."))
+                  .then(() => setActionMessage("Design link copied."))
               }
             >
               <ShareNetwork size={17} /> Share
@@ -232,148 +367,77 @@ export function Studio({
           </div>
           <div className="clm-estimate">
             <span>Estimated price</span>
-            <strong>AED 7,950</strong>
-            <small>Price updates after atelier review</small>
+            <strong>
+              {design.estimate ? formatCaleumsPrice(design) : "Calculating…"}
+            </strong>
+            <small>
+              Estimate upper bound · final quote follows atelier review
+            </small>
           </div>
         </aside>
 
-        <section className="clm-studio-canvas">
+        <section className="clm-studio-canvas clm-presentation-set">
           <header>
             <div>
-              <p className="clm-kicker">One considered result</p>
-              <h2>Studio 01</h2>
+              <p className="clm-kicker">Your presentation set</p>
+              <h2>Four views of one approved pendant.</h2>
             </div>
-            <span className="clm-state" data-state={taskState}>
-              {taskState.replaceAll("_", " ")}
-            </span>
+            <div className="clm-presentation-status">
+              {scenarioMode && (
+                <span className="clm-mock-mark">
+                  {samplePresentation
+                    ? "Sample presentation assets · no provider call"
+                    : "Sample presentation assets"}
+                </span>
+              )}
+              <span>
+                {cards.filter((card) => card.state === "ready").length} of 4
+                ready
+              </span>
+            </div>
           </header>
-          <div className="clm-studio-media">
-            {asset ? (
-              <Image
-                src={asset}
-                alt={
-                  presentationAsset?.alt ??
-                  representation?.alt ??
-                  "Caleums pendant presentation"
-                }
-                fill
-                priority
-                sizes="(max-width: 799px) 100vw, 68vw"
-                style={{ transform: `scale(${zoom})` }}
+          <div className="clm-presentation-grid">
+            {cards.map((card) => (
+              <PresentationCard
+                key={card.id}
+                card={card}
+                busy={busy}
+                onCancel={(selected) => {
+                  if (!selected.task) return;
+                  void action(
+                    `cancel-${selected.task.id}`,
+                    async () => {
+                      await client.cancelTask(designId, selected.task!.id);
+                      pinCancelled(selected.task!.id);
+                    },
+                    `${selected.label} task cancelled.`,
+                  );
+                }}
+                onRetry={(selected) => {
+                  if (!selected.task) return;
+                  clearCancelled(selected.task.id);
+                  void action(
+                    `retry-${selected.task.id}`,
+                    () => client.retryTask(designId, selected.task!.id),
+                    `${selected.label} retry started.`,
+                  );
+                }}
               />
-            ) : (
-              <div className="clm-studio-loading">
-                <Sparkle size={34} weight="duotone" />
-                <strong>
-                  {taskState === "failed"
-                    ? "This view needs another try"
-                    : taskState === "cancelled"
-                      ? "This view was cancelled"
-                      : taskState === "blocked"
-                        ? "This task is waiting on its dependency"
-                        : "Preparing this view"}
-                </strong>
-                <span>Ready media remains preserved.</span>
-              </div>
-            )}
-            <div className="clm-zoom">
-              <button
-                aria-label="Zoom out"
-                onClick={() => setZoom(Math.max(1, zoom - 0.15))}
-              >
-                <MagnifyingGlassMinus size={18} />
-              </button>
-              <button
-                aria-label="Zoom in"
-                onClick={() => setZoom(Math.min(1.6, zoom + 0.15))}
-              >
-                <MagnifyingGlassPlus size={18} />
-              </button>
-              <span>{Math.round(zoom * 100)}%</span>
-            </div>
-          </div>
-          <div
-            className="clm-studio-tabs"
-            role="tablist"
-            aria-label="Presentation views"
-          >
-            {visibleViews.map((view) => (
-              <button key={view} role="tab" aria-selected>
-                <span>Studio</span>
-                <small>{taskState}</small>
-              </button>
             ))}
           </div>
           {scenarioMode && (
             <details className="clm-task-audit">
               <summary>Development task status audit</summary>
-              <p>
-                Frozen mock task states only. These do not add customer-facing
-                presentation directions.
-              </p>
               <ul>
-                {run.tasks.map((task, index) => {
-                  const auditedState = locallyCancelled.includes(task.id)
-                    ? "cancelled"
-                    : task.state;
-                  return (
-                    <li key={task.id}>
-                      <span>
-                        Task {index + 1} · {auditedState.replaceAll("_", " ")}
-                      </span>
-                      {activeStates.has(auditedState) && (
-                        <button
-                          type="button"
-                          disabled={Boolean(busy)}
-                          aria-label={`Cancel task ${index + 1}`}
-                          onClick={() =>
-                            void action(
-                              `cancel-audit-${task.id}`,
-                              async () => {
-                                const result = await client.cancelTask(
-                                  designId,
-                                  task.id,
-                                );
-                                setLocallyCancelled((current) => [
-                                  ...new Set([...current, task.id]),
-                                ]);
-                                return result;
-                              },
-                              `Task ${index + 1} cancelled.`,
-                            )
-                          }
-                        >
-                          Cancel
-                        </button>
-                      )}
-                      {auditedState === "failed" && (
-                        <button
-                          type="button"
-                          disabled={Boolean(busy)}
-                          aria-label={`Retry task ${index + 1}`}
-                          onClick={() =>
-                            void action(
-                              `retry-audit-${task.id}`,
-                              async () => {
-                                const result = await client.retryTask(
-                                  designId,
-                                  task.id,
-                                );
-                                setLocallyCancelled((current) =>
-                                  current.filter((id) => id !== task.id),
-                                );
-                                return result;
-                              },
-                              `Task ${index + 1} retry completed.`,
-                            )
-                          }
-                        >
-                          Retry
-                        </button>
-                      )}
-                    </li>
-                  );
-                })}
+                {run.tasks.map((task) => (
+                  <li key={task.id}>
+                    <span>
+                      {task.view.replaceAll("_", " ")} ·{" "}
+                      {locallyCancelled.has(task.id) ? "cancelled" : task.state}
+                    </span>
+                    <small>Attempt {task.attempt}</small>
+                  </li>
+                ))}
               </ul>
             </details>
           )}
@@ -381,84 +445,79 @@ export function Studio({
 
         <footer className="clm-studio-actions">
           <div>
-            <strong>{approved}</strong>
-            <span>Identity verified · Studio presentation</span>
+            <strong>{identity.inline}</strong>
+            <span>Verified identity · four presentation views</span>
           </div>
+          {scenarioMode && (
+            <Link
+              className="clm-secondary"
+              href={`/${locale}/design/crafting?designId=${designId}&replay=1`}
+            >
+              <Sparkle size={17} /> Replay generation journey
+            </Link>
+          )}
           <button
+            type="button"
             className="clm-secondary"
-            disabled={Boolean(busy)}
-            onClick={() => void refine()}
+            disabled={Boolean(busy) || ordered}
+            title={ordered ? "Ordered designs are locked" : undefined}
+            onClick={() =>
+              void action(
+                "refine",
+                async () => {
+                  await client.refineDesign(
+                    designId,
+                    "Caleums Studio refinement",
+                  );
+                  await client.startRun(designId);
+                },
+                "A refined presentation set has started.",
+              )
+            }
           >
+            <MagicWand size={17} />
             {busy === "refine" ? "Refining…" : "Refine"}
           </button>
           <button
+            type="button"
             className="clm-secondary"
-            disabled={Boolean(busy)}
-            onClick={() => void regenerate()}
+            disabled={Boolean(busy) || ordered}
+            title={ordered ? "Ordered designs are locked" : undefined}
+            onClick={() =>
+              void action(
+                "regenerate",
+                () => client.startRun(designId),
+                "A fresh presentation set has started.",
+              )
+            }
           >
+            <ArrowClockwise size={17} />
             {busy === "regenerate" ? "Starting…" : "Regenerate"}
           </button>
-          {studioTask && activeStates.has(taskState) && (
-            <button
-              className="clm-secondary clm-task-action"
-              disabled={Boolean(busy)}
-              onClick={() =>
-                void action(
-                  "cancel-task",
-                  async () => {
-                    const result = await client.cancelTask(
-                      designId,
-                      studioTask.id,
-                    );
-                    setLocallyCancelled((current) => [
-                      ...new Set([...current, studioTask.id]),
-                    ]);
-                    return result;
-                  },
-                  "Studio task cancelled. Ready assets remain preserved.",
-                )
-              }
-            >
-              <X size={16} />{" "}
-              {busy === "cancel-task" ? "Cancelling…" : "Cancel task"}
-            </button>
-          )}
-          {studioTask && taskState === "failed" && (
-            <button
-              className="clm-secondary clm-task-action"
-              disabled={Boolean(busy)}
-              onClick={() =>
-                void action(
-                  "retry-task",
-                  () => client.retryTask(designId, studioTask.id),
-                  "Studio task retry started.",
-                )
-              }
-            >
-              {busy === "retry-task" ? "Retrying…" : "Retry task"}
-            </button>
-          )}
-          {asset && (
-            <a className="clm-secondary" href={asset} download>
-              <DownloadSimple size={17} /> Download
-            </a>
-          )}
           <button
+            type="button"
             className="clm-primary"
-            disabled={taskState !== "ready" || Boolean(busy)}
+            disabled={!primaryReady || !design.estimate || Boolean(busy)}
             onClick={() => void continueToPiece()}
           >
             {busy === "commerce" ? "Preparing…" : "Continue to your piece"}{" "}
             <ArrowRight size={17} />
           </button>
         </footer>
-        {message && (
+        {ordered && (
+          <p className="clm-ordered-lock">
+            This ordered design is locked; refinement and regeneration are
+            unavailable.
+          </p>
+        )}
+        {actionMessage && (
           <p className="clm-toast" role="status">
-            {message}
+            {actionMessage}
           </p>
         )}
         <p className="clm-sr-live" aria-live="polite" aria-atomic="true">
-          Studio presentation task {taskState}.
+          Presentation tasks:{" "}
+          {cards.map((card) => `${card.label} ${card.state}`).join(", ")}.
         </p>
       </main>
     </AppShell>

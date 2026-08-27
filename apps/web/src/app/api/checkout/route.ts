@@ -1,4 +1,7 @@
-import { createShopifyDraftOrder } from "../../../lib/backend/shopify";
+import {
+  createShopifyDraftOrder,
+  reconcileShopifyDraftOrder,
+} from "../../../lib/backend/shopify";
 import {
   adminConfig,
   authenticatedUser,
@@ -65,16 +68,18 @@ export async function POST(request: Request) {
         { error: "Checkout idempotency key mismatch" },
         { status: 409 },
       );
-    const reservation = await supabaseRequest<Array<Record<string, unknown>>>(
-      admin,
-      `/rest/v1/quotes?id=eq.${encodeURIComponent(quoteId)}&owner_principal_id=eq.${user.id}&checkout_status=eq.not_created&shopify_draft_order_id=is.null`,
-      {
-        method: "PATCH",
-        headers: { prefer: "return=representation" },
-        body: JSON.stringify({ checkout_status: "draft" }),
-      },
-    );
-    if (!reservation[0]) {
+    const reservation = await supabaseRequest<{
+      reserved: boolean;
+      reconciliation: boolean;
+    }>(admin, "/rest/v1/rpc/reserve_shopify_checkout", {
+      method: "POST",
+      body: JSON.stringify({
+        p_quote_id: quoteId,
+        p_owner_principal_id: user.id,
+        p_idempotency_key: idempotencyKey,
+      }),
+    });
+    if (!reservation.reserved) {
       const winner = await supabaseRequest<Array<Record<string, unknown>>>(
         admin,
         `/rest/v1/quotes?id=eq.${encodeURIComponent(quoteId)}&owner_principal_id=eq.${user.id}`,
@@ -102,14 +107,33 @@ export async function POST(request: Request) {
     });
     let result;
     try {
-      result = await createShopifyDraftOrder({
+      const draftInput = {
         quoteId,
         designId: String(quote.design_id),
         locale: designs[0]?.locale ?? "en",
         idempotencyKey,
         title: "Custom Caleums name pendant",
         amountAed: Number(quote.total),
-      });
+      };
+      result = reservation.reconciliation
+        ? await reconcileShopifyDraftOrder(draftInput)
+        : await createShopifyDraftOrder(draftInput);
+      if (!result) {
+        await supabaseRequest(admin, "/rest/v1/audit_events", {
+          method: "POST",
+          body: JSON.stringify({
+            design_id: quote.design_id,
+            principal_id: user.id,
+            actor_type: "system",
+            action: "checkout.draft_order_reconciliation_pending",
+            detail: { quoteId, idempotencyKey },
+          }),
+        });
+        return Response.json(
+          { status: "provider_unknown", reconciliationPending: true },
+          { status: 202 },
+        );
+      }
     } catch (error) {
       await supabaseRequest(admin, "/rest/v1/audit_events", {
         method: "POST",
@@ -133,6 +157,7 @@ export async function POST(request: Request) {
           shopify_draft_order_id: result.draftOrderId,
           checkout_url: result.checkoutUrl,
           checkout_status: "ready",
+          checkout_claimed_at: null,
         }),
       },
     );

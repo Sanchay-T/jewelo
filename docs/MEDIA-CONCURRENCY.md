@@ -3,6 +3,11 @@
 **Decision date:** 26 August 2026  
 **Status:** locked for implementation
 
+The final Caleums asset graph is defined by
+`docs/CALEUMS-FINAL-E2E-CONTRACT.md`. Preserve the durable concurrency,
+idempotency, quota, and truthful-progress rules below, but do not infer an older
+four-variation media topology where the final contract differs.
+
 ## What owns what
 
 - **Trigger.dev** is the durable workflow and concurrency layer.

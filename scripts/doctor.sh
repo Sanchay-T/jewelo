@@ -20,6 +20,8 @@ check_cmd node required
 check_cmd corepack required
 check_cmd pnpm optional
 check_cmd gh optional
+check_cmd hq-gh optional
+check_cmd doctl optional
 check_cmd vercel optional
 check_cmd claude optional
 check_cmd codex optional

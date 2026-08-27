@@ -21,4 +21,10 @@ describe("checkout policy", () => {
     expect(shopify).toContain("Caleums quote");
     expect(shopify).toContain("commerce/${input.designId}?checkout=mock");
   });
+
+  it("leases creation and reconciles stale provider-unknown drafts read-only", () => {
+    expect(checkout).toContain('"/rest/v1/rpc/reserve_shopify_checkout"');
+    expect(checkout).toContain("reconcileShopifyDraftOrder");
+    expect(checkout).toContain('status: "provider_unknown"');
+  });
 });

@@ -6,7 +6,7 @@ Create a clean, reproducible production repository foundation for the locked Jew
 
 ## Completion condition
 
-A fresh checkout can install, lint, typecheck, test, build, run a minimal health surface, and exercise typed data/media/provider/workflow contracts through documented root commands. Vercel, Supabase, Trigger.dev, OpenAI, and fal development seams are configured without paid media calls. Authorized Vercel/Supabase/Trigger setup is verified or reduced to one precise external authorization.
+A fresh checkout can install, lint, typecheck, test, build, run a minimal health surface, and exercise typed data/media/provider/workflow contracts through documented root commands. DigitalOcean, Supabase, Trigger.dev, OpenAI, and fal development seams are configured without paid media calls. Authorized DigitalOcean/Supabase/Trigger setup is verified or reduced to one precise external authorization.
 
 ## Required work
 
@@ -28,7 +28,7 @@ A fresh checkout can install, lint, typecheck, test, build, run a minimal health
   - `preview_all`, `selected_only`, and `final_upgrade` media profiles;
   - per-run and per-organization spend ceilings;
   - stable task/provider idempotency keys.
-- Add Vercel, Supabase, Trigger, OpenAI, and fal setup/runbooks and project commands.
+- Add DigitalOcean, Supabase, Trigger, OpenAI, and fal setup/runbooks and project commands.
 - Keep the fal MCP project definition environment-authenticated; document the exact local authorization step without committing a key.
 - Add the approved UI dependency foundation: Motion, Embla Carousel, `react-zoom-pan-pinch`, and `react-dropzone` in the appropriate shared/web package boundaries.
 - Add lint, formatting, typecheck, unit test, build, dependency boundary, secret scan, and CI workflows.
@@ -76,7 +76,7 @@ Commands requiring an authorized cloud/provider environment must fail with a pre
 - Exercise deterministic four-variation fan-out contract fixtures without real providers.
 - Prove quota/spend config refuses unsafe real-provider mode.
 - Prove fal MCP configuration contains no committed credential.
-- With authorization, inspect/deploy a Vercel preview, Supabase development/preview branch, and Trigger development/preview task; otherwise name the exact missing authorization.
+- With authorization, inspect/deploy DigitalOcean staging, a Supabase development/preview branch, and a Trigger development/preview task; otherwise name the exact missing authorization.
 - Run plan and adversarial reviewers.
 
 ## Stop condition

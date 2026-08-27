@@ -2,10 +2,10 @@
   "version": 4,
   "status": "pm-approved-implementation-ready",
   "decision_date": "2026-08-26",
-  "active_goal": "docs/goals/01-product-studio.md",
+  "active_goal": "docs/goals/02-supabase-domain.md",
   "stack": [
     "nextjs-16.2",
-    "vercel",
+    "digitalocean-app-platform",
     "supabase-postgres-auth-storage-realtime",
     "trigger-dev-v4",
     "gpt-image-2-2026-04-21-direct-openai",
