@@ -263,7 +263,10 @@ export class OpenAIStudioVerifier implements StudioVerifier {
 
 /** Reads the letters actually engraved on a generated pendant. */
 export interface StudioNameReader {
-  read(media: GeneratedMedia): Promise<string>;
+  read(
+    media: GeneratedMedia,
+    expected: string,
+  ): Promise<{ text: string; matches: boolean }>;
 }
 
 /**
@@ -324,7 +327,10 @@ export class OpenAINameReader implements StudioNameReader {
     private readonly fetcher: Fetch = fetch,
   ) {}
 
-  async read(media: GeneratedMedia): Promise<string> {
+  async read(
+    media: GeneratedMedia,
+    expected: string,
+  ): Promise<{ text: string; matches: boolean }> {
     const base64 = Buffer.from(media.bytes).toString("base64");
     const response = await this.fetcher("https://api.openai.com/v1/responses", {
       method: "POST",
@@ -340,7 +346,7 @@ export class OpenAINameReader implements StudioNameReader {
             content: [
               {
                 type: "input_text",
-                text: 'Transcribe EXACTLY the Arabic (or Latin) text written on the pendant. Reply with JSON {"text": "..."} only.',
+                text: `The approved name for this pendant is "${expected}". Read the name written on the pendant carefully (it may be cursive, pavé, or Arabic calligraphy). Reply with JSON {"text": "<what is written>", "matches": <true if it spells exactly the approved name, letter for letter, in the same script; otherwise false>} only.`,
               },
               {
                 type: "input_image",
@@ -357,8 +363,11 @@ export class OpenAINameReader implements StudioNameReader {
             schema: {
               type: "object",
               additionalProperties: false,
-              properties: { text: { type: "string" } },
-              required: ["text"],
+              properties: {
+                text: { type: "string" },
+                matches: { type: "boolean" },
+              },
+              required: ["text", "matches"],
             },
           },
         },
@@ -368,10 +377,11 @@ export class OpenAINameReader implements StudioNameReader {
       throw new Error(`OpenAI name read failed:${response.status}`);
     const parsed = JSON.parse(extractResponseText(await response.json())) as {
       text?: unknown;
+      matches?: unknown;
     };
-    if (typeof parsed.text !== "string")
+    if (typeof parsed.text !== "string" || typeof parsed.matches !== "boolean")
       throw new Error("OpenAI name read was malformed");
-    return parsed.text;
+    return { text: parsed.text, matches: parsed.matches };
   }
 }
 

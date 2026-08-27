@@ -219,9 +219,7 @@ export async function executePresentationTask(
       variables: compiled.variableSnapshot,
       compiledPrompt,
       compilerVersion: compiled.compilerVersion,
-      sha256: createHash("sha256")
-        .update(compiledPrompt, "utf8")
-        .digest("hex"),
+      sha256: createHash("sha256").update(compiledPrompt, "utf8").digest("hex"),
     });
   }
   if (
@@ -357,9 +355,11 @@ export async function executePresentationTask(
         throw new Error("identity_verification_failed");
       const record = verification as unknown as Record<string, unknown>;
       if (nameReader && task.presentation_view === "studio") {
-        const readText = await nameReader.read(media);
         const expected = revision.identity_anchor.approvedText;
-        const passed = identityTextMatches(readText, expected);
+        const reading = await nameReader.read(media, expected);
+        const readText = reading.text;
+        const passed =
+          reading.matches || identityTextMatches(readText, expected);
         record.nameCheck = { passed, readText, expected };
         if (!passed) {
           const terminal = regeneration >= 2 || reservation.attempt >= 3;
