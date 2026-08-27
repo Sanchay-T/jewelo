@@ -11,8 +11,21 @@ const workspaceRoot = path.resolve(
 loadRootEnv();
 parseBrowserEnv(process.env);
 
+const supabaseHost = new URL(
+  process.env.NEXT_PUBLIC_SUPABASE_URL ?? "https://example.supabase.co",
+).hostname;
+
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: supabaseHost,
+        pathname: "/storage/v1/**",
+      },
+    ],
+  },
   reactStrictMode: true,
   transpilePackages: ["@jewelo/config"],
   turbopack: {

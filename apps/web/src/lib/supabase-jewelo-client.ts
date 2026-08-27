@@ -44,6 +44,7 @@ interface StatePayload {
   generation_runs: Row[];
   generation_tasks: Row[];
   assets: Row[];
+  estimates: Row[];
   quotes: Row[];
   orders: Row[];
   audit_events: Row[];
@@ -51,6 +52,23 @@ interface StatePayload {
 
 function text(value: unknown, fallback = "") {
   return typeof value === "string" ? value : fallback;
+}
+
+function estimateFromSnapshot(row: Row, directionId: string): LegacyEstimate {
+  return {
+    id: text(row.id),
+    revisionId: text(row.revision_id),
+    directionId,
+    currency: text(row.currency, "AED") as LegacyEstimate["currency"],
+    low: Number(row.low_amount),
+    high: Number(row.high_amount),
+    confidence: text(row.confidence, "medium") as LegacyEstimate["confidence"],
+    assumptions: Array.isArray(row.assumptions)
+      ? (row.assumptions as string[])
+      : [],
+    goldPriceTimestamp: text(row.gold_price_timestamp),
+    expiresAt: text(row.expires_at),
+  };
 }
 
 function taskState(value: unknown): TaskState {
@@ -415,21 +433,14 @@ export class SupabaseJeweloClient implements LegacyJeweloClient {
     const revision = design.revisions.at(-1);
     if (!revision || !design.selectedDirectionId)
       throw new Error("Select a direction first");
-    design.estimate = {
-      id: `estimate:${revision.id}:${design.selectedDirectionId}`,
-      revisionId: revision.id,
-      directionId: design.selectedDirectionId,
-      currency: "AED",
-      low: 1950,
-      high: 2450,
-      confidence: "medium",
-      assumptions: [
-        "Indicative 18K gold studio estimate",
-        "Final weight and stone count require operator review",
-      ],
-      goldPriceTimestamp: new Date().toISOString(),
-      expiresAt: new Date(Date.now() + 48 * 3600_000).toISOString(),
-    };
+    const snapshot = await this.#request<Row>(
+      `/api/designs/${designId}/commands`,
+      {
+        method: "POST",
+        body: JSON.stringify({ command: "estimate", revisionId: revision.id }),
+      },
+    );
+    design.estimate = estimateFromSnapshot(snapshot, design.selectedDirectionId);
     this.#emit();
     return structuredClone(design);
   }
@@ -441,7 +452,7 @@ export class SupabaseJeweloClient implements LegacyJeweloClient {
       method: "POST",
       body: JSON.stringify({
         command: "request_quote",
-        estimate: design.estimate,
+        revisionId: design.estimate.revisionId,
         idempotencyKey: this.#idempotency(
           "quote",
           `${designId}:${design.estimate.revisionId}`,
@@ -561,6 +572,9 @@ export class SupabaseJeweloClient implements LegacyJeweloClient {
     const quoteByDesign = new Map(
       payload.quotes.map((quote) => [text(quote.design_id), quote]),
     );
+    const estimateByRevision = new Map(
+      (payload.estimates ?? []).map((row) => [text(row.revision_id), row]),
+    );
     const orderByDesign = new Map(
       payload.orders.map((order) => [text(order.design_id), order]),
     );
@@ -628,6 +642,13 @@ export class SupabaseJeweloClient implements LegacyJeweloClient {
         latestRun?.directions.find(
           (direction) => direction.representations.product.state === "ready",
         )?.id;
+      const estimateRow = estimateByRevision.get(revisions.at(-1)?.id ?? "");
+      const estimate = estimateRow
+        ? estimateFromSnapshot(
+            estimateRow,
+            selectedDirectionId ?? snapshot?.directionId ?? "",
+          )
+        : snapshot;
       return {
         id,
         name:
@@ -640,7 +661,7 @@ export class SupabaseJeweloClient implements LegacyJeweloClient {
         revisions,
         runs,
         selectedDirectionId,
-        estimate: snapshot,
+        estimate,
         quote,
         order,
         audit,
@@ -914,8 +935,13 @@ export class SupabaseJeweloClient implements LegacyJeweloClient {
     if (!response.ok) {
       const body = (await response.json().catch(() => ({}))) as {
         error?: string;
+        code?: string;
       };
-      throw new Error(body.error ?? `Request failed:${response.status}`);
+      const failure = new Error(
+        body.error ?? `Request failed:${response.status}`,
+      ) as Error & { code?: string };
+      if (body.code) failure.code = body.code;
+      throw failure;
     }
     return response.json() as Promise<T>;
   }

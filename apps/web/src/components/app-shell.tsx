@@ -41,10 +41,10 @@ export function AppShell({
           <button type="button" aria-label="Shopping bag">
             <Bag size={19} />
           </button>
+          <ScenarioDrawer />
         </div>
       </header>
       {children}
-      <ScenarioDrawer />
     </div>
   );
 }
@@ -125,6 +125,7 @@ function ScenarioDrawer() {
         </div>
       )}
       <button
+        type="button"
         className="clm-scenario-trigger"
         aria-label="Toggle fixture scenarios"
         aria-expanded={open}

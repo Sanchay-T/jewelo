@@ -2,33 +2,34 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowClockwise,
   ArrowLeft,
   ArrowRight,
-  CheckCircle,
   DownloadSimple,
   FloppyDisk,
-  ImageSquare,
   MagicWand,
-  MagnifyingGlassMinus,
-  MagnifyingGlassPlus,
   ShareNetwork,
   Sparkle,
+  SpinnerGap,
   X,
 } from "@phosphor-icons/react";
 import { AppShell } from "@/components/app-shell";
 import { useJewelo } from "@/lib/jewelo-provider";
 import {
-  PRESENTATION_VIEW_DETAILS,
   arabicStyleLabel,
   formatCaleumsPrice,
   identityFromSpecification,
-  safePresentationState,
 } from "@/lib/ui-presentation";
-import type { Locale, PresentationView, TaskState } from "@/lib/types";
+import type { Locale, TaskState } from "@/lib/types";
+import {
+  adaptPresentationCards,
+  applySamplePresentationAssets,
+  isPrimaryReady,
+  type PresentationCardModel,
+} from "./presentation-cards";
 
 const activeStates = new Set<TaskState>([
   "queued",
@@ -37,50 +38,92 @@ const activeStates = new Set<TaskState>([
   "retrying",
 ]);
 
-const legacyPresentationCoordinates = {
-  studio: { directionIndex: 0, kind: "product" },
-  on_skin: { directionIndex: 0, kind: "worn" },
-  close_up: { directionIndex: 2, kind: "product" },
-  dark: { directionIndex: 3, kind: "product" },
-} as const;
+function stateCopy(state: TaskState) {
+  if (state === "failed") return "This presentation needs another try.";
+  if (state === "cancelled") return "This presentation was cancelled.";
+  if (state === "blocked") return "Waiting for its verified parent task.";
+  if (state === "unavailable" || state === "available_on_request")
+    return "This presentation is not available yet.";
+  if (state === "verifying") return "Checking the approved identity.";
+  if (state === "retrying") return "Trying this presentation again.";
+  if (state === "generating") return "Rendering this presentation.";
+  return "Queued for presentation.";
+}
 
-const motionViewDetails = {
-  id: "motion" as const,
-  label: "Motion",
-  treatment: "4 sec film",
-  ratio: "9:16" as const,
-};
-
-function stateCopy(state: TaskState | "pending") {
-  if (state === "failed")
-    return ["This view needs another try", "Ready siblings remain available."];
-  if (state === "cancelled")
-    return ["This view was cancelled", "Ready siblings remain available."];
-  if (state === "blocked")
-    return [
-      "Waiting for Studio approval",
-      "Derived work starts only from the verified parent.",
-    ];
-  if (state === "unavailable")
-    return ["This view is unavailable", "The atelier can review the task."];
-  if (state === "pending")
-    return [
-      "Waiting for its backend task",
-      "This placeholder is not selectable or ready.",
-    ];
-  if (state === "verifying")
-    return [
-      "Checking your exact identity",
-      "The view unlocks only after verification.",
-    ];
-  if (state === "retrying")
-    return ["Trying this view again", "Ready siblings remain available."];
-  if (state === "generating")
-    return [
-      "Rendering this presentation",
-      "It will appear here when verified.",
-    ];
-  return ["Queued for presentation", "It will appear here when verified."];
+function PresentationCard({
+  card,
+  busy,
+  onCancel,
+  onRetry,
+}: {
+  card: PresentationCardModel;
+  busy?: string;
+  onCancel(card: PresentationCardModel): void;
+  onRetry(card: PresentationCardModel): void;
+}) {
+  const ready = card.state === "ready" && Boolean(card.assetUrl);
+  return (
+    <article className="clm-presentation-card" data-state={card.state}>
+      <div className="clm-presentation-media">
+        {ready ? (
+          <Image
+            src={card.assetUrl!}
+            alt={card.alt}
+            fill
+            priority={card.id === "studio" || card.id === "on_skin"}
+            sizes="(max-width: 799px) 100vw, (max-width: 1100px) 50vw, 25vw"
+          />
+        ) : (
+          <div className="clm-presentation-placeholder" role="status">
+            {activeStates.has(card.state) ? (
+              <SpinnerGap className="clm-spin" size={30} />
+            ) : (
+              <Sparkle size={30} weight="duotone" />
+            )}
+            <strong>{card.state.replaceAll("_", " ")}</strong>
+            <span>{stateCopy(card.state)}</span>
+          </div>
+        )}
+        <span className="clm-presentation-number">{card.number}</span>
+      </div>
+      <footer>
+        <div>
+          <strong>{card.label}</strong>
+          <span>{card.treatment}</span>
+        </div>
+        <span className="clm-state" data-state={card.state}>
+          {card.state.replaceAll("_", " ")}
+        </span>
+      </footer>
+      <div className="clm-presentation-actions">
+        {ready && (
+          <a href={card.assetUrl} download>
+            <DownloadSimple size={16} /> Download
+          </a>
+        )}
+        {card.task && activeStates.has(card.state) && (
+          <button
+            type="button"
+            disabled={Boolean(busy)}
+            onClick={() => onCancel(card)}
+          >
+            <X size={16} />
+            {busy === `cancel-${card.task.id}` ? "Cancelling…" : "Cancel"}
+          </button>
+        )}
+        {card.task && (card.state === "failed" || card.state === "blocked") && (
+          <button
+            type="button"
+            disabled={Boolean(busy)}
+            onClick={() => onRetry(card)}
+          >
+            <ArrowClockwise size={16} />
+            {busy === `retry-${card.task.id}` ? "Retrying…" : "Retry"}
+          </button>
+        )}
+      </div>
+    </article>
+  );
 }
 
 export function Studio({
@@ -91,6 +134,7 @@ export function Studio({
   designId: string;
 }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { client, state, refresh } = useJewelo();
   const design = state.designs.find((item) => item.id === designId);
   const run = design?.runs.at(-1);
@@ -98,77 +142,52 @@ export function Studio({
   const revision =
     design?.revisions.find((item) => item.id === run?.revisionId) ??
     design?.revisions.at(-1);
-  const [activeView, setActiveView] = useState<PresentationView>("studio");
-  const [zoom, setZoom] = useState(1);
   const [busy, setBusy] = useState<string>();
-  const [message, setMessage] = useState("");
-  const [locallyCancelled, setLocallyCancelled] = useState<string[]>([]);
+  const [actionMessage, setActionMessage] = useState("");
+  const estimateRequested = useRef(false);
   const scenarioMode = process.env.NEXT_PUBLIC_JEWELO_SCENARIOS === "1";
-
-  const slots = useMemo(() => {
-    const hasMotion = Boolean(
-      run?.tasks.some((candidate) => candidate.view === "motion") ||
-      run?.assets.some((candidate) => candidate.view === "motion"),
-    );
-    const detailsList = hasMotion
-      ? [...PRESENTATION_VIEW_DETAILS, motionViewDetails]
-      : PRESENTATION_VIEW_DETAILS;
-    return detailsList.map((details) => {
-      const canonicalTask = run?.tasks.find(
-        (candidate) => candidate.view === details.id,
-      );
-      const legacyCoordinate =
-        details.id === "motion"
-          ? undefined
-          : legacyPresentationCoordinates[details.id];
-      const legacyDirection = legacyCoordinate
-        ? run?.directions[legacyCoordinate.directionIndex]
-        : undefined;
-      const task =
-        canonicalTask ??
-        (legacyCoordinate
-          ? run?.tasks.find(
-              (candidate) =>
-                candidate.directionId === legacyDirection?.id &&
-                candidate.kind === legacyCoordinate.kind,
-            )
-          : undefined);
-      const asset =
-        run?.assets.find(
-          (candidate) => task && candidate.lineage.taskId === task.id,
-        ) ?? run?.assets.find((candidate) => candidate.view === details.id);
-      const backendState = safePresentationState(
-        task && locallyCancelled.includes(task.id)
-          ? "cancelled"
-          : (task?.state ?? asset?.state),
-      );
-      const ready =
-        backendState === "ready" &&
-        asset?.state === "ready" &&
-        Boolean(asset.assetUrl);
-      return {
-        ...details,
-        task,
-        asset,
-        ready,
-        state: backendState === "ready" && !ready ? "verifying" : backendState,
-      };
-    });
-  }, [locallyCancelled, run]);
-  const selectedSlot =
-    slots.find((slot) => slot.id === activeView) ?? slots[0]!;
-  const studioSlot = slots.find((slot) => slot.id === "studio")!;
+  const samplePresentation = scenarioMode && searchParams.get("sample") === "1";
+  const cards = useMemo(() => {
+    const adapted = adaptPresentationCards(run);
+    return samplePresentation
+      ? applySamplePresentationAssets(adapted, true)
+      : adapted;
+  }, [run, samplePresentation]);
+  const primaryReady = isPrimaryReady(cards);
+  const ordered = Boolean(design?.order);
 
   useEffect(
     () => (run ? client.subscribeToRun(run.id, refresh) : undefined),
     [client, refresh, run],
   );
   useEffect(() => {
-    if (selectedSlot.task)
-      setMessage(
-        `${selectedSlot.label} is ${selectedSlot.state.replaceAll("_", " ")}.`,
-      );
-  }, [selectedSlot.label, selectedSlot.state, selectedSlot.task]);
+    estimateRequested.current = false;
+  }, [revision?.id, run?.id]);
+  useEffect(() => {
+    if (
+      !design ||
+      !direction ||
+      direction.representations.product.state !== "ready" ||
+      !primaryReady ||
+      design.estimate ||
+      estimateRequested.current
+    )
+      return;
+    estimateRequested.current = true;
+    void (async () => {
+      if (design.selectedDirectionId !== direction.id)
+        await client.selectDirection(design.id, direction.id);
+      await client.calculateEstimate(design.id);
+    })()
+      .then(() => {
+        setActionMessage("");
+        refresh();
+      })
+      .catch(() => {
+        estimateRequested.current = false;
+        setActionMessage("The price estimate could not be calculated yet.");
+      });
+  }, [client, design, direction, primaryReady, refresh]);
 
   async function action(
     key: string,
@@ -176,49 +195,40 @@ export function Studio({
     success: string,
   ) {
     setBusy(key);
-    setMessage("");
+    setActionMessage("");
     try {
       await work();
       refresh();
-      setMessage(success);
+      setActionMessage(success);
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Action unavailable");
+      const code =
+        error && typeof error === "object" && "code" in error
+          ? String((error as { code?: unknown }).code ?? "")
+          : "";
+      setActionMessage(
+        error instanceof Error
+          ? code
+            ? `${error.message} (${code})`
+            : error.message
+          : "Action unavailable",
+      );
     } finally {
       setBusy(undefined);
     }
   }
 
   async function continueToPiece() {
-    if (!direction || !studioSlot.ready) return;
+    if (!direction || !primaryReady || !design?.estimate) return;
     await action(
       "commerce",
       async () => {
-        if (design?.selectedDirectionId !== direction.id)
+        if (design.selectedDirectionId !== direction.id)
           await client.selectDirection(designId, direction.id);
-        if (!design?.estimate) await client.calculateEstimate(designId);
+        await client.calculateEstimate(designId);
+        refresh();
         router.push(`/${locale}/commerce/${designId}`);
       },
       "Opening your final piece.",
-    );
-  }
-
-  async function regenerate() {
-    setLocallyCancelled([]);
-    await action(
-      "regenerate",
-      () => client.startRun(designId),
-      "A fresh set of presentation tasks has started.",
-    );
-  }
-
-  async function refine() {
-    await action(
-      "refine",
-      async () => {
-        await client.refineDesign(designId, "Caleums Studio refinement");
-        await client.startRun(designId);
-      },
-      "A refined revision is being rendered.",
     );
   }
 
@@ -243,7 +253,7 @@ export function Studio({
             className="clm-primary"
             onClick={() => void client.startRun(designId)}
           >
-            Create Studio result
+            Create presentation set
           </button>
         </main>
       </AppShell>
@@ -251,11 +261,12 @@ export function Studio({
 
   const spec = revision.specification;
   const identity = identityFromSpecification(spec);
-  const loadingCopy = stateCopy(selectedSlot.state);
-
   return (
     <AppShell locale={locale}>
-      <main className="clm-studio" dir={locale === "ar" ? "rtl" : "ltr"}>
+      <main
+        className="clm-studio clm-studio-set"
+        dir={locale === "ar" ? "rtl" : "ltr"}
+      >
         <aside className="clm-studio-summary">
           <Link className="clm-back" href={`/${locale}/design/new`}>
             <ArrowLeft size={16} /> Back to design
@@ -267,9 +278,7 @@ export function Studio({
           <dl className="clm-summary compact">
             <div>
               <dt>Names</dt>
-              <dd dir={spec.arabicStyle === "none" ? "ltr" : "rtl"}>
-                {identity.inline}
-              </dd>
+              <dd>{identity.inline}</dd>
             </div>
             <div>
               <dt>Script</dt>
@@ -306,7 +315,9 @@ export function Studio({
           <div className="clm-studio-save">
             <button
               type="button"
-              onClick={() => setMessage("Design saved in this workspace.")}
+              onClick={() =>
+                setActionMessage("Design saved in this workspace.")
+              }
             >
               <FloppyDisk size={17} /> Save
             </button>
@@ -315,7 +326,7 @@ export function Studio({
               onClick={() =>
                 void navigator.clipboard
                   ?.writeText(window.location.href)
-                  .then(() => setMessage("Design link copied."))
+                  .then(() => setActionMessage("Design link copied."))
               }
             >
               <ShareNetwork size={17} /> Share
@@ -323,155 +334,71 @@ export function Studio({
           </div>
           <div className="clm-estimate">
             <span>Estimated price</span>
-            <strong>{formatCaleumsPrice(design)}</strong>
-            <small>One price source · final quote follows atelier review</small>
+            <strong>
+              {design.estimate ? formatCaleumsPrice(design) : "Calculating…"}
+            </strong>
+            <small>
+              Estimate upper bound · final quote follows atelier review
+            </small>
           </div>
         </aside>
 
-        <section className="clm-studio-canvas">
+        <section className="clm-studio-canvas clm-presentation-set">
           <header>
             <div>
               <p className="clm-kicker">Your presentation set</p>
-              <h2>
-                {selectedSlot.label} · {selectedSlot.treatment}
-              </h2>
+              <h2>Four views of one approved pendant.</h2>
             </div>
-            <span className="clm-state" data-state={selectedSlot.state}>
-              {selectedSlot.state.replaceAll("_", " ")}
-            </span>
-          </header>
-          <div
-            id="caleums-active-presentation"
-            className="clm-studio-media"
-            data-ratio={selectedSlot.ratio}
-            aria-live="polite"
-          >
-            {selectedSlot.ready &&
-            selectedSlot.asset?.assetUrl &&
-            selectedSlot.id === "motion" ? (
-              <video
-                src={selectedSlot.asset.assetUrl}
-                aria-label={selectedSlot.asset.alt}
-                controls
-                muted
-                playsInline
-                preload="metadata"
-                poster={studioSlot.asset?.assetUrl}
-              />
-            ) : selectedSlot.ready && selectedSlot.asset?.assetUrl ? (
-              <Image
-                src={selectedSlot.asset.assetUrl}
-                alt={selectedSlot.asset.alt}
-                fill
-                priority={selectedSlot.id === "studio"}
-                sizes="(max-width: 799px) 100vw, 68vw"
-                style={{ transform: `scale(${zoom})` }}
-              />
-            ) : (
-              <div className="clm-studio-loading">
-                <Sparkle size={34} weight="duotone" />
-                <strong>{loadingCopy[0]}</strong>
-                <span>{loadingCopy[1]}</span>
-              </div>
-            )}
-            {selectedSlot.ready && selectedSlot.id !== "motion" && (
-              <div className="clm-zoom">
-                <button
-                  type="button"
-                  aria-label="Zoom out"
-                  onClick={() => setZoom(Math.max(1, zoom - 0.15))}
-                >
-                  <MagnifyingGlassMinus size={18} />
-                </button>
-                <button
-                  type="button"
-                  aria-label="Zoom in"
-                  onClick={() => setZoom(Math.min(1.6, zoom + 0.15))}
-                >
-                  <MagnifyingGlassPlus size={18} />
-                </button>
-                <span>{Math.round(zoom * 100)}%</span>
-              </div>
-            )}
-          </div>
-          <div
-            className="clm-studio-tabs"
-            role="tablist"
-            aria-label="Presentation views"
-          >
-            {slots.map((slot, index) => (
-              <button
-                key={slot.id}
-                type="button"
-                role="tab"
-                aria-selected={activeView === slot.id}
-                aria-controls="caleums-active-presentation"
-                disabled={!slot.task && !slot.asset}
-                onClick={() => {
-                  setZoom(1);
-                  setActiveView(slot.id);
-                }}
-              >
-                <span>
-                  <ImageSquare size={16} /> {String(index + 1).padStart(2, "0")}{" "}
-                  {slot.label}
+            <div className="clm-presentation-status">
+              {scenarioMode && (
+                <span className="clm-mock-mark">
+                  {samplePresentation
+                    ? "Sample presentation assets · no provider call"
+                    : "Sample presentation assets"}
                 </span>
-                <small>
-                  {slot.ready && <CheckCircle size={12} />}
-                  {slot.treatment} · {slot.ratio} ·{" "}
-                  {slot.state.replaceAll("_", " ")}
-                </small>
-              </button>
+              )}
+              <span>
+                {cards.filter((card) => card.state === "ready").length} of 4
+                ready
+              </span>
+            </div>
+          </header>
+          <div className="clm-presentation-grid">
+            {cards.map((card) => (
+              <PresentationCard
+                key={card.id}
+                card={card}
+                busy={busy}
+                onCancel={(selected) => {
+                  if (!selected.task) return;
+                  void action(
+                    `cancel-${selected.task.id}`,
+                    () => client.cancelTask(designId, selected.task!.id),
+                    `${selected.label} task cancelled.`,
+                  );
+                }}
+                onRetry={(selected) => {
+                  if (!selected.task) return;
+                  void action(
+                    `retry-${selected.task.id}`,
+                    () => client.retryTask(designId, selected.task!.id),
+                    `${selected.label} retry started.`,
+                  );
+                }}
+              />
             ))}
           </div>
           {scenarioMode && (
             <details className="clm-task-audit">
               <summary>Development task status audit</summary>
-              <p>
-                Each row is a real mock/backend task state; missing tasks remain
-                unavailable.
-              </p>
               <ul>
-                {slots.map((slot) => (
-                  <li key={slot.id}>
+                {run.tasks.map((task) => (
+                  <li key={task.id}>
                     <span>
-                      {slot.label} · {slot.state.replaceAll("_", " ")}
+                      {task.view.replaceAll("_", " ")} ·{" "}
+                      {task.state}
                     </span>
-                    {slot.task && activeStates.has(slot.state as TaskState) && (
-                      <button
-                        type="button"
-                        disabled={Boolean(busy)}
-                        onClick={() =>
-                          void action(
-                            `cancel-${slot.task!.id}`,
-                            async () => {
-                              await client.cancelTask(designId, slot.task!.id);
-                              setLocallyCancelled((current) => [
-                                ...new Set([...current, slot.task!.id]),
-                              ]);
-                            },
-                            `${slot.label} task cancelled.`,
-                          )
-                        }
-                      >
-                        Cancel
-                      </button>
-                    )}
-                    {slot.task && slot.state === "failed" && (
-                      <button
-                        type="button"
-                        disabled={Boolean(busy)}
-                        onClick={() =>
-                          void action(
-                            `retry-${slot.task!.id}`,
-                            () => client.retryTask(designId, slot.task!.id),
-                            `${slot.label} retry started.`,
-                          )
-                        }
-                      >
-                        Retry
-                      </button>
-                    )}
+                    <small>Attempt {task.attempt}</small>
                   </li>
                 ))}
               </ul>
@@ -482,18 +409,34 @@ export function Studio({
         <footer className="clm-studio-actions">
           <div>
             <strong>{identity.inline}</strong>
-            <span>
-              Verified identity · four independent stills
-              {slots.some((slot) => slot.id === "motion")
-                ? " · motion from Studio"
-                : ""}
-            </span>
+            <span>Verified identity · four presentation views</span>
           </div>
+          {scenarioMode && (
+            <Link
+              className="clm-secondary"
+              href={`/${locale}/design/crafting?designId=${designId}&replay=1`}
+            >
+              <Sparkle size={17} /> Replay generation journey
+            </Link>
+          )}
           <button
             type="button"
             className="clm-secondary"
-            disabled={Boolean(busy)}
-            onClick={() => void refine()}
+            disabled={Boolean(busy) || ordered}
+            title={ordered ? "Ordered designs are locked" : undefined}
+            onClick={() =>
+              void action(
+                "refine",
+                async () => {
+                  await client.refineDesign(
+                    designId,
+                    "Caleums Studio refinement",
+                  );
+                  await client.startRun(designId);
+                },
+                "A refined presentation set has started.",
+              )
+            }
           >
             <MagicWand size={17} />
             {busy === "refine" ? "Refining…" : "Refine"}
@@ -501,78 +444,43 @@ export function Studio({
           <button
             type="button"
             className="clm-secondary"
-            disabled={Boolean(busy)}
-            onClick={() => void regenerate()}
+            disabled={Boolean(busy) || ordered}
+            title={ordered ? "Ordered designs are locked" : undefined}
+            onClick={() =>
+              void action(
+                "regenerate",
+                () => client.startRun(designId),
+                "A fresh presentation set has started.",
+              )
+            }
           >
             <ArrowClockwise size={17} />
             {busy === "regenerate" ? "Starting…" : "Regenerate"}
           </button>
-          {selectedSlot.task &&
-            activeStates.has(selectedSlot.state as TaskState) && (
-              <button
-                type="button"
-                className="clm-secondary clm-task-action"
-                disabled={Boolean(busy)}
-                onClick={() =>
-                  void action(
-                    "cancel-task",
-                    async () => {
-                      await client.cancelTask(designId, selectedSlot.task!.id);
-                      setLocallyCancelled((current) => [
-                        ...new Set([...current, selectedSlot.task!.id]),
-                      ]);
-                    },
-                    `${selectedSlot.label} task cancelled. Ready assets remain preserved.`,
-                  )
-                }
-              >
-                <X size={16} />
-                {busy === "cancel-task" ? "Cancelling…" : "Cancel task"}
-              </button>
-            )}
-          {selectedSlot.task && selectedSlot.state === "failed" && (
-            <button
-              type="button"
-              className="clm-secondary clm-task-action"
-              disabled={Boolean(busy)}
-              onClick={() =>
-                void action(
-                  "retry-task",
-                  () => client.retryTask(designId, selectedSlot.task!.id),
-                  `${selectedSlot.label} retry started.`,
-                )
-              }
-            >
-              <ArrowClockwise size={16} />
-              {busy === "retry-task" ? "Retrying…" : "Retry task"}
-            </button>
-          )}
-          {selectedSlot.ready && selectedSlot.asset?.assetUrl && (
-            <a
-              className="clm-secondary"
-              href={selectedSlot.asset.assetUrl}
-              download
-            >
-              <DownloadSimple size={17} /> Download
-            </a>
-          )}
           <button
             type="button"
             className="clm-primary"
-            disabled={!studioSlot.ready || Boolean(busy)}
+            disabled={!primaryReady || !design.estimate || Boolean(busy)}
             onClick={() => void continueToPiece()}
           >
             {busy === "commerce" ? "Preparing…" : "Continue to your piece"}{" "}
             <ArrowRight size={17} />
           </button>
         </footer>
-        {message && (
+        {ordered && (
+          <p className="clm-ordered-lock">
+            This ordered design is locked; refinement and regeneration are
+            unavailable.
+          </p>
+        )}
+        {actionMessage && (
           <p className="clm-toast" role="status">
-            {message}
+            {actionMessage}
           </p>
         )}
         <p className="clm-sr-live" aria-live="polite" aria-atomic="true">
-          {selectedSlot.label} presentation task {selectedSlot.state}.
+          Presentation tasks:{" "}
+          {cards.map((card) => `${card.label} ${card.state}`).join(", ")}.
         </p>
       </main>
     </AppShell>

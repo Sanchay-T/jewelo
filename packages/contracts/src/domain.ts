@@ -17,7 +17,12 @@ export const PRESENTATION_VIEWS = [
   "motion",
 ] as const;
 export type PresentationView = (typeof PRESENTATION_VIEWS)[number];
-export const ENABLED_PRESENTATION_VIEWS = ["studio"] as const;
+export const ENABLED_PRESENTATION_VIEWS = [
+  "studio",
+  "on_skin",
+  "close_up",
+  "dark",
+] as const;
 export type EnabledPresentationView =
   (typeof ENABLED_PRESENTATION_VIEWS)[number];
 
