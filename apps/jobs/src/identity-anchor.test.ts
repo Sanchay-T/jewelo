@@ -98,7 +98,9 @@ describe("deterministic identity anchor", () => {
     expect(rendered.report).toMatchObject({ style: "classic", passed: true });
   });
 
-  it("routes unsupported Arabic styles and two-name layouts before spend", async () => {
+  // Every certified style was opened to customers on 2026-08-27, so only a
+  // two-name layout and a style outside the engine still gate before spend.
+  it("routes two-name layouts and unregistered Arabic styles before spend", async () => {
     const anchor = {
       approvedText: "ليلى & نور",
       language: "ar" as const,
@@ -119,12 +121,31 @@ describe("deterministic identity anchor", () => {
         { ...anchor, approvedText: "ليلى" },
         {
           names: [{ approvedArabicText: "ليلى" }],
-          arabicStyle: "signature",
+          arabicStyle: "art-deco",
           layout: "single-name",
           connector: "none",
           dimensions: { widthMm: 30, heightMm: 12, thicknessMm: 1.2 },
         },
       ),
     ).rejects.toMatchObject({ code: "unsupported_arabic_style" });
+  });
+
+  it("renders the Signature style that was opened to every customer", async () => {
+    const rendered = await renderIdentityAnchor(
+      {
+        approvedText: "ليلى",
+        language: "ar",
+        typography: "signature",
+        fingerprint: "seed-fingerprint",
+      },
+      {
+        names: [{ approvedArabicText: "ليلى" }],
+        arabicStyle: "signature",
+        layout: "single-name",
+        connector: "none",
+        dimensions: { widthMm: 30, heightMm: 12, thicknessMm: 1.2 },
+      },
+    );
+    expect(rendered.report).toMatchObject({ style: "signature", passed: true });
   });
 });

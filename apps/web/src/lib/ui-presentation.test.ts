@@ -1,11 +1,13 @@
 import { describe, expect, it } from "vitest";
 import {
+  ARABIC_STYLE_OPTIONS,
   PRESENTATION_VIEW_DETAILS,
   arabicStyleLabel,
   formatCaleumsPrice,
   formatIdentity,
   isProviderSupportedArabicStyle,
 } from "./ui-presentation";
+import type { ArabicStyle } from "./types";
 
 describe("Caleums UI presentation mappings", () => {
   it("keeps each two-name connector identical in inline and preview output", () => {
@@ -27,12 +29,16 @@ describe("Caleums UI presentation mappings", () => {
     });
   });
 
-  it("marks only Classic and Minimal Arabic as provider-supported", () => {
+  // Every certified Arabic style was opened to customers on 2026-08-27; only a
+  // style the identity engine does not register stays review-only.
+  it("marks every offered Arabic style as provider-supported", () => {
     expect(arabicStyleLabel("contemporary")).toBe("Arabic · Classic");
-    expect(isProviderSupportedArabicStyle("contemporary")).toBe(true);
-    expect(isProviderSupportedArabicStyle("minimal")).toBe(true);
-    expect(isProviderSupportedArabicStyle("diwani")).toBe(false);
-    expect(isProviderSupportedArabicStyle("kufi")).toBe(false);
+    for (const style of ARABIC_STYLE_OPTIONS)
+      expect(isProviderSupportedArabicStyle(style.id)).toBe(true);
+    expect(isProviderSupportedArabicStyle("none")).toBe(true);
+    expect(isProviderSupportedArabicStyle("art-deco" as ArabicStyle)).toBe(
+      false,
+    );
   });
 
   it("defines the four independent still presentations and ratios", () => {

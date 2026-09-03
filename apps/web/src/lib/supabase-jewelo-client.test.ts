@@ -83,6 +83,13 @@ describe("remote one-view client flow", () => {
         setItem: (key: string, value: string) => storage.set(key, value),
       },
     });
+    // `subscribeToRun` re-reads state on tab focus so expired signed media URLs
+    // are refreshed; the browser-only harness has to supply that surface too.
+    vi.stubGlobal("document", {
+      visibilityState: "visible",
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    });
     fetcher = vi.fn(
       async (input: string | URL | Request, init?: RequestInit) => {
         const path = String(input);

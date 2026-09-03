@@ -37,16 +37,18 @@ describe("Shopify Admin adapter", () => {
       createShopifyDraftOrder(input("00000000-0000-4000-8000-000000000000")),
     ).resolves.toMatchObject({ mode: "mock" });
 
+    // The customer-facing message stays generic; the stable contract is the
+    // machine-readable code and the 503.
     vi.stubEnv("NODE_ENV", "production");
     await expect(
       createShopifyDraftOrder(input("00000000-0000-4000-8000-000000000000")),
-    ).rejects.toThrow("not completely configured");
+    ).rejects.toMatchObject({ code: "checkout_unavailable", status: 503 });
 
     vi.stubEnv("NODE_ENV", "development");
     process.env.SHOPIFY_STORE_DOMAIN = "partial.myshopify.com";
     await expect(
       createShopifyDraftOrder(input("00000000-0000-4000-8000-000000000000")),
-    ).rejects.toThrow("not completely configured");
+    ).rejects.toMatchObject({ code: "checkout_unavailable", status: 503 });
   });
 
   it("reuses one client-credentials token across concurrent requests", async () => {

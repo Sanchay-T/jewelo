@@ -9,6 +9,7 @@ import { BASELINE_PROMPT_TEMPLATES } from "@jewelo/ai";
 import {
   executePresentationTask,
   type PresentationRepository,
+  type PresentationTaskView,
 } from "./presentation";
 
 function fixture() {
@@ -28,7 +29,7 @@ function fixture() {
     id: "task-1",
     run_id: "run-1",
     owner_principal_id: "owner-1",
-    presentation_view: "studio" as const,
+    presentation_view: "studio" as PresentationTaskView,
     status: "queued",
     attempt: 0,
     dispatch_idempotency_key: "task:run-1:studio:release:release-a",
@@ -295,8 +296,11 @@ describe("generic presentation execution", () => {
     expect(generator.generate).not.toHaveBeenCalled();
   });
 
+  // The studio still deliberately gets no style photo, so the anchor gate is
+  // exercised on a dependent view.
   it("blocks a missing exact style anchor before reserving or calling a provider", async () => {
     const state = fixture();
+    state.task.presentation_view = "on_skin";
     state.repository.signedStyleAnchorUrl = vi.fn(async () => {
       throw new Error(
         "style_anchor_missing:ddd3862a-05cb-4b95-9b6b-aa8d6453293b",
