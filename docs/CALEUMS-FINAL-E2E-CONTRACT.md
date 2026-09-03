@@ -8,6 +8,9 @@
 
 **Applies to:** final Caleums implementation, verification, and release work
 
+**Amended 3 September 2026 (D-017):** video/motion generation was removed.
+Jewelo generates still images only.
+
 This document supersedes older goal examples, the one-view seed, the ZIP's
 Runway transport notes, and every Studio-parent or chained-edit graph. The ZIP
 remains authoritative for the approved identity solver, prompt semantics, shot
@@ -106,8 +109,7 @@ The authoritative source task IDs are:
 
 Managed immutable profiles are `image.packshot`, `image.worn`,
 `image.macro_gift`, `image.dark_editorial`, `image.studio_hero`,
-`image.billboard`, `video.preview`, `video.final`, and
-`verification.image`. `image.studio` remains readable only for legacy seeded
+`image.billboard`, and `verification.image`. `image.studio` remains readable only for legacy seeded
 tasks. Draft/validate/publish/rollback/history reject unknown, malformed, or
 missing `{{variables}}`; publication affects only new tasks.
 
@@ -118,15 +120,6 @@ lineage. The initial call plus at most two automatic retries is the complete
 paid-attempt budget. Cancellation and ambiguous callbacks cannot create another
 paid attempt with the same idempotency key.
 
-## Motion
-
-Motion alone derives from one verified still. fal Seedance preview is 4 seconds,
-9:16; optional final is 6 seconds. Both are 720p and submit
-`generate_audio:false`. Submission request/status/result URLs are durable
-server-side task lineage; Trigger polls with bounded idempotent runs, then copies
-the output to private Storage. Motion failure never blocks quote, checkout,
-order, or fulfillment.
-
 ## Durable boundaries and commercial safety
 
 - Supabase owns identity, revisions, releases, runs/tasks, immutable assets,
@@ -134,7 +127,6 @@ order, or fulfillment.
 - Trigger.dev owns outbox dispatch, provider-specific concurrency, durable
   polling, retry/cancel/resume, and recovery. No Redis or custom queue server.
 - OpenAI handles all still generation and still verification server-side.
-- fal handles video only.
 - Shopify retains Draft Order/checkout/payment ownership; the accepted,
   unexpired, spelling-confirmed quote and webhook-deduplication gates remain.
 

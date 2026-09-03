@@ -3,6 +3,11 @@
 **Decision date:** 26 August 2026  
 **Status:** locked for implementation
 
+> **Superseded in part on 3 September 2026 (D-017).** Video/motion generation
+> was removed; Jewelo generates still images only. Every fal.ai, Seedance and
+> motion statement below is retained as historical rationale and is no longer
+> in effect. See `docs/DECISION-REGISTER.md`.
+
 The final Caleums asset graph is defined by
 `docs/CALEUMS-FINAL-E2E-CONTRACT.md`. Preserve the durable concurrency,
 idempotency, quota, and truthful-progress rules below, but do not infer an older
@@ -12,10 +17,9 @@ four-variation media topology where the final contract differs.
 
 - **Trigger.dev** is the durable workflow and concurrency layer.
 - **OpenAI** is the primary still-image provider through the direct API.
-- **fal.ai** is the managed inference gateway for Seedance video generation.
 - **Supabase** is the durable source of truth for runs, tasks, assets, usage, and customer-visible progress.
 
-fal.ai is not the Jewelo workflow engine. Its queue API and webhooks execute model jobs; Trigger.dev owns business orchestration, retries, dependencies, fairness, cancellation, and recovery.
+OpenAI is not the Jewelo workflow engine. Its API executes model inference; Trigger.dev owns business orchestration, retries, dependencies, fairness, cancellation, and recovery.
 
 ## Pipeline
 
@@ -28,21 +32,19 @@ create run + four variation records + outbox
         v
 Trigger parent batch-dispatches variations 1..4
         |
-        +-- variation 1: product -> QA -> [worn + fast motion] concurrently
-        +-- variation 2: product -> QA -> [worn + fast motion] concurrently
-        +-- variation 3: product -> QA -> [worn + fast motion] concurrently
-        +-- variation 4: product -> QA -> [worn + fast motion] concurrently
+        +-- variation 1: product -> QA -> worn
+        +-- variation 2: product -> QA -> worn
+        +-- variation 3: product -> QA -> worn
+        +-- variation 4: product -> QA -> worn
 ```
 
-There is no artificial barrier that waits for all four products before starting downstream work. The first verified product appears immediately; its worn image and motion preview start while other variations are still processing.
+There is no artificial barrier that waits for all four products before starting downstream work. The first verified product appears immediately; its worn image starts while other variations are still processing.
 
 ## Trigger.dev queues
 
 ```text
 openai-image        concurrency 4 initially
 visual-verifier     independently bounded
-fal-seedance-fast   concurrency 4 launch target
-fal-seedance-final  concurrency 1-2
 per-organization    concurrency key, default 4 active variation pipelines
 ```
 
@@ -60,37 +62,18 @@ Use Trigger batch fan-out APIs rather than `Promise.all()` around waitable child
 
 Four product requests may start together. Worn calls unlock progressively. OpenAI publishes GPT Image 2 tier limits from 5 IPM at Tier 1 to 20 IPM at Tier 2 and higher thereafter. Before real traffic, the project must demonstrate enough effective capacity for the selected pipeline; otherwise Trigger queues excess work without lying to the UI.
 
-### fal.ai
-
-New fal accounts begin with two concurrent requests and increase with purchased credits. Four-video parallel preview mode remains disabled until the account has a verified concurrency limit of at least four. If the limit is lower, requests remain queued and the UI shows that real state.
-
 ## Locked model profiles
 
 ```text
 still.production       gpt-image-2-2026-04-21 (direct OpenAI)
-still.fallback         openai/gpt-image-2 on fal (disabled by default)
-motion.preview         bytedance/seedance-2.0/fast/image-to-video
-motion.final           bytedance/seedance-2.0/image-to-video
 ```
-
-### Preview-all mode
-
-For the observation/demo experience, each verified product direction receives a fast motion preview:
-
-- 4 seconds;
-- 9:16;
-- 720p;
-- audio disabled;
-- generated from the approved product still;
-- four jobs submitted as soon as their corresponding products pass QA.
-
-The selected direction may receive a 6-second standard-quality final motion render, optionally based on its approved worn still.
 
 ## Cost and safety
 
-Four 4-second Seedance Fast previews at the documented 720p rate are approximately $3.87 before retries. A 6-second standard final is approximately $1.81. Keep preview-all mode behind an explicit product profile and transactional spend reservation even though it is the intended showcase experience.
+Every default sibling still is reserved transactionally against the run and the
+principal's daily ceiling before any provider call.
 
-Provider output URLs are temporary transport only. fal URLs are public by default and retained for at least seven days by default, so jobs immediately download verified outputs into private Supabase Storage and persist checksums and lineage. Configure the strongest available fal ACL/lifecycle header as defense in depth, but do not rely on it as Jewelo storage.
+Provider output URLs are temporary transport only, so jobs immediately download verified outputs into private Supabase Storage and persist checksums and lineage.
 
 ## UX delivery contract
 
@@ -108,15 +91,14 @@ queued -> generating -> verifying -> ready
 - never show fake percentage progress;
 - keep successful siblings usable;
 - preserve state across reload/leave/resume;
-- motion and worn assets fill progressively beneath the same variation identity.
+- worn assets fill progressively beneath the same variation identity.
 
 ## UI libraries
 
 - Motion for layout transitions, presence, reduced-motion-aware reveals, and progress-state animation;
 - Embla Carousel for the responsive direction filmstrip;
 - `react-zoom-pan-pinch` for keyboard/pointer/touch inspection;
-- `react-dropzone` for reference selection, with upload performed through signed Supabase paths;
-- native `<video>` for short MP4 previews initially; add streaming infrastructure only when measured delivery requires it.
+- `react-dropzone` for reference selection, with upload performed through signed Supabase paths.
 
 ## Open-source framework decision
 
@@ -132,8 +114,4 @@ Accessed 26 August 2026:
 - Trigger queues: https://trigger.dev/docs/queue-concurrency
 - Trigger task fan-out: https://trigger.dev/docs/triggering
 - Trigger idempotency: https://trigger.dev/docs/idempotency
-- fal concurrency/retention: https://fal.ai/docs/documentation/model-apis/faq
-- fal MCP: https://fal.ai/docs/documentation/setting-up/mcp
-- Seedance 2.0: https://fal.ai/seedance-2.0
-- Seedance image-to-video: https://fal.ai/models/bytedance/seedance-2.0/image-to-video
 - Genblaze: https://github.com/backblaze-labs/genblaze

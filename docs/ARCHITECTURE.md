@@ -1,5 +1,11 @@
 # Jewelo v2 architecture
 
+> **Superseded in part on 3 September 2026 (D-017).** Video/motion generation
+> was removed; Jewelo generates still images only. Every fal.ai, Seedance and
+> motion statement below is retained as historical rationale and is no longer
+> in effect. See `docs/DECISION-REGISTER.md`.
+
+
 The final Caleums parent/child asset graph and provider split are frozen in
 `docs/CALEUMS-FINAL-E2E-CONTRACT.md`. That contract overrides older pipeline
 examples below where they differ.
@@ -27,12 +33,11 @@ Realtime/Storage       fan-out, waits, observability
   | task/asset updates |
   +--------------------+
                        |
-              +--------+---------+
-              |                  |
-              v                  v
-        OpenAI API             fal.ai
-        GPT Image 2            Seedance 2.0 Fast
-        GPT-5.6 Luna           Seedance 2.0 Standard
+                       |
+                       v
+                  OpenAI API
+                  GPT Image 2
+                  GPT-5.6 Luna
 ```
 
 The application is a modular monolith with two deployable units—web and jobs—not a microservice fleet.
@@ -73,13 +78,7 @@ The application is a modular monolith with two deployable units—web and jobs�
 - perform configured structured visual verification after deterministic checks;
 - return temporary provider output that jobs immediately copy into Jewelo storage.
 
-### fal.ai
-
-- execute Seedance image-to-video inference through asynchronous queue/status/webhook APIs;
-- provide model/schema/pricing/test-run access through its MCP for coding agents;
-- not own Jewelo dependencies, commercial state, retries, or customer progress.
-
-Provider adapters accept typed contracts and return typed results. Domain code never imports OpenAI or fal SDKs.
+Provider adapters accept typed contracts and return typed results. Domain code never imports the OpenAI SDK.
 
 ## Core data model
 
@@ -145,26 +144,18 @@ canonical SVG + PNG identity
         v
 parent uses Trigger batch fan-out for variations 1..4
         |
-        +-- V1 product -- QA --+-- worn V1 -- QA -- persist
-        |                      +-- fast motion V1 -- QA -- persist
-        |
-        +-- V2 product -- QA --+-- worn V2 -- QA -- persist
-        |                      +-- fast motion V2 -- QA -- persist
-        |
-        +-- V3 product -- QA --+-- worn V3 -- QA -- persist
-        |                      +-- fast motion V3 -- QA -- persist
-        |
-        +-- V4 product -- QA --+-- worn V4 -- QA -- persist
-                               +-- fast motion V4 -- QA -- persist
+        +-- V1 product -- QA -- worn V1 -- QA -- persist
+        +-- V2 product -- QA -- worn V2 -- QA -- persist
+        +-- V3 product -- QA -- worn V3 -- QA -- persist
+        +-- V4 product -- QA -- worn V4 -- QA -- persist
 ```
 
 The pipeline is **streaming by variation**, not staged behind global barriers:
 
 - all four product stills start together;
 - each product persists and appears as soon as it passes QA;
-- that variation immediately starts its worn still and Seedance Fast preview concurrently;
-- a slow/failing sibling cannot block a successful variation;
-- selecting a direction may start an optional standard-quality final motion render without replacing the fast preview.
+- that variation immediately starts its worn still;
+- a slow/failing sibling cannot block a successful variation.
 
 Do not wrap waitable Trigger child calls in arbitrary `Promise.all()`. Use Trigger batch fan-out APIs and named queues so child execution, retries and metadata remain visible.
 
@@ -189,12 +180,6 @@ openai-image
 visual-verifier
   separately bounded so verification cannot starve generation
 
-fal-seedance-fast
-  concurrency: 4 only after fal account limit >= 4 is verified
-
-fal-seedance-final
-  concurrency: 1-2
-
 organization
   concurrency key: organization ID
   default maximum: 4 active variation pipelines
@@ -213,24 +198,7 @@ run:{runId}:variation:{index}:{kind}:release:{releaseId}
 ```text
 still.production  = gpt-image-2-2026-04-21 (direct OpenAI)
 still.verifier    = gpt-5.6-luna
-still.fallback    = openai/gpt-image-2 on fal, disabled
-motion.preview    = bytedance/seedance-2.0/fast/image-to-video
-motion.final      = bytedance/seedance-2.0/image-to-video
 ```
-
-### Fast motion previews
-
-The showcase profile creates four previews:
-
-- start frame: the approved product still;
-- duration: 4 seconds;
-- aspect: 9:16;
-- resolution: 720p;
-- audio: disabled;
-- motion: restrained product camera movement and specular light;
-- submitted as soon as each product passes QA.
-
-The optional final profile creates one 6-second standard Seedance render for the selected direction, using the approved product or worn still according to the chosen creative treatment.
 
 ## Canonical pendant identity
 
@@ -252,7 +220,7 @@ identity.json
 identity_fingerprint
 ```
 
-GPT Image 2 receives the canonical identity as a high-fidelity input. Product output becomes an additional reference for the matching worn output. Seedance receives an approved still as its first frame.
+GPT Image 2 receives the canonical identity as a high-fidelity input. Product output becomes an additional reference for the matching worn output.
 
 The verifier checks:
 
@@ -261,7 +229,6 @@ The verifier checks:
 - metal and stone consistency;
 - duplicate/missing elements;
 - crop/resolution/background requirements;
-- video drift, duration, aspect, playability and loop quality.
 
 A model may fail the quality gate; it may not silently redefine the customer’s pendant.
 
@@ -281,7 +248,7 @@ slot ready -> crossfade asset into the same layout box
 slot retrying/failed -> explicit status and bounded action
 ```
 
-The first useful product must be visible without waiting for the full set. Motion, Embla Carousel and `react-zoom-pan-pinch` provide the interaction layer; Supabase state remains the source of truth.
+The first useful product must be visible without waiting for the full set. The Motion library, Embla Carousel and `react-zoom-pan-pinch` provide the interaction layer; Supabase state remains the source of truth.
 
 ## Media security
 
@@ -291,7 +258,6 @@ Private buckets:
 references
 canonical
 generated-images
-generated-video
 exports
 ```
 
@@ -304,7 +270,7 @@ org/{orgId}/design/{designId}/revision/{revisionId}/run/{runId}/
 
 Store MIME type, dimensions, duration, checksum, byte size, provider lineage, and lifecycle status in `assets`. Never store durable provider URLs.
 
-fal URLs are public by default unless ACLs are configured and are retained only temporarily. Trigger jobs download successful output immediately, verify bytes/checksum, upload to private Supabase Storage, then persist the Jewelo asset.
+Provider output URLs are temporary transport only. Trigger jobs download successful output immediately, verify bytes/checksum, upload to private Supabase Storage, then persist the Jewelo asset.
 
 ## Authentication and authorization
 
@@ -321,7 +287,7 @@ fal URLs are public by default unless ACLs are configured and are retained only 
 ```text
 development  -> persistent Supabase dev + Trigger DEV + local Next.js + dev provider keys
 preview      -> Supabase PR branch + Trigger preview branch + DigitalOcean staging + contract providers
-staging      -> persistent Supabase staging + Trigger STAGING + bounded OpenAI/fal validation
+staging      -> persistent Supabase staging + Trigger STAGING + bounded OpenAI validation
 production   -> Supabase Mumbai prod + Trigger PROD + DigitalOcean production + approved provider quotas
 ```
 
@@ -331,7 +297,7 @@ Production data is never copied into previews. Seed only synthetic fixtures.
 
 Scale in this order:
 
-1. OpenAI/fal quotas, queue policy and model spend;
+1. OpenAI quotas, queue policy and model spend;
 2. Trigger environment concurrency and fairness;
 3. Supabase compute/connection pool;
 4. Realtime transport if measured;

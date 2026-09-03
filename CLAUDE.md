@@ -20,13 +20,12 @@ You are implementing a first-principles production rebuild. The architecture is 
 - Repository: pnpm workspace + Turborepo.
 - Data platform: Supabase Mumbai — Postgres, Auth, Realtime, private Storage.
 - Workflow: Trigger.dev Cloud.
-- Still images: direct OpenAI GPT Image 2 snapshot.
-- Motion: fal.ai with Seedance 2.0 Fast for four previews and Seedance 2.0 Standard for the selected final upgrade.
+- Still images: direct OpenAI GPT Image 2 snapshot. Jewelo is image-only; video/motion generation was removed on 2026-09-03.
 - Observability: Sentry, PostHog, Trigger/provider traces.
 - Development: managed remote environments; no required Docker/local database/local storage.
-- Media UI: Motion, Embla Carousel, `react-zoom-pan-pinch`, `react-dropzone`, native short-form video.
+- Media UI: Motion, Embla Carousel, `react-zoom-pan-pinch`, `react-dropzone`.
 
-These may change only after an explicit user instruction or a proved blocking incompatibility. An agent must not substitute Convex, Neon, Clerk, Firebase, R2, Runway, another workflow engine, another image model, or another video gateway because it prefers that vendor.
+These may change only after an explicit user instruction or a proved blocking incompatibility. An agent must not substitute Convex, Neon, Clerk, Firebase, R2, another workflow engine, or another image model because it prefers that vendor. Do not reintroduce a video/motion provider.
 
 For final Caleums integration, `docs/CALEUMS-FINAL-E2E-CONTRACT.md` overrides
 older goal examples that describe a different media graph or provider split.
@@ -45,13 +44,13 @@ older goal examples that describe a different media graph or provider split.
 10. Use an outbox/reconciliation boundary so a committed design run cannot be lost if Trigger dispatch fails.
 11. Preserve old successful assets when refining or regenerating. New work creates a new run/revision.
 12. Batch-dispatch four independent variation pipelines. Start all four product stills concurrently within verified OpenAI quota.
-13. As soon as one product passes QA, persist/reveal it and start that variation’s worn still and fast Seedance preview concurrently. Never add a global “wait for all products” barrier.
-14. Four Seedance previews require a verified fal account concurrency limit of at least four. Otherwise queue truthfully; do not fake parallel progress.
-15. Showcase motion profile: four 4-second, 9:16, 720p, silent Seedance Fast previews. Optional selected final: 6-second Seedance Standard.
+13. As soon as the studio still passes QA, persist/reveal it and release its dependent stills concurrently. Never add a global “wait for all products” barrier.
+14. Queue truthfully when a provider limit is reached; do not fake parallel progress.
+15. Jewelo generates still images only. Do not add video, motion, or any animation-generating provider.
 16. Provider concurrency, requests-per-minute, attempt limits, and spend ceilings are validated configuration—not hard-coded business rules.
 17. Use Trigger batch fan-out and named queues; do not use ad hoc `Promise.all()` around waitable child tasks.
 18. Idempotency keys include run, variation, asset kind, and prompt release. Duplicate dispatch/callback must not duplicate charges or assets.
-19. fal.ai is an inference gateway, not Jewelo’s workflow engine or durable storage. Immediately copy successful provider media into private Supabase Storage.
+19. OpenAI is an inference gateway, not Jewelo’s workflow engine or durable storage. Immediately copy successful provider media into private Supabase Storage.
 20. Do not add Genblaze or another autonomous media-agent framework. Borrow provenance ideas only; keep execution deterministic and typed.
 21. Do not make paid provider calls outside a goal that permits them and a documented development budget.
 22. Never commit secrets, production data, customer media, raw provider payloads containing PII, or permanent public provider URLs.
@@ -76,7 +75,7 @@ queued -> generating -> verifying -> ready
 - use skeleton/shimmer only for real pending state;
 - never show fake percentages;
 - successful siblings remain usable;
-- product, worn, and motion stay linked to one variation identity;
+- every still stays linked to one variation identity;
 - leaving/reloading reconstructs the complete run.
 
 ## Human API boundary
@@ -86,7 +85,6 @@ Ask the user only for the smallest external action: authenticate a named MCP/CLI
 Specific launch authorizations include:
 
 - OpenAI project with sufficient GPT Image 2 quota for four concurrent product calls and progressive worn calls;
-- fal account/API key with a verified concurrency limit of at least four for preview-all mode;
 - explicit development spend ceilings.
 
 Once an environment is authorized, routine migrations, preview deploys, job runs, model schema/pricing checks, logs, cleanup, and debugging are agent work.

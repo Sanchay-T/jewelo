@@ -11,10 +11,7 @@ This branch is the clean-room source of truth for rebuilding Jewelo from first p
 - DigitalOcean App Platform in Bangalore for staging and production web deployments
 - Supabase Mumbai for Postgres, Auth, Realtime, and private Storage
 - Trigger.dev Cloud for durable, parallel AI workflows
-- direct OpenAI `gpt-image-2-2026-04-21` for product and worn stills
-- fal.ai for video inference
-- Seedance 2.0 Fast for four 4-second motion previews
-- Seedance 2.0 Standard for an optional selected final motion
+- direct OpenAI `gpt-image-2-2026-04-21` for every still
 - Sentry + PostHog for reliability and product analytics
 - Motion + Embla + `react-zoom-pan-pinch` + `react-dropzone` for the progressive media experience
 
@@ -25,8 +22,7 @@ Read `docs/FINAL-STACK.md`, `docs/ARCHITECTURE.md`, and `docs/MEDIA-CONCURRENCY.
 ```text
 four product stills start concurrently
   each verified product appears immediately
-    each independently unlocks:
-      worn still + fast Seedance preview concurrently
+    the studio still independently unlocks its dependent stills
 ```
 
 There is no “wait for the entire batch” barrier. A slow or failed sibling cannot delay a successful variation.
@@ -34,14 +30,15 @@ There is no “wait for the entire batch” barrier. A slow or failed sibling ca
 Provider quotas remain honest:
 
 - OpenAI concurrency/IPM is validated before real launch;
-- fal preview-all mode requires a verified account concurrency limit of at least four;
 - below a provider limit, Trigger queues excess work and the UI shows `queued` rather than fake progress.
 
 ## Open-source framework decision
 
 No autonomous media-agent framework sits in the production path. Genblaze was the strongest open-source pipeline candidate reviewed, but it would add Python and duplicate Trigger.dev’s durable workflow responsibilities. Jewelo keeps deterministic typed workflows and borrows only provenance ideas.
 
-fal.ai is the managed inference gateway for Seedance—not the business workflow engine. Trigger.dev owns fan-out, retries, idempotency, fairness, cancellation, and recovery. Supabase owns durable customer-visible truth.
+OpenAI is the managed inference gateway for stills—not the business workflow engine. Trigger.dev owns fan-out, retries, idempotency, fairness, cancellation, and recovery. Supabase owns durable customer-visible truth.
+
+Video/motion generation was removed on 2026-09-03: Jewelo generates still images only. See `docs/DECISION-REGISTER.md`.
 
 ## Start
 
@@ -83,7 +80,7 @@ The human is required only for:
 
 - first-time account creation or OAuth authorization;
 - supplying development/production secrets;
-- purchasing/approving OpenAI and fal quota or billing;
+- purchasing/approving OpenAI quota or billing;
 - accepting legal, privacy, retention, and manufacturing claims;
 - irreversible production actions;
 - merging and launch approval.
@@ -101,7 +98,6 @@ main
         ├── goal/03-durable-generation
         ├── goal/04-identity-prompt-qa
         ├── goal/05-real-still-generation
-        ├── goal/06-real-motion
         ├── goal/07-commerce-operator
         └── goal/08-hardening-launch
 ```
