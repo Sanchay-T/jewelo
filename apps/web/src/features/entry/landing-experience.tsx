@@ -46,7 +46,10 @@ export function LandingExperience({ locale }: { locale: "en" | "ar" }) {
   return (
     <AppShell locale={locale}>
       <main className="clm-landing">
-        <section className="clm-hero-copy">
+        {/* This copy is still English on /ar. Isolating it as LTR stops the
+            bidirectional algorithm moving trailing full stops to the front
+            (".name", ".precious"). Remove the override with translations. */}
+        <section className="clm-hero-copy" dir="ltr">
           <p className="clm-kicker">
             Design a custom name pendant that’s as unique as your story.
           </p>

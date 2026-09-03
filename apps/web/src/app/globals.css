@@ -32,7 +32,9 @@ html,
 body {
   margin: 0;
   min-width: 320px;
-  overflow-x: hidden;
+  /* `clip` rather than `hidden`: `hidden` makes these a scroll container, which
+     silently disables `position: sticky` for every descendant. */
+  overflow-x: clip;
   background: var(--ivory);
   color: var(--ink);
 }
@@ -309,69 +311,129 @@ img {
   min-height: calc(100dvh - 70px);
   padding: 18px;
 }
-.clm-config-progress {
-  max-width: 1380px;
-  margin: 0 auto 14px;
-}
-.clm-config-progress > span {
-  font-size: 0.62rem;
-  font-weight: 700;
-}
-.clm-config-progress > div {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
-  margin-top: 8px;
-  gap: 5px;
-}
-.clm-config-progress button {
-  min-height: 44px;
-  position: relative;
-  text-align: start;
-  border: 0;
-  background: transparent;
-  padding: 0;
-  color: var(--muted);
-}
-.clm-config-progress i {
-  height: 3px;
-  width: 100%;
-  display: block;
-  background: #ded8ce;
-}
-.clm-config-progress button[data-active] i {
-  background: var(--gold);
-}
-.clm-config-progress button[data-not-applicable] {
-  opacity: 0.48;
-}
-.clm-config-progress button[data-not-applicable] i {
-  height: 3px;
-  background: transparent;
-  border-top: 3px dashed #cfc8bd;
-}
-.clm-config-progress small {
-  display: block;
-  font-size: 0.58rem;
-  margin-top: 7px;
-}
 .clm-config-shell {
   max-width: 1380px;
-  min-height: calc(100dvh - 177px);
+  min-height: calc(100dvh - 106px);
   margin: 0 auto;
   border: 1px solid var(--line);
   display: grid;
   grid-template-columns: minmax(360px, 42%) minmax(0, 58%);
   background: var(--paper);
-  overflow: hidden;
 }
+.clm-config-shell.single {
+  grid-template-columns: minmax(0, 1fr);
+}
+/* The page scrolls, not this column, so the sticky action bar at its end pins
+   to the viewport instead of clipping inside an inner scroll container. */
 .clm-controls {
   grid-column: 1;
   grid-row: 1;
   padding: clamp(26px, 4vw, 58px);
   display: flex;
   flex-direction: column;
-  overflow-y: auto;
-  max-height: calc(100dvh - 177px);
+}
+.clm-config-block,
+.clm-review-strip {
+  border-top: 1px solid var(--line);
+  padding: 22px 0 4px;
+}
+.clm-controls > .clm-config-block:first-of-type {
+  border-top: 0;
+  padding-top: 0;
+}
+.clm-config-block > h2,
+.clm-review-strip > h2 {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 0 0 14px;
+  font-family: Georgia, serif;
+  font-size: 1.15rem;
+  font-weight: 400;
+}
+.clm-config-block > h2 > span,
+.clm-review-strip > h2 > span {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 24px;
+  height: 24px;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  font-family: "Instrument Sans", Arial, sans-serif;
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: var(--muted);
+}
+.clm-block-hint {
+  margin: -8px 0 13px;
+  color: var(--muted);
+  font-size: 0.7rem;
+  line-height: 1.5;
+}
+.clm-add-name,
+.clm-remove-name,
+.clm-inline-more {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 14px;
+  border: 1px dashed var(--line);
+  background: transparent;
+  color: #755621;
+  font-size: 0.69rem;
+  font-weight: 700;
+}
+.clm-remove-name {
+  border-style: solid;
+  color: var(--muted);
+  font-weight: 400;
+}
+.clm-second-name {
+  border-inline-start: 2px solid var(--line);
+  padding-inline-start: 14px;
+}
+.clm-details-block {
+  border-top: 1px solid var(--line);
+  padding: 4px 0;
+}
+.clm-details-block > summary {
+  min-height: 60px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  list-style: none;
+}
+.clm-details-block > summary::-webkit-details-marker {
+  display: none;
+}
+.clm-details-block > summary::after {
+  content: "+";
+  margin-inline-start: auto;
+  font-size: 1.1rem;
+  color: var(--muted);
+}
+.clm-details-block[open] > summary::after {
+  content: "−";
+}
+.clm-details-block > summary strong {
+  display: block;
+  font-size: 0.78rem;
+}
+.clm-details-block > summary small {
+  display: block;
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 0.62rem;
+}
+.clm-details-block > summary:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 3px;
+}
+.clm-review-strip {
+  margin-top: auto;
 }
 .clm-controls header {
   margin-bottom: 25px;
@@ -392,15 +454,22 @@ img {
 .clm-preview {
   grid-column: 2;
   grid-row: 1;
-  position: relative;
+  position: sticky;
+  top: 88px;
+  align-self: start;
   overflow: hidden;
-  min-height: min(640px, calc(100dvh - 177px));
+  height: min(640px, calc(100dvh - 106px));
   background: #f1ebe1;
 }
+/* A generated fixture used to sit here, which meant a visitor saw another
+   customer's pendant under their own name. The backdrop is now inert. */
 .clm-preview-frame {
   position: absolute;
   inset: 0;
   overflow: hidden;
+  background:
+    radial-gradient(120% 80% at 50% 12%, #fbf6ec 0%, transparent 62%),
+    linear-gradient(168deg, #f4eee4 0%, #ece4d7 100%);
 }
 .clm-preview > img,
 .clm-preview-frame > img {
@@ -409,6 +478,14 @@ img {
   object-fit: cover;
   opacity: 0.28;
   filter: saturate(0.55) contrast(0.9);
+}
+.clm-preview-empty {
+  color: var(--muted);
+  font-family: "Instrument Sans", Arial, sans-serif;
+  font-size: 0.8rem;
+  font-style: normal;
+  letter-spacing: 0.04em;
+  text-shadow: none;
 }
 .clm-preview-badge {
   position: absolute;
@@ -629,7 +706,6 @@ img {
   color: var(--ink);
   font-size: 0.56rem;
   line-height: 1;
-  text-transform: capitalize;
 }
 .clm-view-controls {
   position: absolute;
@@ -976,6 +1052,11 @@ img {
   font-size: 0.69rem;
   text-transform: capitalize;
 }
+/* The review summary already reads as prose; capitalising it turns "30 mm"
+   into "30 Mm" at the moment the customer checks their own spelling. */
+.clm-review-strip .clm-summary dd {
+  text-transform: none;
+}
 .clm-summary.compact div {
   grid-template-columns: 82px 1fr;
   padding: 9px 0;
@@ -1033,14 +1114,49 @@ img {
   font-weight: 400;
   margin: 4px 0;
 }
+/* The estimate lives inside this bar. Defect 20 was the bar covering the
+   estimate at the moment of approval; putting it in the bar makes that
+   impossible rather than merely unlikely. */
 .clm-config-actions {
   position: sticky;
-  bottom: -1px;
-  margin-top: auto;
-  padding-top: 20px;
+  bottom: 0;
+  z-index: 20;
+  margin-top: 18px;
+  padding: 14px 0;
   display: flex;
+  align-items: center;
   justify-content: space-between;
+  gap: 14px;
+  border-top: 1px solid var(--line);
   background: var(--paper);
+}
+.clm-actions-estimate {
+  min-width: 0;
+}
+.clm-actions-estimate span,
+.clm-actions-estimate strong,
+.clm-actions-estimate small {
+  display: block;
+}
+.clm-actions-estimate span {
+  font-size: 0.58rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+}
+.clm-actions-estimate strong {
+  margin-top: 2px;
+  font-size: 1.05rem;
+}
+.clm-actions-estimate small {
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 0.58rem;
+  line-height: 1.45;
+}
+.clm-config-actions .clm-primary {
+  flex: none;
 }
 
 .clm-empty {
@@ -1236,11 +1352,14 @@ img {
   color: var(--muted);
   font-size: 0.57rem;
 }
-.clm-crafting-card[data-state="blocked"] .clm-crafting-skeleton,
-.clm-crafting-card[data-state="failed"] .clm-crafting-skeleton,
-.clm-crafting-card[data-state="cancelled"] .clm-crafting-skeleton {
-  animation: none;
-  opacity: 0.66;
+/* Same box as the skeleton so the slot never changes size when work stops. */
+.clm-crafting-stalled {
+  position: absolute;
+  inset: 0;
+  background: #e3ddd3;
+}
+.clm-crafting-card-progress:not([data-pending]) {
+  opacity: 0.72;
 }
 .clm-crafting-complete {
   min-height: 54px;
@@ -2432,7 +2551,7 @@ img {
     padding: 28px;
   }
   .clm-preview {
-    min-height: 600px;
+    height: min(600px, calc(100dvh - 106px));
   }
   .clm-style-grid,
   .clm-layout-grid {
@@ -2514,28 +2633,7 @@ img {
     justify-content: flex-start;
   }
   .clm-config-page {
-    padding: 0 0 86px;
-  }
-  .clm-config-progress {
-    padding: 10px 14px 3px;
-    margin: 0;
-    overflow-x: auto;
-    scrollbar-width: none;
-  }
-  .clm-config-progress::-webkit-scrollbar {
-    display: none;
-  }
-  .clm-config-progress > div {
-    width: max-content;
-    grid-template-columns: none;
-    grid-auto-flow: column;
-    grid-auto-columns: 44px;
-  }
-  .clm-config-progress small {
-    display: none;
-  }
-  .clm-config-progress button {
-    min-height: 44px;
+    padding: 0;
   }
   .clm-config-shell {
     display: flex;
@@ -2545,11 +2643,13 @@ img {
   }
   .clm-preview {
     order: 1;
+    height: auto;
     min-height: 310px;
     max-height: 42vh;
     aspect-ratio: 1.2;
     position: sticky;
     top: 0;
+    align-self: auto;
     z-index: 5;
     border-bottom: 1px solid var(--line);
   }
@@ -2581,9 +2681,7 @@ img {
   }
   .clm-controls {
     order: 2;
-    padding: 26px 18px 26px;
-    max-height: none;
-    overflow: visible;
+    padding: 26px 18px 0;
   }
   .clm-controls button,
   .clm-controls input,
@@ -2611,17 +2709,20 @@ img {
   .clm-four-grid {
     grid-template-columns: repeat(2, 1fr);
   }
+  /* Sticky rather than fixed: a fixed bar is what hid page content, and the
+     estimate inside it has to stay readable at 390px. */
   .clm-config-actions {
-    position: fixed;
     z-index: 25;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    padding: 10px 14px;
-    border-top: 1px solid var(--line);
+    margin-inline: -18px;
+    padding: 12px 18px;
+    flex-wrap: wrap;
   }
   .clm-config-actions .clm-primary {
     min-width: 155px;
+    margin-inline-start: auto;
+  }
+  .clm-actions-estimate small {
+    display: none;
   }
   .clm-generation {
     display: flex;

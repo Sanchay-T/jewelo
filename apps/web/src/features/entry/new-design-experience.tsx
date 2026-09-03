@@ -1,8 +1,7 @@
 "use client";
 
-import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ArrowLeft,
   ArrowRight,
@@ -11,13 +10,16 @@ import {
   Heart,
   Minus,
   PencilSimple,
+  Plus,
   Sparkle,
   SpinnerGap,
+  X,
 } from "@phosphor-icons/react";
 import { AppShell } from "@/components/app-shell";
 import { useJewelo } from "@/lib/jewelo-provider";
 import {
   ARABIC_STYLE_OPTIONS,
+  CALEUMS_STARTING_PRICE,
   formatIdentity,
   isProviderSupportedArabicStyle,
 } from "@/lib/ui-presentation";
@@ -33,31 +35,19 @@ import type {
   StoneCoverage,
 } from "@/lib/types";
 import {
-  CONSTRUCTION_STAGES,
+  DEFAULT_CONFIGURATOR_DRAFT,
+  LAYOUT_LABELS,
+  PRIMARY_LAYOUTS,
+  SECONDARY_LAYOUTS,
+  SIZE_WIDTHS_MM,
   clearConfiguratorDraft,
   configuratorReviewSummary,
-  isNameStageValid,
-  navigationSequence,
+  isIdentityValid,
   readConfiguratorDraft,
+  resolvedLayoutFor,
   writeConfiguratorDraft,
-  type ConfiguratorDraftV1,
-  type ConfiguratorStageId,
+  type ConfiguratorDraftV2,
 } from "./configurator-draft";
-
-const layouts: Array<{ id: PendantLayout; label: string }> = [
-  { id: "side-by-side", label: "Side by side" },
-  { id: "connected-heart", label: "Connected heart" },
-  { id: "stacked", label: "Stacked" },
-  { id: "stacked-heart", label: "Stacked + heart" },
-  { id: "infinity", label: "Infinity" },
-  { id: "interlocked", label: "Interlocked" },
-];
-
-const sizeWidths: Partial<Record<SizeProfile, number>> = {
-  delicate: 22,
-  classic: 30,
-  statement: 36,
-};
 
 function titleCaseOption(value: string) {
   return value
@@ -85,14 +75,23 @@ async function refineArabicName(name: string, signal: AbortSignal) {
   return result.arabicText.trim();
 }
 
+/**
+ * Proposes an Arabic spelling for a Latin name. The customer remains the
+ * spelling authority: an edited spelling is never overwritten.
+ *
+ * `enabled` gates the model call on Arabic being the chosen script. Together
+ * with the two-character floor it means a visitor who lands on the page, or who
+ * only ever wants English, never causes a provider call.
+ */
 function useArabicNameReflection(latinName: string, enabled: boolean) {
   const [arabicText, setArabicText] = useState("");
-  const [status, setStatus] = useState<ArabicReflectionStatus>(() =>
-    enabled && latinName.trim().length >= 2 ? "refining" : "idle",
-  );
+  const [status, setStatus] = useState<ArabicReflectionStatus>("idle");
   const [retryToken, setRetryToken] = useState(0);
   const manuallyEdited = useRef(false);
   const restoredForName = useRef<string | null>(null);
+  // The name a spelling already exists for, so switching script back and forth
+  // neither refetches nor discards an approved spelling.
+  const reflectedName = useRef<string | null>(null);
 
   useEffect(() => {
     if (restoredForName.current === latinName) {
@@ -100,18 +99,22 @@ function useArabicNameReflection(latinName: string, enabled: boolean) {
       return;
     }
     manuallyEdited.current = false;
+    reflectedName.current = null;
     setArabicText("");
-    setStatus(enabled && latinName.trim().length >= 2 ? "refining" : "idle");
-  }, [enabled, latinName]);
+    setStatus("idle");
+  }, [latinName]);
 
   useEffect(() => {
     const name = latinName.trim();
-    if (!enabled || name.length < 2 || manuallyEdited.current) return;
+    if (!enabled || name.length < 2) return;
+    if (manuallyEdited.current || reflectedName.current === name) return;
     const controller = new AbortController();
+    setStatus("refining");
     const timer = window.setTimeout(() => {
       void refineArabicName(name, controller.signal)
         .then((refined) => {
           if (controller.signal.aborted || manuallyEdited.current) return;
+          reflectedName.current = name;
           setArabicText(refined);
           setStatus("refined");
         })
@@ -128,14 +131,19 @@ function useArabicNameReflection(latinName: string, enabled: boolean) {
     };
   }, [enabled, latinName, retryToken]);
 
-  const editArabicText = useCallback((value: string) => {
-    manuallyEdited.current = true;
-    setArabicText(value);
-    setStatus("edited");
-  }, []);
+  const editArabicText = useCallback(
+    (value: string) => {
+      manuallyEdited.current = true;
+      reflectedName.current = latinName.trim();
+      setArabicText(value);
+      setStatus("edited");
+    },
+    [latinName],
+  );
 
   const retry = useCallback(() => {
     manuallyEdited.current = false;
+    reflectedName.current = null;
     setArabicText("");
     setStatus("refining");
     setRetryToken((current) => current + 1);
@@ -149,6 +157,7 @@ function useArabicNameReflection(latinName: string, enabled: boolean) {
     ) => {
       restoredForName.current = restoredLatinName;
       manuallyEdited.current = Boolean(value);
+      reflectedName.current = value ? restoredLatinName.trim() : null;
       setArabicText(value);
       setStatus(value ? restoredStatus : "idle");
     },
@@ -182,36 +191,115 @@ function Option<const T extends string>({
   );
 }
 
+function ApprovedSpellingField({
+  id,
+  label,
+  value,
+  status,
+  onEdit,
+  onRetry,
+}: {
+  id: string;
+  label: string;
+  value: string;
+  status: ArabicReflectionStatus;
+  onEdit(next: string): void;
+  onRetry(): void;
+}) {
+  return (
+    <div className="clm-arabic-approved" aria-live="polite">
+      <label className="clm-label" htmlFor={id}>
+        <span className="clm-approved-label">
+          {label}
+          {status === "refined" && (
+            <small>
+              <Sparkle size={12} weight="fill" /> AI refined
+            </small>
+          )}
+          {status === "edited" && (
+            <small>
+              <PencilSimple size={12} /> Edited by you
+            </small>
+          )}
+        </span>
+        <input
+          id={id}
+          dir="rtl"
+          value={value}
+          disabled={status === "refining"}
+          placeholder={
+            status === "refining" ? "Preparing the spelling…" : undefined
+          }
+          onChange={(event) => onEdit(event.target.value)}
+        />
+      </label>
+      {status === "refining" && (
+        <span className="clm-reflection-status">
+          <SpinnerGap className="clm-spin" size={14} />
+          Refining spelling…
+        </span>
+      )}
+      {status === "error" && (
+        <span className="clm-reflection-status">
+          <button type="button" className="clm-inline-retry" onClick={onRetry}>
+            Retry Arabic refinement
+          </button>
+        </span>
+      )}
+    </div>
+  );
+}
+
 export function NewDesignExperience({ locale }: { locale: Locale }) {
   const router = useRouter();
   const { client, createDesign } = useJewelo();
-  const [stage, setStage] = useState<ConfiguratorStageId>("name-language");
-  const [nameCount, setNameCount] = useState<1 | 2>(1);
-  const [nameOne, setNameOne] = useState("Layla");
-  const [nameTwo, setNameTwo] = useState("Mariam");
-  const [language, setLanguage] = useState<"en" | "ar">("en");
+  const [nameCount, setNameCount] = useState<1 | 2>(
+    DEFAULT_CONFIGURATOR_DRAFT.nameCount,
+  );
+  const [nameOne, setNameOne] = useState(DEFAULT_CONFIGURATOR_DRAFT.nameOne);
+  const [nameTwo, setNameTwo] = useState(DEFAULT_CONFIGURATOR_DRAFT.nameTwo);
+  const [language, setLanguage] = useState<"en" | "ar">(
+    DEFAULT_CONFIGURATOR_DRAFT.language,
+  );
   const {
     arabicText: arabicOne,
     editArabicText: setArabicOne,
     restore: restoreArabicOne,
     retry: retryArabicOne,
     status: arabicOneStatus,
-  } = useArabicNameReflection(nameOne, true);
+  } = useArabicNameReflection(nameOne, language === "ar");
   const {
     arabicText: arabicTwo,
     editArabicText: setArabicTwo,
     restore: restoreArabicTwo,
     retry: retryArabicTwo,
     status: arabicTwoStatus,
-  } = useArabicNameReflection(nameTwo, nameCount === 2);
-  const [arabicStyle, setArabicStyle] = useState<ArabicStyle>("contemporary");
-  const [layout, setLayout] = useState<PendantLayout>("connected-heart");
-  const [metal, setMetal] = useState<MetalColor>("yellow");
-  const [coverage, setCoverage] = useState<StoneCoverage>("full-pave");
-  const [gemstone, setGemstone] = useState<Gemstone>("lab-diamond");
-  const [size, setSize] = useState<SizeProfile>("classic");
-  const [chain, setChain] = useState<ChainStyle>("cable");
-  const [chainLength, setChainLength] = useState<40 | 45 | 50 | 55>(45);
+  } = useArabicNameReflection(nameTwo, language === "ar" && nameCount === 2);
+  const [arabicStyle, setArabicStyle] = useState<ArabicStyle>(
+    DEFAULT_CONFIGURATOR_DRAFT.arabicStyle,
+  );
+  const [layout, setLayout] = useState<PendantLayout>(
+    DEFAULT_CONFIGURATOR_DRAFT.layout,
+  );
+  const [metal, setMetal] = useState<MetalColor>(
+    DEFAULT_CONFIGURATOR_DRAFT.metal,
+  );
+  const [coverage, setCoverage] = useState<StoneCoverage>(
+    DEFAULT_CONFIGURATOR_DRAFT.coverage,
+  );
+  const [gemstone, setGemstone] = useState<Gemstone>(
+    DEFAULT_CONFIGURATOR_DRAFT.gemstone,
+  );
+  const [size, setSize] = useState<SizeProfile>(
+    DEFAULT_CONFIGURATOR_DRAFT.size,
+  );
+  const [chain, setChain] = useState<ChainStyle>(
+    DEFAULT_CONFIGURATOR_DRAFT.chain,
+  );
+  const [chainLength, setChainLength] = useState<40 | 45 | 50 | 55>(
+    DEFAULT_CONFIGURATOR_DRAFT.chainLength,
+  );
+  const [moreLayouts, setMoreLayouts] = useState(false);
   const [previewZoom, setPreviewZoom] = useState(1);
   const [previewFace, setPreviewFace] = useState<"front" | "side">("front");
   const [confirmed, setConfirmed] = useState(false);
@@ -224,15 +312,17 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
     language === "ar" ? (nameOne.trim() ? arabicOne : "") : nameOne;
   const displayTwo =
     language === "ar" ? (nameTwo.trim() ? arabicTwo : "") : nameTwo;
-  const resolvedLayout = nameCount === 1 ? "single-name" : layout;
+  const resolvedLayout = resolvedLayoutFor({ nameCount, layout });
   const identity = formatIdentity(
     nameCount === 1 ? [displayOne] : [displayOne, displayTwo],
     resolvedLayout,
   );
-  const emptyIdentity = { inline: "", lines: ["", "", ""] };
   const selectedArabicStyle = ARABIC_STYLE_OPTIONS.find(
     (option) => option.id === arabicStyle,
   );
+  // Two-name Arabic has no deterministic identity solution today
+  // (`unsupported_arabic_two_name`), so it routes to the atelier instead of
+  // generation. Surfaced at the affordance, not only at approval.
   const needsOperatorReview =
     language === "ar" &&
     (nameCount === 2 || !isProviderSupportedArabicStyle(arabicStyle));
@@ -247,18 +337,13 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
     language === "ar"
       ? (selectedArabicStyle?.label ?? titleCaseOption(arabicStyle))
       : "English script";
-  const sequence = useMemo(() => navigationSequence(language), [language]);
-  const stageIndex = sequence.indexOf(stage);
-  const safeStageIndex = stageIndex < 0 ? 0 : stageIndex;
-  const constructionIndex =
-    stage === "review"
-      ? CONSTRUCTION_STAGES.length - 1
-      : CONSTRUCTION_STAGES.findIndex((item) => item.id === stage);
 
   useEffect(() => {
-    const draft = readConfiguratorDraft(window.sessionStorage);
+    const draft = readConfiguratorDraft(
+      window.localStorage,
+      window.sessionStorage,
+    );
     if (draft) {
-      setStage(draft.stage);
       setNameCount(draft.nameCount);
       setNameOne(draft.nameOne);
       setNameTwo(draft.nameTwo);
@@ -271,27 +356,36 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
       setSize(draft.size);
       setChain(draft.chain);
       setChainLength(draft.chainLength);
+      // A restored layout must never be invisible behind the disclosure.
+      if (SECONDARY_LAYOUTS.includes(draft.layout)) setMoreLayouts(true);
       restoreArabicOne(draft.arabicOne, draft.nameOne, draft.arabicOneStatus);
       restoreArabicTwo(draft.arabicTwo, draft.nameTwo, draft.arabicTwoStatus);
-      setDraftRestored(true);
-      return;
     }
     setDraftRestored(true);
   }, [restoreArabicOne, restoreArabicTwo]);
 
   useEffect(() => {
     if (!draftRestored) return;
-    const draft: ConfiguratorDraftV1 = {
-      version: 1,
-      stage,
+    const draft: ConfiguratorDraftV2 = {
+      version: 2,
       nameCount,
       nameOne,
       nameTwo,
       language,
       arabicOne,
       arabicTwo,
-      arabicOneStatus: arabicOneStatus === "edited" ? "edited" : "refined",
-      arabicTwoStatus: arabicTwoStatus === "edited" ? "edited" : "refined",
+      arabicOneStatus:
+        arabicOneStatus === "edited"
+          ? "edited"
+          : arabicOneStatus === "refined"
+            ? "refined"
+            : undefined,
+      arabicTwoStatus:
+        arabicTwoStatus === "edited"
+          ? "edited"
+          : arabicTwoStatus === "refined"
+            ? "refined"
+            : undefined,
       arabicStyle,
       layout,
       metal,
@@ -301,7 +395,7 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
       chain,
       chainLength,
     };
-    writeConfiguratorDraft(window.sessionStorage, draft);
+    writeConfiguratorDraft(window.localStorage, draft);
   }, [
     arabicOne,
     arabicOneStatus,
@@ -320,33 +414,24 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
     nameOne,
     nameTwo,
     size,
-    stage,
   ]);
 
-  useEffect(() => {
-    if (language === "en" && stage === "arabic-style") setStage("names-layout");
-  }, [language, stage]);
-
+  // The checkbox confirms the *spelling*, so only identity-affecting changes
+  // invalidate it. Choosing a different chain must not silently untick it.
   useEffect(() => {
     setConfirmed(false);
   }, [
     arabicOne,
     arabicStyle,
     arabicTwo,
-    chain,
-    chainLength,
-    coverage,
-    gemstone,
     language,
     layout,
-    metal,
     nameCount,
     nameOne,
     nameTwo,
-    size,
   ]);
 
-  const namesValid = isNameStageValid({
+  const namesValid = isIdentityValid({
     language,
     nameCount,
     nameOne,
@@ -354,16 +439,9 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
     arabicOne,
     arabicTwo,
   });
-  const primaryNameValid = Boolean(
-    nameOne.trim() && (language === "en" || arabicOne.trim()),
-  );
-  const previewIdentity = namesValid ? identity : emptyIdentity;
-
-  function stageIsValid(id: ConfiguratorStageId) {
-    if (id === "name-language") return primaryNameValid;
-    if (id === "names-layout") return namesValid;
-    return true;
-  }
+  const previewIdentity = namesValid
+    ? identity
+    : { inline: "", lines: ["", "", ""] };
 
   function updateNameOne(value: string) {
     setNameOne(value);
@@ -373,19 +451,6 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
   function updateNameTwo(value: string) {
     setNameTwo(value);
     if (!value.trim()) setArabicTwo("");
-  }
-
-  function goBack() {
-    if (safeStageIndex === 0) {
-      router.push(`/${locale}`);
-      return;
-    }
-    setStage(sequence[safeStageIndex - 1]!);
-  }
-
-  function goForward() {
-    const next = sequence[safeStageIndex + 1];
-    if (next && stageIsValid(stage)) setStage(next);
   }
 
   function buildSpecification(): DesignInput {
@@ -412,7 +477,7 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
       nameCount,
       names,
       arabicStyle: language === "ar" ? arabicStyle : "none",
-      layout: nameCount === 1 ? "single-name" : layout,
+      layout: resolvedLayout,
       source: "fresh",
       metalKarat: "18K",
       metalColor: metal,
@@ -442,12 +507,16 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
     };
   }
 
+  function forgetDraft() {
+    clearConfiguratorDraft(window.localStorage, window.sessionStorage);
+  }
+
   async function approve() {
     setSaving(true);
     setError(undefined);
     try {
       const design = await createDesign(buildSpecification());
-      clearConfiguratorDraft(window.sessionStorage);
+      forgetDraft();
       const replay =
         process.env.NODE_ENV === "development" &&
         process.env.NEXT_PUBLIC_JEWELO_SCENARIOS === "1"
@@ -472,7 +541,7 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
       void spellingConfirmed;
       const draft = await client.createDraft(draftInput);
       await client.updateDraft(draft.id, { spellingConfirmed: true });
-      clearConfiguratorDraft(window.sessionStorage);
+      forgetDraft();
       setReviewSent(true);
     } catch (caught) {
       setError(
@@ -486,8 +555,7 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
   }
 
   const reviewSummary = configuratorReviewSummary({
-    version: 1,
-    stage,
+    version: 2,
     nameCount,
     nameOne,
     nameTwo,
@@ -503,54 +571,48 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
     chain,
     chainLength,
   });
+  const visibleLayouts = moreLayouts
+    ? [...PRIMARY_LAYOUTS, ...SECONDARY_LAYOUTS]
+    : PRIMARY_LAYOUTS;
+
+  if (reviewSent)
+    return (
+      <AppShell locale={locale}>
+        <main className="clm-config-page" dir={locale === "ar" ? "rtl" : "ltr"}>
+          <div className="clm-config-shell single">
+            <section className="clm-controls" dir="ltr">
+              <header>
+                <p className="clm-kicker">Atelier review</p>
+                <h1>Sent for atelier review</h1>
+                <p role="status">
+                  Two Arabic names are hand-finished by our atelier. We have your
+                  approved spelling and will contact you before any piece is
+                  made.
+                </p>
+              </header>
+              <div className="clm-config-actions">
+                <button
+                  type="button"
+                  className="clm-primary"
+                  onClick={() => setReviewSent(false)}
+                >
+                  <ArrowLeft size={17} /> Back to my design
+                </button>
+              </div>
+            </section>
+          </div>
+        </main>
+      </AppShell>
+    );
 
   return (
     <AppShell locale={locale}>
       <main className="clm-config-page" dir={locale === "ar" ? "rtl" : "ltr"}>
-        <div className="clm-config-progress">
-          <span>
-            {stage === "review"
-              ? "Live Editor · Review"
-              : `Step ${constructionIndex + 1} of ${CONSTRUCTION_STAGES.length}`}
-          </span>
-          <div>
-            {CONSTRUCTION_STAGES.map((item, index) => {
-              const notApplicable =
-                item.id === "arabic-style" && language === "en";
-              const futureLocked = !primaryNameValid
-                ? index > 0
-                : !namesValid
-                  ? index > 2
-                  : false;
-              return (
-                <button
-                  key={item.id}
-                  aria-label={`${item.label}${notApplicable ? ", not applicable for English" : ""}`}
-                  aria-current={stage === item.id ? "step" : undefined}
-                  data-active={
-                    (index <= constructionIndex && !notApplicable) || undefined
-                  }
-                  data-not-applicable={notApplicable || undefined}
-                  disabled={notApplicable || futureLocked}
-                  onClick={() => setStage(item.id)}
-                >
-                  <i /> <small>{item.label}</small>
-                </button>
-              );
-            })}
-          </div>
-        </div>
         <div className="clm-config-shell">
           <section className="clm-preview" aria-label="Live pendant preview">
-            <div className="clm-preview-frame">
-              <Image
-                src="/fixtures/layla-direction-1-product.png"
-                alt="Live preview of the approved Caleums name pendant"
-                fill
-                priority
-                sizes="(max-width: 799px) 100vw, 58vw"
-              />
-            </div>
+            {/* Deliberately no photograph here: a fixture of somebody else's
+                pendant used to bleed through under the visitor's own name. */}
+            <div className="clm-preview-frame" aria-hidden="true" />
             <div className="clm-preview-badge">Live preview</div>
             <div
               className="clm-live-chain"
@@ -569,12 +631,16 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
               className="clm-live-name"
               data-metal={metal}
               data-stones={coverage}
-              data-layout={nameCount === 1 ? "single-name" : layout}
+              data-layout={resolvedLayout}
               data-arabic-style={language === "ar" ? arabicStyle : undefined}
               data-size={size}
               data-gemstone={coverage === "none" ? "none" : gemstone}
               dir={language === "ar" ? "rtl" : "ltr"}
-              aria-label={`Deterministic identity preview: ${previewIdentity.inline}`}
+              aria-label={
+                namesValid
+                  ? `Deterministic identity preview: ${previewIdentity.inline}`
+                  : "Identity preview, waiting for your name"
+              }
               style={{
                 transform: `scale(${previewScale}) scaleX(${previewFace === "side" ? 0.22 : 1})`,
               }}
@@ -583,6 +649,10 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
                 <span className="clm-preview-loader" role="status">
                   <SpinnerGap className="clm-spin" size={30} />
                   Preparing Arabic spelling…
+                </span>
+              ) : !namesValid ? (
+                <span className="clm-preview-empty" dir="ltr">
+                  Your name appears here
                 </span>
               ) : (
                 <>
@@ -613,21 +683,23 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
               <strong dir={language === "ar" ? "rtl" : "ltr"}>
                 {arabicPreviewPending
                   ? "Preparing Arabic spelling…"
-                  : previewIdentity.inline}
+                  : previewIdentity.inline || "\u00A0"}
               </strong>
-              <span>
-                {previewScript} · {titleCaseOption(resolvedLayout)} · 18K{" "}
-                {metal} gold
+              <span dir="ltr">
+                {previewScript} · {LAYOUT_LABELS[resolvedLayout]} · 18K {metal}{" "}
+                gold
               </span>
-              <div className="clm-preview-specs" aria-live="polite">
-                <small>{titleCaseOption(coverage)}</small>
+              <div className="clm-preview-specs" aria-live="polite" dir="ltr">
+                <small>
+                  {coverage === "none" ? "No stones" : titleCaseOption(coverage)}
+                </small>
                 <small>
                   {coverage === "none"
                     ? "No gemstone"
                     : titleCaseOption(gemstone)}
                 </small>
                 <small>
-                  {titleCaseOption(size)} · {sizeWidths[size] ?? 30} mm
+                  {titleCaseOption(size)} · {SIZE_WIDTHS_MM[size]} mm
                 </small>
                 <small>
                   {chain === "curb" ? "Fine curb" : titleCaseOption(chain)} ·{" "}
@@ -662,104 +734,125 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
             </div>
           </section>
 
-          <section className="clm-controls">
-            {stage === "name-language" && (
-              <>
-                <header>
-                  <p className="clm-kicker">Name &amp; language</p>
-                  <h1>Let’s start with your name</h1>
-                  <p>Enter the exact spelling and choose its script.</p>
-                </header>
-                <label className="clm-label">
-                  Enter your name
-                  <input
-                    value={nameOne}
-                    maxLength={18}
-                    onChange={(event) => updateNameOne(event.target.value)}
-                  />
-                </label>
-                <fieldset className="clm-label clm-choice-fieldset">
-                  <legend>Choose language / script</legend>
-                  <span className="clm-segmented">
-                    <button
-                      type="button"
-                      aria-pressed={language === "en"}
-                      onClick={() => setLanguage("en")}
-                    >
-                      English
-                    </button>
-                    <button
-                      type="button"
-                      aria-pressed={language === "ar"}
-                      onClick={() => setLanguage("ar")}
-                    >
-                      العربية
-                    </button>
-                  </span>
-                  <small className="clm-field-hint">
-                    {language === "en"
-                      ? "Choose العربية to see the Arabic spelling and live preview."
-                      : "Choose English to return to the Latin script preview."}
-                  </small>
-                </fieldset>
-                {language === "ar" && (
-                  <div className="clm-arabic-approved" aria-live="polite">
-                    <label className="clm-label" htmlFor="arabic-name-one">
-                      <span className="clm-approved-label">
-                        Approved Arabic spelling
-                        {arabicOneStatus === "refined" && (
-                          <small>
-                            <Sparkle size={12} weight="fill" /> AI refined
-                          </small>
-                        )}
-                        {arabicOneStatus === "edited" && (
-                          <small>
-                            <PencilSimple size={12} /> Edited by you
-                          </small>
-                        )}
-                      </span>
-                      <input
-                        id="arabic-name-one"
-                        dir="rtl"
-                        value={arabicOne}
-                        disabled={arabicOneStatus === "refining"}
-                        placeholder={
-                          arabicOneStatus === "refining"
-                            ? "Luna is preparing the spelling…"
-                            : undefined
-                        }
-                        onChange={(event) => setArabicOne(event.target.value)}
-                      />
-                    </label>
-                    {arabicOneStatus === "refining" && (
-                      <span className="clm-reflection-status">
-                        <SpinnerGap className="clm-spin" size={14} />
-                        Refining spelling…
-                      </span>
-                    )}
-                    {arabicOneStatus === "error" && (
-                      <button
-                        type="button"
-                        className="clm-inline-retry"
-                        onClick={retryArabicOne}
-                      >
-                        Retry Arabic refinement
-                      </button>
-                    )}
-                  </div>
-                )}
-              </>
-            )}
+          {/* The page mirrors for Arabic, but this copy is still English:
+              keeping it LTR stops trailing punctuation reordering into ".name" */}
+          <section className="clm-controls" dir="ltr">
+            <header>
+              <p className="clm-kicker">Design your pendant</p>
+              <h1>Your name, made precious</h1>
+              <p>
+                Everything is on this one page. Type a name, choose how it
+                should look, and approve the spelling when it is exactly right.
+              </p>
+            </header>
 
-            {stage === "arabic-style" && (
-              <>
-                <header>
-                  <p className="clm-kicker">Arabic style</p>
-                  <h1>Choose your Arabic style</h1>
-                  <p>
-                    Each style gives a distinct look and feel to your pendant.
-                  </p>
-                </header>
+            <section className="clm-config-block" aria-labelledby="block-name">
+              <h2 id="block-name">
+                <span>1</span> Your name
+              </h2>
+              <label className="clm-label">
+                Name
+                <input
+                  value={nameOne}
+                  maxLength={18}
+                  autoComplete="off"
+                  placeholder="Enter the exact spelling"
+                  onChange={(event) => updateNameOne(event.target.value)}
+                />
+              </label>
+              <fieldset className="clm-label clm-choice-fieldset">
+                <legend>Script</legend>
+                <span className="clm-segmented">
+                  <button
+                    type="button"
+                    aria-pressed={language === "en"}
+                    onClick={() => setLanguage("en")}
+                  >
+                    English
+                  </button>
+                  <button
+                    type="button"
+                    aria-pressed={language === "ar"}
+                    onClick={() => setLanguage("ar")}
+                  >
+                    العربية
+                  </button>
+                </span>
+              </fieldset>
+              {language === "ar" && Boolean(nameOne.trim()) && (
+                <ApprovedSpellingField
+                  id="arabic-name-one"
+                  label="Approved Arabic spelling"
+                  value={arabicOne}
+                  status={arabicOneStatus}
+                  onEdit={setArabicOne}
+                  onRetry={retryArabicOne}
+                />
+              )}
+
+              {nameCount === 1 ? (
+                <>
+                  <button
+                    type="button"
+                    className="clm-add-name"
+                    onClick={() => setNameCount(2)}
+                  >
+                    <Plus size={15} /> Add a second name
+                  </button>
+                  {language === "ar" && (
+                    <small className="clm-field-hint">
+                      Two Arabic names are finished by hand in our atelier
+                      rather than generated, so they take a little longer.
+                    </small>
+                  )}
+                </>
+              ) : (
+                <div className="clm-second-name">
+                  <label className="clm-label">
+                    Second name
+                    <input
+                      value={nameTwo}
+                      maxLength={18}
+                      autoComplete="off"
+                      placeholder="Enter the exact spelling"
+                      onChange={(event) => updateNameTwo(event.target.value)}
+                    />
+                  </label>
+                  {language === "ar" && Boolean(nameTwo.trim()) && (
+                    <ApprovedSpellingField
+                      id="arabic-name-two"
+                      label="Approved Arabic spelling, second name"
+                      value={arabicTwo}
+                      status={arabicTwoStatus}
+                      onEdit={setArabicTwo}
+                      onRetry={retryArabicTwo}
+                    />
+                  )}
+                  <button
+                    type="button"
+                    className="clm-remove-name"
+                    onClick={() => {
+                      setNameCount(1);
+                      updateNameTwo("");
+                    }}
+                  >
+                    <X size={15} /> Remove the second name
+                  </button>
+                </div>
+              )}
+            </section>
+
+            {language === "ar" ? (
+              <section
+                className="clm-config-block"
+                aria-labelledby="block-style"
+              >
+                <h2 id="block-style">
+                  <span>2</span> Design style
+                </h2>
+                <p className="clm-block-hint">
+                  Six styles our atelier renders today.
+                </p>
                 <div className="clm-style-grid">
                   {ARABIC_STYLE_OPTIONS.map((item) => (
                     <Option
@@ -768,473 +861,327 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
                       selected={arabicStyle === item.id}
                       onSelect={(value) => setArabicStyle(value as ArabicStyle)}
                     >
-                      <strong dir="rtl">{arabicOne}</strong>
+                      <strong dir="rtl">{arabicOne || item.sample}</strong>
                       <span>{item.label}</span>
-                      <small className="clm-support-note">
-                        {item.providerSupported
-                          ? "Supported"
-                          : "Atelier review"}
-                      </small>
+                      <small className="clm-support-note">{item.blurb}</small>
                     </Option>
                   ))}
                 </div>
-                <p
-                  className={
-                    needsOperatorReview
-                      ? "clm-support-message review"
-                      : "clm-support-message"
-                  }
-                  role={needsOperatorReview ? "status" : undefined}
-                >
-                  {needsOperatorReview
-                    ? `${selectedArabicStyle?.label} is reviewed by the atelier before any generation or provider spend.`
-                    : "Classic and Minimal can proceed directly to generation."}
+              </section>
+            ) : (
+              <section
+                className="clm-config-block"
+                aria-labelledby="block-style"
+              >
+                <h2 id="block-style">
+                  <span>2</span> Design style
+                </h2>
+                <p className="clm-block-hint">
+                  English names are cut in our classical Latin script. Choose
+                  العربية above to pick between six Arabic styles.
                 </p>
-              </>
+              </section>
             )}
 
-            {stage === "names-layout" && (
-              <>
-                <header>
-                  <p className="clm-kicker">Names &amp; layout</p>
-                  <h1>One name or two?</h1>
-                  <p>Confirm every name, then choose how they connect.</p>
-                </header>
-                <fieldset className="clm-label clm-choice-fieldset">
-                  <legend>How many names?</legend>
-                  <span className="clm-segmented">
-                    <button
-                      type="button"
-                      aria-pressed={nameCount === 1}
-                      onClick={() => setNameCount(1)}
-                    >
-                      One name
-                    </button>
-                    <button
-                      type="button"
-                      aria-pressed={nameCount === 2}
-                      onClick={() => setNameCount(2)}
-                    >
-                      Two names
-                    </button>
-                  </span>
-                </fieldset>
-                <div className="clm-arabic-edits">
-                  <label className="clm-label">
-                    Name 1
-                    <input
-                      value={nameOne}
-                      maxLength={18}
-                      onChange={(event) => updateNameOne(event.target.value)}
-                    />
-                  </label>
-                  {nameCount === 2 && (
-                    <label className="clm-label">
-                      Name 2
-                      <input
-                        value={nameTwo}
-                        maxLength={18}
-                        onChange={(event) => updateNameTwo(event.target.value)}
-                      />
-                    </label>
-                  )}
-                </div>
-                {language === "ar" && (
-                  <div className="clm-arabic-edits">
-                    <label className="clm-label">
-                      Approved Arabic spelling 1
-                      <input
-                        dir="rtl"
-                        value={arabicOne}
-                        disabled={arabicOneStatus === "refining"}
-                        placeholder={
-                          arabicOneStatus === "refining"
-                            ? "Luna is preparing the spelling…"
-                            : undefined
-                        }
-                        onChange={(event) => setArabicOne(event.target.value)}
-                      />
-                      {arabicOneStatus === "error" && (
-                        <button
-                          type="button"
-                          className="clm-inline-retry"
-                          onClick={retryArabicOne}
-                        >
-                          Retry Luna
-                        </button>
-                      )}
-                    </label>
-                    {nameCount === 2 && (
-                      <label className="clm-label">
-                        Approved Arabic spelling 2
-                        <input
-                          id="arabic-name-two"
-                          dir="rtl"
-                          value={arabicTwo}
-                          disabled={arabicTwoStatus === "refining"}
-                          placeholder={
-                            arabicTwoStatus === "refining"
-                              ? "Luna is preparing the spelling…"
-                              : undefined
-                          }
-                          onChange={(event) => setArabicTwo(event.target.value)}
-                        />
-                        {arabicTwoStatus === "error" && (
-                          <button
-                            type="button"
-                            className="clm-inline-retry"
-                            onClick={retryArabicTwo}
-                          >
-                            Retry Luna
-                          </button>
-                        )}
-                      </label>
-                    )}
-                  </div>
-                )}
-                {nameCount === 2 ? (
-                  <div>
-                    <p className="clm-label-heading">Choose your layout</p>
-                    <div className="clm-layout-grid">
-                      {layouts.map((item) => (
-                        <Option
-                          key={item.id}
-                          value={item.id}
-                          selected={layout === item.id}
-                          onSelect={(value) =>
-                            setLayout(value as PendantLayout)
-                          }
-                        >
-                          <strong>
-                            {formatIdentity(
-                              [displayOne, displayTwo],
-                              item.id,
-                            ).lines.join("\n")}
-                          </strong>
-                          <span>{item.label}</span>
-                        </Option>
-                      ))}
-                    </div>
-                  </div>
-                ) : (
-                  <p className="clm-support-message">
-                    One name uses the classic single-name layout.
-                  </p>
-                )}
-              </>
-            )}
-
-            {stage === "metal" && (
-              <>
-                <header>
-                  <p className="clm-kicker">18K solid gold</p>
-                  <h1>Choose your metal</h1>
-                  <p>The beauty of fine gold, in your choice of colour.</p>
-                </header>
-                <div className="clm-metal-list">
-                  {(["yellow", "white", "rose"] as MetalColor[]).map((item) => (
+            {nameCount === 2 && (
+              <section
+                className="clm-config-block"
+                aria-labelledby="block-layout"
+              >
+                <h2 id="block-layout">
+                  <span>3</span> Layout
+                </h2>
+                <p className="clm-block-hint">How the two names sit together.</p>
+                <div className="clm-layout-grid">
+                  {visibleLayouts.map((item) => (
                     <Option
                       key={item}
                       value={item}
-                      selected={metal === item}
-                      onSelect={(value) => setMetal(value as MetalColor)}
+                      selected={layout === item}
+                      onSelect={(value) => setLayout(value as PendantLayout)}
                     >
-                      <i data-metal={item} />
-                      <div>
-                        <strong>18K {item} gold</strong>
-                        <span>Solid gold · polished finish</span>
-                      </div>
+                      <strong>
+                        {formatIdentity(
+                          [displayOne || "Name", displayTwo || "Name"],
+                          item,
+                        ).lines.join("\n")}
+                      </strong>
+                      <span>{LAYOUT_LABELS[item]}</span>
                     </Option>
                   ))}
                 </div>
-              </>
-            )}
-
-            {stage === "stones" && (
-              <>
-                <header>
-                  <p className="clm-kicker">Diamonds &amp; gemstones</p>
-                  <h1>Add your light</h1>
-                  <p>
-                    Choose how much of the name should be set, then select your
-                    stone.
-                  </p>
-                </header>
-                <p className="clm-label-heading">Stone setting</p>
-                <div className="clm-coverage-grid">
-                  {(
-                    [
-                      "none",
-                      "accent",
-                      "partial-pave",
-                      "full-pave",
-                    ] as StoneCoverage[]
-                  ).map((item) => (
-                    <Option
-                      key={item}
-                      value={item}
-                      selected={coverage === item}
-                      onSelect={(value) => setCoverage(value as StoneCoverage)}
-                    >
-                      <span className="clm-stone-sample" aria-hidden="true">
-                        {item === "none" ? (
-                          <Minus size={24} />
-                        ) : (
-                          Array.from({
-                            length:
-                              item === "accent"
-                                ? 1
-                                : item === "partial-pave"
-                                  ? 3
-                                  : 5,
-                          }).map((_, index) => (
-                            <Sparkle key={index} size={15} weight="fill" />
-                          ))
-                        )}
-                      </span>
-                      <span>{item.replaceAll("-", " ")}</span>
-                    </Option>
-                  ))}
-                </div>
-                {coverage !== "none" && (
-                  <>
-                    <p className="clm-label-heading">Choose your stone</p>
-                    <div className="clm-gem-grid">
-                      {(
-                        [
-                          "lab-diamond",
-                          "natural-diamond",
-                          "ruby",
-                          "emerald",
-                          "blue-sapphire",
-                          "pink-sapphire",
-                        ] as Gemstone[]
-                      ).map((item) => (
-                        <Option
-                          key={item}
-                          value={item}
-                          selected={gemstone === item}
-                          onSelect={(value) => setGemstone(value as Gemstone)}
-                        >
-                          <Diamond
-                            className="clm-gem-icon"
-                            data-gem={item}
-                            size={24}
-                            weight="duotone"
-                            aria-hidden="true"
-                          />
-                          <span>{item.replaceAll("-", " ")}</span>
-                        </Option>
-                      ))}
-                    </div>
-                  </>
+                {!moreLayouts && (
+                  <button
+                    type="button"
+                    className="clm-inline-more"
+                    onClick={() => setMoreLayouts(true)}
+                  >
+                    <Plus size={14} /> More layouts
+                  </button>
                 )}
-              </>
+              </section>
             )}
 
-            {stage === "size-chain" && (
-              <>
-                <header>
-                  <p className="clm-kicker">Size &amp; chain</p>
-                  <h1>Make it yours to wear</h1>
-                  <p>Choose the scale of your pendant and how it sits.</p>
-                </header>
-                <p className="clm-label-heading">Pendant size</p>
-                <div className="clm-three-grid">
-                  {(["delicate", "classic", "statement"] as SizeProfile[]).map(
-                    (item, index) => (
-                      <Option
-                        key={item}
-                        value={item}
-                        selected={size === item}
-                        onSelect={(value) => setSize(value as SizeProfile)}
-                      >
-                        <strong>{item}</strong>
-                        <span>~{[22, 30, 36][index]} mm</span>
-                      </Option>
-                    ),
-                  )}
-                </div>
-                <p className="clm-label-heading">Chain style</p>
-                <div className="clm-four-grid">
-                  {(["cable", "rolo", "box", "curb"] as ChainStyle[]).map(
-                    (item) => (
-                      <Option
-                        key={item}
-                        value={item}
-                        selected={chain === item}
-                        onSelect={(value) => setChain(value as ChainStyle)}
-                      >
-                        <strong>{item === "curb" ? "Fine curb" : item}</strong>
-                      </Option>
-                    ),
-                  )}
-                </div>
-                <p className="clm-label-heading">Chain length</p>
-                <div className="clm-four-grid">
-                  {([40, 45, 50, 55] as const).map((item) => (
-                    <button
-                      className="clm-option"
-                      type="button"
-                      key={item}
-                      aria-pressed={chainLength === item}
-                      onClick={() => setChainLength(item)}
-                    >
-                      {item} cm
-                    </button>
-                  ))}
-                </div>
-              </>
-            )}
+            <section className="clm-config-block" aria-labelledby="block-metal">
+              <h2 id="block-metal">
+                <span>{nameCount === 2 ? 4 : 3}</span> Metal
+              </h2>
+              <div className="clm-metal-list">
+                {(["yellow", "white", "rose"] as MetalColor[]).map((item) => (
+                  <Option
+                    key={item}
+                    value={item}
+                    selected={metal === item}
+                    onSelect={(value) => setMetal(value as MetalColor)}
+                  >
+                    <i data-metal={item} />
+                    <div>
+                      <strong>18K {item} gold</strong>
+                      <span>Solid gold · polished finish</span>
+                    </div>
+                  </Option>
+                ))}
+              </div>
+            </section>
 
-            {stage === "review" && !reviewSent && (
-              <>
-                <header>
-                  <p className="clm-kicker">Review your design</p>
-                  <h1>Every detail, exactly right</h1>
-                  <p>
-                    This approved spelling becomes the immutable identity of
-                    your piece.
-                  </p>
-                </header>
-                <dl className="clm-summary">
-                  <div>
-                    <dt>Names</dt>
-                    <dd dir={language === "ar" ? "rtl" : "ltr"}>
-                      {reviewSummary.names}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt>Script</dt>
-                    <dd>{reviewSummary.script}</dd>
-                  </div>
-                  <div>
-                    <dt>Layout</dt>
-                    <dd>{reviewSummary.layout}</dd>
-                  </div>
-                  <div>
-                    <dt>Metal</dt>
-                    <dd>{reviewSummary.metal}</dd>
-                  </div>
-                  <div>
-                    <dt>Stones</dt>
-                    <dd>{reviewSummary.stones}</dd>
-                  </div>
-                  <div>
-                    <dt>Size &amp; chain</dt>
-                    <dd>{reviewSummary.sizeAndChain}</dd>
-                  </div>
-                </dl>
-                <label className="clm-confirm">
-                  <input
-                    type="checkbox"
-                    checked={confirmed}
-                    onChange={(event) => setConfirmed(event.target.checked)}
-                  />
-                  <span>
-                    <strong>
-                      I confirm the spelling shown above is correct.
-                    </strong>
-                    <small>
-                      Custom jewellery cannot be changed once production begins.
-                    </small>
-                  </span>
-                </label>
-                <div className="clm-estimate">
-                  <span>Price estimate</span>
-                  <strong>Calculated after Studio verification</strong>
+            {/* Stones, size and chain are defaulted and folded away. Nothing is
+                removed from the draft or the API contract. */}
+            <details className="clm-details-block">
+              <summary>
+                <span>
+                  <strong>Stones, size and chain</strong>
                   <small>
-                    Your price estimate carries into the final quote.
+                    {reviewSummary.stones} · {reviewSummary.sizeAndChain}
                   </small>
-                </div>
-                {needsOperatorReview && (
-                  <p className="clm-review-notice" role="status">
-                    {nameCount === 2
-                      ? "Two-name Arabic layouts enter operator review."
-                      : "This style will enter operator review."}{" "}
-                    Generation stays stopped until the atelier approves a
-                    supported production path.
-                  </p>
-                )}
-                {error && (
-                  <p className="clm-error" role="alert">
-                    {error}
-                  </p>
-                )}
-              </>
-            )}
+                </span>
+              </summary>
 
-            {stage === "review" && reviewSent && (
-              <>
-                <header>
-                  <p className="clm-kicker">Atelier review</p>
-                  <h1>Sent for atelier review</h1>
-                  <p role="status">
-                    Arabic ·{" "}
-                    {selectedArabicStyle?.label ?? titleCaseOption(arabicStyle)}{" "}
-                    is hand-finished by our atelier. We have your approved
-                    spelling and will contact you before any piece is made.
-                  </p>
-                </header>
-                <div className="clm-config-actions">
-                  <button
-                    type="button"
-                    className="clm-primary"
-                    onClick={() => setReviewSent(false)}
-                  >
-                    <ArrowLeft size={17} /> Back to design
-                  </button>
-                </div>
-              </>
-            )}
-
-            {!reviewSent && (
-              <div className="clm-config-actions">
-                <button type="button" className="clm-back" onClick={goBack}>
-                  <ArrowLeft size={17} /> Back
-                </button>
-                {stage !== "review" ? (
-                  <button
-                    type="button"
-                    className="clm-primary"
-                    aria-label={
-                      stage === "size-chain" ? "Review identity" : "Continue"
-                    }
-                    disabled={!stageIsValid(stage)}
-                    onClick={goForward}
-                  >
-                    Continue <ArrowRight size={17} />
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    className="clm-primary"
-                    aria-label={
-                      needsOperatorReview
-                        ? "Send to atelier review"
-                        : "Approve revision"
-                    }
-                    disabled={!confirmed || saving}
-                    onClick={() => {
-                      if (needsOperatorReview) {
-                        void sendForAtelierReview();
-                        return;
-                      }
-                      void approve();
+              <p className="clm-label-heading">Stone setting</p>
+              <div className="clm-coverage-grid">
+                {(
+                  ["none", "accent", "partial-pave", "full-pave"] as StoneCoverage[]
+                ).map((item) => (
+                  <Option
+                    key={item}
+                    value={item}
+                    selected={coverage === item}
+                    onSelect={(value) => {
+                      const next = value as StoneCoverage;
+                      setCoverage(next);
+                      if (next !== "none" && gemstone === "none")
+                        setGemstone("lab-diamond");
                     }}
                   >
-                    {saving
-                      ? needsOperatorReview
-                        ? "Sending…"
-                        : "Approving…"
-                      : needsOperatorReview
-                        ? "Send for atelier review"
-                        : "See my pendant"}{" "}
-                    <ArrowRight size={17} />
-                  </button>
+                    <span className="clm-stone-sample" aria-hidden="true">
+                      {item === "none" ? (
+                        <Minus size={24} />
+                      ) : (
+                        Array.from({
+                          length:
+                            item === "accent"
+                              ? 1
+                              : item === "partial-pave"
+                                ? 3
+                                : 5,
+                        }).map((_, index) => (
+                          <Sparkle key={index} size={15} weight="fill" />
+                        ))
+                      )}
+                    </span>
+                    <span>{item.replaceAll("-", " ")}</span>
+                  </Option>
+                ))}
+              </div>
+              {coverage !== "none" && (
+                <>
+                  <p className="clm-label-heading">Choose your stone</p>
+                  <div className="clm-gem-grid">
+                    {(
+                      [
+                        "lab-diamond",
+                        "natural-diamond",
+                        "ruby",
+                        "emerald",
+                        "blue-sapphire",
+                        "pink-sapphire",
+                      ] as Gemstone[]
+                    ).map((item) => (
+                      <Option
+                        key={item}
+                        value={item}
+                        selected={gemstone === item}
+                        onSelect={(value) => setGemstone(value as Gemstone)}
+                      >
+                        <Diamond
+                          className="clm-gem-icon"
+                          data-gem={item}
+                          size={24}
+                          weight="duotone"
+                          aria-hidden="true"
+                        />
+                        <span>{item.replaceAll("-", " ")}</span>
+                      </Option>
+                    ))}
+                  </div>
+                </>
+              )}
+
+              <p className="clm-label-heading">Pendant size</p>
+              <div className="clm-three-grid">
+                {(["delicate", "classic", "statement"] as SizeProfile[]).map(
+                  (item) => (
+                    <Option
+                      key={item}
+                      value={item}
+                      selected={size === item}
+                      onSelect={(value) => setSize(value as SizeProfile)}
+                    >
+                      <strong>{item}</strong>
+                      <span>~{SIZE_WIDTHS_MM[item]} mm</span>
+                    </Option>
+                  ),
                 )}
               </div>
-            )}
+
+              <p className="clm-label-heading">Chain style</p>
+              <div className="clm-four-grid">
+                {(["cable", "rolo", "box", "curb"] as ChainStyle[]).map(
+                  (item) => (
+                    <Option
+                      key={item}
+                      value={item}
+                      selected={chain === item}
+                      onSelect={(value) => setChain(value as ChainStyle)}
+                    >
+                      <strong>{item === "curb" ? "Fine curb" : item}</strong>
+                    </Option>
+                  ),
+                )}
+              </div>
+
+              <p className="clm-label-heading">Chain length</p>
+              <div className="clm-four-grid">
+                {([40, 45, 50, 55] as const).map((item) => (
+                  <button
+                    className="clm-option"
+                    type="button"
+                    key={item}
+                    aria-pressed={chainLength === item}
+                    onClick={() => setChainLength(item)}
+                  >
+                    {item} cm
+                  </button>
+                ))}
+              </div>
+            </details>
+
+            <section className="clm-review-strip" aria-labelledby="block-review">
+              <h2 id="block-review">
+                <span>
+                  <Check size={13} weight="bold" />
+                </span>{" "}
+                Approve your design
+              </h2>
+              <dl className="clm-summary compact">
+                <div>
+                  <dt>Name</dt>
+                  <dd dir={language === "ar" ? "rtl" : "ltr"}>
+                    {reviewSummary.names || "—"}
+                  </dd>
+                </div>
+                <div>
+                  <dt>Script</dt>
+                  <dd>{reviewSummary.script}</dd>
+                </div>
+                <div>
+                  <dt>Layout</dt>
+                  <dd>{reviewSummary.layout}</dd>
+                </div>
+                <div>
+                  <dt>Metal</dt>
+                  <dd>{reviewSummary.metal}</dd>
+                </div>
+                <div>
+                  <dt>Stones</dt>
+                  <dd>{reviewSummary.stones}</dd>
+                </div>
+                <div>
+                  <dt>Size &amp; chain</dt>
+                  <dd>{reviewSummary.sizeAndChain}</dd>
+                </div>
+              </dl>
+              <label className="clm-confirm">
+                <input
+                  type="checkbox"
+                  checked={confirmed}
+                  disabled={!namesValid}
+                  onChange={(event) => setConfirmed(event.target.checked)}
+                />
+                <span>
+                  <strong>I confirm the spelling shown above is correct.</strong>
+                  <small>
+                    This spelling becomes the immutable identity of your piece.
+                    Custom jewellery cannot be changed once production begins.
+                  </small>
+                </span>
+              </label>
+              {needsOperatorReview && (
+                <p className="clm-review-notice" role="status">
+                  {nameCount === 2
+                    ? "Two Arabic names enter atelier review."
+                    : "This style enters atelier review."}{" "}
+                  Generation stays stopped until the atelier approves a supported
+                  production path.
+                </p>
+              )}
+              {error && (
+                <p className="clm-error" role="alert">
+                  {error}
+                </p>
+              )}
+            </section>
+
+            {/* Estimate lives inside the action bar so the sticky bar can never
+                cover the commercial information at the moment of approval. */}
+            <div className="clm-config-actions">
+              <div className="clm-actions-estimate">
+                <span>Starting price</span>
+                <strong>
+                  {CALEUMS_STARTING_PRICE.currency}{" "}
+                  {CALEUMS_STARTING_PRICE.amount.toLocaleString("en-AE")}
+                </strong>
+                <small>
+                  Your estimate is calculated after Studio verification and
+                  carries into the final quote.
+                </small>
+              </div>
+              <button
+                type="button"
+                className="clm-primary"
+                aria-label={
+                  needsOperatorReview
+                    ? "Send to atelier review"
+                    : "Approve revision"
+                }
+                disabled={!namesValid || !confirmed || saving}
+                onClick={() => {
+                  if (needsOperatorReview) {
+                    void sendForAtelierReview();
+                    return;
+                  }
+                  void approve();
+                }}
+              >
+                {saving
+                  ? needsOperatorReview
+                    ? "Sending…"
+                    : "Approving…"
+                  : needsOperatorReview
+                    ? "Send for atelier review"
+                    : "See my pendant"}{" "}
+                <ArrowRight size={17} />
+              </button>
+            </div>
           </section>
         </div>
       </main>

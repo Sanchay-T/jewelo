@@ -32,7 +32,7 @@ describe("Caleums UI presentation mappings", () => {
   // Every certified Arabic style was opened to customers on 2026-08-27; only a
   // style the identity engine does not register stays review-only.
   it("marks every offered Arabic style as provider-supported", () => {
-    expect(arabicStyleLabel("contemporary")).toBe("Arabic · Classic");
+    expect(arabicStyleLabel("contemporary")).toBe("Arabic · Classical");
     for (const style of ARABIC_STYLE_OPTIONS)
       expect(isProviderSupportedArabicStyle(style.id)).toBe(true);
     expect(isProviderSupportedArabicStyle("none")).toBe(true);

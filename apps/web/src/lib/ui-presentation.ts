@@ -11,30 +11,59 @@ export const CALEUMS_STARTING_PRICE = {
   amount: 7_950,
 };
 
+/**
+ * The six design styles the customer chooses between. These are the existing
+ * `ArabicStyle` members relabelled to the partner's vocabulary — `contemporary`
+ * reads as "Classical" — because the enum value is what the identity solver and
+ * `identity-anchor.ts` key on. `blurb` describes the pendant until goal G-12
+ * lands a licensed pre-rendered tile per style.
+ */
 export const ARABIC_STYLE_OPTIONS: ReadonlyArray<{
   id: Exclude<ArabicStyle, "none">;
   label: string;
+  blurb: string;
   sample: string;
   providerSupported: boolean;
 }> = [
   {
     id: "contemporary",
-    label: "Classic",
+    label: "Classical",
+    blurb: "Even Naskh strokes, balanced and timeless",
     sample: "أسماء",
     providerSupported: true,
   },
-  { id: "minimal", label: "Minimal", sample: "أسماء", providerSupported: true },
-  { id: "diwani", label: "Diwani", sample: "أسماء", providerSupported: true },
+  {
+    id: "minimal",
+    label: "Minimal",
+    blurb: "Thin, quiet lines with generous spacing",
+    sample: "أسماء",
+    providerSupported: true,
+  },
+  {
+    id: "diwani",
+    label: "Diwani",
+    blurb: "Flowing calligraphic curves that lean forward",
+    sample: "أسماء",
+    providerSupported: true,
+  },
   {
     id: "thuluth-inspired",
-    label: "Thuluth inspired",
+    label: "Thuluth",
+    blurb: "Tall, sweeping letters with dramatic weight",
     sample: "أسماء",
     providerSupported: true,
   },
-  { id: "kufi", label: "Kufi", sample: "أسماء", providerSupported: true },
+  {
+    id: "kufi",
+    label: "Kufi",
+    blurb: "Geometric, architectural, squared terminals",
+    sample: "أسماء",
+    providerSupported: true,
+  },
   {
     id: "signature",
     label: "Signature",
+    blurb: "Personal handwritten flourish, like a signed name",
     sample: "أسماء",
     providerSupported: true,
   },
