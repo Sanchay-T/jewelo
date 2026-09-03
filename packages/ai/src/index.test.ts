@@ -1,10 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
-import {
-  FalSeedanceVideoAdapter,
-  OpenAIStillAdapter,
-  OpenAIStudioVerifier,
-} from "./index";
+import { OpenAIStillAdapter, OpenAIStudioVerifier } from "./index";
 
 describe("OpenAI still HTTP contract", () => {
   it("sends independent silhouette and style inputs with size as a request parameter", async () => {
@@ -99,39 +95,5 @@ describe("OpenAI still HTTP contract", () => {
         },
       }),
     ).resolves.toEqual(decision);
-  });
-});
-
-describe("fal Seedance HTTP contract", () => {
-  it("submits silent four-second 9:16 preview motion from one verified still", async () => {
-    const fetcher = vi.fn<typeof fetch>().mockResolvedValue(
-      new Response(
-        JSON.stringify({
-          request_id: "video-request",
-          status_url: "https://fal.invalid/status",
-          response_url: "https://fal.invalid/result",
-        }),
-        { status: 200 },
-      ),
-    );
-    const adapter = new FalSeedanceVideoAdapter(
-      "test-key",
-      "bytedance/seedance-2.0/fast/image-to-video",
-      "bytedance/seedance-2.0/image-to-video",
-      40,
-      fetcher,
-    );
-    await adapter.submit({
-      idempotencyKey: "video-1",
-      prompt: "Pinned motion prompt",
-      verifiedStillUrl: "https://signed.invalid/verified-still.png",
-      kind: "preview",
-    });
-    expect(JSON.parse(String(fetcher.mock.calls[0]?.[1]?.body))).toMatchObject({
-      duration: 4,
-      aspect_ratio: "9:16",
-      generate_audio: false,
-      image_url: "https://signed.invalid/verified-still.png",
-    });
   });
 });

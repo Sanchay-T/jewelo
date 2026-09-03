@@ -270,7 +270,9 @@ describe("Caleums migration security contract", () => {
     );
   });
 
-  it("seeds usable publications for image and both future video profiles", () => {
+  // Historical file. The video publications it seeded are inert after the
+  // 2026-09-03 image-only decision, but the rows stay for existing lineage.
+  it("seeds usable publications for every profile it registered", () => {
     for (const profile of ["image.studio", "video.preview", "video.final"])
       expect(promptMigration).toContain(`'${profile}', 1`);
     expect(promptMigration).not.toContain(
@@ -280,8 +282,12 @@ describe("Caleums migration security contract", () => {
 
   it("leases outbox events so immediate and scheduled dispatch cannot both win", () => {
     expect(triggerRecoveryMigration).toContain("add column lease_id uuid");
-    expect(triggerRecoveryMigration).toContain("add column trigger_run_id text");
-    expect(triggerRecoveryMigration).toContain("add column task_identifier text");
+    expect(triggerRecoveryMigration).toContain(
+      "add column trigger_run_id text",
+    );
+    expect(triggerRecoveryMigration).toContain(
+      "add column task_identifier text",
+    );
     expect(triggerRecoveryMigration).toContain(
       "where oe.id = p_event_id\n    and oe.published_at is null",
     );

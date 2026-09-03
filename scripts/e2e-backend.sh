@@ -195,7 +195,7 @@ note_id design_a "$DESIGN_A"
 note_id revision_a "$REV_A"
 [[ "$RUN_A" == "null" || -z "$RUN_A" ]] && { bad "06 revisions.approve" "-" "no run_id; cannot continue"; exit 1; }
 
-STILLS=$(db "generation_tasks?run_id=eq.$RUN_A&provider_profile=neq.video.fal&select=id,presentation_view,status,attempt")
+STILLS=$(db "generation_tasks?run_id=eq.$RUN_A&select=id,presentation_view,status,attempt")
 expect_eq "07 db.still-task count" "4" "$(echo "$STILLS" | jq 'length')" "$(echo "$STILLS" | jq -c 'map({(.presentation_view):.status})|add')"
 EARLY=$(echo "$STILLS" | jq '[.[]|select(.status=="queued" or .status=="generating")]|length')
 if [[ "$EARLY" == "4" ]]; then
@@ -251,7 +251,7 @@ FIRST_READY_MS=""
 LAST_ROWS="[]"
 stills_ready() {
   local rows ready
-  rows=$(db "generation_tasks?run_id=eq.$RUN_A&provider_profile=neq.video.fal&select=presentation_view,status")
+  rows=$(db "generation_tasks?run_id=eq.$RUN_A&select=presentation_view,status")
   ready=$(echo "$rows" | jq '[.[]|select(.status=="ready")]|length')
   if [[ -z "$FIRST_READY_MS" && "$ready" -ge 1 ]]; then FIRST_READY_MS=$(elapsed); TIMING+=("first_still_ready=$FIRST_READY_MS"); fi
   LAST_ROWS=$rows

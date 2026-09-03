@@ -1,10 +1,6 @@
 "use client";
 
-export const OPERATOR_PROMPT_PROFILES = [
-  "image.studio",
-  "video.preview",
-  "video.final",
-] as const;
+export const OPERATOR_PROMPT_PROFILES = ["image.studio"] as const;
 export type OperatorPromptProfile = (typeof OPERATOR_PROMPT_PROFILES)[number];
 
 export interface OperatorPromptRelease {

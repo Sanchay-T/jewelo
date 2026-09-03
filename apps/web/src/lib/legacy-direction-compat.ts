@@ -21,7 +21,7 @@ import type {
 // Temporary Goal 02 bridge for the working app's four-direction fixture.
 // Delete this file when the final integration moves the UI to presentation views.
 
-export type RepresentationKind = "product" | "worn" | "motion";
+export type RepresentationKind = "product" | "worn";
 export interface LegacyAssetLineage extends AssetLineage {
   directionId: string;
 }

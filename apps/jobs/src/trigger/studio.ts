@@ -4,7 +4,6 @@ import {
   productionPresentationDependencies,
 } from "../presentation";
 import { dispatchPendingOutbox } from "../outbox";
-import { videoPollTask, videoSubmissionTask } from "./video";
 
 const openAIImageQueue = queue({
   name: "openai-image",
@@ -99,11 +98,7 @@ async function recoverStaleTasks(
 }
 
 async function dispatchOutboxEvent(
-  payload: {
-    taskId: string;
-    operation: "still_execute" | "video_submit" | "video_poll";
-    pollCount?: number;
-  },
+  payload: { taskId: string; operation: "still_execute" },
   options: {
     idempotencyKey: string;
     idempotencyKeyTTL: "30d";
@@ -111,12 +106,5 @@ async function dispatchOutboxEvent(
     tags: string[];
   },
 ) {
-  if (payload.operation === "video_submit")
-    return videoSubmissionTask.trigger({ taskId: payload.taskId }, options);
-  if (payload.operation === "video_poll")
-    return videoPollTask.trigger(
-      { taskId: payload.taskId, pollCount: payload.pollCount ?? 0 },
-      options,
-    );
   return studioPresentationTask.trigger({ taskId: payload.taskId }, options);
 }

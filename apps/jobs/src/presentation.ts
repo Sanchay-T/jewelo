@@ -20,12 +20,14 @@ import { isDuplicateObject } from "@jewelo/media";
 import sharp from "sharp";
 import { renderIdentityAnchor } from "./identity-anchor";
 
+export type PresentationTaskView =
+  "studio" | "on_skin" | "close_up" | "dark" | "studio_hero" | "billboard";
+
 interface TaskRow {
   id: string;
   run_id: string;
   owner_principal_id: string;
-  presentation_view:
-    "studio" | "on_skin" | "close_up" | "dark" | "studio_hero" | "billboard";
+  presentation_view: PresentationTaskView;
   status: string;
   attempt: number;
   dispatch_idempotency_key: string;
@@ -556,7 +558,7 @@ export class SupabasePresentationRepository implements PresentationRepository {
     if (!checkpoint) return undefined;
     const attempts = await this.#request<
       Array<{
-        provider: "mock" | "openai" | "fal";
+        provider: "mock" | "openai";
         model: string;
         provider_request_id?: string;
         estimated_cost_cents: number;
@@ -910,7 +912,7 @@ export class SupabasePresentationRepository implements PresentationRepository {
     inputAssetIds?: readonly string[];
   }): Promise<TransitionOutcome> {
     // Claim `ready` first: a task cancelled mid-verification must not gain an
-    // asset, a motion request, or a `task.ready` audit event.
+    // asset or a `task.ready` audit event.
     const ready = await this.transitionTask(
       input.task.id,
       ["generating", "verifying"],
@@ -955,51 +957,12 @@ export class SupabasePresentationRepository implements PresentationRepository {
         p_terminal: true,
       }),
     });
-    let motionPreview = "not_applicable";
-    if (input.task.presentation_view === "studio") {
+    if (input.task.presentation_view === "studio")
       // The three model views only become dispatchable once this still exists.
       await this.#request("/rest/v1/rpc/release_dependent_tasks", {
         method: "POST",
         body: JSON.stringify({ p_source_task_id: input.task.id }),
       });
-      try {
-        await this.#request("/rest/v1/rpc/request_video_task", {
-          method: "POST",
-          body: JSON.stringify({
-            p_run_id: input.run.id,
-            p_kind: "preview",
-            p_source_task_id: input.task.id,
-            p_request_key: `auto-preview:${input.run.id}:${input.task.id}`,
-          }),
-        });
-        motionPreview = "requested";
-      } catch (error) {
-        motionPreview = "operator_review";
-        const reason = String(
-          error instanceof Error ? error.message : "unknown",
-        ).slice(0, 120);
-        await this.#request("/rest/v1/audit_events", {
-          method: "POST",
-          body: JSON.stringify({
-            design_id: input.run.design_id,
-            principal_id: input.task.owner_principal_id,
-            actor_type: "job",
-            action: "video.auto_request_failed",
-            detail: { sourceTaskId: input.task.id, reason },
-          }),
-        });
-        // The still stays ready; only the run carries the visible motion failure.
-        await this.#request(`/rest/v1/generation_runs?id=eq.${input.run.id}`, {
-          method: "PATCH",
-          body: JSON.stringify({
-            operator_review_reason: `video_request_failed:${reason}`.slice(
-              0,
-              300,
-            ),
-          }),
-        });
-      }
-    }
     await this.#request("/rest/v1/audit_events", {
       method: "POST",
       body: JSON.stringify({
@@ -1007,11 +970,7 @@ export class SupabasePresentationRepository implements PresentationRepository {
         principal_id: input.task.owner_principal_id,
         actor_type: "job",
         action: "task.ready",
-        detail: {
-          taskId: input.task.id,
-          attempt: input.attempt,
-          motionPreview,
-        },
+        detail: { taskId: input.task.id, attempt: input.attempt },
       }),
     });
     return "applied";

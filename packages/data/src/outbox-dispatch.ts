@@ -1,16 +1,13 @@
-export type DispatchOperation =
-  | "still_execute"
-  | "video_submit"
-  | "video_poll";
+export type DispatchOperation = "still_execute";
 
 interface OutboxEvent {
   id: string;
   aggregate_id: string;
   payload: {
     taskId?: string;
+    /** Legacy `video` events predate the 2026-09-03 image-only decision. */
     taskKind?: "still" | "video";
-    operation?: DispatchOperation;
-    pollCount?: number;
+    operation?: DispatchOperation | "video_submit" | "video_poll";
   };
   dispatch_idempotency_key: string;
   attempt_count: number;
@@ -39,10 +36,17 @@ interface DispatchEnvironment {
   SUPABASE_SERVICE_ROLE_KEY?: string;
 }
 
-function operationFor(event: OutboxEvent): DispatchOperation {
+/**
+ * Video generation was removed on 2026-09-03. A legacy `video` event has no
+ * task to dispatch to, so it must be rejected rather than silently retargeted
+ * at the still pipeline, which would execute the wrong work on a fal-profile
+ * task row.
+ */
+function isRemovedVideoEvent(event: OutboxEvent): boolean {
   return (
-    event.payload.operation ??
-    (event.payload.taskKind === "video" ? "video_submit" : "still_execute")
+    event.payload.taskKind === "video" ||
+    event.payload.operation === "video_submit" ||
+    event.payload.operation === "video_poll"
   );
 }
 
@@ -55,11 +59,7 @@ function sanitizedError(error: unknown): string {
 export async function dispatchPendingOutbox(
   environment: DispatchEnvironment,
   trigger: (
-    payload: {
-      taskId: string;
-      operation: DispatchOperation;
-      pollCount?: number;
-    },
+    payload: { taskId: string; operation: DispatchOperation },
     options: TriggerDispatchOptions,
   ) => Promise<TriggerDispatchResult>,
   fetcher: typeof fetch = fetch,
@@ -108,17 +108,28 @@ export async function dispatchPendingOutbox(
         await nack(claimed, leaseId, error, url, headers, fetcher).catch(
           () => undefined,
         );
-        return { kind: "pending" as const, outboxId: claimed.id, errorCode: error };
+        return {
+          kind: "pending" as const,
+          outboxId: claimed.id,
+          errorCode: error,
+        };
+      }
+      if (isRemovedVideoEvent(claimed)) {
+        const error = "outbox_video_generation_removed";
+        await nack(claimed, leaseId, error, url, headers, fetcher).catch(
+          () => undefined,
+        );
+        return {
+          kind: "pending" as const,
+          outboxId: claimed.id,
+          errorCode: error,
+        };
       }
       try {
-        const operation = operationFor(claimed);
         const result = await trigger(
           {
             taskId: claimed.payload.taskId,
-            operation,
-            ...(operation === "video_poll"
-              ? { pollCount: claimed.payload.pollCount ?? 0 }
-              : {}),
+            operation: "still_execute",
           },
           {
             idempotencyKey: claimed.dispatch_idempotency_key,
@@ -156,7 +167,11 @@ export async function dispatchPendingOutbox(
         await nack(claimed, leaseId, code, url, headers, fetcher).catch(
           () => undefined,
         );
-        return { kind: "pending" as const, outboxId: claimed.id, errorCode: code };
+        return {
+          kind: "pending" as const,
+          outboxId: claimed.id,
+          errorCode: code,
+        };
       }
     }),
   );
@@ -189,7 +204,9 @@ async function nack(
       p_event_id: event.id,
       p_lease_id: leaseId,
       p_error: error,
-      p_available_at: new Date(Date.now() + backoffSeconds * 1_000).toISOString(),
+      p_available_at: new Date(
+        Date.now() + backoffSeconds * 1_000,
+      ).toISOString(),
     }),
   });
   if (!response.ok) throw new Error(`Outbox nack failed:${response.status}`);

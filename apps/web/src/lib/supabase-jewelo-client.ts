@@ -459,7 +459,10 @@ export class SupabaseJeweloClient implements LegacyJeweloClient {
         body: JSON.stringify({ command: "estimate", revisionId: revision.id }),
       },
     );
-    design.estimate = estimateFromSnapshot(snapshot, design.selectedDirectionId);
+    design.estimate = estimateFromSnapshot(
+      snapshot,
+      design.selectedDirectionId,
+    );
     this.#emit();
     return structuredClone(design);
   }
@@ -737,10 +740,16 @@ export class SupabaseJeweloClient implements LegacyJeweloClient {
     const id = text(run.id);
     const revisionId = text(run.revision_id);
     const directionId = `${id}:studio`;
+    // Video generation was removed on 2026-09-03. Legacy `motion_*` rows stay
+    // in Postgres for lineage but never reach the customer's run model.
     const taskRows = payload.generation_tasks.filter(
-      (task) => task.run_id === id,
+      (task) =>
+        task.run_id === id && !isMotionView(text(task.presentation_view)),
     );
-    const assetRows = payload.assets.filter((asset) => asset.run_id === id);
+    const assetRows = payload.assets.filter(
+      (asset) =>
+        asset.run_id === id && !isMotionView(text(asset.presentation_view)),
+    );
     const taskFor = (view: string) =>
       taskRows.find((task) => text(task.presentation_view) === view);
     const assetFor = (view: string) =>
@@ -781,7 +790,6 @@ export class SupabaseJeweloClient implements LegacyJeweloClient {
     };
     const product = mappedRepresentation("product", "studio");
     const worn = mappedRepresentation("worn", "on_skin");
-    const motion = mappedRepresentation("motion", "motion_preview");
     const direction: Direction = {
       id: directionId,
       label: "Caleums views",
@@ -790,11 +798,7 @@ export class SupabaseJeweloClient implements LegacyJeweloClient {
       identityFingerprint:
         revisions.find((revision) => revision.id === revisionId)?.identityAnchor
           .fingerprint ?? "pending",
-      representations: {
-        product,
-        worn,
-        motion,
-      },
+      representations: { product, worn },
     };
     return {
       id,
@@ -815,11 +819,7 @@ export class SupabaseJeweloClient implements LegacyJeweloClient {
         const view = publicPresentationView(storedView);
         const asset = assetFor(storedView);
         const kind: RepresentationKind =
-          view === "on_skin"
-            ? "worn"
-            : view.startsWith("motion")
-              ? "motion"
-              : "product";
+          view === "on_skin" ? "worn" : "product";
         return {
           id: text(task.id),
           view,
@@ -984,12 +984,15 @@ export class SupabaseJeweloClient implements LegacyJeweloClient {
   }
 }
 
+function isMotionView(value: string): boolean {
+  return value === "motion" || value.startsWith("motion_");
+}
+
 function publicPresentationView(
   value: string,
 ): LegacyGenerationRun["tasks"][number]["view"] {
-  if (value === "motion_preview" || value === "motion_final") return "motion";
   if (value === "studio_hero" || value === "billboard") return "studio";
-  if (["studio", "on_skin", "close_up", "dark", "motion"].includes(value))
+  if (["studio", "on_skin", "close_up", "dark"].includes(value))
     return value as LegacyGenerationRun["tasks"][number]["view"];
   return "studio";
 }

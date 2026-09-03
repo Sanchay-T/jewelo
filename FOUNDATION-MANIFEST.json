@@ -8,8 +8,7 @@
     "digitalocean-app-platform",
     "supabase-postgres-auth-storage-realtime",
     "trigger-dev-v4",
-    "gpt-image-2-2026-04-21-direct-openai",
-    "fal-seedance-2-fast-and-standard"
+    "gpt-image-2-2026-04-21-direct-openai"
   ],
   "local_infrastructure_required": false
 }

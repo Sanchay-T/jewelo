@@ -83,16 +83,6 @@ export async function POST(request: Request) {
           body: JSON.stringify({ status: input.payload?.status }),
         },
       );
-    } else if (input.command === "request_video") {
-      result = await supabaseRequest(admin, "/rest/v1/rpc/request_video_task", {
-        method: "POST",
-        body: JSON.stringify({
-          p_run_id: input.payload?.runId,
-          p_kind: input.payload?.kind,
-          p_source_task_id: input.targetId,
-          p_request_key: input.idempotencyKey,
-        }),
-      });
     } else
       return Response.json(
         { error: "Unknown operator command", code: "not_found" },
@@ -114,11 +104,9 @@ export async function POST(request: Request) {
       ? (result[0] as Record<string, unknown> | undefined)
       : (result as Record<string, unknown> | undefined);
     const dispatchAggregateId =
-      input.command === "request_video"
-        ? String(resultRecord?.id ?? "")
-        : input.command === "review_task" && input.payload?.decision === "retry"
-          ? input.targetId
-          : "";
+      input.command === "review_task" && input.payload?.decision === "retry"
+        ? input.targetId
+        : "";
     const dispatch = dispatchAggregateId
       ? await attemptImmediateDispatch(dispatchAggregateId)
       : undefined;

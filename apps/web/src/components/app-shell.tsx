@@ -96,7 +96,6 @@ function ScenarioDrawer() {
     "fast-all",
     "slow-sibling",
     "partial",
-    "quota-2",
     "retry",
     "resume",
     "cancel",

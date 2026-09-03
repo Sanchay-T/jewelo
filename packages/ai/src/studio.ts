@@ -13,7 +13,7 @@ export interface StudioGenerationInput {
 }
 
 export interface GeneratedMedia {
-  provider: "mock" | "openai" | "fal";
+  provider: "mock" | "openai";
   model: string;
   requestId: string;
   bytes: Uint8Array;
@@ -384,100 +384,6 @@ export class OpenAINameReader implements StudioNameReader {
     if (typeof parsed.text !== "string" || typeof parsed.matches !== "boolean")
       throw new Error("OpenAI name read was malformed");
     return { text: parsed.text, matches: parsed.matches };
-  }
-}
-
-export interface MotionSubmission {
-  provider: "fal";
-  model: string;
-  requestId: string;
-  statusUrl: string;
-  responseUrl: string;
-  estimatedCostCents: number;
-}
-
-export class FalSeedanceVideoAdapter {
-  constructor(
-    private readonly apiKey: string,
-    readonly previewModel: string,
-    readonly finalModel: string,
-    private readonly estimatedCostCents: number,
-    private readonly fetcher: Fetch = fetch,
-  ) {}
-
-  async submit(input: {
-    idempotencyKey: string;
-    prompt: string;
-    verifiedStillUrl: string;
-    kind: "preview" | "final";
-  }): Promise<MotionSubmission> {
-    const model =
-      input.kind === "preview" ? this.previewModel : this.finalModel;
-    const response = await this.fetcher(`https://queue.fal.run/${model}`, {
-      method: "POST",
-      headers: {
-        authorization: `Key ${this.apiKey}`,
-        "content-type": "application/json",
-        "x-idempotency-key": input.idempotencyKey,
-      },
-      body: JSON.stringify({
-        prompt: input.prompt,
-        image_url: input.verifiedStillUrl,
-        duration: input.kind === "preview" ? 4 : 6,
-        aspect_ratio: "9:16",
-        resolution: "720p",
-        generate_audio: false,
-      }),
-    });
-    if (!response.ok)
-      throw new Error(`fal video submission failed:${response.status}`);
-    const result = (await response.json()) as {
-      request_id?: string;
-      status_url?: string;
-      response_url?: string;
-    };
-    if (!result.request_id || !result.status_url || !result.response_url)
-      throw new Error("fal video submission omitted durable polling URLs");
-    return {
-      provider: "fal",
-      model,
-      requestId: result.request_id,
-      statusUrl: result.status_url,
-      responseUrl: result.response_url,
-      estimatedCostCents: this.estimatedCostCents,
-    };
-  }
-
-  async poll(
-    submission: MotionSubmission,
-  ): Promise<
-    | { state: "pending" }
-    | { state: "failed"; error: string }
-    | { state: "ready"; temporaryOutputUrl: string }
-  > {
-    const statusResponse = await this.fetcher(submission.statusUrl, {
-      headers: { authorization: `Key ${this.apiKey}` },
-    });
-    if (!statusResponse.ok)
-      throw new Error(`fal video status failed:${statusResponse.status}`);
-    const status = (await statusResponse.json()) as {
-      status?: string;
-      error?: string;
-    };
-    if (status.status === "FAILED")
-      return { state: "failed", error: status.error ?? "fal_video_failed" };
-    if (status.status !== "COMPLETED") return { state: "pending" };
-    const resultResponse = await this.fetcher(submission.responseUrl, {
-      headers: { authorization: `Key ${this.apiKey}` },
-    });
-    if (!resultResponse.ok)
-      throw new Error(`fal video result failed:${resultResponse.status}`);
-    const result = (await resultResponse.json()) as {
-      video?: { url?: string };
-    };
-    if (!result.video?.url)
-      throw new Error("fal video result omitted video URL");
-    return { state: "ready", temporaryOutputUrl: result.video.url };
   }
 }
 

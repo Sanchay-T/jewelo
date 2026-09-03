@@ -48,7 +48,6 @@ export const jobsEnvSchema = trustedWebEnvSchema
     TRIGGER_PROJECT_REF: nonEmpty.optional(),
     TRIGGER_SECRET_KEY: nonEmpty.optional(),
     PROVIDER_MODE: z.enum(["mock", "real"]).default("mock"),
-    FAL_KEY: nonEmpty.optional(),
     OPENAI_API_KEY: nonEmpty.optional(),
     OPENAI_IMAGE_MODEL: z
       .literal("gpt-image-2-2026-04-21")
@@ -60,30 +59,19 @@ export const jobsEnvSchema = trustedWebEnvSchema
       .min(1)
       .max(32)
       .default(2),
-    FAL_VIDEO_CONCURRENCY_LIMIT: z.coerce
-      .number()
-      .int()
-      .min(1)
-      .max(32)
-      .default(2),
     OPENAI_STILL_ESTIMATED_COST_CENTS: z.coerce
       .number()
       .int()
       .min(1)
       .default(20),
-    FAL_VIDEO_ESTIMATED_COST_CENTS: z.coerce.number().int().min(1).default(40),
   })
   .superRefine((value, context) => {
-    if (value.PROVIDER_MODE === "real") {
-      for (const key of ["FAL_KEY", "OPENAI_API_KEY"] as const) {
-        if (!value[key])
-          context.addIssue({
-            code: "custom",
-            path: [key],
-            message: `${key} is required in real provider mode`,
-          });
-      }
-    }
+    if (value.PROVIDER_MODE === "real" && !value.OPENAI_API_KEY)
+      context.addIssue({
+        code: "custom",
+        path: ["OPENAI_API_KEY"],
+        message: "OPENAI_API_KEY is required in real provider mode",
+      });
   });
 
 export const ciEnvSchema = z.object({

@@ -41,7 +41,7 @@ export const ARABIC_STYLE_OPTIONS: ReadonlyArray<{
 ];
 
 export const PRESENTATION_VIEW_DETAILS: ReadonlyArray<{
-  id: Exclude<PresentationView, "motion">;
+  id: PresentationView;
   label: string;
   treatment: string;
   ratio: "1:1" | "4:5" | "9:16";

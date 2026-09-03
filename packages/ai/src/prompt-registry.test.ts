@@ -79,8 +79,8 @@ describe("versioned prompt registry", () => {
 
   it("supports compact versioned prompt-sheet aliases", () => {
     const compact = compilePrompt({
-      profile: "video.preview",
-      template: "Animate this exact approved pendant: {{piece_spec}}",
+      profile: "image.packshot",
+      template: "Photograph this exact approved pendant: {{piece_spec}}",
       variables,
     });
     expect(compact.compiledPrompt).toContain("name=Layla");

@@ -63,8 +63,7 @@ a {
   color: inherit;
   text-decoration: none;
 }
-img,
-video {
+img {
   display: block;
   max-width: 100%;
 }
@@ -1452,8 +1451,7 @@ video {
 .clm-studio-media[data-ratio="9:16"] {
   aspect-ratio: 9 / 16;
 }
-.clm-studio-media > img,
-.clm-studio-media > video {
+.clm-studio-media > img {
   width: 100%;
   height: 100%;
   object-fit: contain;

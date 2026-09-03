@@ -9,6 +9,14 @@ const migration = readFileSync(
   "utf8",
 );
 
+const imageOnlyMigration = readFileSync(
+  new URL(
+    "../../../supabase/migrations/20260903000000_image_only_remove_video.sql",
+    import.meta.url,
+  ),
+  "utf8",
+);
+
 describe("final media corrective migration", () => {
   it("fans out four independent still siblings without a Studio parent", () => {
     expect(migration).toContain(
@@ -58,9 +66,42 @@ describe("final media corrective migration", () => {
     );
   });
 
-  it("creates video only from a verified still and never adds audio", () => {
+  it("derives dependent stills from a verified source asset", () => {
     expect(migration).toContain("verification_result->>'passed'='true'");
     expect(migration).toContain("dependency_task_id");
     expect(migration).toContain("input_asset_ids");
+  });
+});
+
+describe("image-only forward migration", () => {
+  it("removes the only function that can create a paid video task", () => {
+    expect(imageOnlyMigration).toContain(
+      "drop function if exists public.request_video_task(uuid, text, uuid, text)",
+    );
+  });
+
+  it("closes every retry path into a legacy video task", () => {
+    const guards = imageOnlyMigration.match(
+      /raise exception 'video generation removed'/g,
+    );
+    expect(guards).toHaveLength(2);
+    for (const fn of [
+      "public.retry_generation_task(p_task_id uuid, p_retry_key text)",
+      "public.operator_retry_generation_task(",
+    ])
+      expect(imageOnlyMigration).toContain(fn);
+  });
+
+  it("never dispatches stale recovery at a removed video Trigger task", () => {
+    expect(imageOnlyMigration).toContain(
+      "and coalesce(t.provider_profile, '') <> 'video.fal'",
+    );
+    expect(imageOnlyMigration).not.toContain("video_submit");
+    expect(imageOnlyMigration).not.toContain("video_poll");
+  });
+
+  it("keeps historical video lineage readable instead of dropping it", () => {
+    expect(imageOnlyMigration).not.toMatch(/drop (table|column|type)/i);
+    expect(imageOnlyMigration).not.toMatch(/delete from/i);
   });
 });

@@ -10,15 +10,11 @@ import {
 import { adminConfig } from "./supabase-rest";
 
 export type ImmediateDispatchState =
-  | "accepted"
-  | "partially_pending"
-  | "pending";
+  "accepted" | "partially_pending" | "pending";
 
 /** Fixed vocabulary: a dispatch failure never echoes provider or env detail. */
 export type ImmediateDispatchErrorCode =
-  | "not_configured"
-  | "rejected"
-  | "dispatch_failed";
+  "not_configured" | "rejected" | "dispatch_failed";
 
 export async function dispatchDurableOutbox(
   aggregateId: string,
@@ -76,23 +72,13 @@ export async function attemptImmediateDispatch(aggregateId: string): Promise<{
 
 export async function triggerTask(
   triggerKey: string,
-  payload: {
-    taskId: string;
-    operation: DispatchOperation;
-    pollCount?: number;
-  },
+  payload: { taskId: string; operation: DispatchOperation },
   options: TriggerDispatchOptions,
   fetcher: typeof fetch = fetch,
 ) {
-  const taskIdentifier =
-    payload.operation === "still_execute"
-      ? "presentation-task-v1"
-      : payload.operation === "video_submit"
-        ? "video-submit-v1"
-        : "video-poll-v1";
   const baseUrl = process.env.TRIGGER_API_URL ?? "https://api.trigger.dev";
   const response = await fetcher(
-    `${baseUrl}/api/v1/tasks/${taskIdentifier}/trigger`,
+    `${baseUrl}/api/v1/tasks/presentation-task-v1/trigger`,
     {
       method: "POST",
       headers: {
@@ -100,10 +86,7 @@ export async function triggerTask(
         "content-type": "application/json",
       },
       body: JSON.stringify({
-        payload:
-          payload.operation === "video_poll"
-            ? { taskId: payload.taskId, pollCount: payload.pollCount ?? 0 }
-            : { taskId: payload.taskId },
+        payload: { taskId: payload.taskId },
         options,
       }),
     },

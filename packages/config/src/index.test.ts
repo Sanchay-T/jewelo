@@ -33,10 +33,7 @@ describe("environment boundaries", () => {
     expect(result.success).toBe(false);
     if (!result.success) {
       expect(result.error.issues.map((issue) => issue.path[0])).toEqual(
-        expect.arrayContaining([
-          "SUPABASE_URL",
-          "SUPABASE_SERVICE_ROLE_KEY",
-        ]),
+        expect.arrayContaining(["SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY"]),
       );
     }
   });
@@ -55,7 +52,6 @@ describe("environment boundaries", () => {
       SUPABASE_URL: "https://example.supabase.co",
       SUPABASE_SERVICE_ROLE_KEY: "service-role-test",
       PROVIDER_MODE: "real",
-      FAL_KEY: "fal-test",
       OPENAI_API_KEY: "openai-test",
     });
     expect(result.success).toBe(true);

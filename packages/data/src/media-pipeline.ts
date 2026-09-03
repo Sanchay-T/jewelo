@@ -5,8 +5,6 @@ export const FINAL_MEDIA_SHOTS = {
   dark: { profile: "image.dark_editorial", aspectRatio: "9:16" },
   studio_hero: { profile: "image.studio_hero", aspectRatio: "9:16" },
   billboard: { profile: "image.billboard", aspectRatio: "16:9" },
-  motion_preview: { profile: "video.preview", aspectRatio: "9:16" },
-  motion_final: { profile: "video.final", aspectRatio: "9:16" },
 } as const;
 
 export type DurablePresentationView = keyof typeof FINAL_MEDIA_SHOTS;

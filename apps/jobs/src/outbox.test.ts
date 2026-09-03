@@ -48,7 +48,9 @@ describe("scheduled outbox dispatch", () => {
     expect(fetcher.mock.calls[2]?.[0]).toContain("ack_outbox_event");
   });
 
-  it("preserves the durable video dispatch kind", async () => {
+  // Video generation was removed on 2026-09-03. A legacy video event must never
+  // be retargeted at the still pipeline; it is rejected so the row stays visible.
+  it("rejects a legacy video event instead of dispatching it", async () => {
     const trigger = vi.fn(async () => ({ id: "video-run" }));
     const fetcher = vi
       .fn<typeof fetch>()
@@ -74,18 +76,26 @@ describe("scheduled outbox dispatch", () => {
         ]),
       )
       .mockResolvedValueOnce(Response.json(true));
-    await dispatchPendingOutbox(
-      {
-        SUPABASE_URL: "https://example.supabase.co",
-        SUPABASE_SERVICE_ROLE_KEY: "service-role-test",
-      },
-      trigger,
-      fetcher,
-    );
-    expect(trigger).toHaveBeenCalledWith(
-      { taskId: "task-video", operation: "video_submit" },
-      expect.objectContaining({ idempotencyKey: "dispatch-video" }),
-    );
+    await expect(
+      dispatchPendingOutbox(
+        {
+          SUPABASE_URL: "https://example.supabase.co",
+          SUPABASE_SERVICE_ROLE_KEY: "service-role-test",
+        },
+        trigger,
+        fetcher,
+      ),
+    ).resolves.toEqual({
+      accepted: [],
+      pending: [
+        {
+          outboxId: "event-video",
+          errorCode: "outbox_video_generation_removed",
+        },
+      ],
+    });
+    expect(trigger).not.toHaveBeenCalled();
+    expect(fetcher.mock.calls[2]?.[0]).toContain("nack_outbox_event");
   });
 
   it("nacks one rejected event without losing accepted siblings", async () => {

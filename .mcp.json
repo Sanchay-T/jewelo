@@ -28,13 +28,6 @@
     "trigger": {
       "command": "npx",
       "args": ["trigger.dev@latest", "mcp", "--dev-only"]
-    },
-    "fal-ai": {
-      "type": "http",
-      "url": "https://mcp.fal.ai/mcp",
-      "headers": {
-        "Authorization": "Bearer ${FAL_KEY:-not-configured}"
-      }
     }
   }
 }

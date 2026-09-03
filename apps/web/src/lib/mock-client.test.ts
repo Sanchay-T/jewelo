@@ -7,7 +7,6 @@ const scenarios: ScenarioId[] = [
   "fast-all",
   "slow-sibling",
   "partial",
-  "quota-2",
   "retry",
   "resume",
   "cancel",
@@ -69,7 +68,8 @@ describe("MockJeweloClient progressive contract", () => {
       const fingerprint =
         client.getDesign("design-1")!.revisions[0]!.identityAnchor.fingerprint;
       expect(run.directions).toHaveLength(4);
-      expect(run.tasks).toHaveLength(12);
+      // Four directions x product/worn stills; motion was removed 2026-09-03.
+      expect(run.tasks).toHaveLength(8);
       expect(
         run.directions.every(
           (direction) => direction.identityFingerprint === fingerprint,
@@ -123,18 +123,6 @@ describe("MockJeweloClient progressive contract", () => {
     expect(partial.status).toBe("partial");
     expect(partial.directions[2]!.representations.product.state).toBe("failed");
     expect(partial.directions[0]!.representations.product.state).toBe("ready");
-  });
-
-  it("holds excess motion work in queue when capacity is two", async () => {
-    const client = clientFor("quota-2");
-    const limited = await client.advanceRun((await start(client)).id, 900);
-    const states = limited.directions.map(
-      (direction) => direction.representations.motion.state,
-    );
-    expect(
-      states.filter((state) => state === "generating" || state === "verifying"),
-    ).toHaveLength(2);
-    expect(states.filter((state) => state === "queued")).toHaveLength(2);
   });
 
   it("retries one identity task without resetting siblings", async () => {

@@ -1,28 +1,16 @@
 export type Locale = "en" | "ar";
 export type Role = "customer" | "operator";
 export type ScenarioId =
-  | "fast-all"
-  | "slow-sibling"
-  | "partial"
-  | "quota-2"
-  | "retry"
-  | "resume"
-  | "cancel";
+  "fast-all" | "slow-sibling" | "partial" | "retry" | "resume" | "cancel";
 
 export const PRESENTATION_VIEWS = [
   "studio",
   "on_skin",
   "close_up",
   "dark",
-  "motion",
 ] as const;
 export type PresentationView = (typeof PRESENTATION_VIEWS)[number];
-export const ENABLED_PRESENTATION_VIEWS = [
-  "studio",
-  "on_skin",
-  "close_up",
-  "dark",
-] as const;
+export const ENABLED_PRESENTATION_VIEWS = PRESENTATION_VIEWS;
 export type EnabledPresentationView =
   (typeof ENABLED_PRESENTATION_VIEWS)[number];
 

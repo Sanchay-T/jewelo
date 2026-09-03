@@ -8,8 +8,6 @@ export const PROMPT_PROFILES = [
   "image.dark_editorial",
   "image.studio_hero",
   "image.billboard",
-  "video.preview",
-  "video.final",
   "verification.image",
 ] as const;
 export type PromptProfile = (typeof PROMPT_PROFILES)[number];
@@ -104,18 +102,6 @@ export const BASELINE_PROMPT_TEMPLATES: Readonly<
   "image.billboard": imageTemplate(
     "Campaign photograph of the necklace toward the right of a matte-black paper sweep, lit by one narrow warm spotlight with subtle metal rim light and calm empty darkness to the left.",
   ),
-  "video.preview": [
-    "Create a restrained silent {{presentation_view}} motion preview from the approved still for {{approved_name}} ({{language}}; Arabic style: {{arabic_style}}).",
-    "Keep {{layout}} geometry, spelling and attachments unchanged throughout every frame.",
-    "Preserve {{metal_karat}} {{metal_color}} metal, {{finish}} finish, {{stone_coverage}} {{gemstone}}, {{size_profile}} scale, {{dimensions}}, and the {{chain_style}} chain at {{chain_length}}.",
-    "Use only subtle product-camera movement and controlled specular light; no morphing or new objects. {{inspiration_rule}}",
-  ].join(" "),
-  "video.final": [
-    "Create a polished silent {{presentation_view}} final product film from the approved still for {{approved_name}} ({{language}}; Arabic style: {{arabic_style}}).",
-    "Keep exact spelling, {{layout}} geometry and attachments stable for the full shot.",
-    "Preserve {{metal_karat}} {{metal_color}} metal, {{finish}} finish, {{stone_coverage}} {{gemstone}}, {{size_profile}} scale, {{dimensions}}, and the {{chain_style}} chain at {{chain_length}}.",
-    "Use elegant, restrained camera motion and realistic light only; do not morph the pendant or introduce unapproved details. {{inspiration_rule}}",
-  ].join(" "),
   "verification.image": [
     "Verify the supplied generated image against the immutable silhouette and approved configuration for {{approved_name}} ({{language}}; Arabic style: {{arabic_style}}).",
     "Require exact spelling and script, the same identity and {{layout}} geometry, exactly two connected jump rings with coherent {{chain_style}} chain attachment at {{chain_length}}, {{metal_karat}} {{metal_color}} {{finish}} metal, {{stone_coverage}} {{gemstone}}, {{size_profile}} dimensions {{dimensions}}, and the requested {{presentation_view}} shot.",
@@ -130,8 +116,6 @@ export const PRESENTATION_PROFILE = {
   dark: "image.dark_editorial",
   studio_hero: "image.studio_hero",
   billboard: "image.billboard",
-  motion_preview: "video.preview",
-  motion_final: "video.final",
 } as const satisfies Readonly<Record<string, PromptProfile>>;
 
 export const PRESENTATION_ASPECT_RATIO = {
@@ -141,8 +125,6 @@ export const PRESENTATION_ASPECT_RATIO = {
   dark: "9:16",
   studio_hero: "9:16",
   billboard: "16:9",
-  motion_preview: "9:16",
-  motion_final: "9:16",
 } as const;
 
 export const STYLE_ANCHOR_SOURCE_TASK_IDS = {

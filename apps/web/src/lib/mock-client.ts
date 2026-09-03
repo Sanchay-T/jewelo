@@ -38,7 +38,6 @@ const WORN_ASSETS = [
   "/fixtures/layla-direction-3-worn.png",
   "/fixtures/layla-direction-4-worn.png",
 ];
-const MOTION_ASSET = "/fixtures/edit/layla-direction-1-motion.mp4";
 
 function hashText(value: string): string {
   let hash = 2166136261;
@@ -111,19 +110,13 @@ function representation(
     kind,
     state,
     assetUrl: state === "ready" ? assetUrl : undefined,
-    posterUrl:
-      kind === "motion"
-        ? "/fixtures/layla-direction-1-motion-poster.jpg"
-        : undefined,
     alt: `${kind} representation of the approved Layla yellow-gold pendant, ${directionId}`,
     lineage: lineage(revisionId, runId, directionId, taskId, attempt),
   };
 }
 
 function presentationView(kind: RepresentationKind): PresentationView {
-  if (kind === "product") return "studio";
-  if (kind === "worn") return "on_skin";
-  return "motion";
+  return kind === "product" ? "studio" : "on_skin";
 }
 
 function projectPresentationAssets(directions: Direction[]) {
@@ -144,7 +137,7 @@ function direction(
   revisionId: string,
   runId: string,
   index: number,
-  states: [TaskState, TaskState, TaskState],
+  states: [TaskState, TaskState],
 ): Direction {
   const id = `${runId}-direction-${index}`;
   return {
@@ -174,14 +167,6 @@ function direction(
         states[1],
         WORN_ASSETS[index - 1],
       ),
-      motion: representation(
-        revisionId,
-        runId,
-        id,
-        "motion",
-        states[2],
-        index === 1 ? MOTION_ASSET : undefined,
-      ),
     },
   };
 }
@@ -194,29 +179,24 @@ function buildRun(
 ): GenerationRun {
   const revisionId = revision.id;
   const runId = `${designId}-run-${ordinal}`;
-  const initial: [TaskState, TaskState, TaskState] = [
-    "generating",
-    "queued",
-    "queued",
-  ];
+  const initial: [TaskState, TaskState] = ["generating", "queued"];
   const stateSetsByScenario: Record<
     ScenarioId,
-    Array<[TaskState, TaskState, TaskState]>
+    Array<[TaskState, TaskState]>
   > = {
     "fast-all": [initial, initial, initial, initial],
     "slow-sibling": [initial, initial, initial, initial],
     partial: [initial, initial, initial, initial],
-    "quota-2": [initial, initial, initial, initial],
     retry: [initial, initial, initial, initial],
     resume: [
-      ["ready", "ready", "ready"],
-      ["ready", "generating", "queued"],
-      ["verifying", "queued", "queued"],
+      ["ready", "ready"],
+      ["ready", "generating"],
+      ["verifying", "queued"],
       initial,
     ],
     cancel: [
-      ["ready", "generating", "generating"],
-      ["verifying", "queued", "queued"],
+      ["ready", "generating"],
+      ["verifying", "queued"],
       initial,
       initial,
     ],
@@ -275,13 +255,7 @@ function revealAsset(direction: Direction, kind: RepresentationKind): void {
   const index = Number(direction.label.replace("Direction ", "")) - 1;
   const representation = direction.representations[kind];
   representation.assetUrl =
-    kind === "product"
-      ? PRODUCT_ASSETS[index]
-      : kind === "worn"
-        ? WORN_ASSETS[index]
-        : index === 0
-          ? MOTION_ASSET
-          : undefined;
+    kind === "product" ? PRODUCT_ASSETS[index] : WORN_ASSETS[index];
 }
 
 function setRepresentationState(
@@ -351,43 +325,16 @@ function applyScenario(
         "worn",
         phase(elapsedMs, productCompletedAt + 320, productCompletedAt + 520),
       );
-
-      if (scenario === "quota-2") {
-        const motionStart =
-          index < 2 ? productCompletedAt : productCompletedAt + 900;
-        if (elapsedMs < motionStart)
-          setRepresentationState(direction, "motion", "queued");
-        else if (index === 0)
-          setRepresentationState(
-            direction,
-            "motion",
-            phase(elapsedMs, motionStart + 300, motionStart + 520),
-          );
-        else if (elapsedMs < motionStart + 520)
-          setRepresentationState(direction, "motion", "generating");
-        else
-          setRepresentationState(direction, "motion", "available_on_request");
-      } else if (index === 0) {
-        setRepresentationState(
-          direction,
-          "motion",
-          phase(elapsedMs, productCompletedAt + 300, productCompletedAt + 520),
-        );
-      } else {
-        setRepresentationState(direction, "motion", "available_on_request");
-      }
     } else if (productState === "failed") {
       setRepresentationState(direction, "worn", "blocked");
-      setRepresentationState(direction, "motion", "blocked");
     } else {
       setRepresentationState(direction, "worn", "queued");
-      setRepresentationState(direction, "motion", "queued");
     }
   });
 
   if (scenario === "cancel" && elapsedMs >= 1_000) {
     for (const direction of run.directions) {
-      for (const kind of ["product", "worn", "motion"] as const) {
+      for (const kind of ["product", "worn"] as const) {
         if (direction.representations[kind].state !== "ready")
           setRepresentationState(direction, kind, "cancelled");
       }

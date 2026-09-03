@@ -22,7 +22,6 @@ const SAMPLE_PRESENTATION_ASSETS: Record<PresentationView, string> = {
   on_skin: "/fixtures/layla-direction-1-worn.png",
   close_up: "/fixtures/layla-direction-3-product.png",
   dark: "/fixtures/layla-direction-4-product.png",
-  motion: "/fixtures/layla-direction-1-motion-poster.jpg",
 };
 
 const legacyCoordinates = {
