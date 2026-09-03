@@ -149,47 +149,98 @@ Omran: first four cream cards "yes but can and has to be done much better"; "Plu
 | | chain | cable, curb, rolo, box |
 | | chainLength | 40, 45, 50, 55 cm |
 
-Draft persisted in `localStorage` under `caleums:configurator-draft:v1`; six-step wizard plus review.
+Draft persisted in `sessionStorage` under `caleums:configurator-draft:v1`; six-step
+wizard plus a review step. (An earlier version of this brief said `localStorage`;
+the code used `sessionStorage`. Goal 09 moves it to `localStorage` under a `v2`
+key with migration.)
 
-### Proposal (to validate against Omran's images/transcripts before locking)
+### Locked decision (3 Sep 2026, owner + Omran) — implemented by `docs/goals/09-declutter-entry-and-feedback.md`
 
-Principle: **the customer picks from rendered examples, not from vocabulary.** Two screens before generation, everything else defaults and is editable *after* the first render.
+Principle: **the customer picks from examples, not from vocabulary**, and does it
+on **one page**. Everything else is defaulted and stays editable.
 
-**Screen 1 — Name**
-- Name (one field; second name is an "add a second name" affordance, not a mode switch).
-- Script: English / Arabic (Arabic shows live transliteration with refine).
+The full mapping table, acceptance criteria and stopping condition live in the
+goal file. Summary of what is locked:
 
-**Screen 2 — Look** (rendered tiles, each tile is a real pre-rendered pendant of a sample name)
-- **Design style: 6 tiles** (Omran's 6; today's 7 Arabic styles collapse into these — candidates: Classical, Contemporary, Diwani, Thuluth, Kufi, Minimal; "Signature" merges into Classical or Diwani pending his images).
-- **Layout: 3 tiles** — Normal (downward, in frame), plus two to be confirmed from his set (likely Side-by-side and Connected/Stacked for two names).
-- **Metal: 3 swatches** (yellow / white / rose) — visual, single tap.
+- **One page.** No wizard, no stepper, no separate review route — a review strip
+  at the bottom of the same page.
+- **Name first.** One input, script toggle EN/العربية, second name is an
+  "add a second name" affordance. Arabic keeps the editable approved-spelling
+  field: the human is the spelling authority.
+- **6 design styles = the six existing `ArabicStyle` values relabelled**
+  (`contemporary`→Classical, `minimal`, `diwani`, `thuluth-inspired`, `kufi`,
+  `signature`). This is not a compromise: `LIVE_STYLES` in
+  `packages/identity/src/caleums-arabic-v3.ts` already holds exactly these six,
+  and `identity-anchor.ts` already maps `contemporary → "classic"`. Omran's
+  "plus classical" is a label change, not a new enum member. **No migration.**
+- **Styles show for Arabic only.** `arabicStyle` is only read when
+  `language === "ar"`; an English style picker would be a choice the pipeline
+  ignores. English gets an honest "English script" statement until G-12 adds
+  real Latin style profiles.
+- **3 visible layouts, 7 kept in the contract.** `side-by-side` ("Normal, side
+  by side"), `stacked` ("Downwards, stacked"), `connected-heart` ("Joined with a
+  heart"). `stacked-heart` / `infinity` / `interlocked` move behind a "more
+  layouts" disclosure that auto-opens for a restored draft. **`frame` and
+  `square` are not implemented** — they have no `PendantLayout` member and no
+  geometry in the identity compiler, so they stay an open question rather than
+  an invented value.
+- **Metal: 3 swatches**, same page.
+- **Stones / size / chain: one closed "Details" disclosure**, defaults coverage
+  `none`, gemstone `none`, size `classic`, chain `cable` 45 cm. No field is
+  removed from the draft or the API contract — they are defaulted and folded away.
+- **Two-name Arabic is flagged at the affordance.**
+  `classifyArabicIdentityInput` returns `unsupported_arabic_two_name`, so the
+  constraint must be visible where the customer adds the name, not only at the
+  bottom of the page.
 
-**Deferred to the studio (after first render, as refinements, all defaulted)**
-- Stones: default *none*; single toggle "add diamonds" → coverage; gemstone colour behind a secondary picker. Cut gemstone list to what the partner can actually manufacture.
-- Size: default *classic 30 mm*; delicate/statement as a slider or two chips. Drop "custom" from the customer path (operator-only).
-- Chain: default *cable 45 cm*; chain style/length live in the commerce step, they do not change the pendant render.
+Net effect: first-visit decisions go from 10 fields / ~35 values across 7 screens
+to a name plus 3 visual choices on 1 screen. The renderable combination surface
+that G-12 has to QA by hand drops to 54 (6 styles × 3 layouts × 3 metals).
 
-Net effect: first-visit decisions go from 10 fields / ~35 values to 3 visual choices + a name; combinatorial prompt surface drops from ~230k to 54 (6 × 3 × 3) renderable combinations, which is small enough to **pre-render every tile** and to QA every prompt profile by hand.
-
-Open questions for Omran (ask before implementing §4):
-1. Exact six design styles and the reference image for each.
-2. The three layouts; how two names appear in "Normal (downwards)".
+Still open with Omran (blocks G-12, not Goal 09):
+1. Exact reference image for each of the six styles, and the licence to use them.
+2. What frame / square mean geometrically, and how two names sit in "Normal
+   (downwards)".
 3. Which stone/gemstone combinations he can manufacture and price.
 4. Whether the customer ever needs chain choice before checkout.
-5. What "classical" means — Naskh-like Arabic, serif Latin, or both.
+5. Whether "classical" means Naskh-like Arabic, serif Latin, or both.
 
 ---
 
-## 5. Changes to make (proposed goal order)
+## 5. Changes to make — now / next / later
 
-Each item becomes one `docs/goals/*.md` file with a stopping condition before coding.
+Each item becomes one `docs/goals/*.md` file with a stopping condition before
+coding. G-numbers are the planning names; the goal files are numbered
+sequentially on disk.
+
+### NOW — in progress
+
+**G-13 Declutter entry and honest feedback** → `docs/goals/09-declutter-entry-and-feedback.md`
+
+One configurator page; 6 styles / 3 layouts / 3 metals visible, everything else
+defaulted behind a "Details" disclosure; walkthrough defects 19–23 fixed;
+generation feedback tells the truth about queued / generating / verifying /
+failed / retrying / cancelled. No pipeline, provider, migration or enum changes.
+*Stop when a visitor types a name and reaches an enabled approve control without
+leaving the page, `/api/transliterate` is provably not called before they type,
+and the estimate is visible at approval on desktop.*
+
+Defect 24 (404 status) is **explicitly deferred** — see the goal file.
+
+### NEXT — unblocked, ordered
 
 1. **G-09 Repo truth reset** — *partially done:* image-only docs landed in `697a8cd`; `.cursor/` is gitignored; fal MCP removed from Cursor config. Still open: `main` as base in CLAUDE.md/PR template; stale DO runbook; `.env.example` = Zod schema only; Supabase region statement. *Stop when `rg -i 'seedance|fal\.ai|video'` in docs returns only the decision-register entry.*
-2. **G-10 Push-to-live** — GitHub source with `deploy_on_push` (staging), CI workflow (`typecheck`, `lint`, `test`, `secret:scan`) required on `main`, turbo `outputs`, health-check timing, `DEPLOYMENT_LIVE` alert, rollback target recorded. *Stop when a docs-only push reaches the live URL unattended in < 4 min with CI green.*
+2. **G-10 Push-to-live** — GitHub source with `deploy_on_push` (staging), CI workflow (`typecheck`, `lint`, `test`, `secret:scan`) required on `main`, turbo `outputs`, health-check timing, `DEPLOYMENT_LIVE` alert, rollback target recorded. *Stop when a docs-only push reaches the live URL unattended in < 4 min with CI green.* — the highest-leverage item after G-13, because nothing currently gates `main` on a public repo.
 3. **G-11 Operational safety** — queue-depth / zero-throughput alert for Trigger; Sentry actually installed (web + jobs); pooler-based `SUPABASE_DB_URL`; job-only provider keys or amended rule 7; reconcile fal spend ledger. *Stop when a deliberately paused Trigger worker pages within 10 min.*
-4. **G-12 Style library with the partner** — ingest Omran's reference images + transcripts; define 6 styles × 3 layouts; author and QA one prompt profile + style anchor per style; pre-render tile sets for sample names; verify Playfair/Arabic fonts render identically on macOS and Linux. *Stop when every tile renders correctly for two Latin and two Arabic sample names with name-check pass.*
-5. **G-13 Declutter entry** — implement §4 screens; move stones/size/chain to post-render refinements; fix walkthrough defects 19–24 (transliteration gating, action-bar overlap, `/ar` copy, stale support copy, Layla fixture bleed, 404s); RTL/mobile/keyboard verification; Playwright flow test updated. *Stop when a new visitor reaches first render in ≤ 3 taps after typing a name and no provider call happens before the name is submitted.*
-6. **G-14 Visual QA beyond the name** — restore a real structured verifier (geometry, chain threading, background, duplicate pendant) with deterministic fallbacks, now that video budget is freed. *Stop when injected bad renders are caught ≥ 95% on the fixture set.*
+4. **G-15 Web-tier spend guard** *(new, found while planning G-13)* — `/api/transliterate` builds a real OpenAI client whenever `OPENAI_API_KEY` is set and never consults a provider mode; `PROVIDER_MODE` is jobs-side config while the web app switches on `NEXT_PUBLIC_JEWELO_DATA_MODE`. *Stop when a local/dev web tier cannot make a paid model call regardless of which keys are present.*
+5. **G-16 Design-not-found semantics** *(new)* — hydration flag on the client store, then a real 404 for `studio.tsx`, `crafting-transition.tsx` and `CommerceExperience.tsx`. *Stop when a bad design id returns 404 and a valid one never flashes "Design not found".*
+
+### LATER — blocked on a human or on an earlier goal
+
+- **G-12 Style library with the partner** — *blocked on Omran: licence for the 12 concept cards, and the reference image per style.* Ingest his reference images + transcripts; author and QA one prompt profile + style anchor per style; pre-render tile sets for sample names (his voice note: preload by name length, e.g. a 4-letter "Asma" and a 10-letter "Muhammad"); verify Playfair/Arabic fonts render identically on macOS and Linux. *Stop when every tile renders correctly for two Latin and two Arabic sample names with name-check pass.* G-13 ships the information architecture that G-12 drops images into.
+- **Frame / square layouts and English style profiles** — blocked on G-12 plus a `PendantLayout` / `ArabicStyle` contract change and identity-compiler work.
+- **`/ar` Arabic copy** — blocked on translation. G-13 only stops English strings from rendering with flipped punctuation inside RTL.
+- **G-14 Visual QA beyond the name** — restore a real structured verifier (geometry, chain threading, background, duplicate pendant) with deterministic fallbacks, now that video budget is freed. *Stop when injected bad renders are caught ≥ 95% on the fixture set.*
 
 Deliberately **not** doing: CRM (Omran owns it), video, per-PR preview apps, instance upsizing, Runway in production.
 
