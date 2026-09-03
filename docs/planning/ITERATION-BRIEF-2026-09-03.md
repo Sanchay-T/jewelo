@@ -67,11 +67,9 @@ Verified OK: zero console errors on all routes, identical health/readiness paylo
 
 ## 3. Partner feedback so far (Omran, "Jewelry AI" group)
 
-Source: local `wacli` store, chat `120363424060454271@g.us`, 30 messages, 12 Aug 2026 → 30 Aug 2026.
-Media not yet downloaded — `wacli` needs a fresh QR login (`wacli auth`); then run
-`~/hq/projects/personal/devonel.com/jewelo-intake/whatsapp-jewelry-ai/pull-and-transcribe.sh`
-to fetch 12 images + 6 voice notes and transcribe the voice notes with ElevenLabs Scribe.
-Voice-note content and the image references are **pending** and will be appended to §3.1.
+Source: `wacli` now authenticated globally as `919136820958@s.whatsapp.net` (phone pairing).
+Chat `120363424060454271@g.us`, 31 messages (Apr 12 → Sep 2). Media + Scribe transcripts
+live **outside the public repo** at `~/hq/projects/personal/devonel.com/jewelo-intake/whatsapp-jewelry-ai/`.
 
 Text decisions captured (29–30 Aug):
 
@@ -83,12 +81,53 @@ Text decisions captured (29–30 Aug):
 - **"Videos are not needed."**
 - Earlier (12 Apr): Omran is building CRM and marketing separately — Jewelo does not need to own CRM.
 
-### 3.1 Pending from media / transcripts
+### 3.1 Reference images (12, 29 Aug — Omran)
 
-- [ ] The 12 reference images (which styles, which layouts, what "classical" means visually).
-- [ ] Transcripts of 6 voice notes (4 Omran, 2 Sanchay), 30 Aug 10:34–14:00 UTC.
-- [ ] Meeting chat notes from Omran (to be pasted by owner): new form options, changes, feedback, add/delete list.
-- [ ] Licensing / rights constraints on reference images and fonts ("the license" mentioned by owner — clarify what is licensed: reference designs, calligraphy fonts, or brand).
+Two batches. First batch is cream concept cards (sample names **Isma / Asma**). Second batch is dark Caleums spec sheets (name **ASMA**).
+
+**Cream concept cards — candidate customer-facing styles**
+
+| File (prefix) | Title on card | Visual |
+| --- | --- | --- |
+| `125842_…3A946B6E` | Concept 5 — Framed Minimal | Block "Isma" in an open rectangular frame; corner + side-bar diamonds |
+| `125842_…3A1B8F41` | Floating Diamond Rails Asma | Architectural "ASMA" between two rails; 3 floating bezel diamonds |
+| `125901_…3A3A47C2` | Concept 7 — Arabic Origami | Faceted origami Arabic form; princess-cut corners + mid cluster |
+| `125902_…3A168095` | Diamond Constellation Frame Asma | Block "ASMA" in a constellation rectangle of bezel nodes |
+| `125902_…3AA7D0BE` | Origami Ribbon Asma | Continuous folded-ribbon "ASMA" inside a rectangle |
+| `125902_…3ABE8BA1` | Concept 2 — English Origami | Faceted origami Latin "Isma"; princess accents + side cluster |
+
+**Dark Caleums spec sheets — richer "celestial architecture" language (not 6-tile starters)**
+
+| File | Title | Notes |
+| --- | --- | --- |
+| `130241_…3A8541D9` | Asma Drop Origami | Vertical cascade; entry/north-star/personal/exit stones + hidden sapphires; Caelum backplate |
+| `130242_…3A215A74` | Asma Stacked Origami | AS over MA; same stone-journey language |
+| `130242_…3AC227D9` | Open-frame Suspended Origami | Letters suspended in an octagonal frame |
+| `130315_…3A2DF9FD` | Asma Art Deco | Horizontal nameplate, baguette-filled letters, sunburst terminals, North Star |
+| `130316_…3A01C95C` | Celestial / Constellation | Name in an orbital/star-map frame |
+| `130316_…3A42060E` | Asma Ribbon Flow | Cursive ribbon script; entry/north-star/pink/exit stones |
+
+Omran: first four cream cards "yes but can and has to be done much better"; "Plus classical"; display today is "literally normal writing"; "we can add more things then from these styles."
+
+### 3.2 Voice notes (Scribe, 30 Aug)
+
+**Omran 10:34** — Preload previews by name length. Generate sample names (Asma; also a long one like Muhammad) so a 4-letter and a 10-letter customer see how *their* character count would sit, not a generic tile.
+
+**Omran 10:34** — Ordinary names are fine as samples; counting to five.
+
+**Omran 10:35** — Start with **six designs only**. Suggested cheap first-pass tiles via Gemini Flash (his $22 balance). Uniqueness = pre-rendered style tiles, not more options. **Stack note:** Gemini Flash is *not* locked; do not adopt without an explicit decision. OpenAI GPT Image 2 stays the production still path.
+
+**Sanchay 13:55** — Agreed: six options, then a **post-generation customization layer**. First shot is "based on your idea"; the customer can take one image and go deeper on aesthetics for that option only.
+
+**Omran 13:57** — Locked flow: (1) name, (2) pick styles — he said *two* styles, in two formats: "rotating" vs "origami", (3) display: **frame / vertical / horizontal / square**. Then generate. ("Videos are not needed" in the text right before this note.)
+
+**Sanchay 14:00** — Will drop a wireframe into the group (not in the store after Sep 2 except "checking").
+
+### 3.3 Still pending from the owner
+
+- [ ] Paste the meeting chat notes (form options / add-delete list) if they go beyond this group.
+- [ ] License: are these concept cards ours to use as style anchors, or third-party / designer-owned?
+- [ ] Resolve the layout count: text said **3 layouts** ("Normal downwards in the frame"); voice said **frame / vertical / horizontal / square** plus rotating vs origami. Treat voice as the later, richer version until Omran confirms.
 
 ---
 
@@ -165,8 +204,9 @@ Deliberately **not** doing: CRM (Omran owns it), video, per-PR preview apps, ins
 
 ## 7. Human actions outstanding
 
-- `wacli auth` (QR) so media/voice notes can be pulled; then run the intake script.
-- Paste Omran's meeting chat notes into §3.1.
+- Paste any extra meeting notes that are not in the Jewelry AI group.
+- Confirm license on the 12 concept cards.
 - Confirm fal billing for 26–27 Aug (ledger only).
-- Rotate the ElevenLabs key at some point — it was shared in a chat transcript.
-- Decide: Supabase region (stay Seoul vs. move to Mumbai) and provider keys on the web tier (rule 7).
+- Rotate the ElevenLabs key — it was shared in chat.
+- Decide: Supabase region (Seoul vs Mumbai) and provider keys on the web tier (rule 7).
+- Confirm layouts: 3 (text) vs frame/vertical/horizontal/square (voice).
