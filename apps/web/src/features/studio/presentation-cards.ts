@@ -104,21 +104,109 @@ export function isPrimaryReady(cards: PresentationCardModel[]) {
   return studio?.state === "ready" && Boolean(studio.assetUrl);
 }
 
-// The backend runs studio first: on_skin/close_up/dark stay `queued` behind a
-// dependency on the studio task, so "Queued" reads as if nothing is happening.
-export function presentationStatusLabel(
+export interface PresentationStatus {
+  label: string;
+  detail: string;
+  /**
+   * True only when the provider genuinely has work in flight for this view.
+   * Shimmer and spinners are gated on this so a failed or cancelled card never
+   * animates as though something is still happening.
+   */
+  pending: boolean;
+}
+
+const STATUS_COPY: Readonly<Record<TaskState, PresentationStatus>> = {
+  queued: {
+    label: "Queued",
+    detail: "Waiting for a free slot in the render queue.",
+    pending: true,
+  },
+  generating: {
+    label: "Generating",
+    detail: "Rendering this view now.",
+    pending: true,
+  },
+  verifying: {
+    label: "Checking spelling",
+    detail: "Reading the name back to confirm it matches your approved spelling.",
+    pending: true,
+  },
+  retrying: {
+    label: "Retrying",
+    detail: "The first attempt did not pass. Trying again.",
+    pending: true,
+  },
+  ready: { label: "Ready", detail: "This view is finished.", pending: false },
+  failed: {
+    label: "Needs another try",
+    detail: "This view did not complete. You can retry it on its own.",
+    pending: false,
+  },
+  blocked: {
+    label: "Not started",
+    detail: "Waiting for the view it is built from.",
+    pending: false,
+  },
+  cancelled: {
+    label: "Cancelled",
+    detail: "You cancelled this view. Nothing further was charged.",
+    pending: false,
+  },
+  unavailable: {
+    label: "Not available",
+    detail: "This view is not part of the current set.",
+    pending: false,
+  },
+  available_on_request: {
+    label: "On request",
+    detail: "We can render this view when you ask for it.",
+    pending: false,
+  },
+};
+
+/**
+ * Customer-facing status for one view. Never exposes a raw enum member and
+ * never invents a percentage — the states are discrete and that is all we know.
+ *
+ * The backend runs studio first: on_skin/close_up/dark stay `queued` behind a
+ * dependency on the studio task, so plain "Queued" reads as if nothing is
+ * happening.
+ */
+export function presentationStatus(
   card: PresentationCardModel,
   cards: PresentationCardModel[],
-) {
+): PresentationStatus {
   if (
     card.id === "studio" &&
     card.state === "blocked" &&
     card.task?.terminalErrorCode?.startsWith("name_mismatch")
   )
-    return "Spelling check failed - retry";
+    return {
+      label: "Spelling check failed",
+      detail:
+        "The rendered name did not match your approved spelling, so it was not kept. Retry to render again.",
+      pending: false,
+    };
   if (card.state === "queued" && card.id !== "studio" && !isPrimaryReady(cards))
-    return "Waiting for studio";
-  return card.state.replaceAll("_", " ");
+    return {
+      label: "Waiting for studio",
+      detail: "It starts as soon as the Studio view is verified.",
+      pending: true,
+    };
+  return (
+    STATUS_COPY[card.state] ?? {
+      label: "Preparing",
+      detail: "Preparing this view.",
+      pending: true,
+    }
+  );
+}
+
+export function presentationStatusLabel(
+  card: PresentationCardModel,
+  cards: PresentationCardModel[],
+) {
+  return presentationStatus(card, cards).label;
 }
 
 export function applyPresentationReplay(

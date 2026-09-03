@@ -12,8 +12,9 @@ import {
   adaptPresentationCards,
   applyPresentationReplay,
   applySamplePresentationAssets,
-  presentationStatusLabel,
+  presentationStatus,
   type PresentationCardModel,
+  type PresentationStatus,
 } from "@/features/studio/presentation-cards";
 
 const progress = [
@@ -25,10 +26,10 @@ const progress = [
 
 function CraftingCard({
   card,
-  statusLabel,
+  status,
 }: {
   card: PresentationCardModel;
-  statusLabel: string;
+  status: PresentationStatus;
 }) {
   const ready = card.state === "ready" && Boolean(card.assetUrl);
   const primary = card.id === "studio" || card.id === "on_skin";
@@ -54,12 +55,16 @@ function CraftingCard({
               sizes="(max-width: 799px) 100vw, (max-width: 1100px) 50vw, 25vw"
             />
           </a>
-        ) : (
+        ) : /* Shimmer is reserved for real pending work; a failed or cancelled
+               slot holds its dimensions without pretending to be busy. */
+        status.pending ? (
           <div className="clm-crafting-skeleton" aria-hidden="true">
             <i />
             <i />
             <i />
           </div>
+        ) : (
+          <div className="clm-crafting-stalled" aria-hidden="true" />
         )}
         <span>{card.number}</span>
       </div>
@@ -69,23 +74,17 @@ function CraftingCard({
           <small>{card.treatment}</small>
         </div>
         <span className="clm-state" data-state={card.state}>
-          {statusLabel}
+          {status.label}
         </span>
       </footer>
       {!ready && (
-        <div className="clm-crafting-card-progress" role="status">
-          <SpinnerGap className="clm-spin" size={14} />
-          {statusLabel === "Waiting for studio"
-            ? "Waiting for studio"
-            : card.state === "blocked"
-              ? statusLabel === "Spelling check failed - retry"
-                ? statusLabel
-                : "Awaiting approval"
-              : card.state === "failed"
-                ? "Needs retry"
-                : card.state === "cancelled"
-                  ? "Cancelled"
-                  : "Preparing presentation"}
+        <div
+          className="clm-crafting-card-progress"
+          data-pending={status.pending || undefined}
+          role="status"
+        >
+          {status.pending && <SpinnerGap className="clm-spin" size={14} />}
+          <span dir="ltr">{status.label}</span>
         </div>
       )}
     </article>
@@ -173,6 +172,8 @@ export function CraftingTransition({
   const cancelled = taskState === "cancelled";
   const blocked = taskState === "blocked" || taskState === "unavailable";
   const running = !ready && !failed && !cancelled && !blocked;
+  // Discrete steps derived from the real task state — never a percentage, and
+  // never "step 2" merely because a task row exists.
   const completed = ready
     ? 4
     : replay
@@ -181,9 +182,11 @@ export function CraftingTransition({
         : 2
       : taskState === "verifying"
         ? 3
-        : task
+        : taskState === "generating" || taskState === "retrying"
           ? 2
-          : 1;
+          : task
+            ? 1
+            : 0;
   return (
     <AppShell locale={locale}>
       <main className="clm-generation">
@@ -297,7 +300,7 @@ export function CraftingTransition({
               <CraftingCard
                 key={card.id}
                 card={card}
-                statusLabel={presentationStatusLabel(card, cards)}
+                status={presentationStatus(card, cards)}
               />
             ))}
           </div>

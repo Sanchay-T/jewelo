@@ -28,8 +28,9 @@ import {
   adaptPresentationCards,
   applySamplePresentationAssets,
   isPrimaryReady,
-  presentationStatusLabel,
+  presentationStatus,
   type PresentationCardModel,
+  type PresentationStatus,
 } from "./presentation-cards";
 
 const activeStates = new Set<TaskState>([
@@ -39,31 +40,15 @@ const activeStates = new Set<TaskState>([
   "retrying",
 ]);
 
-function stateCopy(state: TaskState, statusLabel: string) {
-  if (statusLabel === "Waiting for studio")
-    return "It starts as soon as the Studio view is verified.";
-  if (statusLabel === "Spelling check failed - retry")
-    return "The approved spelling did not verify. Retry to render again.";
-  if (state === "failed") return "This presentation needs another try.";
-  if (state === "cancelled") return "This presentation was cancelled.";
-  if (state === "blocked") return "Waiting for its verified parent task.";
-  if (state === "unavailable" || state === "available_on_request")
-    return "This presentation is not available yet.";
-  if (state === "verifying") return "Checking the approved identity.";
-  if (state === "retrying") return "Trying this presentation again.";
-  if (state === "generating") return "Rendering this presentation.";
-  return "Queued for presentation.";
-}
-
 function PresentationCard({
   card,
-  statusLabel,
+  status,
   busy,
   onCancel,
   onRetry,
 }: {
   card: PresentationCardModel;
-  statusLabel: string;
+  status: PresentationStatus;
   busy?: string;
   onCancel(card: PresentationCardModel): void;
   onRetry(card: PresentationCardModel): void;
@@ -93,14 +78,18 @@ function PresentationCard({
             />
           </a>
         ) : (
-          <div className="clm-presentation-placeholder" role="status">
-            {activeStates.has(card.state) ? (
+          <div
+            className="clm-presentation-placeholder"
+            data-pending={status.pending || undefined}
+            role="status"
+          >
+            {status.pending ? (
               <SpinnerGap className="clm-spin" size={30} />
             ) : (
               <Sparkle size={30} weight="duotone" />
             )}
-            <strong>{statusLabel}</strong>
-            <span>{stateCopy(card.state, statusLabel)}</span>
+            <strong>{status.label}</strong>
+            <span dir="ltr">{status.detail}</span>
           </div>
         )}
         <span className="clm-presentation-number">{card.number}</span>
@@ -111,7 +100,7 @@ function PresentationCard({
           <span>{card.treatment}</span>
         </div>
         <span className="clm-state" data-state={card.state}>
-          {statusLabel}
+          {status.label}
         </span>
       </footer>
       <div className="clm-presentation-actions">
@@ -387,7 +376,7 @@ export function Studio({
               <PresentationCard
                 key={card.id}
                 card={card}
-                statusLabel={presentationStatusLabel(card, cards)}
+                status={presentationStatus(card, cards)}
                 busy={busy}
                 onCancel={(selected) => {
                   if (!selected.task) return;
@@ -502,8 +491,7 @@ export function Studio({
           Presentation tasks:{" "}
           {cards
             .map(
-              (card) =>
-                `${card.label} ${presentationStatusLabel(card, cards)}`,
+              (card) => `${card.label} ${presentationStatus(card, cards).label}`,
             )
             .join(", ")}
           .
