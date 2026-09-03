@@ -1,0 +1,56 @@
+{
+  "observedRequest": {
+    "url": "https://api.openai.com/v1/images/edits",
+    "method": "POST",
+    "headerNames": [
+      "authorization",
+      "Idempotency-Key"
+    ],
+    "idempotencyKeyPresent": true,
+    "idempotencyKey": "proof:1788432806:studio:release:74ba8efd-6d11-4bc7-8d6a-3f65088d5cde:attempt:1",
+    "model": "gpt-image-2-2026-04-21",
+    "size": "1024x1024",
+    "quality": "high",
+    "output_format": "png",
+    "n": null,
+    "promptLength": 1321,
+    "referenceImageCount": 1,
+    "referenceImages": [
+      {
+        "name": "identity.png",
+        "type": "image/png",
+        "bytes": 17764
+      }
+    ],
+    "httpStatus": 200,
+    "requestIdHeader": "req_bb6bd6329df74f7b9b1d1938692c715c",
+    "outputBytes": 1236030,
+    "providerRequestId": "openai:1788432916",
+    "latencyMs": 111691
+  },
+  "response": {
+    "created": 1788432916,
+    "background": "opaque",
+    "data": [
+      {
+        "b64_json": "<redacted 1648040 base64 chars>"
+      }
+    ],
+    "output_format": "png",
+    "quality": "high",
+    "size": "1024x1024",
+    "usage": {
+      "input_tokens": 1024,
+      "input_tokens_details": {
+        "image_tokens": 722,
+        "text_tokens": 302
+      },
+      "output_tokens": 7024,
+      "output_tokens_details": {
+        "image_tokens": 7024,
+        "text_tokens": 0
+      },
+      "total_tokens": 8048
+    }
+  }
+}
