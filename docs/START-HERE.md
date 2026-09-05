@@ -2,18 +2,28 @@
 
 Jewelo lets a customer configure a personalized piece, receive four coherent design directions, inspect each direction as product, worn, and motion media, and turn the chosen direction into a quote or order.
 
+## Customer journey (review prototype)
+
+The customer path is no longer "configure, then four competing styles."
+It is name → one look → one sit → 22/32 → four cameras of that piece → request.
+
+Canonical file: `docs/CALEUMS-CUSTOMER-JOURNEY.md`.
+Code: `apps/web/src/features/review/`.
+This is behind `/[locale]/review`. It is not live `/en`.
+
 ## Product truth
 
 Read in order:
 
-1. `docs/CALEUMS-FINAL-E2E-CONTRACT.md`
-2. `docs/PRODUCT-CONTRACT.md`
-3. `docs/FROZEN-UX.md`
-4. `docs/UX-AUDIT.md`
-5. `docs/FINAL-STACK.md`
-6. `docs/ARCHITECTURE.md`
-7. `docs/MEDIA-CONCURRENCY.md`
-8. the active file in `docs/goals/`
+1. `docs/CALEUMS-CUSTOMER-JOURNEY.md` (customer UI / review prototype)
+2. `docs/CALEUMS-FINAL-E2E-CONTRACT.md`
+3. `docs/PRODUCT-CONTRACT.md`
+4. `docs/FROZEN-UX.md`
+5. `docs/UX-AUDIT.md`
+6. `docs/FINAL-STACK.md`
+7. `docs/ARCHITECTURE.md`
+8. `docs/MEDIA-CONCURRENCY.md`
+9. the active file in `docs/goals/`
 
 The old implementation is not a source of architectural truth.
 
