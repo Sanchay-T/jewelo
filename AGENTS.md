@@ -2,7 +2,7 @@
 
 These rules apply to Claude Code, Codex, and other coding agents.
 
-- Read `CLAUDE.md`, `docs/FINAL-STACK.md`, `docs/ARCHITECTURE.md`, and the active goal before changing files.
+- Read `CLAUDE.md`, `docs/FINAL-STACK.md`, `docs/ARCHITECTURE.md`, `docs/CALEUMS-CUSTOMER-JOURNEY.md` (customer UI), and the active goal before changing files.
 - The stack is locked. Do not turn implementation work back into vendor research.
 - Use one goal, one branch, one measurable stopping condition, and one proof packet.
 - Prefer project scripts and official CLI/MCP surfaces over undocumented dashboard clicking.

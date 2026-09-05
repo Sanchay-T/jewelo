@@ -1,0 +1,354 @@
+<!doctype html>
+<!-- Static twin of apps/web/src/features/review. Path: landing → compose → sit → CAST → atelier → request. No GPT Image 2. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CALEUMS</title>
+<style>
+:root{--ivory:#f7f3ec;--paper:#fffdf9;--ink:#10100f;--muted:#6e685f;--line:#ddd5c9;--gold:#a68243}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--ivory);color:var(--ink);font-family:Palatino,Georgia,serif}
+a,button{color:inherit;text-decoration:none;font:inherit;cursor:pointer}
+.bar{height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 18px;border-bottom:1px solid var(--line);background:var(--paper)}
+.brand{letter-spacing:.32em;font-size:11px}
+.nav{display:flex;gap:16px;font-size:12px;letter-spacing:.12em;text-transform:uppercase}
+.dots a{width:28px;height:28px;display:grid;place-items:center;font-size:10px;border:1px solid transparent}
+.dots a.on{border-color:var(--ink)}
+.screen{display:none;min-height:calc(100dvh - 56px)}
+.screen.on{display:grid}
+.hero{place-items:center;padding:24px 16px 48px;text-align:center}
+.hero .slot{width:min(78vw,420px);margin:0 auto 22px}
+.who{font-size:18px;margin:0 0 6px}
+.meta{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin:0 0 18px}
+.cta{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:0 28px;background:var(--ink);color:var(--ivory);letter-spacing:.16em;font-size:11px;text-transform:uppercase;border:0}
+.cta[disabled]{opacity:.4}
+.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.split{grid-template-columns:1.1fr .9fr}
+.pad{padding:24px;display:flex;flex-direction:column;gap:12px}
+.field{width:100%;border:0;border-bottom:1px solid var(--ink);background:transparent;font-size:28px;padding:10px 0;font-family:inherit}
+label{display:block;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+.four{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.three{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.tile{border:1px solid var(--line);background:var(--paper);padding:0;text-align:start}
+.tile.on{outline:1px solid var(--gold)}
+.tile img,.slot img{width:100%;aspect-ratio:1;object-fit:contain;display:block;background:var(--paper)}
+.tile span{display:block;padding:8px 10px;font-size:10px;letter-spacing:.16em;text-transform:uppercase}
+.tile span b{display:block;font-weight:400;color:var(--muted);margin-top:2px}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.chip{min-height:44px;padding:0 16px;border:1px solid var(--line);background:transparent;letter-spacing:.12em;font-size:11px;text-transform:uppercase}
+.chip.on{background:var(--ink);color:var(--ivory)}
+.note{font-size:12px;color:var(--muted);margin:0}
+.crumb{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);margin:0 0 12px}
+.slot{position:relative;margin:0}
+.slot .stage{position:relative;aspect-ratio:1;border:1px solid var(--line);background:var(--paper);overflow:hidden}
+.slot[data-ratio="4-5"] .stage{aspect-ratio:4/5}
+.slot[data-ratio="9-16"] .stage{aspect-ratio:9/16;max-height:58dvh}
+.veil{position:absolute;inset:0;background:color-mix(in srgb,var(--ivory) 16%,transparent);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--gold) 40%,transparent);pointer-events:none}
+.hair{position:absolute;left:0;right:0;top:0;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);animation:sweep 2.4s linear infinite}
+@keyframes sweep{from{transform:translateX(-100%)}to{transform:translateX(100%)}}
+.status{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin:8px 0 0;min-height:16px}
+.film{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.film .tile .stage{aspect-ratio:1}
+.buy{position:sticky;bottom:0;display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 0;background:var(--ivory)}
+.scrim{position:fixed;inset:0;background:rgb(16 16 15 / .4);display:grid;place-items:center;padding:20px;z-index:40}
+.sheet{width:min(440px,100%);background:var(--paper);border:1px solid var(--line);padding:28px 24px;display:flex;flex-direction:column;gap:14px}
+.track{display:flex;overflow-x:auto;scroll-snap-type:x mandatory}
+.track img{flex:0 0 100%;scroll-snap-align:start;height:70dvh;object-fit:contain;background:var(--paper)}
+@media(max-width:800px){.split,.three{grid-template-columns:1fr 1fr}.hero .slot{width:min(92vw,420px)}.buy{flex-direction:column;align-items:stretch}}
+@media(prefers-reduced-motion:reduce){.hair{display:none}}
+</style>
+</head>
+<body>
+<header class="bar">
+  <a class="brand" href="#v1">CALEUMS</a>
+  <nav class="nav">
+    <span class="dots" id="nav"></span>
+    <a href="#atelier">atelier</a>
+    <a href="https://wa.me/?text=CALEUMS" target="_blank" rel="noreferrer">the house</a>
+  </nav>
+</header>
+
+<section class="screen on hero" id="v1">
+  <div>
+    <div class="slot"><div class="stage"><img src="stills/S03-in-frame-medium.jpg" alt=""></div></div>
+    <p class="who">أسماء</p>
+    <p class="meta">18K · made to order · Dubai</p>
+    <a class="cta" href="#compose">Begin with your name</a>
+  </div>
+</section>
+
+<section class="screen" id="v2">
+  <div class="track">
+    <img src="stills/S03-in-frame-medium.jpg" alt="">
+    <img src="stills/S04-in-frame-medium.jpg" alt="">
+    <img src="stills/S18-in-frame-medium.jpg" alt="">
+    <img src="stills/S16-in-frame-medium.jpg" alt="">
+  </div>
+  <div class="pad" style="text-align:center">
+    <a class="cta" href="#compose">Begin with your name</a>
+  </div>
+</section>
+
+<section class="screen split" id="v3">
+  <img src="stills/S04-in-frame-medium.jpg" alt="" style="width:100%;height:100%;object-fit:contain;background:var(--paper)">
+  <div class="pad">
+    <p class="who">أسماء</p>
+    <p class="meta">18K · made to order · Dubai</p>
+    <a class="cta" href="#compose">Begin with your name</a>
+  </div>
+</section>
+
+<section class="screen split" id="v4">
+  <div class="pad">
+    <p class="meta">the metal follows the name</p>
+    <label for="nm">name</label>
+    <input id="nm" class="field" value="">
+    <a class="cta" href="#compose">Begin with your name</a>
+  </div>
+  <div class="pad">
+    <div class="slot"><div class="stage"><img id="live" src="stills/S03-in-frame-medium.jpg" alt=""></div></div>
+    <p class="note" id="liveName">أسماء</p>
+  </div>
+</section>
+
+<section class="screen hero" id="v5" lang="ar" dir="rtl">
+  <div>
+    <div class="slot"><div class="stage"><img src="stills/S03-downwards-short.jpg" alt=""></div></div>
+    <p class="who">نور</p>
+    <p class="meta">١٨ قيراط · حسب الطلب · دبي</p>
+    <a class="cta" href="#compose">ابدأ باسمك</a>
+  </div>
+</section>
+
+<section class="screen split" id="v6">
+  <div class="four" style="padding:16px">
+    <button type="button" class="tile on"><img src="stills/S03-in-frame-medium.jpg" alt=""><span>Window</span></button>
+    <button type="button" class="tile"><img src="stills/S04-in-frame-medium.jpg" alt=""><span>Halo</span></button>
+    <button type="button" class="tile"><img src="stills/S18-in-frame-medium.jpg" alt=""><span>Rails</span></button>
+    <button type="button" class="tile"><img src="stills/S16-in-frame-medium.jpg" alt=""><span>Drop</span></button>
+  </div>
+  <div class="pad">
+    <p class="meta">four looks</p>
+    <a class="cta" href="#compose">Begin with your name</a>
+  </div>
+</section>
+
+<section class="screen split" id="compose">
+  <div class="pad">
+    <p class="crumb">compose</p>
+    <p class="who" id="composeWho">أسماء</p>
+    <div class="slot"><div class="stage"><img id="composeHero" src="stills/S03-in-frame-medium.jpg" alt=""></div></div>
+  </div>
+  <div class="pad">
+    <label for="nm2">name</label>
+    <input id="nm2" class="field" value="">
+    <div class="four" id="looks"></div>
+    <div class="row">
+      <a class="cta ghost" href="#v1">Back</a>
+      <a class="cta" id="toSit" href="#sit">Next</a>
+    </div>
+  </div>
+</section>
+
+<section class="screen split" id="sit">
+  <div class="pad">
+    <p class="crumb" id="sitCrumb">compose / Window</p>
+    <p class="who" id="sitWho">أسماء</p>
+    <div class="slot"><div class="stage"><img id="sitHero" src="stills/S03-in-frame-medium.jpg" alt=""></div></div>
+  </div>
+  <div class="pad">
+    <div class="three" id="sits"></div>
+    <div class="row">
+      <button class="chip" type="button" data-size="22">22 mm</button>
+      <button class="chip on" type="button" data-size="32">32 mm</button>
+    </div>
+    <div class="row">
+      <a class="cta ghost" href="#compose">Back</a>
+      <button class="cta" type="button" id="cast">Cast this name</button>
+    </div>
+  </div>
+</section>
+
+<section class="screen split" id="atelier">
+  <div class="pad">
+    <p class="crumb" id="atCrumb">compose / Window / sit Drop</p>
+    <p class="who" id="atWho">أسماء</p>
+    <div class="slot" id="atHero">
+      <div class="stage">
+        <img id="atHeroImg" src="stills/S03-in-frame-medium.jpg" alt="">
+        <div class="veil" id="atVeil"><span class="hair"></span></div>
+      </div>
+      <p class="status" id="atStatus">casting</p>
+    </div>
+    <p class="note" id="atNote">you can close this. we will keep casting.</p>
+  </div>
+  <div class="pad">
+    <div class="film" id="film"></div>
+    <div class="buy">
+      <p class="note" id="buyLine">أسماء · Window · 32 mm</p>
+      <button class="cta" type="button" id="request" disabled>once a view is ready</button>
+    </div>
+  </div>
+</section>
+
+<div class="scrim" id="sheet" hidden>
+  <div class="sheet" role="dialog">
+    <p class="meta">Request this piece</p>
+    <p class="who" id="sheetWho">أسماء</p>
+    <p class="note" id="sheetLine">Window / Drop / 32 mm<br>18K yellow</p>
+    <label for="spell">spelling</label>
+    <input id="spell" class="field">
+    <div class="row">
+      <a class="cta" id="wa" href="https://wa.me/?text=CALEUMS" target="_blank" rel="noreferrer">WhatsApp the house</a>
+      <button class="cta ghost" type="button" id="send">Send</button>
+    </div>
+    <p class="note" id="sent" hidden>sent. the house has this piece.</p>
+    <button class="cta ghost" type="button" id="closeSheet">Close</button>
+  </div>
+</div>
+
+<script>
+const LOOKS = [
+  {id:'window', file:'S03', en:'Window', cap:'frame'},
+  {id:'halo', file:'S04', en:'Halo', cap:'circle'},
+  {id:'rails', file:'S18', en:'Rails', cap:'bars'},
+  {id:'drop', file:'S16', en:'Drop', cap:'hang'},
+];
+const SITS = [
+  {id:'bar', file:'normal', en:'Bar', cap:'across'},
+  {id:'drop', file:'downwards', en:'Drop', cap:'fall'},
+  {id:'window', file:'in-frame', en:'Window', cap:'inside'},
+];
+const CAMERAS = [
+  {id:'studio', en:'Studio', ready:2600, gen:400, ver:1800},
+  {id:'skin', en:'On skin', ready:4300, gen:900, ver:3400},
+  {id:'close', en:'Close', ready:5900, gen:1400, ver:5000},
+  {id:'dark', en:'Dark', ready:7600, gen:1800, ver:6400, retry:3200},
+];
+const state = {name:'', look:'window', sit:'window', size:32, start:0};
+function len(n){
+  const letters = Array.from(n.replace(/\s+/g,'')).filter(ch=>/\p{L}/u.test(ch));
+  if(!letters.length) return 'medium';
+  if(letters.length<=3) return 'short';
+  if(letters.length>=7) return 'long';
+  return 'medium';
+}
+function src(look, sit, length){
+  const L = LOOKS.find(x=>x.id===look);
+  const S = SITS.find(x=>x.id===sit);
+  const exact = L.file + '-' + S.file + '-' + length + '.jpg';
+  if (L.file === 'S18' && S.file === 'downwards') return 'stills/S18-normal-medium.jpg';
+  return 'stills/' + exact;
+}
+function who(){ return state.name.trim() || 'أسماء'; }
+function show(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('on', s.id===id));
+  document.querySelectorAll('.dots a').forEach(a=>a.classList.toggle('on', a.getAttribute('href')==='#'+id));
+}
+function renderLooks(){
+  const box = document.getElementById('looks');
+  const length = len(state.name);
+  box.innerHTML = LOOKS.map(l=>`<button type="button" class="tile ${l.id===state.look?'on':''}" data-look="${l.id}"><img src="${src(l.id,'window',length)}" alt=""><span>${l.en}<b>${l.cap}</b></span></button>`).join('');
+  const hero = src(state.look,'window',length);
+  document.getElementById('composeHero').src = hero;
+  document.getElementById('composeWho').textContent = who();
+}
+function renderSits(){
+  const length = len(state.name);
+  document.getElementById('sits').innerHTML = SITS.map(s=>`<button type="button" class="tile ${s.id===state.sit?'on':''}" data-sit="${s.id}"><img src="${src(state.look,s.id,length)}" alt=""><span>${s.en}<b>${s.cap}</b></span></button>`).join('');
+  document.getElementById('sitHero').src = src(state.look,state.sit,length);
+  document.getElementById('sitWho').textContent = who();
+  const L = LOOKS.find(x=>x.id===state.look);
+  document.getElementById('sitCrumb').textContent = `compose / ${L.en}`;
+}
+function camState(cam, elapsed){
+  if(elapsed < cam.gen) return 'queued';
+  if(cam.retry && elapsed >= cam.retry && elapsed < cam.retry+900) return 'retrying';
+  if(elapsed < cam.ver) return 'generating';
+  if(elapsed < cam.ready) return 'verifying';
+  return 'ready';
+}
+function word(s){
+  return {queued:'queued', generating:'casting', verifying:'checking the letters', retrying:'trying again', ready:''}[s]||'';
+}
+function renderAtelier(){
+  const elapsed = Date.now()-state.start;
+  const length = len(state.name);
+  const L = LOOKS.find(x=>x.id===state.look);
+  const S = SITS.find(x=>x.id===state.sit);
+  document.getElementById('atWho').textContent = who();
+  document.getElementById('atCrumb').textContent = `compose / ${L.en} / sit ${S.en}`;
+  document.getElementById('buyLine').textContent = `${who()} · ${L.en} · ${S.en} · ${state.size} mm`;
+  document.getElementById('atHeroImg').src = src(state.look,state.sit,length);
+  const studio = camState(CAMERAS[0], elapsed);
+  const veil = document.getElementById('atVeil');
+  veil.hidden = studio==='ready';
+  document.getElementById('atStatus').textContent = word(studio);
+  const ready = CAMERAS.filter(c=>camState(c,elapsed)==='ready').length;
+  document.getElementById('atNote').textContent = ready ? 'a view is ready.' : 'you can close this. we will keep casting.';
+  const req = document.getElementById('request');
+  req.disabled = ready<1;
+  req.textContent = ready ? 'Request this piece' : 'once a view is ready';
+  document.getElementById('film').innerHTML = CAMERAS.map(c=>{
+    const st = camState(c, elapsed);
+    return `<button type="button" class="tile ${st==='ready'?'on':''}"><div class="slot"><div class="stage"><img src="${src(state.look,state.sit,length)}" alt="">${st==='ready'?'':`<div class="veil"><span class="hair"></span></div>`}</div><p class="status">${word(st)}</p></div><span>${c.en}</span></button>`;
+  }).join('');
+  if(ready<4) requestAnimationFrame(renderAtelier);
+}
+const nav = document.getElementById('nav');
+['v1','v2','v3','v4','v5','v6'].forEach(id=>{
+  const a=document.createElement('a'); a.href='#'+id; a.textContent=id.slice(1); nav.appendChild(a);
+});
+document.getElementById('looks').addEventListener('click', e=>{
+  const b=e.target.closest('[data-look]'); if(!b) return; state.look=b.dataset.look; renderLooks();
+});
+document.getElementById('sits').addEventListener('click', e=>{
+  const b=e.target.closest('[data-sit]'); if(!b) return; state.sit=b.dataset.sit; renderSits();
+});
+document.querySelectorAll('[data-size]').forEach(b=>b.addEventListener('click',()=>{
+  state.size=Number(b.dataset.size);
+  document.querySelectorAll('[data-size]').forEach(x=>x.classList.toggle('on', x===b));
+}));
+function syncName(v){
+  state.name=v;
+  document.getElementById('nm').value=v;
+  document.getElementById('nm2').value=v;
+  document.getElementById('liveName').textContent=who();
+  document.getElementById('live').src=src('window','window',len(v));
+  renderLooks();
+}
+document.getElementById('nm').addEventListener('input', e=>syncName(e.target.value));
+document.getElementById('nm2').addEventListener('input', e=>syncName(e.target.value));
+document.getElementById('toSit').addEventListener('click', e=>{
+  if(!state.name.trim()){ e.preventDefault(); }
+});
+document.getElementById('cast').addEventListener('click', ()=>{
+  if(!state.name.trim()){ location.hash='compose'; return; }
+  state.start=Date.now();
+  location.hash='atelier';
+  renderAtelier();
+});
+document.getElementById('request').addEventListener('click', ()=>{
+  document.getElementById('sheet').hidden=false;
+  document.getElementById('sheetWho').textContent=who();
+  const L=LOOKS.find(x=>x.id===state.look); const S=SITS.find(x=>x.id===state.sit);
+  document.getElementById('sheetLine').innerHTML=`${L.en} / ${S.en} / ${state.size} mm<br>18K yellow`;
+  document.getElementById('spell').value=state.name;
+  document.getElementById('wa').href='https://wa.me/?text='+encodeURIComponent(`CALEUMS\n${who()}\n${L.en} / ${S.en} / ${state.size} mm\n18K yellow`);
+});
+document.getElementById('closeSheet').addEventListener('click', ()=>document.getElementById('sheet').hidden=true);
+document.getElementById('send').addEventListener('click', ()=>document.getElementById('sent').hidden=false);
+function route(){
+  const id=(location.hash||'#v1').slice(1);
+  show(id);
+  if(id==='compose') renderLooks();
+  if(id==='sit') renderSits();
+  if(id==='atelier'){ if(!state.start) state.start=Date.now(); renderAtelier(); }
+}
+window.addEventListener('hashchange', route);
+renderLooks();
+route();
+</script>
+</body>
+</html>
