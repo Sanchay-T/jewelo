@@ -8,6 +8,24 @@ import {
 } from "./index";
 
 describe("environment boundaries", () => {
+  it("treats an empty optional URL or key as unset", () => {
+    const parsed = parseBrowserEnv({
+      NEXT_PUBLIC_SENTRY_DSN: "",
+      NEXT_PUBLIC_POSTHOG_KEY: "   ",
+      NEXT_PUBLIC_POSTHOG_HOST: "",
+    });
+    expect(parsed.NEXT_PUBLIC_SENTRY_DSN).toBeUndefined();
+    expect(parsed.NEXT_PUBLIC_POSTHOG_KEY).toBeUndefined();
+    expect(parsed.NEXT_PUBLIC_POSTHOG_HOST).toBeUndefined();
+    const jobs = jobsEnvSchema.safeParse({
+      SUPABASE_URL: "https://example.supabase.co",
+      SUPABASE_SERVICE_ROLE_KEY: "service-role",
+      OPENAI_API_KEY: "",
+    });
+    expect(jobs.success).toBe(true);
+    if (jobs.success) expect(jobs.data.OPENAI_API_KEY).toBeUndefined();
+  });
+
   it("builds with a safe local browser default", () => {
     expect(parseBrowserEnv({}).NEXT_PUBLIC_APP_URL).toBe(
       "http://localhost:3000",

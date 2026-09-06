@@ -1,18 +1,31 @@
 export * from "./load-env";
 import { z } from "zod";
 
+/**
+ * Deployment dashboards and `.env` files often carry `KEY=` with an empty
+ * value for a variable that is intentionally unset. Treat "" (or whitespace)
+ * exactly like an absent variable for every optional field, so an empty
+ * `NEXT_PUBLIC_SENTRY_DSN=` line does not fail `z.url().optional()`.
+ */
+const blankToUndefined = (value: unknown) =>
+  typeof value === "string" && value.trim() === "" ? undefined : value;
+const optionalOf = <T extends z.ZodTypeAny>(schema: T) =>
+  z.preprocess(blankToUndefined, schema.optional());
+
 const url = z.url();
 const nonEmpty = z.string().min(1);
+const optionalUrl = optionalOf(url);
+const optionalNonEmpty = optionalOf(nonEmpty);
 
 export const browserEnvSchema = z
   .object({
     NEXT_PUBLIC_APP_URL: url.default("http://localhost:3000"),
     NEXT_PUBLIC_JEWELO_DATA_MODE: z.enum(["mock", "remote"]).default("mock"),
-    NEXT_PUBLIC_SUPABASE_URL: url.optional(),
-    NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: nonEmpty.optional(),
-    NEXT_PUBLIC_POSTHOG_KEY: nonEmpty.optional(),
-    NEXT_PUBLIC_POSTHOG_HOST: url.optional(),
-    NEXT_PUBLIC_SENTRY_DSN: url.optional(),
+    NEXT_PUBLIC_SUPABASE_URL: optionalUrl,
+    NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: optionalNonEmpty,
+    NEXT_PUBLIC_POSTHOG_KEY: optionalNonEmpty,
+    NEXT_PUBLIC_POSTHOG_HOST: optionalUrl,
+    NEXT_PUBLIC_SENTRY_DSN: optionalUrl,
   })
   .superRefine((value, context) => {
     const hasUrl = value.NEXT_PUBLIC_SUPABASE_URL !== undefined;
@@ -29,14 +42,14 @@ export const browserEnvSchema = z
 export const trustedWebEnvSchema = z.object({
   SUPABASE_URL: url,
   SUPABASE_SERVICE_ROLE_KEY: nonEmpty,
-  SUPABASE_PUBLISHABLE_KEY: nonEmpty.optional(),
-  SHOPIFY_STORE_DOMAIN: nonEmpty.optional(),
-  SHOPIFY_CLIENT_ID: nonEmpty.optional(),
-  SHOPIFY_CLIENT_SECRET: nonEmpty.optional(),
-  SHOPIFY_WEBHOOK_SECRET: nonEmpty.optional(),
-  OPERATOR_EMAIL: nonEmpty.optional(),
-  OPERATOR_PASSPHRASE: nonEmpty.optional(),
-  OPERATOR_SESSION_SECRET: nonEmpty.optional(),
+  SUPABASE_PUBLISHABLE_KEY: optionalNonEmpty,
+  SHOPIFY_STORE_DOMAIN: optionalNonEmpty,
+  SHOPIFY_CLIENT_ID: optionalNonEmpty,
+  SHOPIFY_CLIENT_SECRET: optionalNonEmpty,
+  SHOPIFY_WEBHOOK_SECRET: optionalNonEmpty,
+  OPERATOR_EMAIL: optionalNonEmpty,
+  OPERATOR_PASSPHRASE: optionalNonEmpty,
+  OPERATOR_SESSION_SECRET: optionalNonEmpty,
 });
 
 export const triggerConfigEnvSchema = z.object({
@@ -45,11 +58,11 @@ export const triggerConfigEnvSchema = z.object({
 
 export const jobsEnvSchema = trustedWebEnvSchema
   .extend({
-    TRIGGER_PROJECT_REF: nonEmpty.optional(),
-    TRIGGER_SECRET_KEY: nonEmpty.optional(),
+    TRIGGER_PROJECT_REF: optionalNonEmpty,
+    TRIGGER_SECRET_KEY: optionalNonEmpty,
     PROVIDER_MODE: z.enum(["mock", "real"]).default("mock"),
-    FAL_KEY: nonEmpty.optional(),
-    OPENAI_API_KEY: nonEmpty.optional(),
+    FAL_KEY: optionalNonEmpty,
+    OPENAI_API_KEY: optionalNonEmpty,
     OPENAI_IMAGE_MODEL: z
       .literal("gpt-image-2-2026-04-21")
       .default("gpt-image-2-2026-04-21"),
