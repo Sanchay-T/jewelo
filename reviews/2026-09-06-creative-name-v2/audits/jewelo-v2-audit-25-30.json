@@ -1,0 +1,110 @@
+[
+  {
+    "id": "V2-25",
+    "outputHash": "aca867f6fea4599d323caf170b031d1b9705be909d7d1e964d81a84aefd5d421",
+    "gates": {
+      "identity": "pass",
+      "construction": "pass",
+      "attachments": "needs_review",
+      "selections": "pass",
+      "photography": "pass",
+      "unrequested_content": "pass",
+      "reference_leakage": "pass"
+    },
+    "styleScore": 5,
+    "appealScore": 4,
+    "notes": "Exact Latin readback: Lily, preserving uppercase L, lowercase i/l/y and one round i dot. The dot has a visible narrow stem, L-to-i and i-to-l have short finite-width baseline bridges, and l meets the left y serif through a visible continuous joint. No full backing plate/frame. The left body eyelet is clearly joined to L with a rectangular tab and receives a separate closed connector. On the right, the circular eyelet appears tangent to the sloping y stem; the lower-right crop does not establish a finite-width integral connection rather than touching surfaces. Both connector/chain interlocks are visible, but the right eyelet-to-body joint remains needs_review rather than inferring hidden solder or support. Classical serif forms closely fit the shared Latin specimen. White polished metal, no stones/captions/specimen names. Original and lower quadrant crops inspected.",
+    "reviewer": "adversarial_review",
+    "blinded": true
+  },
+  {
+    "id": "V2-26",
+    "outputHash": "7b71d6d9660f36e26a1f5b297e49795336d31f4e0c226086cc27a0f7ad085d7d",
+    "gates": {
+      "identity": "pass",
+      "construction": "pass",
+      "attachments": "reject",
+      "selections": "pass",
+      "photography": "pass",
+      "unrequested_content": "pass",
+      "reference_leakage": "needs_review"
+    },
+    "styleScore": 5,
+    "appealScore": 3,
+    "notes": "Exact Latin readback: Ava, with correct uppercase A/lowercase v/a and open counters. Two visible local support bridges connect A-to-v and v-to-a; the letters form one continuous body, without a plate or frame. The right eyelet has a visible tab connected to a and receives a separate connector. The left chain instead ends in an eyelet with a rectangular stub suspended above and entirely detached from A. That is not a second integral body attachment, so attachments reject. The detached rectangle resembles the generic tab in the shared hardware example; copying versus an assembly error is uncertain while blinded, so reference_leakage is needs_review. Strong classical serif fit and polished white metal; no stones, labels or specimen names. Original and lower quadrant crops inspected.",
+    "reviewer": "adversarial_review",
+    "blinded": true
+  },
+  {
+    "id": "V2-27",
+    "gates": {
+      "identity": "pass",
+      "construction": "pass",
+      "attachments": "pass",
+      "selections": "pass",
+      "photography": "pass",
+      "unrequested_content": "pass",
+      "reference_leakage": "pass"
+    },
+    "styleScore": 5,
+    "appealScore": 4,
+    "notes": "Exact Latin readback: Lily, preserving uppercase L, lowercase i/l/y and one round i dot. The dot has a visible finite-width rectangular support stem. A short bridge joins the upturned L foot to i; i-to-l has a finite mid-height bridge and small baseline bridge; l-to-y has a continuous finite-width upper-serif joint. The left integral eyelet has a broad root at the upper L serif; the right eyelet has a stepped extension from the upper-right y serif. Each receives a separate connector with a readable chain interlock. No full backing plate/frame, stones, captions or specimen names. Strong classic serif fit, coherent white-metal highlights and shadows. Original and lower quadrant crops inspected.",
+    "outputHash": "3ab3f4520afde72381c30058f3134f9f39ccec5d971daae754b541701d185f6f",
+    "reviewer": "adversarial_review",
+    "blinded": true
+  },
+  {
+    "id": "V2-28",
+    "gates": {
+      "identity": "pass",
+      "construction": "pass",
+      "attachments": "pass",
+      "selections": "pass",
+      "photography": "pass",
+      "unrequested_content": "pass",
+      "reference_leakage": "pass"
+    },
+    "styleScore": 5,
+    "appealScore": 4,
+    "notes": "Exact Latin readback: Ava, uppercase A and lowercase v/a, with clear counters. Finite-width local horizontal bridges near the baseline join A-to-v and v-to-a. These are short support segments, not a full plate/frame. Both circular body eyelets have clear short outside tabs integrated into the outer letters, separate closed connectors and readable cable-chain interlocks. Strong classical serif fit and polished white-metal appearance. No stones, captions, specimen names or unrelated decoration. Original and lower quadrant crops inspected.",
+    "outputHash": "94a444d5cf86b01b8175356d925d900d638be6bae6ecde987bbf02a9f9e33660",
+    "reviewer": "adversarial_review",
+    "blinded": true
+  },
+  {
+    "id": "V2-29",
+    "gates": {
+      "identity": "reject",
+      "construction": "reject",
+      "attachments": "pass",
+      "selections": "pass",
+      "photography": "pass",
+      "unrequested_content": "pass",
+      "reference_leakage": "pass"
+    },
+    "styleScore": 4,
+    "appealScore": 3,
+    "notes": "Arabic readback: أيمان, not the requested إيمان: the initial alif carries a hamza above instead of below. Two ya diamonds are present below the correct group and each has a visible support stem. The final nun has one diamond above, but that diamond is entirely detached with no visible metal support. Main letter groups are linked by finite-width horizontal bridges: right initial alif to the middle group, and middle alif to final nun. Thus main-body support does not cure the floating nun dot. Both end eyelets are integral to the outer letters and receive separate closed connectors with readable cable-chain interlocks. Naskh-like classical forms remain a close style fit despite spelling failure. White-metal render, no stones/captions or definite specimen-name leakage. Original and lower crops plus upper-right crop inspected.",
+    "outputHash": "6c35cfa3124c306eb66e28716c3967769a5efae9aae670d619aa0a0607482cbb",
+    "reviewer": "adversarial_review",
+    "blinded": true
+  },
+  {
+    "id": "V2-30",
+    "gates": {
+      "identity": "pass",
+      "construction": "pass",
+      "attachments": "pass",
+      "selections": "pass",
+      "photography": "pass",
+      "unrequested_content": "pass",
+      "reference_leakage": "pass"
+    },
+    "styleScore": 5,
+    "appealScore": 4,
+    "notes": "Exact Latin readback: Lily, correct uppercase L and lowercase i/l/y with one round i dot. The round dot visibly meets a finite-width raised support atop i. Short finite-width baseline bridges connect L-to-i and i-to-l; a narrow horizontal local bar links l to the y stem. No full plate/frame. Left eyelet is integrated into a curved extension of the upper L serif; right eyelet has a clear stem integrated with the upper-right y serif. Both receive separate closed connectors, with readable apertures and cable-chain interlocks. Strong classical serif lettering, coherent polished white-metal appearance, no stones/captions/specimen names. Original and all four quadrant crops inspected.",
+    "outputHash": "7bcaf7db0c4ede78df4daf2e592bda17fea11ec37cc9431eaf6f8a4d1db9535e",
+    "reviewer": "adversarial_review",
+    "blinded": true
+  }
+]

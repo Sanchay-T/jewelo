@@ -1,0 +1,1027 @@
+{
+  "version": "2.0.0",
+  "rendererSha256": "82b28177416d9d4447f459997de5d1db87e00ec9be1a7d2d803b5532b1db45c1",
+  "renderer": "hb-view (HarfBuzz) 14.3.0",
+  "referenceGenerationCredits": 0,
+  "references": [
+    {
+      "id": "lettering-ar",
+      "role": "lettering",
+      "tag": "lettering",
+      "path": "reviews/2026-09-06-creative-name-v2/references/lettering-ar.png",
+      "sha256": "c62ffcca3335a356511cb98675abbe4787ff78a6ea6b365ce0f8e65ad27049b6",
+      "script": "Arabic",
+      "words": [
+        "مريم",
+        "فاطمة",
+        "جلال",
+        "أمينة"
+      ],
+      "font": "NotoNaskhArabic-Regular.ttf",
+      "fontSha256": "67b5a525a661b607971fbd3f96a81b89d3a768e74534fca84f18ac97e6fab72f",
+      "fontLicense": "OFL-1.1",
+      "shaping": [
+        {
+          "text": "مريم",
+          "glyphs": [
+            {
+              "g": 75,
+              "cl": 3,
+              "dx": 0,
+              "dy": 0,
+              "ax": 528,
+              "ay": 0
+            },
+            {
+              "g": 325,
+              "cl": 2,
+              "dx": 31,
+              "dy": -17,
+              "ax": 0,
+              "ay": 0
+            },
+            {
+              "g": 21,
+              "cl": 2,
+              "dx": 0,
+              "dy": 0,
+              "ax": 343,
+              "ay": 0
+            },
+            {
+              "g": 29,
+              "cl": 1,
+              "dx": 0,
+              "dy": 0,
+              "ax": 404,
+              "ay": 0
+            },
+            {
+              "g": 77,
+              "cl": 0,
+              "dx": 0,
+              "dy": 0,
+              "ax": 456,
+              "ay": 0
+            }
+          ],
+          "renderHash": "532d883c84cb62fcf95d91c7cf3275083d5f5c0575dee8d2ebb33166a4d33f91"
+        },
+        {
+          "text": "فاطمة",
+          "glyphs": [
+            {
+              "g": 294,
+              "cl": 4,
+              "dx": 91,
+              "dy": -294,
+              "ax": 0,
+              "ay": 0
+            },
+            {
+              "g": 81,
+              "cl": 4,
+              "dx": 0,
+              "dy": 0,
+              "ax": 452,
+              "ay": 0
+            },
+            {
+              "g": 76,
+              "cl": 3,
+              "dx": 0,
+              "dy": 0,
+              "ax": 413,
+              "ay": 0
+            },
+            {
+              "g": 43,
+              "cl": 2,
+              "dx": 0,
+              "dy": 0,
+              "ax": 660,
+              "ay": 0
+            },
+            {
+              "g": 9,
+              "cl": 1,
+              "dx": 0,
+              "dy": 0,
+              "ax": 253,
+              "ay": 0
+            },
+            {
+              "g": 288,
+              "cl": 0,
+              "dx": 115,
+              "dy": -227,
+              "ax": 0,
+              "ay": 0
+            },
+            {
+              "g": 51,
+              "cl": 0,
+              "dx": 0,
+              "dy": 0,
+              "ax": 420,
+              "ay": 0
+            }
+          ],
+          "renderHash": "94d99dc45a003915d3db8bf21eacc889c23115005a0523a22b106fe7bd7377ca"
+        },
+        {
+          "text": "جلال",
+          "glyphs": [
+            {
+              "g": 66,
+              "cl": 3,
+              "dx": 0,
+              "dy": 0,
+              "ax": 595,
+              "ay": 0
+            },
+            {
+              "g": 11,
+              "cl": 2,
+              "dx": 0,
+              "dy": 0,
+              "ax": 300,
+              "ay": 0
+            },
+            {
+              "g": 69,
+              "cl": 1,
+              "dx": 0,
+              "dy": 0,
+              "ax": 310,
+              "ay": 0
+            },
+            {
+              "g": 323,
+              "cl": 0,
+              "dx": 283,
+              "dy": -8,
+              "ax": 0,
+              "ay": 0
+            },
+            {
+              "g": 25,
+              "cl": 0,
+              "dx": 0,
+              "dy": 0,
+              "ax": 636,
+              "ay": 0
+            }
+          ],
+          "renderHash": "1360676faaf2650c218f272bc8732fe9430f95d4fe82a3e2577b17273f9d148a"
+        },
+        {
+          "text": "أمينة",
+          "glyphs": [
+            {
+              "g": 294,
+              "cl": 4,
+              "dx": 91,
+              "dy": -294,
+              "ax": 0,
+              "ay": 0
+            },
+            {
+              "g": 81,
+              "cl": 4,
+              "dx": 0,
+              "dy": 0,
+              "ax": 452,
+              "ay": 0
+            },
+            {
+              "g": 288,
+              "cl": 3,
+              "dx": 85,
+              "dy": -428,
+              "ax": 0,
+              "ay": 0
+            },
+            {
+              "g": 16,
+              "cl": 3,
+              "dx": 0,
+              "dy": 0,
+              "ax": 292,
+              "ay": 0
+            },
+            {
+              "g": 325,
+              "cl": 2,
+              "dx": 54,
+              "dy": -17,
+              "ax": 0,
+              "ay": 0
+            },
+            {
+              "g": 18,
+              "cl": 2,
+              "dx": 0,
+              "dy": 0,
+              "ax": 360,
+              "ay": 0
+            },
+            {
+              "g": 77,
+              "cl": 1,
+              "dx": 0,
+              "dy": 0,
+              "ax": 456,
+              "ay": 0
+            },
+            {
+              "g": 305,
+              "cl": 0,
+              "dx": 46,
+              "dy": -15,
+              "ax": 0,
+              "ay": 0
+            },
+            {
+              "g": 8,
+              "cl": 0,
+              "dx": 0,
+              "dy": 0,
+              "ax": 238,
+              "ay": 0
+            }
+          ],
+          "renderHash": "67c8c9c30f3d252d0c6611eb131c86a24f7f8e242b4f7183f72f2e96f2fa94dc"
+        }
+      ],
+      "preflight": {
+        "status": "pass",
+        "sha256": "c62ffcca3335a356511cb98675abbe4787ff78a6ea6b365ce0f8e65ad27049b6",
+        "reviewers": [
+          "root",
+          "plan_reviewer"
+        ],
+        "scope": "Visual reference-role preflight; not manufacturing certification.",
+        "observation": "Exact specimen spelling and identifying marks preserved; natural HarfBuzz shaping."
+      },
+      "roleDescription": "Lettering style only; sample words are not customer identity."
+    },
+    {
+      "id": "lettering-en",
+      "role": "lettering",
+      "tag": "lettering",
+      "path": "reviews/2026-09-06-creative-name-v2/references/lettering-en.png",
+      "sha256": "e6ca39f12d87ab454576974f048ec0004d508d2275e6d9cd458834307af26735",
+      "script": "English",
+      "words": [
+        "Amelia",
+        "George",
+        "Sophia",
+        "James"
+      ],
+      "font": "PlayfairDisplay-SemiBold.ttf",
+      "fontSha256": "c40f2293766a503bc70cce9e512ef844a4ccb7cbcde792fe2ea31d191917d8d6",
+      "fontLicense": "OFL-1.1",
+      "shaping": [
+        {
+          "text": "Amelia",
+          "glyphs": [
+            {
+              "g": 1,
+              "cl": 0,
+              "dx": 0,
+              "dy": 0,
+              "ax": 630,
+              "ay": 0
+            },
+            {
+              "g": 286,
+              "cl": 1,
+              "dx": 0,
+              "dy": 0,
+              "ax": 888,
+              "ay": 0
+            },
+            {
+              "g": 225,
+              "cl": 2,
+              "dx": 0,
+              "dy": 0,
+              "ax": 506,
+              "ay": 0
+            },
+            {
+              "g": 280,
+              "cl": 3,
+              "dx": 0,
+              "dy": 0,
+              "ax": 286,
+              "ay": 0
+            },
+            {
+              "g": 259,
+              "cl": 4,
+              "dx": 0,
+              "dy": 0,
+              "ax": 293,
+              "ay": 0
+            },
+            {
+              "g": 190,
+              "cl": 5,
+              "dx": 0,
+              "dy": 0,
+              "ax": 498,
+              "ay": 0
+            }
+          ],
+          "renderHash": "73a7b8850c36677ad27f0bf8e4669feeba6146bc848c946a5389100daea569e8"
+        },
+        {
+          "text": "George",
+          "glyphs": [
+            {
+              "g": 57,
+              "cl": 0,
+              "dx": 0,
+              "dy": 0,
+              "ax": 703,
+              "ay": 0
+            },
+            {
+              "g": 225,
+              "cl": 1,
+              "dx": 0,
+              "dy": 0,
+              "ax": 506,
+              "ay": 0
+            },
+            {
+              "g": 294,
+              "cl": 2,
+              "dx": 0,
+              "dy": 0,
+              "ax": 548,
+              "ay": 0
+            },
+            {
+              "g": 322,
+              "cl": 3,
+              "dx": 0,
+              "dy": 0,
+              "ax": 445,
+              "ay": 0
+            },
+            {
+              "g": 247,
+              "cl": 4,
+              "dx": 0,
+              "dy": 0,
+              "ax": 518,
+              "ay": 0
+            },
+            {
+              "g": 225,
+              "cl": 5,
+              "dx": 0,
+              "dy": 0,
+              "ax": 506,
+              "ay": 0
+            }
+          ],
+          "renderHash": "c25157fdd3352a388662f7f95b27f9474f02d8f103e3113584156be739ae246d"
+        },
+        {
+          "text": "Sophia",
+          "glyphs": [
+            {
+              "g": 132,
+              "cl": 0,
+              "dx": 0,
+              "dy": 0,
+              "ax": 540,
+              "ay": 0
+            },
+            {
+              "g": 294,
+              "cl": 1,
+              "dx": 0,
+              "dy": 0,
+              "ax": 548,
+              "ay": 0
+            },
+            {
+              "g": 319,
+              "cl": 2,
+              "dx": 0,
+              "dy": 0,
+              "ax": 581,
+              "ay": 0
+            },
+            {
+              "g": 255,
+              "cl": 3,
+              "dx": 0,
+              "dy": 0,
+              "ax": 588,
+              "ay": 0
+            },
+            {
+              "g": 259,
+              "cl": 4,
+              "dx": 0,
+              "dy": 0,
+              "ax": 293,
+              "ay": 0
+            },
+            {
+              "g": 190,
+              "cl": 5,
+              "dx": 0,
+              "dy": 0,
+              "ax": 498,
+              "ay": 0
+            }
+          ],
+          "renderHash": "dba8f54c8d52befb10343271fdfe588bc113e2cafe465765af68ecba709ff323"
+        },
+        {
+          "text": "James",
+          "glyphs": [
+            {
+              "g": 82,
+              "cl": 0,
+              "dx": 0,
+              "dy": 0,
+              "ax": 304,
+              "ay": 0
+            },
+            {
+              "g": 190,
+              "cl": 1,
+              "dx": 0,
+              "dy": 0,
+              "ax": 498,
+              "ay": 0
+            },
+            {
+              "g": 286,
+              "cl": 2,
+              "dx": 0,
+              "dy": 0,
+              "ax": 888,
+              "ay": 0
+            },
+            {
+              "g": 225,
+              "cl": 3,
+              "dx": 0,
+              "dy": 0,
+              "ax": 506,
+              "ay": 0
+            },
+            {
+              "g": 326,
+              "cl": 4,
+              "dx": 0,
+              "dy": 0,
+              "ax": 447,
+              "ay": 0
+            }
+          ],
+          "renderHash": "9442edd6f968f31b3f89405f5cd2191f019e35161209ebd68084096dd858d5ab"
+        }
+      ],
+      "preflight": {
+        "status": "pass",
+        "sha256": "e6ca39f12d87ab454576974f048ec0004d508d2275e6d9cd458834307af26735",
+        "reviewers": [
+          "root",
+          "plan_reviewer"
+        ],
+        "scope": "Visual reference-role preflight; not manufacturing certification.",
+        "observation": "Exact specimen spelling and identifying marks preserved; natural HarfBuzz shaping."
+      },
+      "roleDescription": "Lettering style only; sample words are not customer identity."
+    },
+    {
+      "id": "hardware",
+      "role": "hardware",
+      "tag": "hardware",
+      "path": "reviews/2026-09-06-creative-name-v2/references/hardware.png",
+      "sha256": "38fa0377be00b1ca7eb3076c92e4ab04252d3da73749c5a9be1262f7bf3cec27",
+      "preflight": {
+        "status": "pass",
+        "sha256": "38fa0377be00b1ca7eb3076c92e4ab04252d3da73749c5a9be1262f7bf3cec27",
+        "reviewers": [
+          "root",
+          "plan_reviewer"
+        ],
+        "scope": "Visual reference-role preflight; not manufacturing certification.",
+        "observation": "Neutral tab, integral eyelet, separate connector and alternating links show coherent front/behind interlocks."
+      },
+      "roleDescription": "One integral body eyelet, separate perpendicular closed connector and first alternating cable links. Relationship only; not pendant outline. Apply at both body attachments.",
+      "geometry": {
+        "bodyComponents": 1,
+        "eyeletOuterRadius": 36,
+        "eyeletBoreRadius": 20,
+        "connectorCenterY": -29,
+        "connectorRadius": 29,
+        "tubeRadius": 4.8,
+        "firstLinkCenterY": -63,
+        "firstLinkRadius": 22,
+        "units": "reference pixels, not mm",
+        "projection": "oblique z-buffer; visible front/behind"
+      },
+      "limitations": [
+        "Visual relationship specimen, not manufacturing CAD or strength certification."
+      ]
+    },
+    {
+      "id": "spelling-ar-liyan",
+      "role": "spelling",
+      "tag": "spelling",
+      "path": "reviews/2026-09-06-creative-name-v2/references/spelling-ar-liyan.png",
+      "sha256": "1853b3985159cfdb79932db5378f5d4f134384fcde9e8b1716591901510c8305",
+      "script": "Arabic",
+      "words": [
+        "ليان"
+      ],
+      "font": "NotoNaskhArabic-Regular.ttf",
+      "fontSha256": "67b5a525a661b607971fbd3f96a81b89d3a768e74534fca84f18ac97e6fab72f",
+      "fontLicense": "OFL-1.1",
+      "shaping": [
+        {
+          "text": "ليان",
+          "glyphs": [
+            {
+              "g": 288,
+              "cl": 3,
+              "dx": 204,
+              "dy": -515,
+              "ax": 0,
+              "ay": 0
+            },
+            {
+              "g": 78,
+              "cl": 3,
+              "dx": 0,
+              "dy": 0,
+              "ax": 586,
+              "ay": 0
+            },
+            {
+              "g": 9,
+              "cl": 2,
+              "dx": 0,
+              "dy": 0,
+              "ax": 253,
+              "ay": 0
+            },
+            {
+              "g": 325,
+              "cl": 1,
+              "dx": 54,
+              "dy": -17,
+              "ax": 0,
+              "ay": 0
+            },
+            {
+              "g": 18,
+              "cl": 1,
+              "dx": 0,
+              "dy": 0,
+              "ax": 360,
+              "ay": 0
+            },
+            {
+              "g": 70,
+              "cl": 0,
+              "dx": 0,
+              "dy": 0,
+              "ax": 212,
+              "ay": 0
+            }
+          ],
+          "renderHash": "f6a34f3d5b7f355680382d1d14240cfd6f4dc47ad54384808c2114ac2449f1fe"
+        }
+      ],
+      "preflight": {
+        "status": "pass",
+        "sha256": "1853b3985159cfdb79932db5378f5d4f134384fcde9e8b1716591901510c8305",
+        "reviewers": [
+          "root",
+          "plan_reviewer"
+        ],
+        "scope": "Visual reference-role preflight; not manufacturing certification.",
+        "observation": "Exact specimen spelling and identifying marks preserved; natural HarfBuzz shaping."
+      },
+      "roleDescription": "Exact spelling and reading order only; not a pendant silhouette."
+    },
+    {
+      "id": "spelling-ar-noor",
+      "role": "spelling",
+      "tag": "spelling",
+      "path": "reviews/2026-09-06-creative-name-v2/references/spelling-ar-noor.png",
+      "sha256": "e1a427512370acfd51286d05669ca1a9eabf0e84744520e2afb80813e51e4a02",
+      "script": "Arabic",
+      "words": [
+        "نور"
+      ],
+      "font": "NotoNaskhArabic-Regular.ttf",
+      "fontSha256": "67b5a525a661b607971fbd3f96a81b89d3a768e74534fca84f18ac97e6fab72f",
+      "fontLicense": "OFL-1.1",
+      "shaping": [
+        {
+          "text": "نور",
+          "glyphs": [
+            {
+              "g": 28,
+              "cl": 2,
+              "dx": 0,
+              "dy": 0,
+              "ax": 386,
+              "ay": 0
+            },
+            {
+              "g": 96,
+              "cl": 1,
+              "dx": 0,
+              "dy": 0,
+              "ax": 468,
+              "ay": 0
+            },
+            {
+              "g": 288,
+              "cl": 0,
+              "dx": 65,
+              "dy": -308,
+              "ax": 0,
+              "ay": 0
+            },
+            {
+              "g": 19,
+              "cl": 0,
+              "dx": 0,
+              "dy": 0,
+              "ax": 275,
+              "ay": 0
+            }
+          ],
+          "renderHash": "f60f940a497dbc5b53e821771d6abdafbc113e553791fb76947f8382880a8a69"
+        }
+      ],
+      "preflight": {
+        "status": "pass",
+        "sha256": "e1a427512370acfd51286d05669ca1a9eabf0e84744520e2afb80813e51e4a02",
+        "reviewers": [
+          "root",
+          "plan_reviewer"
+        ],
+        "scope": "Visual reference-role preflight; not manufacturing certification.",
+        "observation": "Exact specimen spelling and identifying marks preserved; natural HarfBuzz shaping."
+      },
+      "roleDescription": "Exact spelling and reading order only; not a pendant silhouette."
+    },
+    {
+      "id": "spelling-ar-iman",
+      "role": "spelling",
+      "tag": "spelling",
+      "path": "reviews/2026-09-06-creative-name-v2/references/spelling-ar-iman.png",
+      "sha256": "b76575d751d30d997127fb065f0e7d3a0ebc977d83fa87a47ea0655c01e7fd43",
+      "script": "Arabic",
+      "words": [
+        "إيمان"
+      ],
+      "font": "NotoNaskhArabic-Regular.ttf",
+      "fontSha256": "67b5a525a661b607971fbd3f96a81b89d3a768e74534fca84f18ac97e6fab72f",
+      "fontLicense": "OFL-1.1",
+      "shaping": [
+        {
+          "text": "إيمان",
+          "glyphs": [
+            {
+              "g": 288,
+              "cl": 4,
+              "dx": 204,
+              "dy": -515,
+              "ax": 0,
+              "ay": 0
+            },
+            {
+              "g": 78,
+              "cl": 4,
+              "dx": 0,
+              "dy": 0,
+              "ax": 586,
+              "ay": 0
+            },
+            {
+              "g": 9,
+              "cl": 3,
+              "dx": 0,
+              "dy": 0,
+              "ax": 253,
+              "ay": 0
+            },
+            {
+              "g": 76,
+              "cl": 2,
+              "dx": 0,
+              "dy": 0,
+              "ax": 413,
+              "ay": 0
+            },
+            {
+              "g": 325,
+              "cl": 1,
+              "dx": 31,
+              "dy": -17,
+              "ax": 0,
+              "ay": 0
+            },
+            {
+              "g": 21,
+              "cl": 1,
+              "dx": 0,
+              "dy": 0,
+              "ax": 343,
+              "ay": 0
+            },
+            {
+              "g": 333,
+              "cl": 0,
+              "dx": 66,
+              "dy": -48,
+              "ax": 0,
+              "ay": 0
+            },
+            {
+              "g": 8,
+              "cl": 0,
+              "dx": 0,
+              "dy": 0,
+              "ax": 238,
+              "ay": 0
+            }
+          ],
+          "renderHash": "83ffd89d0bf691182717b6466ef7480557a9674d25321574e39faed608210cb6"
+        }
+      ],
+      "preflight": {
+        "status": "pass",
+        "sha256": "b76575d751d30d997127fb065f0e7d3a0ebc977d83fa87a47ea0655c01e7fd43",
+        "reviewers": [
+          "root",
+          "plan_reviewer"
+        ],
+        "scope": "Visual reference-role preflight; not manufacturing certification.",
+        "observation": "Exact specimen spelling and identifying marks preserved; natural HarfBuzz shaping."
+      },
+      "roleDescription": "Exact spelling and reading order only; not a pendant silhouette."
+    },
+    {
+      "id": "spelling-en-ava",
+      "role": "spelling",
+      "tag": "spelling",
+      "path": "reviews/2026-09-06-creative-name-v2/references/spelling-en-ava.png",
+      "sha256": "3202104c338ff55ea459a8a40c5e7776aeee4213380b12c342a292032bc3b66a",
+      "script": "English",
+      "words": [
+        "Ava"
+      ],
+      "font": "PlayfairDisplay-SemiBold.ttf",
+      "fontSha256": "c40f2293766a503bc70cce9e512ef844a4ccb7cbcde792fe2ea31d191917d8d6",
+      "fontLicense": "OFL-1.1",
+      "shaping": [
+        {
+          "text": "Ava",
+          "glyphs": [
+            {
+              "g": 1,
+              "cl": 0,
+              "dx": 0,
+              "dy": 0,
+              "ax": 630,
+              "ay": 0
+            },
+            {
+              "g": 359,
+              "cl": 1,
+              "dx": 0,
+              "dy": 0,
+              "ax": 483,
+              "ay": 0
+            },
+            {
+              "g": 190,
+              "cl": 2,
+              "dx": 0,
+              "dy": 0,
+              "ax": 498,
+              "ay": 0
+            }
+          ],
+          "renderHash": "884ac073fa65421a51aac6ed562ac7c683381f870a129a00fbb574fc4633cba3"
+        }
+      ],
+      "preflight": {
+        "status": "pass",
+        "sha256": "3202104c338ff55ea459a8a40c5e7776aeee4213380b12c342a292032bc3b66a",
+        "reviewers": [
+          "root",
+          "plan_reviewer"
+        ],
+        "scope": "Visual reference-role preflight; not manufacturing certification.",
+        "observation": "Exact specimen spelling and identifying marks preserved; natural HarfBuzz shaping."
+      },
+      "roleDescription": "Exact spelling and reading order only; not a pendant silhouette."
+    },
+    {
+      "id": "spelling-en-lily",
+      "role": "spelling",
+      "tag": "spelling",
+      "path": "reviews/2026-09-06-creative-name-v2/references/spelling-en-lily.png",
+      "sha256": "927c5623d6535bc0fd5bf3f7acf38915eabc82c39e4dc63bb0a1b90b0bbe416f",
+      "script": "English",
+      "words": [
+        "Lily"
+      ],
+      "font": "PlayfairDisplay-SemiBold.ttf",
+      "fontSha256": "c40f2293766a503bc70cce9e512ef844a4ccb7cbcde792fe2ea31d191917d8d6",
+      "fontLicense": "OFL-1.1",
+      "shaping": [
+        {
+          "text": "Lily",
+          "glyphs": [
+            {
+              "g": 87,
+              "cl": 0,
+              "dx": 0,
+              "dy": 0,
+              "ax": 588,
+              "ay": 0
+            },
+            {
+              "g": 259,
+              "cl": 1,
+              "dx": 0,
+              "dy": 0,
+              "ax": 293,
+              "ay": 0
+            },
+            {
+              "g": 280,
+              "cl": 2,
+              "dx": 0,
+              "dy": 0,
+              "ax": 286,
+              "ay": 0
+            },
+            {
+              "g": 366,
+              "cl": 3,
+              "dx": 0,
+              "dy": 0,
+              "ax": 504,
+              "ay": 0
+            }
+          ],
+          "renderHash": "9d47d3fd93f5ea26e5d39d8e7a7e2bc43b990203d846fcad69afd417614e38d7"
+        }
+      ],
+      "preflight": {
+        "status": "pass",
+        "sha256": "927c5623d6535bc0fd5bf3f7acf38915eabc82c39e4dc63bb0a1b90b0bbe416f",
+        "reviewers": [
+          "root",
+          "plan_reviewer"
+        ],
+        "scope": "Visual reference-role preflight; not manufacturing certification.",
+        "observation": "Exact specimen spelling and identifying marks preserved; natural HarfBuzz shaping."
+      },
+      "roleDescription": "Exact spelling and reading order only; not a pendant silhouette."
+    },
+    {
+      "id": "spelling-en-christopher",
+      "role": "spelling",
+      "tag": "spelling",
+      "path": "reviews/2026-09-06-creative-name-v2/references/spelling-en-christopher.png",
+      "sha256": "d027f9ca58e885fc69fc31541f3f94c180ebf5a76c08fbc7ee980b64ae891ba8",
+      "script": "English",
+      "words": [
+        "Christopher"
+      ],
+      "font": "PlayfairDisplay-SemiBold.ttf",
+      "fontSha256": "c40f2293766a503bc70cce9e512ef844a4ccb7cbcde792fe2ea31d191917d8d6",
+      "fontLicense": "OFL-1.1",
+      "shaping": [
+        {
+          "text": "Christopher",
+          "glyphs": [
+            {
+              "g": 26,
+              "cl": 0,
+              "dx": 0,
+              "dy": 0,
+              "ax": 688,
+              "ay": 0
+            },
+            {
+              "g": 255,
+              "cl": 1,
+              "dx": 0,
+              "dy": 0,
+              "ax": 588,
+              "ay": 0
+            },
+            {
+              "g": 322,
+              "cl": 2,
+              "dx": 0,
+              "dy": 0,
+              "ax": 445,
+              "ay": 0
+            },
+            {
+              "g": 259,
+              "cl": 3,
+              "dx": 0,
+              "dy": 0,
+              "ax": 293,
+              "ay": 0
+            },
+            {
+              "g": 326,
+              "cl": 4,
+              "dx": 0,
+              "dy": 0,
+              "ax": 447,
+              "ay": 0
+            },
+            {
+              "g": 334,
+              "cl": 5,
+              "dx": 0,
+              "dy": 0,
+              "ax": 354,
+              "ay": 0
+            },
+            {
+              "g": 294,
+              "cl": 6,
+              "dx": 0,
+              "dy": 0,
+              "ax": 548,
+              "ay": 0
+            },
+            {
+              "g": 319,
+              "cl": 7,
+              "dx": 0,
+              "dy": 0,
+              "ax": 581,
+              "ay": 0
+            },
+            {
+              "g": 255,
+              "cl": 8,
+              "dx": 0,
+              "dy": 0,
+              "ax": 588,
+              "ay": 0
+            },
+            {
+              "g": 225,
+              "cl": 9,
+              "dx": 0,
+              "dy": 0,
+              "ax": 506,
+              "ay": 0
+            },
+            {
+              "g": 322,
+              "cl": 10,
+              "dx": 0,
+              "dy": 0,
+              "ax": 445,
+              "ay": 0
+            }
+          ],
+          "renderHash": "ebb15ee850017ee0c7d9c807539ec821bc52ca4b70b1b352c1691adf724a0790"
+        }
+      ],
+      "preflight": {
+        "status": "pass",
+        "sha256": "d027f9ca58e885fc69fc31541f3f94c180ebf5a76c08fbc7ee980b64ae891ba8",
+        "reviewers": [
+          "root",
+          "plan_reviewer"
+        ],
+        "scope": "Visual reference-role preflight; not manufacturing certification.",
+        "observation": "Exact specimen spelling and identifying marks preserved; natural HarfBuzz shaping."
+      },
+      "roleDescription": "Exact spelling and reading order only; not a pendant silhouette."
+    }
+  ]
+}

@@ -1,0 +1,139 @@
+{
+  "status": "screening_review_complete_not_qualified",
+  "submitted": 48,
+  "terminal": 48,
+  "semantic": {
+    "total": 48,
+    "pass": 33,
+    "reject": 9,
+    "needs_review": 6,
+    "pending": 0
+  },
+  "overall": {
+    "total": 48,
+    "pass": 30,
+    "reject": 14,
+    "needs_review": 4,
+    "pending": 0
+  },
+  "methods": {
+    "assembly": {
+      "total": 16,
+      "pass": 14,
+      "reject": 2,
+      "needs_review": 0,
+      "pending": 0
+    },
+    "body": {
+      "total": 16,
+      "pass": 10,
+      "reject": 5,
+      "needs_review": 1,
+      "pending": 0
+    },
+    "text": {
+      "total": 16,
+      "pass": 6,
+      "reject": 7,
+      "needs_review": 3,
+      "pending": 0
+    }
+  },
+  "families": {
+    "classical/assembly": {
+      "total": 4,
+      "pass": 3,
+      "reject": 1,
+      "needs_review": 0,
+      "pending": 0
+    },
+    "rails/body": {
+      "total": 4,
+      "pass": 4,
+      "reject": 0,
+      "needs_review": 0,
+      "pending": 0
+    },
+    "classical/body": {
+      "total": 4,
+      "pass": 1,
+      "reject": 2,
+      "needs_review": 1,
+      "pending": 0
+    },
+    "origami/assembly": {
+      "total": 4,
+      "pass": 3,
+      "reject": 1,
+      "needs_review": 0,
+      "pending": 0
+    },
+    "rails/assembly": {
+      "total": 4,
+      "pass": 4,
+      "reject": 0,
+      "needs_review": 0,
+      "pending": 0
+    },
+    "rails/text": {
+      "total": 4,
+      "pass": 0,
+      "reject": 4,
+      "needs_review": 0,
+      "pending": 0
+    },
+    "framed/body": {
+      "total": 4,
+      "pass": 4,
+      "reject": 0,
+      "needs_review": 0,
+      "pending": 0
+    },
+    "framed/assembly": {
+      "total": 4,
+      "pass": 4,
+      "reject": 0,
+      "needs_review": 0,
+      "pending": 0
+    },
+    "origami/body": {
+      "total": 4,
+      "pass": 1,
+      "reject": 3,
+      "needs_review": 0,
+      "pending": 0
+    },
+    "framed/text": {
+      "total": 4,
+      "pass": 3,
+      "reject": 0,
+      "needs_review": 1,
+      "pending": 0
+    },
+    "classical/text": {
+      "total": 4,
+      "pass": 2,
+      "reject": 1,
+      "needs_review": 1,
+      "pending": 0
+    },
+    "origami/text": {
+      "total": 4,
+      "pass": 1,
+      "reject": 2,
+      "needs_review": 1,
+      "pending": 0
+    }
+  },
+  "baselineCredits": 308802,
+  "lastCheckpointCredits": 307842,
+  "observedWorkspaceDebit": 960,
+  "providerFailures": 0,
+  "qualification": {
+    "qualified": false,
+    "requests": 0,
+    "views": 0,
+    "lower95": null
+  },
+  "reviewScope": "AI-assisted visual R&D assessment; no claim of human script certification, physical dimensions or manufacturing accuracy"
+}

@@ -1,0 +1,32 @@
+✔ four nested methods change reference roles while keeping all semantic slots fixed (7.132042ms)
+✔ native name, hamza, supplied marks, case and original source string are preserved (0.822833ms)
+✔ inactive second name, layout, gem and empty optional request never leak into prompts (0.1515ms)
+✔ reference requirements enforce ordered roles, tags, preflight and hash shape (0.454541ms)
+✔ all reference assets are copied and frozen without freezing caller objects (0.115917ms)
+✔ paid scope rejects other families and all unsupported active configuration choices (0.27425ms)
+✔ three continuation views independently bind to the same original Studio identity (0.324625ms)
+✔ continuation rejects missing anchors, name/config mismatch, unreviewed sources and view chains (0.508958ms)
+✔ preparation freezes48 cases and journal rejects changed compiled settings, references and order (372.754292ms)
+✔ verified workspace and explicit policy replace a precaution without asserting a quota reset (2.054834ms)
+✔ atomic transaction persists once, rolls back exceptions, and fails closed on an existing lock (29.466709ms)
+✔ duplicate trial rejects changed prompts and max two active reservations is enforced (0.352959ms)
+✔ uncertain submission blocks all new work and cannot be cleared by timeout failure (0.325292ms)
+✔ a reused provider task ID creates ambiguity instead of pretending a second unique paid result (0.184917ms)
+✔ pending reservations survive checkpoints and reserve exposure includes reconciled spend (0.198666ms)
+✔ checkpoint cannot erase an unsubmitted reservation; reported zero balance blocks spending (0.111917ms)
+✔ confirmed task debit over 41 cannot be cleared; unrelated workspace debits require evidence (0.647208ms)
+✔ checkpoints are mandatory after 20 submissions and screening endpoint (2.29575ms)
+✔ selection requires 12 of 12 hard passes, every style score at least 3, then median and fewer references (4.822ms)
+✔ selection rejects incomplete, reused-manifest, unreviewed, and forged winning evidence (4.123625ms)
+✔ audit is bound to original bytes and rubric, includes leakage and style score, and is immutable (0.609041ms)
+✔ continuity binds each fixed first repetition anchor and caps the whole new campaign at 60 (4.406417ms)
+✔ actual excess debit can exhaust 2460 credits before the 60-submission ceiling (2.969125ms)
+✔ cheap earlier intervals cannot mask an unexplained expensive later interval (0.280042ms)
+ℹ tests 24
+ℹ suites 0
+ℹ pass 24
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 450.497

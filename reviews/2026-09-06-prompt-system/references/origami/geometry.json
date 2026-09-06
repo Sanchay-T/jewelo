@@ -1,0 +1,36 @@
+{
+  "family": "origami",
+  "sourceSha256": "62c80f1f0a86b9639a3bdbf292686d91107a02b33e6363a79a0a4030b2381b6d",
+  "source": "source/muhammad-geometry.png",
+  "bodyMaskHash": "3510fd0376106adc5cae294cd7fae74336267757797b4e07e07b2e15aee7708a",
+  "bodyHash": "c798322d8865d7a8fff751fd69d1ce5f5511a22e1f352a9eff35d026480be997",
+  "assemblyHash": "4e9cf1e2637c3534bcbc4d634d93ad2890d0420ce0d7d1cfa8860cba78b104ca",
+  "geometryHash": "3510fd0376106adc5cae294cd7fae74336267757797b4e07e07b2e15aee7708a",
+  "components": 1,
+  "componentMoves": 0,
+  "supportChecks": [],
+  "eyelets": [
+    {
+      "x": 323,
+      "y": 155,
+      "outerRadiusPx": 36,
+      "boreRadiusPx": 20
+    },
+    {
+      "x": 1119,
+      "y": 227,
+      "outerRadiusPx": 36,
+      "boreRadiusPx": 20
+    }
+  ],
+  "coordinateUnits": "reference pixels, not mm",
+  "physicalDimensionsVerified": false,
+  "constructionDetail": "Lettering itself has continuous shallow alternating folded planes; no separate folded carrier. The silhouette and original eyelets remain fixed.",
+  "foldHeightPixels": 14,
+  "status": "pending_visual_preflight",
+  "limitations": [
+    "Experimental appearance geometry; no manufacturing strength certification.",
+    "Source mask comes from prior reviewed artifact; original font/shaping lineage is inherited, not re-typeset.",
+    "Complete assembly reference shows pendant and initial chain links, not clasp or measured full necklace."
+  ]
+}

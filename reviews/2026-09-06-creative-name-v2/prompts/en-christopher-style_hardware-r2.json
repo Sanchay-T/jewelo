@@ -1,0 +1,322 @@
+{
+  "version": "jewelo-creative-prompt-lab-2.0.0",
+  "kind": "new_design",
+  "config": {
+    "name": "Christopher",
+    "script": "English",
+    "construction": "Classical",
+    "lettering": "Classic",
+    "metal": "White gold",
+    "coverage": "No stones",
+    "size": 32,
+    "chain": "Cable",
+    "twoNames": false,
+    "engraving": ""
+  },
+  "configHash": "d8e14e4b9ec67044ed959b10bb83b75eaa878f2848a91c7c922121b301308a63",
+  "sourceStrings": {
+    "name": "Christopher"
+  },
+  "recipeHash": "8a2d8105a3bcd36a3a6c433aa0776c49772ea158da4d1121893e728c20078409",
+  "templateHash": "34fd65418d80a2c4b7501303bb4c1b63194ec772a93fd95ff317fae9c5c99763",
+  "prompt": "Create one photorealistic Studio photograph of a newly designed custom-name necklace.\n\nCUSTOMER IDENTITY\nThe pendant itself spells \"Christopher\". English, left-to-right reading. Preserve exact spelling, capitalization, supplied marks and meaningful spaces. One upright name formed from metal, not a printed caption.\nClassic English serif lettering with Playfair character: clear serifs, balanced stroke contrast, rounded bowls and readable mixed-case proportions. Preserve the requested capitalization.\n\nREFERENCE ROLES\nImage 1, @lettering: use only its lettering traits and calligraphic character for the requested name. Its sample writing is not the customer name. Do not copy the sample name or its exact composition and contour.\nImage 2, @hardware: use only the body-eyelet, separate-connector and first-chain-link relationship. Place the two attachments to suit this new name. Customer selections control finish and chain; do not copy unrelated shapes, proportions or writing.\n\nDESIGN FREEDOM\nCreate an original name-specific composition in the selected lettering style. You may adapt letter proportions, spacing, permitted flourishes and discreet support placement while preserving spelling and correct shaping. The selected construction and hardware relationship are fixed; no pre-existing pendant silhouette is prescribed.\n\nCONSTRUCTION\nUpright lettering forms the main rigid pendant body. Discreet bridges support separated components while retaining recognizable letter groups.\nSupport every separated letter group, identifying dot, hamza and supplied mark with discreet metal bridges. Keep bridges visibly distinguishable from linguistic strokes and preserve the reading, mark count and placement, intentional counters and linguistic breaks. Each bridge visibly meets the components it supports with a continuous metal connection; point contacts, truncated supports and purported hidden connections are insufficient. Do not add a surrounding frame or full backing plate.\nExactly two integral body eyelets carry the pendant. Each body eyelet receives one separate closed connecting ring; that same connector passes through the first Cable-chain link. Keep eyelets, connectors and alternating chain links distinguishable, with plausible interlocks and visible apertures. Use both body eyelets; no unused eyelets, extra body holes or loose chain ends beside the pendant. Continue the chain beyond the photographic frame.\n\nCUSTOMER SELECTIONS\nWhite gold appearance with a clean polished finish. Stone-free metal, without gemstones or empty stone seats. Cable chain with alternating oval links. Nominal selected size label: 32 mm; this image does not certify dimensions. Do not print measurement labels.\n\nPHOTOGRAPHY\nNear-front catalog photograph on matte ivory. One large soft source with gentle fill and neutral white balance. Entire pendant and both attachment junctions visible, with sufficient depth of field to inspect the construction. Show the lettering, support bridges and both attachment junctions clearly enough to inspect their connections.\n\nVISIBLE REQUIREMENTS\nRetain intentional letter counters, linguistic spaces and hardware apertures. Supports must preserve legibility and meet their intended components. No captions, specimen writing, reference labels, logos or unrelated decoration. Use coherent reflections and contact shadows with readable metal edges; do not conceal a critical connection with glare or blur.",
+  "promptHash": "dc16826a3738d56fd54d2801e9d12c7190a928830e8cc35bd3ecb05bab2ab36a",
+  "method": "style_hardware",
+  "view": "Studio",
+  "ratio": "1:1",
+  "model": "gpt-image-2",
+  "quality": null,
+  "imageSize": null,
+  "referenceDescriptors": [
+    {
+      "id": "lettering-en",
+      "role": "lettering",
+      "tag": "lettering",
+      "path": "reviews/2026-09-06-creative-name-v2/references/lettering-en.png",
+      "sha256": "e6ca39f12d87ab454576974f048ec0004d508d2275e6d9cd458834307af26735",
+      "script": "English",
+      "words": [
+        "Amelia",
+        "George",
+        "Sophia",
+        "James"
+      ],
+      "font": "PlayfairDisplay-SemiBold.ttf",
+      "fontSha256": "c40f2293766a503bc70cce9e512ef844a4ccb7cbcde792fe2ea31d191917d8d6",
+      "fontLicense": "OFL-1.1",
+      "shaping": [
+        {
+          "text": "Amelia",
+          "glyphs": [
+            {
+              "g": 1,
+              "cl": 0,
+              "dx": 0,
+              "dy": 0,
+              "ax": 630,
+              "ay": 0
+            },
+            {
+              "g": 286,
+              "cl": 1,
+              "dx": 0,
+              "dy": 0,
+              "ax": 888,
+              "ay": 0
+            },
+            {
+              "g": 225,
+              "cl": 2,
+              "dx": 0,
+              "dy": 0,
+              "ax": 506,
+              "ay": 0
+            },
+            {
+              "g": 280,
+              "cl": 3,
+              "dx": 0,
+              "dy": 0,
+              "ax": 286,
+              "ay": 0
+            },
+            {
+              "g": 259,
+              "cl": 4,
+              "dx": 0,
+              "dy": 0,
+              "ax": 293,
+              "ay": 0
+            },
+            {
+              "g": 190,
+              "cl": 5,
+              "dx": 0,
+              "dy": 0,
+              "ax": 498,
+              "ay": 0
+            }
+          ],
+          "renderHash": "73a7b8850c36677ad27f0bf8e4669feeba6146bc848c946a5389100daea569e8"
+        },
+        {
+          "text": "George",
+          "glyphs": [
+            {
+              "g": 57,
+              "cl": 0,
+              "dx": 0,
+              "dy": 0,
+              "ax": 703,
+              "ay": 0
+            },
+            {
+              "g": 225,
+              "cl": 1,
+              "dx": 0,
+              "dy": 0,
+              "ax": 506,
+              "ay": 0
+            },
+            {
+              "g": 294,
+              "cl": 2,
+              "dx": 0,
+              "dy": 0,
+              "ax": 548,
+              "ay": 0
+            },
+            {
+              "g": 322,
+              "cl": 3,
+              "dx": 0,
+              "dy": 0,
+              "ax": 445,
+              "ay": 0
+            },
+            {
+              "g": 247,
+              "cl": 4,
+              "dx": 0,
+              "dy": 0,
+              "ax": 518,
+              "ay": 0
+            },
+            {
+              "g": 225,
+              "cl": 5,
+              "dx": 0,
+              "dy": 0,
+              "ax": 506,
+              "ay": 0
+            }
+          ],
+          "renderHash": "c25157fdd3352a388662f7f95b27f9474f02d8f103e3113584156be739ae246d"
+        },
+        {
+          "text": "Sophia",
+          "glyphs": [
+            {
+              "g": 132,
+              "cl": 0,
+              "dx": 0,
+              "dy": 0,
+              "ax": 540,
+              "ay": 0
+            },
+            {
+              "g": 294,
+              "cl": 1,
+              "dx": 0,
+              "dy": 0,
+              "ax": 548,
+              "ay": 0
+            },
+            {
+              "g": 319,
+              "cl": 2,
+              "dx": 0,
+              "dy": 0,
+              "ax": 581,
+              "ay": 0
+            },
+            {
+              "g": 255,
+              "cl": 3,
+              "dx": 0,
+              "dy": 0,
+              "ax": 588,
+              "ay": 0
+            },
+            {
+              "g": 259,
+              "cl": 4,
+              "dx": 0,
+              "dy": 0,
+              "ax": 293,
+              "ay": 0
+            },
+            {
+              "g": 190,
+              "cl": 5,
+              "dx": 0,
+              "dy": 0,
+              "ax": 498,
+              "ay": 0
+            }
+          ],
+          "renderHash": "dba8f54c8d52befb10343271fdfe588bc113e2cafe465765af68ecba709ff323"
+        },
+        {
+          "text": "James",
+          "glyphs": [
+            {
+              "g": 82,
+              "cl": 0,
+              "dx": 0,
+              "dy": 0,
+              "ax": 304,
+              "ay": 0
+            },
+            {
+              "g": 190,
+              "cl": 1,
+              "dx": 0,
+              "dy": 0,
+              "ax": 498,
+              "ay": 0
+            },
+            {
+              "g": 286,
+              "cl": 2,
+              "dx": 0,
+              "dy": 0,
+              "ax": 888,
+              "ay": 0
+            },
+            {
+              "g": 225,
+              "cl": 3,
+              "dx": 0,
+              "dy": 0,
+              "ax": 506,
+              "ay": 0
+            },
+            {
+              "g": 326,
+              "cl": 4,
+              "dx": 0,
+              "dy": 0,
+              "ax": 447,
+              "ay": 0
+            }
+          ],
+          "renderHash": "9442edd6f968f31b3f89405f5cd2191f019e35161209ebd68084096dd858d5ab"
+        }
+      ],
+      "preflight": {
+        "status": "pass",
+        "sha256": "e6ca39f12d87ab454576974f048ec0004d508d2275e6d9cd458834307af26735",
+        "reviewers": [
+          "root",
+          "plan_reviewer"
+        ],
+        "scope": "Visual reference-role preflight; not manufacturing certification.",
+        "observation": "Exact specimen spelling and identifying marks preserved; natural HarfBuzz shaping."
+      },
+      "roleDescription": "Lettering style only; sample words are not customer identity."
+    },
+    {
+      "id": "hardware",
+      "role": "hardware",
+      "tag": "hardware",
+      "path": "reviews/2026-09-06-creative-name-v2/references/hardware.png",
+      "sha256": "38fa0377be00b1ca7eb3076c92e4ab04252d3da73749c5a9be1262f7bf3cec27",
+      "preflight": {
+        "status": "pass",
+        "sha256": "38fa0377be00b1ca7eb3076c92e4ab04252d3da73749c5a9be1262f7bf3cec27",
+        "reviewers": [
+          "root",
+          "plan_reviewer"
+        ],
+        "scope": "Visual reference-role preflight; not manufacturing certification.",
+        "observation": "Neutral tab, integral eyelet, separate connector and alternating links show coherent front/behind interlocks."
+      },
+      "roleDescription": "One integral body eyelet, separate perpendicular closed connector and first alternating cable links. Relationship only; not pendant outline. Apply at both body attachments.",
+      "geometry": {
+        "bodyComponents": 1,
+        "eyeletOuterRadius": 36,
+        "eyeletBoreRadius": 20,
+        "connectorCenterY": -29,
+        "connectorRadius": 29,
+        "tubeRadius": 4.8,
+        "firstLinkCenterY": -63,
+        "firstLinkRadius": 22,
+        "units": "reference pixels, not mm",
+        "projection": "oblique z-buffer; visible front/behind"
+      },
+      "limitations": [
+        "Visual relationship specimen, not manufacturing CAD or strength certification."
+      ]
+    }
+  ],
+  "slots": {
+    "identity": "The pendant itself spells \"Christopher\". English, left-to-right reading. Preserve exact spelling, capitalization, supplied marks and meaningful spaces. One upright name formed from metal, not a printed caption.",
+    "style": "Classic English serif lettering with Playfair character: clear serifs, balanced stroke contrast, rounded bowls and readable mixed-case proportions. Preserve the requested capitalization.",
+    "construction": "Upright lettering forms the main rigid pendant body. Discreet bridges support separated components while retaining recognizable letter groups.",
+    "support": "Support every separated letter group, identifying dot, hamza and supplied mark with discreet metal bridges. Keep bridges visibly distinguishable from linguistic strokes and preserve the reading, mark count and placement, intentional counters and linguistic breaks. Each bridge visibly meets the components it supports with a continuous metal connection; point contacts, truncated supports and purported hidden connections are insufficient. Do not add a surrounding frame or full backing plate.",
+    "attachments": "Exactly two integral body eyelets carry the pendant. Each body eyelet receives one separate closed connecting ring; that same connector passes through the first Cable-chain link. Keep eyelets, connectors and alternating chain links distinguishable, with plausible interlocks and visible apertures. Use both body eyelets; no unused eyelets, extra body holes or loose chain ends beside the pendant. Continue the chain beyond the photographic frame.",
+    "selections": "White gold appearance with a clean polished finish. Stone-free metal, without gemstones or empty stone seats. Cable chain with alternating oval links. Nominal selected size label: 32 mm; this image does not certify dimensions. Do not print measurement labels.",
+    "photography": "Near-front catalog photograph on matte ivory. One large soft source with gentle fill and neutral white balance. Entire pendant and both attachment junctions visible, with sufficient depth of field to inspect the construction. Show the lettering, support bridges and both attachment junctions clearly enough to inspect their connections.",
+    "invariants": "Retain intentional letter counters, linguistic spaces and hardware apertures. Supports must preserve legibility and meet their intended components. No captions, specimen writing, reference labels, logos or unrelated decoration. Use coherent reflections and contact shadows with readable metal edges; do not conceal a critical connection with glare or blur.",
+    "references": "Image 1, @lettering: use only its lettering traits and calligraphic character for the requested name. Its sample writing is not the customer name. Do not copy the sample name or its exact composition and contour.\nImage 2, @hardware: use only the body-eyelet, separate-connector and first-chain-link relationship. Place the two attachments to suit this new name. Customer selections control finish and chain; do not copy unrelated shapes, proportions or writing.",
+    "creative": "Create an original name-specific composition in the selected lettering style. You may adapt letter proportions, spacing, permitted flourishes and discreet support placement while preserving spelling and correct shaping. The selected construction and hardware relationship are fixed; no pre-existing pendant silhouette is prescribed."
+  },
+  "release": {
+    "version": "jewelo-creative-prompt-lab-2.0.0",
+    "status": "candidate",
+    "productionApproved": false,
+    "qualification": "untested",
+    "templateHash": "34fd65418d80a2c4b7501303bb4c1b63194ec772a93fd95ff317fae9c5c99763"
+  }
+}

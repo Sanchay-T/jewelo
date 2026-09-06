@@ -1,0 +1,328 @@
+[
+  {
+    "id": "R01",
+    "config": {
+      "script": "Arabic",
+      "construction": "Classical",
+      "lettering": "Diwani",
+      "metal": "Yellow gold",
+      "coverage": "Accent",
+      "gem": "Natural diamond",
+      "size": 32,
+      "chain": "Cable",
+      "twoNames": false,
+      "name": "أسماء",
+      "engraving": ""
+    },
+    "configHash": "c9f2c7c4a8b8a5e8dc136295ba5034a9412956e05ed6dc4124f948c35d5d75ac",
+    "preflight": "not_prepared",
+    "developmentCase": "D009"
+  },
+  {
+    "id": "R02",
+    "config": {
+      "script": "English",
+      "construction": "Classical",
+      "lettering": "Kufi",
+      "layout": "Infinity",
+      "metal": "Rose gold",
+      "coverage": "Partial pavé",
+      "gem": "Lab diamond",
+      "size": 32,
+      "chain": "Rolo",
+      "twoNames": true,
+      "name": "James",
+      "secondName": "Benjamin",
+      "engraving": ""
+    },
+    "configHash": "2b14a30dd7d604cb39a52664f888b3a2f04abed7abdd449de3305c2ddfc1f17f",
+    "preflight": "not_prepared",
+    "developmentCase": "D003"
+  },
+  {
+    "id": "R03",
+    "config": {
+      "script": "English",
+      "construction": "Classical",
+      "lettering": "Minimal",
+      "layout": "Stacked",
+      "metal": "Yellow gold",
+      "coverage": "Full pavé",
+      "gem": "Lab diamond",
+      "size": 32,
+      "chain": "Rolo",
+      "twoNames": true,
+      "name": "Charlotte",
+      "secondName": "Ava",
+      "engraving": ""
+    },
+    "configHash": "7a94205805151b4b7d840b375c03bcd927ac2b24ba9f3a9937fdc4927544c89a",
+    "preflight": "not_prepared",
+    "developmentCase": "D015"
+  },
+  {
+    "id": "R04",
+    "config": {
+      "script": "Arabic",
+      "construction": "Classical",
+      "lettering": "Signature",
+      "layout": "Interlocked",
+      "metal": "White gold",
+      "coverage": "No stones",
+      "size": 32,
+      "chain": "Box",
+      "twoNames": true,
+      "name": "زينب",
+      "secondName": "عبد الرحمن",
+      "engraving": ""
+    },
+    "configHash": "ef4763b75f181e484c93722d9605db8e6b07c5f7aabce5a5a6b8bb4673a41a24",
+    "preflight": "not_prepared",
+    "developmentCase": "D037"
+  },
+  {
+    "id": "R05",
+    "config": {
+      "script": "Arabic",
+      "construction": "Origami ribbon",
+      "lettering": "Minimal",
+      "layout": "Side by side",
+      "metal": "Rose gold",
+      "coverage": "Partial pavé",
+      "gem": "Pink sapphire",
+      "size": 22,
+      "chain": "Curb",
+      "twoNames": true,
+      "name": "آلاء",
+      "secondName": "جنى",
+      "engraving": ""
+    },
+    "configHash": "ae239c1cbc16b8708fc1ad15970e979ef8040214c0f566b821259a0b646a6d60",
+    "preflight": "not_prepared",
+    "developmentCase": "D007"
+  },
+  {
+    "id": "R06",
+    "config": {
+      "script": "English",
+      "construction": "Origami ribbon",
+      "lettering": "Diwani",
+      "layout": "Interlocked",
+      "metal": "Yellow gold",
+      "coverage": "Full pavé",
+      "gem": "Natural diamond",
+      "size": 22,
+      "chain": "Curb",
+      "twoNames": true,
+      "name": "Charlotte",
+      "secondName": "Olivia",
+      "engraving": ""
+    },
+    "configHash": "5a65747c4f5dcf78abb922edfeb81a3b2809fb23f5cdbe9ed818d4016fb0aaf9",
+    "preflight": "not_prepared",
+    "developmentCase": "D002"
+  },
+  {
+    "id": "R07",
+    "config": {
+      "script": "English",
+      "construction": "Origami ribbon",
+      "lettering": "Thuluth inspired",
+      "layout": "Connected heart",
+      "metal": "White gold",
+      "coverage": "Full pavé",
+      "gem": "Natural diamond",
+      "size": 32,
+      "chain": "Curb",
+      "twoNames": true,
+      "name": "Alexandra",
+      "secondName": "Lia",
+      "engraving": ""
+    },
+    "configHash": "12fd8abe9582eb2c00dc6d2b6b6ae3a3cbfb10894cfc04fed9bac1add3533d69",
+    "preflight": "not_prepared",
+    "developmentCase": "D091"
+  },
+  {
+    "id": "R08",
+    "config": {
+      "script": "English",
+      "construction": "Origami ribbon",
+      "lettering": "Classic",
+      "layout": "Connected heart",
+      "metal": "White gold",
+      "coverage": "No stones",
+      "size": 32,
+      "chain": "Rolo",
+      "twoNames": true,
+      "name": "Charlotte",
+      "secondName": "Grace",
+      "engraving": ""
+    },
+    "configHash": "675497218d13faace785671a400b6071f826689d1e0450d5ad2cff2879be4638",
+    "preflight": "not_prepared",
+    "developmentCase": "D010"
+  },
+  {
+    "id": "R09",
+    "config": {
+      "script": "Arabic",
+      "construction": "Framed minimal",
+      "lettering": "Thuluth inspired",
+      "layout": "Connected heart",
+      "metal": "Yellow gold",
+      "coverage": "Partial pavé",
+      "gem": "Emerald",
+      "size": 22,
+      "chain": "Rolo",
+      "twoNames": true,
+      "name": "أسماء",
+      "secondName": "أحمد",
+      "engraving": ""
+    },
+    "configHash": "9027fab572da5e18156bacd6117153eef87fca9e2d2f1c32323d3093d233b8bc",
+    "preflight": "not_prepared",
+    "developmentCase": "D005"
+  },
+  {
+    "id": "R10",
+    "config": {
+      "script": "Arabic",
+      "construction": "Framed minimal",
+      "lettering": "Classic",
+      "layout": "Stacked",
+      "metal": "Rose gold",
+      "coverage": "Accent",
+      "gem": "Blue sapphire",
+      "size": 22,
+      "chain": "Box",
+      "twoNames": true,
+      "name": "فاطمة",
+      "secondName": "أسماء",
+      "engraving": ""
+    },
+    "configHash": "efd71298e7c0e365c27014a5842df54987e80f5a5ecea2ce451140986d73b82e",
+    "preflight": "not_prepared",
+    "developmentCase": "D004"
+  },
+  {
+    "id": "R11",
+    "config": {
+      "script": "Arabic",
+      "construction": "Framed minimal",
+      "lettering": "Signature",
+      "layout": "Infinity",
+      "metal": "Yellow gold",
+      "coverage": "Full pavé",
+      "gem": "Ruby",
+      "size": 22,
+      "chain": "Box",
+      "twoNames": true,
+      "name": "عبد الرحمن",
+      "secondName": "أحمد",
+      "engraving": ""
+    },
+    "configHash": "bf080ed402fe86def74a1bd60a0f889fa0e5fc57973c94d63c11efc033ad194a",
+    "preflight": "not_prepared",
+    "developmentCase": "D012"
+  },
+  {
+    "id": "R12",
+    "config": {
+      "script": "English",
+      "construction": "Framed minimal",
+      "lettering": "Minimal",
+      "layout": "Infinity",
+      "metal": "White gold",
+      "coverage": "No stones",
+      "size": 22,
+      "chain": "Cable",
+      "twoNames": true,
+      "name": "Noor",
+      "secondName": "Oliver",
+      "engraving": ""
+    },
+    "configHash": "a8f49be0e9b57c25eb733ba1c2cb1558f4f3807ef6c0c4d592491abecfbdb512",
+    "preflight": "not_prepared",
+    "developmentCase": "D026"
+  },
+  {
+    "id": "R13",
+    "config": {
+      "script": "Arabic",
+      "construction": "Diamond rails",
+      "lettering": "Signature",
+      "layout": "Side by side",
+      "metal": "White gold",
+      "coverage": "Full pavé",
+      "gem": "Ruby",
+      "size": 32,
+      "chain": "Cable",
+      "twoNames": true,
+      "name": "أسماء",
+      "secondName": "عبد الله",
+      "engraving": ""
+    },
+    "configHash": "06699100d829c0a024c7d7d6dadbd0b0267085c7a869d92342af1ad304170193",
+    "preflight": "not_prepared",
+    "developmentCase": "D001"
+  },
+  {
+    "id": "R14",
+    "config": {
+      "script": "Arabic",
+      "construction": "Diamond rails",
+      "lettering": "Diwani",
+      "layout": "Interlocked",
+      "metal": "White gold",
+      "coverage": "Partial pavé",
+      "gem": "Lab diamond",
+      "size": 22,
+      "chain": "Box",
+      "twoNames": true,
+      "name": "أسماء",
+      "secondName": "أحمد",
+      "engraving": ""
+    },
+    "configHash": "18fce1366863b8231144a25e246e3fa9a17eee09d3fc7ffff3443e980c35b513",
+    "preflight": "not_prepared",
+    "developmentCase": "D013"
+  },
+  {
+    "id": "R15",
+    "config": {
+      "script": "English",
+      "construction": "Diamond rails",
+      "lettering": "Kufi",
+      "metal": "Rose gold",
+      "coverage": "Full pavé",
+      "gem": "Emerald",
+      "size": 22,
+      "chain": "Cable",
+      "twoNames": false,
+      "name": "Christopher",
+      "engraving": ""
+    },
+    "configHash": "489764eb5ac56bb17e2263dc2f189757434d888631e1d4e1a0c11f92e89180d9",
+    "preflight": "not_prepared",
+    "developmentCase": "D008"
+  },
+  {
+    "id": "R16",
+    "config": {
+      "script": "Arabic",
+      "construction": "Diamond rails",
+      "lettering": "Diwani",
+      "metal": "White gold",
+      "coverage": "No stones",
+      "size": 22,
+      "chain": "Box",
+      "twoNames": false,
+      "name": "ليلى",
+      "engraving": ""
+    },
+    "configHash": "a21e17529f002b74d73872b4a7e3a0a9c66e65b7e610b3ab574ebe3a33aea5ba",
+    "preflight": "not_prepared",
+    "developmentCase": "D035"
+  }
+]

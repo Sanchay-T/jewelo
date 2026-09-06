@@ -1,0 +1,25 @@
+Create one photorealistic Studio photograph of a newly designed custom-name necklace.
+
+CUSTOMER IDENTITY
+{{identity}}
+{{style}}
+
+REFERENCE ROLES
+{{references}}
+
+DESIGN FREEDOM
+{{creative}}
+
+CONSTRUCTION
+{{construction}}
+{{support}}
+{{attachments}}
+
+CUSTOMER SELECTIONS
+{{selections}}
+
+PHOTOGRAPHY
+{{photography}}
+
+VISIBLE REQUIREMENTS
+{{invariants}}

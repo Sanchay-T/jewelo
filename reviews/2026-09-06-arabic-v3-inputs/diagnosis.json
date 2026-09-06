@@ -1,0 +1,1064 @@
+{
+  "sourceLedgerHash": "ffdd496782ec6d862f56ac0884950355f408422f597641ab886efae1d638fe1c",
+  "arabic": {
+    "total": 24,
+    "pass": 1,
+    "reject": 19,
+    "uncertain": 4,
+    "gates": {
+      "identity": {
+        "pass": 6,
+        "reject": 15,
+        "uncertain": 3
+      },
+      "construction": {
+        "pass": 6,
+        "reject": 12,
+        "uncertain": 6
+      },
+      "attachments": {
+        "pass": 15,
+        "reject": 6,
+        "uncertain": 3
+      },
+      "selections": {
+        "pass": 24,
+        "reject": 0,
+        "uncertain": 0
+      },
+      "photography": {
+        "pass": 24,
+        "reject": 0,
+        "uncertain": 0
+      },
+      "unrequested_content": {
+        "pass": 22,
+        "reject": 1,
+        "uncertain": 1
+      },
+      "reference_leakage": {
+        "pass": 19,
+        "reject": 0,
+        "uncertain": 5
+      }
+    }
+  },
+  "byName": {
+    "ليان": {
+      "total": 8,
+      "pass": 0,
+      "reject": 7,
+      "uncertain": 1,
+      "gates": {
+        "identity": {
+          "pass": 3,
+          "reject": 5,
+          "uncertain": 0
+        },
+        "construction": {
+          "pass": 2,
+          "reject": 5,
+          "uncertain": 1
+        },
+        "attachments": {
+          "pass": 5,
+          "reject": 0,
+          "uncertain": 3
+        },
+        "selections": {
+          "pass": 8,
+          "reject": 0,
+          "uncertain": 0
+        },
+        "photography": {
+          "pass": 8,
+          "reject": 0,
+          "uncertain": 0
+        },
+        "unrequested_content": {
+          "pass": 6,
+          "reject": 1,
+          "uncertain": 1
+        },
+        "reference_leakage": {
+          "pass": 7,
+          "reject": 0,
+          "uncertain": 1
+        }
+      }
+    },
+    "نور": {
+      "total": 8,
+      "pass": 1,
+      "reject": 4,
+      "uncertain": 3,
+      "gates": {
+        "identity": {
+          "pass": 3,
+          "reject": 2,
+          "uncertain": 3
+        },
+        "construction": {
+          "pass": 3,
+          "reject": 1,
+          "uncertain": 4
+        },
+        "attachments": {
+          "pass": 5,
+          "reject": 3,
+          "uncertain": 0
+        },
+        "selections": {
+          "pass": 8,
+          "reject": 0,
+          "uncertain": 0
+        },
+        "photography": {
+          "pass": 8,
+          "reject": 0,
+          "uncertain": 0
+        },
+        "unrequested_content": {
+          "pass": 8,
+          "reject": 0,
+          "uncertain": 0
+        },
+        "reference_leakage": {
+          "pass": 8,
+          "reject": 0,
+          "uncertain": 0
+        }
+      }
+    },
+    "إيمان": {
+      "total": 8,
+      "pass": 0,
+      "reject": 8,
+      "uncertain": 0,
+      "gates": {
+        "identity": {
+          "pass": 0,
+          "reject": 8,
+          "uncertain": 0
+        },
+        "construction": {
+          "pass": 1,
+          "reject": 6,
+          "uncertain": 1
+        },
+        "attachments": {
+          "pass": 5,
+          "reject": 3,
+          "uncertain": 0
+        },
+        "selections": {
+          "pass": 8,
+          "reject": 0,
+          "uncertain": 0
+        },
+        "photography": {
+          "pass": 8,
+          "reject": 0,
+          "uncertain": 0
+        },
+        "unrequested_content": {
+          "pass": 8,
+          "reject": 0,
+          "uncertain": 0
+        },
+        "reference_leakage": {
+          "pass": 4,
+          "reject": 0,
+          "uncertain": 4
+        }
+      }
+    }
+  },
+  "byMethod": {
+    "text": {
+      "total": 6,
+      "pass": 1,
+      "reject": 4,
+      "uncertain": 1,
+      "gates": {
+        "identity": {
+          "pass": 2,
+          "reject": 3,
+          "uncertain": 1
+        },
+        "construction": {
+          "pass": 2,
+          "reject": 3,
+          "uncertain": 1
+        },
+        "attachments": {
+          "pass": 6,
+          "reject": 0,
+          "uncertain": 0
+        },
+        "selections": {
+          "pass": 6,
+          "reject": 0,
+          "uncertain": 0
+        },
+        "photography": {
+          "pass": 6,
+          "reject": 0,
+          "uncertain": 0
+        },
+        "unrequested_content": {
+          "pass": 6,
+          "reject": 0,
+          "uncertain": 0
+        },
+        "reference_leakage": {
+          "pass": 6,
+          "reject": 0,
+          "uncertain": 0
+        }
+      }
+    },
+    "style": {
+      "total": 6,
+      "pass": 0,
+      "reject": 4,
+      "uncertain": 2,
+      "gates": {
+        "identity": {
+          "pass": 1,
+          "reject": 4,
+          "uncertain": 1
+        },
+        "construction": {
+          "pass": 0,
+          "reject": 2,
+          "uncertain": 4
+        },
+        "attachments": {
+          "pass": 3,
+          "reject": 1,
+          "uncertain": 2
+        },
+        "selections": {
+          "pass": 6,
+          "reject": 0,
+          "uncertain": 0
+        },
+        "photography": {
+          "pass": 6,
+          "reject": 0,
+          "uncertain": 0
+        },
+        "unrequested_content": {
+          "pass": 5,
+          "reject": 1,
+          "uncertain": 0
+        },
+        "reference_leakage": {
+          "pass": 4,
+          "reject": 0,
+          "uncertain": 2
+        }
+      }
+    },
+    "style_hardware": {
+      "total": 6,
+      "pass": 0,
+      "reject": 6,
+      "uncertain": 0,
+      "gates": {
+        "identity": {
+          "pass": 1,
+          "reject": 5,
+          "uncertain": 0
+        },
+        "construction": {
+          "pass": 3,
+          "reject": 2,
+          "uncertain": 1
+        },
+        "attachments": {
+          "pass": 3,
+          "reject": 3,
+          "uncertain": 0
+        },
+        "selections": {
+          "pass": 6,
+          "reject": 0,
+          "uncertain": 0
+        },
+        "photography": {
+          "pass": 6,
+          "reject": 0,
+          "uncertain": 0
+        },
+        "unrequested_content": {
+          "pass": 5,
+          "reject": 0,
+          "uncertain": 1
+        },
+        "reference_leakage": {
+          "pass": 5,
+          "reject": 0,
+          "uncertain": 1
+        }
+      }
+    },
+    "style_hardware_spelling": {
+      "total": 6,
+      "pass": 0,
+      "reject": 5,
+      "uncertain": 1,
+      "gates": {
+        "identity": {
+          "pass": 2,
+          "reject": 3,
+          "uncertain": 1
+        },
+        "construction": {
+          "pass": 1,
+          "reject": 5,
+          "uncertain": 0
+        },
+        "attachments": {
+          "pass": 3,
+          "reject": 2,
+          "uncertain": 1
+        },
+        "selections": {
+          "pass": 6,
+          "reject": 0,
+          "uncertain": 0
+        },
+        "photography": {
+          "pass": 6,
+          "reject": 0,
+          "uncertain": 0
+        },
+        "unrequested_content": {
+          "pass": 6,
+          "reject": 0,
+          "uncertain": 0
+        },
+        "reference_leakage": {
+          "pass": 4,
+          "reject": 0,
+          "uncertain": 2
+        }
+      }
+    }
+  },
+  "referenceBindingChecks": [
+    {
+      "caseId": "ar-liyan-style_hardware_spelling-r1",
+      "name": "ليان",
+      "referenceChecks": [
+        {
+          "id": "lettering-ar",
+          "hashMatches": true,
+          "customerMatches": true,
+          "scriptMatches": true
+        },
+        {
+          "id": "hardware",
+          "hashMatches": true,
+          "customerMatches": true,
+          "scriptMatches": true
+        },
+        {
+          "id": "spelling-ar-liyan",
+          "hashMatches": true,
+          "customerMatches": true,
+          "scriptMatches": true
+        }
+      ]
+    },
+    {
+      "caseId": "ar-iman-style-r1",
+      "name": "إيمان",
+      "referenceChecks": [
+        {
+          "id": "lettering-ar",
+          "hashMatches": true,
+          "customerMatches": true,
+          "scriptMatches": true
+        }
+      ]
+    },
+    {
+      "caseId": "ar-liyan-style_hardware_spelling-r2",
+      "name": "ليان",
+      "referenceChecks": [
+        {
+          "id": "lettering-ar",
+          "hashMatches": true,
+          "customerMatches": true,
+          "scriptMatches": true
+        },
+        {
+          "id": "hardware",
+          "hashMatches": true,
+          "customerMatches": true,
+          "scriptMatches": true
+        },
+        {
+          "id": "spelling-ar-liyan",
+          "hashMatches": true,
+          "customerMatches": true,
+          "scriptMatches": true
+        }
+      ]
+    },
+    {
+      "caseId": "ar-liyan-style-r1",
+      "name": "ليان",
+      "referenceChecks": [
+        {
+          "id": "lettering-ar",
+          "hashMatches": true,
+          "customerMatches": true,
+          "scriptMatches": true
+        }
+      ]
+    },
+    {
+      "caseId": "en-lily-text-r2",
+      "name": "Lily",
+      "referenceChecks": []
+    },
+    {
+      "caseId": "ar-iman-style_hardware_spelling-r1",
+      "name": "إيمان",
+      "referenceChecks": [
+        {
+          "id": "lettering-ar",
+          "hashMatches": true,
+          "customerMatches": true,
+          "scriptMatches": true
+        },
+        {
+          "id": "hardware",
+          "hashMatches": true,
+          "customerMatches": true,
+          "scriptMatches": true
+        },
+        {
+          "id": "spelling-ar-iman",
+          "hashMatches": true,
+          "customerMatches": true,
+          "scriptMatches": true
+        }
+      ]
+    },
+    {
+      "caseId": "ar-iman-style_hardware-r1",
+      "name": "إيمان",
+      "referenceChecks": [
+        {
+          "id": "lettering-ar",
+          "hashMatches": true,
+          "customerMatches": true,
+          "scriptMatches": true
+        },
+        {
+          "id": "hardware",
+          "hashMatches": true,
+          "customerMatches": true,
+          "scriptMatches": true
+        }
+      ]
+    },
+    {
+      "caseId": "en-ava-style_hardware-r2",
+      "name": "Ava",
+      "referenceChecks": [
+        {
+          "id": "lettering-en",
+          "hashMatches": true,
+          "customerMatches": true,
+          "scriptMatches": true
+        },
+        {
+          "id": "hardware",
+          "hashMatches": true,
+          "customerMatches": true,
+          "scriptMatches": true
+        }
+      ]
+    },
+    {
+      "caseId": "en-ava-text-r1",
+      "name": "Ava",
+      "referenceChecks": []
+    },
+    {
+      "caseId": "ar-iman-text-r1",
+      "name": "إيمان",
+      "referenceChecks": []
+    },
+    {
+      "caseId": "en-christopher-text-r2",
+      "name": "Christopher",
+      "referenceChecks": []
+    },
+    {
+      "caseId": "ar-noor-text-r1",
+      "name": "نور",
+      "referenceChecks": []
+    },
+    {
+      "caseId": "ar-iman-style_hardware_spelling-r2",
+      "name": "إيمان",
+      "referenceChecks": [
+        {
+          "id": "lettering-ar",
+          "hashMatches": true,
+          "customerMatches": true,
+          "scriptMatches": true
+        },
+        {
+          "id": "hardware",
+          "hashMatches": true,
+          "customerMatches": true,
+          "scriptMatches": true
+        },
+        {
+          "id": "spelling-ar-iman",
+          "hashMatches": true,
+          "customerMatches": true,
+          "scriptMatches": true
+        }
+      ]
+    },
+    {
+      "caseId": "ar-iman-style_hardware-r2",
+      "name": "إيمان",
+      "referenceChecks": [
+        {
+          "id": "lettering-ar",
+          "hashMatches": true,
+          "customerMatches": true,
+          "scriptMatches": true
+        },
+        {
+          "id": "hardware",
+          "hashMatches": true,
+          "customerMatches": true,
+          "scriptMatches": true
+        }
+      ]
+    },
+    {
+      "caseId": "ar-noor-style_hardware_spelling-r2",
+      "name": "نور",
+      "referenceChecks": [
+        {
+          "id": "lettering-ar",
+          "hashMatches": true,
+          "customerMatches": true,
+          "scriptMatches": true
+        },
+        {
+          "id": "hardware",
+          "hashMatches": true,
+          "customerMatches": true,
+          "scriptMatches": true
+        },
+        {
+          "id": "spelling-ar-noor",
+          "hashMatches": true,
+          "customerMatches": true,
+          "scriptMatches": true
+        }
+      ]
+    },
+    {
+      "caseId": "en-ava-style_hardware_spelling-r1",
+      "name": "Ava",
+      "referenceChecks": [
+        {
+          "id": "lettering-en",
+          "hashMatches": true,
+          "customerMatches": true,
+          "scriptMatches": true
+        },
+        {
+          "id": "hardware",
+          "hashMatches": true,
+          "customerMatches": true,
+          "scriptMatches": true
+        },
+        {
+          "id": "spelling-en-ava",
+          "hashMatches": true,
+          "customerMatches": true,
+          "scriptMatches": true
+        }
+      ]
+    },
+    {
+      "caseId": "en-christopher-style_hardware_spelling-r1",
+      "name": "Christopher",
+      "referenceChecks": [
+        {
+          "id": "lettering-en",
+          "hashMatches": true,
+          "customerMatches": true,
+          "scriptMatches": true
+        },
+        {
+          "id": "hardware",
+          "hashMatches": true,
+          "customerMatches": true,
+          "scriptMatches": true
+        },
+        {
+          "id": "spelling-en-christopher",
+          "hashMatches": true,
+          "customerMatches": true,
+          "scriptMatches": true
+        }
+      ]
+    },
+    {
+      "caseId": "en-ava-style_hardware-r1",
+      "name": "Ava",
+      "referenceChecks": [
+        {
+          "id": "lettering-en",
+          "hashMatches": true,
+          "customerMatches": true,
+          "scriptMatches": true
+        },
+        {
+          "id": "hardware",
+          "hashMatches": true,
+          "customerMatches": true,
+          "scriptMatches": true
+        }
+      ]
+    },
+    {
+      "caseId": "ar-noor-style-r1",
+      "name": "نور",
+      "referenceChecks": [
+        {
+          "id": "lettering-ar",
+          "hashMatches": true,
+          "customerMatches": true,
+          "scriptMatches": true
+        }
+      ]
+    },
+    {
+      "caseId": "en-christopher-style_hardware-r1",
+      "name": "Christopher",
+      "referenceChecks": [
+        {
+          "id": "lettering-en",
+          "hashMatches": true,
+          "customerMatches": true,
+          "scriptMatches": true
+        },
+        {
+          "id": "hardware",
+          "hashMatches": true,
+          "customerMatches": true,
+          "scriptMatches": true
+        }
+      ]
+    },
+    {
+      "caseId": "ar-noor-style_hardware_spelling-r1",
+      "name": "نور",
+      "referenceChecks": [
+        {
+          "id": "lettering-ar",
+          "hashMatches": true,
+          "customerMatches": true,
+          "scriptMatches": true
+        },
+        {
+          "id": "hardware",
+          "hashMatches": true,
+          "customerMatches": true,
+          "scriptMatches": true
+        },
+        {
+          "id": "spelling-ar-noor",
+          "hashMatches": true,
+          "customerMatches": true,
+          "scriptMatches": true
+        }
+      ]
+    },
+    {
+      "caseId": "en-lily-style_hardware-r1",
+      "name": "Lily",
+      "referenceChecks": [
+        {
+          "id": "lettering-en",
+          "hashMatches": true,
+          "customerMatches": true,
+          "scriptMatches": true
+        },
+        {
+          "id": "hardware",
+          "hashMatches": true,
+          "customerMatches": true,
+          "scriptMatches": true
+        }
+      ]
+    },
+    {
+      "caseId": "ar-liyan-style-r2",
+      "name": "ليان",
+      "referenceChecks": [
+        {
+          "id": "lettering-ar",
+          "hashMatches": true,
+          "customerMatches": true,
+          "scriptMatches": true
+        }
+      ]
+    },
+    {
+      "caseId": "en-lily-style_hardware_spelling-r1",
+      "name": "Lily",
+      "referenceChecks": [
+        {
+          "id": "lettering-en",
+          "hashMatches": true,
+          "customerMatches": true,
+          "scriptMatches": true
+        },
+        {
+          "id": "hardware",
+          "hashMatches": true,
+          "customerMatches": true,
+          "scriptMatches": true
+        },
+        {
+          "id": "spelling-en-lily",
+          "hashMatches": true,
+          "customerMatches": true,
+          "scriptMatches": true
+        }
+      ]
+    },
+    {
+      "caseId": "en-lily-style_hardware_spelling-r2",
+      "name": "Lily",
+      "referenceChecks": [
+        {
+          "id": "lettering-en",
+          "hashMatches": true,
+          "customerMatches": true,
+          "scriptMatches": true
+        },
+        {
+          "id": "hardware",
+          "hashMatches": true,
+          "customerMatches": true,
+          "scriptMatches": true
+        },
+        {
+          "id": "spelling-en-lily",
+          "hashMatches": true,
+          "customerMatches": true,
+          "scriptMatches": true
+        }
+      ]
+    },
+    {
+      "caseId": "en-ava-style_hardware_spelling-r2",
+      "name": "Ava",
+      "referenceChecks": [
+        {
+          "id": "lettering-en",
+          "hashMatches": true,
+          "customerMatches": true,
+          "scriptMatches": true
+        },
+        {
+          "id": "hardware",
+          "hashMatches": true,
+          "customerMatches": true,
+          "scriptMatches": true
+        },
+        {
+          "id": "spelling-en-ava",
+          "hashMatches": true,
+          "customerMatches": true,
+          "scriptMatches": true
+        }
+      ]
+    },
+    {
+      "caseId": "en-lily-style_hardware-r2",
+      "name": "Lily",
+      "referenceChecks": [
+        {
+          "id": "lettering-en",
+          "hashMatches": true,
+          "customerMatches": true,
+          "scriptMatches": true
+        },
+        {
+          "id": "hardware",
+          "hashMatches": true,
+          "customerMatches": true,
+          "scriptMatches": true
+        }
+      ]
+    },
+    {
+      "caseId": "en-ava-style-r1",
+      "name": "Ava",
+      "referenceChecks": [
+        {
+          "id": "lettering-en",
+          "hashMatches": true,
+          "customerMatches": true,
+          "scriptMatches": true
+        }
+      ]
+    },
+    {
+      "caseId": "ar-iman-text-r2",
+      "name": "إيمان",
+      "referenceChecks": []
+    },
+    {
+      "caseId": "en-lily-text-r1",
+      "name": "Lily",
+      "referenceChecks": []
+    },
+    {
+      "caseId": "ar-noor-style_hardware-r1",
+      "name": "نور",
+      "referenceChecks": [
+        {
+          "id": "lettering-ar",
+          "hashMatches": true,
+          "customerMatches": true,
+          "scriptMatches": true
+        },
+        {
+          "id": "hardware",
+          "hashMatches": true,
+          "customerMatches": true,
+          "scriptMatches": true
+        }
+      ]
+    },
+    {
+      "caseId": "en-christopher-style-r2",
+      "name": "Christopher",
+      "referenceChecks": [
+        {
+          "id": "lettering-en",
+          "hashMatches": true,
+          "customerMatches": true,
+          "scriptMatches": true
+        }
+      ]
+    },
+    {
+      "caseId": "ar-liyan-text-r2",
+      "name": "ليان",
+      "referenceChecks": []
+    },
+    {
+      "caseId": "ar-noor-style_hardware-r2",
+      "name": "نور",
+      "referenceChecks": [
+        {
+          "id": "lettering-ar",
+          "hashMatches": true,
+          "customerMatches": true,
+          "scriptMatches": true
+        },
+        {
+          "id": "hardware",
+          "hashMatches": true,
+          "customerMatches": true,
+          "scriptMatches": true
+        }
+      ]
+    },
+    {
+      "caseId": "en-christopher-style-r1",
+      "name": "Christopher",
+      "referenceChecks": [
+        {
+          "id": "lettering-en",
+          "hashMatches": true,
+          "customerMatches": true,
+          "scriptMatches": true
+        }
+      ]
+    },
+    {
+      "caseId": "ar-noor-style-r2",
+      "name": "نور",
+      "referenceChecks": [
+        {
+          "id": "lettering-ar",
+          "hashMatches": true,
+          "customerMatches": true,
+          "scriptMatches": true
+        }
+      ]
+    },
+    {
+      "caseId": "en-christopher-text-r1",
+      "name": "Christopher",
+      "referenceChecks": []
+    },
+    {
+      "caseId": "en-christopher-style_hardware_spelling-r2",
+      "name": "Christopher",
+      "referenceChecks": [
+        {
+          "id": "lettering-en",
+          "hashMatches": true,
+          "customerMatches": true,
+          "scriptMatches": true
+        },
+        {
+          "id": "hardware",
+          "hashMatches": true,
+          "customerMatches": true,
+          "scriptMatches": true
+        },
+        {
+          "id": "spelling-en-christopher",
+          "hashMatches": true,
+          "customerMatches": true,
+          "scriptMatches": true
+        }
+      ]
+    },
+    {
+      "caseId": "ar-liyan-style_hardware-r1",
+      "name": "ليان",
+      "referenceChecks": [
+        {
+          "id": "lettering-ar",
+          "hashMatches": true,
+          "customerMatches": true,
+          "scriptMatches": true
+        },
+        {
+          "id": "hardware",
+          "hashMatches": true,
+          "customerMatches": true,
+          "scriptMatches": true
+        }
+      ]
+    },
+    {
+      "caseId": "ar-liyan-text-r1",
+      "name": "ليان",
+      "referenceChecks": []
+    },
+    {
+      "caseId": "en-ava-style-r2",
+      "name": "Ava",
+      "referenceChecks": [
+        {
+          "id": "lettering-en",
+          "hashMatches": true,
+          "customerMatches": true,
+          "scriptMatches": true
+        }
+      ]
+    },
+    {
+      "caseId": "ar-liyan-style_hardware-r2",
+      "name": "ليان",
+      "referenceChecks": [
+        {
+          "id": "lettering-ar",
+          "hashMatches": true,
+          "customerMatches": true,
+          "scriptMatches": true
+        },
+        {
+          "id": "hardware",
+          "hashMatches": true,
+          "customerMatches": true,
+          "scriptMatches": true
+        }
+      ]
+    },
+    {
+      "caseId": "ar-noor-text-r2",
+      "name": "نور",
+      "referenceChecks": []
+    },
+    {
+      "caseId": "en-ava-text-r2",
+      "name": "Ava",
+      "referenceChecks": []
+    },
+    {
+      "caseId": "en-christopher-style_hardware-r2",
+      "name": "Christopher",
+      "referenceChecks": [
+        {
+          "id": "lettering-en",
+          "hashMatches": true,
+          "customerMatches": true,
+          "scriptMatches": true
+        },
+        {
+          "id": "hardware",
+          "hashMatches": true,
+          "customerMatches": true,
+          "scriptMatches": true
+        }
+      ]
+    },
+    {
+      "caseId": "en-lily-style-r2",
+      "name": "Lily",
+      "referenceChecks": [
+        {
+          "id": "lettering-en",
+          "hashMatches": true,
+          "customerMatches": true,
+          "scriptMatches": true
+        }
+      ]
+    },
+    {
+      "caseId": "en-lily-style-r1",
+      "name": "Lily",
+      "referenceChecks": [
+        {
+          "id": "lettering-en",
+          "hashMatches": true,
+          "customerMatches": true,
+          "scriptMatches": true
+        }
+      ]
+    },
+    {
+      "caseId": "ar-iman-style-r2",
+      "name": "إيمان",
+      "referenceChecks": [
+        {
+          "id": "lettering-ar",
+          "hashMatches": true,
+          "customerMatches": true,
+          "scriptMatches": true
+        }
+      ]
+    }
+  ],
+  "allFrozenBindingsCorrect": true,
+  "providerCalls": 0,
+  "causalConclusion": "Observed defects and input omissions; no unique failure cause is established. Input methods changed prompt text and references together. Two outputs per name/method cell cannot establish general reliability."
+}

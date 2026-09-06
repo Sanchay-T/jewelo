@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Asma - Approved renders + Omran styles</title>
+<style>
+body{font-family:-apple-system,system-ui,sans-serif;margin:0;background:#0e2a16;color:#eee}
+header{padding:14px 18px;border-bottom:1px solid #2c5c38;position:sticky;top:0;background:#0e2a16;z-index:5}
+h2{padding:0 18px}
+#stage{display:flex;gap:16px;padding:16px;max-width:1400px;margin:0 auto}
+#viewer{flex:3;background:#000;border-radius:12px;min-height:55vh;display:flex;align-items:center;justify-content:center;overflow:hidden}
+#viewer img{max-width:100%;max-height:68vh;object-fit:contain;background:#fff}
+#side{flex:1;min-width:300px;background:#122e1a;border-radius:12px;padding:16px}
+.badge{display:inline-block;padding:4px 10px;border-radius:20px;font-size:12px;margin-right:6px}
+.pass{background:#1d5c2e}
+.warn{background:#6b5a1e}
+.work{background:#4a4a4a}
+.nav{display:flex;gap:8px;justify-content:center;padding:12px}
+button{background:#1d5c2e;color:#eee;border:1px solid #3fa34d;border-radius:8px;padding:8px 14px;cursor:pointer}
+#dots{display:flex;gap:6px;justify-content:center;padding:8px}
+#dots span{width:10px;height:10px;border-radius:50%;background:#3a6b46;cursor:pointer;display:inline-block}
+#dots span.on{background:#fff}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;padding:0 18px 40px}
+.card{background:#122e1a;border-radius:12px;padding:12px}
+.card img{width:100%;border-radius:8px;background:#fff}
+.card h3{margin:8px 0 4px}
+.card p{font-size:13px;margin:4px 0}
+a{color:#9cf}
+small.mono{font-family:monospace;font-size:11px}
+</style>
+</head>
+<body>
+<header><strong>أسماء - APPROVED RENDERS (dual-reviewed, sendable)</strong> <span id="count"></span></header>
+<div id="stage">
+<div id="viewer"><img id="img" alt="approved render"></div>
+<div id="side">
+<div id="meta"></div>
+<div class="nav"><button id="prev">Prev</button><button id="next">Next</button></div>
+<div id="dots"></div>
+<div><a id="orig" target="_blank">Open full-res original</a></div>
+</div>
+</div>
+<h2>Omran's 6 styles - reference vs status</h2>
+<div class="grid">
+<div class="card"><img src="omran/style-rails_small.jpg"><h3>1. Floating Rails <span class="badge pass">approved</span></h3><p>Omran ref: gold nameplate between diamond rails.</p><p>Our render: <a href="originals/round7_rails_5e1ff765.png" target="_blank">R7 rails</a> - single chain, continuous baseline, fused hamza, welded ء.</p></div>
+<div class="card"><img src="omran/style-framed_small.jpg"><h3>2. Framed Minimal <span class="badge pass">approved</span></h3><p>Omran ref: block letters in frame.</p><p>Our render: <a href="originals/round5_fingers_a4cd7fad.png" target="_blank">R5 fingers-held</a> - agreed pass by both reviewers, cleanest build.</p></div>
+<div class="card"><img src="omran/style-origami_small.jpg"><h3>3. Origami <span class="badge pass">approved</span></h3><p>Omran ref: faceted gold pendant render.</p><p>Our render: <a href="originals/round11_origami_55ff4f5e.png" target="_blank">R11 origami</a> - agreed pass, facets as texture, stone hamza fused, one chain.</p></div>
+<div class="card"><img src="omran/style-constellation_small.jpg"><h3>4. Constellation <span class="badge pass">approved</span></h3><p>Omran ref: orbital sapphire star web.</p><p>Our render: <a href="originals/round12_constellation_ce0bdb1c.png" target="_blank">R12 constellation</a> - agreed pass, rails carry all letters, diamond hamza fused (zoom-verified).</p></div>
+<div class="card"><img src="omran/style-ribbon_small.jpg"><h3>5. Ribbon Flow <span class="badge pass">approved</span></h3><p>Omran ref: flowing script necklace poster.</p><p>Our render: <a href="originals/round6_ribbon_3630f03a.png" target="_blank">R6 ribbon worn</a> - agreed pass, best worn shot.</p></div>
+<div class="card"><img src="omran/style-artdeco_small.jpg"><h3>6. Art Deco <span class="badge pass">approved</span></h3><p>Omran ref: stepped baguettes + sunburst poster.</p><p>Our render: <a href="originals/round10_artdeco_5a2f1173.png" target="_blank">R10 art deco</a> - agreed pass, frame carries all letters, flush pavé, sunburst dropped, one chain.</p></div>
+</div>
+<script>
+const DATA=[
+{id:"a4cd7fad-486a-40fd-923e-516c3b09772f",look:"1. Framed Minimal - fingers held",file:"round5_fingers_a4cd7fad.png",norm:"round5_fingers_a4cd7fad.jpg",note:"AGREED PASS. Continuous س-م-ا, gapped أ with fused hamza, welded ء, chains attached. Cleanest build - lead with this."},
+{id:"3630f03a-adde-4775-b562-21a0281a6303",look:"2. Ribbon Flow - worn",file:"round6_ribbon_3630f03a.png",norm:"round6_ribbon_3630f03a.jpg",qc:"pass",note:"AGREED PASS. أ gap kept, hamza-as-blue-stone fused to stem, ء welded, single chain both ends. Best worn shot."},
+{id:"5e1ff765-5449-489f-9701-0b725375d8e0",look:"3. Floating Rails - linen",file:"round7_rails_5e1ff765.png",norm:"round7_rails_5e1ff765.jpg",note:"AGREED PASS. Single top chain, continuous baseline, gapped أ, fused hamza, welded ء, stones on rails only."},
+{id:"55ff4f5e-3dc1-4b92-85fe-075bfd8fb850",look:"4. Origami - oak desk",file:"round11_origami_55ff4f5e.png",norm:"round11_origami_55ff4f5e.jpg",note:"AGREED PASS. Facets as texture, continuous baseline incl. ا stem, diamond hamza touching stem, welded ء, one chain."},
+{id:"ce0bdb1c-21c2-49cb-a7e4-ce432ff36ec5",look:"5. Constellation - navy",file:"round12_constellation_ce0bdb1c.png",norm:"round12_constellation_ce0bdb1c.jpg",note:"AGREED PASS. Rails carry all letters, diamond hamza fused (2x-zoom verified), gap kept, ء welded, bail chain."},
+{id:"5a2f1173-fcf5-4a8e-9217-bedec85e7be9",look:"6. Art Deco - gift box",file:"round10_artdeco_5a2f1173.png",norm:"round10_artdeco_5a2f1173.jpg",note:"AGREED PASS. Frame carries all letters, flush baguette pavé, fused hamza, one chain. Sunburst dropped."}
+];
+let i=0;
+const img=document.getElementById('img');
+function show(){
+const d=DATA[i];
+img.src='normalized/'+d.norm;
+document.getElementById('meta').innerHTML='<span class="badge pass">approved - sendable</span><h3>'+d.look+'</h3><p>'+d.note+'</p><p><small class="mono">'+d.id+'</small></p>';
+document.getElementById('orig').href='originals/'+d.file;
+document.getElementById('count').textContent=(i+1)+' / '+DATA.length;
+const dots=document.getElementById('dots');dots.innerHTML='';
+DATA.forEach((x,idx)=>{const s=document.createElement('span');if(idx===i)s.classList.add('on');s.onclick=()=>{i=idx;show()};dots.appendChild(s)});
+}
+document.getElementById('prev').onclick=()=>{i=(i-1+DATA.length)%DATA.length;show()};
+document.getElementById('next').onclick=()=>{i=(i+1)%DATA.length;show()};
+document.addEventListener('keydown',e=>{if(e.key==='ArrowRight')document.getElementById('next').click();if(e.key==='ArrowLeft')document.getElementById('prev').click()});
+show();
+</script>
+</body>
+</html>

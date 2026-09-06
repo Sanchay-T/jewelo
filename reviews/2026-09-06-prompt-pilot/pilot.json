@@ -1,0 +1,55 @@
+{
+  "case_id": "AR-MUHAMMAD-CLASSICAL-BAR-YELLOW-NONE",
+  "prompt_version": "0.1",
+  "prompt_file": "prompts/muhammad-yellow-v01.txt",
+  "prompt_sha256": "3b467c7a12199b9ae95aff813a98213c56220eab710140c6b5c0aaa11f0afd81",
+  "reference_file": "references/muhammad-geometry.png",
+  "reference_sha256": "62c80f1f0a86b9639a3bdbf292686d91107a02b33e6363a79a0a4030b2381b6d",
+  "reference_role": "geometry",
+  "model": "gpt-image-2",
+  "ratio": "1:1",
+  "count": 2,
+  "max_total_images": 6,
+  "workspace_id": 1068827,
+  "workspace_name": "Sanchay",
+  "preflight": "Visually inspected by parent and plan reviewer; connected original script, zero component moves; integral eyelets distinguished from separate hardware. Not manufacturing approval.",
+  "status": "complete_not_promoted",
+  "task_ids": [
+    "d9efc10d-8c40-482d-a05a-03f2a340a0d1",
+    "1a9004eb-13a0-4ce5-a1c9-8ac62ae62225",
+    "7e3c5b9b-0603-48cd-8e94-35328e2b0c29",
+    "eee9ec3f-91dc-4bf3-9c31-7552f4c3dbd3",
+    "4ca6f46e-2e9c-47f8-9276-3a559d3d36d6",
+    "c61501cd-28c3-413c-a818-648dc593b874"
+  ],
+  "images_submitted": 6,
+  "white_prompt_file": "prompts/muhammad-white-v01.txt",
+  "white_prompt_sha256": "050452483c13b02f59a479583b2e8741c7ef93a311f5648ebc8af654bc73fa18",
+  "balance_after_yellow_submission": 308882,
+  "balance_after_white_submission": 308842,
+  "cost_note": "Workspace balances, not per-task billing receipts. No balance before the first submission was captured.",
+  "white_v02_prompt_file": "prompts/muhammad-white-v02.txt",
+  "white_v02_prompt_sha256": "837b808bd42cc9be60ae90b4a8191e10e67966f6ede556138104db3fd30e7353",
+  "balance_after_final_submission": 308802,
+  "retry_budget_remaining": 0,
+  "summary": {
+    "submitted": 6,
+    "visual_pass": 3,
+    "reject": 3,
+    "needs_review_overall": 0,
+    "v01_yellow": {
+      "pass": 2,
+      "total": 2
+    },
+    "v01_white": {
+      "pass": 1,
+      "total": 2
+    },
+    "v02_white": {
+      "pass": 0,
+      "total": 2
+    },
+    "limitation": "One name and one construction; tiny exploratory sample. No universal reliability estimate or production promotion.",
+    "next_hypothesis": "Validated full assembly reference alongside body identity; v0.3 untested."
+  }
+}

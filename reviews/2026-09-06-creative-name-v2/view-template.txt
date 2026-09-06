@@ -1,0 +1,22 @@
+Create one photograph of the existing necklace identified by @design_anchor in the requested view.
+
+CUSTOMER IDENTITY
+{{identity}}
+{{style}}
+
+DESIGN REFERENCE
+{{references}}
+
+PRESERVE CONSTRUCTION
+{{construction}}
+{{support}}
+{{attachments}}
+
+CUSTOMER SELECTIONS
+{{selections}}
+
+PHOTOGRAPHY
+{{photography}}
+
+VISIBLE REQUIREMENTS
+{{invariants}}

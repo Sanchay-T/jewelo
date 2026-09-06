@@ -1,0 +1,142 @@
+[
+  {
+    "id": "V2-43",
+    "outputHash": "f247d162a92b901ed29dac30d026cd6dcc5a272752f0e6abb1793a444bcbb5ff",
+    "gates": {
+      "identity": "pass",
+      "construction": "pass",
+      "attachments": "pass",
+      "selections": "pass",
+      "photography": "pass",
+      "unrequested_content": "pass",
+      "reference_leakage": "pass"
+    },
+    "styleScore": 4,
+    "appealScore": 3,
+    "notes": [
+      "Readback: نور, retaining the noon dot, waw counter and recognizable ra. The thin straight left attachment stem is distinguishable from the thicker ra stroke, so it reads as hardware support rather than an additional full-weight letter stroke.",
+      "The noon dot has a visible bridge to the upper terminal (tr crop). Two visible narrow bridges join waw to ra; all components are supported without a full backing/frame.",
+      "Both end eyelets have continuous narrow stems to the body, separate closed connectors and distinguishable Cable-chain interlocks. No gaps or unused holes observed.",
+      "Classic Arabic traits are retained, with long attachment stems and somewhat angular ra terminal. White-gold appearance, no stones, coherent photography and no unrelated writing/reference leakage."
+    ],
+    "reviewer": "plan_reviewer",
+    "blinded": true
+  },
+  {
+    "id": "V2-44",
+    "outputHash": "5e3c99fa99a36ddc0e70aa7a208e2682c485030415b8eb0644496f41a99713af",
+    "gates": {
+      "identity": "pass",
+      "construction": "reject",
+      "attachments": "pass",
+      "selections": "pass",
+      "photography": "pass",
+      "unrequested_content": "pass",
+      "reference_leakage": "pass"
+    },
+    "styleScore": 5,
+    "appealScore": 3,
+    "notes": [
+      "Readback: Ava, retaining uppercase A and lowercase va.",
+      "The final a is detached from v: visible background separates the nearest upper serif/terminal, and no bridge joins their lower bodies (br crop). Construction rejects.",
+      "A visible narrow baseline bridge joins A to v. Both end eyelets individually join their adjacent letter and receive separate closed connectors linked to Cable chain; the internal letter-body separation is recorded under construction.",
+      "Strong Classic high-contrast serif styling, stone-free white-gold appearance and inspectable photography; no full backing/frame, unrelated writing or reference leakage."
+    ],
+    "reviewer": "plan_reviewer",
+    "blinded": true
+  },
+  {
+    "id": "V2-45",
+    "outputHash": "1c797f730e95fc8c2fdcc20ef398af06853838bc389415caf8283df5c11cf13f",
+    "gates": {
+      "identity": "pass",
+      "construction": "pass",
+      "attachments": "pass",
+      "selections": "pass",
+      "photography": "pass",
+      "unrequested_content": "pass",
+      "reference_leakage": "pass"
+    },
+    "styleScore": 5,
+    "appealScore": 4,
+    "notes": [
+      "Readback: Christopher with correct capitalization and supported i dot.",
+      "Every adjacent letter has visible joining metal through mid-height or lower bridges/contacts; the i dot has a narrow stem and counters remain open. No full backing/frame.",
+      "The end eyelets are integrated at the outer letters and receive separate closed connectors linked to Cable chain; both apertures and junctions are inspectable.",
+      "Strong Classic serif styling, stone-free white-gold appearance and coherent photography; no unrelated writing or reference leakage."
+    ],
+    "reviewer": "plan_reviewer",
+    "blinded": true
+  },
+  {
+    "id": "V2-46",
+    "outputHash": "3e0077078420d22f62605da526ce47ba1cd8bed8440ed01f508d7e38776408df",
+    "gates": {
+      "identity": "pass",
+      "construction": "needs_review",
+      "attachments": "pass",
+      "selections": "pass",
+      "photography": "pass",
+      "unrequested_content": "pass",
+      "reference_leakage": "pass"
+    },
+    "styleScore": 5,
+    "appealScore": 4,
+    "notes": [
+      "Readback: Lily with uppercase L, lowercase ily and a distinct supported i dot.",
+      "Clear finite-width bridges join L-i and l-y. Between i and l, the baseline serif tips show a tiny light seam/possible point contact (br crop), with no distinct bridge elsewhere. Continuous finite-width support across that junction cannot be confirmed.",
+      "The i dot has a visible support stem; letters and spaces stay readable. No full backing/frame.",
+      "Both integral end eyelets and separate connectors are visibly interlinked with Cable chain; no attachment gaps observed.",
+      "Strong Classic serif fit, white-gold appearance without stones, coherent photography and no unrelated writing/reference leakage."
+    ],
+    "reviewer": "plan_reviewer",
+    "blinded": true
+  },
+  {
+    "id": "V2-47",
+    "outputHash": "eff91c24dfaf4044ecb7309d7863eeb5b9f2ecfe5b723f3111dad0769dcecb9e",
+    "gates": {
+      "identity": "pass",
+      "construction": "pass",
+      "attachments": "pass",
+      "selections": "pass",
+      "photography": "pass",
+      "unrequested_content": "pass",
+      "reference_leakage": "pass"
+    },
+    "styleScore": 5,
+    "appealScore": 4,
+    "notes": [
+      "Readback: Lily, with uppercase L, lowercase ily and a distinct supported i dot.",
+      "Visible narrow metal joins all three adjacent letter pairs along the baseline; the i dot has a finite-width support stem. No full backing/frame.",
+      "Both end eyelets are integrated with the outside letters and receive separate closed connectors linked to the Cable chain; no gap or unused hole observed.",
+      "Strong Classic high-contrast serif styling, stone-free white-gold appearance and inspectable coherent photography; no unrelated writing or reference leakage."
+    ],
+    "reviewer": "plan_reviewer",
+    "blinded": true
+  },
+  {
+    "id": "V2-48",
+    "outputHash": "8c20c40d5cfe53c7882e290296c0f50b02dd9e8c5037aec8e6c2b4b8b5043402",
+    "gates": {
+      "identity": "reject",
+      "construction": "needs_review",
+      "attachments": "reject",
+      "selections": "pass",
+      "photography": "pass",
+      "unrequested_content": "pass",
+      "reference_leakage": "pass"
+    },
+    "styleScore": 4,
+    "appealScore": 2,
+    "notes": [
+      "Readback is أيمان rather than requested إيمان: hamza is above the initial alef, not below.",
+      "Both chain end rings are hooked directly around tapered body extensions, with no separate integral body eyelet apertures (original and bl/br crops). The required two-eyelet plus connector construction is absent.",
+      "The noon dot has a clear horizontal support and the lower yeh dots have small visible necks; bridges join separated principal groups.",
+      "The hamza meets the alef through a tiny junction whose finite-width continuity cannot be confirmed. Construction remains needs_review; hidden support is not assumed.",
+      "Classic Arabic traits and selected white-gold/stone-free Cable appearance remain, with coherent inspectable photography. No full backing/frame, labels, specimen words or unrelated reference shapes."
+    ],
+    "reviewer": "plan_reviewer",
+    "blinded": true
+  }
+]

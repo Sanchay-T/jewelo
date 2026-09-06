@@ -1,0 +1,52 @@
+{
+  "family": "framed",
+  "sourceSha256": "62c80f1f0a86b9639a3bdbf292686d91107a02b33e6363a79a0a4030b2381b6d",
+  "source": "source/muhammad-geometry.png",
+  "bodyMaskHash": "a66565b586f7c95a5cf06e4668920b137dbe277cfe69fe98bbc226e06a83101d",
+  "bodyHash": "e3c2848187130a3416d4aa2b2fbea044bce2bb2f5285bd32809af5ac7cdcd6a5",
+  "assemblyHash": "cdfc3e7f61c81ba8f45a93e34b6dd7b84e9cc4b3e3a047b1c79e06a4bf20e9b3",
+  "geometryHash": "a66565b586f7c95a5cf06e4668920b137dbe277cfe69fe98bbc226e06a83101d",
+  "components": 1,
+  "componentMoves": 0,
+  "supportChecks": [
+    {
+      "id": "lower_left",
+      "overlapPixels": 380,
+      "passed": true
+    },
+    {
+      "id": "lower_right",
+      "overlapPixels": 238,
+      "passed": true
+    }
+  ],
+  "eyelets": [
+    {
+      "x": 160,
+      "y": 104,
+      "outerRadiusPx": 36,
+      "boreRadiusPx": 20
+    },
+    {
+      "x": 1230,
+      "y": 104,
+      "outerRadiusPx": 36,
+      "boreRadiusPx": 20
+    }
+  ],
+  "coordinateUnits": "reference pixels, not mm",
+  "physicalDimensionsVerified": false,
+  "constructionDetail": "Open rectangular carrier, two lower support contacts at the broad baseline, no legacy lettering eyelets.",
+  "foldHeightPixels": 0,
+  "status": "preflight_pass",
+  "limitations": [
+    "Experimental appearance geometry; no manufacturing strength certification.",
+    "Source mask comes from prior reviewed artifact; original font/shaping lineage is inherited, not re-typeset.",
+    "Complete assembly reference shows pendant and initial chain links, not clasp or measured full necklace."
+  ],
+  "configHash": "c6a926224ce391d674ed45519ae899d8f77532d1791d259267afc6d17b5da437",
+  "preflightHash": "103246f0390a76bedcdaa40e81885c10de27a9815c5e2ba9bfda6590eb8fea94",
+  "stones": [],
+  "attachment": "Exactly two integral body eyelets at the designated attachment locations. Each existing eyelet receives one separate closed connecting ring, and each connecting ring receives the first cable-chain link. The connecting rings and alternating chain links remain separate interlocking parts. Continue the chain beyond the photographic frame; do not show loose cut ends beside the pendant.",
+  "invariants": "Preserve the core Muhammad lettering, its reading order, letter counters, approved support contacts and the two designated body attachment points. Preserve the specified rigid body architecture."
+}

@@ -1,0 +1,143 @@
+[
+  {
+    "id": "V2-31",
+    "outputHash": "62eb2fa04dfb8cc7d12743a43e1204abd2eebd8517c555999e06278180dc64a8",
+    "gates": {
+      "identity": "reject",
+      "construction": "pass",
+      "attachments": "reject",
+      "selections": "pass",
+      "photography": "pass",
+      "unrequested_content": "pass",
+      "reference_leakage": "pass"
+    },
+    "styleScore": 2,
+    "appealScore": 2,
+    "notes": [
+      "Exact نور readback fails: the noon dot is absent, replaced by a large hamza above an alef-like upright at image right. The left final-letter outline is also changed into a deep bowl.",
+      "Both end rings are hooked directly over tapered letter terminals (bl/br crops), without two clearly formed integral body eyelets each receiving a separate connector. The required attachment construction is absent.",
+      "The depicted principal body is continuous, and the added hamza has a visible narrow support. This does not correct the identity or hardware defects.",
+      "White-gold appearance and stone-free Cable chain match; the metal and background are inspectable. No full backing/frame, labels, specimen words or unrelated reference shapes observed."
+    ],
+    "reviewer": "plan_reviewer",
+    "blinded": true
+  },
+  {
+    "id": "V2-32",
+    "outputHash": "d69f7d985171be4c56f6459298e9489a6ceb45b619b6254219947be5d5c1ca72",
+    "gates": {
+      "identity": "pass",
+      "construction": "pass",
+      "attachments": "pass",
+      "selections": "pass",
+      "photography": "pass",
+      "unrequested_content": "pass",
+      "reference_leakage": "pass"
+    },
+    "styleScore": 5,
+    "appealScore": 4,
+    "notes": [
+      "Readback: Christopher, with correct capitalization and a distinct supported i dot.",
+      "Narrow lower bridges and selected upper contacts visibly join every adjacent letter. The i dot has a finite-width stem; counters stay open. No full backing or frame.",
+      "Both integral end eyelets receive distinguishable separate closed connectors linked to the Cable chain. No gaps or unused holes observed.",
+      "Strong Classic serif style, stone-free white-gold appearance and coherent inspectable photography; no unrelated writing, specimen words or reference leakage."
+    ],
+    "reviewer": "plan_reviewer",
+    "blinded": true
+  },
+  {
+    "id": "V2-33",
+    "outputHash": "feb095efa1045865644f790126ca2332031f5a85c8452b57244093a1ad61ab8d",
+    "gates": {
+      "identity": "pass",
+      "construction": "reject",
+      "attachments": "pass",
+      "selections": "pass",
+      "photography": "pass",
+      "unrequested_content": "pass",
+      "reference_leakage": "pass"
+    },
+    "styleScore": 4,
+    "appealScore": 3,
+    "notes": [
+      "Readback: ليان, retaining one noon dot and two yeh dots.",
+      "The noon dot above the left bowl is completely detached, with clear background around it and no visible metal support (original and bl crop). Construction rejects.",
+      "The lower yeh dots have visible short support necks and a small inter-dot bridge. A visible bridge joins the alef/noon groups.",
+      "Both integral body eyelets receive separate closed connectors interlinked with Cable chain. No attachment gap observed.",
+      "Recognizable Classic Arabic, selected white-gold appearance, no stones, no full backing/frame and coherent inspectable photography; no unrelated writing or reference leakage."
+    ],
+    "reviewer": "plan_reviewer",
+    "blinded": true
+  },
+  {
+    "id": "V2-34",
+    "outputHash": "c8205aa0502e3b31acb51dd0ceb7460c950de33cfe34891ee6de9f016b61e8f1",
+    "gates": {
+      "identity": "pass",
+      "construction": "needs_review",
+      "attachments": "reject",
+      "selections": "pass",
+      "photography": "pass",
+      "unrequested_content": "pass",
+      "reference_leakage": "pass"
+    },
+    "styleScore": 5,
+    "appealScore": 2,
+    "notes": [
+      "Readback: نور, with a clear final ra, waw counter and one noon dot.",
+      "The entire left chain/eyelet assembly is detached from the pendant, with a large background gap between the loose eyelet and the final ra (original and bl crop). Attachments reject.",
+      "The noon dot meets the upper terminal through an extremely narrow tip junction; a distinct finite-width support is not clearly shown, so construction needs review.",
+      "A visible bridge joins waw to ra. The right eyelet and connector are connected to the body and chain.",
+      "Strong Classic Arabic fit and stone-free white-gold appearance; clear photography exposes the attachment failure. No full backing/frame, unrelated writing or reference leakage."
+    ],
+    "reviewer": "plan_reviewer",
+    "blinded": true
+  },
+  {
+    "id": "V2-35",
+    "outputHash": "ba619e287a0f496d57fb256d98901775e31d00477edbc5988f56954d9d3bc91e",
+    "gates": {
+      "identity": "pass",
+      "construction": "pass",
+      "attachments": "pass",
+      "selections": "pass",
+      "photography": "pass",
+      "unrequested_content": "pass",
+      "reference_leakage": "pass"
+    },
+    "styleScore": 5,
+    "appealScore": 4,
+    "notes": [
+      "Readback: Christopher with correct capitalization, letter order and supported i dot.",
+      "All adjacent letters have visible joining metal through lower and selected upper bridges. The i dot has a finite-width stem and counters remain open. No full backing plate or surrounding frame.",
+      "Both integral body eyelets receive separate closed connectors visibly interlinked with the Cable chain. No gaps or unused holes observed.",
+      "Strong Classic serif fit, stone-free white-gold appearance and coherent inspectable photography; no unrelated writing or reference leakage."
+    ],
+    "reviewer": "plan_reviewer",
+    "blinded": true
+  },
+  {
+    "id": "V2-36",
+    "outputHash": "99116503d90c6dd36124b0110830cdcba3a2ca53cc23bf7e701ee5041c16d1d3",
+    "gates": {
+      "identity": "reject",
+      "construction": "needs_review",
+      "attachments": "pass",
+      "selections": "pass",
+      "photography": "pass",
+      "unrequested_content": "pass",
+      "reference_leakage": "pass"
+    },
+    "styleScore": 2,
+    "appealScore": 2,
+    "notes": [
+      "Exact نور readback fails: the required noon dot above the right-hand letter is absent; a diamond appears below the baseline instead, and an unrequested hamza appears above the upright. The final ra also has an exaggerated deep bowl/upturned attachment stem.",
+      "The lower diamond has a visible support neck, and principal letter groups are joined by metal bridges.",
+      "The added hamza meets the upright at a very narrow tip junction (tr crop), with no clearly distinguishable finite-width bridge; construction remains uncertain rather than assuming hidden support.",
+      "Both end eyelets have continuous body stems and distinguishable separate closed connectors linked to Cable chain.",
+      "Stone-free white-gold appearance and inspectable photography; no full backing/frame, captions, specimen words or unrelated reference shapes."
+    ],
+    "reviewer": "plan_reviewer",
+    "blinded": true
+  }
+]

@@ -1,0 +1,158 @@
+{
+  "version": "jewelo-prompt-lab-1.0.0",
+  "template": "Create one photorealistic jewelry photograph.\n\nIDENTITY\n{{name_and_script}}\n{{lettering_and_arrangement}}\n\nCONSTRUCTION\n{{construction_recipe}}\n{{attachment_recipe}}\n{{reference_roles}}\n\nCUSTOMER SELECTIONS\n{{metal_and_finish}}\n{{stone_and_setting_spec}}\n{{selected_size}}\n{{chain_style}}\n{{applicable_personalization}}\n\nPHOTOGRAPHY\n{{view_recipe}}\n\nPRESERVE\n{{applicable_invariants}}",
+  "templateHash": "28f7149dbff81b64d979fc03bad7068ca8c73933adcfcae917ca1c4280b346e4",
+  "slots": [
+    {
+      "name": "name_and_script",
+      "definition": "Frozen name(s), NFC spelling, script and reading direction."
+    },
+    {
+      "name": "lettering_and_arrangement",
+      "definition": "Selected lettering adaptation plus exact approved arrangement recipe; inactive second name/layout omitted."
+    },
+    {
+      "name": "construction_recipe",
+      "definition": "Construction family section plus configuration-specific support/contact description."
+    },
+    {
+      "name": "attachment_recipe",
+      "definition": "Preflighted body eyelets, separate rings and selected chain interlock."
+    },
+    {
+      "name": "reference_roles",
+      "definition": "Empty for text-only; explicit @geometry or @assembly role matching the provided hashed asset."
+    },
+    {
+      "name": "metal_and_finish",
+      "definition": "Selected metal appearance with the frozen polished-finish baseline; no invented karat."
+    },
+    {
+      "name": "stone_and_setting_spec",
+      "definition": "No-stones suppression, or exact coverage/gem/setting/placement map."
+    },
+    {
+      "name": "selected_size",
+      "definition": "Nominal 22 or 32 mm label; unresolved physical axis, no dimensional certification."
+    },
+    {
+      "name": "chain_style",
+      "definition": "Selected Cable/Rolo/Box/Curb appearance; no unsupported chain-length field."
+    },
+    {
+      "name": "applicable_personalization",
+      "definition": "Empty personalization or engraving on explicitly approved rear surface; never transferred to front."
+    },
+    {
+      "name": "view_recipe",
+      "definition": "One of four frozen photographic recipes, each independently receiving the same piece specification."
+    },
+    {
+      "name": "applicable_invariants",
+      "definition": "Configuration-specific identity/geometry preservation and applicable continuity/appearance constraints."
+    }
+  ],
+  "options": {
+    "script": [
+      "English",
+      "Arabic"
+    ],
+    "construction": [
+      "Classical",
+      "Origami ribbon",
+      "Framed minimal",
+      "Diamond rails"
+    ],
+    "lettering": [
+      "Classic",
+      "Minimal",
+      "Diwani",
+      "Kufi",
+      "Signature",
+      "Thuluth inspired"
+    ],
+    "layout": [
+      "Side by side",
+      "Connected heart",
+      "Stacked",
+      "Infinity",
+      "Interlocked"
+    ],
+    "metal": [
+      "Yellow gold",
+      "White gold",
+      "Rose gold"
+    ],
+    "coverage": [
+      "No stones",
+      "Accent",
+      "Partial pavé",
+      "Full pavé"
+    ],
+    "gem": [
+      "Lab diamond",
+      "Natural diamond",
+      "Ruby",
+      "Emerald",
+      "Blue sapphire",
+      "Pink sapphire"
+    ],
+    "size": [
+      22,
+      32
+    ],
+    "chain": [
+      "Cable",
+      "Rolo",
+      "Box",
+      "Curb"
+    ]
+  },
+  "constructionSections": {
+    "Classical": "Upright shaped lettering forms the main rigid pendant body. Preserve approved structural bridges without changing linguistic spacing. No surrounding frame or extra backing plate.",
+    "Framed minimal": "An open rectangular frame supports upright lettering at the defined contact points. The frame carries the two attachment eyelets. No additional eyelets on the lettering.",
+    "Diamond rails": "Two parallel rails carry upright lettering through the defined rigid supports. The upper rail carries the two attachment eyelets. Rail architecture is retained even when No stones is selected; the family name does not independently request diamonds.",
+    "Origami ribbon": "Experimental folded-letter recipe: the lettering itself is a continuous metal ribbon with shallow alternating folded planes across broad strokes. Preserve readable glyph contours and connected metal through each crease. No separate folded carrier, cracks, cut letters or surrounding frame."
+  },
+  "shotSections": {
+    "Studio": {
+      "ratio": "1:1",
+      "text": "Near-front catalog photograph on matte ivory. One large soft source with gentle fill and neutral white balance. Entire pendant and both attachment junctions visible, with sufficient depth of field to inspect the construction."
+    },
+    "On skin": {
+      "ratio": "4:5",
+      "text": "Jewelry-focused view at an adult wearer’s collarbone, natural skin texture and a plain neckline. The chain follows gravity and skin contours with plausible contact shadows. Keep the entire pendant and both attachment junctions visible and sharp; do not hide them behind clothing or hair."
+    },
+    "Close-up": {
+      "ratio": "1:1",
+      "text": "Close product photograph on neutral gray, pendant filling most of the frame. Resolve edge thickness, finish, settings and attachment junctions. Keep the complete pendant in frame and in focus; magnification must not crop away identity or hardware."
+    },
+    "Dark": {
+      "ratio": "9:16",
+      "text": "Product photograph on matte charcoal with broad controlled highlights and subtle edge separation. Retain visible shadow detail, true metal color, the complete pendant and both attachments. Deep background, inspectable jewelry; no glow or theatrical sparkle."
+    }
+  },
+  "latinAdaptations": {
+    "Classic": "Latin serif lettering with balanced proportions",
+    "Minimal": "simple restrained Latin lettering with even strokes",
+    "Signature": "connected Latin cursive with a handwritten rhythm",
+    "Diwani": "Latin adaptation with flowing curved strokes and controlled swashes; retain English spelling",
+    "Kufi": "Latin adaptation with angular rectilinear geometry; retain English spelling",
+    "Thuluth inspired": "Latin adaptation with tall upright proportions and contrasting curved strokes; retain English spelling"
+  },
+  "twoNameArrangementStartingPoints": {
+    "Side by side": "Place both names upright side by side in the selected script reading order, joined by the approved structural connector.",
+    "Connected heart": "Place both upright names around a connected heart carrier; join each name to the carrier at its approved contacts.",
+    "Stacked": "Place the first name above the second; both remain upright and independently readable. Use the approved inter-row supports, never rotate a horizontal word vertically.",
+    "Infinity": "Support both upright names on the approved continuous infinity carrier without obscuring letters.",
+    "Interlocked": "Preserve two distinct name-bearing rigid components and their approved mechanical interlock; do not fuse articulating parts or leave them unsupported."
+  },
+  "limits": {
+    "nameUnicodeCharacters": 30,
+    "engravingUnicodeCharacters": 80,
+    "engravingSurface": "Rear only when explicitly approved in recipe; otherwise reject",
+    "arbitraryRequests": "Rejected; resolve into supported selections first",
+    "dimensions": "22/32 mm nominal only"
+  },
+  "status": "Candidate: frozen screening prompts retained; broader geometry packages not prepared or qualified"
+}

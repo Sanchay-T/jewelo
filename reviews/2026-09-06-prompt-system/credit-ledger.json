@@ -1,0 +1,322 @@
+{
+  "baselineCredits": 308802,
+  "observations": [
+    {
+      "caseId": "classical-assembly-4",
+      "taskId": "e366912e-b65b-4c38-a275-64321d9972c9",
+      "observedBalance": 308782,
+      "changeSincePreviousSubmissionObservation": 20
+    },
+    {
+      "caseId": "rails-body-2",
+      "taskId": "baa981e2-450f-4a2b-a581-6a1571262138",
+      "observedBalance": 308762,
+      "changeSincePreviousSubmissionObservation": 20
+    },
+    {
+      "caseId": "classical-body-3",
+      "taskId": "6bbeed4f-f4f1-4752-ad0b-36bb9859985b",
+      "observedBalance": 308742,
+      "changeSincePreviousSubmissionObservation": 20
+    },
+    {
+      "caseId": "classical-body-1",
+      "taskId": "9b854606-c2dd-41c9-884d-507dd226c675",
+      "observedBalance": 308722,
+      "changeSincePreviousSubmissionObservation": 20
+    },
+    {
+      "caseId": "origami-assembly-3",
+      "taskId": "f8148525-8b9d-4408-9ac6-d3c8e89ea344",
+      "observedBalance": 308702,
+      "changeSincePreviousSubmissionObservation": 20
+    },
+    {
+      "caseId": "rails-assembly-2",
+      "taskId": "fdfe2c1a-2138-4e00-84ac-a9318b1d6d19",
+      "observedBalance": 308682,
+      "changeSincePreviousSubmissionObservation": 20
+    },
+    {
+      "caseId": "rails-text-3",
+      "taskId": "3d4e837a-df19-427f-a2ae-1fb52061bcd8",
+      "observedBalance": 308662,
+      "changeSincePreviousSubmissionObservation": 20
+    },
+    {
+      "caseId": "origami-assembly-4",
+      "taskId": "890caf0b-f694-40ca-92c2-cd1c6fe59a68",
+      "observedBalance": 308642,
+      "changeSincePreviousSubmissionObservation": 20
+    },
+    {
+      "caseId": "framed-body-4",
+      "taskId": "2de175bd-f88a-4660-83b1-f5bec70fba8a",
+      "observedBalance": 308622,
+      "changeSincePreviousSubmissionObservation": 20
+    },
+    {
+      "caseId": "framed-assembly-3",
+      "taskId": "7fb01900-52f6-4365-b18c-7e7049997b3b",
+      "observedBalance": 308602,
+      "changeSincePreviousSubmissionObservation": 20
+    },
+    {
+      "caseId": "origami-body-2",
+      "taskId": "d30203b1-9ad7-4303-bce8-782e4c36ed73",
+      "observedBalance": 308582,
+      "changeSincePreviousSubmissionObservation": 20
+    },
+    {
+      "caseId": "framed-text-2",
+      "taskId": "89538adb-fae9-4e94-9972-bd4a69ae8011",
+      "observedBalance": 308562,
+      "changeSincePreviousSubmissionObservation": 20
+    },
+    {
+      "caseId": "framed-text-1",
+      "taskId": "c2d85c1d-1324-48bd-b52c-33c4efd7be87",
+      "observedBalance": 308542,
+      "changeSincePreviousSubmissionObservation": 20
+    },
+    {
+      "caseId": "classical-assembly-1",
+      "taskId": "51a74f4c-c935-4572-a0a6-848d0e2a90a8",
+      "observedBalance": 308522,
+      "changeSincePreviousSubmissionObservation": 20
+    },
+    {
+      "caseId": "framed-body-1",
+      "taskId": "0b32d1a6-f99c-413f-a686-2bd5bc1b6e17",
+      "observedBalance": 308502,
+      "changeSincePreviousSubmissionObservation": 20
+    },
+    {
+      "caseId": "origami-assembly-2",
+      "taskId": "66f1affc-997b-4daa-8613-a78b9d47d0d2",
+      "observedBalance": 308482,
+      "changeSincePreviousSubmissionObservation": 20
+    },
+    {
+      "caseId": "classical-body-2",
+      "taskId": "d18b1dd6-54ed-4ad0-97c8-2ab08402b202",
+      "observedBalance": 308462,
+      "changeSincePreviousSubmissionObservation": 20
+    },
+    {
+      "caseId": "classical-text-4",
+      "taskId": "41dd0198-8ad8-4b8b-b933-8bae9ddf8576",
+      "observedBalance": 308442,
+      "changeSincePreviousSubmissionObservation": 20
+    },
+    {
+      "caseId": "origami-text-1",
+      "taskId": "76e6c6a7-d506-4392-81e5-61bfbf4e661c",
+      "observedBalance": 308422,
+      "changeSincePreviousSubmissionObservation": 20
+    },
+    {
+      "caseId": "rails-assembly-3",
+      "taskId": "3da911b5-392d-4f78-840d-35cc475038d1",
+      "observedBalance": 308402,
+      "changeSincePreviousSubmissionObservation": 20
+    },
+    {
+      "caseId": "rails-text-4",
+      "taskId": "85c0994a-2f2a-4d8f-96c0-b2eafe24a79c",
+      "observedBalance": 308382,
+      "changeSincePreviousSubmissionObservation": 20
+    },
+    {
+      "caseId": "framed-body-3",
+      "taskId": "ca9aa093-ca4e-475d-adc4-91b23e11259f",
+      "observedBalance": 308362,
+      "changeSincePreviousSubmissionObservation": 20
+    },
+    {
+      "caseId": "rails-body-4",
+      "taskId": "14132bb0-797c-4eee-9250-31ff241571e8",
+      "observedBalance": 308342,
+      "changeSincePreviousSubmissionObservation": 20
+    },
+    {
+      "caseId": "framed-assembly-4",
+      "taskId": "28734efc-3f9c-4d78-b43b-821ab55298c9",
+      "observedBalance": 308322,
+      "changeSincePreviousSubmissionObservation": 20
+    },
+    {
+      "caseId": "rails-assembly-4",
+      "taskId": "13351030-69f0-4cc3-bee2-c50e6fdb5034",
+      "observedBalance": 308302,
+      "changeSincePreviousSubmissionObservation": 20
+    },
+    {
+      "caseId": "framed-body-2",
+      "taskId": "1797d705-a6bd-491a-ad17-ecbd6f9bc35d",
+      "observedBalance": 308282,
+      "changeSincePreviousSubmissionObservation": 20
+    },
+    {
+      "caseId": "framed-assembly-1",
+      "taskId": "1d7a6846-24f5-44fb-8ff9-243e8a69e03a",
+      "observedBalance": 308262,
+      "changeSincePreviousSubmissionObservation": 20
+    },
+    {
+      "caseId": "classical-text-2",
+      "taskId": "d2d2cfd8-0ec0-4f31-b703-c1c77dd0ab37",
+      "observedBalance": 308242,
+      "changeSincePreviousSubmissionObservation": 20
+    },
+    {
+      "caseId": "origami-assembly-1",
+      "taskId": "e7402979-d815-4ddf-9b31-8f836c5d313a",
+      "observedBalance": 308222,
+      "changeSincePreviousSubmissionObservation": 20
+    },
+    {
+      "caseId": "framed-text-4",
+      "taskId": "0be0a5e2-4d40-42f6-9aed-71db22d9f426",
+      "observedBalance": 308202,
+      "changeSincePreviousSubmissionObservation": 20
+    },
+    {
+      "caseId": "classical-text-3",
+      "taskId": "90a55949-4e9d-4adc-b527-cf672c727f4b",
+      "observedBalance": 308182,
+      "changeSincePreviousSubmissionObservation": 20
+    },
+    {
+      "caseId": "rails-assembly-1",
+      "taskId": "6ef246cc-39ce-431b-9926-aace3ae37352",
+      "observedBalance": 308162,
+      "changeSincePreviousSubmissionObservation": 20
+    },
+    {
+      "caseId": "framed-assembly-2",
+      "taskId": "b98ae89d-561e-4402-837d-e3a83e841d4d",
+      "observedBalance": 308142,
+      "changeSincePreviousSubmissionObservation": 20
+    },
+    {
+      "caseId": "origami-body-4",
+      "taskId": "15c9c2a9-abf6-440f-a42c-48ee392da52c",
+      "observedBalance": 308122,
+      "changeSincePreviousSubmissionObservation": 20
+    },
+    {
+      "caseId": "classical-assembly-2",
+      "taskId": "2068cf6b-b107-4f06-a9ad-b80a769ff0e9",
+      "observedBalance": 308102,
+      "changeSincePreviousSubmissionObservation": 20
+    },
+    {
+      "caseId": "classical-assembly-3",
+      "taskId": "e6c85edc-31eb-4fc0-88f5-a64b07c241dc",
+      "observedBalance": 308082,
+      "changeSincePreviousSubmissionObservation": 20
+    },
+    {
+      "caseId": "rails-body-1",
+      "taskId": "4e6b52b3-57c6-408a-ad26-72c110ce51a6",
+      "observedBalance": 308062,
+      "changeSincePreviousSubmissionObservation": 20
+    },
+    {
+      "caseId": "classical-body-4",
+      "taskId": "54fd44e4-9a66-4708-8d09-d7e1767bca1e",
+      "observedBalance": 308042,
+      "changeSincePreviousSubmissionObservation": 20
+    },
+    {
+      "caseId": "rails-text-2",
+      "taskId": "82797309-eec0-45b7-9965-8c3a411585c3",
+      "observedBalance": 308022,
+      "changeSincePreviousSubmissionObservation": 20
+    },
+    {
+      "caseId": "origami-text-4",
+      "taskId": "fff3690e-cc90-434f-9be5-0eb205184ec4",
+      "observedBalance": 308002,
+      "changeSincePreviousSubmissionObservation": 20
+    },
+    {
+      "caseId": "classical-text-1",
+      "taskId": "c1b2a3ba-cecb-4e75-9757-c963aab16fa7",
+      "observedBalance": 307982,
+      "changeSincePreviousSubmissionObservation": 20
+    },
+    {
+      "caseId": "rails-text-1",
+      "taskId": "141b20c3-3ca5-454d-8407-acac398bd9ac",
+      "observedBalance": 307962,
+      "changeSincePreviousSubmissionObservation": 20
+    },
+    {
+      "caseId": "origami-text-2",
+      "taskId": "951c3371-b77c-4a4f-b7fa-1ca88219cefa",
+      "observedBalance": 307942,
+      "changeSincePreviousSubmissionObservation": 20
+    },
+    {
+      "caseId": "framed-text-3",
+      "taskId": "90cc6b4e-a9ef-4f03-b45a-5e6db104cab6",
+      "observedBalance": 307922,
+      "changeSincePreviousSubmissionObservation": 20
+    },
+    {
+      "caseId": "origami-body-3",
+      "taskId": "4057bb17-fa5f-4048-bfa7-6571c9d128ab",
+      "observedBalance": 307902,
+      "changeSincePreviousSubmissionObservation": 20
+    },
+    {
+      "caseId": "origami-text-3",
+      "taskId": "99d6e833-23e8-469d-8785-143b36e636d8",
+      "observedBalance": 307882,
+      "changeSincePreviousSubmissionObservation": 20
+    },
+    {
+      "caseId": "rails-body-3",
+      "taskId": "f395cb58-aedf-4bb3-9442-745f57d9d392",
+      "observedBalance": 307862,
+      "changeSincePreviousSubmissionObservation": 20
+    },
+    {
+      "caseId": "origami-body-1",
+      "taskId": "61e38223-8983-4e57-9bf8-a9809dac64dd",
+      "observedBalance": 307842,
+      "changeSincePreviousSubmissionObservation": 20
+    }
+  ],
+  "checkpoints": [
+    {
+      "at": "2026-09-05T21:50:55.954Z",
+      "submission": 20,
+      "previous": 308802,
+      "current": 308402,
+      "workspaceDelta": 400,
+      "attribution": "Workspace balance change, not a per-task invoice; concurrent account use may affect it."
+    },
+    {
+      "at": "2026-09-05T22:16:05.702Z",
+      "submission": 40,
+      "previous": 308402,
+      "current": 308002,
+      "workspaceDelta": 400,
+      "attribution": "Workspace balance change, not a per-task invoice; concurrent account use may affect it."
+    },
+    {
+      "at": "2026-09-05T22:26:02.449Z",
+      "submission": 48,
+      "previous": 308002,
+      "current": 307842,
+      "workspaceDelta": 160,
+      "attribution": "Workspace balance change, not a per-task invoice; concurrent account use may affect it."
+    }
+  ],
+  "paidPreparationGenerations": 0,
+  "referenceUploads": 8,
+  "attribution": "Observed workspace balance changes. No itemized per-task or upload invoice is exposed; concurrent workspace usage could affect deltas."
+}

@@ -1,0 +1,47 @@
+{
+  "version": "jewelo-prompt-lab-1.0.0",
+  "config": {
+    "name": "محمد",
+    "twoNames": false,
+    "script": "Arabic",
+    "construction": "Framed minimal",
+    "lettering": "Classic",
+    "metal": "White gold",
+    "coverage": "No stones",
+    "size": 32,
+    "chain": "Cable",
+    "engraving": ""
+  },
+  "configHash": "c6a926224ce391d674ed45519ae899d8f77532d1791d259267afc6d17b5da437",
+  "recipeHash": "35e4422067a50ed2ec17ca5285c0686d73c4188b9998813df495ba5e9966a717",
+  "templateHash": "28f7149dbff81b64d979fc03bad7068ca8c73933adcfcae917ca1c4280b346e4",
+  "view": "Studio",
+  "method": "assembly",
+  "model": "gpt-image-2",
+  "ratio": "1:1",
+  "quality": null,
+  "imageSize": null,
+  "referenceDescriptors": [
+    {
+      "tag": "assembly",
+      "path": "references/framed/assembly.png",
+      "sha256": "cdfc3e7f61c81ba8f45a93e34b6dd7b84e9cc4b3e3a047b1c79e06a4bf20e9b3"
+    }
+  ],
+  "prompt": "Create one photorealistic jewelry photograph.\n\nIDENTITY\nExact pendant name: \"محمد\". Arabic, right-to-left reading. This text forms the jewelry, not a caption.\nClassic Arabic lettering, preserving the approved shaped glyphs. One upright name; no second name or two-name connector.\n\nCONSTRUCTION\nAn open rectangular frame supports upright lettering at the defined contact points. The frame carries the two attachment eyelets. No additional eyelets on the lettering. Open rectangular carrier, two lower support contacts at the broad baseline, no legacy lettering eyelets.\nExactly two integral body eyelets at the designated attachment locations. Each existing eyelet receives one separate closed connecting ring, and each connecting ring receives the first cable-chain link. The connecting rings and alternating chain links remain separate interlocking parts. Continue the chain beyond the photographic frame; do not show loose cut ends beside the pendant.\n@assembly defines this exact body and its installed separate hardware. Preserve its glyph contours, support contacts, eyelets and interlocking relationships. Apply the requested finish and photographic presentation; do not redesign the assembly.\n\nCUSTOMER SELECTIONS\nWhite gold appearance, clean polished finish. Coherent reflections, visible edge thickness and believable edge bevels. No assumed karat or invented material certificate.\nStone-free metal. No gemstones, pavé, prongs, bezels or empty stone seats.\nNominal selected size label: 32 mm. Preserve the approved reference proportions. Do not print measurement labels or invent other dimensions.\nCable chain: alternating oval links. One necklace attached at its specified body attachment points.\nNo additional personalization.\n\nPHOTOGRAPHY\nNear-front catalog photograph on matte ivory. One large soft source with gentle fill and neutral white balance. Entire pendant and both attachment junctions visible, with sufficient depth of field to inspect the construction.\n\nPRESERVE\nPreserve the core Muhammad lettering, its reading order, letter counters, approved support contacts and the two designated body attachment points. Preserve the specified rigid body architecture. Preserve intentional letter counters, openwork and hardware apertures. All visible parts have plausible support. No loose chain ends beside an attachment, impossible intersections, extra holes, missing letters, captions, logos or sparkle graphics.",
+  "promptHash": "09c831a753d1384fcf137ae36aa057a622709c308515e8fb8d093c45d49c9df6",
+  "slots": {
+    "name_and_script": "Exact pendant name: \"محمد\". Arabic, right-to-left reading. This text forms the jewelry, not a caption.",
+    "lettering_and_arrangement": "Classic Arabic lettering, preserving the approved shaped glyphs. One upright name; no second name or two-name connector.",
+    "construction_recipe": "An open rectangular frame supports upright lettering at the defined contact points. The frame carries the two attachment eyelets. No additional eyelets on the lettering. Open rectangular carrier, two lower support contacts at the broad baseline, no legacy lettering eyelets.",
+    "attachment_recipe": "Exactly two integral body eyelets at the designated attachment locations. Each existing eyelet receives one separate closed connecting ring, and each connecting ring receives the first cable-chain link. The connecting rings and alternating chain links remain separate interlocking parts. Continue the chain beyond the photographic frame; do not show loose cut ends beside the pendant.",
+    "reference_roles": "@assembly defines this exact body and its installed separate hardware. Preserve its glyph contours, support contacts, eyelets and interlocking relationships. Apply the requested finish and photographic presentation; do not redesign the assembly.",
+    "metal_and_finish": "White gold appearance, clean polished finish. Coherent reflections, visible edge thickness and believable edge bevels. No assumed karat or invented material certificate.",
+    "stone_and_setting_spec": "Stone-free metal. No gemstones, pavé, prongs, bezels or empty stone seats.",
+    "selected_size": "Nominal selected size label: 32 mm. Preserve the approved reference proportions. Do not print measurement labels or invent other dimensions.",
+    "chain_style": "Cable chain: alternating oval links. One necklace attached at its specified body attachment points.",
+    "applicable_personalization": "No additional personalization.",
+    "view_recipe": "Near-front catalog photograph on matte ivory. One large soft source with gentle fill and neutral white balance. Entire pendant and both attachment junctions visible, with sufficient depth of field to inspect the construction.",
+    "applicable_invariants": "Preserve the core Muhammad lettering, its reading order, letter counters, approved support contacts and the two designated body attachment points. Preserve the specified rigid body architecture. Preserve intentional letter counters, openwork and hardware apertures. All visible parts have plausible support. No loose chain ends beside an attachment, impossible intersections, extra holes, missing letters, captions, logos or sparkle graphics."
+  }
+}

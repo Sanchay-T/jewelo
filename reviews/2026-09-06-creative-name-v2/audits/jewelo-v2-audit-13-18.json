@@ -1,0 +1,110 @@
+[
+  {
+    "id": "V2-13",
+    "outputHash": "b1a477461ab630d1784f1c38e85c1432d38cac2f6c8b48a16f2ad596988d6ca9",
+    "gates": {
+      "identity": "reject",
+      "construction": "reject",
+      "attachments": "reject",
+      "selections": "pass",
+      "photography": "pass",
+      "unrequested_content": "pass",
+      "reference_leakage": "needs_review"
+    },
+    "styleScore": 4,
+    "appealScore": 2,
+    "notes": "Arabic readback appears أيمان rather than required إيمان: the hamza-like form is above the right alif and merged near its attachment, not below the alif. A broad but clearly visible short bridge joins the left nun to the adjacent alif. However, the middle/left name body has no connection to the right initial alif, and the entire left chain ends in a small eyelet/stub floating above the nun rather than an eyelet integral to the pendant. The nun dot is also floating. Construction and left attachment therefore reject without assuming hidden support. The two lower ya dots are supported through a visible metal web. Right connector/eyelet interlock is visible; it cannot compensate for the missing left body attachment. Polished white metal, cable chain, complete readable framing. Wrong hamza placement may be specimen-shape leakage or a rendering error; source remains uncertain while blinded. Original and lower-left/lower-right crops inspected.",
+    "reviewer": "adversarial_review",
+    "blinded": true
+  },
+  {
+    "id": "V2-14",
+    "outputHash": "59a4cef09bbc7f1d631008abc7d463c810dca563dfd4792145b9dee1ba0cb27d",
+    "gates": {
+      "identity": "reject",
+      "construction": "reject",
+      "attachments": "pass",
+      "selections": "pass",
+      "photography": "pass",
+      "unrequested_content": "pass",
+      "reference_leakage": "needs_review"
+    },
+    "styleScore": 4,
+    "appealScore": 3,
+    "notes": "Arabic readback: أيمان, not requested إيمان; the hamza is unmistakably ABOVE the initial alif. The initial alif on the right remains physically separated from the following ya by an open air gap with no bridge. The left nun is visibly bridged to the middle alif, the nun diamond is joined directly to the top of its inner stem, and the two ya dots have visible stems, but the unbridged right linguistic break still makes this an incomplete connected pendant. Two integral outer body eyelets each receive a separate closed connector linked to the cable chain, with readable apertures. White polished metal, no stones/frame/captions. Classic Arabic stroke traits are recognizable and close to the shared specimen. The hamza-above shape resembles a form in that specimen, but its origin cannot be established; reference leakage remains needs_review. Original and lower quadrant crops inspected.",
+    "reviewer": "adversarial_review",
+    "blinded": true
+  },
+  {
+    "id": "V2-15",
+    "outputHash": "6b48d4655cb8f6b86ca96b7f3f14db3c28f70dddc173eb571dee9ff4196369e3",
+    "gates": {
+      "identity": "pass",
+      "construction": "reject",
+      "attachments": "reject",
+      "selections": "pass",
+      "photography": "pass",
+      "unrequested_content": "pass",
+      "reference_leakage": "pass"
+    },
+    "styleScore": 4,
+    "appealScore": 3,
+    "notes": "Arabic main-name readback: نور, with one identifying nun diamond. The diamond meets the pointed nun terminal only at an apparent tip-to-tip contact; no finite-width supporting bridge is visible in the lower-right crop. The rubric disallows point contacts, so construction rejects. The waw/ra break has two clearly visible narrow bridges, and a short bridge joins the nun to the right eyelet's long vertical tab. However, the entire left chain ends in a separate ring/eyelet floating well above the ra, with no metal connection to the pendant; the second integral body attachment is missing. Right eyelet/connector interlock is readable. White gold appearance, cable chain, no stones/frame/captions or specimen names. Original and lower quadrant crops inspected.",
+    "reviewer": "adversarial_review",
+    "blinded": true
+  },
+  {
+    "id": "V2-16",
+    "outputHash": "c274521b3def946257e87fa307dd06860b7ceecb51156333a8a77cdea6bbd658",
+    "gates": {
+      "identity": "pass",
+      "construction": "pass",
+      "attachments": "pass",
+      "selections": "pass",
+      "photography": "pass",
+      "unrequested_content": "pass",
+      "reference_leakage": "pass"
+    },
+    "styleScore": 5,
+    "appealScore": 4,
+    "notes": "Exact Latin readback: Ava, with uppercase A followed by lowercase v and a. The open A counter and lowercase a counter remain clear. Visible short metal bridges connect A to v near the upper-left v serif and lower gap, then v to a at the lower gap; these are local supports, with no full backing plate or surrounding frame. Both outside body eyelets are visibly integral through short tabs and each receives a separate closed connector linked to the cable chain. Apertures and plausible interlocking relationships are readable. Classical serif proportions, stroke contrast and lowercase a form closely match the shared Latin style specimen. White polished metal, complete sharp pendant/junctions, no stones, captions or specimen writing. Original and lower quadrant crops inspected.",
+    "reviewer": "adversarial_review",
+    "blinded": true
+  },
+  {
+    "id": "V2-17",
+    "outputHash": "96d15e49885d34e1a237e880c5d18f9b2d869f17d8943f139e39eb06272282e7",
+    "gates": {
+      "identity": "pass",
+      "construction": "reject",
+      "attachments": "pass",
+      "selections": "pass",
+      "photography": "pass",
+      "unrequested_content": "pass",
+      "reference_leakage": "pass"
+    },
+    "styleScore": 5,
+    "appealScore": 4,
+    "notes": "Exact Latin readback: Christopher, correctly ordered with uppercase C, lowercase remainder and one dot above i. That i dot is visibly detached from the i stem with an open air gap and no supporting bridge; construction rejects. Neighboring letters show a mixture of local bridges and touching serifs, but no hidden support is assumed and those contacts cannot rescue the floating dot. Both outer eyelets appear integral to C and final r, each receiving a distinct connector linked to the cable chain; readable apertures and plausible interlocks are visible. Strong classical serif style fit, coherent polished white metal and contact shadows, no full plate/frame, stones, captions or specimen names. Original and lower quadrant crops inspected.",
+    "reviewer": "adversarial_review",
+    "blinded": true
+  },
+  {
+    "id": "V2-18",
+    "outputHash": "a11ef27381097d66a1f662875ae55d4aa1d13ebd4ff734637078d535594899da",
+    "gates": {
+      "identity": "pass",
+      "construction": "pass",
+      "attachments": "pass",
+      "selections": "pass",
+      "photography": "pass",
+      "unrequested_content": "pass",
+      "reference_leakage": "pass"
+    },
+    "styleScore": 5,
+    "appealScore": 4,
+    "notes": "Exact Latin readback: Ava, preserving uppercase A and lowercase v/a with open counters. A visible finite-width local bridge joins A to v, and another joins v to a; the supporting strips preserve readable glyph boundaries and do not form a full plate or frame. Both outer body eyelets have continuous tabs joining the lettering, and each receives a separate closed connector linked to the first cable-chain link. Both junctions and apertures are inspectable. The classical serif forms and stroke contrast closely match the shared Latin style specimen. White polished metal, no stones, no captions, no extra specimen words, complete pendant and coherent photographic shadows. Original and lower quadrant crops inspected.",
+    "reviewer": "adversarial_review",
+    "blinded": true
+  }
+]

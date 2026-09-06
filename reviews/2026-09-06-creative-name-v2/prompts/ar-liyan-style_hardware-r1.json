@@ -1,0 +1,346 @@
+{
+  "version": "jewelo-creative-prompt-lab-2.0.0",
+  "kind": "new_design",
+  "config": {
+    "name": "ليان",
+    "script": "Arabic",
+    "construction": "Classical",
+    "lettering": "Classic",
+    "metal": "White gold",
+    "coverage": "No stones",
+    "size": 32,
+    "chain": "Cable",
+    "twoNames": false,
+    "engraving": ""
+  },
+  "configHash": "f29ea317df42f05fae1f12bb1860c59beba540054cb23ecbfa5597eb45d683f6",
+  "sourceStrings": {
+    "name": "ليان"
+  },
+  "recipeHash": "4172771a84fb7992241ca9997ddf59910e224f4a7408df34869018f52f7c6424",
+  "templateHash": "34fd65418d80a2c4b7501303bb4c1b63194ec772a93fd95ff317fae9c5c99763",
+  "prompt": "Create one photorealistic Studio photograph of a newly designed custom-name necklace.\n\nCUSTOMER IDENTITY\nThe pendant itself spells \"ليان\". Arabic, right-to-left reading. Preserve exact spelling, capitalization, supplied marks and meaningful spaces. One upright name formed from metal, not a printed caption.\nClassic Arabic lettering with Naskh character: balanced stroke contrast, rounded bowls, clear contextual joins and measured upright proportions. Preserve correct Arabic shaping and identifying marks.\n\nREFERENCE ROLES\nImage 1, @lettering: use only its lettering traits and calligraphic character for the requested name. Its sample writing is not the customer name. Do not copy the sample name or its exact composition and contour.\nImage 2, @hardware: use only the body-eyelet, separate-connector and first-chain-link relationship. Place the two attachments to suit this new name. Customer selections control finish and chain; do not copy unrelated shapes, proportions or writing.\n\nDESIGN FREEDOM\nCreate an original name-specific composition in the selected lettering style. You may adapt letter proportions, spacing, permitted flourishes and discreet support placement while preserving spelling and correct shaping. The selected construction and hardware relationship are fixed; no pre-existing pendant silhouette is prescribed.\n\nCONSTRUCTION\nUpright lettering forms the main rigid pendant body. Discreet bridges support separated components while retaining recognizable letter groups.\nSupport every separated letter group, identifying dot, hamza and supplied mark with discreet metal bridges. Keep bridges visibly distinguishable from linguistic strokes and preserve the reading, mark count and placement, intentional counters and linguistic breaks. Each bridge visibly meets the components it supports with a continuous metal connection; point contacts, truncated supports and purported hidden connections are insufficient. Do not add a surrounding frame or full backing plate.\nExactly two integral body eyelets carry the pendant. Each body eyelet receives one separate closed connecting ring; that same connector passes through the first Cable-chain link. Keep eyelets, connectors and alternating chain links distinguishable, with plausible interlocks and visible apertures. Use both body eyelets; no unused eyelets, extra body holes or loose chain ends beside the pendant. Continue the chain beyond the photographic frame.\n\nCUSTOMER SELECTIONS\nWhite gold appearance with a clean polished finish. Stone-free metal, without gemstones or empty stone seats. Cable chain with alternating oval links. Nominal selected size label: 32 mm; this image does not certify dimensions. Do not print measurement labels.\n\nPHOTOGRAPHY\nNear-front catalog photograph on matte ivory. One large soft source with gentle fill and neutral white balance. Entire pendant and both attachment junctions visible, with sufficient depth of field to inspect the construction. Show the lettering, support bridges and both attachment junctions clearly enough to inspect their connections.\n\nVISIBLE REQUIREMENTS\nRetain intentional letter counters, linguistic spaces and hardware apertures. Supports must preserve legibility and meet their intended components. No captions, specimen writing, reference labels, logos or unrelated decoration. Use coherent reflections and contact shadows with readable metal edges; do not conceal a critical connection with glare or blur.",
+  "promptHash": "779e683a9c557279b957e4da6999d5ac4f6f24009ea5f90083fdd45fa233f995",
+  "method": "style_hardware",
+  "view": "Studio",
+  "ratio": "1:1",
+  "model": "gpt-image-2",
+  "quality": null,
+  "imageSize": null,
+  "referenceDescriptors": [
+    {
+      "id": "lettering-ar",
+      "role": "lettering",
+      "tag": "lettering",
+      "path": "reviews/2026-09-06-creative-name-v2/references/lettering-ar.png",
+      "sha256": "c62ffcca3335a356511cb98675abbe4787ff78a6ea6b365ce0f8e65ad27049b6",
+      "script": "Arabic",
+      "words": [
+        "مريم",
+        "فاطمة",
+        "جلال",
+        "أمينة"
+      ],
+      "font": "NotoNaskhArabic-Regular.ttf",
+      "fontSha256": "67b5a525a661b607971fbd3f96a81b89d3a768e74534fca84f18ac97e6fab72f",
+      "fontLicense": "OFL-1.1",
+      "shaping": [
+        {
+          "text": "مريم",
+          "glyphs": [
+            {
+              "g": 75,
+              "cl": 3,
+              "dx": 0,
+              "dy": 0,
+              "ax": 528,
+              "ay": 0
+            },
+            {
+              "g": 325,
+              "cl": 2,
+              "dx": 31,
+              "dy": -17,
+              "ax": 0,
+              "ay": 0
+            },
+            {
+              "g": 21,
+              "cl": 2,
+              "dx": 0,
+              "dy": 0,
+              "ax": 343,
+              "ay": 0
+            },
+            {
+              "g": 29,
+              "cl": 1,
+              "dx": 0,
+              "dy": 0,
+              "ax": 404,
+              "ay": 0
+            },
+            {
+              "g": 77,
+              "cl": 0,
+              "dx": 0,
+              "dy": 0,
+              "ax": 456,
+              "ay": 0
+            }
+          ],
+          "renderHash": "532d883c84cb62fcf95d91c7cf3275083d5f5c0575dee8d2ebb33166a4d33f91"
+        },
+        {
+          "text": "فاطمة",
+          "glyphs": [
+            {
+              "g": 294,
+              "cl": 4,
+              "dx": 91,
+              "dy": -294,
+              "ax": 0,
+              "ay": 0
+            },
+            {
+              "g": 81,
+              "cl": 4,
+              "dx": 0,
+              "dy": 0,
+              "ax": 452,
+              "ay": 0
+            },
+            {
+              "g": 76,
+              "cl": 3,
+              "dx": 0,
+              "dy": 0,
+              "ax": 413,
+              "ay": 0
+            },
+            {
+              "g": 43,
+              "cl": 2,
+              "dx": 0,
+              "dy": 0,
+              "ax": 660,
+              "ay": 0
+            },
+            {
+              "g": 9,
+              "cl": 1,
+              "dx": 0,
+              "dy": 0,
+              "ax": 253,
+              "ay": 0
+            },
+            {
+              "g": 288,
+              "cl": 0,
+              "dx": 115,
+              "dy": -227,
+              "ax": 0,
+              "ay": 0
+            },
+            {
+              "g": 51,
+              "cl": 0,
+              "dx": 0,
+              "dy": 0,
+              "ax": 420,
+              "ay": 0
+            }
+          ],
+          "renderHash": "94d99dc45a003915d3db8bf21eacc889c23115005a0523a22b106fe7bd7377ca"
+        },
+        {
+          "text": "جلال",
+          "glyphs": [
+            {
+              "g": 66,
+              "cl": 3,
+              "dx": 0,
+              "dy": 0,
+              "ax": 595,
+              "ay": 0
+            },
+            {
+              "g": 11,
+              "cl": 2,
+              "dx": 0,
+              "dy": 0,
+              "ax": 300,
+              "ay": 0
+            },
+            {
+              "g": 69,
+              "cl": 1,
+              "dx": 0,
+              "dy": 0,
+              "ax": 310,
+              "ay": 0
+            },
+            {
+              "g": 323,
+              "cl": 0,
+              "dx": 283,
+              "dy": -8,
+              "ax": 0,
+              "ay": 0
+            },
+            {
+              "g": 25,
+              "cl": 0,
+              "dx": 0,
+              "dy": 0,
+              "ax": 636,
+              "ay": 0
+            }
+          ],
+          "renderHash": "1360676faaf2650c218f272bc8732fe9430f95d4fe82a3e2577b17273f9d148a"
+        },
+        {
+          "text": "أمينة",
+          "glyphs": [
+            {
+              "g": 294,
+              "cl": 4,
+              "dx": 91,
+              "dy": -294,
+              "ax": 0,
+              "ay": 0
+            },
+            {
+              "g": 81,
+              "cl": 4,
+              "dx": 0,
+              "dy": 0,
+              "ax": 452,
+              "ay": 0
+            },
+            {
+              "g": 288,
+              "cl": 3,
+              "dx": 85,
+              "dy": -428,
+              "ax": 0,
+              "ay": 0
+            },
+            {
+              "g": 16,
+              "cl": 3,
+              "dx": 0,
+              "dy": 0,
+              "ax": 292,
+              "ay": 0
+            },
+            {
+              "g": 325,
+              "cl": 2,
+              "dx": 54,
+              "dy": -17,
+              "ax": 0,
+              "ay": 0
+            },
+            {
+              "g": 18,
+              "cl": 2,
+              "dx": 0,
+              "dy": 0,
+              "ax": 360,
+              "ay": 0
+            },
+            {
+              "g": 77,
+              "cl": 1,
+              "dx": 0,
+              "dy": 0,
+              "ax": 456,
+              "ay": 0
+            },
+            {
+              "g": 305,
+              "cl": 0,
+              "dx": 46,
+              "dy": -15,
+              "ax": 0,
+              "ay": 0
+            },
+            {
+              "g": 8,
+              "cl": 0,
+              "dx": 0,
+              "dy": 0,
+              "ax": 238,
+              "ay": 0
+            }
+          ],
+          "renderHash": "67c8c9c30f3d252d0c6611eb131c86a24f7f8e242b4f7183f72f2e96f2fa94dc"
+        }
+      ],
+      "preflight": {
+        "status": "pass",
+        "sha256": "c62ffcca3335a356511cb98675abbe4787ff78a6ea6b365ce0f8e65ad27049b6",
+        "reviewers": [
+          "root",
+          "plan_reviewer"
+        ],
+        "scope": "Visual reference-role preflight; not manufacturing certification.",
+        "observation": "Exact specimen spelling and identifying marks preserved; natural HarfBuzz shaping."
+      },
+      "roleDescription": "Lettering style only; sample words are not customer identity."
+    },
+    {
+      "id": "hardware",
+      "role": "hardware",
+      "tag": "hardware",
+      "path": "reviews/2026-09-06-creative-name-v2/references/hardware.png",
+      "sha256": "38fa0377be00b1ca7eb3076c92e4ab04252d3da73749c5a9be1262f7bf3cec27",
+      "preflight": {
+        "status": "pass",
+        "sha256": "38fa0377be00b1ca7eb3076c92e4ab04252d3da73749c5a9be1262f7bf3cec27",
+        "reviewers": [
+          "root",
+          "plan_reviewer"
+        ],
+        "scope": "Visual reference-role preflight; not manufacturing certification.",
+        "observation": "Neutral tab, integral eyelet, separate connector and alternating links show coherent front/behind interlocks."
+      },
+      "roleDescription": "One integral body eyelet, separate perpendicular closed connector and first alternating cable links. Relationship only; not pendant outline. Apply at both body attachments.",
+      "geometry": {
+        "bodyComponents": 1,
+        "eyeletOuterRadius": 36,
+        "eyeletBoreRadius": 20,
+        "connectorCenterY": -29,
+        "connectorRadius": 29,
+        "tubeRadius": 4.8,
+        "firstLinkCenterY": -63,
+        "firstLinkRadius": 22,
+        "units": "reference pixels, not mm",
+        "projection": "oblique z-buffer; visible front/behind"
+      },
+      "limitations": [
+        "Visual relationship specimen, not manufacturing CAD or strength certification."
+      ]
+    }
+  ],
+  "slots": {
+    "identity": "The pendant itself spells \"ليان\". Arabic, right-to-left reading. Preserve exact spelling, capitalization, supplied marks and meaningful spaces. One upright name formed from metal, not a printed caption.",
+    "style": "Classic Arabic lettering with Naskh character: balanced stroke contrast, rounded bowls, clear contextual joins and measured upright proportions. Preserve correct Arabic shaping and identifying marks.",
+    "construction": "Upright lettering forms the main rigid pendant body. Discreet bridges support separated components while retaining recognizable letter groups.",
+    "support": "Support every separated letter group, identifying dot, hamza and supplied mark with discreet metal bridges. Keep bridges visibly distinguishable from linguistic strokes and preserve the reading, mark count and placement, intentional counters and linguistic breaks. Each bridge visibly meets the components it supports with a continuous metal connection; point contacts, truncated supports and purported hidden connections are insufficient. Do not add a surrounding frame or full backing plate.",
+    "attachments": "Exactly two integral body eyelets carry the pendant. Each body eyelet receives one separate closed connecting ring; that same connector passes through the first Cable-chain link. Keep eyelets, connectors and alternating chain links distinguishable, with plausible interlocks and visible apertures. Use both body eyelets; no unused eyelets, extra body holes or loose chain ends beside the pendant. Continue the chain beyond the photographic frame.",
+    "selections": "White gold appearance with a clean polished finish. Stone-free metal, without gemstones or empty stone seats. Cable chain with alternating oval links. Nominal selected size label: 32 mm; this image does not certify dimensions. Do not print measurement labels.",
+    "photography": "Near-front catalog photograph on matte ivory. One large soft source with gentle fill and neutral white balance. Entire pendant and both attachment junctions visible, with sufficient depth of field to inspect the construction. Show the lettering, support bridges and both attachment junctions clearly enough to inspect their connections.",
+    "invariants": "Retain intentional letter counters, linguistic spaces and hardware apertures. Supports must preserve legibility and meet their intended components. No captions, specimen writing, reference labels, logos or unrelated decoration. Use coherent reflections and contact shadows with readable metal edges; do not conceal a critical connection with glare or blur.",
+    "references": "Image 1, @lettering: use only its lettering traits and calligraphic character for the requested name. Its sample writing is not the customer name. Do not copy the sample name or its exact composition and contour.\nImage 2, @hardware: use only the body-eyelet, separate-connector and first-chain-link relationship. Place the two attachments to suit this new name. Customer selections control finish and chain; do not copy unrelated shapes, proportions or writing.",
+    "creative": "Create an original name-specific composition in the selected lettering style. You may adapt letter proportions, spacing, permitted flourishes and discreet support placement while preserving spelling and correct shaping. The selected construction and hardware relationship are fixed; no pre-existing pendant silhouette is prescribed."
+  },
+  "release": {
+    "version": "jewelo-creative-prompt-lab-2.0.0",
+    "status": "candidate",
+    "productionApproved": false,
+    "qualification": "untested",
+    "templateHash": "34fd65418d80a2c4b7501303bb4c1b63194ec772a93fd95ff317fae9c5c99763"
+  }
+}

@@ -1,0 +1,154 @@
+{
+  "version": "standard-arabic-naskh-0.1",
+  "unicodeVersion": "17.0.0",
+  "source": "https://www.unicode.org/Public/17.0.0/ucd/ArabicShaping.txt",
+  "sourceSha256": "39afa01e680e27d0fd10b67a9b27be13fbaa3d0efecfb5be45991de9a0d267d0",
+  "license": "https://www.unicode.org/license.txt",
+  "scope": "Basic Arabic letters only; no spaces, tatweel, presentation forms, join/bidi controls, vowel marks or extended Persian/Urdu characters. Standard Naskh mark conventions; not all calligraphic traditions.",
+  "letters": {
+    "ء": {
+      "unicodeName": "HAMZA",
+      "joiningType": "U"
+    },
+    "آ": {
+      "unicodeName": "ALEF WITH MADDA ABOVE",
+      "joiningType": "R"
+    },
+    "أ": {
+      "unicodeName": "ALEF WITH HAMZA ABOVE",
+      "joiningType": "R"
+    },
+    "ؤ": {
+      "unicodeName": "WAW WITH HAMZA ABOVE",
+      "joiningType": "R"
+    },
+    "إ": {
+      "unicodeName": "ALEF WITH HAMZA BELOW",
+      "joiningType": "R"
+    },
+    "ئ": {
+      "unicodeName": "DOTLESS YEH WITH HAMZA ABOVE",
+      "joiningType": "D"
+    },
+    "ا": {
+      "unicodeName": "ALEF",
+      "joiningType": "R"
+    },
+    "ب": {
+      "unicodeName": "BEH",
+      "joiningType": "D"
+    },
+    "ة": {
+      "unicodeName": "TEH MARBUTA",
+      "joiningType": "R"
+    },
+    "ت": {
+      "unicodeName": "DOTLESS BEH WITH 2 DOTS ABOVE",
+      "joiningType": "D"
+    },
+    "ث": {
+      "unicodeName": "DOTLESS BEH WITH 3 DOTS ABOVE",
+      "joiningType": "D"
+    },
+    "ج": {
+      "unicodeName": "HAH WITH DOT BELOW",
+      "joiningType": "D"
+    },
+    "ح": {
+      "unicodeName": "HAH",
+      "joiningType": "D"
+    },
+    "خ": {
+      "unicodeName": "HAH WITH DOT ABOVE",
+      "joiningType": "D"
+    },
+    "د": {
+      "unicodeName": "DAL",
+      "joiningType": "R"
+    },
+    "ذ": {
+      "unicodeName": "DAL WITH DOT ABOVE",
+      "joiningType": "R"
+    },
+    "ر": {
+      "unicodeName": "REH",
+      "joiningType": "R"
+    },
+    "ز": {
+      "unicodeName": "REH WITH DOT ABOVE",
+      "joiningType": "R"
+    },
+    "س": {
+      "unicodeName": "SEEN",
+      "joiningType": "D"
+    },
+    "ش": {
+      "unicodeName": "SEEN WITH 3 DOTS ABOVE",
+      "joiningType": "D"
+    },
+    "ص": {
+      "unicodeName": "SAD",
+      "joiningType": "D"
+    },
+    "ض": {
+      "unicodeName": "SAD WITH DOT ABOVE",
+      "joiningType": "D"
+    },
+    "ط": {
+      "unicodeName": "TAH",
+      "joiningType": "D"
+    },
+    "ظ": {
+      "unicodeName": "TAH WITH DOT ABOVE",
+      "joiningType": "D"
+    },
+    "ع": {
+      "unicodeName": "AIN",
+      "joiningType": "D"
+    },
+    "غ": {
+      "unicodeName": "AIN WITH DOT ABOVE",
+      "joiningType": "D"
+    },
+    "ف": {
+      "unicodeName": "FEH",
+      "joiningType": "D"
+    },
+    "ق": {
+      "unicodeName": "QAF",
+      "joiningType": "D"
+    },
+    "ك": {
+      "unicodeName": "KAF",
+      "joiningType": "D"
+    },
+    "ل": {
+      "unicodeName": "LAM",
+      "joiningType": "D"
+    },
+    "م": {
+      "unicodeName": "MEEM",
+      "joiningType": "D"
+    },
+    "ن": {
+      "unicodeName": "NOON",
+      "joiningType": "D"
+    },
+    "ه": {
+      "unicodeName": "HEH",
+      "joiningType": "D"
+    },
+    "و": {
+      "unicodeName": "WAW",
+      "joiningType": "R"
+    },
+    "ى": {
+      "unicodeName": "DOTLESS YEH",
+      "joiningType": "D"
+    },
+    "ي": {
+      "unicodeName": "YEH",
+      "joiningType": "D"
+    }
+  }
+}

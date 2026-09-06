@@ -1,0 +1,39 @@
+{
+  "version": "creative-name-v2-rubric-1",
+  "hardGates": [
+    "identity",
+    "construction",
+    "attachments",
+    "selections",
+    "photography",
+    "unrequested_content",
+    "reference_leakage"
+  ],
+  "criteria": {
+    "identity": "Read back exact requested name, capitalization, script, dots and hamzas. Preserve reading order. Meaningful linguistic breaks and counters remain readable.",
+    "construction": "Every separated letter group and identifying mark is visibly supported by continuous metal. Discreet bridges are allowed, point contacts or inferred hidden support are insufficient. No full backing plate or frame.",
+    "attachments": "Exactly two integral body eyelets, each receiving a separate closed connector linked to the first cable-chain link. Distinguishable plausible interlocks and readable apertures; no gaps or unused holes.",
+    "selections": "Classical, Classic style, white gold appearance, no stones or empty seats, cable chain, one name and no engraving. Nominal32 label is not a physical measurement claim.",
+    "photography": "Believable metal, coherent light and contact; complete pendant and both junctions inspectable. Unreadable critical details cannot pass.",
+    "unrequested_content": "No captions, logos, unrelated decoration or writing.",
+    "reference_leakage": "No specimen names, diagram labels or unrelated reference shapes copied."
+  },
+  "styleScale": {
+    "1": "wrong style",
+    "2": "substantial mismatch",
+    "3": "recognizable with deviations",
+    "4": "close fit",
+    "5": "strong fit"
+  },
+  "uncertainty": "needs_review fails advancement; disagreement remains needs_review until adjudicated",
+  "comparison": "Review images and crops using blind IDs before revealing method and prompt. Record appeal separately.",
+  "selection": "All12 hard-pass and all style scores >=3. Highest median style, ties fewer references.",
+  "anchors": [
+    "ليان",
+    "إيمان",
+    "Lily",
+    "Christopher"
+  ],
+  "anchorRepeat": 1,
+  "qualification": "Diagnostic only; no99% or production claim."
+}

@@ -1,0 +1,482 @@
+[
+  {
+    "id": "ar-liyan-style_hardware_spelling-r1",
+    "method": "style_hardware_spelling",
+    "repeat": 1,
+    "configHash": "f29ea317df42f05fae1f12bb1860c59beba540054cb23ecbfa5597eb45d683f6",
+    "blindId": "V2-01",
+    "compiledHash": "92e58365c74f7a9ede9a972ae67de0ea9d50cd9191c0339c0a60fdf496e458a7",
+    "promptHash": "7ed482da3506f4d0f7f4c0b5e54fd00ac69167898ac908278b1f8d01a6590a97",
+    "promptFile": "prompts/ar-liyan-style_hardware_spelling-r1.json"
+  },
+  {
+    "id": "ar-iman-style-r1",
+    "method": "style",
+    "repeat": 1,
+    "configHash": "4669b89cb3d3e0adfe182a46f359e6ad8af9c3c669a1e2b37c94838cf2f26c1e",
+    "blindId": "V2-02",
+    "compiledHash": "f04f21228d25924f69a7cad57726d3e8db76672c5ec5313e538bac9060349b19",
+    "promptHash": "434ff05978530c0e49eaa7a7f366fbe11dd56a0d01c6144bb4d03bff37d6b660",
+    "promptFile": "prompts/ar-iman-style-r1.json"
+  },
+  {
+    "id": "ar-liyan-style_hardware_spelling-r2",
+    "method": "style_hardware_spelling",
+    "repeat": 2,
+    "configHash": "f29ea317df42f05fae1f12bb1860c59beba540054cb23ecbfa5597eb45d683f6",
+    "blindId": "V2-03",
+    "compiledHash": "92e58365c74f7a9ede9a972ae67de0ea9d50cd9191c0339c0a60fdf496e458a7",
+    "promptHash": "7ed482da3506f4d0f7f4c0b5e54fd00ac69167898ac908278b1f8d01a6590a97",
+    "promptFile": "prompts/ar-liyan-style_hardware_spelling-r2.json"
+  },
+  {
+    "id": "ar-liyan-style-r1",
+    "method": "style",
+    "repeat": 1,
+    "configHash": "f29ea317df42f05fae1f12bb1860c59beba540054cb23ecbfa5597eb45d683f6",
+    "blindId": "V2-04",
+    "compiledHash": "ae881b7e6cd5e0beed83fa54151bb0a2238dff4367bf1f5f2b03c9781c494210",
+    "promptHash": "3add89ac8d0900f75dc95af5ee7c819f48856474a152322e24106ffedd6e5a7f",
+    "promptFile": "prompts/ar-liyan-style-r1.json"
+  },
+  {
+    "id": "en-lily-text-r2",
+    "method": "text",
+    "repeat": 2,
+    "configHash": "fe2bacc96dba2dced3bfa5d0726967aa329009859b7c53dfe6511fee657030cd",
+    "blindId": "V2-05",
+    "compiledHash": "cddd820bab5ea7f91270127d8de5bbb4baf04f9145c0ed6ce913caeea4c58f21",
+    "promptHash": "4847b1489d3ca1001cc70d3de684a52a8de6863b38920bcb772233ca5a18badb",
+    "promptFile": "prompts/en-lily-text-r2.json"
+  },
+  {
+    "id": "ar-iman-style_hardware_spelling-r1",
+    "method": "style_hardware_spelling",
+    "repeat": 1,
+    "configHash": "4669b89cb3d3e0adfe182a46f359e6ad8af9c3c669a1e2b37c94838cf2f26c1e",
+    "blindId": "V2-06",
+    "compiledHash": "672f354759c405ca126cb5e3698ef9e5bd1ad5fb5006d20d98b38f881f9fae31",
+    "promptHash": "199c40536ef2755c5c42649261fe338cac512af078969f1b5c47cfb0c400bd77",
+    "promptFile": "prompts/ar-iman-style_hardware_spelling-r1.json"
+  },
+  {
+    "id": "ar-iman-style_hardware-r1",
+    "method": "style_hardware",
+    "repeat": 1,
+    "configHash": "4669b89cb3d3e0adfe182a46f359e6ad8af9c3c669a1e2b37c94838cf2f26c1e",
+    "blindId": "V2-07",
+    "compiledHash": "d2670200ec6491906e60df59e63cf786258e927e85d670b24b06840340ce0a40",
+    "promptHash": "e742aa162db4a9f9fa6f12400af0da48a34fe60079fd7ca7dea9650cd148759a",
+    "promptFile": "prompts/ar-iman-style_hardware-r1.json"
+  },
+  {
+    "id": "en-ava-style_hardware-r2",
+    "method": "style_hardware",
+    "repeat": 2,
+    "configHash": "3839d7c4269dcd59cffaf9c0f07524796633b04e961031ba96f2be1b2389bc26",
+    "blindId": "V2-08",
+    "compiledHash": "e302d3c74cdfe39403c7e8c7244b1bfb28b35d46b77856c43bf73daf598bdae0",
+    "promptHash": "7e578dc63c5130ed1957132d12ca953c44377c252085e21b30d91a77d475cb6f",
+    "promptFile": "prompts/en-ava-style_hardware-r2.json"
+  },
+  {
+    "id": "en-ava-text-r1",
+    "method": "text",
+    "repeat": 1,
+    "configHash": "3839d7c4269dcd59cffaf9c0f07524796633b04e961031ba96f2be1b2389bc26",
+    "blindId": "V2-09",
+    "compiledHash": "487004cba19ba75bbc723d2f87f4f59f3184f0dfef89a90a170963cca57fa7c3",
+    "promptHash": "4bd7b620a68ca9406d222e16ee3a5735e3c6064d088df2e0eda38347f8984907",
+    "promptFile": "prompts/en-ava-text-r1.json"
+  },
+  {
+    "id": "ar-iman-text-r1",
+    "method": "text",
+    "repeat": 1,
+    "configHash": "4669b89cb3d3e0adfe182a46f359e6ad8af9c3c669a1e2b37c94838cf2f26c1e",
+    "blindId": "V2-10",
+    "compiledHash": "78c85f03318a4d2743c50269d298ec799afa5995d118e55e8112d9222dab5ff7",
+    "promptHash": "53f1a69d2c57aa42d26736742dfb4ceb6c3c20ce0b095ce7865149ca0d1d045d",
+    "promptFile": "prompts/ar-iman-text-r1.json"
+  },
+  {
+    "id": "en-christopher-text-r2",
+    "method": "text",
+    "repeat": 2,
+    "configHash": "d8e14e4b9ec67044ed959b10bb83b75eaa878f2848a91c7c922121b301308a63",
+    "blindId": "V2-11",
+    "compiledHash": "cf114c6fc03935eeb84b41e68000bc353cf8da5636d4a69f5c959bceb2114200",
+    "promptHash": "4b0284e9f695034707b5e74fd20431515e3af88904e3e015fc0aeef0c7a0ab31",
+    "promptFile": "prompts/en-christopher-text-r2.json"
+  },
+  {
+    "id": "ar-noor-text-r1",
+    "method": "text",
+    "repeat": 1,
+    "configHash": "853b036047b36eacbb42b85244ec4e5ffb374786b7c8a0256f47901161335317",
+    "blindId": "V2-12",
+    "compiledHash": "b9babe11d052296a3b44d083e63f7e938e21087b9eda9cd6d7e26bf5bb6e22eb",
+    "promptHash": "c91c9b63461ac32dea26b81c3a258f50d959a82f5d5f9568b35fff4546182a5d",
+    "promptFile": "prompts/ar-noor-text-r1.json"
+  },
+  {
+    "id": "ar-iman-style_hardware_spelling-r2",
+    "method": "style_hardware_spelling",
+    "repeat": 2,
+    "configHash": "4669b89cb3d3e0adfe182a46f359e6ad8af9c3c669a1e2b37c94838cf2f26c1e",
+    "blindId": "V2-13",
+    "compiledHash": "672f354759c405ca126cb5e3698ef9e5bd1ad5fb5006d20d98b38f881f9fae31",
+    "promptHash": "199c40536ef2755c5c42649261fe338cac512af078969f1b5c47cfb0c400bd77",
+    "promptFile": "prompts/ar-iman-style_hardware_spelling-r2.json"
+  },
+  {
+    "id": "ar-iman-style_hardware-r2",
+    "method": "style_hardware",
+    "repeat": 2,
+    "configHash": "4669b89cb3d3e0adfe182a46f359e6ad8af9c3c669a1e2b37c94838cf2f26c1e",
+    "blindId": "V2-14",
+    "compiledHash": "d2670200ec6491906e60df59e63cf786258e927e85d670b24b06840340ce0a40",
+    "promptHash": "e742aa162db4a9f9fa6f12400af0da48a34fe60079fd7ca7dea9650cd148759a",
+    "promptFile": "prompts/ar-iman-style_hardware-r2.json"
+  },
+  {
+    "id": "ar-noor-style_hardware_spelling-r2",
+    "method": "style_hardware_spelling",
+    "repeat": 2,
+    "configHash": "853b036047b36eacbb42b85244ec4e5ffb374786b7c8a0256f47901161335317",
+    "blindId": "V2-15",
+    "compiledHash": "42d2fd66a1603352769885cba3f0115b88d28cde54cedb18be418eaa6e3a1881",
+    "promptHash": "ec2a1c6c720e00980958bbaf1a2ee9d43f1bb1a5db1e365159118c3ad75a3ceb",
+    "promptFile": "prompts/ar-noor-style_hardware_spelling-r2.json"
+  },
+  {
+    "id": "en-ava-style_hardware_spelling-r1",
+    "method": "style_hardware_spelling",
+    "repeat": 1,
+    "configHash": "3839d7c4269dcd59cffaf9c0f07524796633b04e961031ba96f2be1b2389bc26",
+    "blindId": "V2-16",
+    "compiledHash": "7753dd0b0fd1361ed11efc1b3c916b085dd46bcec501d0f1ffd812cbc65a7fad",
+    "promptHash": "c7f0dc93079e392235f95a8fa227aa96ce4df2ef8f692a7fb92b95ec0c660100",
+    "promptFile": "prompts/en-ava-style_hardware_spelling-r1.json"
+  },
+  {
+    "id": "en-christopher-style_hardware_spelling-r1",
+    "method": "style_hardware_spelling",
+    "repeat": 1,
+    "configHash": "d8e14e4b9ec67044ed959b10bb83b75eaa878f2848a91c7c922121b301308a63",
+    "blindId": "V2-17",
+    "compiledHash": "f92d07cec3234878639798c3318521091292502d8d99971ec3c1f28ccbe9ece6",
+    "promptHash": "2d653d2637a00531c64568e23c0a69841575a40f1c4f5320fdbd3a5c60e94f56",
+    "promptFile": "prompts/en-christopher-style_hardware_spelling-r1.json"
+  },
+  {
+    "id": "en-ava-style_hardware-r1",
+    "method": "style_hardware",
+    "repeat": 1,
+    "configHash": "3839d7c4269dcd59cffaf9c0f07524796633b04e961031ba96f2be1b2389bc26",
+    "blindId": "V2-18",
+    "compiledHash": "e302d3c74cdfe39403c7e8c7244b1bfb28b35d46b77856c43bf73daf598bdae0",
+    "promptHash": "7e578dc63c5130ed1957132d12ca953c44377c252085e21b30d91a77d475cb6f",
+    "promptFile": "prompts/en-ava-style_hardware-r1.json"
+  },
+  {
+    "id": "ar-noor-style-r1",
+    "method": "style",
+    "repeat": 1,
+    "configHash": "853b036047b36eacbb42b85244ec4e5ffb374786b7c8a0256f47901161335317",
+    "blindId": "V2-19",
+    "compiledHash": "ee73a9d3557353425a1f47956c9f275d627173a1996b59f76db2f74afbd99bdf",
+    "promptHash": "d8758b9c0aaeb6e07e700ce39a9ef3c803dd355c27c71643f01a20b6f3542104",
+    "promptFile": "prompts/ar-noor-style-r1.json"
+  },
+  {
+    "id": "en-christopher-style_hardware-r1",
+    "method": "style_hardware",
+    "repeat": 1,
+    "configHash": "d8e14e4b9ec67044ed959b10bb83b75eaa878f2848a91c7c922121b301308a63",
+    "blindId": "V2-20",
+    "compiledHash": "35398c1604fee1397ea8b195df190445208eb734af2a9cff23e7d2edcc1e4063",
+    "promptHash": "dc16826a3738d56fd54d2801e9d12c7190a928830e8cc35bd3ecb05bab2ab36a",
+    "promptFile": "prompts/en-christopher-style_hardware-r1.json"
+  },
+  {
+    "id": "ar-noor-style_hardware_spelling-r1",
+    "method": "style_hardware_spelling",
+    "repeat": 1,
+    "configHash": "853b036047b36eacbb42b85244ec4e5ffb374786b7c8a0256f47901161335317",
+    "blindId": "V2-21",
+    "compiledHash": "42d2fd66a1603352769885cba3f0115b88d28cde54cedb18be418eaa6e3a1881",
+    "promptHash": "ec2a1c6c720e00980958bbaf1a2ee9d43f1bb1a5db1e365159118c3ad75a3ceb",
+    "promptFile": "prompts/ar-noor-style_hardware_spelling-r1.json"
+  },
+  {
+    "id": "en-lily-style_hardware-r1",
+    "method": "style_hardware",
+    "repeat": 1,
+    "configHash": "fe2bacc96dba2dced3bfa5d0726967aa329009859b7c53dfe6511fee657030cd",
+    "blindId": "V2-22",
+    "compiledHash": "8b795b48283beacd888a988361224f9a2c1c8425031b94eecfb9724a6c1107c0",
+    "promptHash": "5029cb56011398d75d4eb9a1b6527b205eb253e2956ccb6e15fe172f955de68a",
+    "promptFile": "prompts/en-lily-style_hardware-r1.json"
+  },
+  {
+    "id": "ar-liyan-style-r2",
+    "method": "style",
+    "repeat": 2,
+    "configHash": "f29ea317df42f05fae1f12bb1860c59beba540054cb23ecbfa5597eb45d683f6",
+    "blindId": "V2-23",
+    "compiledHash": "ae881b7e6cd5e0beed83fa54151bb0a2238dff4367bf1f5f2b03c9781c494210",
+    "promptHash": "3add89ac8d0900f75dc95af5ee7c819f48856474a152322e24106ffedd6e5a7f",
+    "promptFile": "prompts/ar-liyan-style-r2.json"
+  },
+  {
+    "id": "en-lily-style_hardware_spelling-r1",
+    "method": "style_hardware_spelling",
+    "repeat": 1,
+    "configHash": "fe2bacc96dba2dced3bfa5d0726967aa329009859b7c53dfe6511fee657030cd",
+    "blindId": "V2-24",
+    "compiledHash": "8769e94f90fe0628ff0858bc4863b93340d7a8105b1cf72db8d0f8553487046d",
+    "promptHash": "2ffd8838d276934203d26f410bc7f0471ff00e1677f73e656e8413e9b37889a9",
+    "promptFile": "prompts/en-lily-style_hardware_spelling-r1.json"
+  },
+  {
+    "id": "en-lily-style_hardware_spelling-r2",
+    "method": "style_hardware_spelling",
+    "repeat": 2,
+    "configHash": "fe2bacc96dba2dced3bfa5d0726967aa329009859b7c53dfe6511fee657030cd",
+    "blindId": "V2-25",
+    "compiledHash": "8769e94f90fe0628ff0858bc4863b93340d7a8105b1cf72db8d0f8553487046d",
+    "promptHash": "2ffd8838d276934203d26f410bc7f0471ff00e1677f73e656e8413e9b37889a9",
+    "promptFile": "prompts/en-lily-style_hardware_spelling-r2.json"
+  },
+  {
+    "id": "en-ava-style_hardware_spelling-r2",
+    "method": "style_hardware_spelling",
+    "repeat": 2,
+    "configHash": "3839d7c4269dcd59cffaf9c0f07524796633b04e961031ba96f2be1b2389bc26",
+    "blindId": "V2-26",
+    "compiledHash": "7753dd0b0fd1361ed11efc1b3c916b085dd46bcec501d0f1ffd812cbc65a7fad",
+    "promptHash": "c7f0dc93079e392235f95a8fa227aa96ce4df2ef8f692a7fb92b95ec0c660100",
+    "promptFile": "prompts/en-ava-style_hardware_spelling-r2.json"
+  },
+  {
+    "id": "en-lily-style_hardware-r2",
+    "method": "style_hardware",
+    "repeat": 2,
+    "configHash": "fe2bacc96dba2dced3bfa5d0726967aa329009859b7c53dfe6511fee657030cd",
+    "blindId": "V2-27",
+    "compiledHash": "8b795b48283beacd888a988361224f9a2c1c8425031b94eecfb9724a6c1107c0",
+    "promptHash": "5029cb56011398d75d4eb9a1b6527b205eb253e2956ccb6e15fe172f955de68a",
+    "promptFile": "prompts/en-lily-style_hardware-r2.json"
+  },
+  {
+    "id": "en-ava-style-r1",
+    "method": "style",
+    "repeat": 1,
+    "configHash": "3839d7c4269dcd59cffaf9c0f07524796633b04e961031ba96f2be1b2389bc26",
+    "blindId": "V2-28",
+    "compiledHash": "6294bc3ec981f0634ee8acc478da1d62f20dff798c1f877ca12585803080756a",
+    "promptHash": "a0c1dcd608b865c5c2b543a4d24d3d8d39d16ab3d4d5b20a5eb1f162904a251a",
+    "promptFile": "prompts/en-ava-style-r1.json"
+  },
+  {
+    "id": "ar-iman-text-r2",
+    "method": "text",
+    "repeat": 2,
+    "configHash": "4669b89cb3d3e0adfe182a46f359e6ad8af9c3c669a1e2b37c94838cf2f26c1e",
+    "blindId": "V2-29",
+    "compiledHash": "78c85f03318a4d2743c50269d298ec799afa5995d118e55e8112d9222dab5ff7",
+    "promptHash": "53f1a69d2c57aa42d26736742dfb4ceb6c3c20ce0b095ce7865149ca0d1d045d",
+    "promptFile": "prompts/ar-iman-text-r2.json"
+  },
+  {
+    "id": "en-lily-text-r1",
+    "method": "text",
+    "repeat": 1,
+    "configHash": "fe2bacc96dba2dced3bfa5d0726967aa329009859b7c53dfe6511fee657030cd",
+    "blindId": "V2-30",
+    "compiledHash": "cddd820bab5ea7f91270127d8de5bbb4baf04f9145c0ed6ce913caeea4c58f21",
+    "promptHash": "4847b1489d3ca1001cc70d3de684a52a8de6863b38920bcb772233ca5a18badb",
+    "promptFile": "prompts/en-lily-text-r1.json"
+  },
+  {
+    "id": "ar-noor-style_hardware-r1",
+    "method": "style_hardware",
+    "repeat": 1,
+    "configHash": "853b036047b36eacbb42b85244ec4e5ffb374786b7c8a0256f47901161335317",
+    "blindId": "V2-31",
+    "compiledHash": "97aa62933591a1bb7335b4d9e37ae04dd53014e6e7bf9d4211651e7e8a569695",
+    "promptHash": "bc33df54e44fec49b3809443cb9bd57e5bfa12a685531555525333d48f39c8e2",
+    "promptFile": "prompts/ar-noor-style_hardware-r1.json"
+  },
+  {
+    "id": "en-christopher-style-r2",
+    "method": "style",
+    "repeat": 2,
+    "configHash": "d8e14e4b9ec67044ed959b10bb83b75eaa878f2848a91c7c922121b301308a63",
+    "blindId": "V2-32",
+    "compiledHash": "fb73829f9fc0fc96ff9a6f5697684c0b3b2e233c3844bec612905088e216cbf5",
+    "promptHash": "6a5eb89801fefb77749f2d6cc6d55d7346950042da7605af881bf593c6698742",
+    "promptFile": "prompts/en-christopher-style-r2.json"
+  },
+  {
+    "id": "ar-liyan-text-r2",
+    "method": "text",
+    "repeat": 2,
+    "configHash": "f29ea317df42f05fae1f12bb1860c59beba540054cb23ecbfa5597eb45d683f6",
+    "blindId": "V2-33",
+    "compiledHash": "7eaa5db5223e62d0a5fdd6b27f25de3af0e3906e40de758780cb1daa9a77c3e9",
+    "promptHash": "e49205d793d7167bb3851640f59912d9f28e1bf6c07487d5d36eb90bc08a09a9",
+    "promptFile": "prompts/ar-liyan-text-r2.json"
+  },
+  {
+    "id": "ar-noor-style_hardware-r2",
+    "method": "style_hardware",
+    "repeat": 2,
+    "configHash": "853b036047b36eacbb42b85244ec4e5ffb374786b7c8a0256f47901161335317",
+    "blindId": "V2-34",
+    "compiledHash": "97aa62933591a1bb7335b4d9e37ae04dd53014e6e7bf9d4211651e7e8a569695",
+    "promptHash": "bc33df54e44fec49b3809443cb9bd57e5bfa12a685531555525333d48f39c8e2",
+    "promptFile": "prompts/ar-noor-style_hardware-r2.json"
+  },
+  {
+    "id": "en-christopher-style-r1",
+    "method": "style",
+    "repeat": 1,
+    "configHash": "d8e14e4b9ec67044ed959b10bb83b75eaa878f2848a91c7c922121b301308a63",
+    "blindId": "V2-35",
+    "compiledHash": "fb73829f9fc0fc96ff9a6f5697684c0b3b2e233c3844bec612905088e216cbf5",
+    "promptHash": "6a5eb89801fefb77749f2d6cc6d55d7346950042da7605af881bf593c6698742",
+    "promptFile": "prompts/en-christopher-style-r1.json"
+  },
+  {
+    "id": "ar-noor-style-r2",
+    "method": "style",
+    "repeat": 2,
+    "configHash": "853b036047b36eacbb42b85244ec4e5ffb374786b7c8a0256f47901161335317",
+    "blindId": "V2-36",
+    "compiledHash": "ee73a9d3557353425a1f47956c9f275d627173a1996b59f76db2f74afbd99bdf",
+    "promptHash": "d8758b9c0aaeb6e07e700ce39a9ef3c803dd355c27c71643f01a20b6f3542104",
+    "promptFile": "prompts/ar-noor-style-r2.json"
+  },
+  {
+    "id": "en-christopher-text-r1",
+    "method": "text",
+    "repeat": 1,
+    "configHash": "d8e14e4b9ec67044ed959b10bb83b75eaa878f2848a91c7c922121b301308a63",
+    "blindId": "V2-37",
+    "compiledHash": "cf114c6fc03935eeb84b41e68000bc353cf8da5636d4a69f5c959bceb2114200",
+    "promptHash": "4b0284e9f695034707b5e74fd20431515e3af88904e3e015fc0aeef0c7a0ab31",
+    "promptFile": "prompts/en-christopher-text-r1.json"
+  },
+  {
+    "id": "en-christopher-style_hardware_spelling-r2",
+    "method": "style_hardware_spelling",
+    "repeat": 2,
+    "configHash": "d8e14e4b9ec67044ed959b10bb83b75eaa878f2848a91c7c922121b301308a63",
+    "blindId": "V2-38",
+    "compiledHash": "f92d07cec3234878639798c3318521091292502d8d99971ec3c1f28ccbe9ece6",
+    "promptHash": "2d653d2637a00531c64568e23c0a69841575a40f1c4f5320fdbd3a5c60e94f56",
+    "promptFile": "prompts/en-christopher-style_hardware_spelling-r2.json"
+  },
+  {
+    "id": "ar-liyan-style_hardware-r1",
+    "method": "style_hardware",
+    "repeat": 1,
+    "configHash": "f29ea317df42f05fae1f12bb1860c59beba540054cb23ecbfa5597eb45d683f6",
+    "blindId": "V2-39",
+    "compiledHash": "79fb138bbeb7171055dd5d110243db48e2bc8444c42f90f10a8bde6583d157d3",
+    "promptHash": "779e683a9c557279b957e4da6999d5ac4f6f24009ea5f90083fdd45fa233f995",
+    "promptFile": "prompts/ar-liyan-style_hardware-r1.json"
+  },
+  {
+    "id": "ar-liyan-text-r1",
+    "method": "text",
+    "repeat": 1,
+    "configHash": "f29ea317df42f05fae1f12bb1860c59beba540054cb23ecbfa5597eb45d683f6",
+    "blindId": "V2-40",
+    "compiledHash": "7eaa5db5223e62d0a5fdd6b27f25de3af0e3906e40de758780cb1daa9a77c3e9",
+    "promptHash": "e49205d793d7167bb3851640f59912d9f28e1bf6c07487d5d36eb90bc08a09a9",
+    "promptFile": "prompts/ar-liyan-text-r1.json"
+  },
+  {
+    "id": "en-ava-style-r2",
+    "method": "style",
+    "repeat": 2,
+    "configHash": "3839d7c4269dcd59cffaf9c0f07524796633b04e961031ba96f2be1b2389bc26",
+    "blindId": "V2-41",
+    "compiledHash": "6294bc3ec981f0634ee8acc478da1d62f20dff798c1f877ca12585803080756a",
+    "promptHash": "a0c1dcd608b865c5c2b543a4d24d3d8d39d16ab3d4d5b20a5eb1f162904a251a",
+    "promptFile": "prompts/en-ava-style-r2.json"
+  },
+  {
+    "id": "ar-liyan-style_hardware-r2",
+    "method": "style_hardware",
+    "repeat": 2,
+    "configHash": "f29ea317df42f05fae1f12bb1860c59beba540054cb23ecbfa5597eb45d683f6",
+    "blindId": "V2-42",
+    "compiledHash": "79fb138bbeb7171055dd5d110243db48e2bc8444c42f90f10a8bde6583d157d3",
+    "promptHash": "779e683a9c557279b957e4da6999d5ac4f6f24009ea5f90083fdd45fa233f995",
+    "promptFile": "prompts/ar-liyan-style_hardware-r2.json"
+  },
+  {
+    "id": "ar-noor-text-r2",
+    "method": "text",
+    "repeat": 2,
+    "configHash": "853b036047b36eacbb42b85244ec4e5ffb374786b7c8a0256f47901161335317",
+    "blindId": "V2-43",
+    "compiledHash": "b9babe11d052296a3b44d083e63f7e938e21087b9eda9cd6d7e26bf5bb6e22eb",
+    "promptHash": "c91c9b63461ac32dea26b81c3a258f50d959a82f5d5f9568b35fff4546182a5d",
+    "promptFile": "prompts/ar-noor-text-r2.json"
+  },
+  {
+    "id": "en-ava-text-r2",
+    "method": "text",
+    "repeat": 2,
+    "configHash": "3839d7c4269dcd59cffaf9c0f07524796633b04e961031ba96f2be1b2389bc26",
+    "blindId": "V2-44",
+    "compiledHash": "487004cba19ba75bbc723d2f87f4f59f3184f0dfef89a90a170963cca57fa7c3",
+    "promptHash": "4bd7b620a68ca9406d222e16ee3a5735e3c6064d088df2e0eda38347f8984907",
+    "promptFile": "prompts/en-ava-text-r2.json"
+  },
+  {
+    "id": "en-christopher-style_hardware-r2",
+    "method": "style_hardware",
+    "repeat": 2,
+    "configHash": "d8e14e4b9ec67044ed959b10bb83b75eaa878f2848a91c7c922121b301308a63",
+    "blindId": "V2-45",
+    "compiledHash": "35398c1604fee1397ea8b195df190445208eb734af2a9cff23e7d2edcc1e4063",
+    "promptHash": "dc16826a3738d56fd54d2801e9d12c7190a928830e8cc35bd3ecb05bab2ab36a",
+    "promptFile": "prompts/en-christopher-style_hardware-r2.json"
+  },
+  {
+    "id": "en-lily-style-r2",
+    "method": "style",
+    "repeat": 2,
+    "configHash": "fe2bacc96dba2dced3bfa5d0726967aa329009859b7c53dfe6511fee657030cd",
+    "blindId": "V2-46",
+    "compiledHash": "296eb241374a58c92640878cd1cc661a91973668cbea9e5a940635644c3d36d4",
+    "promptHash": "61913e79a85d0a3b0f52513fe7cbf8189744aed923219403332d75d4ab48655b",
+    "promptFile": "prompts/en-lily-style-r2.json"
+  },
+  {
+    "id": "en-lily-style-r1",
+    "method": "style",
+    "repeat": 1,
+    "configHash": "fe2bacc96dba2dced3bfa5d0726967aa329009859b7c53dfe6511fee657030cd",
+    "blindId": "V2-47",
+    "compiledHash": "296eb241374a58c92640878cd1cc661a91973668cbea9e5a940635644c3d36d4",
+    "promptHash": "61913e79a85d0a3b0f52513fe7cbf8189744aed923219403332d75d4ab48655b",
+    "promptFile": "prompts/en-lily-style-r1.json"
+  },
+  {
+    "id": "ar-iman-style-r2",
+    "method": "style",
+    "repeat": 2,
+    "configHash": "4669b89cb3d3e0adfe182a46f359e6ad8af9c3c669a1e2b37c94838cf2f26c1e",
+    "blindId": "V2-48",
+    "compiledHash": "f04f21228d25924f69a7cad57726d3e8db76672c5ec5313e538bac9060349b19",
+    "promptHash": "434ff05978530c0e49eaa7a7f366fbe11dd56a0d01c6144bb4d03bff37d6b660",
+    "promptFile": "prompts/ar-iman-style-r2.json"
+  }
+]

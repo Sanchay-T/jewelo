@@ -1,0 +1,27 @@
+{
+  "version": "1.0.0",
+  "frozenAt": "2026-09-05T21:23:50.227Z",
+  "gates": [
+    "identity",
+    "construction",
+    "attachments",
+    "selections",
+    "photography",
+    "unrequested_content"
+  ],
+  "verdicts": [
+    "pass",
+    "reject",
+    "needs_review"
+  ],
+  "required": "Every hard gate passes. Needs-review is not a pass. Judge visible output at native resolution and crops.",
+  "comparison": "Semantic correctness scored for all methods; exact contour preservation separately, applicable only where supplied as input.",
+  "crossView": "All four outputs pass and depict the same piece for development/qualification request success.",
+  "exclusions": [
+    "physical millimetre accuracy",
+    "metal karat verification",
+    "gem origin certification",
+    "manufacturing strength"
+  ],
+  "languageReview": "Arabic reviewed visually against preserved shaped identity; uncertain letters require competent adjudication."
+}

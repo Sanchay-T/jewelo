@@ -1,0 +1,22 @@
+✔ native names retain exact owner-specific marks and natural joining groups (1.232ms)
+✔ NFC equivalents share identity; raw source is retained and hamza forms differ (0.308791ms)
+✔ unsupported controls, extra text, marks and presentation forms fail before spend (0.177583ms)
+✔ natural joins are linguistic, distinct from physical supports (0.101583ms)
+✔ markless names do not acquire generic hamza/dot instructions (0.081417ms)
+✔ standalone hamza is deferred until its letter support policy exists (0.128625ms)
+✔ cross-customer spelling reference is rejected even if its bytes were approved (1.698625ms)
+✔ reference script, font, count, role and order mismatches fail (1.60575ms)
+✔ reference IDs are nonempty and unique before upload binding (1.277584ms)
+✔ unsupported customer choices are not silently overwritten (1.408209ms)
+✔ packet and reference bytes are verified at the final adapter boundary (2.5115ms)
+✔ pending/stale visual preflight blocks request assembly (2.314959ms)
+✔ file traversal and symlinks outside package fail (1.98425ms)
+✔ final tool arguments preserve prompt bytes, names, ordered tags and exact upload URL (2.933292ms)
+ℹ tests 14
+ℹ suites 0
+ℹ pass 14
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 77.629667

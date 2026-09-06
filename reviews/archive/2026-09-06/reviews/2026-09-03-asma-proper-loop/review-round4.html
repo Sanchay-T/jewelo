@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Asma Round-4 Join Fix - Constellation + Ribbon pilots</title>
+<style>
+body{font-family:-apple-system,system-ui,sans-serif;margin:0;background:#0e2a16;color:#eee}
+header{padding:12px 16px;border-bottom:1px solid #2c5c38}
+#stage{display:flex;gap:16px;padding:16px;max-width:1400px;margin:0 auto}
+#viewer{flex:3;background:#000;border-radius:12px;min-height:60vh;display:flex;align-items:center;justify-content:center;overflow:hidden}
+#viewer img{max-width:100%;max-height:75vh;object-fit:contain;background:#fff}
+#side{flex:1;min-width:280px;background:#122e1a;border-radius:12px;padding:16px}
+.badge{display:inline-block;padding:4px 10px;border-radius:20px;font-size:12px;background:#1d5c2e}
+.nav{display:flex;gap:8px;justify-content:center;padding:12px}
+button{background:#1d5c2e;color:#eee;border:1px solid #3fa34d;border-radius:8px;padding:8px 14px;cursor:pointer}
+#dots{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;padding:8px}
+#dots span{width:10px;height:10px;border-radius:50%;background:#3a6b46;cursor:pointer;display:inline-block}
+#dots span.on{background:#fff}
+a{color:#9cf}
+</style>
+</head>
+<body>
+<header><strong>ROUND-4 JOIN FIX - thick identity, unbroken س-م-ا baseline</strong> <span id="count"></span></header>
+<div id="stage">
+<div id="viewer"><img id="img" alt="shot"></div>
+<div id="side">
+<div id="meta"></div>
+<div class="nav"><button id="prev">Prev</button><button id="next">Next</button></div>
+<div id="dots"></div>
+<div><a id="orig" target="_blank">Open full-res original</a></div>
+</div>
+</div>
+<script>
+const DATA=[
+{id:"16a47342-335b-49d5-9510-5c60a747435b",look:"1 Constellation pilot - join fixed",file:"round4_constellation_16a47342.png",norm:"round4_constellation_16a47342.jpg",note:"Navy fabric. س-م-ا now one molten bar, zero gaps. Bail soldered, chain threaded. Final ء separate by design."},
+{id:"c05daa92-d380-4813-a3f1-bc01b5495a6b",look:"2 Ribbon pilot - worn, join fixed",file:"round4_ribbon_c05daa92.png",norm:"round4_ribbon_c05daa92.jpg",note:"Collarbone white tee. Continuous ribbon script, س-م-ا unbroken, chain unbroken both sides. Blue/pink accents correct."}
+];
+let i=0;
+const img=document.getElementById('img');
+function show(){
+const d=DATA[i];
+img.src='normalized/'+d.norm;
+document.getElementById('meta').innerHTML='<span class="badge">checked</span><h3>'+d.look+'</h3><p>'+d.note+'</p><p><small>'+d.id+'</small></p>';
+document.getElementById('orig').href='originals/'+d.file;
+document.getElementById('count').textContent=(i+1)+' / '+DATA.length;
+const dots=document.getElementById('dots');dots.innerHTML='';
+DATA.forEach((x,idx)=>{const s=document.createElement('span');if(idx===i)s.classList.add('on');s.onclick=()=>{i=idx;show()};dots.appendChild(s)});
+}
+document.getElementById('prev').onclick=()=>{i=(i-1+DATA.length)%DATA.length;show()};
+document.getElementById('next').onclick=()=>{i=(i+1)%DATA.length;show()};
+document.addEventListener('keydown',e=>{if(e.key==='ArrowRight')document.getElementById('next').click();if(e.key==='ArrowLeft')document.getElementById('prev').click()});
+show();
+</script>
+</body>
+</html>

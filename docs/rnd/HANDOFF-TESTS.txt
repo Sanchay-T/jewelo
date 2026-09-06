@@ -1,0 +1,46 @@
+✔ four nested methods change reference roles while keeping all semantic slots fixed (3.862375ms)
+✔ native name, hamza, supplied marks, case and original source string are preserved (0.702ms)
+✔ inactive second name, layout, gem and empty optional request never leak into prompts (0.152542ms)
+✔ reference requirements enforce ordered roles, tags, preflight and hash shape (0.435917ms)
+✔ all reference assets are copied and frozen without freezing caller objects (0.115583ms)
+✔ paid scope rejects other families and all unsupported active configuration choices (0.269ms)
+✔ three continuation views independently bind to the same original Studio identity (0.32275ms)
+✔ continuation rejects missing anchors, name/config mismatch, unreviewed sources and view chains (0.247334ms)
+✔ preparation freezes48 cases and journal rejects changed compiled settings, references and order (348.454875ms)
+✔ verified workspace and explicit policy replace a precaution without asserting a quota reset (1.857917ms)
+✔ atomic transaction persists once, rolls back exceptions, and fails closed on an existing lock (31.566291ms)
+✔ duplicate trial rejects changed prompts and max two active reservations is enforced (0.291792ms)
+✔ uncertain submission blocks all new work and cannot be cleared by timeout failure (0.320791ms)
+✔ a reused provider task ID creates ambiguity instead of pretending a second unique paid result (0.19025ms)
+✔ pending reservations survive checkpoints and reserve exposure includes reconciled spend (0.179292ms)
+✔ checkpoint cannot erase an unsubmitted reservation; reported zero balance blocks spending (0.10325ms)
+✔ confirmed task debit over 41 cannot be cleared; unrelated workspace debits require evidence (0.229334ms)
+✔ checkpoints are mandatory after 20 submissions and screening endpoint (1.574ms)
+✔ selection requires 12 of 12 hard passes, every style score at least 3, then median and fewer references (4.547958ms)
+✔ selection rejects incomplete, reused-manifest, unreviewed, and forged winning evidence (3.237708ms)
+✔ audit is bound to original bytes and rubric, includes leakage and style score, and is immutable (0.326917ms)
+✔ continuity binds each fixed first repetition anchor and caps the whole new campaign at 60 (3.567041ms)
+✔ actual excess debit can exhaust 2460 credits before the 60-submission ceiling (2.628625ms)
+✔ cheap earlier intervals cannot mask an unexplained expensive later interval (0.298125ms)
+✔ native names retain exact owner-specific marks and natural joining groups (1.224459ms)
+✔ NFC equivalents share identity; raw source is retained and hamza forms differ (0.324667ms)
+✔ unsupported controls, extra text, marks and presentation forms fail before spend (0.166583ms)
+✔ natural joins are linguistic, distinct from physical supports (0.105458ms)
+✔ markless names do not acquire generic hamza/dot instructions (0.083125ms)
+✔ standalone hamza is deferred until its letter support policy exists (0.128416ms)
+✔ cross-customer spelling reference is rejected even if its bytes were approved (2.817084ms)
+✔ reference script, font, count, role and order mismatches fail (10.400083ms)
+✔ reference IDs are nonempty and unique before upload binding (10.020666ms)
+✔ unsupported customer choices are not silently overwritten (3.084ms)
+✔ packet and reference bytes are verified at the final adapter boundary (5.821583ms)
+✔ pending/stale visual preflight blocks request assembly (2.165542ms)
+✔ file traversal and symlinks outside package fail (2.247083ms)
+✔ final tool arguments preserve prompt bytes, names, ordered tags and exact upload URL (2.772583ms)
+ℹ tests 38
+ℹ suites 0
+ℹ pass 38
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 411.083833

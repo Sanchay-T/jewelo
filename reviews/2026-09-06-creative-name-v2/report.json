@@ -1,0 +1,178 @@
+{
+  "status": "screening_complete",
+  "qualified": false,
+  "productionApproved": false,
+  "counts": {
+    "pass": 17,
+    "reject": 24,
+    "needs_review": 7,
+    "pending": 0
+  },
+  "methods": [
+    {
+      "method": "text",
+      "submitted": 12,
+      "pass": 6,
+      "reject": 5,
+      "uncertain": 1,
+      "eligible": false
+    },
+    {
+      "method": "style",
+      "submitted": 12,
+      "pass": 4,
+      "reject": 5,
+      "uncertain": 3,
+      "eligible": false
+    },
+    {
+      "method": "style_hardware",
+      "submitted": 12,
+      "pass": 6,
+      "reject": 6,
+      "uncertain": 0,
+      "eligible": false
+    },
+    {
+      "method": "style_hardware_spelling",
+      "submitted": 12,
+      "pass": 1,
+      "reject": 8,
+      "uncertain": 3,
+      "eligible": false
+    }
+  ],
+  "nameResults": [
+    {
+      "name": "ليان",
+      "script": "Arabic",
+      "submitted": 8,
+      "pass": 0,
+      "reject": 7,
+      "uncertain": 1
+    },
+    {
+      "name": "إيمان",
+      "script": "Arabic",
+      "submitted": 8,
+      "pass": 0,
+      "reject": 8,
+      "uncertain": 0
+    },
+    {
+      "name": "Lily",
+      "script": "English",
+      "submitted": 8,
+      "pass": 5,
+      "reject": 0,
+      "uncertain": 3
+    },
+    {
+      "name": "Ava",
+      "script": "English",
+      "submitted": 8,
+      "pass": 5,
+      "reject": 3,
+      "uncertain": 0
+    },
+    {
+      "name": "Christopher",
+      "script": "English",
+      "submitted": 8,
+      "pass": 6,
+      "reject": 2,
+      "uncertain": 0
+    },
+    {
+      "name": "نور",
+      "script": "Arabic",
+      "submitted": 8,
+      "pass": 1,
+      "reject": 4,
+      "uncertain": 3
+    }
+  ],
+  "gateCounts": {
+    "identity": {
+      "reject": 15,
+      "uncertain": 3
+    },
+    "construction": {
+      "reject": 15,
+      "uncertain": 7
+    },
+    "attachments": {
+      "reject": 8,
+      "uncertain": 5
+    },
+    "selections": {
+      "reject": 0,
+      "uncertain": 0
+    },
+    "photography": {
+      "reject": 0,
+      "uncertain": 0
+    },
+    "unrequested_content": {
+      "reject": 1,
+      "uncertain": 1
+    },
+    "reference_leakage": {
+      "reject": 0,
+      "uncertain": 6
+    }
+  },
+  "submissions": 48,
+  "originalOutputs": 48,
+  "providerFailures": 0,
+  "spending": {
+    "reconciledSpend": 960,
+    "reservedCredits": 0,
+    "exposure": 960,
+    "remainingBudget": 1500,
+    "availableCredits": 306882
+  },
+  "initialBalance": 307842,
+  "lastCheckpointBalance": 306882,
+  "selection": {
+    "eligible": false,
+    "winner": null,
+    "methods": [
+      {
+        "method": "text",
+        "referenceCount": 0,
+        "eligible": false,
+        "hardPasses": 6,
+        "medianStyle": 4.5
+      },
+      {
+        "method": "style",
+        "referenceCount": 1,
+        "eligible": false,
+        "hardPasses": 4,
+        "medianStyle": 4.5
+      },
+      {
+        "method": "style_hardware",
+        "referenceCount": 2,
+        "eligible": false,
+        "hardPasses": 6,
+        "medianStyle": 5
+      },
+      {
+        "method": "style_hardware_spelling",
+        "referenceCount": 3,
+        "eligible": false,
+        "hardPasses": 1,
+        "medianStyle": 4.5
+      }
+    ],
+    "anchors": [],
+    "rubricHash": "b2f11ed4066a248f345ae1cc7f0c7df8f1076863bb113e9e4d416d082422f93a",
+    "evidenceHash": "6c3e1123d4e1d343c088a7fca9ca4640044921e1f4269d536e73392a86233de7",
+    "qualified": false
+  },
+  "continuityPerformed": false,
+  "scope": "Sixnames, Classical/Classic, white gold, stone-free, Cable32 nominal, single name, Studio.48case diagnostic.",
+  "review": "Blinded assistant visual review of originals and detail crops; no paid visual judge. Arabic marks explicitly read back. No claim of a professional Arabic calligrapher or jewelry engineering certification."
+}

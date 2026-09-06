@@ -1,0 +1,147 @@
+{
+  "status": "prepared_not_authorized_or_submitted",
+  "comparison": "Target name reference only vs target name plus generic construction reference; corresponding role paragraph changes, all remaining prompt text fixed. Historical v2 is not a concurrent causal control.",
+  "calls": 12,
+  "proposedCreditCeiling": 492,
+  "reservationPerCall": 41,
+  "expectedCreditsIfPrior20PerImageContinues": 240,
+  "maxActive": 2,
+  "randomizationSeed": "arabic-v3-2026-09-06",
+  "cases": [
+    {
+      "name": "نور",
+      "method": "name_only",
+      "path": "requests/be2b16e67745f135-name_only.json",
+      "promptPath": "requests/be2b16e67745f135-name_only.txt",
+      "packetHash": "d21c427bb01239bfa821cdad498139535b5ebe9ae46cfe9d7759b08d2654994d",
+      "promptHash": "043d04efdec0eddc2f2bf7b496b5c06d34f87537d8bf248c9138ca19e7eb9495",
+      "characters": 1864,
+      "repeat": 2,
+      "blindId": "V3-01"
+    },
+    {
+      "name": "نور",
+      "method": "name_and_construction",
+      "path": "requests/be2b16e67745f135-name_and_construction.json",
+      "promptPath": "requests/be2b16e67745f135-name_and_construction.txt",
+      "packetHash": "4ce475d4a5262677d2d7448f23c987eb007c8e4323b4be6728e4333890af6efb",
+      "promptHash": "cfc650512967332f0b6b60aef0f5d575fec75c89b285a3a554c26600e1248762",
+      "characters": 2103,
+      "repeat": 2,
+      "blindId": "V3-02"
+    },
+    {
+      "name": "ليان",
+      "method": "name_only",
+      "path": "requests/6302368ffc7c286c-name_only.json",
+      "promptPath": "requests/6302368ffc7c286c-name_only.txt",
+      "packetHash": "a38ae27b31c10f3899336cf788ba35af519416c0722ce97c991ab789e4882bac",
+      "promptHash": "6827ed968beaf9d10ddacd75e180487b0dcb7def9411576d5f9c057347017198",
+      "characters": 1925,
+      "repeat": 2,
+      "blindId": "V3-03"
+    },
+    {
+      "name": "نور",
+      "method": "name_and_construction",
+      "path": "requests/be2b16e67745f135-name_and_construction.json",
+      "promptPath": "requests/be2b16e67745f135-name_and_construction.txt",
+      "packetHash": "4ce475d4a5262677d2d7448f23c987eb007c8e4323b4be6728e4333890af6efb",
+      "promptHash": "cfc650512967332f0b6b60aef0f5d575fec75c89b285a3a554c26600e1248762",
+      "characters": 2103,
+      "repeat": 1,
+      "blindId": "V3-04"
+    },
+    {
+      "name": "ليان",
+      "method": "name_and_construction",
+      "path": "requests/6302368ffc7c286c-name_and_construction.json",
+      "promptPath": "requests/6302368ffc7c286c-name_and_construction.txt",
+      "packetHash": "3fe7befe9e2a3677c39ae52eab711ab0528588636a8176b11160b8bdea9d714a",
+      "promptHash": "797fe5b7bbd890e41cb042bc75f1f3b82259dd774b627ec2ff570f179c60af34",
+      "characters": 2164,
+      "repeat": 1,
+      "blindId": "V3-05"
+    },
+    {
+      "name": "نور",
+      "method": "name_only",
+      "path": "requests/be2b16e67745f135-name_only.json",
+      "promptPath": "requests/be2b16e67745f135-name_only.txt",
+      "packetHash": "d21c427bb01239bfa821cdad498139535b5ebe9ae46cfe9d7759b08d2654994d",
+      "promptHash": "043d04efdec0eddc2f2bf7b496b5c06d34f87537d8bf248c9138ca19e7eb9495",
+      "characters": 1864,
+      "repeat": 1,
+      "blindId": "V3-06"
+    },
+    {
+      "name": "ليان",
+      "method": "name_and_construction",
+      "path": "requests/6302368ffc7c286c-name_and_construction.json",
+      "promptPath": "requests/6302368ffc7c286c-name_and_construction.txt",
+      "packetHash": "3fe7befe9e2a3677c39ae52eab711ab0528588636a8176b11160b8bdea9d714a",
+      "promptHash": "797fe5b7bbd890e41cb042bc75f1f3b82259dd774b627ec2ff570f179c60af34",
+      "characters": 2164,
+      "repeat": 2,
+      "blindId": "V3-07"
+    },
+    {
+      "name": "إيمان",
+      "method": "name_and_construction",
+      "path": "requests/060992e33d3a2021-name_and_construction.json",
+      "promptPath": "requests/060992e33d3a2021-name_and_construction.txt",
+      "packetHash": "a5ce9da676916a93070cadc5221706bb88babfdbbde8df61d4fd485518928930",
+      "promptHash": "0c59e1a99157d977f49cded34a370f4406d871ee85f6b799eff444e1690107fb",
+      "characters": 2223,
+      "repeat": 1,
+      "blindId": "V3-08"
+    },
+    {
+      "name": "إيمان",
+      "method": "name_only",
+      "path": "requests/060992e33d3a2021-name_only.json",
+      "promptPath": "requests/060992e33d3a2021-name_only.txt",
+      "packetHash": "bc1c394cc6537e856ce712cdff88ebdb8087ce906b9b5d1dfeb5e0ee96b3bf06",
+      "promptHash": "25b9535d0a5789816483e92a2b703fe6abfa8896913171c9995239068ce710d8",
+      "characters": 1984,
+      "repeat": 2,
+      "blindId": "V3-09"
+    },
+    {
+      "name": "إيمان",
+      "method": "name_and_construction",
+      "path": "requests/060992e33d3a2021-name_and_construction.json",
+      "promptPath": "requests/060992e33d3a2021-name_and_construction.txt",
+      "packetHash": "a5ce9da676916a93070cadc5221706bb88babfdbbde8df61d4fd485518928930",
+      "promptHash": "0c59e1a99157d977f49cded34a370f4406d871ee85f6b799eff444e1690107fb",
+      "characters": 2223,
+      "repeat": 2,
+      "blindId": "V3-10"
+    },
+    {
+      "name": "ليان",
+      "method": "name_only",
+      "path": "requests/6302368ffc7c286c-name_only.json",
+      "promptPath": "requests/6302368ffc7c286c-name_only.txt",
+      "packetHash": "a38ae27b31c10f3899336cf788ba35af519416c0722ce97c991ab789e4882bac",
+      "promptHash": "6827ed968beaf9d10ddacd75e180487b0dcb7def9411576d5f9c057347017198",
+      "characters": 1925,
+      "repeat": 1,
+      "blindId": "V3-11"
+    },
+    {
+      "name": "إيمان",
+      "method": "name_only",
+      "path": "requests/060992e33d3a2021-name_only.json",
+      "promptPath": "requests/060992e33d3a2021-name_only.txt",
+      "packetHash": "bc1c394cc6537e856ce712cdff88ebdb8087ce906b9b5d1dfeb5e0ee96b3bf06",
+      "promptHash": "25b9535d0a5789816483e92a2b703fe6abfa8896913171c9995239068ce710d8",
+      "characters": 1984,
+      "repeat": 1,
+      "blindId": "V3-12"
+    }
+  ],
+  "review": "Retain v2 seven-gate rubric and style>=3; originals and detail crops reviewed blind. Uncertainty prevents pass. No retry replacements.",
+  "stopping": "Stop after12, or earlier on ambiguous submission/account limit/budget conflict; reconcile before, after6, after12. No expansion or additional views within this proposed diagnostic.",
+  "causality": "Input-package comparison, not proof that any individual wording change causes improvement."
+}

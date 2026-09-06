@@ -1,0 +1,47 @@
+{
+  "family": "rails",
+  "sourceSha256": "62c80f1f0a86b9639a3bdbf292686d91107a02b33e6363a79a0a4030b2381b6d",
+  "source": "source/muhammad-geometry.png",
+  "bodyMaskHash": "93005e6776e46b36d86f850776379a0cfd53f0d6263b2903eabd0eabc22e7507",
+  "bodyHash": "bf2ae43a1e5ee8679ebbf8a17d0c4236c3f2217e8649d267658947a47d5d929c",
+  "assemblyHash": "b3070d3c3b75c8ce3f01ebaa013e1debc34c33f9f3d1b1c73fa4393e1f966bed",
+  "geometryHash": "93005e6776e46b36d86f850776379a0cfd53f0d6263b2903eabd0eabc22e7507",
+  "components": 1,
+  "componentMoves": 0,
+  "supportChecks": [
+    {
+      "id": "lower_left",
+      "overlapPixels": 380,
+      "passed": true
+    },
+    {
+      "id": "lower_right",
+      "overlapPixels": 238,
+      "passed": true
+    }
+  ],
+  "eyelets": [
+    {
+      "x": 190,
+      "y": 134,
+      "outerRadiusPx": 36,
+      "boreRadiusPx": 20
+    },
+    {
+      "x": 1200,
+      "y": 134,
+      "outerRadiusPx": 36,
+      "boreRadiusPx": 20
+    }
+  ],
+  "coordinateUnits": "reference pixels, not mm",
+  "physicalDimensionsVerified": false,
+  "constructionDetail": "Parallel upper/lower rails with four supports, two upper rail eyelets, no stones or empty seats.",
+  "foldHeightPixels": 0,
+  "status": "pending_visual_preflight",
+  "limitations": [
+    "Experimental appearance geometry; no manufacturing strength certification.",
+    "Source mask comes from prior reviewed artifact; original font/shaping lineage is inherited, not re-typeset.",
+    "Complete assembly reference shows pendant and initial chain links, not clasp or measured full necklace."
+  ]
+}

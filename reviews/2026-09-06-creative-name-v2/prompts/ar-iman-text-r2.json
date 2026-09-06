@@ -1,0 +1,50 @@
+{
+  "version": "jewelo-creative-prompt-lab-2.0.0",
+  "kind": "new_design",
+  "config": {
+    "name": "إيمان",
+    "script": "Arabic",
+    "construction": "Classical",
+    "lettering": "Classic",
+    "metal": "White gold",
+    "coverage": "No stones",
+    "size": 32,
+    "chain": "Cable",
+    "twoNames": false,
+    "engraving": ""
+  },
+  "configHash": "4669b89cb3d3e0adfe182a46f359e6ad8af9c3c669a1e2b37c94838cf2f26c1e",
+  "sourceStrings": {
+    "name": "إيمان"
+  },
+  "recipeHash": "4172771a84fb7992241ca9997ddf59910e224f4a7408df34869018f52f7c6424",
+  "templateHash": "34fd65418d80a2c4b7501303bb4c1b63194ec772a93fd95ff317fae9c5c99763",
+  "prompt": "Create one photorealistic Studio photograph of a newly designed custom-name necklace.\n\nCUSTOMER IDENTITY\nThe pendant itself spells \"إيمان\". Arabic, right-to-left reading. Preserve exact spelling, capitalization, supplied marks and meaningful spaces. One upright name formed from metal, not a printed caption.\nClassic Arabic lettering with Naskh character: balanced stroke contrast, rounded bowls, clear contextual joins and measured upright proportions. Preserve correct Arabic shaping and identifying marks.\n\nREFERENCE ROLES\n\n\nDESIGN FREEDOM\nCreate an original name-specific composition in the selected lettering style. You may adapt letter proportions, spacing, permitted flourishes and discreet support placement while preserving spelling and correct shaping. The selected construction and hardware relationship are fixed; no pre-existing pendant silhouette is prescribed.\n\nCONSTRUCTION\nUpright lettering forms the main rigid pendant body. Discreet bridges support separated components while retaining recognizable letter groups.\nSupport every separated letter group, identifying dot, hamza and supplied mark with discreet metal bridges. Keep bridges visibly distinguishable from linguistic strokes and preserve the reading, mark count and placement, intentional counters and linguistic breaks. Each bridge visibly meets the components it supports with a continuous metal connection; point contacts, truncated supports and purported hidden connections are insufficient. Do not add a surrounding frame or full backing plate.\nExactly two integral body eyelets carry the pendant. Each body eyelet receives one separate closed connecting ring; that same connector passes through the first Cable-chain link. Keep eyelets, connectors and alternating chain links distinguishable, with plausible interlocks and visible apertures. Use both body eyelets; no unused eyelets, extra body holes or loose chain ends beside the pendant. Continue the chain beyond the photographic frame.\n\nCUSTOMER SELECTIONS\nWhite gold appearance with a clean polished finish. Stone-free metal, without gemstones or empty stone seats. Cable chain with alternating oval links. Nominal selected size label: 32 mm; this image does not certify dimensions. Do not print measurement labels.\n\nPHOTOGRAPHY\nNear-front catalog photograph on matte ivory. One large soft source with gentle fill and neutral white balance. Entire pendant and both attachment junctions visible, with sufficient depth of field to inspect the construction. Show the lettering, support bridges and both attachment junctions clearly enough to inspect their connections.\n\nVISIBLE REQUIREMENTS\nRetain intentional letter counters, linguistic spaces and hardware apertures. Supports must preserve legibility and meet their intended components. No captions, specimen writing, reference labels, logos or unrelated decoration. Use coherent reflections and contact shadows with readable metal edges; do not conceal a critical connection with glare or blur.",
+  "promptHash": "53f1a69d2c57aa42d26736742dfb4ceb6c3c20ce0b095ce7865149ca0d1d045d",
+  "method": "text",
+  "view": "Studio",
+  "ratio": "1:1",
+  "model": "gpt-image-2",
+  "quality": null,
+  "imageSize": null,
+  "referenceDescriptors": [],
+  "slots": {
+    "identity": "The pendant itself spells \"إيمان\". Arabic, right-to-left reading. Preserve exact spelling, capitalization, supplied marks and meaningful spaces. One upright name formed from metal, not a printed caption.",
+    "style": "Classic Arabic lettering with Naskh character: balanced stroke contrast, rounded bowls, clear contextual joins and measured upright proportions. Preserve correct Arabic shaping and identifying marks.",
+    "construction": "Upright lettering forms the main rigid pendant body. Discreet bridges support separated components while retaining recognizable letter groups.",
+    "support": "Support every separated letter group, identifying dot, hamza and supplied mark with discreet metal bridges. Keep bridges visibly distinguishable from linguistic strokes and preserve the reading, mark count and placement, intentional counters and linguistic breaks. Each bridge visibly meets the components it supports with a continuous metal connection; point contacts, truncated supports and purported hidden connections are insufficient. Do not add a surrounding frame or full backing plate.",
+    "attachments": "Exactly two integral body eyelets carry the pendant. Each body eyelet receives one separate closed connecting ring; that same connector passes through the first Cable-chain link. Keep eyelets, connectors and alternating chain links distinguishable, with plausible interlocks and visible apertures. Use both body eyelets; no unused eyelets, extra body holes or loose chain ends beside the pendant. Continue the chain beyond the photographic frame.",
+    "selections": "White gold appearance with a clean polished finish. Stone-free metal, without gemstones or empty stone seats. Cable chain with alternating oval links. Nominal selected size label: 32 mm; this image does not certify dimensions. Do not print measurement labels.",
+    "photography": "Near-front catalog photograph on matte ivory. One large soft source with gentle fill and neutral white balance. Entire pendant and both attachment junctions visible, with sufficient depth of field to inspect the construction. Show the lettering, support bridges and both attachment junctions clearly enough to inspect their connections.",
+    "invariants": "Retain intentional letter counters, linguistic spaces and hardware apertures. Supports must preserve legibility and meet their intended components. No captions, specimen writing, reference labels, logos or unrelated decoration. Use coherent reflections and contact shadows with readable metal edges; do not conceal a critical connection with glare or blur.",
+    "references": "",
+    "creative": "Create an original name-specific composition in the selected lettering style. You may adapt letter proportions, spacing, permitted flourishes and discreet support placement while preserving spelling and correct shaping. The selected construction and hardware relationship are fixed; no pre-existing pendant silhouette is prescribed."
+  },
+  "release": {
+    "version": "jewelo-creative-prompt-lab-2.0.0",
+    "status": "candidate",
+    "productionApproved": false,
+    "qualification": "untested",
+    "templateHash": "34fd65418d80a2c4b7501303bb4c1b63194ec772a93fd95ff317fae9c5c99763"
+  }
+}

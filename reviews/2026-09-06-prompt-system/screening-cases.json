@@ -1,0 +1,386 @@
+[
+  {
+    "id": "classical-assembly-4",
+    "family": "classical",
+    "method": "assembly",
+    "repeat": 4,
+    "compiledPath": "compiled/classical-assembly-4.json",
+    "promptPath": "prompts/classical-assembly-4.txt"
+  },
+  {
+    "id": "rails-body-2",
+    "family": "rails",
+    "method": "body",
+    "repeat": 2,
+    "compiledPath": "compiled/rails-body-2.json",
+    "promptPath": "prompts/rails-body-2.txt"
+  },
+  {
+    "id": "classical-body-3",
+    "family": "classical",
+    "method": "body",
+    "repeat": 3,
+    "compiledPath": "compiled/classical-body-3.json",
+    "promptPath": "prompts/classical-body-3.txt"
+  },
+  {
+    "id": "classical-body-1",
+    "family": "classical",
+    "method": "body",
+    "repeat": 1,
+    "compiledPath": "compiled/classical-body-1.json",
+    "promptPath": "prompts/classical-body-1.txt"
+  },
+  {
+    "id": "origami-assembly-3",
+    "family": "origami",
+    "method": "assembly",
+    "repeat": 3,
+    "compiledPath": "compiled/origami-assembly-3.json",
+    "promptPath": "prompts/origami-assembly-3.txt"
+  },
+  {
+    "id": "rails-assembly-2",
+    "family": "rails",
+    "method": "assembly",
+    "repeat": 2,
+    "compiledPath": "compiled/rails-assembly-2.json",
+    "promptPath": "prompts/rails-assembly-2.txt"
+  },
+  {
+    "id": "rails-text-3",
+    "family": "rails",
+    "method": "text",
+    "repeat": 3,
+    "compiledPath": "compiled/rails-text-3.json",
+    "promptPath": "prompts/rails-text-3.txt"
+  },
+  {
+    "id": "origami-assembly-4",
+    "family": "origami",
+    "method": "assembly",
+    "repeat": 4,
+    "compiledPath": "compiled/origami-assembly-4.json",
+    "promptPath": "prompts/origami-assembly-4.txt"
+  },
+  {
+    "id": "framed-body-4",
+    "family": "framed",
+    "method": "body",
+    "repeat": 4,
+    "compiledPath": "compiled/framed-body-4.json",
+    "promptPath": "prompts/framed-body-4.txt"
+  },
+  {
+    "id": "framed-assembly-3",
+    "family": "framed",
+    "method": "assembly",
+    "repeat": 3,
+    "compiledPath": "compiled/framed-assembly-3.json",
+    "promptPath": "prompts/framed-assembly-3.txt"
+  },
+  {
+    "id": "origami-body-2",
+    "family": "origami",
+    "method": "body",
+    "repeat": 2,
+    "compiledPath": "compiled/origami-body-2.json",
+    "promptPath": "prompts/origami-body-2.txt"
+  },
+  {
+    "id": "framed-text-2",
+    "family": "framed",
+    "method": "text",
+    "repeat": 2,
+    "compiledPath": "compiled/framed-text-2.json",
+    "promptPath": "prompts/framed-text-2.txt"
+  },
+  {
+    "id": "framed-text-1",
+    "family": "framed",
+    "method": "text",
+    "repeat": 1,
+    "compiledPath": "compiled/framed-text-1.json",
+    "promptPath": "prompts/framed-text-1.txt"
+  },
+  {
+    "id": "classical-assembly-1",
+    "family": "classical",
+    "method": "assembly",
+    "repeat": 1,
+    "compiledPath": "compiled/classical-assembly-1.json",
+    "promptPath": "prompts/classical-assembly-1.txt"
+  },
+  {
+    "id": "framed-body-1",
+    "family": "framed",
+    "method": "body",
+    "repeat": 1,
+    "compiledPath": "compiled/framed-body-1.json",
+    "promptPath": "prompts/framed-body-1.txt"
+  },
+  {
+    "id": "origami-assembly-2",
+    "family": "origami",
+    "method": "assembly",
+    "repeat": 2,
+    "compiledPath": "compiled/origami-assembly-2.json",
+    "promptPath": "prompts/origami-assembly-2.txt"
+  },
+  {
+    "id": "classical-body-2",
+    "family": "classical",
+    "method": "body",
+    "repeat": 2,
+    "compiledPath": "compiled/classical-body-2.json",
+    "promptPath": "prompts/classical-body-2.txt"
+  },
+  {
+    "id": "classical-text-4",
+    "family": "classical",
+    "method": "text",
+    "repeat": 4,
+    "compiledPath": "compiled/classical-text-4.json",
+    "promptPath": "prompts/classical-text-4.txt"
+  },
+  {
+    "id": "origami-text-1",
+    "family": "origami",
+    "method": "text",
+    "repeat": 1,
+    "compiledPath": "compiled/origami-text-1.json",
+    "promptPath": "prompts/origami-text-1.txt"
+  },
+  {
+    "id": "rails-assembly-3",
+    "family": "rails",
+    "method": "assembly",
+    "repeat": 3,
+    "compiledPath": "compiled/rails-assembly-3.json",
+    "promptPath": "prompts/rails-assembly-3.txt"
+  },
+  {
+    "id": "rails-text-4",
+    "family": "rails",
+    "method": "text",
+    "repeat": 4,
+    "compiledPath": "compiled/rails-text-4.json",
+    "promptPath": "prompts/rails-text-4.txt"
+  },
+  {
+    "id": "framed-body-3",
+    "family": "framed",
+    "method": "body",
+    "repeat": 3,
+    "compiledPath": "compiled/framed-body-3.json",
+    "promptPath": "prompts/framed-body-3.txt"
+  },
+  {
+    "id": "rails-body-4",
+    "family": "rails",
+    "method": "body",
+    "repeat": 4,
+    "compiledPath": "compiled/rails-body-4.json",
+    "promptPath": "prompts/rails-body-4.txt"
+  },
+  {
+    "id": "framed-assembly-4",
+    "family": "framed",
+    "method": "assembly",
+    "repeat": 4,
+    "compiledPath": "compiled/framed-assembly-4.json",
+    "promptPath": "prompts/framed-assembly-4.txt"
+  },
+  {
+    "id": "rails-assembly-4",
+    "family": "rails",
+    "method": "assembly",
+    "repeat": 4,
+    "compiledPath": "compiled/rails-assembly-4.json",
+    "promptPath": "prompts/rails-assembly-4.txt"
+  },
+  {
+    "id": "framed-body-2",
+    "family": "framed",
+    "method": "body",
+    "repeat": 2,
+    "compiledPath": "compiled/framed-body-2.json",
+    "promptPath": "prompts/framed-body-2.txt"
+  },
+  {
+    "id": "framed-assembly-1",
+    "family": "framed",
+    "method": "assembly",
+    "repeat": 1,
+    "compiledPath": "compiled/framed-assembly-1.json",
+    "promptPath": "prompts/framed-assembly-1.txt"
+  },
+  {
+    "id": "classical-text-2",
+    "family": "classical",
+    "method": "text",
+    "repeat": 2,
+    "compiledPath": "compiled/classical-text-2.json",
+    "promptPath": "prompts/classical-text-2.txt"
+  },
+  {
+    "id": "origami-assembly-1",
+    "family": "origami",
+    "method": "assembly",
+    "repeat": 1,
+    "compiledPath": "compiled/origami-assembly-1.json",
+    "promptPath": "prompts/origami-assembly-1.txt"
+  },
+  {
+    "id": "framed-text-4",
+    "family": "framed",
+    "method": "text",
+    "repeat": 4,
+    "compiledPath": "compiled/framed-text-4.json",
+    "promptPath": "prompts/framed-text-4.txt"
+  },
+  {
+    "id": "classical-text-3",
+    "family": "classical",
+    "method": "text",
+    "repeat": 3,
+    "compiledPath": "compiled/classical-text-3.json",
+    "promptPath": "prompts/classical-text-3.txt"
+  },
+  {
+    "id": "rails-assembly-1",
+    "family": "rails",
+    "method": "assembly",
+    "repeat": 1,
+    "compiledPath": "compiled/rails-assembly-1.json",
+    "promptPath": "prompts/rails-assembly-1.txt"
+  },
+  {
+    "id": "framed-assembly-2",
+    "family": "framed",
+    "method": "assembly",
+    "repeat": 2,
+    "compiledPath": "compiled/framed-assembly-2.json",
+    "promptPath": "prompts/framed-assembly-2.txt"
+  },
+  {
+    "id": "origami-body-4",
+    "family": "origami",
+    "method": "body",
+    "repeat": 4,
+    "compiledPath": "compiled/origami-body-4.json",
+    "promptPath": "prompts/origami-body-4.txt"
+  },
+  {
+    "id": "classical-assembly-2",
+    "family": "classical",
+    "method": "assembly",
+    "repeat": 2,
+    "compiledPath": "compiled/classical-assembly-2.json",
+    "promptPath": "prompts/classical-assembly-2.txt"
+  },
+  {
+    "id": "classical-assembly-3",
+    "family": "classical",
+    "method": "assembly",
+    "repeat": 3,
+    "compiledPath": "compiled/classical-assembly-3.json",
+    "promptPath": "prompts/classical-assembly-3.txt"
+  },
+  {
+    "id": "rails-body-1",
+    "family": "rails",
+    "method": "body",
+    "repeat": 1,
+    "compiledPath": "compiled/rails-body-1.json",
+    "promptPath": "prompts/rails-body-1.txt"
+  },
+  {
+    "id": "classical-body-4",
+    "family": "classical",
+    "method": "body",
+    "repeat": 4,
+    "compiledPath": "compiled/classical-body-4.json",
+    "promptPath": "prompts/classical-body-4.txt"
+  },
+  {
+    "id": "rails-text-2",
+    "family": "rails",
+    "method": "text",
+    "repeat": 2,
+    "compiledPath": "compiled/rails-text-2.json",
+    "promptPath": "prompts/rails-text-2.txt"
+  },
+  {
+    "id": "origami-text-4",
+    "family": "origami",
+    "method": "text",
+    "repeat": 4,
+    "compiledPath": "compiled/origami-text-4.json",
+    "promptPath": "prompts/origami-text-4.txt"
+  },
+  {
+    "id": "classical-text-1",
+    "family": "classical",
+    "method": "text",
+    "repeat": 1,
+    "compiledPath": "compiled/classical-text-1.json",
+    "promptPath": "prompts/classical-text-1.txt"
+  },
+  {
+    "id": "rails-text-1",
+    "family": "rails",
+    "method": "text",
+    "repeat": 1,
+    "compiledPath": "compiled/rails-text-1.json",
+    "promptPath": "prompts/rails-text-1.txt"
+  },
+  {
+    "id": "origami-text-2",
+    "family": "origami",
+    "method": "text",
+    "repeat": 2,
+    "compiledPath": "compiled/origami-text-2.json",
+    "promptPath": "prompts/origami-text-2.txt"
+  },
+  {
+    "id": "framed-text-3",
+    "family": "framed",
+    "method": "text",
+    "repeat": 3,
+    "compiledPath": "compiled/framed-text-3.json",
+    "promptPath": "prompts/framed-text-3.txt"
+  },
+  {
+    "id": "origami-body-3",
+    "family": "origami",
+    "method": "body",
+    "repeat": 3,
+    "compiledPath": "compiled/origami-body-3.json",
+    "promptPath": "prompts/origami-body-3.txt"
+  },
+  {
+    "id": "origami-text-3",
+    "family": "origami",
+    "method": "text",
+    "repeat": 3,
+    "compiledPath": "compiled/origami-text-3.json",
+    "promptPath": "prompts/origami-text-3.txt"
+  },
+  {
+    "id": "rails-body-3",
+    "family": "rails",
+    "method": "body",
+    "repeat": 3,
+    "compiledPath": "compiled/rails-body-3.json",
+    "promptPath": "prompts/rails-body-3.txt"
+  },
+  {
+    "id": "origami-body-1",
+    "family": "origami",
+    "method": "body",
+    "repeat": 1,
+    "compiledPath": "compiled/origami-body-1.json",
+    "promptPath": "prompts/origami-body-1.txt"
+  }
+]

@@ -1,0 +1,18 @@
+import {readFileSync,writeFileSync,existsSync,appendFileSync} from 'node:fs';
+import {hash} from './compiler.mjs';
+const root='reviews/2026-09-06-prompt-system';
+const input=JSON.parse(process.argv[2]);
+const blind=JSON.parse(readFileSync(root+'/blind-index.json','utf8'));
+const record=blind.find(x=>x.label===input.label);
+if(!record?.available)throw Error('output_not_available');
+const rubric=JSON.parse(readFileSync(root+'/rubric.json','utf8'));
+if(!input.notes?.trim())throw Error('audit_observation_required');
+const gates=input.gates;
+if(!gates || Object.keys(gates).length!==rubric.gates.length || !rubric.gates.every(g=>['pass','reject','needs_review'].includes(gates[g])))throw Error('all_rubric_gates_required');
+const verdict=Object.values(gates).includes('reject')?'reject':Object.values(gates).includes('needs_review')?'needs_review':'pass';
+const audits=existsSync(root+'/audit.json')?JSON.parse(readFileSync(root+'/audit.json','utf8')):{};
+const next={label:record.label,outputHash:record.outputHash,rubricHash:hash(rubric),gates,verdict,notes:input.notes,referenceFidelity:input.referenceFidelity??'not_yet_unblinded',reviewer:'primary agent visual review',reviewedAt:new Date().toISOString()};
+appendFileSync(root+'/audit-history.jsonl',JSON.stringify({caseId:record.caseId,previous:audits[record.caseId]??null,next})+'\n');
+audits[record.caseId]=next;
+writeFileSync(root+'/audit.json',JSON.stringify(audits,null,2)+'\n');
+console.log(JSON.stringify({label:input.label,verdict}));

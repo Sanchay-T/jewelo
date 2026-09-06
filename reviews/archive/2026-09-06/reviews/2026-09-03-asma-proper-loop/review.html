@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Asma Proper-Loop Set - 6 Omran styles + canonical</title>
+<style>
+body{font-family:-apple-system,system-ui,sans-serif;margin:0;background:#0e2a16;color:#eee}
+header{padding:12px 16px;border-bottom:1px solid #2c5c38}
+.pill{display:inline-block;background:#1d5c2e;border-radius:20px;padding:4px 12px;font-size:12px;margin:2px}
+#canon{background:#122e1a;border:2px solid #3fa34d;border-radius:12px;padding:16px;margin:16px auto;max-width:1000px;text-align:center}
+#canon img{max-width:520px;width:100%;background:#fff;border-radius:8px}
+#canon .ar{font-size:52px;direction:rtl}
+#stage{display:flex;gap:16px;padding:16px;max-width:1400px;margin:0 auto}
+#viewer{flex:3;background:#000;border-radius:12px;min-height:60vh;display:flex;align-items:center;justify-content:center;overflow:hidden}
+#viewer img{max-width:100%;max-height:75vh;object-fit:contain;background:#fff}
+#viewer.zoom img{width:150%;max-height:none;cursor:zoom-out}
+#side{flex:1;min-width:280px;background:#122e1a;border-radius:12px;padding:16px}
+.badge{display:inline-block;padding:4px 10px;border-radius:20px;font-size:12px}
+.pass{background:#1d5c2e}
+.warn{background:#6b5a1e}
+.nav{display:flex;gap:8px;justify-content:center;padding:12px}
+button{background:#1d5c2e;color:#eee;border:1px solid #3fa34d;border-radius:8px;padding:8px 14px;cursor:pointer}
+#dots{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;padding:8px}
+#dots span{width:10px;height:10px;border-radius:50%;background:#3a6b46;cursor:pointer;display:inline-block}
+#dots span.on{background:#fff}
+a{color:#9cf}
+</style>
+</head>
+<body>
+<header>
+<strong>PROPER LOOP - Asma أسماء, 6 Omran styles, canonical reference</strong>
+<span id="count"></span>
+<button id="zoom">Zoom pendant</button>
+</header>
+<div id="canon">
+<div><span class="pill">STEP 0 - CANONICAL IDENTITY (real font render, not AI)</span></div>
+<img src="normalized/canonical.jpg" alt="canonical asma">
+<div class="ar">أسماء</div>
+<div>NFC 0623 0633 0645 0627 0621 - Geeza Pro - every image below was generated WITH this as reference</div>
+</div>
+<div id="stage">
+<div id="viewer"><img id="img" alt="shot"></div>
+<div id="side">
+<div id="meta"></div>
+<div class="nav"><button id="prev">Prev</button><button id="next">Next</button></div>
+<div id="dots"></div>
+<div><a id="orig" target="_blank">Open full-res original</a></div>
+</div>
+</div>
+<script>
+const DATA=[
+{id:"79f3f17d-ece1-4373-8449-8e904a71e5b5",look:"1 Floating Rails",file:"rails_79f3f17d.png",qc:"pass",note:"Linen + coffee, 3 bezel diamonds. Letter order أ س م ا ء correct. Lifestyle texture real."},
+{id:"025f58e8-f554-40d0-ae5f-8bc3945bd12a",look:"2 Arabic Origami",file:"origami_025f58e8.png",qc:"pass",note:"Oak desk + notebook. Faceted planes, diamond cluster. Strongest desk texture."},
+{id:"2b132492-4329-44e7-8398-09957f63137a",look:"3 Framed Minimal - BEST PRODUCT",file:"framed_2b132492.png",qc:"pass",note:"Fingers holding frame, skin pores visible. Corner diamonds + side bar. Cleanest build."},
+{id:"707666c4-b2aa-4b0a-9c3e-cf86a0c74355",look:"4 Constellation",file:"constellation_707666c4.png",qc:"pass",note:"Navy fabric + phone edge. Orbital lines, blue + pink sapphires. Night-mode grain sells it."},
+{id:"9a29f4c9-7f52-4536-8834-58872b919fc9",look:"5 Ribbon Worn - BEST WORN",file:"ribbon_9a29f4c9.png",qc:"pass",note:"Collarbone, white tee, pores + moles. Diamond + pink + blue accents placed right."},
+{id:"96ecbba4-6f81-4f5e-92d1-adf4b73a0e57",look:"6 Art Deco Unboxing",file:"artdeco_96ecbba4.png",qc:"pass with note",note:"Gift box, baguettes, sunburst sapphire. Terminal ء slightly separated - flag to Omran."}
+];
+let i=0;
+const img=document.getElementById('img');
+function show(){
+const d=DATA[i];
+img.src='normalized/'+d.id+'.jpg';
+const cls=d.qc.startsWith('pass with')?'warn':'pass';
+document.getElementById('meta').innerHTML='<span class="badge '+cls+'">'+d.qc+'</span><h3>'+d.look+'</h3><p>'+d.note+'</p><p><small>'+d.id+'</small></p>';
+document.getElementById('orig').href='originals/'+d.file;
+document.getElementById('count').textContent=(i+1)+' / '+DATA.length;
+const dots=document.getElementById('dots');dots.innerHTML='';
+DATA.forEach((x,idx)=>{const s=document.createElement('span');if(idx===i)s.classList.add('on');s.onclick=()=>{i=idx;show()};dots.appendChild(s)});
+}
+document.getElementById('prev').onclick=()=>{i=(i-1+DATA.length)%DATA.length;show()};
+document.getElementById('next').onclick=()=>{i=(i+1)%DATA.length;show()};
+document.addEventListener('keydown',e=>{if(e.key==='ArrowRight')document.getElementById('next').click();if(e.key==='ArrowLeft')document.getElementById('prev').click()});
+document.getElementById('zoom').onclick=()=>document.getElementById('viewer').classList.toggle('zoom');
+show();
+</script>
+</body>
+</html>

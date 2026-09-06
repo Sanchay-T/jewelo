@@ -1,0 +1,34 @@
+✔ inactive gem, layout and second name do not leak; input snapshot is immutable (2.63325ms)
+✔ literal substitutions do not interpret replacement tokens (0.191125ms)
+✔ unresolved/malformed/unknown placeholders fail before provider (0.212542ms)
+✔ script, units, extra fields, raw requests and missing names rejected (0.41125ms)
+✔ names NFC normalized, second name required only when active (0.103583ms)
+✔ paid compilation requires matching approved recipe and reference bytes (0.204083ms)
+✔ selected stones require an actual placement map (0.153125ms)
+✔ ledger protects concurrency, duplicates and unknown submissions (1.022125ms)
+✔ ledger enforces stage gate, credit checkpoint, quota, and existing balance (0.385292ms)
+✔ four correlated views count as ONE complete request with bound audits (10.738583ms)
+✔ qualification rejects reused evidence, altered gates and unsealed configuration membership (13.742417ms)
+✔ uncertain submission cannot be cleared by declaring a timeout failed (0.356625ms)
+✔ reported zero credits and uncheckpointed completed charges block extra spending (0.19575ms)
+✔ gallery verdict cannot override failure or mismatch immutable output (0.039917ms)
+✔ holdout is reproducible, independent and disjoint from development names (7.374125ms)
+✔ changing prompt text does not reopen an already submitted trial identity (0.236334ms)
+✔ reference drift or missing fidelity review prevents complete-request success (4.9045ms)
+✔ credit checkpoints cannot discard an unsubmitted reservation (0.32775ms)
+✔ both submitted JSON prompt and saved text must match their frozen hash (0.121291ms)
+✔ renaming task IDs cannot qualify reused image bytes (2.6965ms)
+✔ qualification reads immutable files and binds the real ledger entry (3.966333ms)
+✔ development failures retain the denominator and can satisfy 99 percent (3.660667ms)
+✔ development and adjudication must precede the qualification freeze (0.23075ms)
+✔ definite reference drift rejects an image even when another gate is uncertain (3.067916ms)
+✔ nonempty engraving cannot silently assume an unspecified surface (0.215209ms)
+✔ repeated placeholders receive the identical frozen value (0.082542ms)
+ℹ tests 26
+ℹ suites 0
+ℹ pass 26
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 109.190583

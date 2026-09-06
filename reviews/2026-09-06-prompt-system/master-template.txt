@@ -1,0 +1,23 @@
+Create one photorealistic jewelry photograph.
+
+IDENTITY
+{{name_and_script}}
+{{lettering_and_arrangement}}
+
+CONSTRUCTION
+{{construction_recipe}}
+{{attachment_recipe}}
+{{reference_roles}}
+
+CUSTOMER SELECTIONS
+{{metal_and_finish}}
+{{stone_and_setting_spec}}
+{{selected_size}}
+{{chain_style}}
+{{applicable_personalization}}
+
+PHOTOGRAPHY
+{{view_recipe}}
+
+PRESERVE
+{{applicable_invariants}}

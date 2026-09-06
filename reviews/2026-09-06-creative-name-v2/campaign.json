@@ -1,0 +1,48 @@
+{
+  "version": "2.0.0",
+  "status": "frozen_for_screening",
+  "createdAt": "2026-09-06T07:06:59.300Z",
+  "seed": 20260906,
+  "rubricHash": "b2f11ed4066a248f345ae1cc7f0c7df8f1076863bb113e9e4d416d082422f93a",
+  "casesHash": "63318acb0b86f92e78af3687c327656713dc4706e1737deb3292b9e1e984d3fc",
+  "referenceManifestHash": "26793323c75f870a3653f4e99b4090881a9cea26a92cd56e3b3e1871196b83c8",
+  "initialBalance": 307842,
+  "accountTeamId": 1068827,
+  "stages": {
+    "screening": 48,
+    "continuityConditional": 12
+  },
+  "credits": {
+    "cap": 2460,
+    "reservationPerSubmission": 41,
+    "actualPrice": "unknown until reconciled",
+    "purchasesAllowed": false
+  },
+  "provider": {
+    "model": "gpt-image-2",
+    "count": 1,
+    "maxActive": 2,
+    "quality": null,
+    "imageSize": null
+  },
+  "fixedAnchors": [
+    "ليان",
+    "إيمان",
+    "Lily",
+    "Christopher"
+  ],
+  "limitations": [
+    "Only Classical/Classic, white gold, stone-free, Cable32, single names.",
+    "Other constructions are untested drafts.",
+    "No dimensional certification.",
+    "No99% qualification or production integration."
+  ],
+  "releaseFiles": {
+    "compiler.mjs": "94aee2af1b955d5643043b9f47617b627512cf5def9d4d270f50ab7b39fb4820",
+    "ledger.mjs": "7aaa2aebdfa440922b5e4e5291da434a58cb4eb54bc60f7547a001b664ae5720",
+    "prepare.mjs": "336afc073286236908a8a8f454710117cd67cdcdc07fa75b353b0419f389a050",
+    "references.py": "82b28177416d9d4447f459997de5d1db87e00ec9be1a7d2d803b5532b1db45c1",
+    "journal.mjs": "6069e5cce6ba9726d6f37666992b54f0eae543ecc48f020c15a0d52700462629",
+    "../compiler.mjs": "02f8aaf45e5f4f921a0d9203a82b35bfc743109ccc02acfaf11952511d3aa0b8"
+  }
+}

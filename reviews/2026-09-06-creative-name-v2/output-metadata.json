@@ -1,0 +1,434 @@
+[
+  {
+    "caseId": "ar-liyan-style_hardware_spelling-r1",
+    "outputHash": "127369b3a4f4d2208ab2c6d798b21d146600effeab3a3e31db57c0c475b9e74c",
+    "path": "outputs/ar-liyan-style_hardware_spelling-r1.png",
+    "width": 1920,
+    "height": 1920,
+    "format": "PNG",
+    "bytes": 3916309
+  },
+  {
+    "caseId": "ar-iman-style-r1",
+    "outputHash": "286999922e6a1ecb024dbc5f76626761758eb1b65e3d49c18810573129818e14",
+    "path": "outputs/ar-iman-style-r1.png",
+    "width": 1920,
+    "height": 1920,
+    "format": "PNG",
+    "bytes": 4084170
+  },
+  {
+    "caseId": "ar-liyan-style_hardware_spelling-r2",
+    "outputHash": "91f7f7cb5d077fb51a8068f4cae7b399e86b0dd04dbe98012d7c1a077d73a45b",
+    "path": "outputs/ar-liyan-style_hardware_spelling-r2.png",
+    "width": 1920,
+    "height": 1920,
+    "format": "PNG",
+    "bytes": 3804643
+  },
+  {
+    "caseId": "ar-liyan-style-r1",
+    "outputHash": "bd46fa05e7cfc08075b8c0b2a45504f6b849fcdbd937c6b9e0776decf42a27bd",
+    "path": "outputs/ar-liyan-style-r1.png",
+    "width": 1920,
+    "height": 1920,
+    "format": "PNG",
+    "bytes": 3895360
+  },
+  {
+    "caseId": "en-lily-text-r2",
+    "outputHash": "509294cc70f088ba8353ef8f0ce6321c07553b51952ee671ca5797c69646be86",
+    "path": "outputs/en-lily-text-r2.png",
+    "width": 1920,
+    "height": 1920,
+    "format": "PNG",
+    "bytes": 4176106
+  },
+  {
+    "caseId": "ar-iman-style_hardware_spelling-r1",
+    "outputHash": "ae0142587e1966a9339f9ea976d99e1e9232845b563e80cec6a6319b3ef67f3f",
+    "path": "outputs/ar-iman-style_hardware_spelling-r1.png",
+    "width": 1920,
+    "height": 1920,
+    "format": "PNG",
+    "bytes": 3765743
+  },
+  {
+    "caseId": "ar-iman-style_hardware-r1",
+    "outputHash": "2538ca410ebdf61ac102e8fcf9cd300240e02fb32948a4c59e45b567b3983c17",
+    "path": "outputs/ar-iman-style_hardware-r1.png",
+    "width": 1920,
+    "height": 1920,
+    "format": "PNG",
+    "bytes": 3916254
+  },
+  {
+    "caseId": "en-ava-style_hardware-r2",
+    "outputHash": "830855597e7954d05ea5665341f17a0d51faf55f7c50adbe5690dd3ab3a4ec40",
+    "path": "outputs/en-ava-style_hardware-r2.png",
+    "width": 1920,
+    "height": 1920,
+    "format": "PNG",
+    "bytes": 3958463
+  },
+  {
+    "caseId": "en-ava-text-r1",
+    "outputHash": "864bbd03a7d202363379d830ed6dc3c78953f2fc1184357b3a01a1c5cd53e264",
+    "path": "outputs/en-ava-text-r1.png",
+    "width": 1920,
+    "height": 1920,
+    "format": "PNG",
+    "bytes": 4473414
+  },
+  {
+    "caseId": "ar-iman-text-r1",
+    "outputHash": "2ebd9ecb018632e2fda13d0a8010812f1ebfbbf2960d56f241b25f8d330b52b4",
+    "path": "outputs/ar-iman-text-r1.png",
+    "width": 1920,
+    "height": 1920,
+    "format": "PNG",
+    "bytes": 2880651
+  },
+  {
+    "caseId": "en-christopher-text-r2",
+    "outputHash": "f903fee43340d28af8858f46fd98f0f17e739831520f9608b128ba096ce3c970",
+    "path": "outputs/en-christopher-text-r2.png",
+    "width": 1920,
+    "height": 1920,
+    "format": "PNG",
+    "bytes": 4909039
+  },
+  {
+    "caseId": "ar-noor-text-r1",
+    "outputHash": "5693348b095aed529cb9b4445843db222bb7081ba460bc7b6c6cfc7de8a3b5a6",
+    "path": "outputs/ar-noor-text-r1.png",
+    "width": 1920,
+    "height": 1920,
+    "format": "PNG",
+    "bytes": 3939155
+  },
+  {
+    "caseId": "ar-iman-style_hardware_spelling-r2",
+    "outputHash": "b1a477461ab630d1784f1c38e85c1432d38cac2f6c8b48a16f2ad596988d6ca9",
+    "path": "outputs/ar-iman-style_hardware_spelling-r2.png",
+    "width": 1920,
+    "height": 1920,
+    "format": "PNG",
+    "bytes": 4357991
+  },
+  {
+    "caseId": "ar-iman-style_hardware-r2",
+    "outputHash": "59a4cef09bbc7f1d631008abc7d463c810dca563dfd4792145b9dee1ba0cb27d",
+    "path": "outputs/ar-iman-style_hardware-r2.png",
+    "width": 1920,
+    "height": 1920,
+    "format": "PNG",
+    "bytes": 3970625
+  },
+  {
+    "caseId": "ar-noor-style_hardware_spelling-r2",
+    "outputHash": "6b48d4655cb8f6b86ca96b7f3f14db3c28f70dddc173eb571dee9ff4196369e3",
+    "path": "outputs/ar-noor-style_hardware_spelling-r2.png",
+    "width": 1920,
+    "height": 1920,
+    "format": "PNG",
+    "bytes": 3869331
+  },
+  {
+    "caseId": "en-ava-style_hardware_spelling-r1",
+    "outputHash": "c274521b3def946257e87fa307dd06860b7ceecb51156333a8a77cdea6bbd658",
+    "path": "outputs/en-ava-style_hardware_spelling-r1.png",
+    "width": 1920,
+    "height": 1920,
+    "format": "PNG",
+    "bytes": 3839422
+  },
+  {
+    "caseId": "en-christopher-style_hardware_spelling-r1",
+    "outputHash": "96d15e49885d34e1a237e880c5d18f9b2d869f17d8943f139e39eb06272282e7",
+    "path": "outputs/en-christopher-style_hardware_spelling-r1.png",
+    "width": 1920,
+    "height": 1920,
+    "format": "PNG",
+    "bytes": 3695504
+  },
+  {
+    "caseId": "en-ava-style_hardware-r1",
+    "outputHash": "a11ef27381097d66a1f662875ae55d4aa1d13ebd4ff734637078d535594899da",
+    "path": "outputs/en-ava-style_hardware-r1.png",
+    "width": 1920,
+    "height": 1920,
+    "format": "PNG",
+    "bytes": 4481972
+  },
+  {
+    "caseId": "ar-noor-style-r1",
+    "outputHash": "65ac9a34dac09ae119d69aaa9dd703d64b42afe2f70fd1e89753e9040cf8eb11",
+    "path": "outputs/ar-noor-style-r1.png",
+    "width": 1920,
+    "height": 1920,
+    "format": "PNG",
+    "bytes": 4448800
+  },
+  {
+    "caseId": "en-christopher-style_hardware-r1",
+    "outputHash": "ee44caa70b1422e25930b64989bd8bb4c567d6f4550abc814e4b611b41b2dcf3",
+    "path": "outputs/en-christopher-style_hardware-r1.png",
+    "width": 1920,
+    "height": 1920,
+    "format": "PNG",
+    "bytes": 3825108
+  },
+  {
+    "caseId": "ar-noor-style_hardware_spelling-r1",
+    "outputHash": "9d9a071f62e3d7a6b711f5451cf7cdf56ab50c0cad29f094312e23c3e50eff51",
+    "path": "outputs/ar-noor-style_hardware_spelling-r1.png",
+    "width": 1920,
+    "height": 1920,
+    "format": "PNG",
+    "bytes": 4278106
+  },
+  {
+    "caseId": "en-lily-style_hardware-r1",
+    "outputHash": "3b6d1cea5ec15a1aa3b8f03289b8834c8faa8f7330f1e2218919ba2fcbc12099",
+    "path": "outputs/en-lily-style_hardware-r1.png",
+    "width": 1920,
+    "height": 1920,
+    "format": "PNG",
+    "bytes": 3824228
+  },
+  {
+    "caseId": "ar-liyan-style-r2",
+    "outputHash": "4c21d9f32ed45f890cbd29ea12b5334012b86c15bc56904989021d4a1966f38b",
+    "path": "outputs/ar-liyan-style-r2.png",
+    "width": 1920,
+    "height": 1920,
+    "format": "PNG",
+    "bytes": 3721501
+  },
+  {
+    "caseId": "en-lily-style_hardware_spelling-r1",
+    "outputHash": "1867ba839bc91385d3be6f4c8374c0ff6be0dd590b6541cae139732231a8332c",
+    "path": "outputs/en-lily-style_hardware_spelling-r1.png",
+    "width": 1920,
+    "height": 1920,
+    "format": "PNG",
+    "bytes": 3983994
+  },
+  {
+    "caseId": "en-lily-style_hardware_spelling-r2",
+    "outputHash": "aca867f6fea4599d323caf170b031d1b9705be909d7d1e964d81a84aefd5d421",
+    "path": "outputs/en-lily-style_hardware_spelling-r2.png",
+    "width": 1920,
+    "height": 1920,
+    "format": "PNG",
+    "bytes": 4105407
+  },
+  {
+    "caseId": "en-ava-style_hardware_spelling-r2",
+    "outputHash": "7b71d6d9660f36e26a1f5b297e49795336d31f4e0c226086cc27a0f7ad085d7d",
+    "path": "outputs/en-ava-style_hardware_spelling-r2.png",
+    "width": 1920,
+    "height": 1920,
+    "format": "PNG",
+    "bytes": 3990041
+  },
+  {
+    "caseId": "en-lily-style_hardware-r2",
+    "outputHash": "3ab3f4520afde72381c30058f3134f9f39ccec5d971daae754b541701d185f6f",
+    "path": "outputs/en-lily-style_hardware-r2.png",
+    "width": 1920,
+    "height": 1920,
+    "format": "PNG",
+    "bytes": 3824373
+  },
+  {
+    "caseId": "en-ava-style-r1",
+    "outputHash": "94a444d5cf86b01b8175356d925d900d638be6bae6ecde987bbf02a9f9e33660",
+    "path": "outputs/en-ava-style-r1.png",
+    "width": 1920,
+    "height": 1920,
+    "format": "PNG",
+    "bytes": 4023906
+  },
+  {
+    "caseId": "ar-iman-text-r2",
+    "outputHash": "6c35cfa3124c306eb66e28716c3967769a5efae9aae670d619aa0a0607482cbb",
+    "path": "outputs/ar-iman-text-r2.png",
+    "width": 1920,
+    "height": 1920,
+    "format": "PNG",
+    "bytes": 4022829
+  },
+  {
+    "caseId": "en-lily-text-r1",
+    "outputHash": "7bcaf7db0c4ede78df4daf2e592bda17fea11ec37cc9431eaf6f8a4d1db9535e",
+    "path": "outputs/en-lily-text-r1.png",
+    "width": 1920,
+    "height": 1920,
+    "format": "PNG",
+    "bytes": 3769163
+  },
+  {
+    "caseId": "ar-noor-style_hardware-r1",
+    "outputHash": "62eb2fa04dfb8cc7d12743a43e1204abd2eebd8517c555999e06278180dc64a8",
+    "path": "outputs/ar-noor-style_hardware-r1.png",
+    "width": 1920,
+    "height": 1920,
+    "format": "PNG",
+    "bytes": 3680868
+  },
+  {
+    "caseId": "en-christopher-style-r2",
+    "outputHash": "d69f7d985171be4c56f6459298e9489a6ceb45b619b6254219947be5d5c1ca72",
+    "path": "outputs/en-christopher-style-r2.png",
+    "width": 1920,
+    "height": 1920,
+    "format": "PNG",
+    "bytes": 4222061
+  },
+  {
+    "caseId": "ar-liyan-text-r2",
+    "outputHash": "feb095efa1045865644f790126ca2332031f5a85c8452b57244093a1ad61ab8d",
+    "path": "outputs/ar-liyan-text-r2.png",
+    "width": 1920,
+    "height": 1920,
+    "format": "PNG",
+    "bytes": 4237377
+  },
+  {
+    "caseId": "ar-noor-style_hardware-r2",
+    "outputHash": "c8205aa0502e3b31acb51dd0ceb7460c950de33cfe34891ee6de9f016b61e8f1",
+    "path": "outputs/ar-noor-style_hardware-r2.png",
+    "width": 1920,
+    "height": 1920,
+    "format": "PNG",
+    "bytes": 4236998
+  },
+  {
+    "caseId": "en-christopher-style-r1",
+    "outputHash": "ba619e287a0f496d57fb256d98901775e31d00477edbc5988f56954d9d3bc91e",
+    "path": "outputs/en-christopher-style-r1.png",
+    "width": 1920,
+    "height": 1920,
+    "format": "PNG",
+    "bytes": 4084509
+  },
+  {
+    "caseId": "ar-noor-style-r2",
+    "outputHash": "99116503d90c6dd36124b0110830cdcba3a2ca53cc23bf7e701ee5041c16d1d3",
+    "path": "outputs/ar-noor-style-r2.png",
+    "width": 1920,
+    "height": 1920,
+    "format": "PNG",
+    "bytes": 4006943
+  },
+  {
+    "caseId": "en-christopher-text-r1",
+    "outputHash": "e15d0db8608581b920956b367bfd69a7e473b0eb3b12170a00c34ed45b794a61",
+    "path": "outputs/en-christopher-text-r1.png",
+    "width": 1920,
+    "height": 1920,
+    "format": "PNG",
+    "bytes": 3992267
+  },
+  {
+    "caseId": "en-christopher-style_hardware_spelling-r2",
+    "outputHash": "e3cc47c9eaf6704c389c451e5b2d41e907db09efb45e74294ee4b9e2325625b0",
+    "path": "outputs/en-christopher-style_hardware_spelling-r2.png",
+    "width": 1920,
+    "height": 1920,
+    "format": "PNG",
+    "bytes": 3659693
+  },
+  {
+    "caseId": "ar-liyan-style_hardware-r1",
+    "outputHash": "8901f260bc456c5962b6e51132ba2b2591a99ce80d24d9baa0abcab7b568b15a",
+    "path": "outputs/ar-liyan-style_hardware-r1.png",
+    "width": 1920,
+    "height": 1920,
+    "format": "PNG",
+    "bytes": 4163426
+  },
+  {
+    "caseId": "ar-liyan-text-r1",
+    "outputHash": "d21a0876dcda714ad960f52ff8b42a57d979c2d0548a6fa16219d6bda4ddb2aa",
+    "path": "outputs/ar-liyan-text-r1.png",
+    "width": 1920,
+    "height": 1920,
+    "format": "PNG",
+    "bytes": 4331007
+  },
+  {
+    "caseId": "en-ava-style-r2",
+    "outputHash": "aa607fddb6bb27d2681e7a2ce15d9e0fe6a4740b5a2a1d240e5d6bae6307f7b5",
+    "path": "outputs/en-ava-style-r2.png",
+    "width": 1920,
+    "height": 1920,
+    "format": "PNG",
+    "bytes": 4257705
+  },
+  {
+    "caseId": "ar-liyan-style_hardware-r2",
+    "outputHash": "bd1fde035a873800566b8d7c78ffb163cf1ef584d03d4968547943075c9e8840",
+    "path": "outputs/ar-liyan-style_hardware-r2.png",
+    "width": 1920,
+    "height": 1920,
+    "format": "PNG",
+    "bytes": 4072165
+  },
+  {
+    "caseId": "ar-noor-text-r2",
+    "outputHash": "f247d162a92b901ed29dac30d026cd6dcc5a272752f0e6abb1793a444bcbb5ff",
+    "path": "outputs/ar-noor-text-r2.png",
+    "width": 1920,
+    "height": 1920,
+    "format": "PNG",
+    "bytes": 4279896
+  },
+  {
+    "caseId": "en-ava-text-r2",
+    "outputHash": "5e3c99fa99a36ddc0e70aa7a208e2682c485030415b8eb0644496f41a99713af",
+    "path": "outputs/en-ava-text-r2.png",
+    "width": 1920,
+    "height": 1920,
+    "format": "PNG",
+    "bytes": 4106871
+  },
+  {
+    "caseId": "en-christopher-style_hardware-r2",
+    "outputHash": "1c797f730e95fc8c2fdcc20ef398af06853838bc389415caf8283df5c11cf13f",
+    "path": "outputs/en-christopher-style_hardware-r2.png",
+    "width": 1920,
+    "height": 1920,
+    "format": "PNG",
+    "bytes": 3773136
+  },
+  {
+    "caseId": "en-lily-style-r2",
+    "outputHash": "3e0077078420d22f62605da526ce47ba1cd8bed8440ed01f508d7e38776408df",
+    "path": "outputs/en-lily-style-r2.png",
+    "width": 1920,
+    "height": 1920,
+    "format": "PNG",
+    "bytes": 3965894
+  },
+  {
+    "caseId": "en-lily-style-r1",
+    "outputHash": "eff91c24dfaf4044ecb7309d7863eeb5b9f2ecfe5b723f3111dad0769dcecb9e",
+    "path": "outputs/en-lily-style-r1.png",
+    "width": 1920,
+    "height": 1920,
+    "format": "PNG",
+    "bytes": 3936390
+  },
+  {
+    "caseId": "ar-iman-style-r2",
+    "outputHash": "8c20c40d5cfe53c7882e290296c0f50b02dd9e8c5037aec8e6c2b4b8b5043402",
+    "path": "outputs/ar-iman-style-r2.png",
+    "width": 1920,
+    "height": 1920,
+    "format": "PNG",
+    "bytes": 3869346
+  }
+]

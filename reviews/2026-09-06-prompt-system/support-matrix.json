@@ -1,0 +1,101 @@
+{
+  "target": "All current form options; not all qualified",
+  "screening": {
+    "names": [
+      "محمد"
+    ],
+    "script": "Arabic",
+    "lettering": "Classic",
+    "metal": "White gold",
+    "coverage": "No stones",
+    "size": 32,
+    "chain": "Cable",
+    "twoNames": false,
+    "views": [
+      "Studio"
+    ],
+    "constructions": [
+      "Classical",
+      "Origami ribbon",
+      "Framed minimal",
+      "Diamond rails"
+    ]
+  },
+  "options": {
+    "script": [
+      "English",
+      "Arabic"
+    ],
+    "construction": [
+      "Classical",
+      "Origami ribbon",
+      "Framed minimal",
+      "Diamond rails"
+    ],
+    "lettering": [
+      "Classic",
+      "Minimal",
+      "Diwani",
+      "Kufi",
+      "Signature",
+      "Thuluth inspired"
+    ],
+    "layout": [
+      "Side by side",
+      "Connected heart",
+      "Stacked",
+      "Infinity",
+      "Interlocked"
+    ],
+    "metal": [
+      "Yellow gold",
+      "White gold",
+      "Rose gold"
+    ],
+    "coverage": [
+      "No stones",
+      "Accent",
+      "Partial pavé",
+      "Full pavé"
+    ],
+    "gem": [
+      "Lab diamond",
+      "Natural diamond",
+      "Ruby",
+      "Emerald",
+      "Blue sapphire",
+      "Pink sapphire"
+    ],
+    "size": [
+      22,
+      32
+    ],
+    "chain": [
+      "Cable",
+      "Rolo",
+      "Box",
+      "Curb"
+    ]
+  },
+  "pendingPackages": [
+    "Six distinct lettering specimens per script with licensed font and shaping lineage",
+    "Five deterministic two-name arrangements, including mechanically valid interlocked parts",
+    "Stone count/location/setting maps per selected coverage and construction",
+    "Rolo, Box and Curb complete local assembly references",
+    "128 development configuration references with individual visual preflight",
+    "All four view outputs per specification",
+    "22/32 physical measurement meaning"
+  ],
+  "qualifiedConfigurations": [],
+  "productionChanges": false,
+  "measuredStatus": {
+    "screeningImages": 48,
+    "overallPass": 30,
+    "reject": 14,
+    "uncertain": 4,
+    "qualified": false,
+    "productionReady": false,
+    "nextCandidate": "complete assembly reference",
+    "scope": "One Arabic Muhammad configuration per construction, white gold/no stones/32 nominal/Cable/Studio only"
+  }
+}

@@ -1,0 +1,110 @@
+[
+  {
+    "id": "V2-37",
+    "gates": {
+      "identity": "pass",
+      "construction": "pass",
+      "attachments": "pass",
+      "selections": "pass",
+      "photography": "pass",
+      "unrequested_content": "pass",
+      "reference_leakage": "pass"
+    },
+    "styleScore": 5,
+    "appealScore": 4,
+    "notes": "Exact Latin readback: Christopher, uppercase C then lowercase h/r/i/s/t/o/p/h/e/r. Round i dot has a finite-width support stem. Adjacent letters have visible short bridges or finite-width serif joints, including C-h, baseline h-r, upper r-i, lower i-s, s-t, t-o, mid-height o-p/p-h/h-e and lower e-r. No full backing plate/frame. Both circular eyelets have visible finite-width roots on the outer letters and receive distinct closed oval connectors linked to the first cable-chain links. Strong classical serif fit, coherent polished white-metal appearance, no stones/captions/specimen names. Original and all four quadrant crops inspected.",
+    "outputHash": "e15d0db8608581b920956b367bfd69a7e473b0eb3b12170a00c34ed45b794a61",
+    "reviewer": "adversarial_review",
+    "blinded": true
+  },
+  {
+    "id": "V2-38",
+    "gates": {
+      "identity": "pass",
+      "construction": "pass",
+      "attachments": "reject",
+      "selections": "pass",
+      "photography": "pass",
+      "unrequested_content": "pass",
+      "reference_leakage": "pass"
+    },
+    "styleScore": 5,
+    "appealScore": 3,
+    "notes": "Exact Latin readback: Christopher with uppercase C, correct following letters and a round i dot supported by a visible narrow stem. Local bridges and joined serif segments support the letter sequence without a full plate/frame. Both outer letters instead have tall solid vertical tabs in front of large circular rings. Neither solid tab has a readable body-eyelet aperture; the rendering does not establish the required integral eyelet plus separate closed connector interlock. Hidden holes or attachment behind the tabs cannot be inferred, so attachments reject. Strong classic serif fit, polished white metal, cable chain, no stones, captions or definite specimen-name/unrelated-shape leakage. Original and all four quadrant crops inspected.",
+    "outputHash": "e3cc47c9eaf6704c389c451e5b2d41e907db09efb45e74294ee4b9e2325625b0",
+    "reviewer": "adversarial_review",
+    "blinded": true
+  },
+  {
+    "id": "V2-39",
+    "gates": {
+      "identity": "reject",
+      "construction": "pass",
+      "attachments": "pass",
+      "selections": "pass",
+      "photography": "pass",
+      "unrequested_content": "needs_review",
+      "reference_leakage": "pass"
+    },
+    "styleScore": 3,
+    "appealScore": 3,
+    "notes": "Arabic readback cannot be certified as ليان: the lam-ya-alif and final bowl are visible, with two supported ya diamonds, but the identifying nun dot is completely absent. The extra long eyelet-bearing vertical stroke to the right of the lam resembles an added alif; whether read as hardware or an extra character is ambiguous, hence unrequested_content needs_review. Existing letter groups and the two diamonds have finite-width support bridges; no floating present element and no full plate/frame. Both integral end eyelets receive separate closed connectors with readable cable-chain interlocks. Classical Arabic forms remain recognizable but the extra upright distorts the word silhouette. Polished white metal, no stones/captions or definite specimen leakage. Original and both lower quadrant crops inspected.",
+    "outputHash": "8901f260bc456c5962b6e51132ba2b2591a99ce80d24d9baa0abcab7b568b15a",
+    "reviewer": "adversarial_review",
+    "blinded": true
+  },
+  {
+    "id": "V2-40",
+    "gates": {
+      "identity": "reject",
+      "construction": "reject",
+      "attachments": "pass",
+      "selections": "pass",
+      "photography": "pass",
+      "unrequested_content": "pass",
+      "reference_leakage": "pass"
+    },
+    "styleScore": 4,
+    "appealScore": 3,
+    "notes": "Arabic readback is لبان-like rather than requested ليان: there is only one diamond below the middle letter, changing the required two-dot ya to a one-dot ba appearance. Above the final nun is a detached malformed mark made of a large diamond and a smaller lower-right block; it has no visible support to the body. The single lower diamond does have a finite-width stem, and the main alif-to-nun break has a short finite-width bridge. Both end eyelets have visible body roots and receive distinct closed connectors into cable-chain links. Close classical Arabic style fit despite identity failure; white polished metal and no stones/captions/definite specimen names. Original and all four quadrant crops inspected.",
+    "outputHash": "d21a0876dcda714ad960f52ff8b42a57d979c2d0548a6fa16219d6bda4ddb2aa",
+    "reviewer": "adversarial_review",
+    "blinded": true
+  },
+  {
+    "id": "V2-41",
+    "gates": {
+      "identity": "pass",
+      "construction": "reject",
+      "attachments": "pass",
+      "selections": "pass",
+      "photography": "pass",
+      "unrequested_content": "pass",
+      "reference_leakage": "pass"
+    },
+    "styleScore": 5,
+    "appealScore": 3,
+    "notes": "Exact Latin readback: Ava, uppercase A with lowercase v/a and clear counters. A and v have a finite-width short baseline bridge, but the a is entirely separated from v with a clear open gap and no visible bridge anywhere. Each outer letter has its own integral circular eyelet on a short tab, with a distinct closed oval connector and readable cable-chain interlock; the two attachment assemblies do not make the detached letter groups into one pendant. Strong classical serif fit and polished white-metal appearance. No full plate/frame, stones/captions or specimen names. Original and both lower quadrant crops inspected.",
+    "outputHash": "aa607fddb6bb27d2681e7a2ce15d9e0fe6a4740b5a2a1d240e5d6bae6307f7b5",
+    "reviewer": "adversarial_review",
+    "blinded": true
+  },
+  {
+    "id": "V2-42",
+    "gates": {
+      "identity": "reject",
+      "construction": "pass",
+      "attachments": "pass",
+      "selections": "pass",
+      "photography": "pass",
+      "unrequested_content": "pass",
+      "reference_leakage": "pass"
+    },
+    "styleScore": 3,
+    "appealScore": 3,
+    "notes": "Arabic readback cannot be certified as ليان. Two lower ya diamonds are present, but the final nun dot is completely missing. The undotted final bowl has unusually tall uprights and the alif-to-final-bowl connection is a large curved stroke, making the final letters ambiguous rather than a clearly separated alif and nun. Existing metal elements are visibly continuous: the final bowl has a finite-width curved bridge to the preceding group, and each lower diamond has a visible finite-width support neck. No full backing plate/frame. Both end eyelets are integral to the outer uprights and receive separate closed connectors with readable cable-chain interlocks. Recognizable classical Arabic styling with substantial silhouette deviations; polished white metal, no stones, captions or definite specimen-name leakage. Original and both lower quadrant crops inspected.",
+    "outputHash": "bd1fde035a873800566b8d7c78ffb163cf1ef584d03d4968547943075c9e8840",
+    "reviewer": "adversarial_review",
+    "blinded": true
+  }
+]

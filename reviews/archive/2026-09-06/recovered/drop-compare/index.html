@@ -1,0 +1,376 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CALEUMS drop compare</title>
+<style>
+  :root {
+    --ivory: #f4efe6;
+    --paper: #fbf7f0;
+    --ink: #1c1814;
+    --mute: #6f675d;
+    --line: #ddd4c6;
+    --gold: #9a7b32;
+    --old: #8a3b2a;
+    --new: #2f5d3a;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--ivory);
+    color: var(--ink);
+    font-family: Palatino, "Palatino Linotype", Georgia, serif;
+  }
+  header {
+    padding: 28px 28px 12px;
+    border-bottom: 1px solid var(--line);
+    background: var(--paper);
+  }
+  .mark {
+    font-size: 11px;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin: 0 0 6px;
+  }
+  h1 { font-size: 26px; font-weight: 500; margin: 0 0 8px; }
+  .lead { margin: 0; color: var(--mute); font-size: 15px; max-width: 720px; }
+  nav { display: flex; gap: 8px; padding: 16px 28px 0; }
+  nav a {
+    color: var(--ink);
+    text-decoration: none;
+    border: 1px solid var(--line);
+    padding: 6px 10px;
+    font-size: 13px;
+  }
+  .row { padding: 28px; border-bottom: 1px solid var(--line); }
+  .row h2 { margin: 0 0 16px; font-weight: 500; font-size: 22px; }
+  .row h2 span { color: var(--mute); font-size: 13px; letter-spacing: 0.16em; text-transform: uppercase; margin-left: 10px; }
+  .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  .col { background: #fff; border: 1px solid var(--line); padding: 14px; }
+  .tag {
+    margin: 0 0 12px;
+    font-size: 11px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+  }
+  .old .tag { color: var(--old); }
+  .new .tag { color: var(--new); }
+  figure { margin: 0 0 14px; }
+  img, .empty {
+    width: 100%;
+    object-fit: contain;
+    background: var(--ivory);
+    display: block;
+  }
+  .stencil img { max-height: 220px; height: 220px; }
+  .still img, .empty {
+    aspect-ratio: 1;
+    max-height: 420px;
+  }
+  .empty {
+    display: grid;
+    place-items: center;
+    color: var(--mute);
+    font-size: 13px;
+  }
+  figcaption {
+    margin-top: 6px;
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--mute);
+  }
+  .note { margin: 0 0 10px; font-size: 14px; }
+  pre {
+    margin: 0;
+    max-height: 240px;
+    overflow: auto;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    padding: 10px;
+    font: 11px/1.4 "Courier New", Courier, monospace;
+    white-space: pre-wrap;
+  }
+  footer { padding: 18px 28px 32px; color: var(--mute); font-size: 13px; }
+  @media (max-width: 820px) {
+    .pair { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <p class="mark">CALEUMS  ·  S01 Rectangular</p>
+  <h1>Drop sit: old vs new</h1>
+  <p class="lead">Left is the old drop. Right is the correction: stacked stencil, new prompt, new photo. New photos show the sit fix. They are not catalog passes.</p>
+</header>
+<nav>
+  <a href="#asma">Asma</a>
+  <a href="#noor">Noor</a>
+  <a href="#muhammad">Muhammad</a>
+</nav>
+
+    <article class="row" id="asma">
+      <h2>أسماء (Asma) <span>S01 drop</span></h2>
+      <div class="pair">
+        
+      <section class="col old">
+        <p class="tag">OLD</p>
+        <figure class="stencil">
+          <img src="img/asma-old-stencil.jpg" alt="OLD stencil">
+          <figcaption>stencil</figcaption>
+        </figure>
+        <figure class="still">
+          <img src="img/asma-old-still.jpg" alt="OLD still">
+          <figcaption>still</figcaption>
+        </figure>
+        <p class="note">90 rotate. Umayr mark.</p>
+        <pre>Photograph أسماء (Asma) as a real physical 18K yellow gold name pendant.
+
+Look: Rectangular
+Display: vertical drop — taller-than-wide rectangular nameplate, letters stacked or rotated into a vertical rectangle
+Lettering: ar / Noto Naskh Arabic
+Stones: accent lab diamond
+Scale: classic 30 mm
+Chain: curb 45 cm
+Shot: ivory packshot
+Model: gpt-image-2  ·  stencil = horizontal name
+
+IDENTITY
+Use the supplied stencil as immutable geometry.
+Openwork rectangular nameplate.
+Two jump rings on the top frame corners only.
+
+PHOTOGRAPHY
+Real camera capture. Ivory packshot.</pre>
+      </section>
+    
+        
+      <section class="col new">
+        <p class="tag">NEW</p>
+        <figure class="stencil">
+          <img src="img/asma-new-stencil.jpg" alt="NEW stencil">
+          <figcaption>stencil</figcaption>
+        </figure>
+        <figure class="still">
+          <img src="img/asma-new-still.jpg" alt="NEW still">
+          <figcaption>still</figcaption>
+        </figure>
+        <p class="note">correction: upright stack, two corner rings, no extra bail. watermark = not a catalog pass.</p>
+        <pre>Photograph أسماء (Asma) as a real physical 18K yellow gold name pendant.
+
+Look: Rectangular
+Display: upright letters stacked top to bottom. never rotate 90 degrees
+Lettering: ar / Noto Naskh Arabic
+Stones: accent lab diamond
+Scale: classic 32 mm. metal follows the name.
+Chain: curb 45 cm
+Shot: ivory packshot
+Model: gpt-image-2  ·  stencil = upright stacked letters
+
+IDENTITY
+Use the supplied stencil as immutable geometry.
+Preserve exact spelling, glyph order, joins, and jump rings.
+Openwork rectangular nameplate. Fuse lettering to the frame as one piece.
+Two jump rings on the top frame corners only.
+
+CASTING
+This is one piece of 18K gold, as if it came from a single mould.
+Every letter is physically fused to the next letter or to the frame.
+No floating letters. No separate islands.
+The two jump rings are attached to the body, not hovering.
+A jeweler could pick the whole pendant up as one object.
+
+DROP
+Letters stay upright and stack.
+Never rotate the writing 90 degrees.
+
+SIZE
+The metal follows the name. Short names sit compact.
+
+PHOTOGRAPHY
+Real camera capture. iPhone or DSLR jewelry product photo.
+True metal, true shadows. No CGI plastic, no extra charms.</pre>
+      </section>
+    
+      </div>
+    </article>
+        
+
+    <article class="row" id="noor">
+      <h2>نور (Noor) <span>S01 drop</span></h2>
+      <div class="pair">
+        
+      <section class="col old">
+        <p class="tag">OLD</p>
+        <figure class="stencil">
+          <img src="img/noor-old-stencil.jpg" alt="OLD stencil">
+          <figcaption>stencil</figcaption>
+        </figure>
+        <figure class="still">
+          <div class="empty">no still</div>
+          <figcaption>still</figcaption>
+        </figure>
+        <p class="note">no still. cell left empty.</p>
+        <pre>Photograph نور (Noor) as a real physical 18K yellow gold name pendant.
+
+Look: Rectangular
+Display: vertical drop — taller-than-wide rectangular nameplate, letters stacked or rotated into a vertical rectangle
+Lettering: ar / Noto Naskh Arabic
+Stones: accent lab diamond
+Scale: classic 30 mm
+Chain: curb 45 cm
+Shot: ivory packshot
+Model: gpt-image-2  ·  stencil = horizontal name
+
+IDENTITY
+Use the supplied stencil as immutable geometry.
+Openwork rectangular nameplate.
+Two jump rings on the top frame corners only.
+
+PHOTOGRAPHY
+Real camera capture. Ivory packshot.</pre>
+      </section>
+    
+        
+      <section class="col new">
+        <p class="tag">NEW</p>
+        <figure class="stencil">
+          <img src="img/noor-new-stencil.jpg" alt="NEW stencil">
+          <figcaption>stencil</figcaption>
+        </figure>
+        <figure class="still">
+          <img src="img/noor-new-still.jpg" alt="NEW still">
+          <figcaption>still</figcaption>
+        </figure>
+        <p class="note">correction: upright stack. watermark = not a catalog pass.</p>
+        <pre>Photograph نور (Noor) as a real physical 18K yellow gold name pendant.
+
+Look: Rectangular
+Display: upright letters stacked top to bottom. never rotate 90 degrees
+Lettering: ar / Noto Naskh Arabic
+Stones: accent lab diamond
+Scale: classic 32 mm. metal follows the name.
+Chain: curb 45 cm
+Shot: ivory packshot
+Model: gpt-image-2  ·  stencil = upright stacked letters
+
+IDENTITY
+Use the supplied stencil as immutable geometry.
+Preserve exact spelling, glyph order, joins, and jump rings.
+Openwork rectangular nameplate. Fuse lettering to the frame as one piece.
+Two jump rings on the top frame corners only.
+
+CASTING
+This is one piece of 18K gold, as if it came from a single mould.
+Every letter is physically fused to the next letter or to the frame.
+No floating letters. No separate islands.
+The two jump rings are attached to the body, not hovering.
+A jeweler could pick the whole pendant up as one object.
+
+DROP
+Letters stay upright and stack.
+Never rotate the writing 90 degrees.
+
+SIZE
+The metal follows the name. Short names sit compact.
+
+PHOTOGRAPHY
+Real camera capture. iPhone or DSLR jewelry product photo.
+True metal, true shadows. No CGI plastic, no extra charms.</pre>
+      </section>
+    
+      </div>
+    </article>
+        
+
+    <article class="row" id="muhammad">
+      <h2>محمد (Muhammad) <span>S01 drop</span></h2>
+      <div class="pair">
+        
+      <section class="col old">
+        <p class="tag">OLD</p>
+        <figure class="stencil">
+          <img src="img/muhammad-old-stencil.jpg" alt="OLD stencil">
+          <figcaption>stencil</figcaption>
+        </figure>
+        <figure class="still">
+          <img src="img/muhammad-old-still.jpg" alt="OLD still">
+          <figcaption>still</figcaption>
+        </figure>
+        <p class="note">letters distorted. not readable.</p>
+        <pre>Photograph محمد (Muhammad) as a real physical 18K yellow gold name pendant.
+
+Look: Rectangular
+Display: vertical drop — taller-than-wide rectangular nameplate, letters stacked or rotated into a vertical rectangle
+Lettering: ar / Noto Naskh Arabic
+Stones: accent lab diamond
+Scale: classic 30 mm
+Chain: curb 45 cm
+Shot: ivory packshot
+Model: gpt-image-2  ·  stencil = horizontal name
+
+IDENTITY
+Use the supplied stencil as immutable geometry.
+Openwork rectangular nameplate.
+Two jump rings on the top frame corners only.
+
+PHOTOGRAPHY
+Real camera capture. Ivory packshot.</pre>
+      </section>
+    
+        
+      <section class="col new">
+        <p class="tag">NEW</p>
+        <figure class="stencil">
+          <img src="img/muhammad-new-stencil.jpg" alt="NEW stencil">
+          <figcaption>stencil</figcaption>
+        </figure>
+        <figure class="still">
+          <img src="img/muhammad-new-still.jpg" alt="NEW still">
+          <figcaption>still</figcaption>
+        </figure>
+        <p class="note">correction: upright stack. diamond in a ring + watermark = not a catalog pass.</p>
+        <pre>Photograph محمد (Muhammad) as a real physical 18K yellow gold name pendant.
+
+Look: Rectangular
+Display: upright letters stacked top to bottom. never rotate 90 degrees
+Lettering: ar / Noto Naskh Arabic
+Stones: accent lab diamond
+Scale: classic 32 mm. metal follows the name.
+Chain: curb 45 cm
+Shot: ivory packshot
+Model: gpt-image-2  ·  stencil = upright stacked letters
+
+IDENTITY
+Use the supplied stencil as immutable geometry.
+Preserve exact spelling, glyph order, joins, and jump rings.
+Openwork rectangular nameplate. Fuse lettering to the frame as one piece.
+Two jump rings on the top frame corners only.
+
+CASTING
+This is one piece of 18K gold, as if it came from a single mould.
+Every letter is physically fused to the next letter or to the frame.
+No floating letters. No separate islands.
+The two jump rings are attached to the body, not hovering.
+A jeweler could pick the whole pendant up as one object.
+
+DROP
+Letters stay upright and stack.
+Never rotate the writing 90 degrees.
+
+SIZE
+The metal follows the name. Short names sit compact.
+
+PHOTOGRAPHY
+Real camera capture. iPhone or DSLR jewelry product photo.
+True metal, true shadows. No CGI plastic, no extra charms.</pre>
+      </section>
+    
+      </div>
+    </article>
+        
+<footer>Send this HTML to show the drop correction. Do not treat the new stills as launch catalog.</footer>
+</body>
+</html>

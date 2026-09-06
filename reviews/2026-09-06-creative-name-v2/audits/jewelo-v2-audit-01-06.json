@@ -1,0 +1,110 @@
+[
+  {
+    "id": "V2-01",
+    "outputHash": "127369b3a4f4d2208ab2c6d798b21d146600effeab3a3e31db57c0c475b9e74c",
+    "gates": {
+      "identity": "pass",
+      "construction": "reject",
+      "attachments": "needs_review",
+      "selections": "pass",
+      "photography": "pass",
+      "unrequested_content": "pass",
+      "reference_leakage": "pass"
+    },
+    "styleScore": 4,
+    "appealScore": 4,
+    "notes": "Arabic readback: ليان. The two ya dots and single nun dot occupy the expected positions. The left nun dot is a separate floating diamond with no visible bridge to the body; construction rejects. The two lower dots have visible narrow metal supports. A narrow bridge joins the final nun to the adjacent alif while retaining distinguishable glyph forms. At both chain junctions a separate round connector appears to catch an extended letter terminal, but two closed integral body-eyelet apertures cannot be established from the original and four quadrant crops; no hidden loop is inferred. Restrained classical stroke contrast, polished white metal, no stones, no caption or extraneous specimen name. Style judged against the shared Arabic specimen; method remains unknown.",
+    "reviewer": "adversarial_review",
+    "blinded": true
+  },
+  {
+    "id": "V2-02",
+    "outputHash": "286999922e6a1ecb024dbc5f76626761758eb1b65e3d49c18810573129818e14",
+    "gates": {
+      "identity": "reject",
+      "construction": "reject",
+      "attachments": "pass",
+      "selections": "pass",
+      "photography": "pass",
+      "unrequested_content": "pass",
+      "reference_leakage": "needs_review"
+    },
+    "styleScore": 3,
+    "appealScore": 3,
+    "notes": "Requested readback: إيمان. Exact output readback cannot be certified: the rightmost alif visibly carries hamza ABOVE it, giving أ rather than required إ, and the following ya/mim and terminal nun forms are distorted/ambiguous. The hamza-above defect alone rejects identity. The separate diamond above the left terminal has no visible support and rejects construction. The two lower dots have visible stems, and the initial alif has a narrow bridge to the adjacent body. Both attachment circles are visibly integral with the body and receive distinct connector rings linked to the cable chain; the apertures are readable. The altered initial forms resemble elements present in the shared specimen, so unwanted specimen-shape leakage remains uncertain rather than being asserted as fact. No captions, stones or full backing plate. Original and all four quadrant crops inspected.",
+    "reviewer": "adversarial_review",
+    "blinded": true
+  },
+  {
+    "id": "V2-03",
+    "outputHash": "91f7f7cb5d077fb51a8068f4cae7b399e86b0dd04dbe98012d7c1a077d73a45b",
+    "gates": {
+      "identity": "reject",
+      "construction": "reject",
+      "attachments": "pass",
+      "selections": "pass",
+      "photography": "pass",
+      "unrequested_content": "pass",
+      "reference_leakage": "pass"
+    },
+    "styleScore": 3,
+    "appealScore": 3,
+    "notes": "Arabic body suggests ليان, but an exact readback as ليان fails: THREE distinct diamonds are rendered below the ya region instead of its required two dots. The additional top diamond is clearly visible in the lower-right crop, not merely a highlight. The nun dot at the left floats with no bridge; construction rejects independently. The lower three-diamond cluster is supported by narrow stems. The alif/nun connection merges broadly into the lettering baseline rather than reading as a discreet separate bridge. Two integral circular body eyelets and separate edge-on connecting links to the cable chain are visible and plausible. White polished metal and complete inspectable framing; no specimen words or diagram labels. Original and lower quadrant crops inspected.",
+    "reviewer": "adversarial_review",
+    "blinded": true
+  },
+  {
+    "id": "V2-04",
+    "outputHash": "bd46fa05e7cfc08075b8c0b2a45504f6b849fcdbd937c6b9e0776decf42a27bd",
+    "gates": {
+      "identity": "reject",
+      "construction": "reject",
+      "attachments": "needs_review",
+      "selections": "pass",
+      "photography": "pass",
+      "unrequested_content": "reject",
+      "reference_leakage": "needs_review"
+    },
+    "styleScore": 3,
+    "appealScore": 2,
+    "notes": "Arabic main body suggests ليان, but the required single nun dot is replaced by an unrequested small alif/hamza-like form above and inside the left nun bowl. Exact requested spelling is therefore not retained. That extra marked component has no visible connection to the pendant body; its internal short stem joins only its own two pieces. Two ya dots below the center have visible support stems. A narrow bridge visibly joins the final nun to the main body. The chain connectors appear attached to long thin curved extensions of the lettering, but closed integral body-eyelet apertures are not independently readable; attachments need review. The extra Arabic fragment also rejects unrequested content. It resembles a glyph fragment available in the shared lettering specimen, but reference origin cannot be established while blinded, so leakage remains needs_review. Original and lower quadrant crops inspected.",
+    "reviewer": "adversarial_review",
+    "blinded": true
+  },
+  {
+    "id": "V2-05",
+    "outputHash": "509294cc70f088ba8353ef8f0ce6321c07553b51952ee671ca5797c69646be86",
+    "gates": {
+      "identity": "pass",
+      "construction": "pass",
+      "attachments": "pass",
+      "selections": "pass",
+      "photography": "pass",
+      "unrequested_content": "pass",
+      "reference_leakage": "pass"
+    },
+    "styleScore": 5,
+    "appealScore": 4,
+    "notes": "Exact Latin readback: Lily, with uppercase L and lowercase i, l, y. The round i dot has a visible rectangular metal stem. The L-to-i and i-to-l baseline gaps each have a visible short bridge, and a visible upper bridge joins l to the left serif of y. The letters retain readable spacing and their serif forms; no full plate or frame is present. The left integral eyelet is joined to the L's upper serif, and the right integral eyelet sits on a short tab above the y. Both receive distinct closed connector rings linked to the cable chain, with readable apertures. Classical serif traits closely fit the shared Latin specimen. Polished white metal, no stones or extra writing, complete pendant and coherent shadows. Original and both lower quadrant crops inspected.",
+    "reviewer": "adversarial_review",
+    "blinded": true
+  },
+  {
+    "id": "V2-06",
+    "outputHash": "ae0142587e1966a9339f9ea976d99e1e9232845b563e80cec6a6319b3ef67f3f",
+    "gates": {
+      "identity": "reject",
+      "construction": "reject",
+      "attachments": "pass",
+      "selections": "pass",
+      "photography": "pass",
+      "unrequested_content": "pass",
+      "reference_leakage": "needs_review"
+    },
+    "styleScore": 4,
+    "appealScore": 3,
+    "notes": "Arabic readback: أيمان, not requested إيمان: the initial hamza is visibly above the alif rather than below. The correct two ya dots are below the following ya and each has a visible stem. The main word is split into an isolated right alif, a middle ya-mim-alif group, and an isolated left nun. Both linguistic breaks have open air gaps with NO structural bridge; the entire central group has no visible support to either chain-bearing end. The separate nun dot also floats. No hidden backing or support is inferred, so construction rejects decisively. Two integral eyelets on the outer alif/nun pieces receive distinct closed connectors and first cable links with readable apertures. Classical Arabic stroke traits are a close fit despite the identity failure. The wrong hamza-above form overlaps shapes present in the shared specimen, but leakage versus ordinary rendering error cannot be resolved while blinded. Original and both lower quadrant crops inspected.",
+    "reviewer": "adversarial_review",
+    "blinded": true
+  }
+]

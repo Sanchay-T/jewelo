@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Asma All Rounds - combination vs result, honest QC</title>
+<style>
+body{font-family:-apple-system,system-ui,sans-serif;margin:0;background:#0e2a16;color:#eee}
+header{padding:12px 16px;border-bottom:1px solid #2c5c38;position:sticky;top:0;background:#0e2a16;z-index:5}
+#filters{padding:10px 16px;display:flex;gap:8px;flex-wrap:wrap;border-bottom:1px solid #2c5c38}
+#filters button.on{background:#3fa34d}
+#stage{display:flex;gap:16px;padding:16px;max-width:1400px;margin:0 auto}
+#viewer{flex:3;background:#000;border-radius:12px;min-height:60vh;display:flex;align-items:center;justify-content:center;overflow:hidden}
+#viewer img{max-width:100%;max-height:72vh;object-fit:contain;background:#fff}
+#side{flex:1;min-width:300px;background:#122e1a;border-radius:12px;padding:16px}
+.badge{display:inline-block;padding:4px 10px;border-radius:20px;font-size:12px;margin-right:6px}
+.pass{background:#1d5c2e}
+.warn{background:#6b5a1e}
+.fail{background:#6b1e1e}
+.legacy{background:#444}
+.combo{background:#0b1f11;border:1px solid #2c5c38;border-radius:8px;padding:8px;margin:8px 0;font-size:12px}
+.nav{display:flex;gap:8px;justify-content:center;padding:12px}
+button{background:#1d5c2e;color:#eee;border:1px solid #3fa34d;border-radius:8px;padding:8px 14px;cursor:pointer}
+#dots{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;padding:8px;max-height:120px;overflow:auto}
+#dots span{width:10px;height:10px;border-radius:50%;background:#3a6b46;cursor:pointer;display:inline-block}
+#dots span.on{background:#fff}
+#dots span.f{border:2px solid #c33}
+#dots span.p{border:2px solid #3c3}
+a{color:#9cf}
+small.mono{font-family:monospace;font-size:11px}
+</style>
+</head>
+<body>
+<header><strong>ALL ROUNDS - which combination produced what (dual-reviewed where marked)</strong> <span id="count"></span></header>
+<div id="filters">
+<button data-f="all" class="on">All</button>
+<button data-f="pass">Pass only</button>
+<button data-f="notpass">Fail / disputed</button>
+<button data-f="R3">Round 3</button>
+<button data-f="R4">Round 4</button>
+<button data-f="R5">Round 5</button>
+<button data-f="R6">Round 6</button>
+</div>
+<div id="stage">
+<div id="viewer"><img id="img" alt="shot"></div>
+<div id="side">
+<div id="meta"></div>
+<div class="nav"><button id="prev">Prev</button><button id="next">Next</button></div>
+<div id="dots"></div>
+<div><a id="orig" target="_blank">Open full-res original</a> <span id="zoom"></span></div>
+</div>
+</div>
+<script>
+const DATA=[
+{r:"R3",id:"4d0cdb8a-d24a-4bb9-93b9-d29e2087029e",look:"R3 Rails",file:"round3_rails_4d0cdb8a.png",norm:"round3_rails_4d0cdb8a.jpg",qc:"legacy",combo:"identity v1 thin + baseline prompt, no weld words",note:"Chain/bail fixed. Joins not zoom-verified - early single-preview review only."},
+{r:"R3",id:"34a7caa7-1d47-4f6b-ac61-0de5d21cf8e6",look:"R3 Origami",file:"round3_origami_34a7caa7.png",norm:"round3_origami_34a7caa7.jpg",qc:"legacy",combo:"identity v1 thin + baseline prompt, no weld words",note:"Bail soldered, chain threaded. Inline preview never rendered - verify in viewer."},
+{r:"R3",id:"988f29e0-cc13-457a-aef4-4483a6193a08",look:"R3 Framed",file:"round3_framed_988f29e0.png",norm:"round3_framed_988f29e0.jpg",qc:"legacy",combo:"identity v1 thin + baseline prompt, no weld words",note:"Held in hand, chain at top corners. Joins not zoom-verified."},
+{r:"R3",id:"8e281f8b-50dc-4647-bfe7-5a343206798c",look:"R3 Constellation",file:"round3_constellation_8e281f8b.png",norm:"round3_constellation_8e281f8b.jpg",qc:"legacy",combo:"identity v1 thin + baseline prompt, no weld words",note:"Bail + chain attached. Joins not zoom-verified."},
+{r:"R3",id:"960eeb70-2a38-427a-9d2b-29791abfaa77",look:"R3 Ribbon worn",file:"round3_ribbon_960eeb70.png",norm:"round3_ribbon_960eeb70.jpg",qc:"legacy",combo:"identity v1 thin + baseline prompt, no weld words",note:"Best worn of R3. Chain unbroken both sides."},
+{r:"R3",id:"1ce26725-fa28-484e-b5c1-e41af9b738a8",look:"R3 Art Deco",file:"round3_artdeco_1ce26725.png",norm:"round3_artdeco_1ce26725.jpg",qc:"legacy",combo:"identity v1 thin + baseline prompt, no weld words",note:"Gift box, baguettes + sunburst. Joins not zoom-verified."},
+{r:"R4",id:"16a47342-335b-49d5-9510-5c60a747435b",look:"R4 Constellation pilot",file:"round4_constellation_16a47342.png",norm:"round4_constellation_16a47342.jpg",qc:"disputed",combo:"identity v2 THICK + unbroken-bar prompt",note:"س-م-ا continuous. Hamza: I read fused, 2nd reviewer reads air line. ء floating island. FAIL on ء either way.",zoom:"round4_constellation_16a47342_zoom_first.png"},
+{r:"R4",id:"c05daa92-d380-4813-a3f1-bc01b5495a6b",look:"R4 Ribbon pilot",file:"round4_ribbon_c05daa92.png",norm:"round4_ribbon_c05daa92.jpg",qc:"fail",combo:"identity v2 THICK + continuous-ribbon prompt",note:"س-م-ا continuous but أ foot welded into س (gap missing), hamza replaced by stone cap. FAIL."},
+{r:"R5",id:"457996f2-7dcc-4bb2-97ad-86c3278adb90",look:"R5 Navy night",file:"round5_navy_457996f2.png",norm:"round5_navy_457996f2.jpg",qc:"disputed",combo:"identity v2 THICK + cast-metal weld rules",note:"س-م-ا continuous. Hamza disputed again (fused vs air line). ء rail-welded. Tiebreak is yours."},
+{r:"R5",id:"b3eb13c0-23e8-479c-be7c-e688dc03af82",look:"R5 Linen pavé",file:"round5_linen_b3eb13c0.png",norm:"round5_linen_b3eb13c0.jpg",qc:"fail",combo:"identity v2 THICK + cast-metal weld rules",note:"Full pavé drift (unasked, gorgeous). أ foot joins س baseline - gap missing. Nothing floating."},
+{r:"R5",id:"a4cd7fad-486a-40fd-923e-516c3b09772f",look:"R5 Fingers held - CLEANEST",file:"round5_fingers_a4cd7fad.png",norm:"round5_fingers_a4cd7fad.jpg",qc:"pass",combo:"identity v2 THICK + cast-metal weld rules",note:"AGREED PASS by both reviewers: continuous س-م-ا, gapped أ, fused hamza, welded ء, chains attached."},
+{r:"R5",id:"cc45c0ac-b448-46a9-9f16-3f83abdb6fbd",look:"R5 Gift box",file:"round5_giftbox_cc45c0ac.png",norm:"round5_giftbox_cc45c0ac.jpg",qc:"fail",combo:"identity v2 THICK + cast-metal weld rules",note:"أ foot joins س; sunburst sits on م. Connected but script-impure."},
+{r:"R6",id:"3630f03a-adde-4775-b562-21a0281a6303",look:"R6 Ribbon worn - PASS",file:"round6_ribbon_3630f03a.png",norm:"round6_ribbon_3630f03a.jpg",qc:"pass",combo:"identity v2 THICK + free-standing-أ gap rule",note:"AGREED PASS: أ gap kept, hamza-as-blue-stone fused to stem, ء welded, single chain both ends."},
+{r:"R6",id:"c0f99e03-71b8-4827-b5ab-7267abc73e68",look:"R6 Rails",file:"round6_rails_c0f99e03.png",norm:"round6_rails_c0f99e03.jpg",qc:"fail",combo:"identity v2 THICK + free-standing-أ gap rule",note:"Script good (continuous baseline, fused hamza, welded ء) but TWO chains top+bottom - physics fail."},
+{r:"R6",id:"d60bf4c6-67cd-48ba-86a4-3dc467bd6cc2",look:"R6 Origami",file:"round6_origami_d60bf4c6.png",norm:"round6_origami_d60bf4c6.jpg",qc:"fail",combo:"identity v2 THICK + free-standing-أ gap rule",note:"Gap rule overfired: أ fully detached from body, chain holds only أ. Left body has no chain. FAIL."},
+{r:"R6",id:"b8c97620-2ed3-4ac9-a068-50813d2c2534",look:"R6 Art Deco",file:"round6_artdeco_b8c97620.png",norm:"round6_artdeco_b8c97620.jpg",qc:"fail",combo:"identity v2 THICK + free-standing-أ gap rule",note:"Connected via step frame, but sunburst stone covers م/س body. FAIL on stone obscuring letters."},
+{r:"R7",id:"5e1ff765-5449-489f-9701-0b725375d8e0",look:"R7 Rails - PASS",file:"round7_rails_5e1ff765.png",norm:"round7_rails_5e1ff765.jpg",qc:"pass",combo:"identity v2 THICK + proven R5 fingers + calibrated 2mm-gap core",note:"AGREED PASS: single top chain, continuous س-م-ا, gapped أ with fused hamza, welded ء, stones on rails only."},
+{r:"R7",id:"8d9862e4-6a86-4a8e-ae57-d73476ec519e",look:"R7 Origami",file:"round7_origami_8d9862e4.png",norm:"round7_origami_8d9862e4.jpg",qc:"fail",combo:"identity v2 THICK + proven R5 fingers + calibrated 2mm-gap core",note:"أ detached held only by chain (two pieces), stones sit on م/ء bodies. Gap rule still overfires on facets. FAIL."},
+{r:"R7",id:"863dc723-3148-4706-9766-8473688e80a4",look:"R7 Art Deco",file:"round7_artdeco_863dc723.png",norm:"round7_artdeco_863dc723.jpg",qc:"fail",combo:"identity v2 THICK + proven R5 fingers + calibrated 2mm-gap core",note:"Sunburst fixed (separate terminal) but أ floats held only by chain - pendant reads as two pieces. FAIL."},
+{r:"R8",id:"8f2854ed-dcad-469a-9527-51a0a543ab91",look:"R8 Constellation A",file:"round8_constellation_8f2854ed.png",norm:"round8_constellation_8f2854ed.jpg",qc:"fail",combo:"identity v2 THICK + proven + rails-carry-letters",note:"Everything clean except hamza: 2x zoom shows clear air under it. FAIL. Fixed in R12 with stone hamza."},
+{r:"R8",id:"f342bb6d-a190-4303-bce6-2bfe0693b2ce",look:"R8 Origami A",file:"round8_origami_f342bb6d.png",norm:"round8_origami_f342bb6d.jpg",qc:"fail",combo:"identity v2 THICK + proven + back-bar casting",note:"أ foot merges into س baseline, stones set into bodies. FAIL."},
+{r:"R8",id:"d2fcc835-ef3a-4ec8-ae92-26eb7e2a1872",look:"R8 Art Deco A",file:"round8_artdeco_d2fcc835.png",norm:"round8_artdeco_d2fcc835.jpg",qc:"fail",combo:"identity v2 THICK + proven + frame-carries-letters",note:"Letters fully pavé-covered, sunburst touches أ. FAIL."},
+{r:"R9",id:"6dec1346-c19b-4c01-90a0-d0d376cca7a5",look:"R9 Origami B",file:"round9_origami_6dec1346.png",norm:"round9_origami_6dec1346.jpg",qc:"fail",combo:"identity v2 THICK + proven + free-foot rule",note:"Hamza floats with clear air gap to stem. FAIL. Fixed in R11 with stone hamza."},
+{r:"R9",id:"57c11aa9-0d02-4f85-8102-55f0da92f064",look:"R9 Art Deco B",file:"round9_artdeco_57c11aa9.png",norm:"round9_artdeco_57c11aa9.jpg",qc:"fail",combo:"identity v2 THICK + proven + sunburst-fully-clear",note:"Sunburst floats detached above name - pendant not one piece. FAIL. Fixed in R10 by dropping it."},
+{r:"R10",id:"5a2f1173-fcf5-4a8e-9217-bedec85e7be9",look:"R10 Art Deco - PASS",file:"round10_artdeco_5a2f1173.png",norm:"round10_artdeco_5a2f1173.jpg",qc:"pass",combo:"identity v2 THICK + proven + no-sunburst frame-only",note:"AGREED PASS: frame carries أ and ء, gap kept, fused hamza, flush pavé, one chain."},
+{r:"R11",id:"55ff4f5e-3dc1-4b92-85fe-075bfd8fb850",look:"R11 Origami - PASS",file:"round11_origami_55ff4f5e.png",norm:"round11_origami_55ff4f5e.jpg",qc:"pass",combo:"identity v2 THICK + proven + ا-flows-into-bar + stone hamza",note:"AGREED PASS: continuous baseline incl. ا stem, gapped أ with setting touching stem, welded ء, one chain."},
+{r:"R12",id:"ce0bdb1c-21c2-49cb-a7e4-ce432ff36ec5",look:"R12 Constellation - PASS",file:"round12_constellation_ce0bdb1c.png",norm:"round12_constellation_ce0bdb1c.jpg",qc:"pass",combo:"identity v2 THICK + proven + rails-carry + stone hamza",note:"AGREED PASS: diamond hamza fused on stem top (2x-zoom verified), gap kept, ء welded, bail chain, stones on rails."}
+];
+let filter="all";
+let list=DATA.slice();
+let i=0;
+const img=document.getElementById('img');
+function cls(q){return q==='pass'?'pass':(q==='fail'?'fail':(q==='disputed'?'warn':'legacy'))}
+function apply(f){filter=f;list=f==='all'?DATA.slice():f==='notpass'?DATA.filter(d=>d.qc==='fail'||d.qc==='disputed'):f==='pass'?DATA.filter(d=>d.qc==='pass'):DATA.filter(d=>d.r===f);i=0;show();
+document.querySelectorAll('#filters button').forEach(b=>b.classList.toggle('on',b.dataset.f===f));}
+function show(){
+if(!list.length){document.getElementById('meta').innerHTML='<p>No images in this filter.</p>';return}
+const d=list[i%list.length];
+img.src='normalized/'+d.norm;
+document.getElementById('meta').innerHTML='<span class="badge '+cls(d.qc)+'">'+d.qc+'</span><span class="badge legacy">'+d.r+'</span><h3>'+d.look+'</h3><div class="combo"><b>Combination:</b> '+d.combo+'</div><p>'+d.note+'</p><p><small class="mono">'+d.id+'</small></p>';
+document.getElementById('orig').href='originals/'+d.file;
+document.getElementById('zoom').innerHTML=d.zoom?('<a href="normalized/'+d.zoom+'" target="_blank">zoom: first letter</a>'):'';
+document.getElementById('count').textContent=((i%list.length)+1)+' / '+list.length;
+const dots=document.getElementById('dots');dots.innerHTML='';
+list.forEach((x,idx)=>{const s=document.createElement('span');if(idx===(i%list.length))s.classList.add('on');s.classList.add(x.qc==='pass'?'p':(x.qc==='fail'?'f':''));s.title=x.look+' ['+x.qc+']';s.onclick=()=>{i=idx;show()};dots.appendChild(s)});
+}
+document.getElementById('prev').onclick=()=>{i=(i-1+list.length)%list.length;show()};
+document.getElementById('next').onclick=()=>{i=(i+1)%list.length;show()};
+document.addEventListener('keydown',e=>{if(e.key==='ArrowRight')document.getElementById('next').click();if(e.key==='ArrowLeft')document.getElementById('prev').click()});
+document.querySelectorAll('#filters button').forEach(b=>b.onclick=()=>apply(b.dataset.f));
+show();
+</script>
+</body>
+</html>

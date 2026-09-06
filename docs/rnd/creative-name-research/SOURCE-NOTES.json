@@ -1,0 +1,155 @@
+{
+  "date": "2026-09-06",
+  "scope": "Revisit original custom-name pendant generation using reusable references; documentation and analysis only.",
+  "notebook": {
+    "path": "/Users/sanchay/Downloads/image-gen-models-prompting-guide.ipynb",
+    "sha256": "47309d56b2140431ad738a7055b0874168bf7842a2e260999493d1b5b097d1dd",
+    "cells": 98,
+    "codeExecuted": false,
+    "savedOutputs": 0,
+    "explicitAsOf": "2026-04-21",
+    "cellIndexing": "zero-based"
+  },
+  "claims": [
+    {
+      "claim": "Style can transfer to new content; existing-product preservation is a separate task.",
+      "source": "User-supplied OpenAI cookbook",
+      "cells": [
+        40,
+        41,
+        50,
+        51,
+        55,
+        56
+      ],
+      "confidence": "direct example",
+      "jewelryReliabilityEstablished": false
+    },
+    {
+      "claim": "First generated design can be supplied to later scene creation.",
+      "source": "User-supplied OpenAI cookbook",
+      "cells": [
+        90,
+        91,
+        92,
+        94,
+        95
+      ],
+      "confidence": "direct example in character illustration",
+      "jewelryContinuityEstablished": false
+    },
+    {
+      "claim": "No Arabic or jewelry-specific tests; no saved execution outputs.",
+      "source": "Parsed notebook source and cell metadata",
+      "confidence": "direct inspection"
+    },
+    {
+      "claim": "Input fidelity automatic; remaining text/consistency/composition limitations; size max edge <=3840.",
+      "source": "OpenAI Image generation guide",
+      "url": "https://developers.openai.com/api/docs/guides/image-generation",
+      "confidence": "current primary documentation retrieved"
+    },
+    {
+      "claim": "Literal character identity differs from contextual Arabic glyph shape and identifying dots.",
+      "source": "Unicode 17 Chapter9",
+      "url": "https://www.unicode.org/versions/Unicode17.0.0/core-spec/chapter-9/#G20596",
+      "confidence": "primary standard"
+    },
+    {
+      "claim": "Arabic right/non-joining behavior makes some gaps intentional.",
+      "source": "W3C Arabic & Persian Layout Requirements",
+      "url": "https://www.w3.org/International/alreq/",
+      "confidence": "primary layout guidance"
+    },
+    {
+      "claim": "Font, script, language, direction and substitutions/positioning produce shaped glyphs, not pendant supports.",
+      "source": "HarfBuzz Manual",
+      "url": "https://harfbuzz.github.io/shaping-and-shape-plans.html",
+      "confidence": "primary technical documentation; jewelry distinction is inference"
+    },
+    {
+      "claim": "Ring size/wire and closure affect physical assembly; appearance does not certify strength.",
+      "source": "Cooksongold educational guide",
+      "url": "https://www.cooksongold.com/blog/learn/beginners-guide-how-to-use-jump-rings/",
+      "confidence": "primary supplier education plus stated inference"
+    },
+    {
+      "claim": "Diffused and direct lighting serve different metal/gem rendering needs.",
+      "source": "GIA How to Photograph Gems & Jewelry",
+      "url": "https://www.gia.edu/gem-photography",
+      "confidence": "primary physical photography guidance"
+    },
+    {
+      "claim": "Website supports optional image refs, quality and resolution; MCP controls differ.",
+      "source": "Runway model guide plus connected runway_generate_image schema",
+      "url": "https://help.runwayml.com/hc/en-us/articles/51111417337363-Creating-images-with-GPT-Image-2",
+      "confidence": "primary website and tool contract; hidden defaults unknown"
+    },
+    {
+      "claim": "All48 prior screening outputs used one dot-free name and fixed non-construction choices.",
+      "source": "48 local compiled configuration JSON files",
+      "confidence": "direct local enumeration"
+    },
+    {
+      "claim": "Reusable style/hardware refs and optional spelling strip improve new-name design.",
+      "source": "Proposed hypothesis",
+      "confidence": "untested"
+    },
+    {
+      "claim": "Anchor-conditioned views preserve tiny pendant details.",
+      "source": "Proposed transfer from character workflow",
+      "confidence": "untested"
+    }
+  ],
+  "searches": [
+    {
+      "backend": "official-domain web search",
+      "query": "GPT Image 2 prompting references typography"
+    },
+    {
+      "backend": "Agent Reach Exa",
+      "query": "site:help.runwayml.com \"GPT Image 2\" reference prompt"
+    },
+    {
+      "backend": "web search",
+      "query": "\"GPT Image 2\" \"Arabic\" benchmark typography"
+    },
+    {
+      "backend": "web search",
+      "query": "\"GPT Image 2\" \"jewelry\" \"name\" prompt"
+    },
+    {
+      "backend": "official-domain web search",
+      "query": "site:developers.openai.com \"gpt-image-2\" \"reference\" \"style\" prompt"
+    },
+    {
+      "backend": "web search",
+      "query": "site:arxiv.org \"GPT-Image-2\" Arabic text generation"
+    },
+    {
+      "backend": "web search",
+      "query": "site:help.runwayml.com \"GPT Image 2\" \"50\""
+    }
+  ],
+  "sourceSelection": "Official product docs and primary Arabic/physical sources govern. No success rates imported from generic prompt lists, showcases, or detection benchmarks.",
+  "remainingGaps": [
+    "No measured original-name design reliability",
+    "Style/hardware content leakage unknown",
+    "Spelling-strip influence unknown",
+    "Construction-specific support recipes not prepared",
+    "Four-view continuity untested",
+    "Conservative50 submission boundary unresolved"
+  ],
+  "stopReason": "Remaining consequential questions require controlled experiments on actual outputs, not further generic tip searches.",
+  "paidCallsThisResearch": 0,
+  "productionChanges": false,
+  "notebookExecution": false,
+  "review": "Independent Arabic/reference critique and adversarial method/cost critique incorporated; both read-only.",
+  "finalReview": "Independent adversarial review found no material blocker in REVISIT.md; no paid execution or production change implied.",
+  "verification": {
+    "priorProofManifestFilesUnchanged": 243,
+    "localReportLinksValid": true,
+    "markdownCodeFencesBalanced": true,
+    "sourceNotebookUnchanged": true
+  }
+}
