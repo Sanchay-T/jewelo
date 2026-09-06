@@ -1,0 +1,69 @@
+{
+  "version": 9,
+  "tool": "native imagegen",
+  "assets": [
+    {
+      "id": "akr-white-none-On skin-v9",
+      "file": "arabic-kufi-rails-white-none-worn.png",
+      "view": "On skin",
+      "patch": {
+        "script": "Arabic",
+        "construction": "Diamond rails",
+        "lettering": "Kufi",
+        "chain": "Rolo",
+        "metal": "White gold",
+        "coverage": "No stones"
+      },
+      "parent": "/atelier/v8/arabic-kufi-rails-white-none-studio.png",
+      "prompt": "Create one On skin photograph of the exact reference pendant worn naturally by an adult woman on her collarbone. Crop lower chin to upper chest, cream clothing, natural skin texture. Believable 32mm pendant scale. Preserve exact identity: Arabic أسماء angular Kufi with square open mim counter, one name, connected top and bottom rails, 18K white gold, no stones, round Rolo chain and both closed attached jump rings, same proportions. Only environment and camera change. No English or cursive, no additional glyphs, no broken letters, no disconnected geometry, no stones or overlays. Realistic commercial jewelry photography, portrait4:5.",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Direct visual inspection: angular Arabic name and square counter, connected rails, closed chain attachments and white metal retained across the three camera scenes. Nominal32mm sample; not measurement certification."
+      },
+      "cost": null,
+      "sha256": "9aae31cef80ea9a4464ee51b278da8d63d73ea25a6a40d4f912bacb3d00c3110"
+    },
+    {
+      "id": "akr-white-none-Close-up-v9",
+      "file": "arabic-kufi-rails-white-none-close.png",
+      "view": "Close-up",
+      "patch": {
+        "script": "Arabic",
+        "construction": "Diamond rails",
+        "lettering": "Kufi",
+        "chain": "Rolo",
+        "metal": "White gold",
+        "coverage": "No stones"
+      },
+      "parent": "/atelier/v8/arabic-kufi-rails-white-none-studio.png",
+      "prompt": "Create one Close-up photograph of the exact reference pendant in a detailed macro photograph on ivory silk and limestone, jewelry fills most of the frame with all letters and both jump rings visible. Preserve exact identity: Arabic أسماء angular Kufi with square open mim counter, one name, connected top and bottom rails, 18K white gold, no stones, round Rolo chain and both closed attached jump rings, same proportions. Only environment and camera change. No English or cursive, no additional glyphs, no broken letters, no disconnected geometry, no stones or overlays. Realistic commercial jewelry photography, portrait4:5.",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Direct visual inspection: angular Arabic name and square counter, connected rails, closed chain attachments and white metal retained across the three camera scenes. Nominal32mm sample; not measurement certification."
+      },
+      "cost": null,
+      "sha256": "7d2dd7c3b51ac6000c7857ca3f023b9779fbe08844521aa939908b6cfda90c1a"
+    },
+    {
+      "id": "akr-white-none-Dark-v9",
+      "file": "arabic-kufi-rails-white-none-dark.png",
+      "view": "Dark",
+      "patch": {
+        "script": "Arabic",
+        "construction": "Diamond rails",
+        "lettering": "Kufi",
+        "chain": "Rolo",
+        "metal": "White gold",
+        "coverage": "No stones"
+      },
+      "parent": "/atelier/v8/arabic-kufi-rails-white-none-studio.png",
+      "prompt": "Create one Dark photograph of the exact reference pendant in a dramatic luxury product photograph on black velvet with soft rim lighting; fully visible necklace and pendant. Preserve exact identity: Arabic أسماء angular Kufi with square open mim counter, one name, connected top and bottom rails, 18K white gold, no stones, round Rolo chain and both closed attached jump rings, same proportions. Only environment and camera change. No English or cursive, no additional glyphs, no broken letters, no disconnected geometry, no stones or overlays. Realistic commercial jewelry photography, portrait4:5.",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Direct visual inspection: angular Arabic name and square counter, connected rails, closed chain attachments and white metal retained across the three camera scenes. Nominal32mm sample; not measurement certification."
+      },
+      "cost": null,
+      "sha256": "a687ca3e59f6a07b1bcd016dce6c983ac68621d40918da9eee0f5762ead28941"
+    }
+  ]
+}

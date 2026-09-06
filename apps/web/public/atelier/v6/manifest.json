@@ -1,0 +1,331 @@
+{
+  "version": 6,
+  "tool": "built-in imagegen",
+  "cost": {
+    "amount": null,
+    "reason": "Not reported by tool"
+  },
+  "assets": [
+    {
+      "id": "arabic-kufi-v6-worn",
+      "file": "arabic-kufi-worn.png",
+      "view": "On skin",
+      "patch": {
+        "script": "Arabic",
+        "lettering": "Kufi"
+      },
+      "parent": "/atelier/v2/arabic-kufi-repaired.png",
+      "prompt": "Use case: identity-preserve. Edit target: supplied necklace photograph. Create ONE photorealistic CALEUMS ecommerce On skin photo. Worn naturally on an adult woman's collarbone, lower chin to upper chest crop, cream clothing, warm medium skin, natural pores, pendant at60%height, believable32mm scale and readable. Preserve EXACT Arabic أسماء geometry from reference, its square angular Kufi strokes, baseline bridge, square counters, initial hamza connected directly above rightmost alef, final hamza joined at left; no added dots or characters. Same single name,18K yellow gold,no stones,thin cable chain,both closed attached jump rings. Only camera/scene changes. Every component physically joined, no floating marks. Portrait4:5, no overlay text, logos, watermark, collage or extra jewelry.",
+      "source": "/Users/sanchay/.codex/generated_images/01a0737e-d67f-72a0-915c-9e90af782a04/exec-c1605237-5acb-42ac-8ecd-180635089ad1.png",
+      "tool": "built-in imagegen",
+      "cost": null,
+      "generatedAt": "2026-09-06T08:54:44.715067+00:00",
+      "sha256": "3adf0a3d74d9aa0e21a803c7374b0c9a0a59be494fd0f1bbb36520d58c5e21b1",
+      "review": {
+        "status": "rejected",
+        "scope": "Missing square mim counter; superseded by worn-corrected."
+      }
+    },
+    {
+      "id": "arabic-kufi-v6-close",
+      "file": "arabic-kufi-close.png",
+      "view": "Close-up",
+      "patch": {
+        "script": "Arabic",
+        "lettering": "Kufi"
+      },
+      "parent": "/atelier/v2/arabic-kufi-repaired.png",
+      "prompt": "Use case: identity-preserve. Edit target: supplied necklace photograph. Create ONE photorealistic CALEUMS ecommerce Close-up photo. Macro on ivory silk and limestone, entire pendant fills75%width, gentle angle revealing thickness, full name and both rings visible. Preserve EXACT Arabic أسماء geometry from reference, its square angular Kufi strokes, baseline bridge, square counters, initial hamza connected directly above rightmost alef, final hamza joined at left; no added dots or characters. Same single name,18K yellow gold,no stones,thin cable chain,both closed attached jump rings. Only camera/scene changes. Every component physically joined, no floating marks. Portrait4:5, no overlay text, logos, watermark, collage or extra jewelry.",
+      "source": "/Users/sanchay/.codex/generated_images/01a0737e-d67f-72a0-915c-9e90af782a04/exec-81965cc9-1460-48f2-a0ee-256a1623bac0.png",
+      "tool": "built-in imagegen",
+      "cost": null,
+      "generatedAt": "2026-09-06T08:54:44.721300+00:00",
+      "sha256": "5ae9d3e6f0e4bc7c2906c7c6cb56ff944975804e35bc7c7e296815551f1ee316",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Direct visual inspection: retained Arabic example silhouette, open counters, joined marks, chain attachments and requested camera scene. Approximate scale; no manufacturing certification."
+      }
+    },
+    {
+      "id": "arabic-kufi-v6-dark",
+      "file": "arabic-kufi-dark.png",
+      "view": "Dark",
+      "patch": {
+        "script": "Arabic",
+        "lettering": "Kufi"
+      },
+      "parent": "/atelier/v2/arabic-kufi-repaired.png",
+      "prompt": "Use case: identity-preserve. Edit target: supplied necklace photograph. Create ONE photorealistic CALEUMS ecommerce Dark photo. On rich black velvet with gentle folds, controlled warm spotlight, entire pendant fills65%width, luminous polished gold and deep backdrop. Preserve EXACT Arabic أسماء geometry from reference, its square angular Kufi strokes, baseline bridge, square counters, initial hamza connected directly above rightmost alef, final hamza joined at left; no added dots or characters. Same single name,18K yellow gold,no stones,thin cable chain,both closed attached jump rings. Only camera/scene changes. Every component physically joined, no floating marks. Portrait4:5, no overlay text, logos, watermark, collage or extra jewelry.",
+      "source": "/Users/sanchay/.codex/generated_images/01a0737e-d67f-72a0-915c-9e90af782a04/exec-d94b918f-ccd7-4348-a0b2-1f7dbd1eb960.png",
+      "tool": "built-in imagegen",
+      "cost": null,
+      "generatedAt": "2026-09-06T08:54:44.726565+00:00",
+      "sha256": "2f8d79002e214a00bc45293793a58b387eb6353aadb317b075debdb9fe7c8d16",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Direct visual inspection: retained Arabic example silhouette, open counters, joined marks, chain attachments and requested camera scene. Approximate scale; no manufacturing certification."
+      }
+    },
+    {
+      "id": "arabic-signature-v6-worn",
+      "file": "arabic-signature-worn.png",
+      "view": "On skin",
+      "patch": {
+        "script": "Arabic",
+        "lettering": "Signature"
+      },
+      "parent": "/atelier/v2/arabic-signature-repaired.png",
+      "prompt": "Use case: identity-preserve. Edit target supplied necklace. ONE photorealistic CALEUMS ecommerce On skin photo. Worn naturally on an adult woman's collarbone, lower chin to upper chest crop, cream clothing, warm medium skin, natural pores, pendant at60%height, believable32mm scale and readable. Preserve exact Arabic أسماء geometry, the flowing broad Signature curves and triangular mim counter, initial hamza attached above rightmost alef, left final hamza joined by rear thin support. Same single name, yellow18Kgold,no stones, thin cable chain, two closed attached rings. Only camera and scene change. Every letter and mark physically joined. Do not mirror, substitute calligraphy, add dots, close counters, or invent letters. Portrait4:5, no overlay text logos watermark collage extra jewelry.",
+      "source": "/Users/sanchay/.codex/generated_images/01a0737e-d67f-72a0-915c-9e90af782a04/exec-be5450d4-96c0-4eec-ba02-47775dd76bb4.png",
+      "tool": "built-in imagegen",
+      "cost": null,
+      "generatedAt": "2026-09-06T08:54:44.732518+00:00",
+      "sha256": "d4e58bbbf6946151e58156be5c4c446e61f4bf448847a35450c3c43d4cefee55",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Direct visual inspection: retained Arabic example silhouette, open counters, joined marks, chain attachments and requested camera scene. Approximate scale; no manufacturing certification."
+      }
+    },
+    {
+      "id": "arabic-signature-v6-close",
+      "file": "arabic-signature-close.png",
+      "view": "Close-up",
+      "patch": {
+        "script": "Arabic",
+        "lettering": "Signature"
+      },
+      "parent": "/atelier/v2/arabic-signature-repaired.png",
+      "prompt": "Use case: identity-preserve. Edit target supplied necklace. ONE photorealistic CALEUMS ecommerce Close-up photo. Macro on ivory silk and limestone, entire pendant fills75%width, gentle angle revealing thickness, full name and both rings visible. Preserve exact Arabic أسماء geometry, the flowing broad Signature curves and triangular mim counter, initial hamza attached above rightmost alef, left final hamza joined by rear thin support. Same single name, yellow18Kgold,no stones, thin cable chain, two closed attached rings. Only camera and scene change. Every letter and mark physically joined. Do not mirror, substitute calligraphy, add dots, close counters, or invent letters. Portrait4:5, no overlay text logos watermark collage extra jewelry.",
+      "source": "/Users/sanchay/.codex/generated_images/01a0737e-d67f-72a0-915c-9e90af782a04/exec-e8beabe0-0319-4d08-b384-e2299e1b4ac2.png",
+      "tool": "built-in imagegen",
+      "cost": null,
+      "generatedAt": "2026-09-06T08:54:44.738466+00:00",
+      "sha256": "e4a88c91db507cdbbde41d688b082652be399c4a9ccb688035302e360d59d6a4",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Direct visual inspection: retained Arabic example silhouette, open counters, joined marks, chain attachments and requested camera scene. Approximate scale; no manufacturing certification."
+      }
+    },
+    {
+      "id": "arabic-signature-v6-dark",
+      "file": "arabic-signature-dark.png",
+      "view": "Dark",
+      "patch": {
+        "script": "Arabic",
+        "lettering": "Signature"
+      },
+      "parent": "/atelier/v2/arabic-signature-repaired.png",
+      "prompt": "Use case: identity-preserve. Edit target supplied necklace. ONE photorealistic CALEUMS ecommerce Dark photo. On rich black velvet with gentle folds, controlled warm spotlight, entire pendant fills65%width, luminous polished gold and deep backdrop. Preserve exact Arabic أسماء geometry, the flowing broad Signature curves and triangular mim counter, initial hamza attached above rightmost alef, left final hamza joined by rear thin support. Same single name, yellow18Kgold,no stones, thin cable chain, two closed attached rings. Only camera and scene change. Every letter and mark physically joined. Do not mirror, substitute calligraphy, add dots, close counters, or invent letters. Portrait4:5, no overlay text logos watermark collage extra jewelry.",
+      "source": "/Users/sanchay/.codex/generated_images/01a0737e-d67f-72a0-915c-9e90af782a04/exec-e783490f-2baf-411e-8e14-43fc94345952.png",
+      "tool": "built-in imagegen",
+      "cost": null,
+      "generatedAt": "2026-09-06T08:54:44.743972+00:00",
+      "sha256": "aeda6a5493cb081751e55bce2c177d62cf8d94e01c52194df0b4d7c1de930c21",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Direct visual inspection: retained Arabic example silhouette, open counters, joined marks, chain attachments and requested camera scene. Approximate scale; no manufacturing certification."
+      }
+    },
+    {
+      "id": "arabic-minimal-v2-v6-close",
+      "file": "arabic-minimal-v2-close.png",
+      "view": "Close-up",
+      "patch": {
+        "script": "Arabic",
+        "lettering": "Minimal"
+      },
+      "parent": "/atelier/v2/arabic-minimal-v2-repaired.png",
+      "prompt": "Use case: identity-preserve. Edit target supplied necklace. ONE photorealistic CALEUMS ecommerce Close-up photo. Macro on ivory silk and limestone, entire pendant fills75%width, gentle angle revealing thickness, full name and both rings visible. Preserve exact Arabic أسماء geometry, the upright simple Minimal strokes, thin rear baseline bridge, small OPEN triangular mim counter, initial hamza attached above rightmost alef, left final hamza joined to baseline. Same single name, yellow18Kgold,no stones, thin cable chain,two closed attached rings. Only camera and scene change. Every letter and mark physically joined. Do not mirror, substitute calligraphy, add dots, close counters, or invent letters. Portrait4:5, no overlay text logos watermark collage extra jewelry.",
+      "source": "/Users/sanchay/.codex/generated_images/01a0737e-d67f-72a0-915c-9e90af782a04/exec-766cdc97-c6df-4d9c-998f-21498dbd362b.png",
+      "tool": "built-in imagegen",
+      "cost": null,
+      "generatedAt": "2026-09-06T08:54:44.748522+00:00",
+      "sha256": "547bbbab7d76133a45dd85e7df16387f6b568cb6e85a93a24ec4bfaa40ecb54c",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Direct visual inspection: retained Arabic example silhouette, open counters, joined marks, chain attachments and requested camera scene. Approximate scale; no manufacturing certification."
+      }
+    },
+    {
+      "id": "arabic-minimal-v2-v6-worn",
+      "file": "arabic-minimal-v2-worn.png",
+      "view": "On skin",
+      "patch": {
+        "script": "Arabic",
+        "lettering": "Minimal"
+      },
+      "parent": "/atelier/v2/arabic-minimal-v2-repaired.png",
+      "prompt": "Use case: identity-preserve. Edit target supplied necklace. ONE photorealistic CALEUMS ecommerce On skin photo. Worn naturally on an adult woman's collarbone, lower chin to upper chest crop, cream clothing, warm medium skin, natural pores, pendant at60%height, believable32mm scale and readable. Preserve exact Arabic أسماء geometry, the upright simple Minimal strokes, thin rear baseline bridge, small OPEN triangular mim counter, initial hamza attached above rightmost alef, left final hamza joined to baseline. Same single name, yellow18Kgold,no stones, thin cable chain,two closed attached rings. Only camera and scene change. Every letter and mark physically joined. Do not mirror, substitute calligraphy, add dots, close counters, or invent letters. Portrait4:5, no overlay text logos watermark collage extra jewelry.",
+      "source": "/Users/sanchay/.codex/generated_images/01a0737e-d67f-72a0-915c-9e90af782a04/exec-5d88a3d5-3f91-4109-a7af-31070868f3a4.png",
+      "tool": "built-in imagegen",
+      "cost": null,
+      "generatedAt": "2026-09-06T08:54:44.752535+00:00",
+      "sha256": "6bb4f3fc898a42b14e652772debd74722d3c39ead139cb0ca881d19737f7b135",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Direct visual inspection: retained Arabic example silhouette, open counters, joined marks, chain attachments and requested camera scene. Approximate scale; no manufacturing certification."
+      }
+    },
+    {
+      "id": "arabic-minimal-v2-v6-dark",
+      "file": "arabic-minimal-v2-dark.png",
+      "view": "Dark",
+      "patch": {
+        "script": "Arabic",
+        "lettering": "Minimal"
+      },
+      "parent": "/atelier/v2/arabic-minimal-v2-repaired.png",
+      "prompt": "Use case: identity-preserve. Edit target supplied necklace. ONE photorealistic CALEUMS ecommerce Dark photo. On rich black velvet with gentle folds, controlled warm spotlight, entire pendant fills65%width, luminous polished gold and deep backdrop. Preserve exact Arabic أسماء geometry, the upright simple Minimal strokes, thin rear baseline bridge, small OPEN triangular mim counter, initial hamza attached above rightmost alef, left final hamza joined to baseline. Same single name, yellow18Kgold,no stones, thin cable chain,two closed attached rings. Only camera and scene change. Every letter and mark physically joined. Do not mirror, substitute calligraphy, add dots, close counters, or invent letters. Portrait4:5, no overlay text logos watermark collage extra jewelry.",
+      "source": "/Users/sanchay/.codex/generated_images/01a0737e-d67f-72a0-915c-9e90af782a04/exec-ab348a19-693c-4e58-978a-d324b8c4c7d9.png",
+      "tool": "built-in imagegen",
+      "cost": null,
+      "generatedAt": "2026-09-06T08:54:44.756896+00:00",
+      "sha256": "467a15d713a4e457cf705beadd382ff0409ae5783ac9206b8e7256a4976b26d2",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Direct visual inspection: retained Arabic example silhouette, open counters, joined marks, chain attachments and requested camera scene. Approximate scale; no manufacturing certification."
+      }
+    },
+    {
+      "id": "arabic-diwani-v2-v6-worn",
+      "file": "arabic-diwani-v2-worn.png",
+      "view": "On skin",
+      "patch": {
+        "script": "Arabic",
+        "lettering": "Diwani"
+      },
+      "parent": "/atelier/v2/arabic-diwani-v2.png",
+      "prompt": "Use case: identity-preserve. Edit target supplied necklace. ONE photorealistic CALEUMS ecommerce On skin photo. Worn naturally on an adult woman's collarbone, lower chin to upper chest crop, cream clothing, warm medium skin, natural pores, pendant at60%height, believable32mm scale and readable. Preserve EXACT Arabic أسماء geometry from reference including elaborate overlapping Diwani loops, lower sweeping swashes, all OPEN counters, initial hamza touching above rightmost alef, terminal hamza supported at upper left. Same single name, yellow18Kgold,no stones, thin cable chain,two closed attached rings. Only scene and camera change. Every component physically joined. Do not mirror, simplify flourishes, substitute calligraphy, add dots, close counters or invent letters. Portrait4:5, no overlay text logos watermark collage extra jewelry.",
+      "source": "/Users/sanchay/.codex/generated_images/01a0737e-d67f-72a0-915c-9e90af782a04/exec-bfe80c78-2312-457e-a4d9-dee2c1c3551b.png",
+      "tool": "built-in imagegen",
+      "cost": null,
+      "generatedAt": "2026-09-06T08:54:44.762660+00:00",
+      "sha256": "fc8a2821d04033b92593d6dced3a98e48d0f1ca262960474288b1500477ca2d7",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Direct visual inspection: retained Arabic example silhouette, open counters, joined marks, chain attachments and requested camera scene. Approximate scale; no manufacturing certification."
+      }
+    },
+    {
+      "id": "arabic-diwani-v2-v6-close",
+      "file": "arabic-diwani-v2-close.png",
+      "view": "Close-up",
+      "patch": {
+        "script": "Arabic",
+        "lettering": "Diwani"
+      },
+      "parent": "/atelier/v2/arabic-diwani-v2.png",
+      "prompt": "Use case: identity-preserve. Edit target supplied necklace. ONE photorealistic CALEUMS ecommerce Close-up photo. Macro on ivory silk and limestone, entire pendant fills75%width, gentle angle revealing thickness, full name and both rings visible. Preserve EXACT Arabic أسماء geometry from reference including elaborate overlapping Diwani loops, lower sweeping swashes, all OPEN counters, initial hamza touching above rightmost alef, terminal hamza supported at upper left. Same single name, yellow18Kgold,no stones, thin cable chain,two closed attached rings. Only scene and camera change. Every component physically joined. Do not mirror, simplify flourishes, substitute calligraphy, add dots, close counters or invent letters. Portrait4:5, no overlay text logos watermark collage extra jewelry.",
+      "source": "/Users/sanchay/.codex/generated_images/01a0737e-d67f-72a0-915c-9e90af782a04/exec-2013e15c-ecc1-4a30-860d-2bc8d2bc54a6.png",
+      "tool": "built-in imagegen",
+      "cost": null,
+      "generatedAt": "2026-09-06T08:54:44.770353+00:00",
+      "sha256": "6bb982b66047926ccf526978cb67c85b5ef012443238bdc40c6a6d708062fa5e",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Direct visual inspection: retained Arabic example silhouette, open counters, joined marks, chain attachments and requested camera scene. Approximate scale; no manufacturing certification."
+      }
+    },
+    {
+      "id": "arabic-diwani-v2-v6-dark",
+      "file": "arabic-diwani-v2-dark.png",
+      "view": "Dark",
+      "patch": {
+        "script": "Arabic",
+        "lettering": "Diwani"
+      },
+      "parent": "/atelier/v2/arabic-diwani-v2.png",
+      "prompt": "Use case: identity-preserve. Edit target supplied necklace. ONE photorealistic CALEUMS ecommerce Dark photo. On rich black velvet with gentle folds, controlled warm spotlight, entire pendant fills65%width, luminous polished gold and deep backdrop. Preserve EXACT Arabic أسماء geometry from reference including elaborate overlapping Diwani loops, lower sweeping swashes, all OPEN counters, initial hamza touching above rightmost alef, terminal hamza supported at upper left. Same single name, yellow18Kgold,no stones, thin cable chain,two closed attached rings. Only scene and camera change. Every component physically joined. Do not mirror, simplify flourishes, substitute calligraphy, add dots, close counters or invent letters. Portrait4:5, no overlay text logos watermark collage extra jewelry.",
+      "source": "/Users/sanchay/.codex/generated_images/01a0737e-d67f-72a0-915c-9e90af782a04/exec-4f9e2dfe-1219-442c-900f-1a720694629b.png",
+      "tool": "built-in imagegen",
+      "cost": null,
+      "generatedAt": "2026-09-06T08:54:44.774477+00:00",
+      "sha256": "eae583fa7f07674179105778c02de6de0a0ce56cca0ed58433d7f179ff7e8ae4",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Direct visual inspection: retained Arabic example silhouette, open counters, joined marks, chain attachments and requested camera scene. Approximate scale; no manufacturing certification."
+      }
+    },
+    {
+      "id": "arabic-thuluth-v2-v6-close",
+      "file": "arabic-thuluth-v2-close.png",
+      "view": "Close-up",
+      "patch": {
+        "script": "Arabic",
+        "lettering": "Thuluth inspired"
+      },
+      "parent": "/atelier/v2/arabic-thuluth-v2-repaired.png",
+      "prompt": "Use case: identity-preserve. Edit target supplied necklace. ONE photorealistic CALEUMS ecommerce Close-up photo. Macro on ivory silk and limestone, entire pendant fills75%width, gentle angle revealing thickness, full name and both rings visible. Preserve EXACT Arabic أسماء geometry from reference, tall Thuluth-inspired tapered uprights with pointed tips, triangular OPEN mim counter, slender rear straight support bridging disconnected pieces, initial hamza touching above rightmost alef, final hamza attached at left. Same single name, yellow18Kgold,no stones, thin cable chain,two closed attached rings. Only scene and camera change. All marks physically joined. Do not mirror, change calligraphy, add dots, close counters or invent letters. Portrait4:5, no overlay text logos watermark collage extra jewelry.",
+      "source": "/Users/sanchay/.codex/generated_images/01a0737e-d67f-72a0-915c-9e90af782a04/exec-ac415ef1-6c55-4883-8a5e-f6ebd5a24a9e.png",
+      "tool": "built-in imagegen",
+      "cost": null,
+      "generatedAt": "2026-09-06T08:54:44.778560+00:00",
+      "sha256": "7cd8a4a37c7993ef78c6936425acc5a840986fcdda41bbdc996e8afadacd5e97",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Direct visual inspection: retained Arabic example silhouette, open counters, joined marks, chain attachments and requested camera scene. Approximate scale; no manufacturing certification."
+      }
+    },
+    {
+      "id": "arabic-thuluth-v2-v6-worn",
+      "file": "arabic-thuluth-v2-worn.png",
+      "view": "On skin",
+      "patch": {
+        "script": "Arabic",
+        "lettering": "Thuluth inspired"
+      },
+      "parent": "/atelier/v2/arabic-thuluth-v2-repaired.png",
+      "prompt": "Use case: identity-preserve. Edit target supplied necklace. ONE photorealistic CALEUMS ecommerce On skin photo. Worn naturally on an adult woman's collarbone, lower chin to upper chest crop, cream clothing, warm medium skin, natural pores, pendant at60%height, believable32mm scale and readable. Preserve EXACT Arabic أسماء geometry from reference, tall Thuluth-inspired tapered uprights with pointed tips, triangular OPEN mim counter, slender rear straight support bridging disconnected pieces, initial hamza touching above rightmost alef, final hamza attached at left. Same single name, yellow18Kgold,no stones, thin cable chain,two closed attached rings. Only scene and camera change. All marks physically joined. Do not mirror, change calligraphy, add dots, close counters or invent letters. Portrait4:5, no overlay text logos watermark collage extra jewelry.",
+      "source": "/Users/sanchay/.codex/generated_images/01a0737e-d67f-72a0-915c-9e90af782a04/exec-b366032c-e01e-4b90-ac6f-dfc542158daf.png",
+      "tool": "built-in imagegen",
+      "cost": null,
+      "generatedAt": "2026-09-06T08:54:44.786031+00:00",
+      "sha256": "f45d5eb93971efa3c5bf53d98e0c90278303a1863b19b4707bba7c5bd1ff7c4e",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Direct visual inspection: retained Arabic example silhouette, open counters, joined marks, chain attachments and requested camera scene. Approximate scale; no manufacturing certification."
+      }
+    },
+    {
+      "id": "arabic-thuluth-v2-v6-dark",
+      "file": "arabic-thuluth-v2-dark.png",
+      "view": "Dark",
+      "patch": {
+        "script": "Arabic",
+        "lettering": "Thuluth inspired"
+      },
+      "parent": "/atelier/v2/arabic-thuluth-v2-repaired.png",
+      "prompt": "Use case: identity-preserve. Edit target supplied necklace. ONE photorealistic CALEUMS ecommerce Dark photo. On rich black velvet with gentle folds, controlled warm spotlight, entire pendant fills65%width, luminous polished gold and deep backdrop. Preserve EXACT Arabic أسماء geometry from reference, tall Thuluth-inspired tapered uprights with pointed tips, triangular OPEN mim counter, slender rear straight support bridging disconnected pieces, initial hamza touching above rightmost alef, final hamza attached at left. Same single name, yellow18Kgold,no stones, thin cable chain,two closed attached rings. Only scene and camera change. All marks physically joined. Do not mirror, change calligraphy, add dots, close counters or invent letters. Portrait4:5, no overlay text logos watermark collage extra jewelry.",
+      "source": "/Users/sanchay/.codex/generated_images/01a0737e-d67f-72a0-915c-9e90af782a04/exec-46679e1e-3ff4-4607-bfc0-da95d5ecaf5b.png",
+      "tool": "built-in imagegen",
+      "cost": null,
+      "generatedAt": "2026-09-06T08:54:44.789789+00:00",
+      "sha256": "7744d49b5a146b6e7d67201dc5ef4181a75353e96303a31aaa2357f42120fa95",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Direct visual inspection: retained Arabic example silhouette, open counters, joined marks, chain attachments and requested camera scene. Approximate scale; no manufacturing certification."
+      }
+    },
+    {
+      "id": "arabic-kufi-v6-worn-corrected",
+      "file": "arabic-kufi-worn-corrected.png",
+      "view": "On skin",
+      "patch": {
+        "script": "Arabic",
+        "lettering": "Kufi"
+      },
+      "parent": "/atelier/v2/arabic-kufi-repaired.png",
+      "prompt": "Use case: precise-object-edit. Image1 edit target is the on-skin Kufi Arabic necklace; Image2 jewelry identity reference. Preserve everything in image1 including woman, skin, clothing, chain, framing, all lettering and gold. Correct ONLY the missing small square open counter inside the central mim letter: create a real square hole through that gold block showing skin beneath, matching image2's square mim counter and position. Keep gold around all four sides, preserve square Kufi أسماء outlines and supporting baseline, do not introduce dots, extra glyphs, gems or other changes. Photorealistic fine jewelry, no overlay.",
+      "source": "/Users/sanchay/.codex/generated_images/01a0737e-d67f-72a0-915c-9e90af782a04/exec-58544e86-bb84-483e-b9ad-f3ef90a07b09.png",
+      "tool": "built-in imagegen",
+      "cost": null,
+      "generatedAt": "2026-09-06T08:54:44.793266+00:00",
+      "sha256": "c42823dc4123e44f8245b9575e7bb3e6b48006d426950df07c3c002249b4cb50",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Direct visual inspection: retained Arabic example silhouette, open counters, joined marks, chain attachments and requested camera scene. Approximate scale; no manufacturing certification."
+      },
+      "replaces": "arabic-kufi-worn.png"
+    }
+  ]
+}

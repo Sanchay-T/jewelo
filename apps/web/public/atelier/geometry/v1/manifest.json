@@ -1,0 +1,517 @@
+{
+  "version": 1,
+  "coordinateSystem": "SVG x-right, y-down; viewBox tight ink bounds; width 1000 units, proportional height. Filled contours preserve counters. No live text.",
+  "names": {
+    "english": {
+      "asma": "Asma",
+      "fatima": "Fatima"
+    },
+    "arabic": {
+      "asma": "أسماء",
+      "fatima": "فاطمة"
+    }
+  },
+  "lineage": "Deterministic HarfBuzz shaping of pinned OFL fonts; no AI-generated geometry.",
+  "styleScope": "Style IDs retain UI vocabulary. Diwani and Thuluth are inspired catalogue categories, not claims of authentic historical calligraphic execution. English uses distinct Latin faces.",
+  "assembly": "Outlines are typographic components, not a single casting. Renderer must connect separated bodies and diacritics with rear support bridge and visible narrow uprights; do not remove Arabic dots or hamza.",
+  "assets": [
+    {
+      "file": "english-classic-asma.svg",
+      "language": "english",
+      "style": "classic",
+      "nameKey": "asma",
+      "spelling": "Asma",
+      "fontFamily": "playball",
+      "fontSource": "https://raw.githubusercontent.com/google/fonts/5e35378e6bda803962ee6fd257e444a7d459660d/ofl/playball/Playball-Regular.ttf",
+      "fontSha256": "130654dd192f4ccd1c4fa2dc516d03cca93dc8ecdaf30d458283e54dcaef8f40",
+      "variationAxes": {},
+      "viewBox": [
+        0,
+        0,
+        1000,
+        307.363014
+      ],
+      "baselineY": 298.80137,
+      "glyphCount": 4,
+      "sha256": "610ec765f4e78b97102904d6e834c00633a276344b09b71f19a4fe1806faef44"
+    },
+    {
+      "file": "english-classic-fatima.svg",
+      "language": "english",
+      "style": "classic",
+      "nameKey": "fatima",
+      "spelling": "Fatima",
+      "fontFamily": "playball",
+      "fontSource": "https://raw.githubusercontent.com/google/fonts/5e35378e6bda803962ee6fd257e444a7d459660d/ofl/playball/Playball-Regular.ttf",
+      "fontSha256": "130654dd192f4ccd1c4fa2dc516d03cca93dc8ecdaf30d458283e54dcaef8f40",
+      "variationAxes": {},
+      "viewBox": [
+        0,
+        0,
+        1000,
+        280.97012
+      ],
+      "baselineY": 278.592375,
+      "glyphCount": 6,
+      "sha256": "ce1ddd1475b03fa6ea6dbf35741a26a0d72a44ac0cd13c5fa03915ac5db374e0"
+    },
+    {
+      "file": "english-minimal-asma.svg",
+      "language": "english",
+      "style": "minimal",
+      "nameKey": "asma",
+      "spelling": "Asma",
+      "fontFamily": "montserrat",
+      "fontSource": "https://raw.githubusercontent.com/google/fonts/5e35378e6bda803962ee6fd257e444a7d459660d/ofl/montserrat/Montserrat%5Bwght%5D.ttf",
+      "fontSha256": "0f7b311b2f3279e4eef9b2f968bcdbab6e28f4daeb1f049f4f278a902bcd82f7",
+      "variationAxes": {
+        "wght": 600
+      },
+      "viewBox": [
+        0,
+        0,
+        1000,
+        248.227413
+      ],
+      "baselineY": 245.937651,
+      "glyphCount": 4,
+      "sha256": "0b645e49aad577673313042d1612a80822069911030d270e6600674131dbfade"
+    },
+    {
+      "file": "english-minimal-fatima.svg",
+      "language": "english",
+      "style": "minimal",
+      "nameKey": "fatima",
+      "spelling": "Fatima",
+      "fontFamily": "montserrat",
+      "fontSource": "https://raw.githubusercontent.com/google/fonts/5e35378e6bda803962ee6fd257e444a7d459660d/ofl/montserrat/Montserrat%5Bwght%5D.ttf",
+      "fontSha256": "0f7b311b2f3279e4eef9b2f968bcdbab6e28f4daeb1f049f4f278a902bcd82f7",
+      "variationAxes": {
+        "wght": 600
+      },
+      "viewBox": [
+        0,
+        0,
+        1000,
+        227.192915
+      ],
+      "baselineY": 225.291595,
+      "glyphCount": 6,
+      "sha256": "1ed76d09ca02111358372340166352555c333be8d31b1224170419a1855a6078"
+    },
+    {
+      "file": "english-diwani-asma.svg",
+      "language": "english",
+      "style": "diwani",
+      "nameKey": "asma",
+      "spelling": "Asma",
+      "fontFamily": "greatvibes",
+      "fontSource": "https://raw.githubusercontent.com/google/fonts/5e35378e6bda803962ee6fd257e444a7d459660d/ofl/greatvibes/GreatVibes-Regular.ttf",
+      "fontSha256": "8d509802186f1b51572531ecf313e8098f9a5bfdfaca93f0c9b34467f9982d15",
+      "variationAxes": {},
+      "viewBox": [
+        0,
+        0,
+        1000,
+        441.408303
+      ],
+      "baselineY": 407.777194,
+      "glyphCount": 4,
+      "sha256": "477b88debfa51f3d0ac69e13e6136a6c1b6621924548d95e3291c60ee8d82bef"
+    },
+    {
+      "file": "english-diwani-fatima.svg",
+      "language": "english",
+      "style": "diwani",
+      "nameKey": "fatima",
+      "spelling": "Fatima",
+      "fontFamily": "greatvibes",
+      "fontSource": "https://raw.githubusercontent.com/google/fonts/5e35378e6bda803962ee6fd257e444a7d459660d/ofl/greatvibes/GreatVibes-Regular.ttf",
+      "fontSha256": "8d509802186f1b51572531ecf313e8098f9a5bfdfaca93f0c9b34467f9982d15",
+      "variationAxes": {},
+      "viewBox": [
+        0,
+        0,
+        1000,
+        318.370426
+      ],
+      "baselineY": 280.271596,
+      "glyphCount": 6,
+      "sha256": "d448ac8b9add062884805299cf82b94adef81d38d126070822b328d12f3cf5a4"
+    },
+    {
+      "file": "english-kufi-asma.svg",
+      "language": "english",
+      "style": "kufi",
+      "nameKey": "asma",
+      "spelling": "Asma",
+      "fontFamily": "cinzel",
+      "fontSource": "https://raw.githubusercontent.com/google/fonts/5e35378e6bda803962ee6fd257e444a7d459660d/ofl/cinzel/Cinzel%5Bwght%5D.ttf",
+      "fontSha256": "f4d83d34d1f6c741193e4acf4b3dff9531e5a67b6aa65228d00a7db72a4e0f34",
+      "variationAxes": {
+        "wght": 600
+      },
+      "viewBox": [
+        0,
+        0,
+        1000,
+        265.122575
+      ],
+      "baselineY": 258.906957,
+      "glyphCount": 4,
+      "sha256": "328171718094ba5fd432646a8d00101e40d9ac11e4eb8a39851c5fbd964ff8a1"
+    },
+    {
+      "file": "english-kufi-fatima.svg",
+      "language": "english",
+      "style": "kufi",
+      "nameKey": "fatima",
+      "spelling": "Fatima",
+      "fontFamily": "cinzel",
+      "fontSource": "https://raw.githubusercontent.com/google/fonts/5e35378e6bda803962ee6fd257e444a7d459660d/ofl/cinzel/Cinzel%5Bwght%5D.ttf",
+      "fontSha256": "f4d83d34d1f6c741193e4acf4b3dff9531e5a67b6aa65228d00a7db72a4e0f34",
+      "variationAxes": {
+        "wght": 600
+      },
+      "viewBox": [
+        0,
+        0,
+        1000,
+        208.674028
+      ],
+      "baselineY": 203.78149,
+      "glyphCount": 6,
+      "sha256": "b37f1528aaf66963a4d9afb59db0ae161f0487763de5778bc04d84a795344fbc"
+    },
+    {
+      "file": "english-signature-asma.svg",
+      "language": "english",
+      "style": "signature",
+      "nameKey": "asma",
+      "spelling": "Asma",
+      "fontFamily": "allura",
+      "fontSource": "https://raw.githubusercontent.com/google/fonts/5e35378e6bda803962ee6fd257e444a7d459660d/ofl/allura/Allura-Regular.ttf",
+      "fontSha256": "9c142b2e515832c0dfc4ff8b8ea18f40314943bf937b72e2b23c4661bac14cc6",
+      "variationAxes": {},
+      "viewBox": [
+        0,
+        0,
+        1000,
+        305.56176
+      ],
+      "baselineY": 268.483359,
+      "glyphCount": 4,
+      "sha256": "f7325c8be5bdf8879fc8dfa93a57567a9c5e57b93413b6b3817a73400d3d8490"
+    },
+    {
+      "file": "english-signature-fatima.svg",
+      "language": "english",
+      "style": "signature",
+      "nameKey": "fatima",
+      "spelling": "Fatima",
+      "fontFamily": "allura",
+      "fontSource": "https://raw.githubusercontent.com/google/fonts/5e35378e6bda803962ee6fd257e444a7d459660d/ofl/allura/Allura-Regular.ttf",
+      "fontSha256": "9c142b2e515832c0dfc4ff8b8ea18f40314943bf937b72e2b23c4661bac14cc6",
+      "variationAxes": {},
+      "viewBox": [
+        0,
+        0,
+        1000,
+        240.568833
+      ],
+      "baselineY": 229.903219,
+      "glyphCount": 6,
+      "sha256": "f22a41fc725dcb331ae3807bab94d40a8223d8feef583d1f0c9daf65b7cac1af"
+    },
+    {
+      "file": "english-thuluth-asma.svg",
+      "language": "english",
+      "style": "thuluth",
+      "nameKey": "asma",
+      "spelling": "Asma",
+      "fontFamily": "italianno",
+      "fontSource": "https://raw.githubusercontent.com/google/fonts/5e35378e6bda803962ee6fd257e444a7d459660d/ofl/italianno/Italianno-Regular.ttf",
+      "fontSha256": "f6ae96dea0da46c73370eb0575848ab0eda190315bdfda3f5b252bba3dc9173c",
+      "variationAxes": {},
+      "viewBox": [
+        0,
+        0,
+        1000,
+        334.526059
+      ],
+      "baselineY": 320.633781,
+      "glyphCount": 4,
+      "sha256": "0931567826de11143e8ce235554f126871ebd9107b084f96ad69586d45460428"
+    },
+    {
+      "file": "english-thuluth-fatima.svg",
+      "language": "english",
+      "style": "thuluth",
+      "nameKey": "fatima",
+      "spelling": "Fatima",
+      "fontFamily": "italianno",
+      "fontSource": "https://raw.githubusercontent.com/google/fonts/5e35378e6bda803962ee6fd257e444a7d459660d/ofl/italianno/Italianno-Regular.ttf",
+      "fontSha256": "f6ae96dea0da46c73370eb0575848ab0eda190315bdfda3f5b252bba3dc9173c",
+      "variationAxes": {},
+      "viewBox": [
+        0,
+        0,
+        1000,
+        285.800534
+      ],
+      "baselineY": 267.298966,
+      "glyphCount": 6,
+      "sha256": "bdaf6b50771a38b2059a765c469798e28fd91ecb3e4123b508d03128d9cf0cfa"
+    },
+    {
+      "file": "arabic-classic-asma.svg",
+      "language": "arabic",
+      "style": "classic",
+      "nameKey": "asma",
+      "spelling": "أسماء",
+      "fontFamily": "amiri",
+      "fontSource": "https://raw.githubusercontent.com/google/fonts/5e35378e6bda803962ee6fd257e444a7d459660d/ofl/amiri/Amiri-Regular.ttf",
+      "fontSha256": "ab391c4147d054c48976e98322ad0eefe1427aa0e0502a12a4c75d80a70cfcd7",
+      "variationAxes": {},
+      "viewBox": [
+        0,
+        0,
+        1000,
+        686.821581
+      ],
+      "baselineY": 683.654197,
+      "glyphCount": 5,
+      "sha256": "fe89de40e395eca604447f5d0a471e2d67140735e473fb506aa744d873af566a"
+    },
+    {
+      "file": "arabic-classic-fatima.svg",
+      "language": "arabic",
+      "style": "classic",
+      "nameKey": "fatima",
+      "spelling": "فاطمة",
+      "fontFamily": "amiri",
+      "fontSource": "https://raw.githubusercontent.com/google/fonts/5e35378e6bda803962ee6fd257e444a7d459660d/ofl/amiri/Amiri-Regular.ttf",
+      "fontSha256": "ab391c4147d054c48976e98322ad0eefe1427aa0e0502a12a4c75d80a70cfcd7",
+      "variationAxes": {},
+      "viewBox": [
+        0,
+        0,
+        1000,
+        404.168378
+      ],
+      "baselineY": 392.808116,
+      "glyphCount": 5,
+      "sha256": "ac880348ed6abefe44a6e3baf3bf060ab8f147bd74aea3dab77b1740cb36dfaa"
+    },
+    {
+      "file": "arabic-minimal-asma.svg",
+      "language": "arabic",
+      "style": "minimal",
+      "nameKey": "asma",
+      "spelling": "أسماء",
+      "fontFamily": "notosansarabic",
+      "fontSource": "https://raw.githubusercontent.com/google/fonts/5e35378e6bda803962ee6fd257e444a7d459660d/ofl/notosansarabic/NotoSansArabic%5Bwdth%2Cwght%5D.ttf",
+      "fontSha256": "63111b5b2e074dd48cc67692e0a2726d86ee94c1c37fe8598257b7b4e87e869e",
+      "variationAxes": {
+        "wght": 600,
+        "wdth": 100.0
+      },
+      "viewBox": [
+        0,
+        0,
+        1000,
+        415.680903
+      ],
+      "baselineY": 392.288637,
+      "glyphCount": 6,
+      "sha256": "f7cd1672e9a65845d8a8688ffd1b75e375d0862bab76f96a7980778b3c9fdf7d"
+    },
+    {
+      "file": "arabic-minimal-fatima.svg",
+      "language": "arabic",
+      "style": "minimal",
+      "nameKey": "fatima",
+      "spelling": "فاطمة",
+      "fontFamily": "notosansarabic",
+      "fontSource": "https://raw.githubusercontent.com/google/fonts/5e35378e6bda803962ee6fd257e444a7d459660d/ofl/notosansarabic/NotoSansArabic%5Bwdth%2Cwght%5D.ttf",
+      "fontSha256": "63111b5b2e074dd48cc67692e0a2726d86ee94c1c37fe8598257b7b4e87e869e",
+      "variationAxes": {
+        "wght": 600,
+        "wdth": 100.0
+      },
+      "viewBox": [
+        0,
+        0,
+        1000,
+        315.457758
+      ],
+      "baselineY": 308.314778,
+      "glyphCount": 7,
+      "sha256": "33bc4603d5f20fa80ff02b820941e061ab2328c90bce2cb53a17c8e764b05d19"
+    },
+    {
+      "file": "arabic-diwani-asma.svg",
+      "language": "arabic",
+      "style": "diwani",
+      "nameKey": "asma",
+      "spelling": "أسماء",
+      "fontFamily": "arefruqaa",
+      "fontSource": "https://raw.githubusercontent.com/google/fonts/5e35378e6bda803962ee6fd257e444a7d459660d/ofl/arefruqaa/ArefRuqaa-Regular.ttf",
+      "fontSha256": "ceb786d83ba92f35e96efcd8623c2858d288e0c543c8761ba35b1020989464f9",
+      "variationAxes": {},
+      "viewBox": [
+        0,
+        0,
+        1000,
+        639.995319
+      ],
+      "baselineY": 639.995319,
+      "glyphCount": 6,
+      "sha256": "52ce5821796ef3a21a86301b1ac4f09a0b0d6acfca1493a14b5caa936601fc51"
+    },
+    {
+      "file": "arabic-diwani-fatima.svg",
+      "language": "arabic",
+      "style": "diwani",
+      "nameKey": "fatima",
+      "spelling": "فاطمة",
+      "fontFamily": "arefruqaa",
+      "fontSource": "https://raw.githubusercontent.com/google/fonts/5e35378e6bda803962ee6fd257e444a7d459660d/ofl/arefruqaa/ArefRuqaa-Regular.ttf",
+      "fontSha256": "ceb786d83ba92f35e96efcd8623c2858d288e0c543c8761ba35b1020989464f9",
+      "variationAxes": {},
+      "viewBox": [
+        0,
+        0,
+        1000,
+        644.745763
+      ],
+      "baselineY": 644.745763,
+      "glyphCount": 7,
+      "sha256": "6c1e3a28735bca92239dece3e31bc2a7f69884d5b6ed84b8deaddf3879225000"
+    },
+    {
+      "file": "arabic-kufi-asma.svg",
+      "language": "arabic",
+      "style": "kufi",
+      "nameKey": "asma",
+      "spelling": "أسماء",
+      "fontFamily": "reemkufi",
+      "fontSource": "https://raw.githubusercontent.com/google/fonts/5e35378e6bda803962ee6fd257e444a7d459660d/ofl/reemkufi/ReemKufi%5Bwght%5D.ttf",
+      "fontSha256": "33ead1986cd48c138c4d906c9e5a6341877268461f97623409a2014de1cd4aa4",
+      "variationAxes": {
+        "wght": 600
+      },
+      "viewBox": [
+        0,
+        0,
+        1000,
+        491.482241
+      ],
+      "baselineY": 489.031034,
+      "glyphCount": 6,
+      "sha256": "4d4457c0ba70d89075ee1e7b801ddb3863a09848873441ed31f4c8642b87dcee"
+    },
+    {
+      "file": "arabic-kufi-fatima.svg",
+      "language": "arabic",
+      "style": "kufi",
+      "nameKey": "fatima",
+      "spelling": "فاطمة",
+      "fontFamily": "reemkufi",
+      "fontSource": "https://raw.githubusercontent.com/google/fonts/5e35378e6bda803962ee6fd257e444a7d459660d/ofl/reemkufi/ReemKufi%5Bwght%5D.ttf",
+      "fontSha256": "33ead1986cd48c138c4d906c9e5a6341877268461f97623409a2014de1cd4aa4",
+      "variationAxes": {
+        "wght": 600
+      },
+      "viewBox": [
+        0,
+        0,
+        1000,
+        327.198364
+      ],
+      "baselineY": 327.198364,
+      "glyphCount": 7,
+      "sha256": "8d3542c237d2abf0373059da2e77ab0138fb76ea66ef691dfeba9273bf77d693"
+    },
+    {
+      "file": "arabic-signature-asma.svg",
+      "language": "arabic",
+      "style": "signature",
+      "nameKey": "asma",
+      "spelling": "أسماء",
+      "fontFamily": "lateef",
+      "fontSource": "https://raw.githubusercontent.com/google/fonts/5e35378e6bda803962ee6fd257e444a7d459660d/ofl/lateef/Lateef-Regular.ttf",
+      "fontSha256": "fcbd9e0227a4d7238880defa5fd74c012d69351150709e559a8577446145c2fc",
+      "variationAxes": {},
+      "viewBox": [
+        0,
+        0,
+        1000,
+        543.865781
+      ],
+      "baselineY": 527.088431,
+      "glyphCount": 6,
+      "sha256": "ff0b79386ca531935223675e42ca24b8af6935a0d7c0338274e3f1686fd92657"
+    },
+    {
+      "file": "arabic-signature-fatima.svg",
+      "language": "arabic",
+      "style": "signature",
+      "nameKey": "fatima",
+      "spelling": "فاطمة",
+      "fontFamily": "lateef",
+      "fontSource": "https://raw.githubusercontent.com/google/fonts/5e35378e6bda803962ee6fd257e444a7d459660d/ofl/lateef/Lateef-Regular.ttf",
+      "fontSha256": "fcbd9e0227a4d7238880defa5fd74c012d69351150709e559a8577446145c2fc",
+      "variationAxes": {},
+      "viewBox": [
+        0,
+        0,
+        1000,
+        412.554549
+      ],
+      "baselineY": 396.441759,
+      "glyphCount": 5,
+      "sha256": "f6b4033042264614e3d41b5717400845f3d850b41f5946a70fe160681c190268"
+    },
+    {
+      "file": "arabic-thuluth-asma.svg",
+      "language": "arabic",
+      "style": "thuluth",
+      "nameKey": "asma",
+      "spelling": "أسماء",
+      "fontFamily": "scheherazadenew",
+      "fontSource": "https://raw.githubusercontent.com/google/fonts/5e35378e6bda803962ee6fd257e444a7d459660d/ofl/scheherazadenew/ScheherazadeNew-Regular.ttf",
+      "fontSha256": "794bac8dc9e83d1d620bc471ea694f5f31d0965ce8006490a79dfc51a2d283b3",
+      "variationAxes": {},
+      "viewBox": [
+        0,
+        0,
+        1000,
+        548.198637
+      ],
+      "baselineY": 496.348588,
+      "glyphCount": 6,
+      "sha256": "ea6e4012b11436949f1fe5496ab46edbd6efcacf92cd1a7a0f06920013c3975c"
+    },
+    {
+      "file": "arabic-thuluth-fatima.svg",
+      "language": "arabic",
+      "style": "thuluth",
+      "nameKey": "fatima",
+      "spelling": "فاطمة",
+      "fontFamily": "scheherazadenew",
+      "fontSource": "https://raw.githubusercontent.com/google/fonts/5e35378e6bda803962ee6fd257e444a7d459660d/ofl/scheherazadenew/ScheherazadeNew-Regular.ttf",
+      "fontSha256": "794bac8dc9e83d1d620bc471ea694f5f31d0965ce8006490a79dfc51a2d283b3",
+      "variationAxes": {},
+      "viewBox": [
+        0,
+        0,
+        1000,
+        379.854369
+      ],
+      "baselineY": 372.815534,
+      "glyphCount": 5,
+      "sha256": "711168bb99420f4436e7c9b3b637c9a4f5b6f8efaba7e65e420e9ea8874ece99"
+    }
+  ]
+}

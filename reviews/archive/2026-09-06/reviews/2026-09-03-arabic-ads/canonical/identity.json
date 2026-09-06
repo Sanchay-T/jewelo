@@ -1,0 +1,13 @@
+{
+  "approvedText": "أسماء",
+  "codepoints": [
+    "0x623",
+    "0x633",
+    "0x645",
+    "0x627",
+    "0x621"
+  ],
+  "font": "GeezaPro.ttc (system; repo licensed list uses Amiri/Scheherazade/Noto - substitution noted)",
+  "font_sha256": "5b4309f8d596abee520c0826885a39483a16fb244489d2c313322575df4b04a2",
+  "engine": "local-canonical-v1"
+}

@@ -1,0 +1,41 @@
+[
+  {
+    "id": "akr-white-none-On skin-v9",
+    "file": "arabic-kufi-rails-white-none-worn.png",
+    "view": "On skin",
+    "patch": {
+      "script": "Arabic",
+      "construction": "Diamond rails",
+      "lettering": "Kufi",
+      "chain": "Rolo",
+      "metal": "White gold",
+      "coverage": "No stones"
+    }
+  },
+  {
+    "id": "akr-white-none-Close-up-v9",
+    "file": "arabic-kufi-rails-white-none-close.png",
+    "view": "Close-up",
+    "patch": {
+      "script": "Arabic",
+      "construction": "Diamond rails",
+      "lettering": "Kufi",
+      "chain": "Rolo",
+      "metal": "White gold",
+      "coverage": "No stones"
+    }
+  },
+  {
+    "id": "akr-white-none-Dark-v9",
+    "file": "arabic-kufi-rails-white-none-dark.png",
+    "view": "Dark",
+    "patch": {
+      "script": "Arabic",
+      "construction": "Diamond rails",
+      "lettering": "Kufi",
+      "chain": "Rolo",
+      "metal": "White gold",
+      "coverage": "No stones"
+    }
+  }
+]

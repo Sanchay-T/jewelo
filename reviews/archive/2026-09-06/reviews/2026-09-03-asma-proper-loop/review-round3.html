@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Asma Round-3 Fixed Physics - 6 styles</title>
+<style>
+body{font-family:-apple-system,system-ui,sans-serif;margin:0;background:#0e2a16;color:#eee}
+header{padding:12px 16px;border-bottom:1px solid #2c5c38}
+#stage{display:flex;gap:16px;padding:16px;max-width:1400px;margin:0 auto}
+#viewer{flex:3;background:#000;border-radius:12px;min-height:60vh;display:flex;align-items:center;justify-content:center;overflow:hidden}
+#viewer img{max-width:100%;max-height:75vh;object-fit:contain;background:#fff}
+#side{flex:1;min-width:280px;background:#122e1a;border-radius:12px;padding:16px}
+.badge{display:inline-block;padding:4px 10px;border-radius:20px;font-size:12px;background:#1d5c2e}
+.nav{display:flex;gap:8px;justify-content:center;padding:12px}
+button{background:#1d5c2e;color:#eee;border:1px solid #3fa34d;border-radius:8px;padding:8px 14px;cursor:pointer}
+#dots{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;padding:8px}
+#dots span{width:10px;height:10px;border-radius:50%;background:#3a6b46;cursor:pointer;display:inline-block}
+#dots span.on{background:#fff}
+a{color:#9cf}
+</style>
+</head>
+<body>
+<header><strong>ROUND-3 FIXED PHYSICS - Asma, chain + bail attached, 6 styles</strong> <span id="count"></span></header>
+<div id="stage">
+<div id="viewer"><img id="img" alt="shot"></div>
+<div id="side">
+<div id="meta"></div>
+<div class="nav"><button id="prev">Prev</button><button id="next">Next</button></div>
+<div id="dots"></div>
+<div><a id="orig" target="_blank">Open full-res original</a></div>
+</div>
+</div>
+<script>
+const DATA=[
+{id:"4d0cdb8a-d24a-4bb9-93b9-d29e2087029e",look:"1 Floating Rails - chain threaded",file:"round3_rails_4d0cdb8a.png",norm:"round3_rails_4d0cdb8a.jpg",note:"Linen + cup. Chain runs through rail jump rings both sides, no floating. Script connected."},
+{id:"34a7caa7-1d47-4f6b-ac61-0de5d21cf8e6",look:"2 Origami - bail soldered",file:"round3_origami_34a7caa7.png",norm:"round3_origami_34a7caa7.jpg",note:"Oak desk + notebook. Bail soldered on top, chain threaded and trailing out of frame. Diamond cluster intact."},
+{id:"988f29e0-cc13-457a-aef4-4483a6193a08",look:"3 Framed Minimal - held",file:"round3_framed_988f29e0.png",norm:"round3_framed_988f29e0.jpg",note:"Fingers holding frame. Chain attached at top corners with jump rings. Corner diamonds sharp."},
+{id:"8e281f8b-50dc-4647-bfe7-5a343206798c",look:"4 Constellation - night",file:"round3_constellation_8e281f8b.png",norm:"round3_constellation_8e281f8b.jpg",note:"Navy fabric + phone edge. Bail + chain attached, orbital lines with blue/pink sapphires. Best chain fix."},
+{id:"960eeb70-2a38-427a-9d2b-29791abfaa77",look:"5 Ribbon Worn - on neck",file:"round3_ribbon_960eeb70.png",norm:"round3_ribbon_960eeb70.jpg",note:"Collarbone white tee. Chain unbroken pendant to out of frame both sides. Blue/pink accents correct."},
+{id:"1ce26725-fa28-484e-b5c1-e41af9b738a8",look:"6 Art Deco - gift box",file:"round3_artdeco_1ce26725.png",norm:"round3_artdeco_1ce26725.jpg",note:"Black velvet tray in box. Chain attached via jump rings, coiled beside. Baguettes + sunburst sapphire."}
+];
+let i=0;
+const img=document.getElementById('img');
+function show(){
+const d=DATA[i];
+img.src='normalized/'+d.norm;
+document.getElementById('meta').innerHTML='<span class="badge">checked</span><h3>'+d.look+'</h3><p>'+d.note+'</p><p><small>'+d.id+'</small></p>';
+document.getElementById('orig').href='originals/'+d.file;
+document.getElementById('count').textContent=(i+1)+' / '+DATA.length;
+const dots=document.getElementById('dots');dots.innerHTML='';
+DATA.forEach((x,idx)=>{const s=document.createElement('span');if(idx===i)s.classList.add('on');s.onclick=()=>{i=idx;show()};dots.appendChild(s)});
+}
+document.getElementById('prev').onclick=()=>{i=(i-1+DATA.length)%DATA.length;show()};
+document.getElementById('next').onclick=()=>{i=(i+1)%DATA.length;show()};
+document.addEventListener('keydown',e=>{if(e.key==='ArrowRight')document.getElementById('next').click();if(e.key==='ArrowLeft')document.getElementById('prev').click()});
+show();
+</script>
+</body>
+</html>

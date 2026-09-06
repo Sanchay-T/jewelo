@@ -1,0 +1,542 @@
+{
+  "version": 5,
+  "tool": "built-in imagegen",
+  "cost": {
+    "amount": null,
+    "reason": "Not reported"
+  },
+  "assets": [
+    {
+      "id": "arabic-origami-v5",
+      "file": "arabic-origami-studio.png",
+      "view": "Studio",
+      "patch": {
+        "script": "Arabic",
+        "construction": "Origami ribbon"
+      },
+      "prompt": "Edit reference into one CALEUMS Studio product photograph: single Arabic name أسماء in folded origami ribbon gold, clearly faceted folded planar letter strokes; preserve name legibility and connected gold. Exact sample Arabic spelling, upright letters, solid physical joints no floating unattached marks, yellow18Kgold,32mm conceptual width,cable chain attached both ends,no stones. Preserve original warm silk/limestone background and natural lighting with realistic metal texture, no CGI plastic, portrait4:5, wholependant at60%height, no captions/collage.",
+      "parent": "/atelier/v1/asma-arabic.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Visible spelling, attachment and option distinction; illustrative geometry and scale."
+      },
+      "cost": null
+    },
+    {
+      "id": "arabic-rails-v5",
+      "file": "arabic-rails-studio.png",
+      "view": "Studio",
+      "patch": {
+        "script": "Arabic",
+        "construction": "Diamond rails"
+      },
+      "prompt": "Edit reference into one CALEUMS Studio product photograph: single Arabic name أسماء held securely between two slender parallel polished plain-gold horizontal rails, floating diamond rails construction silhouette but no stones for this no-stones variant. Exact sample Arabic spelling, upright letters, solid physical joints no floating unattached marks, yellow18Kgold,32mm conceptual width,cable chain attached both ends,no stones. Preserve original warm silk/limestone background and natural lighting with realistic metal texture, no CGI plastic, portrait4:5, wholependant at60%height, no captions/collage.",
+      "parent": "/atelier/v1/asma-arabic.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Visible spelling, attachment and option distinction; illustrative geometry and scale."
+      },
+      "cost": null
+    },
+    {
+      "id": "arabic-side-v5",
+      "file": "arabic-side-studio.png",
+      "view": "Studio",
+      "patch": {
+        "script": "Arabic",
+        "twoNames": true,
+        "layout": "Side by side"
+      },
+      "prompt": "Edit reference into one CALEUMS Studio product photograph: two Arabic names أسماء and فاطمة side by side along one horizontal line, each readable RTL, discrete continuous gold bridges between letters and names, no heart. Exact sample Arabic spelling, upright letters, solid physical joints no floating unattached marks, yellow18Kgold,32mm conceptual width,cable chain attached both ends,no stones. Preserve original warm silk/limestone background and natural lighting with realistic metal texture, no CGI plastic, portrait4:5, wholependant at60%height, no captions/collage.",
+      "parent": "/atelier/v1/asma-arabic.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Visible spelling, attachment and option distinction; illustrative geometry and scale."
+      },
+      "cost": null
+    },
+    {
+      "id": "arabic-framed-v5",
+      "file": "arabic-framed-studio.png",
+      "view": "Studio",
+      "patch": {
+        "script": "Arabic",
+        "construction": "Framed minimal"
+      },
+      "prompt": "Edit Arabic Asma into a slim rounded rectangular connected yellow gold frame; retain silk/limestone setting, 32mm, Cable, no stones.",
+      "parent": "/atelier/v1/asma-arabic.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Visible spelling, connected frame bridges, chain attachment."
+      },
+      "cost": null
+    },
+    {
+      "id": "arabic-framed-v5-On skin",
+      "file": "arabic-framed-worn.png",
+      "view": "On skin",
+      "patch": {
+        "script": "Arabic",
+        "construction": "Framed minimal"
+      },
+      "prompt": "Edit exact reference necklace for CALEUMS On skin product view: naturally worn on adult woman's collarbone, cropped below chin, ivory linen blouse, realistic skin texture,32mm width scale. Preserve exact Arabic أسماء spelling and exact single-name framed minimal rectangular yellow18Kgold pendant geometry, Classic Arabic lettering, all support bridges and securely attached cable chain, no stones. Real commercial photography, never plastic CGI. Portrait4:5, pendant centered60%height, no labels, no collage, no added jewelry.",
+      "parent": "/atelier/v5/arabic-framed-studio.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Visible Arabic spelling, frame bridges, chain, correct view. Not calibrated dimensions."
+      },
+      "cost": null
+    },
+    {
+      "id": "arabic-framed-v5-Close-up",
+      "file": "arabic-framed-close.png",
+      "view": "Close-up",
+      "patch": {
+        "script": "Arabic",
+        "construction": "Framed minimal"
+      },
+      "prompt": "Edit exact reference necklace for CALEUMS Close-up product view: macro detail on warm ivory silk, close enough to appreciate connected Arabic letters and frame, light background. Preserve exact Arabic أسماء spelling and exact single-name framed minimal rectangular yellow18Kgold pendant geometry, Classic Arabic lettering, all support bridges and securely attached cable chain, no stones. Real commercial photography, never plastic CGI. Portrait4:5, pendant centered60%height, no labels, no collage, no added jewelry.",
+      "parent": "/atelier/v5/arabic-framed-studio.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Visible Arabic spelling, frame bridges, chain, correct view. Not calibrated dimensions."
+      },
+      "cost": null
+    },
+    {
+      "id": "arabic-framed-v5-Dark",
+      "file": "arabic-framed-dark.png",
+      "view": "Dark",
+      "patch": {
+        "script": "Arabic",
+        "construction": "Framed minimal"
+      },
+      "prompt": "Edit exact reference necklace for CALEUMS Dark product view: on deep black textured silk, restrained dramatic warm side-light, gold sharply visible. Preserve exact Arabic أسماء spelling and exact single-name framed minimal rectangular yellow18Kgold pendant geometry, Classic Arabic lettering, all support bridges and securely attached cable chain, no stones. Real commercial photography, never plastic CGI. Portrait4:5, pendant centered60%height, no labels, no collage, no added jewelry.",
+      "parent": "/atelier/v5/arabic-framed-studio.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Visible Arabic spelling, frame bridges, chain, correct view. Not calibrated dimensions."
+      },
+      "cost": null
+    },
+    {
+      "id": "arabic-origami-v5-On skin",
+      "file": "arabic-origami-worn.png",
+      "view": "On skin",
+      "patch": {
+        "script": "Arabic",
+        "construction": "Origami ribbon"
+      },
+      "prompt": "Edit exact reference into On skin photograph on adult woman's collarbone, ivory blouse, natural realistic skin, necklace approximately32mm wide. Same Arabic أسماء, same faceted origami ribbon single-name yellow gold shape and connected letters, no stones, cable chain attached each end. Preserve every construction detail, spelling and geometry. Real fine-jewelry photography soft organic reflections no CGIplastic. Portrait4:5 centered at60%height, no addedlabels, no collage.",
+      "parent": "/atelier/v5/arabic-origami-studio.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Visible spelling, connected letters, same folded form and correct view."
+      },
+      "cost": null
+    },
+    {
+      "id": "arabic-origami-v5-Close-up",
+      "file": "arabic-origami-close.png",
+      "view": "Close-up",
+      "patch": {
+        "script": "Arabic",
+        "construction": "Origami ribbon"
+      },
+      "prompt": "Edit exact reference into Close-up photograph macro on warm ivory silk, bright light background. Same Arabic أسماء, same faceted origami ribbon single-name yellow gold shape and connected letters, no stones, cable chain attached each end. Preserve every construction detail, spelling and geometry. Real fine-jewelry photography soft organic reflections no CGIplastic. Portrait4:5 centered at60%height, no addedlabels, no collage.",
+      "parent": "/atelier/v5/arabic-origami-studio.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Visible spelling, connected letters, same folded form and correct view."
+      },
+      "cost": null
+    },
+    {
+      "id": "arabic-origami-v5-Dark",
+      "file": "arabic-origami-dark.png",
+      "view": "Dark",
+      "patch": {
+        "script": "Arabic",
+        "construction": "Origami ribbon"
+      },
+      "prompt": "Edit exact reference into Dark photograph on black textured silk, dramatic warm sidelighting, gold highly visible. Same Arabic أسماء, same faceted origami ribbon single-name yellow gold shape and connected letters, no stones, cable chain attached each end. Preserve every construction detail, spelling and geometry. Real fine-jewelry photography soft organic reflections no CGIplastic. Portrait4:5 centered at60%height, no addedlabels, no collage.",
+      "parent": "/atelier/v5/arabic-origami-studio.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Visible spelling, connected letters, same folded form and correct view."
+      },
+      "cost": null
+    },
+    {
+      "id": "arabic-rails-v5-On skin",
+      "file": "arabic-rails-worn.png",
+      "view": "On skin",
+      "patch": {
+        "script": "Arabic",
+        "construction": "Diamond rails"
+      },
+      "prompt": "Edit exact reference into On skin CALEUMS product photograph on adult woman's collarbone, ivory blouse, realistic skintexture,32mm illustrative pendant scale. Preserve EXACT jewelry geometry and Arabic spelling أسماء single name connected securely between two parallel gold rails. Yellow18Kgold no stones, Cable chain securely attached. Do not change arrangement or add symbols. Photoreal polished metal with restrained natural reflections. Portrait4:5 pendantcenter60%height; no UI,label,collage.",
+      "parent": "/atelier/v5/arabic-rails-studio.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Visible spelling, attached joints, correct arrangement and camera scene."
+      },
+      "cost": null
+    },
+    {
+      "id": "arabic-rails-v5-Close-up",
+      "file": "arabic-rails-close.png",
+      "view": "Close-up",
+      "patch": {
+        "script": "Arabic",
+        "construction": "Diamond rails"
+      },
+      "prompt": "Edit exact reference into Close-up CALEUMS product photograph macro detail on bright ivorysilk, light background. Preserve EXACT jewelry geometry and Arabic spelling أسماء single name connected securely between two parallel gold rails. Yellow18Kgold no stones, Cable chain securely attached. Do not change arrangement or add symbols. Photoreal polished metal with restrained natural reflections. Portrait4:5 pendantcenter60%height; no UI,label,collage.",
+      "parent": "/atelier/v5/arabic-rails-studio.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Visible spelling, attached joints, correct arrangement and camera scene."
+      },
+      "cost": null
+    },
+    {
+      "id": "arabic-rails-v5-Dark",
+      "file": "arabic-rails-dark.png",
+      "view": "Dark",
+      "patch": {
+        "script": "Arabic",
+        "construction": "Diamond rails"
+      },
+      "prompt": "Edit exact reference into Dark CALEUMS product photograph on black textured silk, warm dramatic side light, pendant clearly visible. Preserve EXACT jewelry geometry and Arabic spelling أسماء single name connected securely between two parallel gold rails. Yellow18Kgold no stones, Cable chain securely attached. Do not change arrangement or add symbols. Photoreal polished metal with restrained natural reflections. Portrait4:5 pendantcenter60%height; no UI,label,collage.",
+      "parent": "/atelier/v5/arabic-rails-studio.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Visible spelling, attached joints, correct arrangement and camera scene."
+      },
+      "cost": null
+    },
+    {
+      "id": "arabic-side-v5-On skin",
+      "file": "arabic-side-worn.png",
+      "view": "On skin",
+      "patch": {
+        "script": "Arabic",
+        "twoNames": true,
+        "layout": "Side by side"
+      },
+      "prompt": "Edit exact reference into On skin CALEUMS product photograph on adult woman's collarbone, ivory blouse, realistic skintexture,32mm illustrative pendant scale. Preserve EXACT jewelry geometry and Arabic spelling أسماء and فاطمة side by side joined by plain gold bridge. Yellow18Kgold no stones, Cable chain securely attached. Do not change arrangement or add symbols. Photoreal polished metal with restrained natural reflections. Portrait4:5 pendantcenter60%height; no UI,label,collage.",
+      "parent": "/atelier/v5/arabic-side-studio.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Visible spelling, attached joints, correct arrangement and camera scene."
+      },
+      "cost": null
+    },
+    {
+      "id": "arabic-side-v5-Close-up",
+      "file": "arabic-side-close.png",
+      "view": "Close-up",
+      "patch": {
+        "script": "Arabic",
+        "twoNames": true,
+        "layout": "Side by side"
+      },
+      "prompt": "Edit exact reference into Close-up CALEUMS product photograph macro detail on bright ivorysilk, light background. Preserve EXACT jewelry geometry and Arabic spelling أسماء and فاطمة side by side joined by plain gold bridge. Yellow18Kgold no stones, Cable chain securely attached. Do not change arrangement or add symbols. Photoreal polished metal with restrained natural reflections. Portrait4:5 pendantcenter60%height; no UI,label,collage.",
+      "parent": "/atelier/v5/arabic-side-studio.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Visible spelling, attached joints, correct arrangement and camera scene."
+      },
+      "cost": null
+    },
+    {
+      "id": "arabic-side-v5-Dark",
+      "file": "arabic-side-dark.png",
+      "view": "Dark",
+      "patch": {
+        "script": "Arabic",
+        "twoNames": true,
+        "layout": "Side by side"
+      },
+      "prompt": "Edit exact reference into Dark CALEUMS product photograph on black textured silk, warm dramatic side light, pendant clearly visible. Preserve EXACT jewelry geometry and Arabic spelling أسماء and فاطمة side by side joined by plain gold bridge. Yellow18Kgold no stones, Cable chain securely attached. Do not change arrangement or add symbols. Photoreal polished metal with restrained natural reflections. Portrait4:5 pendantcenter60%height; no UI,label,collage.",
+      "parent": "/atelier/v5/arabic-side-studio.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Visible spelling, attached joints, correct arrangement and camera scene."
+      },
+      "cost": null
+    },
+    {
+      "id": "arabic-heart-v5",
+      "file": "arabic-heart-studio.png",
+      "view": "Studio",
+      "patch": {
+        "script": "Arabic",
+        "twoNames": true,
+        "layout": "Connected heart"
+      },
+      "prompt": "Create one CALEUMS photoreal product studio photo editing reference. two Arabic names أسماء and فاطمة on a single horizontal line connected by a small open gold HEART in the middle. Exact correct Arabic spelling, classical Arabic strokes, connected durable gold joints between normally separated glyphs, no floating dots, secure cable chain bothends. Single integrated18Kyellowgoldpendant, no stones,32mm illustrative size. Preserve ivorysilk/limestone backdrop, realistic softwindowlight and realmetaltexture no plastic/CGI. Portrait4:5 entirepiece centered60%height, no textlabels/collage.",
+      "parent": "/atelier/v5/arabic-side-studio.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Visible exact names, physical joins, distinct arrangement, gold and cable chain."
+      },
+      "cost": null
+    },
+    {
+      "id": "arabic-stacked-v5",
+      "file": "arabic-stacked-studio.png",
+      "view": "Studio",
+      "patch": {
+        "script": "Arabic",
+        "twoNames": true,
+        "layout": "Stacked"
+      },
+      "prompt": "Create one CALEUMS photoreal product studio photo editing reference. two Arabic names أسماء ABOVE فاطمة, in TWO distinct stacked readable horizontal rows connected by small discreet gold bridges. Exact correct Arabic spelling, classical Arabic strokes, connected durable gold joints between normally separated glyphs, no floating dots, secure cable chain bothends. Single integrated18Kyellowgoldpendant, no stones,32mm illustrative size. Preserve ivorysilk/limestone backdrop, realistic softwindowlight and realmetaltexture no plastic/CGI. Portrait4:5 entirepiece centered60%height, no textlabels/collage.",
+      "parent": "/atelier/v5/arabic-side-studio.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Visible exact names, physical joins, distinct arrangement, gold and cable chain."
+      },
+      "cost": null
+    },
+    {
+      "id": "arabic-infinity-v5",
+      "file": "arabic-infinity-studio.png",
+      "view": "Studio",
+      "patch": {
+        "script": "Arabic",
+        "twoNames": true,
+        "layout": "Infinity"
+      },
+      "prompt": "Create one CALEUMS photoreal product studio photo editing reference. two Arabic names أسماء and فاطمة connected around a central open INFINITY symbol, both names readable and distinct. Exact correct Arabic spelling, classical Arabic strokes, connected durable gold joints between normally separated glyphs, no floating dots, secure cable chain bothends. Single integrated18Kyellowgoldpendant, no stones,32mm illustrative size. Preserve ivorysilk/limestone backdrop, realistic softwindowlight and realmetaltexture no plastic/CGI. Portrait4:5 entirepiece centered60%height, no textlabels/collage.",
+      "parent": "/atelier/v5/arabic-side-studio.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Visible exact names, physical joins, distinct arrangement, gold and cable chain."
+      },
+      "cost": null
+    },
+    {
+      "id": "arabic-interlocked-v5",
+      "file": "arabic-interlocked-studio.png",
+      "view": "Studio",
+      "patch": {
+        "script": "Arabic",
+        "twoNames": true,
+        "layout": "Interlocked"
+      },
+      "prompt": "Create one CALEUMS photoreal product studio photo editing reference. two Arabic names أسماء and فاطمة on two slightly offset closely interlocking rows, linked by two small INTERLOCKED gold loops, all letters upright and not overlapping illegibly. Exact correct Arabic spelling, classical Arabic strokes, connected durable gold joints between normally separated glyphs, no floating dots, secure cable chain bothends. Single integrated18Kyellowgoldpendant, no stones,32mm illustrative size. Preserve ivorysilk/limestone backdrop, realistic softwindowlight and realmetaltexture no plastic/CGI. Portrait4:5 entirepiece centered60%height, no textlabels/collage.",
+      "parent": "/atelier/v5/arabic-side-studio.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Visible exact names, physical joins, distinct arrangement, gold and cable chain."
+      },
+      "cost": null
+    },
+    {
+      "id": "arabic-heart-v5-On skin",
+      "file": "arabic-heart-worn.png",
+      "view": "On skin",
+      "patch": {
+        "script": "Arabic",
+        "twoNames": true,
+        "layout": "Connected heart"
+      },
+      "prompt": "Edit EXACT reference necklace into On skin CALEUMS jewelry photography on adult woman's collarbone, ivory linenblouse, natural real skintexture, pendant32mm illustrative scale. Preserve the exact two names أسماء and فاطمة spelling, identical heart layout, all letterjoints and connector geometry, yellow18Kgold, nostones,cable chain attached securely. No extra diacritics, no floatingdots, no missing name or loops. Photoreal softlypolishedmetal organic reflections, no CGIplastic. Portrait4:5, wholependantcenter60%height, no labels/UI/collage.",
+      "parent": "/atelier/v5/arabic-heart-studio.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Visible names, connected letters, distinct arrangement and camera scene."
+      },
+      "cost": null
+    },
+    {
+      "id": "arabic-heart-v5-Close-up",
+      "file": "arabic-heart-close.png",
+      "view": "Close-up",
+      "patch": {
+        "script": "Arabic",
+        "twoNames": true,
+        "layout": "Connected heart"
+      },
+      "prompt": "Edit EXACT reference necklace into Close-up CALEUMS jewelry photography macro detailed closeup on ivory silk LIGHT background. Preserve the exact two names أسماء and فاطمة spelling, identical heart layout, all letterjoints and connector geometry, yellow18Kgold, nostones,cable chain attached securely. No extra diacritics, no floatingdots, no missing name or loops. Photoreal softlypolishedmetal organic reflections, no CGIplastic. Portrait4:5, wholependantcenter60%height, no labels/UI/collage.",
+      "parent": "/atelier/v5/arabic-heart-studio.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Visible names, connected letters, distinct arrangement and camera scene."
+      },
+      "cost": null
+    },
+    {
+      "id": "arabic-heart-v5-Dark",
+      "file": "arabic-heart-dark.png",
+      "view": "Dark",
+      "patch": {
+        "script": "Arabic",
+        "twoNames": true,
+        "layout": "Connected heart"
+      },
+      "prompt": "Edit EXACT reference necklace into Dark CALEUMS jewelry photography on deep BLACK textured silk warm dramaticlighting, gold clearly visible. Preserve the exact two names أسماء and فاطمة spelling, identical heart layout, all letterjoints and connector geometry, yellow18Kgold, nostones,cable chain attached securely. No extra diacritics, no floatingdots, no missing name or loops. Photoreal softlypolishedmetal organic reflections, no CGIplastic. Portrait4:5, wholependantcenter60%height, no labels/UI/collage.",
+      "parent": "/atelier/v5/arabic-heart-studio.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Visible names, connected letters, distinct arrangement and camera scene."
+      },
+      "cost": null
+    },
+    {
+      "id": "arabic-stacked-v5-On skin",
+      "file": "arabic-stacked-worn.png",
+      "view": "On skin",
+      "patch": {
+        "script": "Arabic",
+        "twoNames": true,
+        "layout": "Stacked"
+      },
+      "prompt": "Edit EXACT reference necklace into On skin CALEUMS jewelry photography on adult woman's collarbone, ivory linenblouse, natural real skintexture, pendant32mm illustrative scale. Preserve the exact two names أسماء and فاطمة spelling, identical stacked layout, all letterjoints and connector geometry, yellow18Kgold, nostones,cable chain attached securely. No extra diacritics, no floatingdots, no missing name or loops. Photoreal softlypolishedmetal organic reflections, no CGIplastic. Portrait4:5, wholependantcenter60%height, no labels/UI/collage.",
+      "parent": "/atelier/v5/arabic-stacked-studio.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Visible names, connected letters, distinct arrangement and camera scene."
+      },
+      "cost": null
+    },
+    {
+      "id": "arabic-stacked-v5-Close-up",
+      "file": "arabic-stacked-close.png",
+      "view": "Close-up",
+      "patch": {
+        "script": "Arabic",
+        "twoNames": true,
+        "layout": "Stacked"
+      },
+      "prompt": "Edit EXACT reference necklace into Close-up CALEUMS jewelry photography macro detailed closeup on ivory silk LIGHT background. Preserve the exact two names أسماء and فاطمة spelling, identical stacked layout, all letterjoints and connector geometry, yellow18Kgold, nostones,cable chain attached securely. No extra diacritics, no floatingdots, no missing name or loops. Photoreal softlypolishedmetal organic reflections, no CGIplastic. Portrait4:5, wholependantcenter60%height, no labels/UI/collage.",
+      "parent": "/atelier/v5/arabic-stacked-studio.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Visible names, connected letters, distinct arrangement and camera scene."
+      },
+      "cost": null
+    },
+    {
+      "id": "arabic-stacked-v5-Dark",
+      "file": "arabic-stacked-dark.png",
+      "view": "Dark",
+      "patch": {
+        "script": "Arabic",
+        "twoNames": true,
+        "layout": "Stacked"
+      },
+      "prompt": "Edit EXACT reference necklace into Dark CALEUMS jewelry photography on deep BLACK textured silk warm dramaticlighting, gold clearly visible. Preserve the exact two names أسماء and فاطمة spelling, identical stacked layout, all letterjoints and connector geometry, yellow18Kgold, nostones,cable chain attached securely. No extra diacritics, no floatingdots, no missing name or loops. Photoreal softlypolishedmetal organic reflections, no CGIplastic. Portrait4:5, wholependantcenter60%height, no labels/UI/collage.",
+      "parent": "/atelier/v5/arabic-stacked-studio.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Visible names, connected letters, distinct arrangement and camera scene."
+      },
+      "cost": null
+    },
+    {
+      "id": "arabic-infinity-v5-On skin",
+      "file": "arabic-infinity-worn.png",
+      "view": "On skin",
+      "patch": {
+        "script": "Arabic",
+        "twoNames": true,
+        "layout": "Infinity"
+      },
+      "prompt": "Edit EXACT reference necklace into On skin CALEUMS jewelry photography on adult woman's collarbone, ivory linenblouse, natural real skintexture, pendant32mm illustrative scale. Preserve the exact two names أسماء and فاطمة spelling, identical infinity layout, all letterjoints and connector geometry, yellow18Kgold, nostones,cable chain attached securely. No extra diacritics, no floatingdots, no missing name or loops. Photoreal softlypolishedmetal organic reflections, no CGIplastic. Portrait4:5, wholependantcenter60%height, no labels/UI/collage.",
+      "parent": "/atelier/v5/arabic-infinity-studio.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Visible names, connected letters, distinct arrangement and camera scene."
+      },
+      "cost": null
+    },
+    {
+      "id": "arabic-infinity-v5-Close-up",
+      "file": "arabic-infinity-close.png",
+      "view": "Close-up",
+      "patch": {
+        "script": "Arabic",
+        "twoNames": true,
+        "layout": "Infinity"
+      },
+      "prompt": "Edit EXACT reference necklace into Close-up CALEUMS jewelry photography macro detailed closeup on ivory silk LIGHT background. Preserve the exact two names أسماء and فاطمة spelling, identical infinity layout, all letterjoints and connector geometry, yellow18Kgold, nostones,cable chain attached securely. No extra diacritics, no floatingdots, no missing name or loops. Photoreal softlypolishedmetal organic reflections, no CGIplastic. Portrait4:5, wholependantcenter60%height, no labels/UI/collage.",
+      "parent": "/atelier/v5/arabic-infinity-studio.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Visible names, connected letters, distinct arrangement and camera scene."
+      },
+      "cost": null
+    },
+    {
+      "id": "arabic-infinity-v5-Dark",
+      "file": "arabic-infinity-dark.png",
+      "view": "Dark",
+      "patch": {
+        "script": "Arabic",
+        "twoNames": true,
+        "layout": "Infinity"
+      },
+      "prompt": "Edit EXACT reference necklace into Dark CALEUMS jewelry photography on deep BLACK textured silk warm dramaticlighting, gold clearly visible. Preserve the exact two names أسماء and فاطمة spelling, identical infinity layout, all letterjoints and connector geometry, yellow18Kgold, nostones,cable chain attached securely. No extra diacritics, no floatingdots, no missing name or loops. Photoreal softlypolishedmetal organic reflections, no CGIplastic. Portrait4:5, wholependantcenter60%height, no labels/UI/collage.",
+      "parent": "/atelier/v5/arabic-infinity-studio.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Visible names, connected letters, distinct arrangement and camera scene."
+      },
+      "cost": null
+    },
+    {
+      "id": "arabic-interlocked-v5-On skin",
+      "file": "arabic-interlocked-worn.png",
+      "view": "On skin",
+      "patch": {
+        "script": "Arabic",
+        "twoNames": true,
+        "layout": "Interlocked"
+      },
+      "prompt": "Edit EXACT reference necklace into On skin CALEUMS jewelry photography on adult woman's collarbone, ivory linenblouse, natural real skintexture, pendant32mm illustrative scale. Preserve the exact two names أسماء and فاطمة spelling, identical interlocked layout, all letterjoints and connector geometry, yellow18Kgold, nostones,cable chain attached securely. No extra diacritics, no floatingdots, no missing name or loops. Photoreal softlypolishedmetal organic reflections, no CGIplastic. Portrait4:5, wholependantcenter60%height, no labels/UI/collage.",
+      "parent": "/atelier/v5/arabic-interlocked-studio.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Visible names, connected letters, distinct arrangement and camera scene."
+      },
+      "cost": null
+    },
+    {
+      "id": "arabic-interlocked-v5-Close-up",
+      "file": "arabic-interlocked-close.png",
+      "view": "Close-up",
+      "patch": {
+        "script": "Arabic",
+        "twoNames": true,
+        "layout": "Interlocked"
+      },
+      "prompt": "Edit EXACT reference necklace into Close-up CALEUMS jewelry photography macro detailed closeup on ivory silk LIGHT background. Preserve the exact two names أسماء and فاطمة spelling, identical interlocked layout, all letterjoints and connector geometry, yellow18Kgold, nostones,cable chain attached securely. No extra diacritics, no floatingdots, no missing name or loops. Photoreal softlypolishedmetal organic reflections, no CGIplastic. Portrait4:5, wholependantcenter60%height, no labels/UI/collage.",
+      "parent": "/atelier/v5/arabic-interlocked-studio.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Visible names, connected letters, distinct arrangement and camera scene."
+      },
+      "cost": null
+    },
+    {
+      "id": "arabic-interlocked-v5-Dark",
+      "file": "arabic-interlocked-dark.png",
+      "view": "Dark",
+      "patch": {
+        "script": "Arabic",
+        "twoNames": true,
+        "layout": "Interlocked"
+      },
+      "prompt": "Edit EXACT reference necklace into Dark CALEUMS jewelry photography on deep BLACK textured silk warm dramaticlighting, gold clearly visible. Preserve the exact two names أسماء and فاطمة spelling, identical interlocked layout, all letterjoints and connector geometry, yellow18Kgold, nostones,cable chain attached securely. No extra diacritics, no floatingdots, no missing name or loops. Photoreal softlypolishedmetal organic reflections, no CGIplastic. Portrait4:5, wholependantcenter60%height, no labels/UI/collage.",
+      "parent": "/atelier/v5/arabic-interlocked-studio.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Visible names, connected letters, distinct arrangement and camera scene."
+      },
+      "cost": null
+    }
+  ]
+}

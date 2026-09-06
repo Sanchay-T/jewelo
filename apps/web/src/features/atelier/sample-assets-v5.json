@@ -1,0 +1,310 @@
+[
+  {
+    "id": "arabic-origami-v5",
+    "file": "arabic-origami-studio.png",
+    "view": "Studio",
+    "patch": {
+      "script": "Arabic",
+      "construction": "Origami ribbon"
+    }
+  },
+  {
+    "id": "arabic-rails-v5",
+    "file": "arabic-rails-studio.png",
+    "view": "Studio",
+    "patch": {
+      "script": "Arabic",
+      "construction": "Diamond rails"
+    }
+  },
+  {
+    "id": "arabic-side-v5",
+    "file": "arabic-side-studio.png",
+    "view": "Studio",
+    "patch": {
+      "script": "Arabic",
+      "twoNames": true,
+      "layout": "Side by side"
+    }
+  },
+  {
+    "id": "arabic-framed-v5",
+    "file": "arabic-framed-studio.png",
+    "view": "Studio",
+    "patch": {
+      "script": "Arabic",
+      "construction": "Framed minimal"
+    }
+  },
+  {
+    "id": "arabic-framed-v5-On skin",
+    "file": "arabic-framed-worn.png",
+    "view": "On skin",
+    "patch": {
+      "script": "Arabic",
+      "construction": "Framed minimal"
+    }
+  },
+  {
+    "id": "arabic-framed-v5-Close-up",
+    "file": "arabic-framed-close.png",
+    "view": "Close-up",
+    "patch": {
+      "script": "Arabic",
+      "construction": "Framed minimal"
+    }
+  },
+  {
+    "id": "arabic-framed-v5-Dark",
+    "file": "arabic-framed-dark.png",
+    "view": "Dark",
+    "patch": {
+      "script": "Arabic",
+      "construction": "Framed minimal"
+    }
+  },
+  {
+    "id": "arabic-origami-v5-On skin",
+    "file": "arabic-origami-worn.png",
+    "view": "On skin",
+    "patch": {
+      "script": "Arabic",
+      "construction": "Origami ribbon"
+    }
+  },
+  {
+    "id": "arabic-origami-v5-Close-up",
+    "file": "arabic-origami-close.png",
+    "view": "Close-up",
+    "patch": {
+      "script": "Arabic",
+      "construction": "Origami ribbon"
+    }
+  },
+  {
+    "id": "arabic-origami-v5-Dark",
+    "file": "arabic-origami-dark.png",
+    "view": "Dark",
+    "patch": {
+      "script": "Arabic",
+      "construction": "Origami ribbon"
+    }
+  },
+  {
+    "id": "arabic-rails-v5-On skin",
+    "file": "arabic-rails-worn.png",
+    "view": "On skin",
+    "patch": {
+      "script": "Arabic",
+      "construction": "Diamond rails"
+    }
+  },
+  {
+    "id": "arabic-rails-v5-Close-up",
+    "file": "arabic-rails-close.png",
+    "view": "Close-up",
+    "patch": {
+      "script": "Arabic",
+      "construction": "Diamond rails"
+    }
+  },
+  {
+    "id": "arabic-rails-v5-Dark",
+    "file": "arabic-rails-dark.png",
+    "view": "Dark",
+    "patch": {
+      "script": "Arabic",
+      "construction": "Diamond rails"
+    }
+  },
+  {
+    "id": "arabic-side-v5-On skin",
+    "file": "arabic-side-worn.png",
+    "view": "On skin",
+    "patch": {
+      "script": "Arabic",
+      "twoNames": true,
+      "layout": "Side by side"
+    }
+  },
+  {
+    "id": "arabic-side-v5-Close-up",
+    "file": "arabic-side-close.png",
+    "view": "Close-up",
+    "patch": {
+      "script": "Arabic",
+      "twoNames": true,
+      "layout": "Side by side"
+    }
+  },
+  {
+    "id": "arabic-side-v5-Dark",
+    "file": "arabic-side-dark.png",
+    "view": "Dark",
+    "patch": {
+      "script": "Arabic",
+      "twoNames": true,
+      "layout": "Side by side"
+    }
+  },
+  {
+    "id": "arabic-heart-v5",
+    "file": "arabic-heart-studio.png",
+    "view": "Studio",
+    "patch": {
+      "script": "Arabic",
+      "twoNames": true,
+      "layout": "Connected heart"
+    }
+  },
+  {
+    "id": "arabic-stacked-v5",
+    "file": "arabic-stacked-studio.png",
+    "view": "Studio",
+    "patch": {
+      "script": "Arabic",
+      "twoNames": true,
+      "layout": "Stacked"
+    }
+  },
+  {
+    "id": "arabic-infinity-v5",
+    "file": "arabic-infinity-studio.png",
+    "view": "Studio",
+    "patch": {
+      "script": "Arabic",
+      "twoNames": true,
+      "layout": "Infinity"
+    }
+  },
+  {
+    "id": "arabic-interlocked-v5",
+    "file": "arabic-interlocked-studio.png",
+    "view": "Studio",
+    "patch": {
+      "script": "Arabic",
+      "twoNames": true,
+      "layout": "Interlocked"
+    }
+  },
+  {
+    "id": "arabic-heart-v5-On skin",
+    "file": "arabic-heart-worn.png",
+    "view": "On skin",
+    "patch": {
+      "script": "Arabic",
+      "twoNames": true,
+      "layout": "Connected heart"
+    }
+  },
+  {
+    "id": "arabic-heart-v5-Close-up",
+    "file": "arabic-heart-close.png",
+    "view": "Close-up",
+    "patch": {
+      "script": "Arabic",
+      "twoNames": true,
+      "layout": "Connected heart"
+    }
+  },
+  {
+    "id": "arabic-heart-v5-Dark",
+    "file": "arabic-heart-dark.png",
+    "view": "Dark",
+    "patch": {
+      "script": "Arabic",
+      "twoNames": true,
+      "layout": "Connected heart"
+    }
+  },
+  {
+    "id": "arabic-stacked-v5-On skin",
+    "file": "arabic-stacked-worn.png",
+    "view": "On skin",
+    "patch": {
+      "script": "Arabic",
+      "twoNames": true,
+      "layout": "Stacked"
+    }
+  },
+  {
+    "id": "arabic-stacked-v5-Close-up",
+    "file": "arabic-stacked-close.png",
+    "view": "Close-up",
+    "patch": {
+      "script": "Arabic",
+      "twoNames": true,
+      "layout": "Stacked"
+    }
+  },
+  {
+    "id": "arabic-stacked-v5-Dark",
+    "file": "arabic-stacked-dark.png",
+    "view": "Dark",
+    "patch": {
+      "script": "Arabic",
+      "twoNames": true,
+      "layout": "Stacked"
+    }
+  },
+  {
+    "id": "arabic-infinity-v5-On skin",
+    "file": "arabic-infinity-worn.png",
+    "view": "On skin",
+    "patch": {
+      "script": "Arabic",
+      "twoNames": true,
+      "layout": "Infinity"
+    }
+  },
+  {
+    "id": "arabic-infinity-v5-Close-up",
+    "file": "arabic-infinity-close.png",
+    "view": "Close-up",
+    "patch": {
+      "script": "Arabic",
+      "twoNames": true,
+      "layout": "Infinity"
+    }
+  },
+  {
+    "id": "arabic-infinity-v5-Dark",
+    "file": "arabic-infinity-dark.png",
+    "view": "Dark",
+    "patch": {
+      "script": "Arabic",
+      "twoNames": true,
+      "layout": "Infinity"
+    }
+  },
+  {
+    "id": "arabic-interlocked-v5-On skin",
+    "file": "arabic-interlocked-worn.png",
+    "view": "On skin",
+    "patch": {
+      "script": "Arabic",
+      "twoNames": true,
+      "layout": "Interlocked"
+    }
+  },
+  {
+    "id": "arabic-interlocked-v5-Close-up",
+    "file": "arabic-interlocked-close.png",
+    "view": "Close-up",
+    "patch": {
+      "script": "Arabic",
+      "twoNames": true,
+      "layout": "Interlocked"
+    }
+  },
+  {
+    "id": "arabic-interlocked-v5-Dark",
+    "file": "arabic-interlocked-dark.png",
+    "view": "Dark",
+    "patch": {
+      "script": "Arabic",
+      "twoNames": true,
+      "layout": "Interlocked"
+    }
+  }
+]

@@ -1,0 +1,326 @@
+{
+  "release": "caleums-cumulative-samples-v1",
+  "generatedAt": "2026-09-06T11:41:22.753Z",
+  "catalogueFingerprint": "89faa61f467aac9e08c1a054f67e4d4d9196a343c5baf375385bf37e5fd7547d",
+  "configurations": 131328,
+  "requiredPhotos": 525312,
+  "integratedPhotos": 168,
+  "missingPhotos": 525144,
+  "roles": {
+    "structural-master": 2271,
+    "camera-view": 393873,
+    "material-variant": 129000
+  },
+  "complete": false,
+  "execution": "offline-inventory-only",
+  "paidRequests": 0,
+  "review": "Integrated assets retain prior review status. Planned jobs are neither generated nor approved.",
+  "excludedInputs": [
+    "customer spelling (fixed examples only)",
+    "engraving",
+    "special requests",
+    "chain length"
+  ],
+  "storageEstimate": {
+    "method": "Current integrated PNG average multiplied by required photo count; not an optimized delivery estimate.",
+    "currentBytes": 354709817,
+    "estimatedFullBytes": 1109126924928
+  },
+  "output": "/tmp/caleums-inventory-safe-export-2026-09-06.ndjson",
+  "exampleJobs": [
+    {
+      "version": 1,
+      "release": "caleums-cumulative-samples-v1",
+      "jobId": "89a3a7d2af58c3d647629f23a608a0d1bbdb5cc8e21ba87e9d6c303fd79b784f",
+      "configurationId": "f77296111e46bf30de2c14b6ce64ea27ba99a4e8ed4abd91afe09dcb60a16742",
+      "canonicalKey": "[\"English\",false,\"Classical\",\"Classic\",null,\"Yellow gold\",\"No stones\",null,22,\"Rolo\",\"Studio\"]",
+      "view": "Studio",
+      "specification": {
+        "names": [
+          "Asma"
+        ],
+        "script": "English",
+        "construction": "Classical",
+        "lettering": "Classic",
+        "layout": null,
+        "metal": "Yellow gold",
+        "karat": "18K",
+        "coverage": "No stones",
+        "gemstone": null,
+        "pendantWidthMm": 22,
+        "chainStyle": "Rolo"
+      },
+      "role": "structural-master",
+      "state": "planned",
+      "reference": null,
+      "acceptanceRequired": [
+        "exact-specification",
+        "fixed-name-spelling",
+        "connected-jewelry",
+        "parent-identity-consistency",
+        "photographic-quality"
+      ]
+    },
+    {
+      "version": 1,
+      "release": "caleums-cumulative-samples-v1",
+      "jobId": "dadd5000c511f58aa5c3fe59c606268825ab03a6895db628cd64b351d917249f",
+      "configurationId": "f77296111e46bf30de2c14b6ce64ea27ba99a4e8ed4abd91afe09dcb60a16742",
+      "canonicalKey": "[\"English\",false,\"Classical\",\"Classic\",null,\"Yellow gold\",\"No stones\",null,22,\"Rolo\",\"On skin\"]",
+      "view": "On skin",
+      "specification": {
+        "names": [
+          "Asma"
+        ],
+        "script": "English",
+        "construction": "Classical",
+        "lettering": "Classic",
+        "layout": null,
+        "metal": "Yellow gold",
+        "karat": "18K",
+        "coverage": "No stones",
+        "gemstone": null,
+        "pendantWidthMm": 22,
+        "chainStyle": "Rolo"
+      },
+      "role": "camera-view",
+      "state": "planned",
+      "reference": {
+        "kind": "planned",
+        "configurationId": "f77296111e46bf30de2c14b6ce64ea27ba99a4e8ed4abd91afe09dcb60a16742",
+        "jobId": "89a3a7d2af58c3d647629f23a608a0d1bbdb5cc8e21ba87e9d6c303fd79b784f",
+        "requiresReferenceAcceptance": true
+      },
+      "acceptanceRequired": [
+        "exact-specification",
+        "fixed-name-spelling",
+        "connected-jewelry",
+        "parent-identity-consistency",
+        "photographic-quality"
+      ]
+    },
+    {
+      "version": 1,
+      "release": "caleums-cumulative-samples-v1",
+      "jobId": "76d6ea083c757982f39cef09c3780f27de51a68ec743592b1c939c72be198ed5",
+      "configurationId": "f77296111e46bf30de2c14b6ce64ea27ba99a4e8ed4abd91afe09dcb60a16742",
+      "canonicalKey": "[\"English\",false,\"Classical\",\"Classic\",null,\"Yellow gold\",\"No stones\",null,22,\"Rolo\",\"Close-up\"]",
+      "view": "Close-up",
+      "specification": {
+        "names": [
+          "Asma"
+        ],
+        "script": "English",
+        "construction": "Classical",
+        "lettering": "Classic",
+        "layout": null,
+        "metal": "Yellow gold",
+        "karat": "18K",
+        "coverage": "No stones",
+        "gemstone": null,
+        "pendantWidthMm": 22,
+        "chainStyle": "Rolo"
+      },
+      "role": "camera-view",
+      "state": "planned",
+      "reference": {
+        "kind": "planned",
+        "configurationId": "f77296111e46bf30de2c14b6ce64ea27ba99a4e8ed4abd91afe09dcb60a16742",
+        "jobId": "89a3a7d2af58c3d647629f23a608a0d1bbdb5cc8e21ba87e9d6c303fd79b784f",
+        "requiresReferenceAcceptance": true
+      },
+      "acceptanceRequired": [
+        "exact-specification",
+        "fixed-name-spelling",
+        "connected-jewelry",
+        "parent-identity-consistency",
+        "photographic-quality"
+      ]
+    },
+    {
+      "version": 1,
+      "release": "caleums-cumulative-samples-v1",
+      "jobId": "ee6b4f1c293d126c88740aedb709fe961c816717c2aaf0013b0be7feace86904",
+      "configurationId": "f77296111e46bf30de2c14b6ce64ea27ba99a4e8ed4abd91afe09dcb60a16742",
+      "canonicalKey": "[\"English\",false,\"Classical\",\"Classic\",null,\"Yellow gold\",\"No stones\",null,22,\"Rolo\",\"Dark\"]",
+      "view": "Dark",
+      "specification": {
+        "names": [
+          "Asma"
+        ],
+        "script": "English",
+        "construction": "Classical",
+        "lettering": "Classic",
+        "layout": null,
+        "metal": "Yellow gold",
+        "karat": "18K",
+        "coverage": "No stones",
+        "gemstone": null,
+        "pendantWidthMm": 22,
+        "chainStyle": "Rolo"
+      },
+      "role": "camera-view",
+      "state": "planned",
+      "reference": {
+        "kind": "planned",
+        "configurationId": "f77296111e46bf30de2c14b6ce64ea27ba99a4e8ed4abd91afe09dcb60a16742",
+        "jobId": "89a3a7d2af58c3d647629f23a608a0d1bbdb5cc8e21ba87e9d6c303fd79b784f",
+        "requiresReferenceAcceptance": true
+      },
+      "acceptanceRequired": [
+        "exact-specification",
+        "fixed-name-spelling",
+        "connected-jewelry",
+        "parent-identity-consistency",
+        "photographic-quality"
+      ]
+    },
+    {
+      "version": 1,
+      "release": "caleums-cumulative-samples-v1",
+      "jobId": "0d4fcc5a159a24f24895f0d67277052cd821d7e2ce5e5ad95f6bb9f57c4e94c1",
+      "configurationId": "dfe336a558353f3a212f4ffd4c2a47d419c24df13298de4f7844ea8c4a14cbf1",
+      "canonicalKey": "[\"English\",false,\"Classical\",\"Classic\",null,\"Yellow gold\",\"No stones\",null,22,\"Box\",\"Studio\"]",
+      "view": "Studio",
+      "specification": {
+        "names": [
+          "Asma"
+        ],
+        "script": "English",
+        "construction": "Classical",
+        "lettering": "Classic",
+        "layout": null,
+        "metal": "Yellow gold",
+        "karat": "18K",
+        "coverage": "No stones",
+        "gemstone": null,
+        "pendantWidthMm": 22,
+        "chainStyle": "Box"
+      },
+      "role": "structural-master",
+      "state": "planned",
+      "reference": null,
+      "acceptanceRequired": [
+        "exact-specification",
+        "fixed-name-spelling",
+        "connected-jewelry",
+        "parent-identity-consistency",
+        "photographic-quality"
+      ]
+    },
+    {
+      "version": 1,
+      "release": "caleums-cumulative-samples-v1",
+      "jobId": "610b8a2e6d76d8b5662faf180f55f6931323f0e4d8668061b20f3cfaff735cc5",
+      "configurationId": "dfe336a558353f3a212f4ffd4c2a47d419c24df13298de4f7844ea8c4a14cbf1",
+      "canonicalKey": "[\"English\",false,\"Classical\",\"Classic\",null,\"Yellow gold\",\"No stones\",null,22,\"Box\",\"On skin\"]",
+      "view": "On skin",
+      "specification": {
+        "names": [
+          "Asma"
+        ],
+        "script": "English",
+        "construction": "Classical",
+        "lettering": "Classic",
+        "layout": null,
+        "metal": "Yellow gold",
+        "karat": "18K",
+        "coverage": "No stones",
+        "gemstone": null,
+        "pendantWidthMm": 22,
+        "chainStyle": "Box"
+      },
+      "role": "camera-view",
+      "state": "planned",
+      "reference": {
+        "kind": "planned",
+        "configurationId": "dfe336a558353f3a212f4ffd4c2a47d419c24df13298de4f7844ea8c4a14cbf1",
+        "jobId": "0d4fcc5a159a24f24895f0d67277052cd821d7e2ce5e5ad95f6bb9f57c4e94c1",
+        "requiresReferenceAcceptance": true
+      },
+      "acceptanceRequired": [
+        "exact-specification",
+        "fixed-name-spelling",
+        "connected-jewelry",
+        "parent-identity-consistency",
+        "photographic-quality"
+      ]
+    },
+    {
+      "version": 1,
+      "release": "caleums-cumulative-samples-v1",
+      "jobId": "d13124e5526659dbdd7acc1db155ccbe4d67228131a5b41dbd23d0d9222a5ea8",
+      "configurationId": "dfe336a558353f3a212f4ffd4c2a47d419c24df13298de4f7844ea8c4a14cbf1",
+      "canonicalKey": "[\"English\",false,\"Classical\",\"Classic\",null,\"Yellow gold\",\"No stones\",null,22,\"Box\",\"Close-up\"]",
+      "view": "Close-up",
+      "specification": {
+        "names": [
+          "Asma"
+        ],
+        "script": "English",
+        "construction": "Classical",
+        "lettering": "Classic",
+        "layout": null,
+        "metal": "Yellow gold",
+        "karat": "18K",
+        "coverage": "No stones",
+        "gemstone": null,
+        "pendantWidthMm": 22,
+        "chainStyle": "Box"
+      },
+      "role": "camera-view",
+      "state": "planned",
+      "reference": {
+        "kind": "planned",
+        "configurationId": "dfe336a558353f3a212f4ffd4c2a47d419c24df13298de4f7844ea8c4a14cbf1",
+        "jobId": "0d4fcc5a159a24f24895f0d67277052cd821d7e2ce5e5ad95f6bb9f57c4e94c1",
+        "requiresReferenceAcceptance": true
+      },
+      "acceptanceRequired": [
+        "exact-specification",
+        "fixed-name-spelling",
+        "connected-jewelry",
+        "parent-identity-consistency",
+        "photographic-quality"
+      ]
+    },
+    {
+      "version": 1,
+      "release": "caleums-cumulative-samples-v1",
+      "jobId": "000fdc4654876de52f1e1df17bb1e0580ab76978744c3b8cb5bb883530078c6d",
+      "configurationId": "dfe336a558353f3a212f4ffd4c2a47d419c24df13298de4f7844ea8c4a14cbf1",
+      "canonicalKey": "[\"English\",false,\"Classical\",\"Classic\",null,\"Yellow gold\",\"No stones\",null,22,\"Box\",\"Dark\"]",
+      "view": "Dark",
+      "specification": {
+        "names": [
+          "Asma"
+        ],
+        "script": "English",
+        "construction": "Classical",
+        "lettering": "Classic",
+        "layout": null,
+        "metal": "Yellow gold",
+        "karat": "18K",
+        "coverage": "No stones",
+        "gemstone": null,
+        "pendantWidthMm": 22,
+        "chainStyle": "Box"
+      },
+      "role": "camera-view",
+      "state": "planned",
+      "reference": {
+        "kind": "planned",
+        "configurationId": "dfe336a558353f3a212f4ffd4c2a47d419c24df13298de4f7844ea8c4a14cbf1",
+        "jobId": "0d4fcc5a159a24f24895f0d67277052cd821d7e2ce5e5ad95f6bb9f57c4e94c1",
+        "requiresReferenceAcceptance": true
+      },
+      "acceptanceRequired": [
+        "exact-specification",
+        "fixed-name-spelling",
+        "connected-jewelry",
+        "parent-identity-consistency",
+        "photographic-quality"
+      ]
+    }
+  ]
+}

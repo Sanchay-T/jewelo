@@ -1,0 +1,94 @@
+{
+  "version": 1,
+  "created": "2026-09-06",
+  "generator": "native imagegen",
+  "purpose": "Jewelry-free photographic plates for deterministic rendered examples.",
+  "selected": {
+    "Studio": "studio.png",
+    "Close-up": "studio.png",
+    "On skin": "skin.png",
+    "Dark": "dark.png"
+  },
+  "selectionNotes": "Studio candidate1 selected for flat center. Dark candidate1 selected for gentle contrast. Skin is a modest crew-neck commercial crop.",
+  "assets": [
+    {
+      "type": "studio",
+      "file": "studio-candidate-1.png",
+      "prompt": "Luxury jewelry photography BACKGROUND PLATE ONLY, square topdown composition. Warm ivory silk, broad gentle folds at the outer corners and fine pale limestone subtly along one edge. Keep center 65% of frame almost flat and clean for compositing a necklace; no objects there. Soft upper-left large studio light, realistic subtle texture. NO jewelry, NO necklace, NO chain, NO pendant, NO lettering or text. Photoreal premium restrained CALEUMS product photography environment. Candidate 1.",
+      "source": "/Users/sanchay/.codex/generated_images/01a072a9-9bb4-7a42-9208-b1ad10637d4b/exec-0a7cc6ff-e271-4f4f-a68c-2eda4992abf3.png",
+      "review": "Accepted empty ivory studio plate; candidate1 selected.",
+      "cost": null,
+      "sha256": "795395b9e4211a49d8632f705ccff86da0dd1be7b24d2d260972c9a61e4639d8"
+    },
+    {
+      "type": "studio",
+      "file": "studio-candidate-2.png",
+      "prompt": "Luxury jewelry photography BACKGROUND PLATE ONLY, square topdown composition. Warm ivory silk, broad gentle folds at the outer corners and fine pale limestone subtly along one edge. Keep center 65% of frame almost flat and clean for compositing a necklace; no objects there. Soft upper-left large studio light, realistic subtle texture. NO jewelry, NO necklace, NO chain, NO pendant, NO lettering or text. Photoreal premium restrained CALEUMS product photography environment. Candidate 2.",
+      "source": "/Users/sanchay/.codex/generated_images/01a072a9-9bb4-7a42-9208-b1ad10637d4b/exec-5e73a884-18a3-4355-8e84-ccebdc3d5b33.png",
+      "review": "Accepted empty ivory studio plate; candidate1 selected.",
+      "cost": null,
+      "sha256": "d922f3f1397fd3b803326326088d900419bebd3dcc656b20cd7f7a18ecaed3ff"
+    },
+    {
+      "type": "dark",
+      "file": "dark.png",
+      "prompt": "Create a square photorealistic luxury jewelry product photography background plate, no jewelry or other objects. Matte dark charcoal velvet with very gentle fabric folds at the outside corners, central 70 percent completely uncluttered and nearly flat, subtle warm spotlight from upper left, premium restrained studio photography, no text, no pendant, no chain, no lettering.",
+      "source": "/Users/sanchay/.codex/generated_images/01a072a9-9bb4-7a42-9208-b1ad10637d4b/exec-813461df-0053-43e5-b271-97ea7628c921.png",
+      "review": "Accepted jewelry-free background; no pendant, chain or lettering embedded.",
+      "cost": null,
+      "sha256": "ea15b59600aadd53dcf97583aec88c8a4e7cf279dc6723ff62914161591d2913"
+    },
+    {
+      "type": "skin",
+      "file": "skin.png",
+      "prompt": "A modest commercial jewelry catalog background photograph, square image. Close crop of an adult model's neck from below the chin down to the top of an ivory crew-neck t-shirt, fully clothed. Neutral frontal pose. Natural warm medium complexion with realistic skin texture. Soft large studio light from upper left. The neck and small exposed area above the crew-neck collar occupy the middle of the frame, with neckline near lower edge. No jewelry whatsoever, no necklace, no earrings, no pendant, no chain. Clean neutral background. Product photography background plate for placing a small necklace later. No text.",
+      "source": "/Users/sanchay/.codex/generated_images/01a072a9-9bb4-7a42-9208-b1ad10637d4b/exec-4dc3826f-51fe-41fb-9a69-3455bf7d3495.png",
+      "review": "Accepted jewelry-free background; no pendant, chain or lettering embedded.",
+      "cost": null,
+      "sha256": "d0b68bc12e76e3deb59c20e379f9e42028573f0143b00c8b2f4964219502ba50"
+    },
+    {
+      "type": "dark",
+      "file": "dark-candidate-2.png",
+      "prompt": "Create a square photorealistic luxury jewelry product photography background plate, no jewelry or other objects. Matte dark charcoal velvet with very gentle fabric folds at the outside corners, central 70 percent completely uncluttered and nearly flat, subtle warm spotlight from upper left, premium restrained studio photography, no text, no pendant, no chain, no lettering. Alternative second setting: smoother tightly woven near-black charcoal textile, folds confined to extreme corners, larger softly lit central field.",
+      "source": "/Users/sanchay/.codex/generated_images/01a072a9-9bb4-7a42-9208-b1ad10637d4b/exec-099ecae6-1d52-4a88-9dc1-4199923d8ade.png",
+      "review": "Accepted jewelry-free background; no pendant, chain or lettering embedded.",
+      "cost": null,
+      "sha256": "58ea9e5a3e71be1d9afb97fc88dd437534f5e196a0a3c7ef6ad427ebd79e2296"
+    },
+    {
+      "type": "skin",
+      "file": "skin-candidate-2.png",
+      "prompt": "A modest commercial jewelry catalog background photograph, square image. Close crop of an adult model's neck from below the chin down to the top of an ivory crew-neck t-shirt, fully clothed. Neutral frontal pose. Natural warm medium complexion with realistic skin texture. Soft large studio light from upper left. The neck and small exposed area above the crew-neck collar occupy the middle of the frame, with neckline near lower edge. No jewelry whatsoever, no necklace, no earrings, no pendant, no chain. Clean neutral background. Product photography background plate for placing a small necklace later. No text. Second alternate take: a slightly wider camera framing, neck centered, gentle symmetrical collar at bottom, soft daylight, natural neutral complexion.",
+      "source": "/Users/sanchay/.codex/generated_images/01a072a9-9bb4-7a42-9208-b1ad10637d4b/exec-bcc32971-f62d-4866-9bc7-c6590b0f2848.png",
+      "review": "Accepted empty catalog background. Candidate1 retained for calibrated positioning.",
+      "sha256": "1fa18de9a5933cb416994c4de7fbbe7008588101a559a95e61c9d87c4b65af0a",
+      "cost": null
+    }
+  ],
+  "costNote": "Generation cost was not provided by the tool.",
+  "failedAttempts": [
+    {
+      "type": "skin",
+      "reason": "Initial image output rejected by image tool; revised to modest crew-neck catalog crop."
+    }
+  ],
+  "selectedFiles": {
+    "Studio": {
+      "file": "studio.png",
+      "sha256": "795395b9e4211a49d8632f705ccff86da0dd1be7b24d2d260972c9a61e4639d8"
+    },
+    "Close-up": {
+      "file": "studio.png",
+      "sha256": "795395b9e4211a49d8632f705ccff86da0dd1be7b24d2d260972c9a61e4639d8"
+    },
+    "On skin": {
+      "file": "skin.png",
+      "sha256": "d0b68bc12e76e3deb59c20e379f9e42028573f0143b00c8b2f4964219502ba50"
+    },
+    "Dark": {
+      "file": "dark.png",
+      "sha256": "ea15b59600aadd53dcf97583aec88c8a4e7cf279dc6723ff62914161591d2913"
+    }
+  }
+}

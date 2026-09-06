@@ -1,0 +1,49 @@
+{
+  "version": 1,
+  "created": "2026-09-06",
+  "tool": "built-in imagegen",
+  "authorization": "User explicitly requested site asset generation",
+  "cost": {
+    "amount": null,
+    "note": "Built-in generation; cost not reported by tool; no application provider calls"
+  },
+  "classification": "AI-generated public-safe fictional sample concepts, not spelling or manufacturing evidence",
+  "assets": [
+    {
+      "file": "asma-studio.png",
+      "prompt": "Use case: product-mockup. Create one premium fine jewelry ecommerce photograph for CALEUMS, no UI or collage. A graceful solid 18K yellow gold name necklace spelling exactly \"Asma\" (A-s-m-a) in continuous connected elegant cursive, upright legible letters, believable polished rounded gold thickness, no stones. Delicate cable chain attached securely at both ends, extending to the upper corners beyond the frame. Pendant is the focal point across lower center, photographed close on softly folded ivory silk with a subtle warm limestone background. 4:5 portrait composition, pendant fills approximately 60 percent width at 58 percent image height, beautiful generous breathing room. Macro commercial jewelry photography, exceptionally realistic metal highlights, fine chain detail, soft window daylight, restrained warm cream #f7f3ec and gold palette, tasteful quiet luxury, crisp product and soft shadows. No watermark, no logo, no overlaid text, no extra jewelry, no hands. This is a sample concept image, not manufacturing evidence.",
+      "parent": null,
+      "version": 1
+    },
+    {
+      "file": "asma-worn.png",
+      "prompt": "Use case: identity-preserve. The input is an edit target / exact jewelry reference. Create the On skin ecommerce photograph of THIS same Asma necklace, preserving the exact connected cursive A-s-m-a letterforms, no stones, yellow gold and cable chain. Photograph on an adult woman collarbone/upper chest wearing an ivory linen open-neck shirt, crop from below chin to upper chest, no face. Pendant realistic approximately 32mm width, centered naturally below collarbone. Realistic skin texture, editorial warm daylight, creamy quiet luxury, 4:5 portrait. Keep entire pendant sharp with believable gold reflections and accurate name. No overlay text, UI, logos or watermark.",
+      "parent": "asma-studio.png",
+      "version": 1
+    },
+    {
+      "file": "asma-dark.png",
+      "prompt": "Use case: lighting-weather. Input is exact jewelry edit target. Photograph this SAME connected cursive yellow gold \"Asma\" name pendant with the same shape and cable chain, no stones, preserving upright legible A-s-m-a lettering. Change scene to deep charcoal velvet with a restrained pool of warm spotlight, exquisite gold reflections, dark luxury ecommerce jewelry editorial. 4:5 portrait; necklace chain extends up to corners; pendant occupies 60 percent of width near center. Full pendant sharp. No added elements, no UI, no text overlays, no logo or watermark. Preserve exact pendant geometry from reference as closely as possible.",
+      "parent": "asma-studio.png",
+      "version": 1
+    },
+    {
+      "file": "asma-close.png",
+      "prompt": "Use case: precise-object-edit. Input image is exact jewelry reference. Create a macro Close-up ecommerce photograph of the same gold Asma necklace on ivory silk. Preserve exact A-s-m-a connected cursive letter shapes, polished yellow gold, no stones, original chain. Move camera closer and to a subtle three-quarter angle to show gold thickness and craftsmanship, but keep ALL of the word fully visible, pendant filling 85 percent image width, fine micro-texture and photoreal light reflections, warm diffuse daylight. 4:5 portrait. No extra jewelry, no UI, watermark or overlay text.",
+      "parent": "asma-studio.png",
+      "version": 1
+    },
+    {
+      "file": "asma-arabic.png",
+      "prompt": "Use case: product-mockup. Single premium ecommerce photograph, 4:5 portrait, cream silk and softly lit warm limestone, fine solid 18K yellow gold ARABIC name necklace spelling exactly \"أسماء\" in beautiful connected upright classical Arabic calligraphy reading right to left, correct hamza and dots retained and supported by subtle integrated gold bridges. No English text. Chain cable attached to both ends extending to top corners. Pendant across center filling 60% width, macro jewelry detail, photoreal polished gold, elegant soft daylight shadows, restrained ivory #f7f3ec palette. No UI, collage, overlaid text, watermark or logos. Sample jewelry concept, not manufacturing evidence.",
+      "parent": null,
+      "version": 1
+    },
+    {
+      "file": "asma-fatima.png",
+      "prompt": "Use case: product-mockup. Single premium fine jewelry ecommerce product photograph of a two-name solid 18K yellow gold necklace spelling exactly \"Asma\" followed by a small connected open heart followed by \"Fatima\". A-s-m-a, F-a-t-i-m-a. Beautiful continuous elegant upright cursive lettering, physically joined gold, delicate cable chain securely attached to the far ends extending to top corners. Small lab-diamond pavé accents on heart only, all letters plain gold. Pendant lies on ivory silk, warm cream limestone in background, soft realistic sunlight, macro high-end jewelry photography. 4:5 portrait, entire pendant at 65% frame width centered, plenty of breathing room. No UI, no collage, no text overlay, watermark or logos. Sample concept only.",
+      "parent": null,
+      "version": 1
+    }
+  ]
+}

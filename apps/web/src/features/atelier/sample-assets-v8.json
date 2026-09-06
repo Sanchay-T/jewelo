@@ -1,0 +1,158 @@
+[
+  {
+    "id": "akrw-none",
+    "file": "arabic-kufi-rails-white-none-studio.png",
+    "view": "Studio",
+    "patch": {
+      "script": "Arabic",
+      "construction": "Diamond rails",
+      "lettering": "Kufi",
+      "chain": "Rolo",
+      "metal": "White gold",
+      "coverage": "No stones"
+    }
+  },
+  {
+    "id": "akr-yellow-none",
+    "file": "arabic-kufi-rails-yellow-none-studio.png",
+    "view": "Studio",
+    "patch": {
+      "script": "Arabic",
+      "construction": "Diamond rails",
+      "lettering": "Kufi",
+      "chain": "Rolo",
+      "metal": "Yellow gold",
+      "coverage": "No stones"
+    }
+  },
+  {
+    "id": "akr-yellow-accent",
+    "file": "arabic-kufi-rails-yellow-accent-studio.png",
+    "view": "Studio",
+    "patch": {
+      "script": "Arabic",
+      "construction": "Diamond rails",
+      "lettering": "Kufi",
+      "chain": "Rolo",
+      "metal": "Yellow gold",
+      "coverage": "Accent"
+    }
+  },
+  {
+    "id": "akr-yellow-partial",
+    "file": "arabic-kufi-rails-yellow-partial-studio.png",
+    "view": "Studio",
+    "patch": {
+      "script": "Arabic",
+      "construction": "Diamond rails",
+      "lettering": "Kufi",
+      "chain": "Rolo",
+      "metal": "Yellow gold",
+      "coverage": "Partial pavé"
+    }
+  },
+  {
+    "id": "akr-yellow-full",
+    "file": "arabic-kufi-rails-yellow-full-studio.png",
+    "view": "Studio",
+    "patch": {
+      "script": "Arabic",
+      "construction": "Diamond rails",
+      "lettering": "Kufi",
+      "chain": "Rolo",
+      "metal": "Yellow gold",
+      "coverage": "Full pavé"
+    }
+  },
+  {
+    "id": "akr-white-accent",
+    "file": "arabic-kufi-rails-white-accent-studio.png",
+    "view": "Studio",
+    "patch": {
+      "script": "Arabic",
+      "construction": "Diamond rails",
+      "lettering": "Kufi",
+      "chain": "Rolo",
+      "metal": "White gold",
+      "coverage": "Accent"
+    }
+  },
+  {
+    "id": "akr-white-partial",
+    "file": "arabic-kufi-rails-white-partial-studio.png",
+    "view": "Studio",
+    "patch": {
+      "script": "Arabic",
+      "construction": "Diamond rails",
+      "lettering": "Kufi",
+      "chain": "Rolo",
+      "metal": "White gold",
+      "coverage": "Partial pavé"
+    }
+  },
+  {
+    "id": "akr-white-full",
+    "file": "arabic-kufi-rails-white-full-studio.png",
+    "view": "Studio",
+    "patch": {
+      "script": "Arabic",
+      "construction": "Diamond rails",
+      "lettering": "Kufi",
+      "chain": "Rolo",
+      "metal": "White gold",
+      "coverage": "Full pavé"
+    }
+  },
+  {
+    "id": "akr-rose-none",
+    "file": "arabic-kufi-rails-rose-none-studio.png",
+    "view": "Studio",
+    "patch": {
+      "script": "Arabic",
+      "construction": "Diamond rails",
+      "lettering": "Kufi",
+      "chain": "Rolo",
+      "metal": "Rose gold",
+      "coverage": "No stones"
+    }
+  },
+  {
+    "id": "akr-rose-partial",
+    "file": "arabic-kufi-rails-rose-partial-studio.png",
+    "view": "Studio",
+    "patch": {
+      "script": "Arabic",
+      "construction": "Diamond rails",
+      "lettering": "Kufi",
+      "chain": "Rolo",
+      "metal": "Rose gold",
+      "coverage": "Partial pavé"
+    }
+  },
+  {
+    "id": "akr-rose-full",
+    "file": "arabic-kufi-rails-rose-full-studio.png",
+    "view": "Studio",
+    "patch": {
+      "script": "Arabic",
+      "construction": "Diamond rails",
+      "lettering": "Kufi",
+      "chain": "Rolo",
+      "metal": "Rose gold",
+      "coverage": "Full pavé"
+    }
+  },
+  {
+    "id": "akr-rose-accent",
+    "file": "arabic-kufi-rails-rose-accent-corrected-studio.png",
+    "view": "Studio",
+    "patch": {
+      "script": "Arabic",
+      "construction": "Diamond rails",
+      "lettering": "Kufi",
+      "chain": "Rolo",
+      "metal": "Rose gold",
+      "coverage": "Accent"
+    }
+  }
+]

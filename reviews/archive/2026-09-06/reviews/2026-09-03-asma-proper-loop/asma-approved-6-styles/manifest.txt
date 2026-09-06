@@ -1,0 +1,28 @@
+ASMA أسماء - APPROVED RENDERS (6 Omran styles)
+Generated 2026-09-03/04. Each image dual-reviewed (agent + independent reviewer) at full resolution.
+
+1. 01-floating-rails.png - Floating Rails, linen + cup
+   task 5e1ff765-5449-489f-9701-0b725375d8e0
+   Single top chain, continuous س-م-ا, gapped أ with fused hamza, welded ء, stones on rails only.
+
+2. 02-framed-minimal.png - Framed Minimal, held in fingers
+   task a4cd7fad-486a-40fd-923e-516c3b09772f
+   Cleanest build. Continuous س-م-ا, gapped أ, fused hamza, welded ء, chains attached.
+
+3. 03-origami.png - Origami, oak desk
+   task 55ff4f5e-3dc1-4b92-85fe-075bfd8fb850
+   Facets as surface texture. Continuous baseline incl. middle ا stem, أ gapped with diamond-setting hamza touching stem, ء welded, one chain both ends.
+
+4. 04-constellation.png - Constellation, navy fabric
+   task ce0bdb1c-21c2-49cb-a7e4-ce432ff36ec5
+   Orbit rails welded to every letter. Continuous baseline, أ gapped with diamond hamza fused on stem top, ء welded, central-bail single chain, stones on rails only.
+
+5. 05-ribbon-flow.png - Ribbon Flow, worn on neck
+   task 3630f03a-adde-4775-b562-21a0281a6303
+   Best worn shot. Continuous ribbon script, أ gap kept, hamza-as-blue-stone fused, ء welded, single chain both ends.
+
+6. 06-art-deco.png - Art Deco, gift box
+   task 5a2f1173-fcf5-4a8e-9217-bedec85e7be9
+   Stepped frame carries أ and ء, gap kept, fused hamza, flush baguette pavé inside faces only, no sunburst, one chain.
+
+All 1920x1920 PNG. Reference identity: deterministic canonical أسماء (NFC), thick-join build.

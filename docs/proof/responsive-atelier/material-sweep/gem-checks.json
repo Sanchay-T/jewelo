@@ -1,0 +1,12 @@
+{
+  "gems": [
+    "Lab diamond",
+    "Natural diamond",
+    "Ruby",
+    "Emerald",
+    "Blue sapphire",
+    "Pink sapphire"
+  ],
+  "sameDiamondAppearance": true,
+  "distinctGemAppearances": true
+}

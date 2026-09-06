@@ -1,3 +1,5 @@
+> Customer UI reset: see `docs/START-HERE.md`. The local customer surface is blank; old customer instructions below describe removed functionality, not an approved design.
+
 # Jewelo v2 — implementation-ready rebuild
 
 This branch is the clean-room source of truth for rebuilding Jewelo from first principles. The product journey, UX behavior, production architecture, concurrency contract, model strategy, and modular implementation goals are already decided.
@@ -114,7 +116,7 @@ A goal normally runs in an isolated worktree and ends in a draft PR into `rebuil
 - `AGENTS.md` — tool-neutral agent rules.
 - `.claude/skills/goal/SKILL.md` — Claude Code `/goal` skill.
 - `docs/PRODUCT-CONTRACT.md` — frozen business journey.
-- `docs/FROZEN-UX.md` and `docs/UX-AUDIT.md` — approved experience and corrections.
+- `docs/OMRAN-BUSINESS-CONTEXT.md` — attributed feedback for a fresh UI brainstorm.
 - `docs/FINAL-STACK.md` — binding technology choices.
 - `docs/ARCHITECTURE.md` — system boundaries, data flow, and scaling behavior.
 - `docs/MEDIA-CONCURRENCY.md` — four-way fan-out, quotas, costs, and progressive UI contract.

@@ -1,0 +1,1152 @@
+{
+  "generatedAt": "2026-09-06T08:55:34.412Z",
+  "scope": "45 option-example families, not all cumulative permutations; metadata coverage does not certify visual accuracy",
+  "baseline": {
+    "families": 37,
+    "photos": 82
+  },
+  "required": {
+    "families": 45,
+    "photos": 180
+  },
+  "current": {
+    "integratedPhotos": 138,
+    "acceptedNotIntegrated": 15,
+    "missing": 27,
+    "completeIntegratedFamilies": 31
+  },
+  "excluded": [
+    {
+      "src": "/atelier/v6/arabic-kufi-worn.png",
+      "status": "rejected",
+      "present": true
+    }
+  ],
+  "families": [
+    {
+      "identity": "[\"English\",false,\"Classical\",\"Classic\",null,\"Yellow gold\",\"No stones\",null,32,\"Cable\",\"Studio\"]",
+      "views": [
+        {
+          "view": "Studio",
+          "status": "integrated",
+          "src": "/atelier/v1/asma-studio.png"
+        },
+        {
+          "view": "On skin",
+          "status": "integrated",
+          "src": "/atelier/v1/asma-worn.png"
+        },
+        {
+          "view": "Close-up",
+          "status": "integrated",
+          "src": "/atelier/v1/asma-close.png"
+        },
+        {
+          "view": "Dark",
+          "status": "integrated",
+          "src": "/atelier/v1/asma-dark.png"
+        }
+      ]
+    },
+    {
+      "identity": "[\"Arabic\",false,\"Classical\",\"Classic\",null,\"Yellow gold\",\"No stones\",null,32,\"Cable\",\"Studio\"]",
+      "views": [
+        {
+          "view": "Studio",
+          "status": "integrated",
+          "src": "/atelier/v1/asma-arabic.png"
+        },
+        {
+          "view": "On skin",
+          "status": "integrated",
+          "src": "/atelier/v2/arabic-worn.png"
+        },
+        {
+          "view": "Close-up",
+          "status": "integrated",
+          "src": "/atelier/v2/arabic-close.png"
+        },
+        {
+          "view": "Dark",
+          "status": "integrated",
+          "src": "/atelier/v2/arabic-dark.png"
+        }
+      ]
+    },
+    {
+      "identity": "[\"English\",false,\"Origami ribbon\",\"Classic\",null,\"Yellow gold\",\"No stones\",null,32,\"Cable\",\"Studio\"]",
+      "views": [
+        {
+          "view": "Studio",
+          "status": "integrated",
+          "src": "/atelier/v2/origami-studio.png"
+        },
+        {
+          "view": "On skin",
+          "status": "integrated",
+          "src": "/atelier/v2/origami-worn.png"
+        },
+        {
+          "view": "Close-up",
+          "status": "integrated",
+          "src": "/atelier/v2/origami-close.png"
+        },
+        {
+          "view": "Dark",
+          "status": "integrated",
+          "src": "/atelier/v2/origami-dark.png"
+        }
+      ]
+    },
+    {
+      "identity": "[\"English\",false,\"Framed minimal\",\"Classic\",null,\"Yellow gold\",\"No stones\",null,32,\"Cable\",\"Studio\"]",
+      "views": [
+        {
+          "view": "Studio",
+          "status": "integrated",
+          "src": "/atelier/v2/framed-studio.png"
+        },
+        {
+          "view": "On skin",
+          "status": "integrated",
+          "src": "/atelier/v2/framed-worn.png"
+        },
+        {
+          "view": "Close-up",
+          "status": "integrated",
+          "src": "/atelier/v2/framed-close.png"
+        },
+        {
+          "view": "Dark",
+          "status": "integrated",
+          "src": "/atelier/v2/framed-dark.png"
+        }
+      ]
+    },
+    {
+      "identity": "[\"English\",false,\"Classical\",\"Classic\",null,\"Rose gold\",\"No stones\",null,32,\"Cable\",\"Studio\"]",
+      "views": [
+        {
+          "view": "Studio",
+          "status": "integrated",
+          "src": "/atelier/v2/rose-studio.png"
+        },
+        {
+          "view": "On skin",
+          "status": "integrated",
+          "src": "/atelier/v2/rose-worn.png"
+        },
+        {
+          "view": "Close-up",
+          "status": "integrated",
+          "src": "/atelier/v2/rose-close.png"
+        },
+        {
+          "view": "Dark",
+          "status": "integrated",
+          "src": "/atelier/v2/rose-dark.png"
+        }
+      ]
+    },
+    {
+      "identity": "[\"English\",false,\"Classical\",\"Classic\",null,\"White gold\",\"No stones\",null,32,\"Cable\",\"Studio\"]",
+      "views": [
+        {
+          "view": "Studio",
+          "status": "integrated",
+          "src": "/atelier/v2/white-studio.png"
+        },
+        {
+          "view": "On skin",
+          "status": "integrated",
+          "src": "/atelier/v2/white-worn.png"
+        },
+        {
+          "view": "Close-up",
+          "status": "integrated",
+          "src": "/atelier/v2/white-close.png"
+        },
+        {
+          "view": "Dark",
+          "status": "integrated",
+          "src": "/atelier/v2/white-dark.png"
+        }
+      ]
+    },
+    {
+      "identity": "[\"English\",false,\"Diamond rails\",\"Classic\",null,\"Yellow gold\",\"No stones\",null,32,\"Cable\",\"Studio\"]",
+      "views": [
+        {
+          "view": "Studio",
+          "status": "integrated",
+          "src": "/atelier/v2/rails-studio.png"
+        },
+        {
+          "view": "On skin",
+          "status": "integrated",
+          "src": "/atelier/v2/rails-worn.png"
+        },
+        {
+          "view": "Close-up",
+          "status": "integrated",
+          "src": "/atelier/v2/rails-close.png"
+        },
+        {
+          "view": "Dark",
+          "status": "integrated",
+          "src": "/atelier/v2/rails-dark.png"
+        }
+      ]
+    },
+    {
+      "identity": "[\"English\",false,\"Classical\",\"Minimal\",null,\"Yellow gold\",\"No stones\",null,32,\"Cable\",\"Studio\"]",
+      "views": [
+        {
+          "view": "Studio",
+          "status": "integrated",
+          "src": "/atelier/v2/minimal-studio.png"
+        },
+        {
+          "view": "On skin",
+          "status": "integrated",
+          "src": "/atelier/v4/minimal-worn.png"
+        },
+        {
+          "view": "Close-up",
+          "status": "integrated",
+          "src": "/atelier/v4/minimal-close.png"
+        },
+        {
+          "view": "Dark",
+          "status": "integrated",
+          "src": "/atelier/v4/minimal-dark.png"
+        }
+      ]
+    },
+    {
+      "identity": "[\"English\",false,\"Classical\",\"Signature\",null,\"Yellow gold\",\"No stones\",null,32,\"Cable\",\"Studio\"]",
+      "views": [
+        {
+          "view": "Studio",
+          "status": "integrated",
+          "src": "/atelier/v2/signature-studio.png"
+        },
+        {
+          "view": "On skin",
+          "status": "integrated",
+          "src": "/atelier/v4/signature-worn.png"
+        },
+        {
+          "view": "Close-up",
+          "status": "integrated",
+          "src": "/atelier/v4/signature-close.png"
+        },
+        {
+          "view": "Dark",
+          "status": "integrated",
+          "src": "/atelier/v4/signature-dark.png"
+        }
+      ]
+    },
+    {
+      "identity": "[\"English\",false,\"Classical\",\"Kufi\",null,\"Yellow gold\",\"No stones\",null,32,\"Cable\",\"Studio\"]",
+      "views": [
+        {
+          "view": "Studio",
+          "status": "integrated",
+          "src": "/atelier/v2/kufi-studio.png"
+        },
+        {
+          "view": "On skin",
+          "status": "integrated",
+          "src": "/atelier/v4/kufi-worn.png"
+        },
+        {
+          "view": "Close-up",
+          "status": "integrated",
+          "src": "/atelier/v4/kufi-close.png"
+        },
+        {
+          "view": "Dark",
+          "status": "integrated",
+          "src": "/atelier/v4/kufi-dark.png"
+        }
+      ]
+    },
+    {
+      "identity": "[\"English\",false,\"Classical\",\"Diwani\",null,\"Yellow gold\",\"No stones\",null,32,\"Cable\",\"Studio\"]",
+      "views": [
+        {
+          "view": "Studio",
+          "status": "integrated",
+          "src": "/atelier/v2/diwani-studio.png"
+        },
+        {
+          "view": "On skin",
+          "status": "integrated",
+          "src": "/atelier/v4/diwani-worn.png"
+        },
+        {
+          "view": "Close-up",
+          "status": "integrated",
+          "src": "/atelier/v4/diwani-close.png"
+        },
+        {
+          "view": "Dark",
+          "status": "integrated",
+          "src": "/atelier/v4/diwani-dark.png"
+        }
+      ]
+    },
+    {
+      "identity": "[\"English\",false,\"Classical\",\"Thuluth inspired\",null,\"Yellow gold\",\"No stones\",null,32,\"Cable\",\"Studio\"]",
+      "views": [
+        {
+          "view": "Studio",
+          "status": "integrated",
+          "src": "/atelier/v2/thuluth-studio.png"
+        },
+        {
+          "view": "On skin",
+          "status": "integrated",
+          "src": "/atelier/v4/thuluth-worn.png"
+        },
+        {
+          "view": "Close-up",
+          "status": "integrated",
+          "src": "/atelier/v4/thuluth-close.png"
+        },
+        {
+          "view": "Dark",
+          "status": "integrated",
+          "src": "/atelier/v4/thuluth-dark.png"
+        }
+      ]
+    },
+    {
+      "identity": "[\"English\",true,\"Classical\",\"Classic\",\"Side by side\",\"Yellow gold\",\"No stones\",null,32,\"Cable\",\"Studio\"]",
+      "views": [
+        {
+          "view": "Studio",
+          "status": "integrated",
+          "src": "/atelier/v2/side-studio.png"
+        },
+        {
+          "view": "On skin",
+          "status": "integrated",
+          "src": "/atelier/v2/side-worn.png"
+        },
+        {
+          "view": "Close-up",
+          "status": "integrated",
+          "src": "/atelier/v2/side-close.png"
+        },
+        {
+          "view": "Dark",
+          "status": "integrated",
+          "src": "/atelier/v2/side-dark.png"
+        }
+      ]
+    },
+    {
+      "identity": "[\"English\",true,\"Classical\",\"Classic\",\"Connected heart\",\"Yellow gold\",\"No stones\",null,32,\"Cable\",\"Studio\"]",
+      "views": [
+        {
+          "view": "Studio",
+          "status": "integrated",
+          "src": "/atelier/v2/heart-studio-repaired.png"
+        },
+        {
+          "view": "On skin",
+          "status": "integrated",
+          "src": "/atelier/v2/heart-worn-repaired.png"
+        },
+        {
+          "view": "Close-up",
+          "status": "integrated",
+          "src": "/atelier/v2/heart-close-repaired.png"
+        },
+        {
+          "view": "Dark",
+          "status": "integrated",
+          "src": "/atelier/v2/heart-dark-repaired.png"
+        }
+      ]
+    },
+    {
+      "identity": "[\"English\",true,\"Classical\",\"Classic\",\"Stacked\",\"Yellow gold\",\"No stones\",null,32,\"Cable\",\"Studio\"]",
+      "views": [
+        {
+          "view": "Studio",
+          "status": "integrated",
+          "src": "/atelier/v2/stacked-studio.png"
+        },
+        {
+          "view": "On skin",
+          "status": "integrated",
+          "src": "/atelier/v2/stacked-worn.png"
+        },
+        {
+          "view": "Close-up",
+          "status": "integrated",
+          "src": "/atelier/v2/stacked-close.png"
+        },
+        {
+          "view": "Dark",
+          "status": "integrated",
+          "src": "/atelier/v2/stacked-dark.png"
+        }
+      ]
+    },
+    {
+      "identity": "[\"English\",true,\"Classical\",\"Classic\",\"Infinity\",\"Yellow gold\",\"No stones\",null,32,\"Rolo\",\"Studio\"]",
+      "views": [
+        {
+          "view": "Studio",
+          "status": "integrated",
+          "src": "/atelier/v2/infinity-studio.png"
+        },
+        {
+          "view": "On skin",
+          "status": "integrated",
+          "src": "/atelier/v2/infinity-worn.png"
+        },
+        {
+          "view": "Close-up",
+          "status": "integrated",
+          "src": "/atelier/v2/infinity-close.png"
+        },
+        {
+          "view": "Dark",
+          "status": "integrated",
+          "src": "/atelier/v2/infinity-dark.png"
+        }
+      ]
+    },
+    {
+      "identity": "[\"English\",true,\"Classical\",\"Classic\",\"Interlocked\",\"Yellow gold\",\"No stones\",null,32,\"Cable\",\"Studio\"]",
+      "views": [
+        {
+          "view": "Studio",
+          "status": "integrated",
+          "src": "/atelier/v2/interlocked-studio-repaired.png"
+        },
+        {
+          "view": "On skin",
+          "status": "integrated",
+          "src": "/atelier/v2/interlocked-worn-repaired.png"
+        },
+        {
+          "view": "Close-up",
+          "status": "integrated",
+          "src": "/atelier/v2/interlocked-close-repaired.png"
+        },
+        {
+          "view": "Dark",
+          "status": "integrated",
+          "src": "/atelier/v2/interlocked-dark-repaired.png"
+        }
+      ]
+    },
+    {
+      "identity": "[\"English\",false,\"Classical\",\"Classic\",null,\"Yellow gold\",\"No stones\",null,32,\"Rolo\",\"Studio\"]",
+      "views": [
+        {
+          "view": "Studio",
+          "status": "integrated",
+          "src": "/atelier/v2/rolo-studio.png"
+        },
+        {
+          "view": "On skin",
+          "status": "integrated",
+          "src": "/atelier/v4/rolo-worn.png"
+        },
+        {
+          "view": "Close-up",
+          "status": "integrated",
+          "src": "/atelier/v4/rolo-close.png"
+        },
+        {
+          "view": "Dark",
+          "status": "integrated",
+          "src": "/atelier/v4/rolo-dark.png"
+        }
+      ]
+    },
+    {
+      "identity": "[\"English\",false,\"Classical\",\"Classic\",null,\"Yellow gold\",\"No stones\",null,32,\"Box\",\"Studio\"]",
+      "views": [
+        {
+          "view": "Studio",
+          "status": "integrated",
+          "src": "/atelier/v2/box-studio.png"
+        },
+        {
+          "view": "On skin",
+          "status": "integrated",
+          "src": "/atelier/v4/box-worn.png"
+        },
+        {
+          "view": "Close-up",
+          "status": "integrated",
+          "src": "/atelier/v4/box-close.png"
+        },
+        {
+          "view": "Dark",
+          "status": "integrated",
+          "src": "/atelier/v4/box-dark.png"
+        }
+      ]
+    },
+    {
+      "identity": "[\"English\",false,\"Classical\",\"Classic\",null,\"Yellow gold\",\"No stones\",null,22,\"Cable\",\"Studio\"]",
+      "views": [
+        {
+          "view": "Studio",
+          "status": "integrated",
+          "src": "/atelier/v2/small-studio.png"
+        },
+        {
+          "view": "On skin",
+          "status": "integrated",
+          "src": "/atelier/v4/small-worn.png"
+        },
+        {
+          "view": "Close-up",
+          "status": "integrated",
+          "src": "/atelier/v4/small-close.png"
+        },
+        {
+          "view": "Dark",
+          "status": "integrated",
+          "src": "/atelier/v4/small-dark.png"
+        }
+      ]
+    },
+    {
+      "identity": "[\"English\",false,\"Classical\",\"Classic\",null,\"Yellow gold\",\"Accent\",\"Lab diamond\",32,\"Cable\",\"Studio\"]",
+      "views": [
+        {
+          "view": "Studio",
+          "status": "integrated",
+          "src": "/atelier/v2/accent-studio.png"
+        },
+        {
+          "view": "On skin",
+          "status": "missing",
+          "src": null
+        },
+        {
+          "view": "Close-up",
+          "status": "missing",
+          "src": null
+        },
+        {
+          "view": "Dark",
+          "status": "missing",
+          "src": null
+        }
+      ]
+    },
+    {
+      "identity": "[\"English\",false,\"Classical\",\"Classic\",null,\"Yellow gold\",\"Partial pavé\",\"Lab diamond\",32,\"Cable\",\"Studio\"]",
+      "views": [
+        {
+          "view": "Studio",
+          "status": "integrated",
+          "src": "/atelier/v2/partial-studio.png"
+        },
+        {
+          "view": "On skin",
+          "status": "missing",
+          "src": null
+        },
+        {
+          "view": "Close-up",
+          "status": "missing",
+          "src": null
+        },
+        {
+          "view": "Dark",
+          "status": "missing",
+          "src": null
+        }
+      ]
+    },
+    {
+      "identity": "[\"English\",false,\"Classical\",\"Classic\",null,\"Yellow gold\",\"Full pavé\",\"Lab diamond\",32,\"Cable\",\"Studio\"]",
+      "views": [
+        {
+          "view": "Studio",
+          "status": "integrated",
+          "src": "/atelier/v2/full-studio.png"
+        },
+        {
+          "view": "On skin",
+          "status": "missing",
+          "src": null
+        },
+        {
+          "view": "Close-up",
+          "status": "missing",
+          "src": null
+        },
+        {
+          "view": "Dark",
+          "status": "missing",
+          "src": null
+        }
+      ]
+    },
+    {
+      "identity": "[\"English\",false,\"Classical\",\"Classic\",null,\"Yellow gold\",\"Accent\",\"Natural diamond\",32,\"Cable\",\"Studio\"]",
+      "views": [
+        {
+          "view": "Studio",
+          "status": "integrated",
+          "src": "/atelier/v2/natural-studio.png"
+        },
+        {
+          "view": "On skin",
+          "status": "missing",
+          "src": null
+        },
+        {
+          "view": "Close-up",
+          "status": "missing",
+          "src": null
+        },
+        {
+          "view": "Dark",
+          "status": "missing",
+          "src": null
+        }
+      ]
+    },
+    {
+      "identity": "[\"English\",false,\"Classical\",\"Classic\",null,\"Yellow gold\",\"Accent\",\"Ruby\",32,\"Cable\",\"Studio\"]",
+      "views": [
+        {
+          "view": "Studio",
+          "status": "integrated",
+          "src": "/atelier/v2/ruby-studio.png"
+        },
+        {
+          "view": "On skin",
+          "status": "missing",
+          "src": null
+        },
+        {
+          "view": "Close-up",
+          "status": "missing",
+          "src": null
+        },
+        {
+          "view": "Dark",
+          "status": "missing",
+          "src": null
+        }
+      ]
+    },
+    {
+      "identity": "[\"English\",false,\"Classical\",\"Classic\",null,\"Yellow gold\",\"Accent\",\"Emerald\",32,\"Cable\",\"Studio\"]",
+      "views": [
+        {
+          "view": "Studio",
+          "status": "integrated",
+          "src": "/atelier/v2/emerald-studio.png"
+        },
+        {
+          "view": "On skin",
+          "status": "missing",
+          "src": null
+        },
+        {
+          "view": "Close-up",
+          "status": "missing",
+          "src": null
+        },
+        {
+          "view": "Dark",
+          "status": "missing",
+          "src": null
+        }
+      ]
+    },
+    {
+      "identity": "[\"English\",false,\"Classical\",\"Classic\",null,\"Yellow gold\",\"Accent\",\"Blue sapphire\",32,\"Cable\",\"Studio\"]",
+      "views": [
+        {
+          "view": "Studio",
+          "status": "integrated",
+          "src": "/atelier/v2/blue-studio.png"
+        },
+        {
+          "view": "On skin",
+          "status": "missing",
+          "src": null
+        },
+        {
+          "view": "Close-up",
+          "status": "missing",
+          "src": null
+        },
+        {
+          "view": "Dark",
+          "status": "missing",
+          "src": null
+        }
+      ]
+    },
+    {
+      "identity": "[\"English\",false,\"Classical\",\"Classic\",null,\"Yellow gold\",\"Accent\",\"Pink sapphire\",32,\"Cable\",\"Studio\"]",
+      "views": [
+        {
+          "view": "Studio",
+          "status": "integrated",
+          "src": "/atelier/v2/pink-studio.png"
+        },
+        {
+          "view": "On skin",
+          "status": "missing",
+          "src": null
+        },
+        {
+          "view": "Close-up",
+          "status": "missing",
+          "src": null
+        },
+        {
+          "view": "Dark",
+          "status": "missing",
+          "src": null
+        }
+      ]
+    },
+    {
+      "identity": "[\"English\",false,\"Classical\",\"Classic\",null,\"Yellow gold\",\"No stones\",null,32,\"Curb\",\"Studio\"]",
+      "views": [
+        {
+          "view": "Studio",
+          "status": "integrated",
+          "src": "/atelier/v2/curb-v2.png"
+        },
+        {
+          "view": "On skin",
+          "status": "missing",
+          "src": null
+        },
+        {
+          "view": "Close-up",
+          "status": "missing",
+          "src": null
+        },
+        {
+          "view": "Dark",
+          "status": "missing",
+          "src": null
+        }
+      ]
+    },
+    {
+      "identity": "[\"Arabic\",false,\"Classical\",\"Kufi\",null,\"Yellow gold\",\"No stones\",null,32,\"Cable\",\"Studio\"]",
+      "views": [
+        {
+          "view": "Studio",
+          "status": "integrated",
+          "src": "/atelier/v2/arabic-kufi-repaired.png"
+        },
+        {
+          "view": "On skin",
+          "status": "accepted-not-integrated",
+          "src": "/atelier/v6/arabic-kufi-worn-corrected.png"
+        },
+        {
+          "view": "Close-up",
+          "status": "accepted-not-integrated",
+          "src": "/atelier/v6/arabic-kufi-close.png"
+        },
+        {
+          "view": "Dark",
+          "status": "accepted-not-integrated",
+          "src": "/atelier/v6/arabic-kufi-dark.png"
+        }
+      ]
+    },
+    {
+      "identity": "[\"Arabic\",false,\"Classical\",\"Signature\",null,\"Yellow gold\",\"No stones\",null,32,\"Cable\",\"Studio\"]",
+      "views": [
+        {
+          "view": "Studio",
+          "status": "integrated",
+          "src": "/atelier/v2/arabic-signature-repaired.png"
+        },
+        {
+          "view": "On skin",
+          "status": "accepted-not-integrated",
+          "src": "/atelier/v6/arabic-signature-worn.png"
+        },
+        {
+          "view": "Close-up",
+          "status": "accepted-not-integrated",
+          "src": "/atelier/v6/arabic-signature-close.png"
+        },
+        {
+          "view": "Dark",
+          "status": "accepted-not-integrated",
+          "src": "/atelier/v6/arabic-signature-dark.png"
+        }
+      ]
+    },
+    {
+      "identity": "[\"Arabic\",false,\"Classical\",\"Minimal\",null,\"Yellow gold\",\"No stones\",null,32,\"Cable\",\"Studio\"]",
+      "views": [
+        {
+          "view": "Studio",
+          "status": "integrated",
+          "src": "/atelier/v2/arabic-minimal-v2-repaired.png"
+        },
+        {
+          "view": "On skin",
+          "status": "accepted-not-integrated",
+          "src": "/atelier/v6/arabic-minimal-v2-worn.png"
+        },
+        {
+          "view": "Close-up",
+          "status": "accepted-not-integrated",
+          "src": "/atelier/v6/arabic-minimal-v2-close.png"
+        },
+        {
+          "view": "Dark",
+          "status": "accepted-not-integrated",
+          "src": "/atelier/v6/arabic-minimal-v2-dark.png"
+        }
+      ]
+    },
+    {
+      "identity": "[\"Arabic\",false,\"Classical\",\"Diwani\",null,\"Yellow gold\",\"No stones\",null,32,\"Cable\",\"Studio\"]",
+      "views": [
+        {
+          "view": "Studio",
+          "status": "integrated",
+          "src": "/atelier/v2/arabic-diwani-v2.png"
+        },
+        {
+          "view": "On skin",
+          "status": "accepted-not-integrated",
+          "src": "/atelier/v6/arabic-diwani-v2-worn.png"
+        },
+        {
+          "view": "Close-up",
+          "status": "accepted-not-integrated",
+          "src": "/atelier/v6/arabic-diwani-v2-close.png"
+        },
+        {
+          "view": "Dark",
+          "status": "accepted-not-integrated",
+          "src": "/atelier/v6/arabic-diwani-v2-dark.png"
+        }
+      ]
+    },
+    {
+      "identity": "[\"Arabic\",false,\"Classical\",\"Thuluth inspired\",null,\"Yellow gold\",\"No stones\",null,32,\"Cable\",\"Studio\"]",
+      "views": [
+        {
+          "view": "Studio",
+          "status": "integrated",
+          "src": "/atelier/v2/arabic-thuluth-v2-repaired.png"
+        },
+        {
+          "view": "On skin",
+          "status": "accepted-not-integrated",
+          "src": "/atelier/v6/arabic-thuluth-v2-worn.png"
+        },
+        {
+          "view": "Close-up",
+          "status": "accepted-not-integrated",
+          "src": "/atelier/v6/arabic-thuluth-v2-close.png"
+        },
+        {
+          "view": "Dark",
+          "status": "accepted-not-integrated",
+          "src": "/atelier/v6/arabic-thuluth-v2-dark.png"
+        }
+      ]
+    },
+    {
+      "identity": "[\"English\",false,\"Origami ribbon\",\"Classic\",null,\"White gold\",\"No stones\",null,32,\"Cable\",\"Studio\"]",
+      "views": [
+        {
+          "view": "Studio",
+          "status": "integrated",
+          "src": "/atelier/v3/origami-white-studio.png"
+        },
+        {
+          "view": "On skin",
+          "status": "integrated",
+          "src": "/atelier/v3/origami-white-worn.png"
+        },
+        {
+          "view": "Close-up",
+          "status": "integrated",
+          "src": "/atelier/v3/origami-white-close.png"
+        },
+        {
+          "view": "Dark",
+          "status": "integrated",
+          "src": "/atelier/v3/origami-white-dark.png"
+        }
+      ]
+    },
+    {
+      "identity": "[\"English\",false,\"Origami ribbon\",\"Classic\",null,\"White gold\",\"Accent\",\"Lab diamond\",32,\"Cable\",\"Studio\"]",
+      "views": [
+        {
+          "view": "Studio",
+          "status": "integrated",
+          "src": "/atelier/v3/origami-white-accent-studio.png"
+        },
+        {
+          "view": "On skin",
+          "status": "integrated",
+          "src": "/atelier/v3/origami-white-accent-worn.png"
+        },
+        {
+          "view": "Close-up",
+          "status": "integrated",
+          "src": "/atelier/v3/origami-white-accent-close.png"
+        },
+        {
+          "view": "Dark",
+          "status": "integrated",
+          "src": "/atelier/v3/origami-white-accent-dark.png"
+        }
+      ]
+    },
+    {
+      "identity": "[\"English\",false,\"Origami ribbon\",\"Classic\",null,\"White gold\",\"Accent\",\"Ruby\",32,\"Cable\",\"Studio\"]",
+      "views": [
+        {
+          "view": "Studio",
+          "status": "integrated",
+          "src": "/atelier/v3/origami-white-ruby-studio.png"
+        },
+        {
+          "view": "On skin",
+          "status": "integrated",
+          "src": "/atelier/v3/origami-white-ruby-worn.png"
+        },
+        {
+          "view": "Close-up",
+          "status": "integrated",
+          "src": "/atelier/v3/origami-white-ruby-close.png"
+        },
+        {
+          "view": "Dark",
+          "status": "integrated",
+          "src": "/atelier/v3/origami-white-ruby-dark.png"
+        }
+      ]
+    },
+    {
+      "identity": "[\"Arabic\",false,\"Origami ribbon\",\"Classic\",null,\"Yellow gold\",\"No stones\",null,32,\"Cable\",\"Studio\"]",
+      "views": [
+        {
+          "view": "Studio",
+          "status": "integrated",
+          "src": "/atelier/v5/arabic-origami-studio.png"
+        },
+        {
+          "view": "On skin",
+          "status": "integrated",
+          "src": "/atelier/v5/arabic-origami-worn.png"
+        },
+        {
+          "view": "Close-up",
+          "status": "integrated",
+          "src": "/atelier/v5/arabic-origami-close.png"
+        },
+        {
+          "view": "Dark",
+          "status": "integrated",
+          "src": "/atelier/v5/arabic-origami-dark.png"
+        }
+      ]
+    },
+    {
+      "identity": "[\"Arabic\",false,\"Framed minimal\",\"Classic\",null,\"Yellow gold\",\"No stones\",null,32,\"Cable\",\"Studio\"]",
+      "views": [
+        {
+          "view": "Studio",
+          "status": "integrated",
+          "src": "/atelier/v5/arabic-framed-studio.png"
+        },
+        {
+          "view": "On skin",
+          "status": "integrated",
+          "src": "/atelier/v5/arabic-framed-worn.png"
+        },
+        {
+          "view": "Close-up",
+          "status": "integrated",
+          "src": "/atelier/v5/arabic-framed-close.png"
+        },
+        {
+          "view": "Dark",
+          "status": "integrated",
+          "src": "/atelier/v5/arabic-framed-dark.png"
+        }
+      ]
+    },
+    {
+      "identity": "[\"Arabic\",false,\"Diamond rails\",\"Classic\",null,\"Yellow gold\",\"No stones\",null,32,\"Cable\",\"Studio\"]",
+      "views": [
+        {
+          "view": "Studio",
+          "status": "integrated",
+          "src": "/atelier/v5/arabic-rails-studio.png"
+        },
+        {
+          "view": "On skin",
+          "status": "integrated",
+          "src": "/atelier/v5/arabic-rails-worn.png"
+        },
+        {
+          "view": "Close-up",
+          "status": "integrated",
+          "src": "/atelier/v5/arabic-rails-close.png"
+        },
+        {
+          "view": "Dark",
+          "status": "integrated",
+          "src": "/atelier/v5/arabic-rails-dark.png"
+        }
+      ]
+    },
+    {
+      "identity": "[\"Arabic\",true,\"Classical\",\"Classic\",\"Side by side\",\"Yellow gold\",\"No stones\",null,32,\"Cable\",\"Studio\"]",
+      "views": [
+        {
+          "view": "Studio",
+          "status": "integrated",
+          "src": "/atelier/v5/arabic-side-studio.png"
+        },
+        {
+          "view": "On skin",
+          "status": "integrated",
+          "src": "/atelier/v5/arabic-side-worn.png"
+        },
+        {
+          "view": "Close-up",
+          "status": "integrated",
+          "src": "/atelier/v5/arabic-side-close.png"
+        },
+        {
+          "view": "Dark",
+          "status": "integrated",
+          "src": "/atelier/v5/arabic-side-dark.png"
+        }
+      ]
+    },
+    {
+      "identity": "[\"Arabic\",true,\"Classical\",\"Classic\",\"Connected heart\",\"Yellow gold\",\"No stones\",null,32,\"Cable\",\"Studio\"]",
+      "views": [
+        {
+          "view": "Studio",
+          "status": "integrated",
+          "src": "/atelier/v5/arabic-heart-studio.png"
+        },
+        {
+          "view": "On skin",
+          "status": "integrated",
+          "src": "/atelier/v5/arabic-heart-worn.png"
+        },
+        {
+          "view": "Close-up",
+          "status": "integrated",
+          "src": "/atelier/v5/arabic-heart-close.png"
+        },
+        {
+          "view": "Dark",
+          "status": "integrated",
+          "src": "/atelier/v5/arabic-heart-dark.png"
+        }
+      ]
+    },
+    {
+      "identity": "[\"Arabic\",true,\"Classical\",\"Classic\",\"Stacked\",\"Yellow gold\",\"No stones\",null,32,\"Cable\",\"Studio\"]",
+      "views": [
+        {
+          "view": "Studio",
+          "status": "integrated",
+          "src": "/atelier/v5/arabic-stacked-studio.png"
+        },
+        {
+          "view": "On skin",
+          "status": "integrated",
+          "src": "/atelier/v5/arabic-stacked-worn.png"
+        },
+        {
+          "view": "Close-up",
+          "status": "integrated",
+          "src": "/atelier/v5/arabic-stacked-close.png"
+        },
+        {
+          "view": "Dark",
+          "status": "integrated",
+          "src": "/atelier/v5/arabic-stacked-dark.png"
+        }
+      ]
+    },
+    {
+      "identity": "[\"Arabic\",true,\"Classical\",\"Classic\",\"Infinity\",\"Yellow gold\",\"No stones\",null,32,\"Cable\",\"Studio\"]",
+      "views": [
+        {
+          "view": "Studio",
+          "status": "integrated",
+          "src": "/atelier/v5/arabic-infinity-studio.png"
+        },
+        {
+          "view": "On skin",
+          "status": "integrated",
+          "src": "/atelier/v5/arabic-infinity-worn.png"
+        },
+        {
+          "view": "Close-up",
+          "status": "integrated",
+          "src": "/atelier/v5/arabic-infinity-close.png"
+        },
+        {
+          "view": "Dark",
+          "status": "integrated",
+          "src": "/atelier/v5/arabic-infinity-dark.png"
+        }
+      ]
+    },
+    {
+      "identity": "[\"Arabic\",true,\"Classical\",\"Classic\",\"Interlocked\",\"Yellow gold\",\"No stones\",null,32,\"Cable\",\"Studio\"]",
+      "views": [
+        {
+          "view": "Studio",
+          "status": "integrated",
+          "src": "/atelier/v5/arabic-interlocked-studio.png"
+        },
+        {
+          "view": "On skin",
+          "status": "integrated",
+          "src": "/atelier/v5/arabic-interlocked-worn.png"
+        },
+        {
+          "view": "Close-up",
+          "status": "integrated",
+          "src": "/atelier/v5/arabic-interlocked-close.png"
+        },
+        {
+          "view": "Dark",
+          "status": "integrated",
+          "src": "/atelier/v5/arabic-interlocked-dark.png"
+        }
+      ]
+    }
+  ]
+}

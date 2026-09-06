@@ -1,10 +1,10 @@
-import { NewDesignExperience } from "@/features/entry/new-design-experience";
-
-export default async function NewDesignPage({
+import { Atelier } from "@/features/atelier/Atelier";
+export const metadata = { title: "Create your piece · CALEUMS" };
+export default async function DesignPage({
   params,
 }: {
-  params: Promise<{ locale: "en" | "ar" }>;
+  params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
-  return <NewDesignExperience locale={locale} />;
+  return <Atelier locale={locale === "ar" ? "ar" : "en"} />;
 }

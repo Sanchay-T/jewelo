@@ -1,0 +1,137 @@
+[
+  {
+    "id": "arabic-kufi-v6-close",
+    "file": "arabic-kufi-close.png",
+    "view": "Close-up",
+    "patch": {
+      "script": "Arabic",
+      "lettering": "Kufi"
+    }
+  },
+  {
+    "id": "arabic-kufi-v6-dark",
+    "file": "arabic-kufi-dark.png",
+    "view": "Dark",
+    "patch": {
+      "script": "Arabic",
+      "lettering": "Kufi"
+    }
+  },
+  {
+    "id": "arabic-signature-v6-worn",
+    "file": "arabic-signature-worn.png",
+    "view": "On skin",
+    "patch": {
+      "script": "Arabic",
+      "lettering": "Signature"
+    }
+  },
+  {
+    "id": "arabic-signature-v6-close",
+    "file": "arabic-signature-close.png",
+    "view": "Close-up",
+    "patch": {
+      "script": "Arabic",
+      "lettering": "Signature"
+    }
+  },
+  {
+    "id": "arabic-signature-v6-dark",
+    "file": "arabic-signature-dark.png",
+    "view": "Dark",
+    "patch": {
+      "script": "Arabic",
+      "lettering": "Signature"
+    }
+  },
+  {
+    "id": "arabic-minimal-v2-v6-close",
+    "file": "arabic-minimal-v2-close.png",
+    "view": "Close-up",
+    "patch": {
+      "script": "Arabic",
+      "lettering": "Minimal"
+    }
+  },
+  {
+    "id": "arabic-minimal-v2-v6-worn",
+    "file": "arabic-minimal-v2-worn.png",
+    "view": "On skin",
+    "patch": {
+      "script": "Arabic",
+      "lettering": "Minimal"
+    }
+  },
+  {
+    "id": "arabic-minimal-v2-v6-dark",
+    "file": "arabic-minimal-v2-dark.png",
+    "view": "Dark",
+    "patch": {
+      "script": "Arabic",
+      "lettering": "Minimal"
+    }
+  },
+  {
+    "id": "arabic-diwani-v2-v6-worn",
+    "file": "arabic-diwani-v2-worn.png",
+    "view": "On skin",
+    "patch": {
+      "script": "Arabic",
+      "lettering": "Diwani"
+    }
+  },
+  {
+    "id": "arabic-diwani-v2-v6-close",
+    "file": "arabic-diwani-v2-close.png",
+    "view": "Close-up",
+    "patch": {
+      "script": "Arabic",
+      "lettering": "Diwani"
+    }
+  },
+  {
+    "id": "arabic-diwani-v2-v6-dark",
+    "file": "arabic-diwani-v2-dark.png",
+    "view": "Dark",
+    "patch": {
+      "script": "Arabic",
+      "lettering": "Diwani"
+    }
+  },
+  {
+    "id": "arabic-thuluth-v2-v6-close",
+    "file": "arabic-thuluth-v2-close.png",
+    "view": "Close-up",
+    "patch": {
+      "script": "Arabic",
+      "lettering": "Thuluth inspired"
+    }
+  },
+  {
+    "id": "arabic-thuluth-v2-v6-worn",
+    "file": "arabic-thuluth-v2-worn.png",
+    "view": "On skin",
+    "patch": {
+      "script": "Arabic",
+      "lettering": "Thuluth inspired"
+    }
+  },
+  {
+    "id": "arabic-thuluth-v2-v6-dark",
+    "file": "arabic-thuluth-v2-dark.png",
+    "view": "Dark",
+    "patch": {
+      "script": "Arabic",
+      "lettering": "Thuluth inspired"
+    }
+  },
+  {
+    "id": "arabic-kufi-v6-worn-corrected",
+    "file": "arabic-kufi-worn-corrected.png",
+    "view": "On skin",
+    "patch": {
+      "script": "Arabic",
+      "lettering": "Kufi"
+    }
+  }
+]

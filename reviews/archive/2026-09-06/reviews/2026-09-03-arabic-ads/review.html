@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Arabic Ads Review - 12 studio shoots</title>
+<style>
+body{font-family:-apple-system,system-ui,sans-serif;margin:0;background:#111;color:#eee}
+header{padding:12px 16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;border-bottom:1px solid #333}
+button{background:#222;color:#eee;border:1px solid #444;border-radius:8px;padding:8px 14px;cursor:pointer}
+button.active{background:#eee;color:#111}
+#stage{display:flex;gap:16px;padding:16px;max-width:1400px;margin:0 auto}
+#viewer{flex:3;background:#000;border-radius:12px;min-height:60vh;display:flex;align-items:center;justify-content:center;overflow:hidden}
+#viewer img{max-width:100%;max-height:75vh;object-fit:contain;background:#fff}
+#viewer.zoom img{width:150%;max-height:none;cursor:zoom-out}
+#side{flex:1;min-width:280px;background:#1a1a1a;border-radius:12px;padding:16px}
+.ar{font-size:44px;direction:rtl;text-align:center;margin:8px 0}
+.badge{display:inline-block;padding:4px 10px;border-radius:20px;font-size:12px}
+.pass{background:#1d5c2e}.fail{background:#7a2b2b}.review{background:#6b5a1e}
+.nav{display:flex;gap:8px;justify-content:center;padding:12px}
+#dots{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;padding:8px}
+#dots span{width:10px;height:10px;border-radius:50%;background:#555;cursor:pointer;display:inline-block}
+#dots span.on{background:#fff}
+a{color:#9cf}
+</style>
+</head>
+<body>
+<header>
+<strong>Arabic pendants - 12 images</strong>
+<span id="count"></span>
+<button data-f="all" class="active">All</button>
+<button data-f="1:1">1:1</button>
+<button data-f="16:9">16:9</button>
+<button data-f="9:16">9:16</button>
+<button id="zoom">Zoom</button>
+<a href="contact-sheet.jpg" target="_blank">contact sheet</a>
+</header>
+<div id="stage">
+<div id="viewer"><img id="img" alt="ad - if blank, images failed to load"></div>
+<div id="side">
+<div class="ar" id="ar"></div>
+<div id="meta"></div>
+<div class="nav"><button id="prev">Prev</button><button id="next">Next</button></div>
+<div id="dots"></div>
+<div><a id="orig" target="_blank">Open full-res original</a></div>
+<p style="color:#888;font-size:12px">Files load from ./normalized/ and ./originals/ next to this html. If blank, open Chrome DevTools Console.</p>
+</div>
+</div>
+<script>
+const DATA=[
+{id:"df7639b5-5511-4e77-9f4c-4600d9ac269f",look:"White hero",ratio:"1:1",dim:"1920x1920",ar:"نور",qc:"pass - clean macro",extra:"none",file:"df7639b5-5511-4e77-9f4c-4600d9ac269f.png",note:"glyphs match نور structure"},
+{id:"9ca281ec-5b37-4542-9324-0a0cd9d88b90",look:"White hero",ratio:"16:9",dim:"1920x1088",ar:"نور",qc:"pass - wide banner",extra:"none",file:"9ca281ec-5b37-4542-9324-0a0cd9d88b90.png",note:"matches square"},
+{id:"784c27af-aa60-4735-9ac9-662f88c389a2",look:"White hero",ratio:"9:16",dim:"1088x1920",ar:"نور",qc:"pass - vertical",extra:"none",file:"784c27af-aa60-4735-9ac9-662f88c389a2.png",note:"matches square"},
+{id:"8c65b524-b4d8-4b96-b39b-fa909423d6c9",look:"Dark luxury",ratio:"1:1",dim:"1920x1920",ar:"ليلى",qc:"pass-with-note - check bail",extra:"gold rim on bust",file:"8c65b524-b4d8-4b96-b39b-fa909423d6c9.png",note:"ليلى with dots below"},
+{id:"0d32eb05-f3ef-46a1-a9e0-b8fefb751953",look:"Dark luxury",ratio:"16:9",dim:"1920x1088",ar:"ليلى",qc:"pass - best banner",extra:"none",file:"0d32eb05-f3ef-46a1-a9e0-b8fefb751953.png",note:"matches square"},
+{id:"779b3093-c8d6-4d8b-84aa-cf64a5b543c7",look:"Dark luxury",ratio:"9:16",dim:"1088x1920",ar:"ليلى",qc:"pass - stories",extra:"none",file:"779b3093-c8d6-4d8b-84aa-cf64a5b543c7.png",note:"matches square"},
+{id:"73f3dfad-2ca7-4d1e-8d75-ee41e7cef4c4",look:"Silk lifestyle",ratio:"1:1",dim:"1920x1920",ar:"فاطمة",qc:"fail-for-clean-ads - brand on box",extra:"LUXO JEWELRY cropped",file:"73f3dfad-2ca7-4d1e-8d75-ee41e7cef4c4.png",note:"فاطمة correct structure"},
+{id:"61a48f96-307b-4972-a829-619b284083b4",look:"Silk lifestyle",ratio:"16:9",dim:"1920x1088",ar:"فاطمة",qc:"fail-for-clean-ads - card copy",extra:"FOR YOU + أنت جميلة",file:"61a48f96-307b-4972-a829-619b284083b4.png",note:"concept only"},
+{id:"e92803b8-edb4-478c-86dd-df04781057b8",look:"Silk lifestyle",ratio:"9:16",dim:"1088x1920",ar:"فاطمة",qc:"fail-for-clean-ads - brand",extra:"LUXELLE JEWELRY",file:"e92803b8-edb4-478c-86dd-df04781057b8.png",note:"concept only"},
+{id:"96063da4-57f7-4a25-9b09-8e826b97bdce",look:"Marble premium",ratio:"1:1",dim:"1920x1920",ar:"مريم",qc:"fail-for-clean-ads - footer brand",extra:"LUXOR GIFT STUDIO",file:"96063da4-57f7-4a25-9b09-8e826b97bdce.png",note:"مريم bold 3D"},
+{id:"59f9dc08-d326-4f56-987a-aa291130f16c",look:"Marble premium",ratio:"16:9",dim:"1920x1088",ar:"مريم",qc:"concept-only - ad draft",extra:"Arabic headline + icons",file:"59f9dc08-d326-4f56-987a-aa291130f16c.png",note:"ad draft"},
+{id:"e8cb4657-0bce-45a0-9146-dd2ec532ada6",look:"Marble premium",ratio:"9:16",dim:"1088x1920",ar:"مريم",qc:"concept-only - poster",extra:"LUXORIA + footer",file:"e8cb4657-0bce-45a0-9146-dd2ec532ada6.png",note:"poster draft"}
+];
+let i=0,filter='all';
+const img=document.getElementById('img');
+img.onerror=()=>{document.getElementById('meta').innerHTML+='<p style=color:red>Image failed to load: '+img.src+'</p>'};
+function list(){return DATA.filter(d=>filter==='all'||d.ratio===filter)}
+function show(){
+const L=list();if(i>=L.length)i=0;const d=L[i];
+img.src='normalized/'+d.id+'.jpg';
+document.getElementById('ar').textContent=d.ar;
+const cls=d.qc.startsWith('pass')?'pass':(d.qc.startsWith('fail')||d.qc.startsWith('concept'))?'fail':'review';
+document.getElementById('meta').innerHTML='<span class=badge '+cls+'>'+d.qc+'</span><p><b>'+d.look+' '+d.ratio+'</b><br>'+d.dim+'<br>'+d.note+'<br>Extra: '+d.extra+'<br><small>'+d.id+'</small></p>';
+document.getElementById('orig').href='originals/'+d.file;
+document.getElementById('count').textContent=(i+1)+' / '+L.length;
+const dots=document.getElementById('dots');dots.innerHTML='';
+L.forEach((x,idx)=>{const s=document.createElement('span');if(idx===i)s.classList.add('on');s.onclick=()=>{i=idx;show()};dots.appendChild(s)});
+}
+document.getElementById('prev').onclick=()=>{i=(i-1+list().length)%list().length;show()};
+document.getElementById('next').onclick=()=>{i=(i+1)%list().length;show()};
+document.addEventListener('keydown',e=>{if(e.key==='ArrowRight')document.getElementById('next').click();if(e.key==='ArrowLeft')document.getElementById('prev').click()});
+document.querySelectorAll('button[data-f]').forEach(b=>b.onclick=()=>{document.querySelectorAll('button[data-f]').forEach(x=>x.classList.remove('active'));b.classList.add('active');filter=b.dataset.f;i=0;show()});
+document.getElementById('zoom').onclick=()=>document.getElementById('viewer').classList.toggle('zoom');
+show();
+</script>
+</body>
+</html>

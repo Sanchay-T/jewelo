@@ -1,0 +1,1327 @@
+{
+  "version": 2,
+  "created": "2026-09-06",
+  "tool": "built-in imagegen",
+  "cost": {
+    "amount": null,
+    "reason": "Not reported by built-in tool"
+  },
+  "assets": [
+    {
+      "id": "origami",
+      "file": "origami-studio.png",
+      "view": "Studio",
+      "patch": {
+        "construction": "Origami ribbon"
+      },
+      "prompt": "Use case: precise-object-edit. Asset: CALEUMS single ecommerce product photo. Input is jewelry style reference. Create a pendant spelling exactly \"Asma\", A-s-m-a, in upright connected letterforms formed from folded solid 18K yellow gold origami ribbon: crisp planar folds, elegant angular ribbon facets, readable name and believable connecting gold. This must visibly differ from ordinary rounded cursive. Single name, no stones, cable chain, approximately 32mm. Preserve warm ivory silk and limestone setting, gentle commercial light, portrait 4:5 composition, whole pendant centered at 62% height filling 65% width, chain up to upper corners. No typography overlays, labels, watermarks or collage.",
+      "parent": "/atelier/v1/asma-studio.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Visible name, option distinction and framing. Physical dimensions not verified."
+      },
+      "cost": null
+    },
+    {
+      "id": "framed",
+      "file": "framed-studio.png",
+      "view": "Studio",
+      "patch": {
+        "construction": "Framed minimal"
+      },
+      "prompt": "Use case: precise-object-edit. Asset: one premium CALEUMS ecommerce jewelry photograph. Reference image gives composition, lighting and base Asma pendant. Create the specified variant below. Exact sample name \"Asma\" (A-s-m-a), upright connected readable letters, solid 18K gold, believable attached chain. Warm cream silk and limestone, soft commercial daylight, portrait 4:5, pendant at 60% image height, full piece visible at 65% width, chain extends to upper corners. No UI, no caption, no logos, no watermark or collage. Unless explicitly changed below, keep Classical construction, Classic cursive, single name, yellow gold, no stones, 32 mm size and cable chain. Variant: Framed minimal construction: original cursive Asma physically suspended by subtle gold bridges INSIDE a slim horizontal rectangular rounded-corner open gold frame, minimal refined border, plain gold with no stones.",
+      "parent": "/atelier/v1/asma-studio.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Visible name, option distinction and framing. Physical dimensions not verified."
+      },
+      "cost": null
+    },
+    {
+      "id": "rose",
+      "file": "rose-studio.png",
+      "view": "Studio",
+      "patch": {
+        "metal": "Rose gold"
+      },
+      "prompt": "Use case: precise-object-edit. Asset: one premium CALEUMS ecommerce jewelry photograph. Reference image gives composition, lighting and base Asma pendant. Create the specified variant below. Exact sample name \"Asma\" (A-s-m-a), upright connected readable letters, solid 18K gold, believable attached chain. Warm cream silk and limestone, soft commercial daylight, portrait 4:5, pendant at 60% image height, full piece visible at 65% width, chain extends to upper corners. No UI, no caption, no logos, no watermark or collage. Unless explicitly changed below, keep Classical construction, Classic cursive, single name, yellow gold, no stones, 32 mm size and cable chain. Variant: Change ALL necklace metal, pendant and chain, to polished 18K ROSE GOLD, warm pink copper reflections, keep name geometry identical. No stones.",
+      "parent": "/atelier/v1/asma-studio.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Visible name, option distinction and framing. Physical dimensions not verified."
+      },
+      "cost": null
+    },
+    {
+      "id": "white",
+      "file": "white-studio.png",
+      "view": "Studio",
+      "patch": {
+        "metal": "White gold"
+      },
+      "prompt": "Use case: precise-object-edit. Asset: one premium CALEUMS ecommerce jewelry photograph. Reference image gives composition, lighting and base Asma pendant. Create the specified variant below. Exact sample name \"Asma\" (A-s-m-a), upright connected readable letters, solid 18K gold, believable attached chain. Warm cream silk and limestone, soft commercial daylight, portrait 4:5, pendant at 60% image height, full piece visible at 65% width, chain extends to upper corners. No UI, no caption, no logos, no watermark or collage. Unless explicitly changed below, keep Classical construction, Classic cursive, single name, yellow gold, no stones, 32 mm size and cable chain. Variant: Change ALL necklace metal, pendant and chain, to luminous polished 18K WHITE GOLD, silver-white neutral reflections, keep name geometry identical. No stones.",
+      "parent": "/atelier/v1/asma-studio.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Visible name, option distinction and framing. Physical dimensions not verified."
+      },
+      "cost": null
+    },
+    {
+      "id": "rails",
+      "file": "rails-studio.png",
+      "view": "Studio",
+      "patch": {
+        "construction": "Diamond rails"
+      },
+      "prompt": "Use case: precise-object-edit. Asset: one premium CALEUMS ecommerce jewelry photograph. Reference image gives composition, lighting and base Asma pendant. Create the specified variant below. Exact sample name \"Asma\" (A-s-m-a), upright connected readable letters, solid 18K gold, believable attached chain. Warm cream silk and limestone, soft commercial daylight, portrait 4:5, pendant at 60% image height, full piece visible at 65% width, chain extends to upper corners. No UI, no caption, no logos, no watermark or collage. Unless explicitly changed below, keep Classical construction, Classic cursive, single name, yellow gold, no stones, 32 mm size and cable chain. Variant: Diamond rails construction: cursive Asma sits securely between two slender parallel horizontal polished gold rails above and below the name. Fine linear architecture, upright lettering. For this no-stones option rails must be PLAIN POLISHED GOLD, not diamonds.",
+      "parent": "/atelier/v1/asma-studio.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Visible name, option distinction and framing. Physical dimensions not verified."
+      },
+      "cost": null
+    },
+    {
+      "id": "minimal",
+      "file": "minimal-studio.png",
+      "view": "Studio",
+      "patch": {
+        "lettering": "Minimal"
+      },
+      "prompt": "Use case: precise-object-edit. Asset: one premium CALEUMS ecommerce jewelry photograph. Reference image gives composition, lighting and base Asma pendant. Create the specified variant below. Exact sample name \"Asma\" (A-s-m-a), upright connected readable letters, solid 18K gold, believable attached chain. Warm cream silk and limestone, soft commercial daylight, portrait 4:5, pendant at 60% image height, full piece visible at 65% width, chain extends to upper corners. No UI, no caption, no logos, no watermark or collage. Unless explicitly changed below, keep Classical construction, Classic cursive, single name, yellow gold, no stones, 32 mm size and cable chain. Variant: Change lettering to ultra clean upright modern minimal sans serif Asma, slender monoline A-s-m-a, joined by subtle base connections. Not cursive, no flourishes.",
+      "parent": "/atelier/v1/asma-studio.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Visible name, option distinction and framing. Physical dimensions not verified."
+      },
+      "cost": null
+    },
+    {
+      "id": "signature",
+      "file": "signature-studio.png",
+      "view": "Studio",
+      "patch": {
+        "lettering": "Signature"
+      },
+      "prompt": "Use case: precise-object-edit. Asset: one premium CALEUMS ecommerce jewelry photograph. Reference image gives composition, lighting and base Asma pendant. Create the specified variant below. Exact sample name \"Asma\" (A-s-m-a), upright connected readable letters, solid 18K gold, believable attached chain. Warm cream silk and limestone, soft commercial daylight, portrait 4:5, pendant at 60% image height, full piece visible at 65% width, chain extends to upper corners. No UI, no caption, no logos, no watermark or collage. Unless explicitly changed below, keep Classical construction, Classic cursive, single name, yellow gold, no stones, 32 mm size and cable chain. Variant: Change lettering to airy handwritten signature Asma, a distinctive long flowing A entry stroke and thin fluid connected calligraphic strokes, elegantly slanted but upright readable, not block lettering.",
+      "parent": "/atelier/v1/asma-studio.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Visible name, option distinction and framing. Physical dimensions not verified."
+      },
+      "cost": null
+    },
+    {
+      "id": "kufi",
+      "file": "kufi-studio.png",
+      "view": "Studio",
+      "patch": {
+        "lettering": "Kufi"
+      },
+      "prompt": "Use case: precise-object-edit. Asset: one premium CALEUMS ecommerce jewelry photograph. Reference image gives composition, lighting and base Asma pendant. Create the specified variant below. Exact sample name \"Asma\" (A-s-m-a), upright connected readable letters, solid 18K gold, believable attached chain. Warm cream silk and limestone, soft commercial daylight, portrait 4:5, pendant at 60% image height, full piece visible at 65% width, chain extends to upper corners. No UI, no caption, no logos, no watermark or collage. Unless explicitly changed below, keep Classical construction, Classic cursive, single name, yellow gold, no stones, 32 mm size and cable chain. Variant: English Kufi-inspired geometrical lettering Asma: upright rectilinear squared letterforms with right-angle strokes and consistent sturdy width, readable Latin A-s-m-a adapted to angular Kufic rhythm, all joined. Not Arabic script.",
+      "parent": "/atelier/v1/asma-studio.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Visible name, option distinction and framing. Physical dimensions not verified."
+      },
+      "cost": null
+    },
+    {
+      "id": "diwani",
+      "file": "diwani-studio.png",
+      "view": "Studio",
+      "patch": {
+        "lettering": "Diwani"
+      },
+      "prompt": "Use case: precise-object-edit. Asset: one premium CALEUMS ecommerce jewelry photograph. Reference image gives composition, lighting and base Asma pendant. Create the specified variant below. Exact sample name \"Asma\" (A-s-m-a), upright connected readable letters, solid 18K gold, believable attached chain. Warm cream silk and limestone, soft commercial daylight, portrait 4:5, pendant at 60% image height, full piece visible at 65% width, chain extends to upper corners. No UI, no caption, no logos, no watermark or collage. Unless explicitly changed below, keep Classical construction, Classic cursive, single name, yellow gold, no stones, 32 mm size and cable chain. Variant: English Diwani-inspired lettering Asma: ornate interconnected flowing Latin letterforms with dramatic curved ascenders and tight elegantly looping flourishes. Exact Latin Asma, not Arabic script. Clearly different ornate lettering from plain cursive.",
+      "parent": "/atelier/v1/asma-studio.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Visible name, option distinction and framing. Physical dimensions not verified."
+      },
+      "cost": null
+    },
+    {
+      "id": "thuluth",
+      "file": "thuluth-studio.png",
+      "view": "Studio",
+      "patch": {
+        "lettering": "Thuluth inspired"
+      },
+      "prompt": "Use case: precise-object-edit. Asset: one premium CALEUMS ecommerce jewelry photograph. Reference image gives composition, lighting and base Asma pendant. Create the specified variant below. Exact sample name \"Asma\" (A-s-m-a), upright connected readable letters, solid 18K gold, believable attached chain. Warm cream silk and limestone, soft commercial daylight, portrait 4:5, pendant at 60% image height, full piece visible at 65% width, chain extends to upper corners. No UI, no caption, no logos, no watermark or collage. Unless explicitly changed below, keep Classical construction, Classic cursive, single name, yellow gold, no stones, 32 mm size and cable chain. Variant: English Thuluth-inspired lettering Asma: tall elegant upright A ascender, balanced long sweeping lower curves, pronounced thick-thin gold strokes and sculptural calligraphic rhythm. Exact Latin Asma, not Arabic script.",
+      "parent": "/atelier/v1/asma-studio.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Visible name, option distinction and framing. Physical dimensions not verified."
+      },
+      "cost": null
+    },
+    {
+      "id": "side",
+      "file": "side-studio.png",
+      "view": "Studio",
+      "patch": {
+        "twoNames": true,
+        "layout": "Side by side"
+      },
+      "prompt": "Use case: precise-object-edit. Asset: one premium CALEUMS ecommerce jewelry photograph. Reference image gives composition, lighting and base Asma pendant. Create the specified variant below. Exact sample name \"Asma\" (A-s-m-a), upright connected readable letters, solid 18K gold, believable attached chain. Warm cream silk and limestone, soft commercial daylight, portrait 4:5, pendant at 60% image height, full piece visible at 65% width, chain extends to upper corners. No UI, no caption, no logos, no watermark or collage. Unless explicitly changed below, keep Classical construction, Classic cursive, single name, yellow gold, no stones, 32 mm size and cable chain. Variant: TWO names exactly Asma and Fatima, upright connected cursive side by side on a horizontal baseline joined by a short plain gold bridge, NO heart NO infinity. Entire two-name piece fits 65% of frame.",
+      "parent": "/atelier/v1/asma-studio.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Visible name, option distinction and framing. Physical dimensions not verified."
+      },
+      "cost": null
+    },
+    {
+      "id": "heart",
+      "file": "heart-studio.png",
+      "view": "Studio",
+      "patch": {
+        "twoNames": true,
+        "layout": "Connected heart"
+      },
+      "prompt": "Use case: precise-object-edit. Asset: one premium CALEUMS ecommerce jewelry photograph. Reference image gives composition, lighting and base Asma pendant. Create the specified variant below. Exact sample name \"Asma\" (A-s-m-a), upright connected readable letters, solid 18K gold, believable attached chain. Warm cream silk and limestone, soft commercial daylight, portrait 4:5, pendant at 60% image height, full piece visible at 65% width, chain extends to upper corners. No UI, no caption, no logos, no watermark or collage. Unless explicitly changed below, keep Classical construction, Classic cursive, single name, yellow gold, no stones, 32 mm size and cable chain. Variant: TWO names exactly Asma and Fatima connected by ONE small open plain gold heart, NO stones or pavé anywhere. Entire two-name piece fits 65% of frame.",
+      "parent": "/atelier/v1/asma-studio.png",
+      "review": {
+        "status": "replaced",
+        "reason": "Connection visibility refinement; original fine necks confirmed under enlarged review.",
+        "replacement": "heart-studio-repaired.png"
+      },
+      "cost": null
+    },
+    {
+      "id": "stacked",
+      "file": "stacked-studio.png",
+      "view": "Studio",
+      "patch": {
+        "twoNames": true,
+        "layout": "Stacked"
+      },
+      "prompt": "Use case: precise-object-edit. Asset: one premium CALEUMS ecommerce jewelry photograph. Reference image gives composition, lighting and base Asma pendant. Create the specified variant below. Exact sample name \"Asma\" (A-s-m-a), upright connected readable letters, solid 18K gold, believable attached chain. Warm cream silk and limestone, soft commercial daylight, portrait 4:5, pendant at 60% image height, full piece visible at 65% width, chain extends to upper corners. No UI, no caption, no logos, no watermark or collage. Unless explicitly changed below, keep Classical construction, Classic cursive, single name, yellow gold, no stones, 32 mm size and cable chain. Variant: TWO names exactly Asma above Fatima in TWO STACKED horizontal rows, aligned centered, discreet gold bridges join rows, no heart. Whole compact piece suspended securely from chain.",
+      "parent": "/atelier/v1/asma-studio.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Visible name, option distinction and framing. Physical dimensions not verified."
+      },
+      "cost": null
+    },
+    {
+      "id": "infinity",
+      "file": "infinity-studio.png",
+      "view": "Studio",
+      "patch": {
+        "twoNames": true,
+        "layout": "Infinity",
+        "chain": "Rolo"
+      },
+      "prompt": "Use case: precise-object-edit. Asset: one premium CALEUMS ecommerce jewelry photograph. Reference image gives composition, lighting and base Asma pendant. Create the specified variant below. Exact sample name \"Asma\" (A-s-m-a), upright connected readable letters, solid 18K gold, believable attached chain. Warm cream silk and limestone, soft commercial daylight, portrait 4:5, pendant at 60% image height, full piece visible at 65% width, chain extends to upper corners. No UI, no caption, no logos, no watermark or collage. Unless explicitly changed below, keep Classical construction, Classic cursive, single name, yellow gold, no stones, 32 mm size and cable chain. Variant: TWO names exactly Asma and Fatima elegantly integrated along lower curves of one continuous open horizontal infinity symbol, both readable upright left-to-right, physically joined. NO stones.",
+      "parent": "/atelier/v1/asma-studio.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Visible name, option distinction and framing. Physical dimensions not verified."
+      },
+      "cost": null,
+      "auditCorrection": {
+        "date": "2026-09-06",
+        "field": "chain",
+        "previous": "Cable (default)",
+        "corrected": "Rolo",
+        "reason": "Independent review of all four current photographs: visible round links match Rolo example. Image bytes unchanged."
+      }
+    },
+    {
+      "id": "interlocked",
+      "file": "interlocked-studio.png",
+      "view": "Studio",
+      "patch": {
+        "twoNames": true,
+        "layout": "Interlocked"
+      },
+      "prompt": "Use case: precise-object-edit. Asset: one premium CALEUMS ecommerce jewelry photograph. Reference image gives composition, lighting and base Asma pendant. Create the specified variant below. Exact sample name \"Asma\" (A-s-m-a), upright connected readable letters, solid 18K gold, believable attached chain. Warm cream silk and limestone, soft commercial daylight, portrait 4:5, pendant at 60% image height, full piece visible at 65% width, chain extends to upper corners. No UI, no caption, no logos, no watermark or collage. Unless explicitly changed below, keep Classical construction, Classic cursive, single name, yellow gold, no stones, 32 mm size and cable chain. Variant: TWO names exactly Asma and Fatima on two interlocking slim open gold oval loops, names readable upright within loops, like linked rings with a name in each, balanced horizontal pendant, no stones.",
+      "parent": "/atelier/v1/asma-studio.png",
+      "review": {
+        "status": "replaced",
+        "reason": "Connection visibility refinement; original fine necks confirmed under enlarged review.",
+        "replacement": "interlocked-studio-repaired.png"
+      },
+      "cost": null
+    },
+    {
+      "id": "rolo",
+      "file": "rolo-studio.png",
+      "view": "Studio",
+      "patch": {
+        "chain": "Rolo"
+      },
+      "prompt": "Use case: precise-object-edit. Asset: one premium CALEUMS ecommerce jewelry photograph. Reference image gives composition, lighting and base Asma pendant. Create the specified variant below. Exact sample name \"Asma\" (A-s-m-a), upright connected readable letters, solid 18K gold, believable attached chain. Warm cream silk and limestone, soft commercial daylight, portrait 4:5, pendant at 60% image height, full piece visible at 65% width, chain extends to upper corners. No UI, no caption, no logos, no watermark or collage. Unless explicitly changed below, keep Classical construction, Classic cursive, single name, yellow gold, no stones, 32 mm size and cable chain. Variant: Replace cable chain with ROLO CHAIN: clearly visible thick round circular interlocking links, uniform rounded round rings, substantially rounder than elongated cable links. Name pendant unchanged.",
+      "parent": "/atelier/v1/asma-studio.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Visible name, option distinction and framing. Physical dimensions not verified."
+      },
+      "cost": null
+    },
+    {
+      "id": "box",
+      "file": "box-studio.png",
+      "view": "Studio",
+      "patch": {
+        "chain": "Box"
+      },
+      "prompt": "Use case: precise-object-edit. Asset: one premium CALEUMS ecommerce jewelry photograph. Reference image gives composition, lighting and base Asma pendant. Create the specified variant below. Exact sample name \"Asma\" (A-s-m-a), upright connected readable letters, solid 18K gold, believable attached chain. Warm cream silk and limestone, soft commercial daylight, portrait 4:5, pendant at 60% image height, full piece visible at 65% width, chain extends to upper corners. No UI, no caption, no logos, no watermark or collage. Unless explicitly changed below, keep Classical construction, Classic cursive, single name, yellow gold, no stones, 32 mm size and cable chain. Variant: Replace chain with BOX CHAIN: continuous squared cube links with a geometric four-sided fine smooth line, no oval or round link holes. Name pendant unchanged.",
+      "parent": "/atelier/v1/asma-studio.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Visible name, option distinction and framing. Physical dimensions not verified."
+      },
+      "cost": null
+    },
+    {
+      "id": "curb",
+      "file": "curb-studio.png",
+      "view": "Studio",
+      "patch": {
+        "chain": "Curb"
+      },
+      "prompt": "Use case: precise-object-edit. Asset: one premium CALEUMS ecommerce jewelry photograph. Reference image gives composition, lighting and base Asma pendant. Create the specified variant below. Exact sample name \"Asma\" (A-s-m-a), upright connected readable letters, solid 18K gold, believable attached chain. Warm cream silk and limestone, soft commercial daylight, portrait 4:5, pendant at 60% image height, full piece visible at 65% width, chain extends to upper corners. No UI, no caption, no logos, no watermark or collage. Unless explicitly changed below, keep Classical construction, Classic cursive, single name, yellow gold, no stones, 32 mm size and cable chain. Variant: Replace chain with CURB CHAIN: flattened interlocking twisted oval links that lie flat, fine curb chain with visible flat reflective faces. Name pendant unchanged.",
+      "parent": "/atelier/v1/asma-studio.png",
+      "review": {
+        "status": "rejected",
+        "reason": "Chain did not visibly distinguish curb from cable."
+      },
+      "cost": null
+    },
+    {
+      "id": "small",
+      "file": "small-studio.png",
+      "view": "Studio",
+      "patch": {
+        "size": 22
+      },
+      "prompt": "Use case: precise-object-edit. Asset: one premium CALEUMS ecommerce jewelry photograph. Reference image gives composition, lighting and base Asma pendant. Create the specified variant below. Exact sample name \"Asma\" (A-s-m-a), upright connected readable letters, solid 18K gold, believable attached chain. Warm cream silk and limestone, soft commercial daylight, portrait 4:5, pendant at 60% image height, full piece visible at 65% width, chain extends to upper corners. No UI, no caption, no logos, no watermark or collage. Unless explicitly changed below, keep Classical construction, Classic cursive, single name, yellow gold, no stones, 32 mm size and cable chain. Variant: 22 mm version of same pendant. KEEP camera framing and silk scale identical but reduce pendant physical width to 22/32 = 68.75 percent of reference width (fills 45% image width). Chain same link size, falls inward to smaller pendant endpoints.",
+      "parent": "/atelier/v1/asma-studio.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Visible name, option distinction and framing. Physical dimensions not verified."
+      },
+      "cost": null
+    },
+    {
+      "id": "accent",
+      "file": "accent-studio.png",
+      "view": "Studio",
+      "patch": {
+        "coverage": "Accent"
+      },
+      "prompt": "Use case: precise-object-edit. Asset: one premium CALEUMS ecommerce jewelry photograph. Reference image gives composition, lighting and base Asma pendant. Create the specified variant below. Exact sample name \"Asma\" (A-s-m-a), upright connected readable letters, solid 18K gold, believable attached chain. Warm cream silk and limestone, soft commercial daylight, portrait 4:5, pendant at 60% image height, full piece visible at 65% width, chain extends to upper corners. No UI, no caption, no logos, no watermark or collage. Unless explicitly changed below, keep Classical construction, Classic cursive, single name, yellow gold, no stones, 32 mm size and cable chain. Variant: Accent lab diamonds: add exactly three tiny clear round brilliant diamonds securely bead-set along the upper A stroke, rest of letters remain polished plain gold. Keep full readable Asma name.",
+      "parent": "/atelier/v1/asma-studio.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Visible name, option distinction and framing. Physical dimensions not verified."
+      },
+      "cost": null
+    },
+    {
+      "id": "partial",
+      "file": "partial-studio.png",
+      "view": "Studio",
+      "patch": {
+        "coverage": "Partial pavé"
+      },
+      "prompt": "Use case: precise-object-edit. Asset: one premium CALEUMS ecommerce jewelry photograph. Reference image gives composition, lighting and base Asma pendant. Create the specified variant below. Exact sample name \"Asma\" (A-s-m-a), upright connected readable letters, solid 18K gold, believable attached chain. Warm cream silk and limestone, soft commercial daylight, portrait 4:5, pendant at 60% image height, full piece visible at 65% width, chain extends to upper corners. No UI, no caption, no logos, no watermark or collage. Unless explicitly changed below, keep Classical construction, Classic cursive, single name, yellow gold, no stones, 32 mm size and cable chain. Variant: Partial pavé lab diamonds: closely set tiny clear round brilliant diamonds cover ONLY the capital A, remaining s-m-a letters remain plain polished yellow gold.",
+      "parent": "/atelier/v1/asma-studio.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Visible name, option distinction and framing. Physical dimensions not verified."
+      },
+      "cost": null
+    },
+    {
+      "id": "full",
+      "file": "full-studio.png",
+      "view": "Studio",
+      "patch": {
+        "coverage": "Full pavé"
+      },
+      "prompt": "Use case: precise-object-edit. Asset: one premium CALEUMS ecommerce jewelry photograph. Reference image gives composition, lighting and base Asma pendant. Create the specified variant below. Exact sample name \"Asma\" (A-s-m-a), upright connected readable letters, solid 18K gold, believable attached chain. Warm cream silk and limestone, soft commercial daylight, portrait 4:5, pendant at 60% image height, full piece visible at 65% width, chain extends to upper corners. No UI, no caption, no logos, no watermark or collage. Unless explicitly changed below, keep Classical construction, Classic cursive, single name, yellow gold, no stones, 32 mm size and cable chain. Variant: Full pavé lab diamonds: all front faces of ALL A-s-m-a letters closely set with tiny clear round brilliant diamonds, continuous micro-pavé throughout entire readable name. Polished gold edges and back, unchanged chain.",
+      "parent": "/atelier/v1/asma-studio.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Visible name, option distinction and framing. Physical dimensions not verified."
+      },
+      "cost": null
+    },
+    {
+      "id": "natural",
+      "file": "natural-studio.png",
+      "view": "Studio",
+      "patch": {
+        "coverage": "Accent",
+        "gem": "Natural diamond"
+      },
+      "prompt": "Use case: precise-object-edit. Asset: one premium CALEUMS ecommerce jewelry photograph. Reference image gives composition, lighting and base Asma pendant. Create the specified variant below. Exact sample name \"Asma\" (A-s-m-a), upright connected readable letters, solid 18K gold, believable attached chain. Warm cream silk and limestone, soft commercial daylight, portrait 4:5, pendant at 60% image height, full piece visible at 65% width, chain extends to upper corners. No UI, no caption, no logos, no watermark or collage. Unless explicitly changed below, keep Classical construction, Classic cursive, single name, yellow gold, no stones, 32 mm size and cable chain. Variant: Accent natural diamonds: three tiny colorless round brilliant diamonds bead-set along capital A stroke, remaining letters plain polished gold. Natural and lab diamonds are visually indistinguishable, render normal clear diamonds.",
+      "parent": "/atelier/v1/asma-studio.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Visible name, option distinction and framing. Physical dimensions not verified."
+      },
+      "cost": null
+    },
+    {
+      "id": "ruby",
+      "file": "ruby-studio.png",
+      "view": "Studio",
+      "patch": {
+        "coverage": "Accent",
+        "gem": "Ruby"
+      },
+      "prompt": "Use case: precise-object-edit. Asset: one premium CALEUMS ecommerce jewelry photograph. Reference image gives composition, lighting and base Asma pendant. Create the specified variant below. Exact sample name \"Asma\" (A-s-m-a), upright connected readable letters, solid 18K gold, believable attached chain. Warm cream silk and limestone, soft commercial daylight, portrait 4:5, pendant at 60% image height, full piece visible at 65% width, chain extends to upper corners. No UI, no caption, no logos, no watermark or collage. Unless explicitly changed below, keep Classical construction, Classic cursive, single name, yellow gold, no stones, 32 mm size and cable chain. Variant: Accent RUBY: three small rich saturated red ruby stones set into upper A stroke, visibly RED gems. Rest of name plain polished yellow gold.",
+      "parent": "/atelier/v1/asma-studio.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Visible name, option distinction and framing. Physical dimensions not verified."
+      },
+      "cost": null
+    },
+    {
+      "id": "emerald",
+      "file": "emerald-studio.png",
+      "view": "Studio",
+      "patch": {
+        "coverage": "Accent",
+        "gem": "Emerald"
+      },
+      "prompt": "Use case: precise-object-edit. Asset: one premium CALEUMS ecommerce jewelry photograph. Reference image gives composition, lighting and base Asma pendant. Create the specified variant below. Exact sample name \"Asma\" (A-s-m-a), upright connected readable letters, solid 18K gold, believable attached chain. Warm cream silk and limestone, soft commercial daylight, portrait 4:5, pendant at 60% image height, full piece visible at 65% width, chain extends to upper corners. No UI, no caption, no logos, no watermark or collage. Unless explicitly changed below, keep Classical construction, Classic cursive, single name, yellow gold, no stones, 32 mm size and cable chain. Variant: Accent EMERALD: three small saturated deep green emerald stones set into upper A stroke, visibly GREEN gems. Rest of name plain polished yellow gold.",
+      "parent": "/atelier/v1/asma-studio.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Visible name, option distinction and framing. Physical dimensions not verified."
+      },
+      "cost": null
+    },
+    {
+      "id": "blue",
+      "file": "blue-studio.png",
+      "view": "Studio",
+      "patch": {
+        "coverage": "Accent",
+        "gem": "Blue sapphire"
+      },
+      "prompt": "Use case: precise-object-edit. Asset: one premium CALEUMS ecommerce jewelry photograph. Reference image gives composition, lighting and base Asma pendant. Create the specified variant below. Exact sample name \"Asma\" (A-s-m-a), upright connected readable letters, solid 18K gold, believable attached chain. Warm cream silk and limestone, soft commercial daylight, portrait 4:5, pendant at 60% image height, full piece visible at 65% width, chain extends to upper corners. No UI, no caption, no logos, no watermark or collage. Unless explicitly changed below, keep Classical construction, Classic cursive, single name, yellow gold, no stones, 32 mm size and cable chain. Variant: Accent BLUE SAPPHIRE: three small saturated royal blue sapphire stones set into upper A stroke, visibly BLUE gems. Rest of name plain polished yellow gold.",
+      "parent": "/atelier/v1/asma-studio.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Visible name, option distinction and framing. Physical dimensions not verified."
+      },
+      "cost": null
+    },
+    {
+      "id": "pink",
+      "file": "pink-studio.png",
+      "view": "Studio",
+      "patch": {
+        "coverage": "Accent",
+        "gem": "Pink sapphire"
+      },
+      "prompt": "Use case: precise-object-edit. Asset: one premium CALEUMS ecommerce jewelry photograph. Reference image gives composition, lighting and base Asma pendant. Create the specified variant below. Exact sample name \"Asma\" (A-s-m-a), upright connected readable letters, solid 18K gold, believable attached chain. Warm cream silk and limestone, soft commercial daylight, portrait 4:5, pendant at 60% image height, full piece visible at 65% width, chain extends to upper corners. No UI, no caption, no logos, no watermark or collage. Unless explicitly changed below, keep Classical construction, Classic cursive, single name, yellow gold, no stones, 32 mm size and cable chain. Variant: Accent PINK SAPPHIRE: three small bright pink sapphire stones set into upper A stroke, visibly PINK gems. Rest of name plain polished yellow gold.",
+      "parent": "/atelier/v1/asma-studio.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Visible name, option distinction and framing. Physical dimensions not verified."
+      },
+      "cost": null
+    },
+    {
+      "id": "curb-v2",
+      "file": "curb-v2.png",
+      "view": "Studio",
+      "patch": {
+        "chain": "Curb"
+      },
+      "prompt": "Use case: precise-object-edit. One CALEUMS fine jewelry ecommerce photograph, portrait 4:5. Input is exact sample jewelry reference. Keep sample name and all unmentioned specifications. No text overlays, UI, collage, logos or watermark. Replace the thin oval cable chain with a CLEARLY DISTINCT 2mm flat curb chain: densely overlapping flat diamond-cut twisted links, all lying in the same plane, broad polished flat faces. It should look like a fine flattened Cuban-link chain, not open cable rings. Keep the Asma pendant and cream silk unchanged. No stones.",
+      "parent": "/atelier/v1/asma-studio.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Visible name, option distinction and framing. Physical dimensions not verified."
+      },
+      "cost": null
+    },
+    {
+      "id": "arabic-minimal",
+      "file": "arabic-minimal.png",
+      "view": "Studio",
+      "patch": {
+        "script": "Arabic",
+        "lettering": "Minimal"
+      },
+      "prompt": "Use case: precise-object-edit. One CALEUMS fine jewelry ecommerce photograph, portrait 4:5. Input is exact sample jewelry reference. Keep sample name and all unmentioned specifications. No text overlays, UI, collage, logos or watermark. ARABIC SCRIPT ONLY. Exact name أسماء including correct hamza. Change lettering to simple minimal modern Arabic monoline lettering, no excessive flourishes. Solid yellow gold, plain no stones, cable chain, 32mm. Preserve Arabic reading order, all dots and hamza integrated with gold supports. Do not render Latin letters.",
+      "parent": "/atelier/v1/asma-arabic.png",
+      "review": {
+        "status": "rejected",
+        "reason": "Added three dots not present in أسماء."
+      },
+      "cost": null
+    },
+    {
+      "id": "arabic-diwani",
+      "file": "arabic-diwani.png",
+      "view": "Studio",
+      "patch": {
+        "script": "Arabic",
+        "lettering": "Diwani"
+      },
+      "prompt": "Use case: precise-object-edit. One CALEUMS fine jewelry ecommerce photograph, portrait 4:5. Input is exact sample jewelry reference. Keep sample name and all unmentioned specifications. No text overlays, UI, collage, logos or watermark. ARABIC SCRIPT ONLY. Exact name أسماء including correct hamza. Change lettering to authentic elegant Diwani calligraphy with flowing interlaced curves and graceful dense ornamental letter arrangement. Solid yellow gold, plain no stones, cable chain, 32mm. Preserve Arabic reading order, all dots and hamza integrated with gold supports. Do not render Latin letters.",
+      "parent": "/atelier/v1/asma-arabic.png",
+      "review": {
+        "status": "rejected",
+        "reason": "Added dot-like marks not present in أسماء."
+      },
+      "cost": null
+    },
+    {
+      "id": "arabic-kufi",
+      "file": "arabic-kufi.png",
+      "view": "Studio",
+      "patch": {
+        "script": "Arabic",
+        "lettering": "Kufi"
+      },
+      "prompt": "Use case: precise-object-edit. One CALEUMS fine jewelry ecommerce photograph, portrait 4:5. Input is exact sample jewelry reference. Keep sample name and all unmentioned specifications. No text overlays, UI, collage, logos or watermark. ARABIC SCRIPT ONLY. Exact name أسماء including correct hamza. Change lettering to authentic geometric square Kufic Arabic calligraphy, rectilinear angular connected strokes and right angles. Solid yellow gold, plain no stones, cable chain, 32mm. Preserve Arabic reading order, all dots and hamza integrated with gold supports. Do not render Latin letters.",
+      "parent": "/atelier/v1/asma-arabic.png",
+      "review": {
+        "status": "replaced",
+        "reason": "Disconnected Arabic letter groups repaired.",
+        "replacement": "arabic-kufi-repaired.png"
+      },
+      "cost": null
+    },
+    {
+      "id": "arabic-signature",
+      "file": "arabic-signature.png",
+      "view": "Studio",
+      "patch": {
+        "script": "Arabic",
+        "lettering": "Signature"
+      },
+      "prompt": "Use case: precise-object-edit. One CALEUMS fine jewelry ecommerce photograph, portrait 4:5. Input is exact sample jewelry reference. Keep sample name and all unmentioned specifications. No text overlays, UI, collage, logos or watermark. ARABIC SCRIPT ONLY. Exact name أسماء including correct hamza. Change lettering to airy fluid contemporary Arabic handwritten signature with long graceful flowing strokes. Solid yellow gold, plain no stones, cable chain, 32mm. Preserve Arabic reading order, all dots and hamza integrated with gold supports. Do not render Latin letters.",
+      "parent": "/atelier/v1/asma-arabic.png",
+      "review": {
+        "status": "replaced",
+        "reason": "Disconnected Arabic letter groups repaired.",
+        "replacement": "arabic-signature-repaired.png"
+      },
+      "cost": null
+    },
+    {
+      "id": "arabic-thuluth",
+      "file": "arabic-thuluth.png",
+      "view": "Studio",
+      "patch": {
+        "script": "Arabic",
+        "lettering": "Thuluth inspired"
+      },
+      "prompt": "Use case: precise-object-edit. One CALEUMS fine jewelry ecommerce photograph, portrait 4:5. Input is exact sample jewelry reference. Keep sample name and all unmentioned specifications. No text overlays, UI, collage, logos or watermark. ARABIC SCRIPT ONLY. Exact name أسماء including correct hamza. Change lettering to authentic Thuluth inspired Arabic calligraphy with tall upright ascenders and balanced sweeping curved bases. Solid yellow gold, plain no stones, cable chain, 32mm. Preserve Arabic reading order, all dots and hamza integrated with gold supports. Do not render Latin letters.",
+      "parent": "/atelier/v1/asma-arabic.png",
+      "review": {
+        "status": "rejected",
+        "reason": "Added dot-like marks not present in أسماء."
+      },
+      "cost": null
+    },
+    {
+      "id": "arabic-worn",
+      "file": "arabic-worn.png",
+      "view": "On skin",
+      "patch": {
+        "script": "Arabic"
+      },
+      "prompt": "Use case: precise-object-edit. One CALEUMS fine jewelry ecommerce photograph, portrait 4:5. Input is exact sample jewelry reference. Keep sample name and all unmentioned specifications. No text overlays, UI, collage, logos or watermark. Preserve this EXACT Arabic أسماء pendant shape, all dots and hamza, yellow gold and cable chain, no stones. ON SKIN photograph: adult woman collarbone and upper chest in open ivory linen shirt, cropped below chin, no face. Pendant approximately 32mm naturally below collarbone, realistic skin and warm daylight.",
+      "parent": "/atelier/v1/asma-arabic.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Visible name, option distinction and framing. Physical dimensions not verified."
+      },
+      "cost": null
+    },
+    {
+      "id": "arabic-close",
+      "file": "arabic-close.png",
+      "view": "Close-up",
+      "patch": {
+        "script": "Arabic"
+      },
+      "prompt": "Use case: precise-object-edit. One CALEUMS fine jewelry ecommerce photograph, portrait 4:5. Input is exact sample jewelry reference. Keep sample name and all unmentioned specifications. No text overlays, UI, collage, logos or watermark. Preserve this EXACT Arabic أسماء pendant shape, all dots and hamza, yellow gold and cable chain, no stones. CLOSE-UP macro photograph: entire Arabic pendant fills 85% image width on cream silk, gentle three-quarter angle highlights gold thickness. Entire name visible.",
+      "parent": "/atelier/v1/asma-arabic.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Visible name, option distinction and framing. Physical dimensions not verified."
+      },
+      "cost": null
+    },
+    {
+      "id": "arabic-dark",
+      "file": "arabic-dark.png",
+      "view": "Dark",
+      "patch": {
+        "script": "Arabic"
+      },
+      "prompt": "Use case: precise-object-edit. One CALEUMS fine jewelry ecommerce photograph, portrait 4:5. Input is exact sample jewelry reference. Keep sample name and all unmentioned specifications. No text overlays, UI, collage, logos or watermark. Preserve this EXACT Arabic أسماء pendant shape, all dots and hamza, yellow gold and cable chain, no stones. DARK photograph: same pendant on charcoal black velvet with warm spotlight and rich highlights, full name sharp, chain to upper corners.",
+      "parent": "/atelier/v1/asma-arabic.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Visible name, option distinction and framing. Physical dimensions not verified."
+      },
+      "cost": null
+    },
+    {
+      "id": "arabic-minimal-v2",
+      "file": "arabic-minimal-v2.png",
+      "view": "Studio",
+      "patch": {
+        "script": "Arabic",
+        "lettering": "Minimal"
+      },
+      "prompt": "Use case: precise-object-edit. One CALEUMS fine jewelry ecommerce photograph, portrait 4:5. Input is exact sample jewelry edit target. No text overlays, UI, collage, logos or watermark. Remove ALL decorative dots and ALL disconnected dot-like marks below the Arabic letters. Exact word is أسماء: alif with hamza, seen, meem, alif, final hamza. This word contains ZERO dotted letters. Preserve the two HAMZA letterforms (initial above alif and final hamza), those are letters, not dots. Do not add any dots or diacritics. Keep existing calligraphy style, shape, gold finish, plain no stones, cable chain and background. Change only removal of incorrect dots.",
+      "parent": "/atelier/v2/arabic-minimal.png",
+      "review": {
+        "status": "replaced",
+        "reason": "Disconnected Arabic letter groups repaired.",
+        "replacement": "arabic-minimal-v2-repaired.png"
+      },
+      "cost": null
+    },
+    {
+      "id": "arabic-diwani-v2",
+      "file": "arabic-diwani-v2.png",
+      "view": "Studio",
+      "patch": {
+        "script": "Arabic",
+        "lettering": "Diwani"
+      },
+      "prompt": "Use case: precise-object-edit. One CALEUMS fine jewelry ecommerce photograph, portrait 4:5. Input is exact sample jewelry edit target. No text overlays, UI, collage, logos or watermark. Remove ALL decorative dots and ALL disconnected dot-like marks below the Arabic letters. Exact word is أسماء: alif with hamza, seen, meem, alif, final hamza. This word contains ZERO dotted letters. Preserve the two HAMZA letterforms (initial above alif and final hamza), those are letters, not dots. Do not add any dots or diacritics. Keep existing calligraphy style, shape, gold finish, plain no stones, cable chain and background. Change only removal of incorrect dots.",
+      "parent": "/atelier/v2/arabic-diwani.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Visible name, option distinction and framing. Physical dimensions not verified."
+      },
+      "cost": null
+    },
+    {
+      "id": "arabic-thuluth-v2",
+      "file": "arabic-thuluth-v2.png",
+      "view": "Studio",
+      "patch": {
+        "script": "Arabic",
+        "lettering": "Thuluth inspired"
+      },
+      "prompt": "Use case: precise-object-edit. One CALEUMS fine jewelry ecommerce photograph, portrait 4:5. Input is exact sample jewelry edit target. No text overlays, UI, collage, logos or watermark. Remove ALL decorative dots and ALL disconnected dot-like marks below the Arabic letters. Exact word is أسماء: alif with hamza, seen, meem, alif, final hamza. This word contains ZERO dotted letters. Preserve the two HAMZA letterforms (initial above alif and final hamza), those are letters, not dots. Do not add any dots or diacritics. Keep existing calligraphy style, shape, gold finish, plain no stones, cable chain and background. Change only removal of incorrect dots.",
+      "parent": "/atelier/v2/arabic-thuluth.png",
+      "review": {
+        "status": "replaced",
+        "reason": "Disconnected Arabic letter groups repaired.",
+        "replacement": "arabic-thuluth-v2-repaired.png"
+      },
+      "cost": null
+    },
+    {
+      "id": "origami-worn",
+      "file": "origami-worn.png",
+      "view": "On skin",
+      "patch": {
+        "construction": "Origami ribbon"
+      },
+      "prompt": "Use case: precise-object-edit. One CALEUMS fine jewelry ecommerce photograph, portrait 4:5. Input is exact sample jewelry edit target. No text overlays, UI, collage, logos or watermark. Preserve the EXACT jewelry in the input: all sample names, letterforms, construction, connection layout, metal color, stones and chain type. Create ON SKIN view, on adult woman collarbone/upper chest with ivory linen open-neck shirt, cropped below chin, no face. Entire pendant naturally rests at approximately 32mm width below collarbone. Warm natural light, realistic skin.",
+      "parent": "/atelier/v2/origami-studio.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Visible name, option distinction and framing. Physical dimensions not verified."
+      },
+      "cost": null
+    },
+    {
+      "id": "origami-close",
+      "file": "origami-close.png",
+      "view": "Close-up",
+      "patch": {
+        "construction": "Origami ribbon"
+      },
+      "prompt": "Use case: precise-object-edit. One CALEUMS fine jewelry ecommerce photograph, portrait 4:5. Input is exact sample jewelry edit target. No text overlays, UI, collage, logos or watermark. Preserve the EXACT jewelry in the input: all sample names, letterforms, construction, connection layout, metal color, stones and chain type. Create CLOSE-UP view on ivory silk: macro camera, whole pendant fills 85% width, subtle three-quarter angle to show metal thickness, keep entire lettering visible.",
+      "parent": "/atelier/v2/origami-studio.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Visible name, option distinction and framing. Physical dimensions not verified."
+      },
+      "cost": null
+    },
+    {
+      "id": "origami-dark",
+      "file": "origami-dark.png",
+      "view": "Dark",
+      "patch": {
+        "construction": "Origami ribbon"
+      },
+      "prompt": "Use case: precise-object-edit. One CALEUMS fine jewelry ecommerce photograph, portrait 4:5. Input is exact sample jewelry edit target. No text overlays, UI, collage, logos or watermark. Preserve the EXACT jewelry in the input: all sample names, letterforms, construction, connection layout, metal color, stones and chain type. Create DARK view on deep charcoal velvet, warm studio spotlight, same metal color, whole pendant centered, fine jewelry editorial. Do not add any stones.",
+      "parent": "/atelier/v2/origami-studio.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Visible name, option distinction and framing. Physical dimensions not verified."
+      },
+      "cost": null
+    },
+    {
+      "id": "framed-worn",
+      "file": "framed-worn.png",
+      "view": "On skin",
+      "patch": {
+        "construction": "Framed minimal"
+      },
+      "prompt": "Use case: precise-object-edit. One CALEUMS fine jewelry ecommerce photograph, portrait 4:5. Input is exact sample jewelry edit target. No text overlays, UI, collage, logos or watermark. Preserve the EXACT jewelry in the input: all sample names, letterforms, construction, connection layout, metal color, stones and chain type. Create ON SKIN view, on adult woman collarbone/upper chest with ivory linen open-neck shirt, cropped below chin, no face. Entire pendant naturally rests at approximately 32mm width below collarbone. Warm natural light, realistic skin.",
+      "parent": "/atelier/v2/framed-studio.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Visible name, option distinction and framing. Physical dimensions not verified."
+      },
+      "cost": null
+    },
+    {
+      "id": "framed-close",
+      "file": "framed-close.png",
+      "view": "Close-up",
+      "patch": {
+        "construction": "Framed minimal"
+      },
+      "prompt": "Use case: precise-object-edit. One CALEUMS fine jewelry ecommerce photograph, portrait 4:5. Input is exact sample jewelry edit target. No text overlays, UI, collage, logos or watermark. Preserve the EXACT jewelry in the input: all sample names, letterforms, construction, connection layout, metal color, stones and chain type. Create CLOSE-UP view on ivory silk: macro camera, whole pendant fills 85% width, subtle three-quarter angle to show metal thickness, keep entire lettering visible.",
+      "parent": "/atelier/v2/framed-studio.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Visible name, option distinction and framing. Physical dimensions not verified."
+      },
+      "cost": null
+    },
+    {
+      "id": "framed-dark",
+      "file": "framed-dark.png",
+      "view": "Dark",
+      "patch": {
+        "construction": "Framed minimal"
+      },
+      "prompt": "Use case: precise-object-edit. One CALEUMS fine jewelry ecommerce photograph, portrait 4:5. Input is exact sample jewelry edit target. No text overlays, UI, collage, logos or watermark. Preserve the EXACT jewelry in the input: all sample names, letterforms, construction, connection layout, metal color, stones and chain type. Create DARK view on deep charcoal velvet, warm studio spotlight, same metal color, whole pendant centered, fine jewelry editorial. Do not add any stones.",
+      "parent": "/atelier/v2/framed-studio.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Visible name, option distinction and framing. Physical dimensions not verified."
+      },
+      "cost": null
+    },
+    {
+      "id": "rose-worn",
+      "file": "rose-worn.png",
+      "view": "On skin",
+      "patch": {
+        "metal": "Rose gold"
+      },
+      "prompt": "Use case: precise-object-edit. One CALEUMS fine jewelry ecommerce photograph, portrait 4:5. Input is exact sample jewelry edit target. No text overlays, UI, collage, logos or watermark. Preserve the EXACT jewelry in the input: all sample names, letterforms, construction, connection layout, metal color, stones and chain type. Create ON SKIN view, on adult woman collarbone/upper chest with ivory linen open-neck shirt, cropped below chin, no face. Entire pendant naturally rests at approximately 32mm width below collarbone. Warm natural light, realistic skin.",
+      "parent": "/atelier/v2/rose-studio.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Visible name, option distinction and framing. Physical dimensions not verified."
+      },
+      "cost": null
+    },
+    {
+      "id": "rose-close",
+      "file": "rose-close.png",
+      "view": "Close-up",
+      "patch": {
+        "metal": "Rose gold"
+      },
+      "prompt": "Use case: precise-object-edit. One CALEUMS fine jewelry ecommerce photograph, portrait 4:5. Input is exact sample jewelry edit target. No text overlays, UI, collage, logos or watermark. Preserve the EXACT jewelry in the input: all sample names, letterforms, construction, connection layout, metal color, stones and chain type. Create CLOSE-UP view on ivory silk: macro camera, whole pendant fills 85% width, subtle three-quarter angle to show metal thickness, keep entire lettering visible.",
+      "parent": "/atelier/v2/rose-studio.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Visible name, option distinction and framing. Physical dimensions not verified."
+      },
+      "cost": null
+    },
+    {
+      "id": "rose-dark",
+      "file": "rose-dark.png",
+      "view": "Dark",
+      "patch": {
+        "metal": "Rose gold"
+      },
+      "prompt": "Use case: precise-object-edit. One CALEUMS fine jewelry ecommerce photograph, portrait 4:5. Input is exact sample jewelry edit target. No text overlays, UI, collage, logos or watermark. Preserve the EXACT jewelry in the input: all sample names, letterforms, construction, connection layout, metal color, stones and chain type. Create DARK view on deep charcoal velvet, warm studio spotlight, same metal color, whole pendant centered, fine jewelry editorial. Do not add any stones.",
+      "parent": "/atelier/v2/rose-studio.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Visible name, option distinction and framing. Physical dimensions not verified."
+      },
+      "cost": null
+    },
+    {
+      "id": "white-worn",
+      "file": "white-worn.png",
+      "view": "On skin",
+      "patch": {
+        "metal": "White gold"
+      },
+      "prompt": "Use case: precise-object-edit. One CALEUMS fine jewelry ecommerce photograph, portrait 4:5. Input is exact sample jewelry edit target. No text overlays, UI, collage, logos or watermark. Preserve the EXACT jewelry in the input: all sample names, letterforms, construction, connection layout, metal color, stones and chain type. Create ON SKIN view, on adult woman collarbone/upper chest with ivory linen open-neck shirt, cropped below chin, no face. Entire pendant naturally rests at approximately 32mm width below collarbone. Warm natural light, realistic skin.",
+      "parent": "/atelier/v2/white-studio.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Visible name, option distinction and framing. Physical dimensions not verified."
+      },
+      "cost": null
+    },
+    {
+      "id": "white-close",
+      "file": "white-close.png",
+      "view": "Close-up",
+      "patch": {
+        "metal": "White gold"
+      },
+      "prompt": "Use case: precise-object-edit. One CALEUMS fine jewelry ecommerce photograph, portrait 4:5. Input is exact sample jewelry edit target. No text overlays, UI, collage, logos or watermark. Preserve the EXACT jewelry in the input: all sample names, letterforms, construction, connection layout, metal color, stones and chain type. Create CLOSE-UP view on ivory silk: macro camera, whole pendant fills 85% width, subtle three-quarter angle to show metal thickness, keep entire lettering visible.",
+      "parent": "/atelier/v2/white-studio.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Visible name, option distinction and framing. Physical dimensions not verified."
+      },
+      "cost": null
+    },
+    {
+      "id": "white-dark",
+      "file": "white-dark.png",
+      "view": "Dark",
+      "patch": {
+        "metal": "White gold"
+      },
+      "prompt": "Use case: precise-object-edit. One CALEUMS fine jewelry ecommerce photograph, portrait 4:5. Input is exact sample jewelry edit target. No text overlays, UI, collage, logos or watermark. Preserve the EXACT jewelry in the input: all sample names, letterforms, construction, connection layout, metal color, stones and chain type. Create DARK view on deep charcoal velvet, warm studio spotlight, same metal color, whole pendant centered, fine jewelry editorial. Do not add any stones.",
+      "parent": "/atelier/v2/white-studio.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Visible name, option distinction and framing. Physical dimensions not verified."
+      },
+      "cost": null
+    },
+    {
+      "id": "rails-worn",
+      "file": "rails-worn.png",
+      "view": "On skin",
+      "patch": {
+        "construction": "Diamond rails"
+      },
+      "prompt": "Use case: precise-object-edit. One CALEUMS fine jewelry ecommerce photograph, portrait 4:5. Input is exact sample jewelry edit target. No text overlays, UI, collage, logos or watermark. Preserve the EXACT jewelry in the input: all sample names, letterforms, construction, connection layout, metal color, stones and chain type. Create ON SKIN view, on adult woman collarbone/upper chest with ivory linen open-neck shirt, cropped below chin, no face. Entire pendant naturally rests at approximately 32mm width below collarbone. Warm natural light, realistic skin.",
+      "parent": "/atelier/v2/rails-studio.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Visible name, option distinction and framing. Physical dimensions not verified."
+      },
+      "cost": null
+    },
+    {
+      "id": "rails-close",
+      "file": "rails-close.png",
+      "view": "Close-up",
+      "patch": {
+        "construction": "Diamond rails"
+      },
+      "prompt": "Use case: precise-object-edit. One CALEUMS fine jewelry ecommerce photograph, portrait 4:5. Input is exact sample jewelry edit target. No text overlays, UI, collage, logos or watermark. Preserve the EXACT jewelry in the input: all sample names, letterforms, construction, connection layout, metal color, stones and chain type. Create CLOSE-UP view on ivory silk: macro camera, whole pendant fills 85% width, subtle three-quarter angle to show metal thickness, keep entire lettering visible.",
+      "parent": "/atelier/v2/rails-studio.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Visible name, option distinction and framing. Physical dimensions not verified."
+      },
+      "cost": null
+    },
+    {
+      "id": "rails-dark",
+      "file": "rails-dark.png",
+      "view": "Dark",
+      "patch": {
+        "construction": "Diamond rails"
+      },
+      "prompt": "Use case: precise-object-edit. One CALEUMS fine jewelry ecommerce photograph, portrait 4:5. Input is exact sample jewelry edit target. No text overlays, UI, collage, logos or watermark. Preserve the EXACT jewelry in the input: all sample names, letterforms, construction, connection layout, metal color, stones and chain type. Create DARK view on deep charcoal velvet, warm studio spotlight, same metal color, whole pendant centered, fine jewelry editorial. Do not add any stones.",
+      "parent": "/atelier/v2/rails-studio.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Visible name, option distinction and framing. Physical dimensions not verified."
+      },
+      "cost": null
+    },
+    {
+      "id": "side-worn",
+      "file": "side-worn.png",
+      "view": "On skin",
+      "patch": {
+        "twoNames": true,
+        "layout": "Side by side"
+      },
+      "prompt": "Use case: precise-object-edit. One CALEUMS fine jewelry ecommerce photograph, portrait 4:5. Input is exact sample jewelry edit target. No text overlays, UI, collage, logos or watermark. Preserve the EXACT jewelry in the input: all sample names, letterforms, construction, connection layout, metal color, stones and chain type. Create ON SKIN view, on adult woman collarbone/upper chest with ivory linen open-neck shirt, cropped below chin, no face. Entire pendant naturally rests at approximately 32mm width below collarbone. Warm natural light, realistic skin.",
+      "parent": "/atelier/v2/side-studio.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Visible name, option distinction and framing. Physical dimensions not verified."
+      },
+      "cost": null
+    },
+    {
+      "id": "side-close",
+      "file": "side-close.png",
+      "view": "Close-up",
+      "patch": {
+        "twoNames": true,
+        "layout": "Side by side"
+      },
+      "prompt": "Use case: precise-object-edit. One CALEUMS fine jewelry ecommerce photograph, portrait 4:5. Input is exact sample jewelry edit target. No text overlays, UI, collage, logos or watermark. Preserve the EXACT jewelry in the input: all sample names, letterforms, construction, connection layout, metal color, stones and chain type. Create CLOSE-UP view on ivory silk: macro camera, whole pendant fills 85% width, subtle three-quarter angle to show metal thickness, keep entire lettering visible.",
+      "parent": "/atelier/v2/side-studio.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Visible name, option distinction and framing. Physical dimensions not verified."
+      },
+      "cost": null
+    },
+    {
+      "id": "side-dark",
+      "file": "side-dark.png",
+      "view": "Dark",
+      "patch": {
+        "twoNames": true,
+        "layout": "Side by side"
+      },
+      "prompt": "Use case: precise-object-edit. One CALEUMS fine jewelry ecommerce photograph, portrait 4:5. Input is exact sample jewelry edit target. No text overlays, UI, collage, logos or watermark. Preserve the EXACT jewelry in the input: all sample names, letterforms, construction, connection layout, metal color, stones and chain type. Create DARK view on deep charcoal velvet, warm studio spotlight, same metal color, whole pendant centered, fine jewelry editorial. Do not add any stones.",
+      "parent": "/atelier/v2/side-studio.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Visible name, option distinction and framing. Physical dimensions not verified."
+      },
+      "cost": null
+    },
+    {
+      "id": "heart-worn",
+      "file": "heart-worn.png",
+      "view": "On skin",
+      "patch": {
+        "twoNames": true,
+        "layout": "Connected heart"
+      },
+      "prompt": "Use case: precise-object-edit. One CALEUMS fine jewelry ecommerce photograph, portrait 4:5. Input is exact sample jewelry edit target. No text overlays, UI, collage, logos or watermark. Preserve the EXACT jewelry in the input: all sample names, letterforms, construction, connection layout, metal color, stones and chain type. Create ON SKIN view, on adult woman collarbone/upper chest with ivory linen open-neck shirt, cropped below chin, no face. Entire pendant naturally rests at approximately 32mm width below collarbone. Warm natural light, realistic skin.",
+      "parent": "/atelier/v2/heart-studio.png",
+      "review": {
+        "status": "replaced",
+        "reason": "Connection visibility refinement; original fine necks confirmed under enlarged review.",
+        "replacement": "heart-worn-repaired.png"
+      },
+      "cost": null
+    },
+    {
+      "id": "heart-close",
+      "file": "heart-close.png",
+      "view": "Close-up",
+      "patch": {
+        "twoNames": true,
+        "layout": "Connected heart"
+      },
+      "prompt": "Use case: precise-object-edit. One CALEUMS fine jewelry ecommerce photograph, portrait 4:5. Input is exact sample jewelry edit target. No text overlays, UI, collage, logos or watermark. Preserve the EXACT jewelry in the input: all sample names, letterforms, construction, connection layout, metal color, stones and chain type. Create CLOSE-UP view on ivory silk: macro camera, whole pendant fills 85% width, subtle three-quarter angle to show metal thickness, keep entire lettering visible.",
+      "parent": "/atelier/v2/heart-studio.png",
+      "review": {
+        "status": "replaced",
+        "reason": "Connection visibility refinement; original fine necks confirmed under enlarged review.",
+        "replacement": "heart-close-repaired.png"
+      },
+      "cost": null
+    },
+    {
+      "id": "heart-dark",
+      "file": "heart-dark.png",
+      "view": "Dark",
+      "patch": {
+        "twoNames": true,
+        "layout": "Connected heart"
+      },
+      "prompt": "Use case: precise-object-edit. One CALEUMS fine jewelry ecommerce photograph, portrait 4:5. Input is exact sample jewelry edit target. No text overlays, UI, collage, logos or watermark. Preserve the EXACT jewelry in the input: all sample names, letterforms, construction, connection layout, metal color, stones and chain type. Create DARK view on deep charcoal velvet, warm studio spotlight, same metal color, whole pendant centered, fine jewelry editorial. Do not add any stones.",
+      "parent": "/atelier/v2/heart-studio.png",
+      "review": {
+        "status": "replaced",
+        "reason": "Connection visibility refinement; original fine necks confirmed under enlarged review.",
+        "replacement": "heart-dark-repaired.png"
+      },
+      "cost": null
+    },
+    {
+      "id": "stacked-worn",
+      "file": "stacked-worn.png",
+      "view": "On skin",
+      "patch": {
+        "twoNames": true,
+        "layout": "Stacked"
+      },
+      "prompt": "Use case: precise-object-edit. One CALEUMS fine jewelry ecommerce photograph, portrait 4:5. Input is exact sample jewelry edit target. No text overlays, UI, collage, logos or watermark. Preserve the EXACT jewelry in the input: all sample names, letterforms, construction, connection layout, metal color, stones and chain type. Create ON SKIN view, on adult woman collarbone/upper chest with ivory linen open-neck shirt, cropped below chin, no face. Entire pendant naturally rests at approximately 32mm width below collarbone. Warm natural light, realistic skin.",
+      "parent": "/atelier/v2/stacked-studio.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Visible name, option distinction and framing. Physical dimensions not verified."
+      },
+      "cost": null
+    },
+    {
+      "id": "stacked-close",
+      "file": "stacked-close.png",
+      "view": "Close-up",
+      "patch": {
+        "twoNames": true,
+        "layout": "Stacked"
+      },
+      "prompt": "Use case: precise-object-edit. One CALEUMS fine jewelry ecommerce photograph, portrait 4:5. Input is exact sample jewelry edit target. No text overlays, UI, collage, logos or watermark. Preserve the EXACT jewelry in the input: all sample names, letterforms, construction, connection layout, metal color, stones and chain type. Create CLOSE-UP view on ivory silk: macro camera, whole pendant fills 85% width, subtle three-quarter angle to show metal thickness, keep entire lettering visible.",
+      "parent": "/atelier/v2/stacked-studio.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Visible name, option distinction and framing. Physical dimensions not verified."
+      },
+      "cost": null
+    },
+    {
+      "id": "stacked-dark",
+      "file": "stacked-dark.png",
+      "view": "Dark",
+      "patch": {
+        "twoNames": true,
+        "layout": "Stacked"
+      },
+      "prompt": "Use case: precise-object-edit. One CALEUMS fine jewelry ecommerce photograph, portrait 4:5. Input is exact sample jewelry edit target. No text overlays, UI, collage, logos or watermark. Preserve the EXACT jewelry in the input: all sample names, letterforms, construction, connection layout, metal color, stones and chain type. Create DARK view on deep charcoal velvet, warm studio spotlight, same metal color, whole pendant centered, fine jewelry editorial. Do not add any stones.",
+      "parent": "/atelier/v2/stacked-studio.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Visible name, option distinction and framing. Physical dimensions not verified."
+      },
+      "cost": null
+    },
+    {
+      "id": "infinity-worn",
+      "file": "infinity-worn.png",
+      "view": "On skin",
+      "patch": {
+        "twoNames": true,
+        "layout": "Infinity",
+        "chain": "Rolo"
+      },
+      "prompt": "Use case: precise-object-edit. One CALEUMS fine jewelry ecommerce photograph, portrait 4:5. Input is exact sample jewelry edit target. No text overlays, UI, collage, logos or watermark. Preserve the EXACT jewelry in the input: all sample names, letterforms, construction, connection layout, metal color, stones and chain type. Create ON SKIN view, on adult woman collarbone/upper chest with ivory linen open-neck shirt, cropped below chin, no face. Entire pendant naturally rests at approximately 32mm width below collarbone. Warm natural light, realistic skin.",
+      "parent": "/atelier/v2/infinity-studio.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Visible name, option distinction and framing. Physical dimensions not verified."
+      },
+      "cost": null,
+      "auditCorrection": {
+        "date": "2026-09-06",
+        "field": "chain",
+        "previous": "Cable (default)",
+        "corrected": "Rolo",
+        "reason": "Independent review of all four current photographs: visible round links match Rolo example. Image bytes unchanged."
+      }
+    },
+    {
+      "id": "infinity-close",
+      "file": "infinity-close.png",
+      "view": "Close-up",
+      "patch": {
+        "twoNames": true,
+        "layout": "Infinity",
+        "chain": "Rolo"
+      },
+      "prompt": "Use case: precise-object-edit. One CALEUMS fine jewelry ecommerce photograph, portrait 4:5. Input is exact sample jewelry edit target. No text overlays, UI, collage, logos or watermark. Preserve the EXACT jewelry in the input: all sample names, letterforms, construction, connection layout, metal color, stones and chain type. Create CLOSE-UP view on ivory silk: macro camera, whole pendant fills 85% width, subtle three-quarter angle to show metal thickness, keep entire lettering visible.",
+      "parent": "/atelier/v2/infinity-studio.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Visible name, option distinction and framing. Physical dimensions not verified."
+      },
+      "cost": null,
+      "auditCorrection": {
+        "date": "2026-09-06",
+        "field": "chain",
+        "previous": "Cable (default)",
+        "corrected": "Rolo",
+        "reason": "Independent review of all four current photographs: visible round links match Rolo example. Image bytes unchanged."
+      }
+    },
+    {
+      "id": "infinity-dark",
+      "file": "infinity-dark.png",
+      "view": "Dark",
+      "patch": {
+        "twoNames": true,
+        "layout": "Infinity",
+        "chain": "Rolo"
+      },
+      "prompt": "Use case: precise-object-edit. One CALEUMS fine jewelry ecommerce photograph, portrait 4:5. Input is exact sample jewelry edit target. No text overlays, UI, collage, logos or watermark. Preserve the EXACT jewelry in the input: all sample names, letterforms, construction, connection layout, metal color, stones and chain type. Create DARK view on deep charcoal velvet, warm studio spotlight, same metal color, whole pendant centered, fine jewelry editorial. Do not add any stones.",
+      "parent": "/atelier/v2/infinity-studio.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Visible name, option distinction and framing. Physical dimensions not verified."
+      },
+      "cost": null,
+      "auditCorrection": {
+        "date": "2026-09-06",
+        "field": "chain",
+        "previous": "Cable (default)",
+        "corrected": "Rolo",
+        "reason": "Independent review of all four current photographs: visible round links match Rolo example. Image bytes unchanged."
+      }
+    },
+    {
+      "id": "interlocked-worn",
+      "file": "interlocked-worn.png",
+      "view": "On skin",
+      "patch": {
+        "twoNames": true,
+        "layout": "Interlocked"
+      },
+      "prompt": "Use case: precise-object-edit. One CALEUMS fine jewelry ecommerce photograph, portrait 4:5. Input is exact sample jewelry edit target. No text overlays, UI, collage, logos or watermark. Preserve the EXACT jewelry in the input: all sample names, letterforms, construction, connection layout, metal color, stones and chain type. Create ON SKIN view, on adult woman collarbone/upper chest with ivory linen open-neck shirt, cropped below chin, no face. Entire pendant naturally rests at approximately 32mm width below collarbone. Warm natural light, realistic skin.",
+      "parent": "/atelier/v2/interlocked-studio.png",
+      "review": {
+        "status": "replaced",
+        "reason": "Connection visibility refinement; original fine necks confirmed under enlarged review.",
+        "replacement": "interlocked-worn-repaired.png"
+      },
+      "cost": null
+    },
+    {
+      "id": "interlocked-close",
+      "file": "interlocked-close.png",
+      "view": "Close-up",
+      "patch": {
+        "twoNames": true,
+        "layout": "Interlocked"
+      },
+      "prompt": "Use case: precise-object-edit. One CALEUMS fine jewelry ecommerce photograph, portrait 4:5. Input is exact sample jewelry edit target. No text overlays, UI, collage, logos or watermark. Preserve the EXACT jewelry in the input: all sample names, letterforms, construction, connection layout, metal color, stones and chain type. Create CLOSE-UP view on ivory silk: macro camera, whole pendant fills 85% width, subtle three-quarter angle to show metal thickness, keep entire lettering visible.",
+      "parent": "/atelier/v2/interlocked-studio.png",
+      "review": {
+        "status": "replaced",
+        "reason": "Connection visibility refinement; original fine necks confirmed under enlarged review.",
+        "replacement": "interlocked-close-repaired.png"
+      },
+      "cost": null
+    },
+    {
+      "id": "interlocked-dark",
+      "file": "interlocked-dark.png",
+      "view": "Dark",
+      "patch": {
+        "twoNames": true,
+        "layout": "Interlocked"
+      },
+      "prompt": "Use case: precise-object-edit. One CALEUMS fine jewelry ecommerce photograph, portrait 4:5. Input is exact sample jewelry edit target. No text overlays, UI, collage, logos or watermark. Preserve the EXACT jewelry in the input: all sample names, letterforms, construction, connection layout, metal color, stones and chain type. Create DARK view on deep charcoal velvet, warm studio spotlight, same metal color, whole pendant centered, fine jewelry editorial. Do not add any stones.",
+      "parent": "/atelier/v2/interlocked-studio.png",
+      "review": {
+        "status": "replaced",
+        "reason": "Connection visibility refinement; original fine necks confirmed under enlarged review.",
+        "replacement": "interlocked-dark-repaired.png"
+      },
+      "cost": null
+    },
+    {
+      "id": "heart",
+      "file": "heart-studio-repaired.png",
+      "view": "Studio",
+      "patch": {
+        "twoNames": true,
+        "layout": "Connected heart"
+      },
+      "prompt": "Precise jewelry repair of this exact product image. The dot above the lowercase i in Fatima must NOT float independently. Add a clearly visible short narrow SOLID GOLD VERTICAL NECK connecting the underside of the i-dot to the TOP OF THE i STEM, creating one physically continuous gold shape. Preserve the recognizable i letter and round dot, but ZERO background gap between dot and stem. Preserve exact Asma and Fatima spelling, all other letter strokes, heart connection, chain and attachments, yellow gold, no stones, camera framing, background, light and scale exactly. Correct any other detached metal island with a discreet visible gold bridge. No redesign, no new gems, no labels. Every jewelry element must connect physically.",
+      "parent": "/atelier/v2/heart-studio.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Independently inspected visible letter connections, spelling, chain attachments and consistency; see docs/proof/responsive-atelier/catalogue-v2/image-review.md"
+      },
+      "cost": null,
+      "revision": 2
+    },
+    {
+      "id": "heart-worn",
+      "file": "heart-worn-repaired.png",
+      "view": "On skin",
+      "patch": {
+        "twoNames": true,
+        "layout": "Connected heart"
+      },
+      "prompt": "Precise jewelry repair of this exact product image. The dot above the lowercase i in Fatima must NOT float independently. Add a clearly visible short narrow SOLID GOLD VERTICAL NECK connecting the underside of the i-dot to the TOP OF THE i STEM, creating one physically continuous gold shape. Preserve the recognizable i letter and round dot, but ZERO background gap between dot and stem. Preserve exact Asma and Fatima spelling, all other letter strokes, heart connection, chain and attachments, yellow gold, no stones, camera framing, background, light and scale exactly. Correct any other detached metal island with a discreet visible gold bridge. No redesign, no new gems, no labels. Every jewelry element must connect physically.",
+      "parent": "/atelier/v2/heart-worn.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Independently inspected visible letter connections, spelling, chain attachments and consistency; see docs/proof/responsive-atelier/catalogue-v2/image-review.md"
+      },
+      "cost": null,
+      "revision": 2
+    },
+    {
+      "id": "heart-close",
+      "file": "heart-close-repaired.png",
+      "view": "Close-up",
+      "patch": {
+        "twoNames": true,
+        "layout": "Connected heart"
+      },
+      "prompt": "Precise jewelry repair of this exact product image. The dot above the lowercase i in Fatima must NOT float independently. Add a clearly visible short narrow SOLID GOLD VERTICAL NECK connecting the underside of the i-dot to the TOP OF THE i STEM, creating one physically continuous gold shape. Preserve the recognizable i letter and round dot, but ZERO background gap between dot and stem. Preserve exact Asma and Fatima spelling, all other letter strokes, heart connection, chain and attachments, yellow gold, no stones, camera framing, background, light and scale exactly. Correct any other detached metal island with a discreet visible gold bridge. No redesign, no new gems, no labels. Every jewelry element must connect physically.",
+      "parent": "/atelier/v2/heart-close.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Independently inspected visible letter connections, spelling, chain attachments and consistency; see docs/proof/responsive-atelier/catalogue-v2/image-review.md"
+      },
+      "cost": null,
+      "revision": 2
+    },
+    {
+      "id": "heart-dark",
+      "file": "heart-dark-repaired.png",
+      "view": "Dark",
+      "patch": {
+        "twoNames": true,
+        "layout": "Connected heart"
+      },
+      "prompt": "Precise jewelry repair of this exact product image. The dot above the lowercase i in Fatima must NOT float independently. Add a clearly visible short narrow SOLID GOLD VERTICAL NECK connecting the underside of the i-dot to the TOP OF THE i STEM, creating one physically continuous gold shape. Preserve the recognizable i letter and round dot, but ZERO background gap between dot and stem. Preserve exact Asma and Fatima spelling, all other letter strokes, heart connection, chain and attachments, yellow gold, no stones, camera framing, background, light and scale exactly. Correct any other detached metal island with a discreet visible gold bridge. No redesign, no new gems, no labels. Every jewelry element must connect physically.",
+      "parent": "/atelier/v2/heart-dark.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Independently inspected visible letter connections, spelling, chain attachments and consistency; see docs/proof/responsive-atelier/catalogue-v2/image-review.md"
+      },
+      "cost": null,
+      "revision": 2
+    },
+    {
+      "id": "interlocked",
+      "file": "interlocked-studio-repaired.png",
+      "view": "Studio",
+      "patch": {
+        "twoNames": true,
+        "layout": "Interlocked"
+      },
+      "prompt": "Precise jewelry repair of this exact product image. The dot above the lowercase i in Fatima must NOT float independently. Add a clearly visible short narrow SOLID GOLD VERTICAL NECK connecting the underside of the i-dot to the TOP OF THE i STEM, creating one physically continuous gold shape. Preserve the recognizable i letter and round dot, but ZERO background gap between dot and stem. Preserve exact Asma and Fatima spelling, all other letter strokes, interlocking oval frames, chain and attachments, yellow gold, no stones, camera framing, background, light and scale exactly. Correct any other detached metal island with a discreet visible gold bridge. No redesign, no new gems, no labels. Every jewelry element must connect physically.",
+      "parent": "/atelier/v2/interlocked-studio.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Independently inspected visible letter connections, spelling, chain attachments and consistency; see docs/proof/responsive-atelier/catalogue-v2/image-review.md"
+      },
+      "cost": null,
+      "revision": 2
+    },
+    {
+      "id": "interlocked-worn",
+      "file": "interlocked-worn-repaired.png",
+      "view": "On skin",
+      "patch": {
+        "twoNames": true,
+        "layout": "Interlocked"
+      },
+      "prompt": "Precise jewelry repair of this exact product image. The dot above the lowercase i in Fatima must NOT float independently. Add a clearly visible short narrow SOLID GOLD VERTICAL NECK connecting the underside of the i-dot to the TOP OF THE i STEM, creating one physically continuous gold shape. Preserve the recognizable i letter and round dot, but ZERO background gap between dot and stem. Preserve exact Asma and Fatima spelling, all other letter strokes, interlocking oval frames, chain and attachments, yellow gold, no stones, camera framing, background, light and scale exactly. Correct any other detached metal island with a discreet visible gold bridge. No redesign, no new gems, no labels. Every jewelry element must connect physically.",
+      "parent": "/atelier/v2/interlocked-worn.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Independently inspected visible letter connections, spelling, chain attachments and consistency; see docs/proof/responsive-atelier/catalogue-v2/image-review.md"
+      },
+      "cost": null,
+      "revision": 2
+    },
+    {
+      "id": "interlocked-close",
+      "file": "interlocked-close-repaired.png",
+      "view": "Close-up",
+      "patch": {
+        "twoNames": true,
+        "layout": "Interlocked"
+      },
+      "prompt": "Precise jewelry repair of this exact product image. The dot above the lowercase i in Fatima must NOT float independently. Add a clearly visible short narrow SOLID GOLD VERTICAL NECK connecting the underside of the i-dot to the TOP OF THE i STEM, creating one physically continuous gold shape. Preserve the recognizable i letter and round dot, but ZERO background gap between dot and stem. Preserve exact Asma and Fatima spelling, all other letter strokes, interlocking oval frames, chain and attachments, yellow gold, no stones, camera framing, background, light and scale exactly. Correct any other detached metal island with a discreet visible gold bridge. No redesign, no new gems, no labels. Every jewelry element must connect physically.",
+      "parent": "/atelier/v2/interlocked-close.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Independently inspected visible letter connections, spelling, chain attachments and consistency; see docs/proof/responsive-atelier/catalogue-v2/image-review.md"
+      },
+      "cost": null,
+      "revision": 2
+    },
+    {
+      "id": "interlocked-dark",
+      "file": "interlocked-dark-repaired.png",
+      "view": "Dark",
+      "patch": {
+        "twoNames": true,
+        "layout": "Interlocked"
+      },
+      "prompt": "Precise jewelry repair of this exact product image. The dot above the lowercase i in Fatima must NOT float independently. Add a clearly visible short narrow SOLID GOLD VERTICAL NECK connecting the underside of the i-dot to the TOP OF THE i STEM, creating one physically continuous gold shape. Preserve the recognizable i letter and round dot, but ZERO background gap between dot and stem. Preserve exact Asma and Fatima spelling, all other letter strokes, interlocking oval frames, chain and attachments, yellow gold, no stones, camera framing, background, light and scale exactly. Correct any other detached metal island with a discreet visible gold bridge. No redesign, no new gems, no labels. Every jewelry element must connect physically.",
+      "parent": "/atelier/v2/interlocked-dark.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Independently inspected visible letter connections, spelling, chain attachments and consistency; see docs/proof/responsive-atelier/catalogue-v2/image-review.md"
+      },
+      "cost": null,
+      "revision": 2
+    },
+    {
+      "id": "arabic-kufi",
+      "file": "arabic-kufi-repaired.png",
+      "view": "Studio",
+      "patch": {
+        "script": "Arabic",
+        "lettering": "Kufi"
+      },
+      "prompt": "Repair the physical connectivity of THIS EXACT Arabic أسماء name necklace, preserving every letter shape, Arabic spelling, camera, polished yellow gold, cable chain, ivory textile and limestone. Currently the middle letter group is separated from the right upright alef and/or left hamza group by open background gaps. Add an elegant, clearly visible narrow SOLID GOLD UNDERLINE SUPPORT BAR running continuously behind and touching the bottom of ALL three groups, from leftmost hamza to rightmost alef, soldered into each group. The bar must be visible spanning both gaps with no disconnected gold islands. Preserve the exact typography rather than replacing it. Keep hamza atop alef physically attached too. One photoreal product photograph, no text labels, no collage.",
+      "parent": "/atelier/v2/arabic-kufi.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Independently inspected visible letter connections, spelling, chain attachments and consistency; see docs/proof/responsive-atelier/catalogue-v2/image-review.md"
+      },
+      "cost": null,
+      "revision": 2
+    },
+    {
+      "id": "arabic-minimal-v2",
+      "file": "arabic-minimal-v2-repaired.png",
+      "view": "Studio",
+      "patch": {
+        "script": "Arabic",
+        "lettering": "Minimal"
+      },
+      "prompt": "Repair the physical connectivity of THIS EXACT Arabic أسماء name necklace, preserving every letter shape, Arabic spelling, camera, polished yellow gold, cable chain, ivory textile and limestone. Currently the middle letter group is separated from the right upright alef and/or left hamza group by open background gaps. Add an elegant, clearly visible narrow SOLID GOLD UNDERLINE SUPPORT BAR running continuously behind and touching the bottom of ALL three groups, from leftmost hamza to rightmost alef, soldered into each group. The bar must be visible spanning both gaps with no disconnected gold islands. Preserve the exact typography rather than replacing it. Keep hamza atop alef physically attached too. One photoreal product photograph, no text labels, no collage.",
+      "parent": "/atelier/v2/arabic-minimal-v2.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Independently inspected visible letter connections, spelling, chain attachments and consistency; see docs/proof/responsive-atelier/catalogue-v2/image-review.md"
+      },
+      "cost": null,
+      "revision": 2
+    },
+    {
+      "id": "arabic-thuluth-v2",
+      "file": "arabic-thuluth-v2-repaired.png",
+      "view": "Studio",
+      "patch": {
+        "script": "Arabic",
+        "lettering": "Thuluth inspired"
+      },
+      "prompt": "Repair the physical connectivity of THIS EXACT Arabic أسماء name necklace, preserving every letter shape, Arabic spelling, camera, polished yellow gold, cable chain, ivory textile and limestone. Currently the middle letter group is separated from the right upright alef and/or left hamza group by open background gaps. Add an elegant, clearly visible narrow SOLID GOLD UNDERLINE SUPPORT BAR running continuously behind and touching the bottom of ALL three groups, from leftmost hamza to rightmost alef, soldered into each group. The bar must be visible spanning both gaps with no disconnected gold islands. Preserve the exact typography rather than replacing it. Keep hamza atop alef physically attached too. One photoreal product photograph, no text labels, no collage.",
+      "parent": "/atelier/v2/arabic-thuluth-v2.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Independently inspected visible letter connections, spelling, chain attachments and consistency; see docs/proof/responsive-atelier/catalogue-v2/image-review.md"
+      },
+      "cost": null,
+      "revision": 2
+    },
+    {
+      "id": "arabic-signature",
+      "file": "arabic-signature-repaired.png",
+      "view": "Studio",
+      "patch": {
+        "script": "Arabic",
+        "lettering": "Signature"
+      },
+      "prompt": "Repair the physical connectivity of THIS EXACT Arabic أسماء name necklace, preserving every letter shape, Arabic spelling, camera, polished yellow gold, cable chain, ivory textile and limestone. Currently the middle letter group is separated from the right upright alef and/or left hamza group by open background gaps. Add an elegant, clearly visible narrow SOLID GOLD UNDERLINE SUPPORT BAR running continuously behind and touching the bottom of ALL three groups, from leftmost hamza to rightmost alef, soldered into each group. The bar must be visible spanning both gaps with no disconnected gold islands. Preserve the exact typography rather than replacing it. Keep hamza atop alef physically attached too. One photoreal product photograph, no text labels, no collage.",
+      "parent": "/atelier/v2/arabic-signature.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Independently inspected visible letter connections, spelling, chain attachments and consistency; see docs/proof/responsive-atelier/catalogue-v2/image-review.md"
+      },
+      "cost": null,
+      "revision": 2
+    }
+  ]
+}

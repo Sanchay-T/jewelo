@@ -1,0 +1,556 @@
+[
+  {
+    "id": "origami",
+    "file": "origami-studio.png",
+    "view": "Studio",
+    "patch": {
+      "construction": "Origami ribbon"
+    }
+  },
+  {
+    "id": "framed",
+    "file": "framed-studio.png",
+    "view": "Studio",
+    "patch": {
+      "construction": "Framed minimal"
+    }
+  },
+  {
+    "id": "rose",
+    "file": "rose-studio.png",
+    "view": "Studio",
+    "patch": {
+      "metal": "Rose gold"
+    }
+  },
+  {
+    "id": "white",
+    "file": "white-studio.png",
+    "view": "Studio",
+    "patch": {
+      "metal": "White gold"
+    }
+  },
+  {
+    "id": "rails",
+    "file": "rails-studio.png",
+    "view": "Studio",
+    "patch": {
+      "construction": "Diamond rails"
+    }
+  },
+  {
+    "id": "minimal",
+    "file": "minimal-studio.png",
+    "view": "Studio",
+    "patch": {
+      "lettering": "Minimal"
+    }
+  },
+  {
+    "id": "signature",
+    "file": "signature-studio.png",
+    "view": "Studio",
+    "patch": {
+      "lettering": "Signature"
+    }
+  },
+  {
+    "id": "kufi",
+    "file": "kufi-studio.png",
+    "view": "Studio",
+    "patch": {
+      "lettering": "Kufi"
+    }
+  },
+  {
+    "id": "diwani",
+    "file": "diwani-studio.png",
+    "view": "Studio",
+    "patch": {
+      "lettering": "Diwani"
+    }
+  },
+  {
+    "id": "thuluth",
+    "file": "thuluth-studio.png",
+    "view": "Studio",
+    "patch": {
+      "lettering": "Thuluth inspired"
+    }
+  },
+  {
+    "id": "side",
+    "file": "side-studio.png",
+    "view": "Studio",
+    "patch": {
+      "twoNames": true,
+      "layout": "Side by side"
+    }
+  },
+  {
+    "id": "heart",
+    "file": "heart-studio-repaired.png",
+    "view": "Studio",
+    "patch": {
+      "twoNames": true,
+      "layout": "Connected heart"
+    }
+  },
+  {
+    "id": "stacked",
+    "file": "stacked-studio.png",
+    "view": "Studio",
+    "patch": {
+      "twoNames": true,
+      "layout": "Stacked"
+    }
+  },
+  {
+    "id": "infinity",
+    "file": "infinity-studio.png",
+    "view": "Studio",
+    "patch": {
+      "twoNames": true,
+      "layout": "Infinity",
+      "chain": "Rolo"
+    }
+  },
+  {
+    "id": "interlocked",
+    "file": "interlocked-studio-repaired.png",
+    "view": "Studio",
+    "patch": {
+      "twoNames": true,
+      "layout": "Interlocked"
+    }
+  },
+  {
+    "id": "rolo",
+    "file": "rolo-studio.png",
+    "view": "Studio",
+    "patch": {
+      "chain": "Rolo"
+    }
+  },
+  {
+    "id": "box",
+    "file": "box-studio.png",
+    "view": "Studio",
+    "patch": {
+      "chain": "Box"
+    }
+  },
+  {
+    "id": "small",
+    "file": "small-studio.png",
+    "view": "Studio",
+    "patch": {
+      "size": 22
+    }
+  },
+  {
+    "id": "accent",
+    "file": "accent-studio.png",
+    "view": "Studio",
+    "patch": {
+      "coverage": "Accent"
+    }
+  },
+  {
+    "id": "partial",
+    "file": "partial-studio.png",
+    "view": "Studio",
+    "patch": {
+      "coverage": "Partial pavé"
+    }
+  },
+  {
+    "id": "full",
+    "file": "full-studio.png",
+    "view": "Studio",
+    "patch": {
+      "coverage": "Full pavé"
+    }
+  },
+  {
+    "id": "natural",
+    "file": "natural-studio.png",
+    "view": "Studio",
+    "patch": {
+      "coverage": "Accent",
+      "gem": "Natural diamond"
+    }
+  },
+  {
+    "id": "ruby",
+    "file": "ruby-studio.png",
+    "view": "Studio",
+    "patch": {
+      "coverage": "Accent",
+      "gem": "Ruby"
+    }
+  },
+  {
+    "id": "emerald",
+    "file": "emerald-studio.png",
+    "view": "Studio",
+    "patch": {
+      "coverage": "Accent",
+      "gem": "Emerald"
+    }
+  },
+  {
+    "id": "blue",
+    "file": "blue-studio.png",
+    "view": "Studio",
+    "patch": {
+      "coverage": "Accent",
+      "gem": "Blue sapphire"
+    }
+  },
+  {
+    "id": "pink",
+    "file": "pink-studio.png",
+    "view": "Studio",
+    "patch": {
+      "coverage": "Accent",
+      "gem": "Pink sapphire"
+    }
+  },
+  {
+    "id": "curb-v2",
+    "file": "curb-v2.png",
+    "view": "Studio",
+    "patch": {
+      "chain": "Curb"
+    }
+  },
+  {
+    "id": "arabic-kufi",
+    "file": "arabic-kufi-repaired.png",
+    "view": "Studio",
+    "patch": {
+      "script": "Arabic",
+      "lettering": "Kufi"
+    }
+  },
+  {
+    "id": "arabic-signature",
+    "file": "arabic-signature-repaired.png",
+    "view": "Studio",
+    "patch": {
+      "script": "Arabic",
+      "lettering": "Signature"
+    }
+  },
+  {
+    "id": "arabic-worn",
+    "file": "arabic-worn.png",
+    "view": "On skin",
+    "patch": {
+      "script": "Arabic"
+    }
+  },
+  {
+    "id": "arabic-close",
+    "file": "arabic-close.png",
+    "view": "Close-up",
+    "patch": {
+      "script": "Arabic"
+    }
+  },
+  {
+    "id": "arabic-dark",
+    "file": "arabic-dark.png",
+    "view": "Dark",
+    "patch": {
+      "script": "Arabic"
+    }
+  },
+  {
+    "id": "arabic-minimal-v2",
+    "file": "arabic-minimal-v2-repaired.png",
+    "view": "Studio",
+    "patch": {
+      "script": "Arabic",
+      "lettering": "Minimal"
+    }
+  },
+  {
+    "id": "arabic-diwani-v2",
+    "file": "arabic-diwani-v2.png",
+    "view": "Studio",
+    "patch": {
+      "script": "Arabic",
+      "lettering": "Diwani"
+    }
+  },
+  {
+    "id": "arabic-thuluth-v2",
+    "file": "arabic-thuluth-v2-repaired.png",
+    "view": "Studio",
+    "patch": {
+      "script": "Arabic",
+      "lettering": "Thuluth inspired"
+    }
+  },
+  {
+    "id": "origami-worn",
+    "file": "origami-worn.png",
+    "view": "On skin",
+    "patch": {
+      "construction": "Origami ribbon"
+    }
+  },
+  {
+    "id": "origami-close",
+    "file": "origami-close.png",
+    "view": "Close-up",
+    "patch": {
+      "construction": "Origami ribbon"
+    }
+  },
+  {
+    "id": "origami-dark",
+    "file": "origami-dark.png",
+    "view": "Dark",
+    "patch": {
+      "construction": "Origami ribbon"
+    }
+  },
+  {
+    "id": "framed-worn",
+    "file": "framed-worn.png",
+    "view": "On skin",
+    "patch": {
+      "construction": "Framed minimal"
+    }
+  },
+  {
+    "id": "framed-close",
+    "file": "framed-close.png",
+    "view": "Close-up",
+    "patch": {
+      "construction": "Framed minimal"
+    }
+  },
+  {
+    "id": "framed-dark",
+    "file": "framed-dark.png",
+    "view": "Dark",
+    "patch": {
+      "construction": "Framed minimal"
+    }
+  },
+  {
+    "id": "rose-worn",
+    "file": "rose-worn.png",
+    "view": "On skin",
+    "patch": {
+      "metal": "Rose gold"
+    }
+  },
+  {
+    "id": "rose-close",
+    "file": "rose-close.png",
+    "view": "Close-up",
+    "patch": {
+      "metal": "Rose gold"
+    }
+  },
+  {
+    "id": "rose-dark",
+    "file": "rose-dark.png",
+    "view": "Dark",
+    "patch": {
+      "metal": "Rose gold"
+    }
+  },
+  {
+    "id": "white-worn",
+    "file": "white-worn.png",
+    "view": "On skin",
+    "patch": {
+      "metal": "White gold"
+    }
+  },
+  {
+    "id": "white-close",
+    "file": "white-close.png",
+    "view": "Close-up",
+    "patch": {
+      "metal": "White gold"
+    }
+  },
+  {
+    "id": "white-dark",
+    "file": "white-dark.png",
+    "view": "Dark",
+    "patch": {
+      "metal": "White gold"
+    }
+  },
+  {
+    "id": "rails-worn",
+    "file": "rails-worn.png",
+    "view": "On skin",
+    "patch": {
+      "construction": "Diamond rails"
+    }
+  },
+  {
+    "id": "rails-close",
+    "file": "rails-close.png",
+    "view": "Close-up",
+    "patch": {
+      "construction": "Diamond rails"
+    }
+  },
+  {
+    "id": "rails-dark",
+    "file": "rails-dark.png",
+    "view": "Dark",
+    "patch": {
+      "construction": "Diamond rails"
+    }
+  },
+  {
+    "id": "side-worn",
+    "file": "side-worn.png",
+    "view": "On skin",
+    "patch": {
+      "twoNames": true,
+      "layout": "Side by side"
+    }
+  },
+  {
+    "id": "side-close",
+    "file": "side-close.png",
+    "view": "Close-up",
+    "patch": {
+      "twoNames": true,
+      "layout": "Side by side"
+    }
+  },
+  {
+    "id": "side-dark",
+    "file": "side-dark.png",
+    "view": "Dark",
+    "patch": {
+      "twoNames": true,
+      "layout": "Side by side"
+    }
+  },
+  {
+    "id": "heart-worn",
+    "file": "heart-worn-repaired.png",
+    "view": "On skin",
+    "patch": {
+      "twoNames": true,
+      "layout": "Connected heart"
+    }
+  },
+  {
+    "id": "heart-close",
+    "file": "heart-close-repaired.png",
+    "view": "Close-up",
+    "patch": {
+      "twoNames": true,
+      "layout": "Connected heart"
+    }
+  },
+  {
+    "id": "heart-dark",
+    "file": "heart-dark-repaired.png",
+    "view": "Dark",
+    "patch": {
+      "twoNames": true,
+      "layout": "Connected heart"
+    }
+  },
+  {
+    "id": "stacked-worn",
+    "file": "stacked-worn.png",
+    "view": "On skin",
+    "patch": {
+      "twoNames": true,
+      "layout": "Stacked"
+    }
+  },
+  {
+    "id": "stacked-close",
+    "file": "stacked-close.png",
+    "view": "Close-up",
+    "patch": {
+      "twoNames": true,
+      "layout": "Stacked"
+    }
+  },
+  {
+    "id": "stacked-dark",
+    "file": "stacked-dark.png",
+    "view": "Dark",
+    "patch": {
+      "twoNames": true,
+      "layout": "Stacked"
+    }
+  },
+  {
+    "id": "infinity-worn",
+    "file": "infinity-worn.png",
+    "view": "On skin",
+    "patch": {
+      "twoNames": true,
+      "layout": "Infinity",
+      "chain": "Rolo"
+    }
+  },
+  {
+    "id": "infinity-close",
+    "file": "infinity-close.png",
+    "view": "Close-up",
+    "patch": {
+      "twoNames": true,
+      "layout": "Infinity",
+      "chain": "Rolo"
+    }
+  },
+  {
+    "id": "infinity-dark",
+    "file": "infinity-dark.png",
+    "view": "Dark",
+    "patch": {
+      "twoNames": true,
+      "layout": "Infinity",
+      "chain": "Rolo"
+    }
+  },
+  {
+    "id": "interlocked-worn",
+    "file": "interlocked-worn-repaired.png",
+    "view": "On skin",
+    "patch": {
+      "twoNames": true,
+      "layout": "Interlocked"
+    }
+  },
+  {
+    "id": "interlocked-close",
+    "file": "interlocked-close-repaired.png",
+    "view": "Close-up",
+    "patch": {
+      "twoNames": true,
+      "layout": "Interlocked"
+    }
+  },
+  {
+    "id": "interlocked-dark",
+    "file": "interlocked-dark-repaired.png",
+    "view": "Dark",
+    "patch": {
+      "twoNames": true,
+      "layout": "Interlocked"
+    }
+  }
+]

@@ -5,7 +5,6 @@ import "@fontsource/playfair-display/400.css";
 import "@fontsource/playfair-display/600.css";
 import "@fontsource/playfair-display/400-italic.css";
 import "./globals.css";
-import { JeweloProvider } from "@/lib/jewelo-provider";
 import { headers } from "next/headers";
 
 export const metadata = {
@@ -23,9 +22,7 @@ export default async function RootLayout({
   const locale = requestHeaders.get("x-jewelo-locale") === "ar" ? "ar" : "en";
   return (
     <html lang={locale} dir={locale === "ar" ? "rtl" : "ltr"}>
-      <body>
-        <JeweloProvider>{children}</JeweloProvider>
-      </body>
+      <body>{children}</body>
     </html>
   );
 }

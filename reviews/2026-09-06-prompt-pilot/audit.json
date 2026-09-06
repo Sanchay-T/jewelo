@@ -1,0 +1,198 @@
+[
+  {
+    "attempt": 1,
+    "version": "0.1",
+    "condition": "Muhammad · classical bar · yellow gold · no stones · identical repeat",
+    "prompt_file": "prompts/muhammad-yellow-v01.txt",
+    "task_id": "d9efc10d-8c40-482d-a05a-03f2a340a0d1",
+    "status": "pass",
+    "findings": [
+      "Reference glyphs, counters, terminal strokes and continuous body preserved.",
+      "Two integral open eyelets plus separate interlocking jump rings; no visible broken necks or detached parts.",
+      "No stones or added decoration; coherent gold reflections and contact shadows.",
+      "Exact dimensions, karat, chain length and manufacturing strength are not visually certified."
+    ],
+    "gates": {
+      "identity": "pass",
+      "construction": "pass",
+      "hardware": "pass",
+      "specification": "pass",
+      "photography": "pass"
+    },
+    "file": "outputs/attempt-1.png",
+    "sha256": "824b69c5fa209ba386efad864938a678c3ba47384f382142c8e9514a7c1077c7",
+    "dimensions": [
+      1920,
+      1920
+    ],
+    "crops": [
+      "crops/attempt-1-left-hardware.png",
+      "crops/attempt-1-right-hardware.png",
+      "crops/attempt-1-lettering.png"
+    ],
+    "reviewer": "Parent visual audit + independent plan_reviewer output audit, full image and native-resolution junction crops."
+  },
+  {
+    "attempt": 2,
+    "version": "0.1",
+    "condition": "Muhammad · classical bar · yellow gold · no stones · identical repeat",
+    "prompt_file": "prompts/muhammad-yellow-v01.txt",
+    "task_id": "1a9004eb-13a0-4ce5-a1c9-8ac62ae62225",
+    "status": "pass",
+    "findings": [
+      "Reference glyphs, counters, terminal strokes and continuous body preserved.",
+      "Two integral open eyelets plus separate interlocking jump rings; no visible broken necks or detached parts.",
+      "No stones or added decoration; coherent gold reflections and contact shadows.",
+      "Exact dimensions, karat, chain length and manufacturing strength are not visually certified."
+    ],
+    "gates": {
+      "identity": "pass",
+      "construction": "pass",
+      "hardware": "pass",
+      "specification": "pass",
+      "photography": "pass"
+    },
+    "file": "outputs/attempt-2.png",
+    "sha256": "7219c6eb2ee70387e7fa0bee76173eda7b57e36b35b5e2c9554c65789aa9064e",
+    "dimensions": [
+      1920,
+      1920
+    ],
+    "crops": [
+      "crops/attempt-2-left-hardware.png",
+      "crops/attempt-2-right-hardware.png",
+      "crops/attempt-2-lettering.png"
+    ],
+    "reviewer": "Parent visual audit + independent plan_reviewer output audit, full image and native-resolution junction crops."
+  },
+  {
+    "attempt": 3,
+    "version": "0.1 white",
+    "condition": "Muhammad · classical bar · white gold · no stones · metal-only change",
+    "prompt_file": "prompts/muhammad-white-v01.txt",
+    "task_id": "7e3c5b9b-0603-48cd-8e94-35328e2b0c29",
+    "status": "reject",
+    "findings": [
+      "Definite detached LEFT chain: loose assembly at approximately (355,1010), intended eyelet at (485,840), original 1920x1920 coordinates. Clear background gap between them.",
+      "Eyelet-to-body contacts look layered/interlocked rather than integral casting; right side lacks the specified distinguishable separate jump ring.",
+      "Name and optical material rendering retained; beauty does not compensate for broken assembly."
+    ],
+    "gates": {
+      "identity": "pass",
+      "construction": "needs_review",
+      "hardware": "reject",
+      "specification": "reject",
+      "photography": "pass"
+    },
+    "file": "outputs/attempt-3.png",
+    "dimensions": [
+      1920,
+      1920
+    ],
+    "sha256": "80620f6132d10cf3b3b934f4a53f7eafb7afb74f09894f34cb987c26c8d1890d",
+    "crops": [
+      "crops/attempt-3-left-hardware.png",
+      "crops/attempt-3-right-hardware.png",
+      "crops/attempt-3-lettering.png"
+    ],
+    "reviewer": "Parent visual audit + independent plan_reviewer audit; both reject."
+  },
+  {
+    "attempt": 4,
+    "version": "0.1 white",
+    "condition": "Muhammad · classical bar · white gold · no stones · metal-only change",
+    "prompt_file": "prompts/muhammad-white-v01.txt",
+    "task_id": "eee9ec3f-91dc-4bf3-9c31-7552f4c3dbd3",
+    "status": "pass",
+    "findings": [
+      "Name/counters preserved; continuous body and integral eyelet necks.",
+      "One separate jump ring per side; plausible attached chain; polished white-metal appearance.",
+      "Nonvisual properties including gold composition, dimensions and strength not certified."
+    ],
+    "gates": {
+      "identity": "pass",
+      "construction": "pass",
+      "hardware": "pass",
+      "specification": "pass",
+      "photography": "pass"
+    },
+    "file": "outputs/attempt-4.png",
+    "dimensions": [
+      1920,
+      1920
+    ],
+    "sha256": "316e2c29632b1cf51cf1e2831377fc820ec07fccf5792dc054998e88f2ee75e1",
+    "crops": [
+      "crops/attempt-4-left-hardware.png",
+      "crops/attempt-4-right-hardware.png",
+      "crops/attempt-4-lettering.png"
+    ],
+    "reviewer": "Parent visual audit + independent plan_reviewer native-resolution audit; both visual pass."
+  },
+  {
+    "attempt": 5,
+    "version": "0.2 white",
+    "condition": "Same white-gold case; ONLY hardware paragraph revised; identical paired repeat",
+    "prompt_file": "prompts/muhammad-white-v02.txt",
+    "task_id": "4ca6f46e-2e9c-47f8-9276-3a559d3d36d6",
+    "status": "reject",
+    "findings": [
+      "Added third body eyelet reshapes the left terminal at approximately (300,1115), original 1920x1920 coordinates.",
+      "The two intended eyelets at approximately (475,875) and (1570,952) remain unused.",
+      "Right chain ends behind body edge near (1660,1065); requested junction is not inspectable.",
+      "Optical material rendering passes; attachment design does not."
+    ],
+    "gates": {
+      "identity": "reject",
+      "construction": "reject",
+      "hardware": "reject",
+      "specification": "reject",
+      "photography": "pass"
+    },
+    "file": "outputs/attempt-5.png",
+    "dimensions": [
+      1920,
+      1920
+    ],
+    "sha256": "eade95282a02ab4c222667c198a32c4b646c70ddf52ae6ffc1114bae79f4c147",
+    "crops": [
+      "crops/attempt-5-left-hardware.png",
+      "crops/attempt-5-right-hardware.png",
+      "crops/attempt-5-lettering.png"
+    ],
+    "reviewer": "Parent visual audit + independent plan_reviewer full-resolution audit; both reject."
+  },
+  {
+    "attempt": 6,
+    "version": "0.2 white",
+    "condition": "Same white-gold case; ONLY hardware paragraph revised; identical paired repeat",
+    "prompt_file": "prompts/muhammad-white-v02.txt",
+    "task_id": "c61501cd-28c3-413c-a818-648dc593b874",
+    "status": "reject",
+    "findings": [
+      "Invented side eyelets and support branches at approximately (192,997) and (1709,973), original 1920x1920 coordinates.",
+      "Both reference eyelets at approximately (438,768) and (1546,864) remain unused: FOUR body eyelets instead of two.",
+      "Name is readable but prescribed terminal contours and hardware assembly were changed.",
+      "Optical material rendering passes; connected does not mean correct."
+    ],
+    "gates": {
+      "identity": "reject",
+      "construction": "reject",
+      "hardware": "reject",
+      "specification": "reject",
+      "photography": "pass"
+    },
+    "file": "outputs/attempt-6.png",
+    "dimensions": [
+      1920,
+      1920
+    ],
+    "sha256": "ba2d2c5cfc28bd077d53ad21a0647799c38ff4161ba646fbeeba2181d519edd6",
+    "crops": [
+      "crops/attempt-6-left-hardware.png",
+      "crops/attempt-6-right-hardware.png",
+      "crops/attempt-6-lettering.png"
+    ],
+    "reviewer": "Parent visual audit + independent plan_reviewer full-resolution audit; both reject."
+  }
+]

@@ -1,40 +1,29 @@
 {
   "mcpServers": {
-    "digitalocean-apps": {
-      "type": "http",
-      "url": "https://apps.mcp.digitalocean.com/mcp",
-      "headers": {
-        "Authorization": "Bearer ${DIGITALOCEAN_ACCESS_TOKEN:-not-configured}"
-      }
-    },
-    "digitalocean-docr": {
-      "type": "http",
-      "url": "https://docr.mcp.digitalocean.com/mcp",
-      "headers": {
-        "Authorization": "Bearer ${DIGITALOCEAN_ACCESS_TOKEN:-not-configured}"
-      }
-    },
-    "digitalocean-docs": {
-      "type": "http",
-      "url": "https://docs.mcp.digitalocean.com/mcp",
-      "headers": {
-        "Authorization": "Bearer ${DIGITALOCEAN_ACCESS_TOKEN:-not-configured}"
-      }
-    },
     "supabase": {
       "type": "http",
       "url": "https://mcp.supabase.com/mcp?features=docs%2Caccount%2Cdatabase%2Cdebugging%2Cdevelopment%2Cfunctions%2Cbranching"
     },
     "trigger": {
       "command": "npx",
-      "args": ["trigger.dev@latest", "mcp", "--dev-only"]
+      "args": [
+        "trigger.dev@latest",
+        "mcp",
+        "--dev-only",
+        "--project-ref",
+        "proj_xlvgghocsckjlnkuaibo"
+      ]
     },
-    "fal-ai": {
-      "type": "http",
-      "url": "https://mcp.fal.ai/mcp",
-      "headers": {
-        "Authorization": "Bearer ${FAL_KEY:-not-configured}"
+    "digitalocean": {
+      "command": "npx",
+      "args": ["-y", "@digitalocean/mcp"],
+      "env": {
+        "DIGITALOCEAN_API_TOKEN": "${DIGITALOCEAN_API_TOKEN:-not-configured}"
       }
+    },
+    "shopify-dev": {
+      "command": "npx",
+      "args": ["-y", "@shopify/dev-mcp@latest"]
     }
   }
 }

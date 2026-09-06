@@ -1,0 +1,122 @@
+[
+  {
+    "id": "origami-white",
+    "file": "origami-white-studio.png",
+    "view": "Studio",
+    "patch": {
+      "construction": "Origami ribbon",
+      "metal": "White gold"
+    }
+  },
+  {
+    "id": "origami-white-accent",
+    "file": "origami-white-accent-studio.png",
+    "view": "Studio",
+    "patch": {
+      "construction": "Origami ribbon",
+      "metal": "White gold",
+      "coverage": "Accent"
+    }
+  },
+  {
+    "id": "origami-white-ruby",
+    "file": "origami-white-ruby-studio.png",
+    "view": "Studio",
+    "patch": {
+      "construction": "Origami ribbon",
+      "metal": "White gold",
+      "coverage": "Accent",
+      "gem": "Ruby"
+    }
+  },
+  {
+    "id": "origami-white-worn",
+    "file": "origami-white-worn.png",
+    "view": "On skin",
+    "patch": {
+      "construction": "Origami ribbon",
+      "metal": "White gold"
+    }
+  },
+  {
+    "id": "origami-white-close",
+    "file": "origami-white-close.png",
+    "view": "Close-up",
+    "patch": {
+      "construction": "Origami ribbon",
+      "metal": "White gold"
+    }
+  },
+  {
+    "id": "origami-white-dark",
+    "file": "origami-white-dark.png",
+    "view": "Dark",
+    "patch": {
+      "construction": "Origami ribbon",
+      "metal": "White gold"
+    }
+  },
+  {
+    "id": "origami-white-accent-worn",
+    "file": "origami-white-accent-worn.png",
+    "view": "On skin",
+    "patch": {
+      "construction": "Origami ribbon",
+      "metal": "White gold",
+      "coverage": "Accent"
+    }
+  },
+  {
+    "id": "origami-white-accent-close",
+    "file": "origami-white-accent-close.png",
+    "view": "Close-up",
+    "patch": {
+      "construction": "Origami ribbon",
+      "metal": "White gold",
+      "coverage": "Accent"
+    }
+  },
+  {
+    "id": "origami-white-accent-dark",
+    "file": "origami-white-accent-dark.png",
+    "view": "Dark",
+    "patch": {
+      "construction": "Origami ribbon",
+      "metal": "White gold",
+      "coverage": "Accent"
+    }
+  },
+  {
+    "id": "origami-white-ruby-worn",
+    "file": "origami-white-ruby-worn.png",
+    "view": "On skin",
+    "patch": {
+      "construction": "Origami ribbon",
+      "metal": "White gold",
+      "coverage": "Accent",
+      "gem": "Ruby"
+    }
+  },
+  {
+    "id": "origami-white-ruby-close",
+    "file": "origami-white-ruby-close.png",
+    "view": "Close-up",
+    "patch": {
+      "construction": "Origami ribbon",
+      "metal": "White gold",
+      "coverage": "Accent",
+      "gem": "Ruby"
+    }
+  },
+  {
+    "id": "origami-white-ruby-dark",
+    "file": "origami-white-ruby-dark.png",
+    "view": "Dark",
+    "patch": {
+      "construction": "Origami ribbon",
+      "metal": "White gold",
+      "coverage": "Accent",
+      "gem": "Ruby"
+    }
+  }
+]

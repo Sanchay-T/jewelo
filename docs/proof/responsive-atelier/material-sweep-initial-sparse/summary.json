@@ -1,0 +1,14 @@
+{
+  "captures": 300,
+  "cases": 300,
+  "runtimeErrors": [],
+  "failedCaptures": 0,
+  "identityGroups": 48,
+  "nestedCoverageGroupsPassed": 48,
+  "sixDistinctImagesGroupsPassed": 48,
+  "strictlyIncreasingCoverageGroupsPassed": 48,
+  "metalChainCases": 12,
+  "distinctMetalChainImages": 12,
+  "minFullStoneCount": 21,
+  "maxFullStoneCount": 42
+}

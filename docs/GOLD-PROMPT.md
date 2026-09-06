@@ -1,3 +1,5 @@
+> Customer UI reset: start with `docs/START-HERE.md`. Do not launch this historical implementation workflow during the fresh brainstorm.
+
 # Gold prompt — first implementation goal
 
 This is historical Goal 00 bootstrap guidance. For final Caleums integration,
@@ -17,8 +19,8 @@ Read, in order:
 2. AGENTS.md
 3. docs/START-HERE.md
 4. docs/PRODUCT-CONTRACT.md
-5. docs/FROZEN-UX.md
-6. docs/UX-AUDIT.md
+5. docs/OMRAN-BUSINESS-CONTEXT.md
+6. docs/START-HERE.md
 7. docs/FINAL-STACK.md
 8. docs/ARCHITECTURE.md
 9. docs/MEDIA-CONCURRENCY.md

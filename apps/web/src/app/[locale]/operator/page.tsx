@@ -1,3 +1,4 @@
+import { JeweloProvider } from "@/lib/jewelo-provider";
 import { OperatorExperience } from "@/features/admin/OperatorExperience";
 
 export default async function OperatorPage({
@@ -6,5 +7,9 @@ export default async function OperatorPage({
   params: Promise<{ locale: "en" | "ar" }>;
 }) {
   const { locale } = await params;
-  return <OperatorExperience locale={locale} />;
+  return (
+    <JeweloProvider>
+      <OperatorExperience locale={locale} />
+    </JeweloProvider>
+  );
 }

@@ -1,0 +1,279 @@
+{
+  "version": 8,
+  "tool": "native imagegen",
+  "assets": [
+    {
+      "id": "akrw-none",
+      "file": "arabic-kufi-rails-white-none-studio.png",
+      "view": "Studio",
+      "patch": {
+        "script": "Arabic",
+        "construction": "Diamond rails",
+        "lettering": "Kufi",
+        "chain": "Rolo",
+        "metal": "White gold",
+        "coverage": "No stones"
+      },
+      "parent": "/atelier/v2/arabic-kufi-repaired.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Direct inspection: Kufi square counter, connected rails and round chain attachments visible. Illustrative nominal scale."
+      },
+      "prompt": "Preserve Arabic أسماء Kufi spelling, square mim counter and letter silhouette from repaired reference. Add connected upper/lower horizontal rails, no stones, white gold and Rolo chain, nominal32mm, portrait studio photography.",
+      "sha256": "172d2c49dffd334af739bea19e81e99f349472852285e019870210216c12b3be"
+    },
+    {
+      "id": "akr-yellow-none",
+      "file": "arabic-kufi-rails-yellow-none-studio.png",
+      "view": "Studio",
+      "patch": {
+        "script": "Arabic",
+        "construction": "Diamond rails",
+        "lettering": "Kufi",
+        "chain": "Rolo",
+        "metal": "Yellow gold",
+        "coverage": "No stones"
+      },
+      "parent": "/atelier/v8/arabic-kufi-rails-white-none-studio.png",
+      "prompt": "Edit this exact master studio product photo. Change only the metal and stones: Yellow gold, No stones. No stones anywhere. All metal including chain and jump rings is 18K Yellow gold. Lock everything else pixel-consistently: Arabic أسماء Kufi angular silhouette with open square mim counter, single name, two connected horizontal rails, round Rolo chain links, both closed attached jump rings, 32mm proportions, camera composition, ivory silk and limestone, lighting. No redesign, no English, no additional letters, no broken jewelry, no floating gemstones, no overlay text. Photo-real ecommerce image portrait4:5.",
+      "cost": null,
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Direct visual inspection: retained angular Arabic name, square counter, rails and attached Rolo chain; metal and stone setting match. AI sample nominal size, not measured geometry."
+      },
+      "sha256": "8097113e5c77e6ba4bac342afc73fb5161fe08793bc20f0feb2814f9c6447e6a"
+    },
+    {
+      "id": "akr-yellow-accent",
+      "file": "arabic-kufi-rails-yellow-accent-studio.png",
+      "view": "Studio",
+      "patch": {
+        "script": "Arabic",
+        "construction": "Diamond rails",
+        "lettering": "Kufi",
+        "chain": "Rolo",
+        "metal": "Yellow gold",
+        "coverage": "Accent"
+      },
+      "parent": "/atelier/v8/arabic-kufi-rails-white-none-studio.png",
+      "prompt": "Edit this exact master studio product photo. Change only the metal and stones: Yellow gold, Accent. Add exactly four small clear diamond accents to the horizontal lower rail ONLY. All metal including chain and jump rings is 18K Yellow gold. Lock everything else pixel-consistently: Arabic أسماء Kufi angular silhouette with open square mim counter, single name, two connected horizontal rails, round Rolo chain links, both closed attached jump rings, 32mm proportions, camera composition, ivory silk and limestone, lighting. No redesign, no English, no additional letters, no broken jewelry, no floating gemstones, no overlay text. Photo-real ecommerce image portrait4:5.",
+      "cost": null,
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Direct visual inspection: retained angular Arabic name, square counter, rails and attached Rolo chain; metal and stone setting match. AI sample nominal size, not measured geometry."
+      },
+      "sha256": "c5c26980dc2fb1d051d76e9f9bb327065e24536ff3d7ed8d0cee5d80d2c97f20"
+    },
+    {
+      "id": "akr-yellow-partial",
+      "file": "arabic-kufi-rails-yellow-partial-studio.png",
+      "view": "Studio",
+      "patch": {
+        "script": "Arabic",
+        "construction": "Diamond rails",
+        "lettering": "Kufi",
+        "chain": "Rolo",
+        "metal": "Yellow gold",
+        "coverage": "Partial pavé"
+      },
+      "parent": "/atelier/v8/arabic-kufi-rails-white-none-studio.png",
+      "prompt": "Edit this exact master studio product photo. Change only the metal and stones: Yellow gold, Partial pavé. Set small clear diamonds continuously along the horizontal lower rail ONLY, leaving the name and upper rail polished metal. All metal including chain and jump rings is 18K Yellow gold. Lock everything else pixel-consistently: Arabic أسماء Kufi angular silhouette with open square mim counter, single name, two connected horizontal rails, round Rolo chain links, both closed attached jump rings, 32mm proportions, camera composition, ivory silk and limestone, lighting. No redesign, no English, no additional letters, no broken jewelry, no floating gemstones, no overlay text. Photo-real ecommerce image portrait4:5.",
+      "cost": null,
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Direct visual inspection: retained angular Arabic name, square counter, rails and attached Rolo chain; metal and stone setting match. AI sample nominal size, not measured geometry."
+      },
+      "sha256": "f2d45e2f0de379127d5ff81822fed0a366ef75ae161e3baf4b48c1bfa03e62b2"
+    },
+    {
+      "id": "akr-yellow-full",
+      "file": "arabic-kufi-rails-yellow-full-studio.png",
+      "view": "Studio",
+      "patch": {
+        "script": "Arabic",
+        "construction": "Diamond rails",
+        "lettering": "Kufi",
+        "chain": "Rolo",
+        "metal": "Yellow gold",
+        "coverage": "Full pavé"
+      },
+      "parent": "/atelier/v8/arabic-kufi-rails-white-none-studio.png",
+      "prompt": "Edit this exact master studio product photo. Change only the metal and stones: Yellow gold, Full pavé. Set small clear diamonds in a continuous neat pavé on both horizontal rails AND the solid strokes of the name; preserve all open counters. All metal including chain and jump rings is 18K Yellow gold. Lock everything else pixel-consistently: Arabic أسماء Kufi angular silhouette with open square mim counter, single name, two connected horizontal rails, round Rolo chain links, both closed attached jump rings, 32mm proportions, camera composition, ivory silk and limestone, lighting. No redesign, no English, no additional letters, no broken jewelry, no floating gemstones, no overlay text. Photo-real ecommerce image portrait4:5.",
+      "cost": null,
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Direct visual inspection: retained angular Arabic name, square counter, rails and attached Rolo chain; metal and stone setting match. AI sample nominal size, not measured geometry."
+      },
+      "sha256": "db1e23db1f35699579fde981e49c46442acfdae3ad1b7fe1b911cab4b96b6b72"
+    },
+    {
+      "id": "akr-white-accent",
+      "file": "arabic-kufi-rails-white-accent-studio.png",
+      "view": "Studio",
+      "patch": {
+        "script": "Arabic",
+        "construction": "Diamond rails",
+        "lettering": "Kufi",
+        "chain": "Rolo",
+        "metal": "White gold",
+        "coverage": "Accent"
+      },
+      "parent": "/atelier/v8/arabic-kufi-rails-white-none-studio.png",
+      "prompt": "Edit this exact master studio product photo. Change only the metal and stones: White gold, Accent. Add exactly four small clear diamond accents to the horizontal lower rail ONLY. All metal including chain and jump rings is 18K White gold. Lock everything else pixel-consistently: Arabic أسماء Kufi angular silhouette with open square mim counter, single name, two connected horizontal rails, round Rolo chain links, both closed attached jump rings, 32mm proportions, camera composition, ivory silk and limestone, lighting. No redesign, no English, no additional letters, no broken jewelry, no floating gemstones, no overlay text. Photo-real ecommerce image portrait4:5.",
+      "cost": null,
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Direct visual inspection: retained angular Arabic name, square counter, rails and attached Rolo chain; metal and stone setting match. AI sample nominal size, not measured geometry."
+      },
+      "sha256": "30af6b23aa765e44591edf64e9d463f016387502f64a5b6dc3608240178331ef"
+    },
+    {
+      "id": "akr-white-partial",
+      "file": "arabic-kufi-rails-white-partial-studio.png",
+      "view": "Studio",
+      "patch": {
+        "script": "Arabic",
+        "construction": "Diamond rails",
+        "lettering": "Kufi",
+        "chain": "Rolo",
+        "metal": "White gold",
+        "coverage": "Partial pavé"
+      },
+      "parent": "/atelier/v8/arabic-kufi-rails-white-none-studio.png",
+      "prompt": "Edit this exact master studio product photo. Change only the metal and stones: White gold, Partial pavé. Set small clear diamonds continuously along the horizontal lower rail ONLY, leaving the name and upper rail polished metal. All metal including chain and jump rings is 18K White gold. Lock everything else pixel-consistently: Arabic أسماء Kufi angular silhouette with open square mim counter, single name, two connected horizontal rails, round Rolo chain links, both closed attached jump rings, 32mm proportions, camera composition, ivory silk and limestone, lighting. No redesign, no English, no additional letters, no broken jewelry, no floating gemstones, no overlay text. Photo-real ecommerce image portrait4:5.",
+      "cost": null,
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Direct visual inspection: retained angular Arabic name, square counter, rails and attached Rolo chain; metal and stone setting match. AI sample nominal size, not measured geometry."
+      },
+      "sha256": "34636e6ec866055913fee62acd0804ed57c65f4f45797c359c8fef784156769d"
+    },
+    {
+      "id": "akr-white-full",
+      "file": "arabic-kufi-rails-white-full-studio.png",
+      "view": "Studio",
+      "patch": {
+        "script": "Arabic",
+        "construction": "Diamond rails",
+        "lettering": "Kufi",
+        "chain": "Rolo",
+        "metal": "White gold",
+        "coverage": "Full pavé"
+      },
+      "parent": "/atelier/v8/arabic-kufi-rails-white-none-studio.png",
+      "prompt": "Edit this exact master studio product photo. Change only the metal and stones: White gold, Full pavé. Set small clear diamonds in a continuous neat pavé on both horizontal rails AND the solid strokes of the name; preserve all open counters. All metal including chain and jump rings is 18K White gold. Lock everything else pixel-consistently: Arabic أسماء Kufi angular silhouette with open square mim counter, single name, two connected horizontal rails, round Rolo chain links, both closed attached jump rings, 32mm proportions, camera composition, ivory silk and limestone, lighting. No redesign, no English, no additional letters, no broken jewelry, no floating gemstones, no overlay text. Photo-real ecommerce image portrait4:5.",
+      "cost": null,
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Direct visual inspection: retained angular Arabic name, square counter, rails and attached Rolo chain; metal and stone setting match. AI sample nominal size, not measured geometry."
+      },
+      "sha256": "e6f4ab03eb0e33bdc301071469bc01dcc409d398e4b522d70742b85cc8a56b94"
+    },
+    {
+      "id": "akr-rose-none",
+      "file": "arabic-kufi-rails-rose-none-studio.png",
+      "view": "Studio",
+      "patch": {
+        "script": "Arabic",
+        "construction": "Diamond rails",
+        "lettering": "Kufi",
+        "chain": "Rolo",
+        "metal": "Rose gold",
+        "coverage": "No stones"
+      },
+      "parent": "/atelier/v8/arabic-kufi-rails-white-none-studio.png",
+      "prompt": "Edit this exact master studio product photo. Change only the metal and stones: Rose gold, No stones. No stones anywhere. All metal including chain and jump rings is 18K Rose gold. Lock everything else pixel-consistently: Arabic أسماء Kufi angular silhouette with open square mim counter, single name, two connected horizontal rails, round Rolo chain links, both closed attached jump rings, 32mm proportions, camera composition, ivory silk and limestone, lighting. No redesign, no English, no additional letters, no broken jewelry, no floating gemstones, no overlay text. Photo-real ecommerce image portrait4:5.",
+      "cost": null,
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Direct visual inspection: retained angular Arabic name, square counter, rails and attached Rolo chain; metal and stone setting match. AI sample nominal size, not measured geometry."
+      },
+      "sha256": "916b8438ce5f15fa1de76877cbd96c53c9e2d5aa92639e5c918af34b355fffc0"
+    },
+    {
+      "id": "akr-rose-partial",
+      "file": "arabic-kufi-rails-rose-partial-studio.png",
+      "view": "Studio",
+      "patch": {
+        "script": "Arabic",
+        "construction": "Diamond rails",
+        "lettering": "Kufi",
+        "chain": "Rolo",
+        "metal": "Rose gold",
+        "coverage": "Partial pavé"
+      },
+      "parent": "/atelier/v8/arabic-kufi-rails-white-none-studio.png",
+      "prompt": "Edit this exact master studio product photo. Change only the metal and stones: Rose gold, Partial pavé. Set small clear diamonds continuously along the horizontal lower rail ONLY, leaving the name and upper rail polished metal. All metal including chain and jump rings is 18K Rose gold. Lock everything else pixel-consistently: Arabic أسماء Kufi angular silhouette with open square mim counter, single name, two connected horizontal rails, round Rolo chain links, both closed attached jump rings, 32mm proportions, camera composition, ivory silk and limestone, lighting. No redesign, no English, no additional letters, no broken jewelry, no floating gemstones, no overlay text. Photo-real ecommerce image portrait4:5.",
+      "cost": null,
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Direct visual inspection: retained angular Arabic name, square counter, rails and attached Rolo chain; metal and stone setting match. AI sample nominal size, not measured geometry."
+      },
+      "sha256": "5d325056f2ae08a64ea6198e666c1113dce410fb9981c9f392a777a58a4afabe"
+    },
+    {
+      "id": "akr-rose-full",
+      "file": "arabic-kufi-rails-rose-full-studio.png",
+      "view": "Studio",
+      "patch": {
+        "script": "Arabic",
+        "construction": "Diamond rails",
+        "lettering": "Kufi",
+        "chain": "Rolo",
+        "metal": "Rose gold",
+        "coverage": "Full pavé"
+      },
+      "parent": "/atelier/v8/arabic-kufi-rails-white-none-studio.png",
+      "prompt": "Edit this exact master studio product photo. Change only the metal and stones: Rose gold, Full pavé. Set small clear diamonds in a continuous neat pavé on both horizontal rails AND the solid strokes of the name; preserve all open counters. All metal including chain and jump rings is 18K Rose gold. Lock everything else pixel-consistently: Arabic أسماء Kufi angular silhouette with open square mim counter, single name, two connected horizontal rails, round Rolo chain links, both closed attached jump rings, 32mm proportions, camera composition, ivory silk and limestone, lighting. No redesign, no English, no additional letters, no broken jewelry, no floating gemstones, no overlay text. Photo-real ecommerce image portrait4:5.",
+      "cost": null,
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Direct visual inspection: retained angular Arabic name, square counter, rails and attached Rolo chain; metal and stone setting match. AI sample nominal size, not measured geometry."
+      },
+      "sha256": "2ff49cdfc979ca3b274fa4d78ca822b7917c3334572d6203ec099604e575a3f3"
+    },
+    {
+      "id": "akr-rose-accent",
+      "file": "arabic-kufi-rails-rose-accent-corrected-studio.png",
+      "view": "Studio",
+      "patch": {
+        "script": "Arabic",
+        "construction": "Diamond rails",
+        "lettering": "Kufi",
+        "chain": "Rolo",
+        "metal": "Rose gold",
+        "coverage": "Accent"
+      },
+      "parent": "/atelier/v8/arabic-kufi-rails-rose-accent-rejected.png",
+      "prompt": "Correct only lower rail accent count to exactly four, evenly spaced. Preserve Arabic Kufi name, rails, Rolo chain, rose gold and photography.",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Direct inspection: corrected four accent diamonds, retained Kufi square counter and connected rails/chain."
+      },
+      "cost": null,
+      "sha256": "d4d67e672f347544356dac8a7a66c5d994dabe68f071b6b0cd2343f7c731a252"
+    },
+    {
+      "id": "akr-rose-accent-rejected",
+      "file": "arabic-kufi-rails-rose-accent-rejected.png",
+      "view": "Studio",
+      "patch": {
+        "script": "Arabic",
+        "construction": "Diamond rails",
+        "lettering": "Kufi",
+        "chain": "Rolo",
+        "metal": "Rose gold",
+        "coverage": "Accent"
+      },
+      "parent": "/atelier/v8/arabic-kufi-rails-white-none-studio.png",
+      "prompt": "Edit this exact master studio product photo. Change only the metal and stones: Rose gold, Accent. Add exactly four small clear diamond accents to the horizontal lower rail ONLY. All metal including chain and jump rings is 18K Rose gold. Lock everything else pixel-consistently: Arabic أسماء Kufi angular silhouette with open square mim counter, single name, two connected horizontal rails, round Rolo chain links, both closed attached jump rings, 32mm proportions, camera composition, ivory silk and limestone, lighting. No redesign, no English, no additional letters, no broken jewelry, no floating gemstones, no overlay text. Photo-real ecommerce image portrait4:5.",
+      "review": {
+        "status": "rejected",
+        "reason": "Three accents instead of four; would change stone count when changing metal."
+      },
+      "cost": null,
+      "sha256": "e82c5e57235bfafc98461b1e48c3ff869be13e004f67b476abfa4ee9520cd121"
+    }
+  ],
+  "cost": null
+}

@@ -1,0 +1,920 @@
+{
+  "scope": "Archive authorized by user 2026-09-06; original bytes verified; no permanent deletions",
+  "files": [
+    {
+      "original": "docs/rnd/agent-roster.md",
+      "sha256": "498b2b7135b5fcca4df8d60e22674aad033b0f570b86d0b8d8df17b66064b52b",
+      "bytes": 1897
+    },
+    {
+      "original": "docs/rnd/image-pack.md",
+      "sha256": "64855914d1df426b87d0b1896b25cfb029338fa8b9a01f09c59ed166f0b1febb",
+      "bytes": 3246
+    },
+    {
+      "original": "docs/rnd/sit-and-size.md",
+      "sha256": "50abef7ddbf1c66a8528a8d9fde195aff4146085d3375e6ba01ce9d5b33e079c",
+      "bytes": 3229
+    },
+    {
+      "original": "docs/rnd/prompt-slots.md",
+      "sha256": "76116eb5bb55ae2cebdaa73dd9f8daae977384434005a52a8fab5d29d7259cbb",
+      "bytes": 4148
+    },
+    {
+      "original": "docs/rnd/STYLE-AGENTS.md",
+      "sha256": "3da5d35dac18677a3fad3cde7920fd7df5d7327b7bf083461a8bffdaa17848ec",
+      "bytes": 1360
+    },
+    {
+      "original": "docs/rnd/STATUS.md",
+      "sha256": "9e27782d7761e24fd4e2cfbcaa6ebeecc32b4e2ce39909ebd3afa036961cf2a0",
+      "bytes": 6229
+    },
+    {
+      "original": "docs/rnd/running-agents.md",
+      "sha256": "f444d27c67409d14b5bc732cb6d3572141109dc17e97a8c17b8a264f97f24a55",
+      "bytes": 1341
+    },
+    {
+      "original": "docs/rnd/make-drop-compare.py",
+      "sha256": "fa84df947d82f7cad4b388e8bd2ad8609bcaf16a5b177ccacefa57f30fefab18",
+      "bytes": 9788
+    },
+    {
+      "original": "docs/rnd/ZIP-DELIVERABLE.md",
+      "sha256": "ff35d2fd418a9906bba774524b73b48156ad3c159a2f29c778ae2e9932bd7395",
+      "bytes": 2296
+    },
+    {
+      "original": "docs/rnd/build_drop_stack.py",
+      "sha256": "7f44dbfc9f1922c669c0bfda218a83a2addc7be4a6f195b3f1e08d82bec053bd",
+      "bytes": 7322
+    },
+    {
+      "original": "docs/rnd/make-stills-grids.py",
+      "sha256": "9641a88848b0c05b3007d239bbe2cfd03cbb3dcb980e1e52c764f12bf84bf988",
+      "bytes": 8088
+    },
+    {
+      "original": "docs/rnd/image-loop.md",
+      "sha256": "21e38f79c28ec92e47fc8dd0ed3f3a5da4c0e45074c8c5ce3ad777fc668b0080",
+      "bytes": 4279
+    },
+    {
+      "original": "docs/rnd/design-matrix.md",
+      "sha256": "f86eefc1422abf81db09806bdb59db898d1b2efc703015c84f437707979abc5c",
+      "bytes": 3796
+    },
+    {
+      "original": "docs/rnd/dual-loop.md",
+      "sha256": "d18a45988b540fd8e48e514575a3876ec9485dcaef107dcffccc3fd0c3137809",
+      "bytes": 2534
+    },
+    {
+      "original": "docs/rnd/matrix-cells.json",
+      "sha256": "90c2ab956a6b758554cc5e379c0c4be2af32100e4b70cbcc1e64149e66c2dc29",
+      "bytes": 160658
+    },
+    {
+      "original": "docs/rnd/make-stills-gallery.py",
+      "sha256": "08e58c6991d1eeb27190734f2d318655f3ef1b189ec12191a330d3725ce76c29",
+      "bytes": 15524
+    },
+    {
+      "original": "docs/planning/omran/IMAGE-PROMPTS.md",
+      "sha256": "361ca11cbde90aeb70c5c4075a8743667bd2840474dfce084769e1e3b11f5a20",
+      "bytes": 3120
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/round4_join_macro.png",
+      "sha256": "67ebf3d04bc628871cc6e28180e3907249e9fe20693a84f82e3eaa1e15889a9c",
+      "bytes": 55461
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/.DS_Store",
+      "sha256": "6a04ae3184e7858718f6004ee4e080eab2f5d33f8aa6510cdb903ca00426e247",
+      "bytes": 6148
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/review.html",
+      "sha256": "63b8de2880eac224dbbe779a243ecced586971c7b3f3db21858dec91599e4a54",
+      "bytes": 4890
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/round4_identity_thick.png",
+      "sha256": "ed2d8486f0d7a87d61a4cd03567f28987daba65b20386fa93a07d955f184575e",
+      "bytes": 24762
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/canonical_asma.png",
+      "sha256": "4ae5be3e2dec3902c475dfa41330e49594a882e107d09ebb6d2134912495855b",
+      "bytes": 12863
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/review-all.html",
+      "sha256": "8cefb06b199380355a48d9ff27aa719d69ff81f8d58db0a90733848b3df3d5f8",
+      "bytes": 12940
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/asma-approved-6-styles.zip",
+      "sha256": "aee4ec55b5fa892e5d7c219b9f5375d1ba2fe38e76bcf5390c162af66d62666e",
+      "bytes": 29881889
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/review-round5.html",
+      "sha256": "3f44c61599d7b1c3308e3c040fd53d30a2db1a15241192b5beaed8a0a3fd4b5d",
+      "bytes": 3860
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/review-round4.html",
+      "sha256": "1ab7db79ae42836dbeb8f1248325bcf78749e0414ff52bc16cfd98e1222e87c9",
+      "bytes": 3234
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/manifest.json",
+      "sha256": "da4e2775a012bc335faea584c4825475e48b6a743393cbbccf83c794b744a4a3",
+      "bytes": 3490
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/review-round3.html",
+      "sha256": "63d52d707a9302a2bab1ded0dcfe94f5b3ba7bd27d2127b54dfc3bf8eed863fe",
+      "bytes": 4180
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/review-send.html",
+      "sha256": "3638e40d7cfb488555df7373f95569b887007753ba981d122c3f1f89fb998d26",
+      "bytes": 6888
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/asma-approved-6-styles/04-constellation.png",
+      "sha256": "0d14df509f5ba509f41d90516d0fbe3337c4ba99b9d33f098047f7377031b85e",
+      "bytes": 5704142
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/asma-approved-6-styles/05-ribbon-flow.png",
+      "sha256": "dbbc382fb2e10a04767f2c39fbdb1f695295a74dc6305e1ca9a6e0cd16ab6b03",
+      "bytes": 5102283
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/asma-approved-6-styles/manifest.txt",
+      "sha256": "2169e15323fe389a61080036e53f55681845efd28a98fd65a7f27ef1ef827133",
+      "bytes": 1586
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/asma-approved-6-styles/02-framed-minimal.png",
+      "sha256": "a76aba32485b299113a48a46862d5e2a405a87fde0480ae9781b9287d4f330ba",
+      "bytes": 4309379
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/asma-approved-6-styles/06-art-deco.png",
+      "sha256": "e160c6ebd27e5966bd1de8f3a4de2602f6f114d0fca69a923b0a177354e414e5",
+      "bytes": 5956916
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/asma-approved-6-styles/01-floating-rails.png",
+      "sha256": "715f716d343ea611bc625a144066133699bfc1afe09be1cbe46dec1016fc639e",
+      "bytes": 5537372
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/asma-approved-6-styles/03-origami.png",
+      "sha256": "dcdd6a4aad855a005b4b8ab0723da716a4f3d5ff146f0a4c23a3aaedcd141503",
+      "bytes": 5415300
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/normalized/round4_ribbon_c05daa92_zoom_last.png",
+      "sha256": "3fbecaec7eddd58b3e32c9066687c07a297b9640ac8eab8c000a80c587a083bd",
+      "bytes": 2267957
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/normalized/flat_proof_e3e4ea7b.jpg",
+      "sha256": "99cf7a5d31243ecfc9252a3a656f0ffe180afa1e98041e766c8c65549113660e",
+      "bytes": 65972
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/normalized/round12_constellation_zoom_hamza.png",
+      "sha256": "31b42fe811b0275ace4b4edcf34979c45034f18f74ce7acca5bb0ba4b2221cf8",
+      "bytes": 2172659
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/normalized/round3_rails_4d0cdb8a.jpg",
+      "sha256": "746c50a3de70fea073f7b35c038180ce4e19a7a913486f9d4b69193a26f4e3fd",
+      "bytes": 285418
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/normalized/round4_constellation_16a47342.jpg",
+      "sha256": "8a7faa0e25854212d3d51974c59f81daf445eece46a900197f01bc1d237ad17a",
+      "bytes": 221968
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/normalized/round3_constellation_8e281f8b.jpg",
+      "sha256": "f535ecbf241f65d19440ed8a347ed3edb4f6a842e140091fc2acefe3cb186dbf",
+      "bytes": 235928
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/normalized/round4_constellation_16a47342_zoom_first.png",
+      "sha256": "99c32b30c2321838768cf80eb5c7f0bd69a0798d78fead2d508e29bf92d474bf",
+      "bytes": 2476349
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/normalized/round3_framed_988f29e0.jpg",
+      "sha256": "4f00872490b29fbcd4857b29f3ea7272062a0a902837ba8878f5db4b16f25f6d",
+      "bytes": 120990
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/normalized/025f58e8-f554-40d0-ae5f-8bc3945bd12a.jpg",
+      "sha256": "e6c30e8167dec46889a873c8efef40b2e0a65afc33e650e238e2243ee2bcb8ac",
+      "bytes": 163409
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/normalized/round5_fingers_a4cd7fad.jpg",
+      "sha256": "789353004591b83c2aa29d37ae283be5f85af5538eb8bcb9b9cbda1f37d4fbca",
+      "bytes": 140383
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/normalized/canonical.jpg",
+      "sha256": "c5daa8ad7b817b89a2e8227583deff0929be8a890d35641880eff12093e394f5",
+      "bytes": 17951
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/normalized/round7_artdeco_863dc723.jpg",
+      "sha256": "d24507e254c5a9a54a6e33c1103e2b882b0806883402af6b3ad8c0774fd70a92",
+      "bytes": 309244
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/normalized/round4_constellation_16a47342_zoom_last.png",
+      "sha256": "cafb2f9bd2282a6987fa2d62b6f7b10f4173b407435c015129e1b4d9a5caab73",
+      "bytes": 1999609
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/normalized/round8_constellation_8f2854ed.jpg",
+      "sha256": "8cb1b0c4cda38051cea13ebfcdb90b880893e2bff07549ec0286361a65b3cf34",
+      "bytes": 271585
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/normalized/round6_artdeco_b8c97620.jpg",
+      "sha256": "52acb0bc734ca4b5851fdc33715b72cb2e0fcc82950ce9d8283273cefa5be643",
+      "bytes": 353682
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/normalized/round3_origami_34a7caa7.jpg",
+      "sha256": "557962eaba898346373539f474ddfebeccac133903330edf5648d18f9499c765",
+      "bytes": 290907
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/normalized/round3_ribbon_960eeb70.jpg",
+      "sha256": "11426b5475a0b7e31f2bc8cebcd95afa4e89628afc7c3170ee0ce8245cca3336",
+      "bytes": 208044
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/normalized/round9_origami_6dec1346.jpg",
+      "sha256": "6d61f7f724e3d1a16f87c4d0e20696d07a05c0c4505697c17725d7f44c433fe9",
+      "bytes": 297504
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/normalized/round8_constellation_zoom_hamza.png",
+      "sha256": "a72ef985cc2039dc64d5636f810ebcf6810de890c8904b777143035216a056b4",
+      "bytes": 1992859
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/normalized/round9_artdeco_57c11aa9.jpg",
+      "sha256": "7fda265cfb88f76c987bc7f4506101ce3197dec0f329568d6618d0b461eae3c1",
+      "bytes": 283927
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/normalized/round10_artdeco_5a2f1173.jpg",
+      "sha256": "bb2d63a8116b8c87fd04820cc125880699d89cd7a82eb9cffc7619f21297dd06",
+      "bytes": 243322
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/normalized/round6_rails_c0f99e03.jpg",
+      "sha256": "8775483d138be794da6371fc7c06889b0fe1b7c576be849301f2e4a950ab5b3a",
+      "bytes": 318675
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/normalized/round8_origami_f342bb6d.jpg",
+      "sha256": "b77ac6239a4e1eaac215287692f43c60c1978e6d5af1369b7391fdbee69a216c",
+      "bytes": 398326
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/normalized/96ecbba4-6f81-4f5e-92d1-adf4b73a0e57.jpg",
+      "sha256": "917f7906f8ee473dbd3b72493ebc2c1dfb0f8a828504388570649aeddef08078",
+      "bytes": 99474
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/normalized/round12_constellation_ce0bdb1c.jpg",
+      "sha256": "4a59b347d81c0c1c1216cedbe2f4bf3af9462829cdcee9a03eb0eff8049f09dc",
+      "bytes": 108935
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/normalized/round8_artdeco_d2fcc835.jpg",
+      "sha256": "1804927f796409b813c0bb1cb9672ff83f74fac7f6732e7c6beb974a1ddc5a34",
+      "bytes": 253884
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/normalized/round6_origami_d60bf4c6.jpg",
+      "sha256": "74237d16be2df94a0909724e31c177d7207b62fb181c51594b01ca08f9643e5a",
+      "bytes": 348302
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/normalized/round7_rails_5e1ff765.jpg",
+      "sha256": "457d033173bd5dba20bcd5d14e5242408ff4a43c31f8b1016f21b10337ac2faa",
+      "bytes": 267628
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/normalized/2b132492-4329-44e7-8398-09957f63137a.jpg",
+      "sha256": "b5f14fc35fe32c8ee80dd06c34b365d26e8d6b5b619784d8f0b66fa32a53ce9e",
+      "bytes": 56084
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/normalized/round5_linen_b3eb13c0.jpg",
+      "sha256": "7df5b4ea6d573a71aa66fbc20f0da2a4e889ef8afe64bfa34c7e5679deaa22c5",
+      "bytes": 336752
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/normalized/round5_giftbox_cc45c0ac.jpg",
+      "sha256": "a98c476271fb0968904da7c2812ed5a320d0629b45e296581bc02eac920405e6",
+      "bytes": 255736
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/normalized/round4_ribbon_c05daa92_zoom_first.png",
+      "sha256": "8b986ec97fe26410643a2f3331c9a4203b93fe9dff8f8135f96d44f8ab88e5ee",
+      "bytes": 2014732
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/normalized/round5_navy_457996f2.jpg",
+      "sha256": "0ea4116b37cfdeea01a000131866ea38bfb2adb84f38168210716e9be53c1927",
+      "bytes": 213576
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/normalized/round6_ribbon_3630f03a.jpg",
+      "sha256": "4629ce258d3ad54e5cd5673d2f7daa5555ae2129d0e99f7e6c467efafcac9486",
+      "bytes": 130712
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/normalized/round11_origami_55ff4f5e.jpg",
+      "sha256": "4d4859366b2cdb1952f3c01a8d57fae77c0d0f34da5b0bcbcacea50775bd28a4",
+      "bytes": 218718
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/normalized/round7_origami_8d9862e4.jpg",
+      "sha256": "15c3ee0e9e7d26a6ea97c16863935a954991d3c971cafb4c91e4ac965ab6f388",
+      "bytes": 337359
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/normalized/round10_origami_2079cf2f.jpg",
+      "sha256": "44e9fe3b4cf2fb91b1d07c4cb913524cfdc88d46322a88d243bb5d558437bbbb",
+      "bytes": 347172
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/normalized/round3_artdeco_1ce26725.jpg",
+      "sha256": "f8b62eb00212fbba5d4f28c95430104a7a85223a58f9687374591fb878938590",
+      "bytes": 284380
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/normalized/9a29f4c9-7f52-4536-8834-58872b919fc9.jpg",
+      "sha256": "d3d86a71566bd4843e2d3113bb3b429bb08545c122cf36c13eb7b6e616fa29f7",
+      "bytes": 91446
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/normalized/79f3f17d-ece1-4373-8449-8e904a71e5b5.jpg",
+      "sha256": "62033eb3cbb4d955471860a97d3b8852b25c17a57ba6858241e9452b088e75fe",
+      "bytes": 240458
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/normalized/707666c4-b2aa-4b0a-9c3e-cf86a0c74355.jpg",
+      "sha256": "c711bd36c786302584cd146ed3315db68901e3ad085e9661ee9ff8834ce9cef3",
+      "bytes": 89355
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/normalized/round4_ribbon_c05daa92.jpg",
+      "sha256": "33048f135067375ea44eebddb0a9bee05ba7a73f6a6cc3e91be3bc2d818c7e54",
+      "bytes": 173043
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/originals/flat_proof_e3e4ea7b.png",
+      "sha256": "4c0511ae8c4858659537577f9da43594ce327072ffea5ebb228aa240116fedf8",
+      "bytes": 1821092
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/originals/round3_rails_4d0cdb8a.png",
+      "sha256": "a58fc57e3f367047b467e0ba0dbe0c7bd5cb642f6bf8a33595ae6423dbc6a0bc",
+      "bytes": 5799927
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/originals/constellation_707666c4.png",
+      "sha256": "3dc9775b869f987169e03d349c9a6ea35e756ae1f0fc24dd35d9d31b2e114ebb",
+      "bytes": 4757062
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/originals/round4_constellation_16a47342.png",
+      "sha256": "21ab899f86f7d4cef4afc6367cbad6eee915cec05a213c2e1d9618c78bb7c3ce",
+      "bytes": 5482311
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/originals/round3_constellation_8e281f8b.png",
+      "sha256": "b1ee0d0b342fa8a9b654a2b430d4a3a195726ba495a201127dabf2cd09c0b019",
+      "bytes": 5613883
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/originals/origami_025f58e8.png",
+      "sha256": "a7d58703c7c4f185ab8aca63e7a7cb05c34b9bcb2cbd8d825213fdb5e05743cc",
+      "bytes": 6380822
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/originals/round3_framed_988f29e0.png",
+      "sha256": "8fd50615b12c0a3ed6b96a9cae62984548d0a419f0080ad0ffb95e1f5cbf2e6c",
+      "bytes": 4171650
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/originals/round5_fingers_a4cd7fad.png",
+      "sha256": "a76aba32485b299113a48a46862d5e2a405a87fde0480ae9781b9287d4f330ba",
+      "bytes": 4309379
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/originals/round7_artdeco_863dc723.png",
+      "sha256": "7a159c112160cadef06bbf41dba0ed15bd3832f9afe3d13472adc5fd2c0dc4b3",
+      "bytes": 6305252
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/originals/round3_origami_34a7caa7.png",
+      "sha256": "f518e59f1d7355210dd651b27face19b985b00e8294bac0f787a77a930390a54",
+      "bytes": 6162116
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/originals/round8_constellation_8f2854ed.png",
+      "sha256": "923e9447d8ae0073cc6facb82ec744acb7b15f44a93cdf2be33f4e64f9ca4397",
+      "bytes": 5628863
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/originals/round6_artdeco_b8c97620.png",
+      "sha256": "b88c3db40d1f8b6661db182395801ceb84542476d4289f1c1f4ab4a1dd415f17",
+      "bytes": 5781300
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/originals/round3_ribbon_960eeb70.png",
+      "sha256": "9450abf743e4e05b737c9a276c3ac3d00490e6532cfeb837ea1ef638fec5a32e",
+      "bytes": 5941617
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/originals/round9_origami_6dec1346.png",
+      "sha256": "c0470d06f1576525529d93ba69dc1f6845d3229917540c34211c74cf8bf2f15b",
+      "bytes": 6409819
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/originals/round9_artdeco_57c11aa9.png",
+      "sha256": "26cf7c6ba4fde5c17469172095b9a491df121913765716b911a18dcb3a25a487",
+      "bytes": 6091858
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/originals/rails_79f3f17d.png",
+      "sha256": "1c1132b34ae25f4da2ba502afb5a8c9a4c2b3a71557db6ac6dad3488c7dadcc3",
+      "bytes": 7314143
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/originals/round6_rails_c0f99e03.png",
+      "sha256": "c9ee045c8cf66833e0c2776b792c2289b40179c0147bfc1e6eaf11a7daa9bb1b",
+      "bytes": 6385145
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/originals/round10_artdeco_5a2f1173.png",
+      "sha256": "e160c6ebd27e5966bd1de8f3a4de2602f6f114d0fca69a923b0a177354e414e5",
+      "bytes": 5956916
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/originals/round8_origami_f342bb6d.png",
+      "sha256": "d09b9f7f88677a7fa934ee8959fa845d3051557a2417cebd213852f8f29916d1",
+      "bytes": 7337773
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/originals/round12_constellation_ce0bdb1c.png",
+      "sha256": "0d14df509f5ba509f41d90516d0fbe3337c4ba99b9d33f098047f7377031b85e",
+      "bytes": 5704142
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/originals/round8_artdeco_d2fcc835.png",
+      "sha256": "20f1f07ace277ac8ed133750b75db83afdb8b92bb9fc4647b9b040a697aa8f56",
+      "bytes": 5872444
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/originals/framed_2b132492.png",
+      "sha256": "51b257c5224cfa177f38e74b48fe274ec44ad927238a1dd7e969d0e2612f4e3c",
+      "bytes": 3824327
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/originals/round7_rails_5e1ff765.png",
+      "sha256": "715f716d343ea611bc625a144066133699bfc1afe09be1cbe46dec1016fc639e",
+      "bytes": 5537372
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/originals/round6_origami_d60bf4c6.png",
+      "sha256": "2c2677afabf94b3b3c208fddd1ac06156ac8c528864571e5f0be8a87078a50a2",
+      "bytes": 7413040
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/originals/round5_linen_b3eb13c0.png",
+      "sha256": "f160553ea45c4480e8b3d7e3d726e465dc61341148a17959055d04709245dc86",
+      "bytes": 6456877
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/originals/artdeco_96ecbba4.png",
+      "sha256": "c3214888ec9118fad9d307d971115e7f3249ada5d4d7c3c92fba0d4656ecd6a9",
+      "bytes": 5632448
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/originals/round5_giftbox_cc45c0ac.png",
+      "sha256": "183b230969e9e539801732e64b7c6ca21e8e3d2ec807662e3630d8a763764c24",
+      "bytes": 5687470
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/originals/round6_ribbon_3630f03a.png",
+      "sha256": "dbbc382fb2e10a04767f2c39fbdb1f695295a74dc6305e1ca9a6e0cd16ab6b03",
+      "bytes": 5102283
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/originals/round5_navy_457996f2.png",
+      "sha256": "73c907737a18d34de34a899b3d39616c2fc9987f34815fe719d69320991d858e",
+      "bytes": 5735813
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/originals/round7_origami_8d9862e4.png",
+      "sha256": "c0d3b7aec23d79a859e0c57bbe4787d8c93d2b1323d4d34a6084c3da427df4ae",
+      "bytes": 6670088
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/originals/round11_origami_55ff4f5e.png",
+      "sha256": "dcdd6a4aad855a005b4b8ab0723da716a4f3d5ff146f0a4c23a3aaedcd141503",
+      "bytes": 5415300
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/originals/ribbon_9a29f4c9.png",
+      "sha256": "ac84651d412dbbe05de1b984ebed0aa4fb7a9dfa57b84460f91f8e6906ef9461",
+      "bytes": 5397921
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/originals/round10_origami_2079cf2f.png",
+      "sha256": "6b1a50e2230b4089c537d5da8da12570d7ecfbafd220aed5ac56a6c838f40ee0",
+      "bytes": 7481169
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/originals/round3_artdeco_1ce26725.png",
+      "sha256": "c812081563ec2acdac06de55ab061c4e65ec6508ab17103bbe9aaf23c71017c1",
+      "bytes": 6296337
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/originals/round4_ribbon_c05daa92.png",
+      "sha256": "3dd249395ac579fb31a1b076a3ae6b90ddbf956dd30dff8deb6312b51723a193",
+      "bytes": 5429946
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/zip_send/04-constellation.png",
+      "sha256": "0d14df509f5ba509f41d90516d0fbe3337c4ba99b9d33f098047f7377031b85e",
+      "bytes": 5704142
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/zip_send/05-ribbon-flow.png",
+      "sha256": "dbbc382fb2e10a04767f2c39fbdb1f695295a74dc6305e1ca9a6e0cd16ab6b03",
+      "bytes": 5102283
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/zip_send/manifest.txt",
+      "sha256": "2169e15323fe389a61080036e53f55681845efd28a98fd65a7f27ef1ef827133",
+      "bytes": 1586
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/zip_send/02-framed-minimal.png",
+      "sha256": "a76aba32485b299113a48a46862d5e2a405a87fde0480ae9781b9287d4f330ba",
+      "bytes": 4309379
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/zip_send/06-art-deco.png",
+      "sha256": "e160c6ebd27e5966bd1de8f3a4de2602f6f114d0fca69a923b0a177354e414e5",
+      "bytes": 5956916
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/zip_send/01-floating-rails.png",
+      "sha256": "715f716d343ea611bc625a144066133699bfc1afe09be1cbe46dec1016fc639e",
+      "bytes": 5537372
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/zip_send/03-origami.png",
+      "sha256": "dcdd6a4aad855a005b4b8ab0723da716a4f3d5ff146f0a4c23a3aaedcd141503",
+      "bytes": 5415300
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/omran/style-ribbon_small.jpg",
+      "sha256": "e540aa17780e458102000d286336de9478b2f08650b225533ee74bb364066ea8",
+      "bytes": 90579
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/omran/style-constellation_small.jpg",
+      "sha256": "cb2f9b7f776c30d1ae9d6db1fbfada755d7d7050d5748a9c772d6dc7492fde61",
+      "bytes": 109936
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/omran/style-constellation.jpg",
+      "sha256": "cee1c119591eda0e51b452c96a2f55ff974099d0536728f35bbd041598312aa1",
+      "bytes": 286957
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/omran/style-framed_small.jpg",
+      "sha256": "a3636ead1cb4a8e5a89b450a941a2c14b12fd967cebbe6a95184276886e6fd23",
+      "bytes": 46792
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/omran/style-rails_small.jpg",
+      "sha256": "a9e21e1032edc8f83763cf668cea0216fd433de621b7c0ffc89b81f802c5106e",
+      "bytes": 46838
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/omran/style-artdeco.jpg",
+      "sha256": "9286582fc5de2296e84c9566836fe57490032f3ac210fee6601e50876c4d34c5",
+      "bytes": 280564
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/omran/style-rails.jpg",
+      "sha256": "7a3c00ad7747338e6afa7f2a203b7f07d0df5f83e6d5ea2e7bfbd285a738e5a5",
+      "bytes": 120942
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/omran/style-ribbon.jpg",
+      "sha256": "ab779ef2595a540eccb80384802a5071a4b2dd9d0294884cb7806d058250161c",
+      "bytes": 231689
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/omran/style-origami_small.jpg",
+      "sha256": "bb86f00e52f265f60eccdb2178840e8a962ef3e4b247629c862da597da7e8fb9",
+      "bytes": 43108
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/omran/style-framed.jpg",
+      "sha256": "e275cd7a6fea046747d8250b691bf270ec55576a245ea9a81503d35bb13f924c",
+      "bytes": 128980
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/omran/style-origami.jpg",
+      "sha256": "c8ff5d6ca332a283713945ed514d6f8cf47e222e8f8ab9fbbd6c7d7e9a8e42b3",
+      "bytes": 117373
+    },
+    {
+      "original": "reviews/2026-09-03-asma-proper-loop/omran/style-artdeco_small.jpg",
+      "sha256": "7cdf125b65a85901acc9040b10baafed670ef85bd9ed7588ec8b3b1646de3561",
+      "bytes": 105455
+    },
+    {
+      "original": "reviews/2026-09-03-arabic-ads/review.html",
+      "sha256": "94d4484d590a174f8fde4a69c89e08402ec50342c2ddbc24f7659f356814b0da",
+      "bytes": 6889
+    },
+    {
+      "original": "reviews/2026-09-03-arabic-ads/validation.json",
+      "sha256": "721c843ea69f0f27533c5570edc7226a0a8bce40c33161130d0381114c193bc2",
+      "bytes": 4675
+    },
+    {
+      "original": "reviews/2026-09-03-arabic-ads/manifest.json",
+      "sha256": "d8114b1341f2e63cdd20c2071e4212b2a658ead3fda3120d3811185f841c8bb0",
+      "bytes": 7080
+    },
+    {
+      "original": "reviews/2026-09-03-arabic-ads/contact-sheet.jpg",
+      "sha256": "bd230b4ad96ff03bad37a9776d48243e1a50f33689a360560c4146f08b719463",
+      "bytes": 97436
+    },
+    {
+      "original": "reviews/2026-09-03-arabic-ads/canonical/asma_naskh_1024.png",
+      "sha256": "57dc655e19295726e47a3ea4d5f1fbe376806ba9d7fbb75a57f56efdcbf2caf9",
+      "bytes": 8721
+    },
+    {
+      "original": "reviews/2026-09-03-arabic-ads/canonical/asma_naskh_2048.png",
+      "sha256": "87cfadc1d086ed7814abe6cf640abc436875567c290f142a118a9c47fe15f985",
+      "bytes": 18290
+    },
+    {
+      "original": "reviews/2026-09-03-arabic-ads/canonical/asma_canonical_1024.png",
+      "sha256": "4ae5be3e2dec3902c475dfa41330e49594a882e107d09ebb6d2134912495855b",
+      "bytes": 12863
+    },
+    {
+      "original": "reviews/2026-09-03-arabic-ads/canonical/asma_canonical_2048.png",
+      "sha256": "6998ab07e50130bac39076ad491321098f32e124c0a27110793aa67831ed5f83",
+      "bytes": 26315
+    },
+    {
+      "original": "reviews/2026-09-03-arabic-ads/canonical/identity.json",
+      "sha256": "647fe127687a6f321b215ae22d02281d317a16f0f5e8dfeb580a667dbe96e81e",
+      "bytes": 345
+    },
+    {
+      "original": "reviews/2026-09-03-arabic-ads/normalized/61a48f96-307b-4972-a829-619b284083b4.jpg",
+      "sha256": "5ead1c7b11965a6135ea26f933c6324a60cc58a8c5390a4473f37a4848b33d53",
+      "bytes": 216586
+    },
+    {
+      "original": "reviews/2026-09-03-arabic-ads/normalized/59f9dc08-d326-4f56-987a-aa291130f16c.jpg",
+      "sha256": "e5e9f1bcf4bc86016d17d72aa08839b5defb57acf970801e42fb56ab5c9e1e72",
+      "bytes": 80256
+    },
+    {
+      "original": "reviews/2026-09-03-arabic-ads/normalized/0d32eb05-f3ef-46a1-a9e0-b8fefb751953.jpg",
+      "sha256": "ee29a2f3eb245a466f46083c593f213a5147331d03e95d886c854cd64bf45745",
+      "bytes": 92748
+    },
+    {
+      "original": "reviews/2026-09-03-arabic-ads/normalized/df7639b5-5511-4e77-9f4c-4600d9ac269f.jpg",
+      "sha256": "d0dd51ef9ce1da7290ea110fc982880d84181be28e6157c6637b2602e52a4088",
+      "bytes": 41295
+    },
+    {
+      "original": "reviews/2026-09-03-arabic-ads/normalized/96063da4-57f7-4a25-9b09-8e826b97bdce.jpg",
+      "sha256": "a62c2f8fef0135782df2ca9bacabb2ceb24f5244c56caa7a5792db780d703de6",
+      "bytes": 84154
+    },
+    {
+      "original": "reviews/2026-09-03-arabic-ads/normalized/9ca281ec-5b37-4542-9324-0a0cd9d88b90.jpg",
+      "sha256": "50742e4aff60945036dd8d3eaf36c0129a1bdb7454405ed684626e5099dbfd24",
+      "bytes": 46210
+    },
+    {
+      "original": "reviews/2026-09-03-arabic-ads/normalized/779b3093-c8d6-4d8b-84aa-cf64a5b543c7.jpg",
+      "sha256": "dfe4ff56f4d314230d16fdeea3f14772356ba0eebcf53c70f62301434cb895d9",
+      "bytes": 47329
+    },
+    {
+      "original": "reviews/2026-09-03-arabic-ads/normalized/784c27af-aa60-4735-9ac9-662f88c389a2.jpg",
+      "sha256": "eb482c6bc1bf0ae7e5390768283eb2c6b89e2b035e7bcb54a7d2e1080df77e7b",
+      "bytes": 37223
+    },
+    {
+      "original": "reviews/2026-09-03-arabic-ads/normalized/e92803b8-edb4-478c-86dd-df04781057b8.jpg",
+      "sha256": "8238d86faf7eb0cb5e7025823cf8dc2c1cd6f26b2a9d36377a8e10ee7c8ca554",
+      "bytes": 78722
+    },
+    {
+      "original": "reviews/2026-09-03-arabic-ads/normalized/8c65b524-b4d8-4b96-b39b-fa909423d6c9.jpg",
+      "sha256": "7b033f0ffacf465f5bc1aeb977dff64f4060b49347ff1891947042453d9e22d7",
+      "bytes": 61213
+    },
+    {
+      "original": "reviews/2026-09-03-arabic-ads/normalized/e8cb4657-0bce-45a0-9146-dd2ec532ada6.jpg",
+      "sha256": "f93f104967b5aaed085d63fa39d69060a4a81b494c25e1f61c8e92952933a200",
+      "bytes": 56865
+    },
+    {
+      "original": "reviews/2026-09-03-arabic-ads/normalized/73f3dfad-2ca7-4d1e-8d75-ee41e7cef4c4.jpg",
+      "sha256": "e08ada1c4e246fdbf197247db7e8357c89ca2190396091d07f8b3660b635ad7d",
+      "bytes": 121832
+    },
+    {
+      "original": "reviews/2026-09-03-arabic-ads/originals/61a48f96-307b-4972-a829-619b284083b4.png",
+      "sha256": "4cc6af2c61e8f0c1b825b6306cc468d7f4244ac390cc7f298d56e4b301a804d9",
+      "bytes": 4345182
+    },
+    {
+      "original": "reviews/2026-09-03-arabic-ads/originals/59f9dc08-d326-4f56-987a-aa291130f16c.png",
+      "sha256": "d52f26c606d1ea0a3971f37c520ecd302899b28bd8fe2be55927d58ca171cf26",
+      "bytes": 2367815
+    },
+    {
+      "original": "reviews/2026-09-03-arabic-ads/originals/df7639b5-5511-4e77-9f4c-4600d9ac269f.png",
+      "sha256": "7313a58db9b3e8172bff2fa8fb20bd76bbdc729129c88b777799632578413f6e",
+      "bytes": 2156863
+    },
+    {
+      "original": "reviews/2026-09-03-arabic-ads/originals/0d32eb05-f3ef-46a1-a9e0-b8fefb751953.png",
+      "sha256": "200c3c0ad0fe5492827b7fce46e33f5dd9aa46d06142b8f61be5e044c3870297",
+      "bytes": 2615660
+    },
+    {
+      "original": "reviews/2026-09-03-arabic-ads/originals/96063da4-57f7-4a25-9b09-8e826b97bdce.png",
+      "sha256": "334ce8cd6de12bb8c07c71a229c549b4fe0268e8639006e0fec14c3afa63149b",
+      "bytes": 4841186
+    },
+    {
+      "original": "reviews/2026-09-03-arabic-ads/originals/9ca281ec-5b37-4542-9324-0a0cd9d88b90.png",
+      "sha256": "4f422309be5c135010920b14f4e8cb1a703e034d622f58702908633fed935f31",
+      "bytes": 1427740
+    },
+    {
+      "original": "reviews/2026-09-03-arabic-ads/originals/784c27af-aa60-4735-9ac9-662f88c389a2.png",
+      "sha256": "6ec1dec3f2edd3ebb22663c037413f96f0938d2ada2c5e9f3f4301e65718ac94",
+      "bytes": 1440792
+    },
+    {
+      "original": "reviews/2026-09-03-arabic-ads/originals/e92803b8-edb4-478c-86dd-df04781057b8.png",
+      "sha256": "2795570fac60a41d59e7e52257e61a37067e9055c1d00e61145d0adaa9751fdd",
+      "bytes": 3911511
+    },
+    {
+      "original": "reviews/2026-09-03-arabic-ads/originals/779b3093-c8d6-4d8b-84aa-cf64a5b543c7.png",
+      "sha256": "cdade93b80089d50710e82d6af1446fab624232694a622b976ef45152089bd61",
+      "bytes": 2030763
+    },
+    {
+      "original": "reviews/2026-09-03-arabic-ads/originals/8c65b524-b4d8-4b96-b39b-fa909423d6c9.png",
+      "sha256": "52f1ebb439d24b7ebf33cde42f3d0dd40c34877a8bfe96dc91484bcea2b42654",
+      "bytes": 4993177
+    },
+    {
+      "original": "reviews/2026-09-03-arabic-ads/originals/e8cb4657-0bce-45a0-9146-dd2ec532ada6.png",
+      "sha256": "056e1614a518ba37de8d1cfd47e96048a6a17df8c6866c9bc986bae4c54117fd",
+      "bytes": 2443704
+    },
+    {
+      "original": "reviews/2026-09-03-arabic-ads/originals/73f3dfad-2ca7-4d1e-8d75-ee41e7cef4c4.png",
+      "sha256": "34fbae792f99216a8259f9d3e8b2b76a8c49981c009ba61b1f505e91c22d2af9",
+      "bytes": 6193413
+    },
+    {
+      "original": "reviews/2026-09-04-realism-loop/03-worn-campaign_zoom.png",
+      "sha256": "fc0617dd33eb02792928c5c082d50c6a72fb156aa6a3db3f8fcd017c8549f3a1",
+      "bytes": 376598
+    },
+    {
+      "original": "reviews/2026-09-04-realism-loop/01-framed-minimal_zoom.png",
+      "sha256": "4eabbb28a4ebe40cee0dc4ec46a1385bccd1c2a93a1a70627b3f5d7239841e80",
+      "bytes": 665279
+    },
+    {
+      "original": "reviews/2026-09-04-realism-loop/03-worn-campaign.png",
+      "sha256": "bb8504af95f72e7bde111a89a981cccb400c3319c7a8563a8ab257bc1b00bd9e",
+      "bytes": 2867123
+    },
+    {
+      "original": "reviews/2026-09-04-realism-loop/01-framed-minimal.png",
+      "sha256": "61bc54cbaaf0b07feccc6dd5213eb2065f7a85fa74c74665fe5774dc7fae328b",
+      "bytes": 2467459
+    },
+    {
+      "original": "reviews/2026-09-04-realism-loop/02-floating-rails.png",
+      "sha256": "8f18a303bca39dd650d0a348f8bdb4b8bcde52ba461f624073ba8026b6c6fda3",
+      "bytes": 2295295
+    },
+    {
+      "original": "reviews/2026-09-04-realism-loop/02-floating-rails_zoom.png",
+      "sha256": "7dd36cf05a51fed7e55653b84aa78be34abbff5e1cdb6a00868e91a1491181fc",
+      "bytes": 675841
+    },
+    {
+      "original": "docs/rnd/README.md",
+      "sha256": "fd94835e2080c2fd61f0f1f40c87faf068a5082c790935402f84055e6718c2dd",
+      "bytes": 2540,
+      "operation": "snapshot before pointer update"
+    },
+    {
+      "original": "/Users/sanchay/Downloads/CALEUMS-recovered-2026-09-06/CALEUMS-drop-compare.zip",
+      "archive": "recovered/CALEUMS-drop-compare.zip",
+      "sha256": "dbe91479b7933c176e65e4ae6eca757918e746521e3eb2f8c9b2ff4bab458df0",
+      "bytes": 687610,
+      "operation": "copy; current Downloads gallery retained"
+    },
+    {
+      "original": "/Users/sanchay/Downloads/CALEUMS-recovered-2026-09-06/CALEUMS-stills-review.zip",
+      "archive": "recovered/CALEUMS-stills-review.zip",
+      "sha256": "4ecf3ad834201c665ac5ec94ea63684c7a285e8ab02d5a7eb7e91bf0ca4766f4",
+      "bytes": 17707278,
+      "operation": "copy; current Downloads gallery retained"
+    },
+    {
+      "original": "reviews/partner-matrix/render-stencils.mts",
+      "sha256": "2a732ea081566c0674e0818434f3cbf2d2167d06e12d8303706bc8b1eb825030",
+      "bytes": 2580
+    },
+    {
+      "original": "reviews/partner-matrix/stencils/stage0-report.json",
+      "sha256": "3460392d034bb918da42a21f2319d47c1f777ab079741c7c399dea1a26857711",
+      "bytes": 4903
+    },
+    {
+      "original": "reviews/partner-matrix/stencils/playfair/muhammad.png",
+      "sha256": "ec4d39514d3193d200821843753fc3cb886fd44887c0c1e51c6bf522da5994dd",
+      "bytes": 14590
+    },
+    {
+      "original": "reviews/partner-matrix/stencils/playfair/asma.png",
+      "sha256": "b077e2a1272f4a4e98645e9807c05237091f4a55bf6e21aa92d46c564e7031ef",
+      "bytes": 19298
+    },
+    {
+      "original": "reviews/partner-matrix/stencils/noto-naskh/nur.png",
+      "sha256": "268f77d4de827b026720585845997b78e372c23fe4285ae53e1e4d6753bf94f1",
+      "bytes": 6288
+    },
+    {
+      "original": "reviews/partner-matrix/stencils/noto-naskh/muhammad.png",
+      "sha256": "62c80f1f0a86b9639a3bdbf292686d91107a02b33e6363a79a0a4030b2381b6d",
+      "bytes": 6544
+    },
+    {
+      "original": "reviews/partner-matrix/stencils/noto-naskh/abdulrahman.png",
+      "sha256": "ae2f18f29c446f8c2e30b0d0cb498f80a2091cd4f0981cc13a8c369bed869aac",
+      "bytes": 14389
+    },
+    {
+      "original": "reviews/partner-matrix/stencils/noto-naskh/asma.png",
+      "sha256": "dbb5dccfe0f497efb7de773f2d477778081bc6cfff64f7ebebc44d880c623ba1",
+      "bytes": 9096
+    }
+  ]
+}

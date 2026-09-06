@@ -1,0 +1,16 @@
+{
+  "configurations": 131328,
+  "requiredImages": 525312,
+  "catalogueImages": 82,
+  "exactImages": 82,
+  "missingImages": 525230,
+  "byView": {
+    "Studio": 37,
+    "On skin": 15,
+    "Close-up": 15,
+    "Dark": 15
+  },
+  "resolverCasesPassed": 525312,
+  "visualReview": "Per-asset review recorded in v2 manifest; enumeration is not visual verification",
+  "generatedAt": "2026-09-05T21:59:46.638Z"
+}

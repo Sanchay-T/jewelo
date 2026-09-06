@@ -1,0 +1,96 @@
+{
+  "started": "2026-09-06T06:14:54.868Z",
+  "updated": "2026-09-06T06:15:01.454Z",
+  "requested": 2,
+  "completed": 2,
+  "captured": 4,
+  "errors": [],
+  "results": [
+    {
+      "index": 0,
+      "draft": {
+        "version": 1,
+        "name": "Asma",
+        "secondName": "",
+        "twoNames": false,
+        "script": "English",
+        "construction": "Classical",
+        "lettering": "Classic",
+        "layout": "Connected heart",
+        "metal": "Yellow gold",
+        "coverage": "Full pavé",
+        "gem": "Ruby",
+        "size": 32,
+        "chain": "Cable",
+        "length": 45,
+        "engraving": "",
+        "requests": ""
+      },
+      "elapsedMs": 1824,
+      "key": "{\"version\":1,\"script\":\"English\",\"construction\":\"Classical\",\"lettering\":\"Classic\",\"twoNames\":false,\"layout\":null,\"metal\":\"Yellow gold\",\"coverage\":\"Full pavé\",\"gem\":\"Ruby\",\"size\":32,\"chain\":\"Cable\",\"outlines\":[\"/atelier/geometry/v1/english-classic-asma.svg\"]}",
+      "metrics": {
+        "key": "{\"version\":1,\"script\":\"English\",\"construction\":\"Classical\",\"lettering\":\"Classic\",\"twoNames\":false,\"layout\":null,\"metal\":\"Yellow gold\",\"coverage\":\"Full pavé\",\"gem\":\"Ruby\",\"size\":32,\"chain\":\"Cable\",\"outlines\":[\"/atelier/geometry/v1/english-classic-asma.svg\"]}",
+        "assemblyId": "fbdc12f0-1b3a-4b88-b831-88fba63b438f",
+        "stoneCount": 77,
+        "stoneSeats": 77
+      },
+      "views": [
+        {
+          "view": "Studio",
+          "file": "000-0.png",
+          "bytes": 1005268,
+          "sha256": "240ec4800d73f8b46f248844d7ea069e3296a0335b85a5caa89ff182f309fa89"
+        },
+        {
+          "view": "Close-up",
+          "file": "000-1.png",
+          "bytes": 1007173,
+          "sha256": "38775f2eb0d1c8ea957204b9e8915ebc701e324e234ce7c9bc47b9a497e34fc3"
+        }
+      ]
+    },
+    {
+      "index": 1,
+      "draft": {
+        "version": 1,
+        "name": "Asma",
+        "secondName": "",
+        "twoNames": false,
+        "script": "Arabic",
+        "construction": "Classical",
+        "lettering": "Classic",
+        "layout": "Connected heart",
+        "metal": "Yellow gold",
+        "coverage": "Full pavé",
+        "gem": "Emerald",
+        "size": 32,
+        "chain": "Cable",
+        "length": 45,
+        "engraving": "",
+        "requests": ""
+      },
+      "elapsedMs": 1318,
+      "key": "{\"version\":1,\"script\":\"Arabic\",\"construction\":\"Classical\",\"lettering\":\"Classic\",\"twoNames\":false,\"layout\":null,\"metal\":\"Yellow gold\",\"coverage\":\"Full pavé\",\"gem\":\"Emerald\",\"size\":32,\"chain\":\"Cable\",\"outlines\":[\"/atelier/geometry/v1/arabic-classic-asma.svg\"]}",
+      "metrics": {
+        "key": "{\"version\":1,\"script\":\"Arabic\",\"construction\":\"Classical\",\"lettering\":\"Classic\",\"twoNames\":false,\"layout\":null,\"metal\":\"Yellow gold\",\"coverage\":\"Full pavé\",\"gem\":\"Emerald\",\"size\":32,\"chain\":\"Cable\",\"outlines\":[\"/atelier/geometry/v1/arabic-classic-asma.svg\"]}",
+        "assemblyId": "2f81824c-76ac-4755-8722-470c237f0645",
+        "stoneCount": 115,
+        "stoneSeats": 115
+      },
+      "views": [
+        {
+          "view": "Studio",
+          "file": "001-0.png",
+          "bytes": 1011355,
+          "sha256": "86fe6d94b38aabb2b3eb5efdddfb910553980622d3636e109045cb7eb387e2cc"
+        },
+        {
+          "view": "Close-up",
+          "file": "001-1.png",
+          "bytes": 1013996,
+          "sha256": "3f9d2b699f111af6014b17552e899c4897771522cbfd69703d2bf7826e92c207"
+        }
+      ]
+    }
+  ]
+}

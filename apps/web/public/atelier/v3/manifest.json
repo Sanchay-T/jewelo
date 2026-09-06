@@ -1,0 +1,214 @@
+{
+  "version": 3,
+  "tool": "built-in imagegen",
+  "cost": {
+    "amount": null,
+    "reason": "Not reported"
+  },
+  "assets": [
+    {
+      "id": "origami-white",
+      "file": "origami-white-studio.png",
+      "view": "Studio",
+      "patch": {
+        "construction": "Origami ribbon",
+        "metal": "White gold"
+      },
+      "prompt": "Edit this exact CALEUMS Asma origami-ribbon necklace photograph. Preserve the exact Asma spelling, upright connected faceted origami letter geometry, cable chain, 32 mm design scale, silk folds, limestone and camera composition. Change ONLY the pendant and chain metal from yellow gold to polished 18K WHITE GOLD, neutral silver-white reflections, no yellow. No stones, no added frame, no labels, no collage. Photoreal luxury ecommerce sample.",
+      "parent": "/atelier/v2/origami-studio.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Visible geometry, continuous letter bridges, sample spelling and conditional accents checked."
+      },
+      "cost": null
+    },
+    {
+      "id": "origami-white-accent",
+      "file": "origami-white-accent-studio.png",
+      "view": "Studio",
+      "patch": {
+        "construction": "Origami ribbon",
+        "metal": "White gold",
+        "coverage": "Accent"
+      },
+      "prompt": "Edit this exact CALEUMS WHITE GOLD Asma origami necklace. Preserve its Asma spelling, folded faceted letter geometry, silver-white 18K metal, 32 mm scale, cable chain, ivory silk/limestone setting and composition exactly. Add only a restrained ACCENT of three tiny clear round lab diamonds flush set into the lower crossbar of the A. The remainder of all letters stays plain white gold. No full pave, no changed font, no labels, no collage. One photoreal product photo.",
+      "parent": "/atelier/v3/origami-white-studio.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Visible geometry, continuous letter bridges, sample spelling and conditional accents checked."
+      },
+      "cost": null
+    },
+    {
+      "id": "origami-white-ruby",
+      "file": "origami-white-ruby-studio.png",
+      "view": "Studio",
+      "patch": {
+        "construction": "Origami ribbon",
+        "metal": "White gold",
+        "coverage": "Accent",
+        "gem": "Ruby"
+      },
+      "prompt": "Edit this exact Asma white-gold origami pendant photo. Change ONLY the three clear accent stones on the A crossbar to three deep red RUBIES of the same size and setting. Preserve exact Asma spelling, angular folded ribbon letter geometry, polished WHITE GOLD, 32mm scale, cable chain, silk/limestone setting and framing. No other gemstones, no added pave, no gold color shift, no changed letters, no labels. Photoreal luxury ecommerce sample.",
+      "parent": "/atelier/v3/origami-white-accent-studio.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Visible geometry, continuous letter bridges, sample spelling and conditional accents checked."
+      },
+      "cost": null
+    },
+    {
+      "id": "origami-white-worn",
+      "file": "origami-white-worn.png",
+      "view": "On skin",
+      "patch": {
+        "construction": "Origami ribbon",
+        "metal": "White gold"
+      },
+      "prompt": "Render this EXACT reference necklace on an adult woman's collarbone, neck and ivory shirt only, no face. Pendant width approximately32mm, natural everyday scale. Elegant macro editorial jewellery portrait. Preserve exactly Asma A-s-m-a lettering, all folded origami facets and connected contours, WHITE GOLD pendant AND cable chain, 32mm design scale, NO stones. Do not change construction, lettering, stone placement or metal. This is another camera view of the SAME product. Photoreal luxury CALEUMS product sample, portrait4:5. No text labels, no collage.",
+      "parent": "/atelier/v3/origami-white-studio.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Visible geometry, continuous letter bridges, sample spelling and conditional accents checked."
+      },
+      "cost": null
+    },
+    {
+      "id": "origami-white-close",
+      "file": "origami-white-close.png",
+      "view": "Close-up",
+      "patch": {
+        "construction": "Origami ribbon",
+        "metal": "White gold"
+      },
+      "prompt": "Render this EXACT reference necklace a close-up macro on the SAME ivory silk. Whole pendant visible with its folds and stones clear; chain may extend out of frame. Preserve exactly Asma A-s-m-a lettering, all folded origami facets and connected contours, WHITE GOLD pendant AND cable chain, 32mm design scale, NO stones. Do not change construction, lettering, stone placement or metal. This is another camera view of the SAME product. Photoreal luxury CALEUMS product sample, portrait4:5. No text labels, no collage.",
+      "parent": "/atelier/v3/origami-white-studio.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Visible geometry, continuous letter bridges, sample spelling and conditional accents checked."
+      },
+      "cost": null
+    },
+    {
+      "id": "origami-white-dark",
+      "file": "origami-white-dark.png",
+      "view": "Dark",
+      "patch": {
+        "construction": "Origami ribbon",
+        "metal": "White gold"
+      },
+      "prompt": "Render this EXACT reference necklace on dark charcoal velvet with low-key studio light and soft warm rim highlights. Whole pendant centered, chain ascending towards upper corners. Preserve exactly Asma A-s-m-a lettering, all folded origami facets and connected contours, WHITE GOLD pendant AND cable chain, 32mm design scale, NO stones. Do not change construction, lettering, stone placement or metal. This is another camera view of the SAME product. Photoreal luxury CALEUMS product sample, portrait4:5. No text labels, no collage.",
+      "parent": "/atelier/v3/origami-white-studio.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Visible geometry, continuous letter bridges, sample spelling and conditional accents checked."
+      },
+      "cost": null
+    },
+    {
+      "id": "origami-white-accent-worn",
+      "file": "origami-white-accent-worn.png",
+      "view": "On skin",
+      "patch": {
+        "construction": "Origami ribbon",
+        "metal": "White gold",
+        "coverage": "Accent"
+      },
+      "prompt": "Render this EXACT reference necklace on an adult woman's collarbone, neck and ivory shirt only, no face. Pendant width approximately32mm, natural everyday scale. Elegant macro editorial jewellery portrait. Preserve exactly Asma A-s-m-a lettering, all folded origami facets and connected contours, WHITE GOLD pendant AND cable chain, 32mm design scale, exactly three clear lab diamonds accent stones on the A crossbar. Do not change construction, lettering, stone placement or metal. This is another camera view of the SAME product. Photoreal luxury CALEUMS product sample, portrait4:5. No text labels, no collage.",
+      "parent": "/atelier/v3/origami-white-accent-studio.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Visible geometry, continuous letter bridges, sample spelling and conditional accents checked."
+      },
+      "cost": null
+    },
+    {
+      "id": "origami-white-accent-close",
+      "file": "origami-white-accent-close.png",
+      "view": "Close-up",
+      "patch": {
+        "construction": "Origami ribbon",
+        "metal": "White gold",
+        "coverage": "Accent"
+      },
+      "prompt": "Render this EXACT reference necklace a close-up macro on the SAME ivory silk. Whole pendant visible with its folds and stones clear; chain may extend out of frame. Preserve exactly Asma A-s-m-a lettering, all folded origami facets and connected contours, WHITE GOLD pendant AND cable chain, 32mm design scale, exactly three clear lab diamonds accent stones on the A crossbar. Do not change construction, lettering, stone placement or metal. This is another camera view of the SAME product. Photoreal luxury CALEUMS product sample, portrait4:5. No text labels, no collage.",
+      "parent": "/atelier/v3/origami-white-accent-studio.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Visible geometry, continuous letter bridges, sample spelling and conditional accents checked."
+      },
+      "cost": null
+    },
+    {
+      "id": "origami-white-accent-dark",
+      "file": "origami-white-accent-dark.png",
+      "view": "Dark",
+      "patch": {
+        "construction": "Origami ribbon",
+        "metal": "White gold",
+        "coverage": "Accent"
+      },
+      "prompt": "Render this EXACT reference necklace on dark charcoal velvet with low-key studio light and soft warm rim highlights. Whole pendant centered, chain ascending towards upper corners. Preserve exactly Asma A-s-m-a lettering, all folded origami facets and connected contours, WHITE GOLD pendant AND cable chain, 32mm design scale, exactly three clear lab diamonds accent stones on the A crossbar. Do not change construction, lettering, stone placement or metal. This is another camera view of the SAME product. Photoreal luxury CALEUMS product sample, portrait4:5. No text labels, no collage.",
+      "parent": "/atelier/v3/origami-white-accent-studio.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Visible geometry, continuous letter bridges, sample spelling and conditional accents checked."
+      },
+      "cost": null
+    },
+    {
+      "id": "origami-white-ruby-worn",
+      "file": "origami-white-ruby-worn.png",
+      "view": "On skin",
+      "patch": {
+        "construction": "Origami ribbon",
+        "metal": "White gold",
+        "coverage": "Accent",
+        "gem": "Ruby"
+      },
+      "prompt": "Render this EXACT reference necklace on an adult woman's collarbone, neck and ivory shirt only, no face. Pendant width approximately32mm, natural everyday scale. Elegant macro editorial jewellery portrait. Preserve exactly Asma A-s-m-a lettering, all folded origami facets and connected contours, WHITE GOLD pendant AND cable chain, 32mm design scale, exactly three deep red rubies accent stones on the A crossbar. Do not change construction, lettering, stone placement or metal. This is another camera view of the SAME product. Photoreal luxury CALEUMS product sample, portrait4:5. No text labels, no collage.",
+      "parent": "/atelier/v3/origami-white-ruby-studio.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Visible geometry, continuous letter bridges, sample spelling and conditional accents checked."
+      },
+      "cost": null
+    },
+    {
+      "id": "origami-white-ruby-close",
+      "file": "origami-white-ruby-close.png",
+      "view": "Close-up",
+      "patch": {
+        "construction": "Origami ribbon",
+        "metal": "White gold",
+        "coverage": "Accent",
+        "gem": "Ruby"
+      },
+      "prompt": "Render this EXACT reference necklace a close-up macro on the SAME ivory silk. Whole pendant visible with its folds and stones clear; chain may extend out of frame. Preserve exactly Asma A-s-m-a lettering, all folded origami facets and connected contours, WHITE GOLD pendant AND cable chain, 32mm design scale, exactly three deep red rubies accent stones on the A crossbar. Do not change construction, lettering, stone placement or metal. This is another camera view of the SAME product. Photoreal luxury CALEUMS product sample, portrait4:5. No text labels, no collage.",
+      "parent": "/atelier/v3/origami-white-ruby-studio.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Visible geometry, continuous letter bridges, sample spelling and conditional accents checked."
+      },
+      "cost": null
+    },
+    {
+      "id": "origami-white-ruby-dark",
+      "file": "origami-white-ruby-dark.png",
+      "view": "Dark",
+      "patch": {
+        "construction": "Origami ribbon",
+        "metal": "White gold",
+        "coverage": "Accent",
+        "gem": "Ruby"
+      },
+      "prompt": "Render this EXACT reference necklace on dark charcoal velvet with low-key studio light and soft warm rim highlights. Whole pendant centered, chain ascending towards upper corners. Preserve exactly Asma A-s-m-a lettering, all folded origami facets and connected contours, WHITE GOLD pendant AND cable chain, 32mm design scale, exactly three deep red rubies accent stones on the A crossbar. Do not change construction, lettering, stone placement or metal. This is another camera view of the SAME product. Photoreal luxury CALEUMS product sample, portrait4:5. No text labels, no collage.",
+      "parent": "/atelier/v3/origami-white-ruby-studio.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Visible geometry, continuous letter bridges, sample spelling and conditional accents checked."
+      },
+      "cost": null
+    }
+  ]
+}

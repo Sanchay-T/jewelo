@@ -1,0 +1,26 @@
+{
+  "captures": 306,
+  "cases": 306,
+  "runtimeErrors": [],
+  "failedCaptures": 0,
+  "identityGroups": 48,
+  "nestedCoverageGroupsPassed": 48,
+  "sixDistinctImagesGroupsPassed": 48,
+  "strictlyIncreasingCoverageGroupsPassed": 48,
+  "metalChainCases": 12,
+  "distinctMetalChainImages": 12,
+  "minFullStoneCount": 28,
+  "maxFullStoneCount": 149,
+  "gemChecks": {
+    "gems": [
+      "Lab diamond",
+      "Natural diamond",
+      "Ruby",
+      "Emerald",
+      "Blue sapphire",
+      "Pink sapphire"
+    ],
+    "sameDiamondAppearance": true,
+    "distinctGemAppearances": true
+  }
+}

@@ -1,0 +1,194 @@
+[
+  {
+    "id": "minimal-worn",
+    "file": "minimal-worn.png",
+    "view": "On skin",
+    "patch": {
+      "lettering": "Minimal"
+    }
+  },
+  {
+    "id": "minimal-close",
+    "file": "minimal-close.png",
+    "view": "Close-up",
+    "patch": {
+      "lettering": "Minimal"
+    }
+  },
+  {
+    "id": "minimal-dark",
+    "file": "minimal-dark.png",
+    "view": "Dark",
+    "patch": {
+      "lettering": "Minimal"
+    }
+  },
+  {
+    "id": "signature-worn",
+    "file": "signature-worn.png",
+    "view": "On skin",
+    "patch": {
+      "lettering": "Signature"
+    }
+  },
+  {
+    "id": "signature-close",
+    "file": "signature-close.png",
+    "view": "Close-up",
+    "patch": {
+      "lettering": "Signature"
+    }
+  },
+  {
+    "id": "signature-dark",
+    "file": "signature-dark.png",
+    "view": "Dark",
+    "patch": {
+      "lettering": "Signature"
+    }
+  },
+  {
+    "id": "kufi-worn",
+    "file": "kufi-worn.png",
+    "view": "On skin",
+    "patch": {
+      "lettering": "Kufi"
+    }
+  },
+  {
+    "id": "kufi-close",
+    "file": "kufi-close.png",
+    "view": "Close-up",
+    "patch": {
+      "lettering": "Kufi"
+    }
+  },
+  {
+    "id": "kufi-dark",
+    "file": "kufi-dark.png",
+    "view": "Dark",
+    "patch": {
+      "lettering": "Kufi"
+    }
+  },
+  {
+    "id": "diwani-worn",
+    "file": "diwani-worn.png",
+    "view": "On skin",
+    "patch": {
+      "lettering": "Diwani"
+    }
+  },
+  {
+    "id": "diwani-close",
+    "file": "diwani-close.png",
+    "view": "Close-up",
+    "patch": {
+      "lettering": "Diwani"
+    }
+  },
+  {
+    "id": "diwani-dark",
+    "file": "diwani-dark.png",
+    "view": "Dark",
+    "patch": {
+      "lettering": "Diwani"
+    }
+  },
+  {
+    "id": "thuluth-worn",
+    "file": "thuluth-worn.png",
+    "view": "On skin",
+    "patch": {
+      "lettering": "Thuluth inspired"
+    }
+  },
+  {
+    "id": "thuluth-close",
+    "file": "thuluth-close.png",
+    "view": "Close-up",
+    "patch": {
+      "lettering": "Thuluth inspired"
+    }
+  },
+  {
+    "id": "thuluth-dark",
+    "file": "thuluth-dark.png",
+    "view": "Dark",
+    "patch": {
+      "lettering": "Thuluth inspired"
+    }
+  },
+  {
+    "id": "rolo-worn",
+    "file": "rolo-worn.png",
+    "view": "On skin",
+    "patch": {
+      "chain": "Rolo"
+    }
+  },
+  {
+    "id": "rolo-close",
+    "file": "rolo-close.png",
+    "view": "Close-up",
+    "patch": {
+      "chain": "Rolo"
+    }
+  },
+  {
+    "id": "rolo-dark",
+    "file": "rolo-dark.png",
+    "view": "Dark",
+    "patch": {
+      "chain": "Rolo"
+    }
+  },
+  {
+    "id": "box-worn",
+    "file": "box-worn.png",
+    "view": "On skin",
+    "patch": {
+      "chain": "Box"
+    }
+  },
+  {
+    "id": "box-close",
+    "file": "box-close.png",
+    "view": "Close-up",
+    "patch": {
+      "chain": "Box"
+    }
+  },
+  {
+    "id": "box-dark",
+    "file": "box-dark.png",
+    "view": "Dark",
+    "patch": {
+      "chain": "Box"
+    }
+  },
+  {
+    "id": "small-worn",
+    "file": "small-worn.png",
+    "view": "On skin",
+    "patch": {
+      "size": 22
+    }
+  },
+  {
+    "id": "small-dark",
+    "file": "small-dark.png",
+    "view": "Dark",
+    "patch": {
+      "size": 22
+    }
+  },
+  {
+    "id": "small-close",
+    "file": "small-close.png",
+    "view": "Close-up",
+    "patch": {
+      "size": 22
+    }
+  }
+]

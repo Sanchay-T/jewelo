@@ -1,13 +1,12 @@
+> UI reset — 5 September 2026: customer UI and prior screen/flow proposals were discarded by the user. Read `docs/START-HERE.md` and `docs/OMRAN-BUSINESS-CONTEXT.md` first. Customer-journey prescriptions below are superseded for brainstorming; retained backend contracts do not approve a new UI.
+
 # Jewelo v2 agent contract
 
 You are implementing a first-principles production rebuild. The architecture is already decided by the product manager. Preserve the approved customer outcome and follow the locked stack; do not inherit assumptions from the old backend.
 
 @docs/START-HERE.md
-@docs/CALEUMS-CUSTOMER-JOURNEY.md
 @docs/CALEUMS-FINAL-E2E-CONTRACT.md
 @docs/PRODUCT-CONTRACT.md
-@docs/FROZEN-UX.md
-@docs/UX-AUDIT.md
 @docs/FINAL-STACK.md
 @docs/ARCHITECTURE.md
 @docs/MEDIA-CONCURRENCY.md

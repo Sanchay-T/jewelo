@@ -1,0 +1,702 @@
+{
+  "version": 4,
+  "plannedExistingAngles": [
+    {
+      "id": "minimal-worn",
+      "file": "minimal-worn.png",
+      "view": "On skin",
+      "patch": {
+        "lettering": "Minimal"
+      },
+      "parent": "/atelier/v2/minimal-studio.png",
+      "status": "planned"
+    },
+    {
+      "id": "minimal-close",
+      "file": "minimal-close.png",
+      "view": "Close-up",
+      "patch": {
+        "lettering": "Minimal"
+      },
+      "parent": "/atelier/v2/minimal-studio.png",
+      "status": "planned"
+    },
+    {
+      "id": "minimal-dark",
+      "file": "minimal-dark.png",
+      "view": "Dark",
+      "patch": {
+        "lettering": "Minimal"
+      },
+      "parent": "/atelier/v2/minimal-studio.png",
+      "status": "planned"
+    },
+    {
+      "id": "signature-worn",
+      "file": "signature-worn.png",
+      "view": "On skin",
+      "patch": {
+        "lettering": "Signature"
+      },
+      "parent": "/atelier/v2/signature-studio.png",
+      "status": "planned"
+    },
+    {
+      "id": "signature-close",
+      "file": "signature-close.png",
+      "view": "Close-up",
+      "patch": {
+        "lettering": "Signature"
+      },
+      "parent": "/atelier/v2/signature-studio.png",
+      "status": "planned"
+    },
+    {
+      "id": "signature-dark",
+      "file": "signature-dark.png",
+      "view": "Dark",
+      "patch": {
+        "lettering": "Signature"
+      },
+      "parent": "/atelier/v2/signature-studio.png",
+      "status": "planned"
+    },
+    {
+      "id": "kufi-worn",
+      "file": "kufi-worn.png",
+      "view": "On skin",
+      "patch": {
+        "lettering": "Kufi"
+      },
+      "parent": "/atelier/v2/kufi-studio.png",
+      "status": "planned"
+    },
+    {
+      "id": "kufi-close",
+      "file": "kufi-close.png",
+      "view": "Close-up",
+      "patch": {
+        "lettering": "Kufi"
+      },
+      "parent": "/atelier/v2/kufi-studio.png",
+      "status": "planned"
+    },
+    {
+      "id": "kufi-dark",
+      "file": "kufi-dark.png",
+      "view": "Dark",
+      "patch": {
+        "lettering": "Kufi"
+      },
+      "parent": "/atelier/v2/kufi-studio.png",
+      "status": "planned"
+    },
+    {
+      "id": "diwani-worn",
+      "file": "diwani-worn.png",
+      "view": "On skin",
+      "patch": {
+        "lettering": "Diwani"
+      },
+      "parent": "/atelier/v2/diwani-studio.png",
+      "status": "planned"
+    },
+    {
+      "id": "diwani-close",
+      "file": "diwani-close.png",
+      "view": "Close-up",
+      "patch": {
+        "lettering": "Diwani"
+      },
+      "parent": "/atelier/v2/diwani-studio.png",
+      "status": "planned"
+    },
+    {
+      "id": "diwani-dark",
+      "file": "diwani-dark.png",
+      "view": "Dark",
+      "patch": {
+        "lettering": "Diwani"
+      },
+      "parent": "/atelier/v2/diwani-studio.png",
+      "status": "planned"
+    },
+    {
+      "id": "thuluth-worn",
+      "file": "thuluth-worn.png",
+      "view": "On skin",
+      "patch": {
+        "lettering": "Thuluth inspired"
+      },
+      "parent": "/atelier/v2/thuluth-studio.png",
+      "status": "planned"
+    },
+    {
+      "id": "thuluth-close",
+      "file": "thuluth-close.png",
+      "view": "Close-up",
+      "patch": {
+        "lettering": "Thuluth inspired"
+      },
+      "parent": "/atelier/v2/thuluth-studio.png",
+      "status": "planned"
+    },
+    {
+      "id": "thuluth-dark",
+      "file": "thuluth-dark.png",
+      "view": "Dark",
+      "patch": {
+        "lettering": "Thuluth inspired"
+      },
+      "parent": "/atelier/v2/thuluth-studio.png",
+      "status": "planned"
+    },
+    {
+      "id": "rolo-worn",
+      "file": "rolo-worn.png",
+      "view": "On skin",
+      "patch": {
+        "chain": "Rolo"
+      },
+      "parent": "/atelier/v2/rolo-studio.png",
+      "status": "planned"
+    },
+    {
+      "id": "rolo-close",
+      "file": "rolo-close.png",
+      "view": "Close-up",
+      "patch": {
+        "chain": "Rolo"
+      },
+      "parent": "/atelier/v2/rolo-studio.png",
+      "status": "planned"
+    },
+    {
+      "id": "rolo-dark",
+      "file": "rolo-dark.png",
+      "view": "Dark",
+      "patch": {
+        "chain": "Rolo"
+      },
+      "parent": "/atelier/v2/rolo-studio.png",
+      "status": "planned"
+    },
+    {
+      "id": "box-worn",
+      "file": "box-worn.png",
+      "view": "On skin",
+      "patch": {
+        "chain": "Box"
+      },
+      "parent": "/atelier/v2/box-studio.png",
+      "status": "planned"
+    },
+    {
+      "id": "box-close",
+      "file": "box-close.png",
+      "view": "Close-up",
+      "patch": {
+        "chain": "Box"
+      },
+      "parent": "/atelier/v2/box-studio.png",
+      "status": "planned"
+    },
+    {
+      "id": "box-dark",
+      "file": "box-dark.png",
+      "view": "Dark",
+      "patch": {
+        "chain": "Box"
+      },
+      "parent": "/atelier/v2/box-studio.png",
+      "status": "planned"
+    },
+    {
+      "id": "small-worn",
+      "file": "small-worn.png",
+      "view": "On skin",
+      "patch": {
+        "size": 22
+      },
+      "parent": "/atelier/v2/small-studio.png",
+      "status": "planned"
+    },
+    {
+      "id": "small-close",
+      "file": "small-close.png",
+      "view": "Close-up",
+      "patch": {
+        "size": 22
+      },
+      "parent": "/atelier/v2/small-studio.png",
+      "status": "planned"
+    },
+    {
+      "id": "small-dark",
+      "file": "small-dark.png",
+      "view": "Dark",
+      "patch": {
+        "size": 22
+      },
+      "parent": "/atelier/v2/small-studio.png",
+      "status": "planned"
+    },
+    {
+      "id": "accent-worn",
+      "file": "accent-worn.png",
+      "view": "On skin",
+      "patch": {
+        "coverage": "Accent"
+      },
+      "parent": "/atelier/v2/accent-studio.png",
+      "status": "planned"
+    },
+    {
+      "id": "accent-close",
+      "file": "accent-close.png",
+      "view": "Close-up",
+      "patch": {
+        "coverage": "Accent"
+      },
+      "parent": "/atelier/v2/accent-studio.png",
+      "status": "planned"
+    },
+    {
+      "id": "accent-dark",
+      "file": "accent-dark.png",
+      "view": "Dark",
+      "patch": {
+        "coverage": "Accent"
+      },
+      "parent": "/atelier/v2/accent-studio.png",
+      "status": "planned"
+    },
+    {
+      "id": "partial-worn",
+      "file": "partial-worn.png",
+      "view": "On skin",
+      "patch": {
+        "coverage": "Partial pav\u00e9"
+      },
+      "parent": "/atelier/v2/partial-studio.png",
+      "status": "planned"
+    },
+    {
+      "id": "partial-close",
+      "file": "partial-close.png",
+      "view": "Close-up",
+      "patch": {
+        "coverage": "Partial pav\u00e9"
+      },
+      "parent": "/atelier/v2/partial-studio.png",
+      "status": "planned"
+    },
+    {
+      "id": "partial-dark",
+      "file": "partial-dark.png",
+      "view": "Dark",
+      "patch": {
+        "coverage": "Partial pav\u00e9"
+      },
+      "parent": "/atelier/v2/partial-studio.png",
+      "status": "planned"
+    },
+    {
+      "id": "full-worn",
+      "file": "full-worn.png",
+      "view": "On skin",
+      "patch": {
+        "coverage": "Full pav\u00e9"
+      },
+      "parent": "/atelier/v2/full-studio.png",
+      "status": "planned"
+    },
+    {
+      "id": "full-close",
+      "file": "full-close.png",
+      "view": "Close-up",
+      "patch": {
+        "coverage": "Full pav\u00e9"
+      },
+      "parent": "/atelier/v2/full-studio.png",
+      "status": "planned"
+    },
+    {
+      "id": "full-dark",
+      "file": "full-dark.png",
+      "view": "Dark",
+      "patch": {
+        "coverage": "Full pav\u00e9"
+      },
+      "parent": "/atelier/v2/full-studio.png",
+      "status": "planned"
+    },
+    {
+      "id": "natural-worn",
+      "file": "natural-worn.png",
+      "view": "On skin",
+      "patch": {
+        "coverage": "Accent",
+        "gem": "Natural diamond"
+      },
+      "parent": "/atelier/v2/natural-studio.png",
+      "status": "planned"
+    },
+    {
+      "id": "natural-close",
+      "file": "natural-close.png",
+      "view": "Close-up",
+      "patch": {
+        "coverage": "Accent",
+        "gem": "Natural diamond"
+      },
+      "parent": "/atelier/v2/natural-studio.png",
+      "status": "planned"
+    },
+    {
+      "id": "natural-dark",
+      "file": "natural-dark.png",
+      "view": "Dark",
+      "patch": {
+        "coverage": "Accent",
+        "gem": "Natural diamond"
+      },
+      "parent": "/atelier/v2/natural-studio.png",
+      "status": "planned"
+    },
+    {
+      "id": "ruby-worn",
+      "file": "ruby-worn.png",
+      "view": "On skin",
+      "patch": {
+        "coverage": "Accent",
+        "gem": "Ruby"
+      },
+      "parent": "/atelier/v2/ruby-studio.png",
+      "status": "planned"
+    },
+    {
+      "id": "ruby-close",
+      "file": "ruby-close.png",
+      "view": "Close-up",
+      "patch": {
+        "coverage": "Accent",
+        "gem": "Ruby"
+      },
+      "parent": "/atelier/v2/ruby-studio.png",
+      "status": "planned"
+    },
+    {
+      "id": "ruby-dark",
+      "file": "ruby-dark.png",
+      "view": "Dark",
+      "patch": {
+        "coverage": "Accent",
+        "gem": "Ruby"
+      },
+      "parent": "/atelier/v2/ruby-studio.png",
+      "status": "planned"
+    }
+  ],
+  "additionalArabicConstructionViews": 0,
+  "additionalArabicLayoutViews": 0,
+  "transferredArabicAnglesToVersion6": [
+    {
+      "id": "arabic-kufi-worn",
+      "file": "arabic-kufi-worn.png",
+      "view": "On skin",
+      "patch": {
+        "script": "Arabic",
+        "lettering": "Kufi"
+      },
+      "parent": "/atelier/v2/arabic-kufi-repaired.png",
+      "status": "planned"
+    },
+    {
+      "id": "arabic-kufi-close",
+      "file": "arabic-kufi-close.png",
+      "view": "Close-up",
+      "patch": {
+        "script": "Arabic",
+        "lettering": "Kufi"
+      },
+      "parent": "/atelier/v2/arabic-kufi-repaired.png",
+      "status": "planned"
+    },
+    {
+      "id": "arabic-kufi-dark",
+      "file": "arabic-kufi-dark.png",
+      "view": "Dark",
+      "patch": {
+        "script": "Arabic",
+        "lettering": "Kufi"
+      },
+      "parent": "/atelier/v2/arabic-kufi-repaired.png",
+      "status": "planned"
+    },
+    {
+      "id": "arabic-signature-worn",
+      "file": "arabic-signature-worn.png",
+      "view": "On skin",
+      "patch": {
+        "script": "Arabic",
+        "lettering": "Signature"
+      },
+      "parent": "/atelier/v2/arabic-signature-repaired.png",
+      "status": "planned"
+    },
+    {
+      "id": "arabic-signature-close",
+      "file": "arabic-signature-close.png",
+      "view": "Close-up",
+      "patch": {
+        "script": "Arabic",
+        "lettering": "Signature"
+      },
+      "parent": "/atelier/v2/arabic-signature-repaired.png",
+      "status": "planned"
+    },
+    {
+      "id": "arabic-signature-dark",
+      "file": "arabic-signature-dark.png",
+      "view": "Dark",
+      "patch": {
+        "script": "Arabic",
+        "lettering": "Signature"
+      },
+      "parent": "/atelier/v2/arabic-signature-repaired.png",
+      "status": "planned"
+    },
+    {
+      "id": "arabic-minimal-v2-worn",
+      "file": "arabic-minimal-v2-worn.png",
+      "view": "On skin",
+      "patch": {
+        "script": "Arabic",
+        "lettering": "Minimal"
+      },
+      "parent": "/atelier/v2/arabic-minimal-v2-repaired.png",
+      "status": "planned"
+    },
+    {
+      "id": "arabic-minimal-v2-close",
+      "file": "arabic-minimal-v2-close.png",
+      "view": "Close-up",
+      "patch": {
+        "script": "Arabic",
+        "lettering": "Minimal"
+      },
+      "parent": "/atelier/v2/arabic-minimal-v2-repaired.png",
+      "status": "planned"
+    },
+    {
+      "id": "arabic-minimal-v2-dark",
+      "file": "arabic-minimal-v2-dark.png",
+      "view": "Dark",
+      "patch": {
+        "script": "Arabic",
+        "lettering": "Minimal"
+      },
+      "parent": "/atelier/v2/arabic-minimal-v2-repaired.png",
+      "status": "planned"
+    },
+    {
+      "id": "arabic-diwani-v2-worn",
+      "file": "arabic-diwani-v2-worn.png",
+      "view": "On skin",
+      "patch": {
+        "script": "Arabic",
+        "lettering": "Diwani"
+      },
+      "parent": "/atelier/v2/arabic-diwani-v2.png",
+      "status": "planned"
+    },
+    {
+      "id": "arabic-diwani-v2-close",
+      "file": "arabic-diwani-v2-close.png",
+      "view": "Close-up",
+      "patch": {
+        "script": "Arabic",
+        "lettering": "Diwani"
+      },
+      "parent": "/atelier/v2/arabic-diwani-v2.png",
+      "status": "planned"
+    },
+    {
+      "id": "arabic-diwani-v2-dark",
+      "file": "arabic-diwani-v2-dark.png",
+      "view": "Dark",
+      "patch": {
+        "script": "Arabic",
+        "lettering": "Diwani"
+      },
+      "parent": "/atelier/v2/arabic-diwani-v2.png",
+      "status": "planned"
+    },
+    {
+      "id": "arabic-thuluth-v2-worn",
+      "file": "arabic-thuluth-v2-worn.png",
+      "view": "On skin",
+      "patch": {
+        "script": "Arabic",
+        "lettering": "Thuluth inspired"
+      },
+      "parent": "/atelier/v2/arabic-thuluth-v2-repaired.png",
+      "status": "planned"
+    },
+    {
+      "id": "arabic-thuluth-v2-close",
+      "file": "arabic-thuluth-v2-close.png",
+      "view": "Close-up",
+      "patch": {
+        "script": "Arabic",
+        "lettering": "Thuluth inspired"
+      },
+      "parent": "/atelier/v2/arabic-thuluth-v2-repaired.png",
+      "status": "planned"
+    },
+    {
+      "id": "arabic-thuluth-v2-dark",
+      "file": "arabic-thuluth-v2-dark.png",
+      "view": "Dark",
+      "patch": {
+        "script": "Arabic",
+        "lettering": "Thuluth inspired"
+      },
+      "parent": "/atelier/v2/arabic-thuluth-v2-repaired.png",
+      "status": "planned"
+    }
+  ],
+  "arabicConstructionAndLayoutOwner": "root/version5",
+  "transferredGemAndCurbAnglesToVersion7": [
+    {
+      "id": "emerald-worn",
+      "file": "emerald-worn.png",
+      "view": "On skin",
+      "patch": {
+        "coverage": "Accent",
+        "gem": "Emerald"
+      },
+      "parent": "/atelier/v2/emerald-studio.png",
+      "status": "planned"
+    },
+    {
+      "id": "emerald-close",
+      "file": "emerald-close.png",
+      "view": "Close-up",
+      "patch": {
+        "coverage": "Accent",
+        "gem": "Emerald"
+      },
+      "parent": "/atelier/v2/emerald-studio.png",
+      "status": "planned"
+    },
+    {
+      "id": "emerald-dark",
+      "file": "emerald-dark.png",
+      "view": "Dark",
+      "patch": {
+        "coverage": "Accent",
+        "gem": "Emerald"
+      },
+      "parent": "/atelier/v2/emerald-studio.png",
+      "status": "planned"
+    },
+    {
+      "id": "blue-worn",
+      "file": "blue-worn.png",
+      "view": "On skin",
+      "patch": {
+        "coverage": "Accent",
+        "gem": "Blue sapphire"
+      },
+      "parent": "/atelier/v2/blue-studio.png",
+      "status": "planned"
+    },
+    {
+      "id": "blue-close",
+      "file": "blue-close.png",
+      "view": "Close-up",
+      "patch": {
+        "coverage": "Accent",
+        "gem": "Blue sapphire"
+      },
+      "parent": "/atelier/v2/blue-studio.png",
+      "status": "planned"
+    },
+    {
+      "id": "blue-dark",
+      "file": "blue-dark.png",
+      "view": "Dark",
+      "patch": {
+        "coverage": "Accent",
+        "gem": "Blue sapphire"
+      },
+      "parent": "/atelier/v2/blue-studio.png",
+      "status": "planned"
+    },
+    {
+      "id": "pink-worn",
+      "file": "pink-worn.png",
+      "view": "On skin",
+      "patch": {
+        "coverage": "Accent",
+        "gem": "Pink sapphire"
+      },
+      "parent": "/atelier/v2/pink-studio.png",
+      "status": "planned"
+    },
+    {
+      "id": "pink-close",
+      "file": "pink-close.png",
+      "view": "Close-up",
+      "patch": {
+        "coverage": "Accent",
+        "gem": "Pink sapphire"
+      },
+      "parent": "/atelier/v2/pink-studio.png",
+      "status": "planned"
+    },
+    {
+      "id": "pink-dark",
+      "file": "pink-dark.png",
+      "view": "Dark",
+      "patch": {
+        "coverage": "Accent",
+        "gem": "Pink sapphire"
+      },
+      "parent": "/atelier/v2/pink-studio.png",
+      "status": "planned"
+    },
+    {
+      "id": "curb-v2-worn",
+      "file": "curb-v2-worn.png",
+      "view": "On skin",
+      "patch": {
+        "chain": "Curb"
+      },
+      "parent": "/atelier/v2/curb-v2.png",
+      "status": "planned"
+    },
+    {
+      "id": "curb-v2-close",
+      "file": "curb-v2-close.png",
+      "view": "Close-up",
+      "patch": {
+        "chain": "Curb"
+      },
+      "parent": "/atelier/v2/curb-v2.png",
+      "status": "planned"
+    },
+    {
+      "id": "curb-v2-dark",
+      "file": "curb-v2-dark.png",
+      "view": "Dark",
+      "patch": {
+        "chain": "Curb"
+      },
+      "parent": "/atelier/v2/curb-v2.png",
+      "status": "planned"
+    }
+  ]
+}

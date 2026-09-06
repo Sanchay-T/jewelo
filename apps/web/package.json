@@ -9,13 +9,15 @@
     "start": "next start",
     "test": "vitest run",
     "test:e2e": "playwright test",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test:atelier": "vitest run src/features/atelier",
+    "test:atelier:e2e": "playwright test -c playwright.customer.config.ts"
   },
   "dependencies": {
     "@fontsource/inter": "5.2.8",
     "@fontsource/playfair-display": "5.2.8",
-    "@jewelo/config": "workspace:*",
     "@jewelo/ai": "workspace:*",
+    "@jewelo/config": "workspace:*",
     "@jewelo/contracts": "workspace:*",
     "@jewelo/data": "workspace:*",
     "@phosphor-icons/react": "2.1.10",
@@ -25,15 +27,17 @@
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "react-dropzone": "14.3.8",
-    "react-zoom-pan-pinch": "3.7.0"
+    "react-zoom-pan-pinch": "3.7.0",
+    "three": "0.185.1"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "4.3.3",
     "@playwright/test": "1.58.2",
+    "@tailwindcss/postcss": "4.3.3",
     "@testing-library/jest-dom": "6.9.1",
     "@testing-library/react": "16.3.2",
     "@types/react": "19.2.18",
     "@types/react-dom": "19.2.5",
+    "@types/three": "0.185.4",
     "tailwindcss": "4.3.3"
   }
 }

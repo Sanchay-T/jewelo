@@ -1,0 +1,453 @@
+{
+  "version": 4,
+  "created": "2026-09-06",
+  "tool": "built-in imagegen",
+  "cost": {
+    "amount": null,
+    "reason": "Not reported by built-in tool"
+  },
+  "assets": [
+    {
+      "id": "minimal-worn",
+      "file": "minimal-worn.png",
+      "view": "On skin",
+      "patch": {
+        "lettering": "Minimal"
+      },
+      "parent": "/atelier/v2/minimal-studio.png",
+      "prompt": "Use case: identity-preserve product photography. Edit target is the supplied CALEUMS jewelry reference. Create ONE photorealistic On skin ecommerce photograph of this exact necklace worn naturally on an adult woman's collarbone, cropped from lower chin to upper chest, plain cream clothing and warm medium skin, soft warm daylight. Preserve the exact pendant identity: text Asma (A-s-m-a), same thin upright minimalist sans-serif gold outline lettering, small visible gold bridges joining A/s/m/a, closed counter in a, single name, polished solid 18K yellow gold, no stones, thin cable chain and both attached jump rings. Preserve all four letter proportions and spacing; do not substitute cursive. Pendant physically coherent, every letter joined and both chains securely attached, no floating metal, no broken links, believable 32mm scale. Portrait 4:5, full pendant near60% image height, clear jewelry large enough to inspect. Natural skin texture, elegant restrained commercial jewelry photography. No typography overlay, watermark, logo, collage, additional necklaces or gemstones.",
+      "source": "/Users/sanchay/.codex/generated_images/01a07388-1798-7110-ab6f-d9336ca35aa5/exec-3875061f-c83b-4f0a-a7f2-ce79854a6f8f.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Direct visual inspection: exact Asma spelling, retained minimal sans-serif form, gold bridges and both chain attachments visible; no observed broken components. Sample approximate scale."
+      },
+      "sha256": "74f327fee9a7da8a826970cc98316e53540d853436848e7ec9209809f02d5c2f",
+      "generatedAt": "2026-09-06T08:25:40.839831+00:00",
+      "cost": null
+    },
+    {
+      "id": "minimal-close",
+      "file": "minimal-close.png",
+      "view": "Close-up",
+      "scene": "A close-up macro product photograph on cream silk and limestone, gently angled to show gold thickness; entire name and both jump rings visible, pendant fills80%width, no crop of letters.",
+      "patch": {
+        "lettering": "Minimal"
+      },
+      "parent": "/atelier/v2/minimal-studio.png",
+      "prompt": "Use case: precise-object-edit. Supplied image is exact jewelry edit target. Create ONE premium CALEUMS ecommerce photograph: A close-up macro product photograph on cream silk and limestone, gently angled to show gold thickness; entire name and both jump rings visible, pendant fills80%width, no crop of letters. Preserve exactly the same single pendant spelling Asma (A-s-m-a), thin upright minimalist sans-serif outline lettering, closed counters, polished18Kyellow gold, no stones, fine cablechain, proportions and small goldbridges joining every letter. Never substitute cursive or alter lettering. Both chainrings attached; no floating/disconnected metal or broken chain. Portrait4:5. No UI, labels, watermark, logo, collage, extra jewelry.",
+      "source": "/Users/sanchay/.codex/generated_images/01a07388-1798-7110-ab6f-d9336ca35aa5/exec-051df95e-0f92-4680-8972-ad9b728a57a4.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Direct visual review: retained Asma minimalist lettering, connected gold bridges, closed counters, both chain rings; no observed breakage; camera treatment correct."
+      },
+      "sha256": "ed7840542bf6977223f6bd7304158d78e495171d8d5b76cfbff48409746e9845",
+      "generatedAt": "2026-09-06T08:27:19.906205+00:00",
+      "cost": null
+    },
+    {
+      "id": "minimal-dark",
+      "file": "minimal-dark.png",
+      "view": "Dark",
+      "scene": "A dark luxurious product photograph on black velvet with subtle directional warm light and realistic gold reflections; entire pendant visible at65%width, cable chain up to topcorners.",
+      "patch": {
+        "lettering": "Minimal"
+      },
+      "parent": "/atelier/v2/minimal-studio.png",
+      "prompt": "Use case: precise-object-edit. Supplied image is exact jewelry edit target. Create ONE premium CALEUMS ecommerce photograph: A dark luxurious product photograph on black velvet with subtle directional warm light and realistic gold reflections; entire pendant visible at65%width, cable chain up to topcorners. Preserve exactly the same single pendant spelling Asma (A-s-m-a), thin upright minimalist sans-serif outline lettering, closed counters, polished18Kyellow gold, no stones, fine cablechain, proportions and small goldbridges joining every letter. Never substitute cursive or alter lettering. Both chainrings attached; no floating/disconnected metal or broken chain. Portrait4:5. No UI, labels, watermark, logo, collage, extra jewelry.",
+      "source": "/Users/sanchay/.codex/generated_images/01a07388-1798-7110-ab6f-d9336ca35aa5/exec-92aa4ce3-9967-4bd4-ab7d-e9623af3b9e5.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Direct visual review: retained Asma minimalist lettering, connected gold bridges, closed counters, both chain rings; no observed breakage; camera treatment correct."
+      },
+      "sha256": "9587870c91a5f18dfe8e506d9ee39a36cddf3271a9e27bf4e3be050023aa2747",
+      "generatedAt": "2026-09-06T08:27:19.942439+00:00",
+      "cost": null
+    },
+    {
+      "id": "signature-worn",
+      "patch": {
+        "lettering": "Signature"
+      },
+      "parent": "/atelier/v2/signature-studio.png",
+      "file": "signature-worn.png",
+      "view": "On skin",
+      "prompt": "Use case: precise-object-edit. Input is exact necklace reference. Create ONE premium photoreal ecommerce image. Worn on an adult woman's collarbone, lower chin to upper chest crop, natural warm medium skin, cream clothing, believable32mm pendant near60%height. Keep identical pendant spelling Asma (A-s-m-a), same single-stroke signature cursive with large looping left A swash, slender connected s-m-a and long right a tail, same gold stroke widths, proportions, single18Kyellowgold name, no stones, cablechain securely attached at bothends. Do not redesign letters or simplify swash; all metal continuous, no brokenlinks or floating components. Portrait4:5; realistic polished solidgold reflections, restrained lighting, no textoverlay/watermark/logo/collage/extra necklaces.",
+      "source": "/Users/sanchay/.codex/generated_images/01a07388-1798-7110-ab6f-d9336ca35aa5/exec-f1283f97-c21b-456f-b5b7-87632224c2f1.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Direct visual inspection: retained signature Asma spelling and looping A swash, connected letter strokes and both chain attachments; correct view, no observed broken metal."
+      },
+      "sha256": "7b5d8c18162111232afccb0c1f80616a9d05bfd170f7f426ff13f775cb4be90f",
+      "generatedAt": "2026-09-06T08:29:34.281852+00:00",
+      "cost": null
+    },
+    {
+      "id": "signature-close",
+      "patch": {
+        "lettering": "Signature"
+      },
+      "parent": "/atelier/v2/signature-studio.png",
+      "file": "signature-close.png",
+      "view": "Close-up",
+      "prompt": "Use case: precise-object-edit. Input is exact necklace reference. Create ONE premium photoreal ecommerce image. Macro product photograph on cream silk and limestone, slight angle to show polished gold thickness, whole name plus both jump rings visible filling80%width. Keep identical pendant spelling Asma (A-s-m-a), same single-stroke signature cursive with large looping left A swash, slender connected s-m-a and long right a tail, same gold stroke widths, proportions, single18Kyellowgold name, no stones, cablechain securely attached at bothends. Do not redesign letters or simplify swash; all metal continuous, no brokenlinks or floating components. Portrait4:5; realistic polished solidgold reflections, restrained lighting, no textoverlay/watermark/logo/collage/extra necklaces.",
+      "source": "/Users/sanchay/.codex/generated_images/01a07388-1798-7110-ab6f-d9336ca35aa5/exec-a462088c-6fc5-4841-8f17-3f672b7a2ca6.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Direct visual inspection: retained signature Asma spelling and looping A swash, connected letter strokes and both chain attachments; correct view, no observed broken metal."
+      },
+      "sha256": "0f69e583fb351a18f878a037f10192a6654ee885dc81a36fada673e136da31cf",
+      "generatedAt": "2026-09-06T08:29:34.359109+00:00",
+      "cost": null
+    },
+    {
+      "id": "signature-dark",
+      "patch": {
+        "lettering": "Signature"
+      },
+      "parent": "/atelier/v2/signature-studio.png",
+      "file": "signature-dark.png",
+      "view": "Dark",
+      "prompt": "Use case: precise-object-edit. Input is exact necklace reference. Create ONE premium photoreal ecommerce image. Dark black velvet backdrop, subtle dramatic warm side light, pendant fully visible at65%width, chain to uppercorners. Keep identical pendant spelling Asma (A-s-m-a), same single-stroke signature cursive with large looping left A swash, slender connected s-m-a and long right a tail, same gold stroke widths, proportions, single18Kyellowgold name, no stones, cablechain securely attached at bothends. Do not redesign letters or simplify swash; all metal continuous, no brokenlinks or floating components. Portrait4:5; realistic polished solidgold reflections, restrained lighting, no textoverlay/watermark/logo/collage/extra necklaces.",
+      "source": "/Users/sanchay/.codex/generated_images/01a07388-1798-7110-ab6f-d9336ca35aa5/exec-970c34f9-0490-49c0-ac3b-90758b8db008.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Direct visual inspection: retained signature Asma spelling and looping A swash, connected letter strokes and both chain attachments; correct view, no observed broken metal."
+      },
+      "sha256": "00541636b503ae1d8b40de9cc211dfc82a896c537554b1d3d7d22ddb24bbc424",
+      "generatedAt": "2026-09-06T08:29:34.442507+00:00",
+      "cost": null
+    },
+    {
+      "id": "kufi-worn",
+      "patch": {
+        "lettering": "Kufi"
+      },
+      "parent": "/atelier/v2/kufi-studio.png",
+      "file": "kufi-worn.png",
+      "view": "On skin",
+      "prompt": "Use case: precise-object-edit. Input is exact necklace reference. Create ONE premium photoreal ecommerce photograph. Worn on an adult woman's collarbone, lower chin to upper chest crop, natural warm medium skin, cream clothing, believable32mm pendant near60%height. Preserve the exact angular geometric block-letter Asma (A-s-m-a) pendant from reference: square A counter, rectangular s bends, double upright m, rectangular a counter, common connected baseline and broad polished18Kyellowgold faces, no stones, cablechain and both attached jump rings. Same letter geometry/proportions, no cursive, no font substitution. All letters connected into coherent piece, no broken metal/links, no floating components. Portrait4:5, realistic solidgold reflections. No textoverlay, watermark, logo, collage, extra jewelry.",
+      "source": "/Users/sanchay/.codex/generated_images/01a07388-1798-7110-ab6f-d9336ca35aa5/exec-b532573b-215b-4e22-a90f-714b629b62ee.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Direct visual review: exact geometric Asma blocks, retained square counters/common gold baseline, chain attachments and solid edges; no observed broken components."
+      },
+      "sha256": "0e3437fe3b94a18038f59c9d6c53c4a5ff98b9142c030ff0c47b038cf836e622",
+      "generatedAt": "2026-09-06T08:31:29.792412+00:00",
+      "cost": null
+    },
+    {
+      "id": "kufi-close",
+      "patch": {
+        "lettering": "Kufi"
+      },
+      "parent": "/atelier/v2/kufi-studio.png",
+      "file": "kufi-close.png",
+      "view": "Close-up",
+      "prompt": "Use case: precise-object-edit. Input is exact necklace reference. Create ONE premium photoreal ecommerce photograph. Macro product photograph on cream silk and limestone, slight angle to show polished gold thickness, whole name plus both jump rings visible filling80%width. Preserve the exact angular geometric block-letter Asma (A-s-m-a) pendant from reference: square A counter, rectangular s bends, double upright m, rectangular a counter, common connected baseline and broad polished18Kyellowgold faces, no stones, cablechain and both attached jump rings. Same letter geometry/proportions, no cursive, no font substitution. All letters connected into coherent piece, no broken metal/links, no floating components. Portrait4:5, realistic solidgold reflections. No textoverlay, watermark, logo, collage, extra jewelry.",
+      "source": "/Users/sanchay/.codex/generated_images/01a07388-1798-7110-ab6f-d9336ca35aa5/exec-d75b83e6-2dc8-4357-bc59-aecea8445de8.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Direct visual review: exact geometric Asma blocks, retained square counters/common gold baseline, chain attachments and solid edges; no observed broken components."
+      },
+      "sha256": "24d8f0b7e47d246db09cf4f26edcbd261a9f1d0db8cbe98ea49104e2e6a219a7",
+      "generatedAt": "2026-09-06T08:31:29.819942+00:00",
+      "cost": null
+    },
+    {
+      "id": "kufi-dark",
+      "patch": {
+        "lettering": "Kufi"
+      },
+      "parent": "/atelier/v2/kufi-studio.png",
+      "file": "kufi-dark.png",
+      "view": "Dark",
+      "prompt": "Use case: precise-object-edit. Input is exact necklace reference. Create ONE premium photoreal ecommerce photograph. Dark black velvet backdrop, subtle dramatic warm side light, pendant fully visible at65%width, chain to uppercorners. Preserve the exact angular geometric block-letter Asma (A-s-m-a) pendant from reference: square A counter, rectangular s bends, double upright m, rectangular a counter, common connected baseline and broad polished18Kyellowgold faces, no stones, cablechain and both attached jump rings. Same letter geometry/proportions, no cursive, no font substitution. All letters connected into coherent piece, no broken metal/links, no floating components. Portrait4:5, realistic solidgold reflections. No textoverlay, watermark, logo, collage, extra jewelry.",
+      "source": "/Users/sanchay/.codex/generated_images/01a07388-1798-7110-ab6f-d9336ca35aa5/exec-dc02b946-7727-49d6-8acd-dcad63209294.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Direct visual review: exact geometric Asma blocks, retained square counters/common gold baseline, chain attachments and solid edges; no observed broken components."
+      },
+      "sha256": "b053548d2fa288128cbe419c1f44710e567ebef0977a9cfd567ceacdff0a3051",
+      "generatedAt": "2026-09-06T08:31:29.848162+00:00",
+      "cost": null
+    },
+    {
+      "id": "diwani-worn",
+      "patch": {
+        "lettering": "Diwani"
+      },
+      "parent": "/atelier/v2/diwani-studio.png",
+      "file": "diwani-worn.png",
+      "view": "On skin",
+      "prompt": "Use case: precise-object-edit. Reference is exact pendant identity. Create ONE premium photoreal ecommerce jewelry photograph. Worn on an adult woman's collarbone, lower chin to upper chest crop, natural warm medium skin, cream clothing, believable32mm pendant near60%height. Preserve exact ornate English Asma (A-s-m-a), elaborate looping capitalA upperloop and lowerleft flourish, connected s-m-a, long continuous lower swash sweeping from A beneath name and curving around a. Same proportions, loop crossings, thin wide polished18Kyellowgold strokes, no stones, cablechain and attached jump rings. Do not change to plain script or Arabic. All ornamental metal and letters joined, no isolated flourishes, brokenlinks or floating components. Portrait4:5; realistic gold thickness/reflections. No textoverlay/watermark/logo/collage/extra jewelry.",
+      "source": "/Users/sanchay/.codex/generated_images/01a07388-1798-7110-ab6f-d9336ca35aa5/exec-e8351f64-3966-43ec-bcf6-f3f5508a8f00.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Direct visual review: ornate Asma preserved including looping A and continuous lower swash; coherent metal and both chain attachments, no observed breakage."
+      },
+      "sha256": "930178c3eda1a5f72b2fe5e18cf1bd2f33020794bbc948e70af0afdb6d020f46",
+      "generatedAt": "2026-09-06T08:34:04.430981+00:00",
+      "cost": null
+    },
+    {
+      "id": "diwani-close",
+      "patch": {
+        "lettering": "Diwani"
+      },
+      "parent": "/atelier/v2/diwani-studio.png",
+      "file": "diwani-close.png",
+      "view": "Close-up",
+      "prompt": "Use case: precise-object-edit. Reference is exact pendant identity. Create ONE premium photoreal ecommerce jewelry photograph. Macro product photograph on cream silk and limestone, slight angle to show polished gold thickness, whole name plus both jump rings visible filling80%width. Preserve exact ornate English Asma (A-s-m-a), elaborate looping capitalA upperloop and lowerleft flourish, connected s-m-a, long continuous lower swash sweeping from A beneath name and curving around a. Same proportions, loop crossings, thin wide polished18Kyellowgold strokes, no stones, cablechain and attached jump rings. Do not change to plain script or Arabic. All ornamental metal and letters joined, no isolated flourishes, brokenlinks or floating components. Portrait4:5; realistic gold thickness/reflections. No textoverlay/watermark/logo/collage/extra jewelry.",
+      "source": "/Users/sanchay/.codex/generated_images/01a07388-1798-7110-ab6f-d9336ca35aa5/exec-3f95be99-8920-4479-8eea-1107ad668089.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Direct visual review: ornate Asma preserved including looping A and continuous lower swash; coherent metal and both chain attachments, no observed breakage."
+      },
+      "sha256": "f33f8eff8d13a15604bca6dcebd69fe0bf5add595a373df6aa6458ed4501c69c",
+      "generatedAt": "2026-09-06T08:34:04.467971+00:00",
+      "cost": null
+    },
+    {
+      "id": "diwani-dark",
+      "patch": {
+        "lettering": "Diwani"
+      },
+      "parent": "/atelier/v2/diwani-studio.png",
+      "file": "diwani-dark.png",
+      "view": "Dark",
+      "prompt": "Use case: precise-object-edit. Reference is exact pendant identity. Create ONE premium photoreal ecommerce jewelry photograph. Dark black velvet backdrop, subtle dramatic warm side light, pendant fully visible at65%width, chain to uppercorners. Preserve exact ornate English Asma (A-s-m-a), elaborate looping capitalA upperloop and lowerleft flourish, connected s-m-a, long continuous lower swash sweeping from A beneath name and curving around a. Same proportions, loop crossings, thin wide polished18Kyellowgold strokes, no stones, cablechain and attached jump rings. Do not change to plain script or Arabic. All ornamental metal and letters joined, no isolated flourishes, brokenlinks or floating components. Portrait4:5; realistic gold thickness/reflections. No textoverlay/watermark/logo/collage/extra jewelry.",
+      "source": "/Users/sanchay/.codex/generated_images/01a07388-1798-7110-ab6f-d9336ca35aa5/exec-d80b0c6c-579e-41f8-8d02-3c50f394d827.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Direct visual review: ornate Asma preserved including looping A and continuous lower swash; coherent metal and both chain attachments, no observed breakage."
+      },
+      "sha256": "2332ef6fc5869701bf1367b93259ce12d03851b95c411003c78c4b66fbefb578",
+      "generatedAt": "2026-09-06T08:34:04.505248+00:00",
+      "cost": null
+    },
+    {
+      "id": "thuluth-worn",
+      "patch": {
+        "lettering": "Thuluth inspired"
+      },
+      "parent": "/atelier/v2/thuluth-studio.png",
+      "file": "thuluth-worn.png",
+      "view": "On skin",
+      "prompt": "Use case: precise-object-edit. Reference is exact necklace identity. Create ONE premium photoreal ecommerce photograph. Worn on an adult woman's collarbone, lower chin to upper chest crop, natural warm medium skin, cream clothing, believable32mm pendant near60%height. Keep exact English Asma (A-s-m-a) pendant: very tall tapered capitalA with pointed upper stem, curled lowerleft foot, broad sweeping lower A swash beneath connected s-m-a curling under finala, tiny structural gold bridges. Same tall calligraphic proportions and gold stroke widths, polished18Kyellowgold, no stones, cablechain securely attached bothsides. Do not simplify to generic cursive or change name to Arabic. All letters and flourishes form continuous gold, no brokenlinks/floating parts. Portrait4:5 with entire tallA and bottomswash uncropped. No textoverlay/watermark/logo/collage/extra jewelry.",
+      "source": "/Users/sanchay/.codex/generated_images/01a07388-1798-7110-ab6f-d9336ca35aa5/exec-1fcc7055-4cd9-45d9-84f7-b62084be85ba.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Direct visual review: tall tapered Asma lettering and lower swash retained, name readable, connecting bridges and both chain rings visible; no observed broken components."
+      },
+      "sha256": "0625c4fdb9c901f54bce829db0c6b52b97bed08507e038d53aa0cbd48f16b303",
+      "generatedAt": "2026-09-06T08:36:40.065868+00:00",
+      "cost": null
+    },
+    {
+      "id": "thuluth-close",
+      "patch": {
+        "lettering": "Thuluth inspired"
+      },
+      "parent": "/atelier/v2/thuluth-studio.png",
+      "file": "thuluth-close.png",
+      "view": "Close-up",
+      "prompt": "Use case: precise-object-edit. Reference is exact necklace identity. Create ONE premium photoreal ecommerce photograph. Macro product photograph on cream silk and limestone, slight angle to show polished gold thickness, whole name plus both jump rings visible filling80%width. Keep exact English Asma (A-s-m-a) pendant: very tall tapered capitalA with pointed upper stem, curled lowerleft foot, broad sweeping lower A swash beneath connected s-m-a curling under finala, tiny structural gold bridges. Same tall calligraphic proportions and gold stroke widths, polished18Kyellowgold, no stones, cablechain securely attached bothsides. Do not simplify to generic cursive or change name to Arabic. All letters and flourishes form continuous gold, no brokenlinks/floating parts. Portrait4:5 with entire tallA and bottomswash uncropped. No textoverlay/watermark/logo/collage/extra jewelry.",
+      "source": "/Users/sanchay/.codex/generated_images/01a07388-1798-7110-ab6f-d9336ca35aa5/exec-81579654-9670-4c82-9993-01bb4643c9c6.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Direct visual review: tall tapered Asma lettering and lower swash retained, name readable, connecting bridges and both chain rings visible; no observed broken components."
+      },
+      "sha256": "3a49baa26ad5b1e315f5dde24f4585dc753badc24a275239817f3a2a8fd9d131",
+      "generatedAt": "2026-09-06T08:36:40.114567+00:00",
+      "cost": null
+    },
+    {
+      "id": "thuluth-dark",
+      "patch": {
+        "lettering": "Thuluth inspired"
+      },
+      "parent": "/atelier/v2/thuluth-studio.png",
+      "file": "thuluth-dark.png",
+      "view": "Dark",
+      "prompt": "Use case: precise-object-edit. Reference is exact necklace identity. Create ONE premium photoreal ecommerce photograph. Dark black velvet backdrop, subtle dramatic warm side light, pendant fully visible at65%width, chain to uppercorners. Keep exact English Asma (A-s-m-a) pendant: very tall tapered capitalA with pointed upper stem, curled lowerleft foot, broad sweeping lower A swash beneath connected s-m-a curling under finala, tiny structural gold bridges. Same tall calligraphic proportions and gold stroke widths, polished18Kyellowgold, no stones, cablechain securely attached bothsides. Do not simplify to generic cursive or change name to Arabic. All letters and flourishes form continuous gold, no brokenlinks/floating parts. Portrait4:5 with entire tallA and bottomswash uncropped. No textoverlay/watermark/logo/collage/extra jewelry.",
+      "source": "/Users/sanchay/.codex/generated_images/01a07388-1798-7110-ab6f-d9336ca35aa5/exec-9e467b6d-58e2-4966-89e5-2a3d7c45600a.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Direct visual review: tall tapered Asma lettering and lower swash retained, name readable, connecting bridges and both chain rings visible; no observed broken components."
+      },
+      "sha256": "9f6bdde88a690dfc61cf21f5674e7c5aea2dfc59f1bfc42533274e77765ff3b2",
+      "generatedAt": "2026-09-06T08:36:40.165622+00:00",
+      "cost": null
+    },
+    {
+      "id": "rolo-worn",
+      "patch": {
+        "chain": "Rolo"
+      },
+      "parent": "/atelier/v2/rolo-studio.png",
+      "file": "rolo-worn.png",
+      "view": "On skin",
+      "prompt": "Use case: precise-object-edit. Input image is exact necklace reference. Create ONE premium photoreal jewelry ecommerce photograph. Worn on an adult woman's collarbone, lower chin to upper chest crop, natural warm medium skin, cream clothing, believable32mm pendant near60%height. Preserve exact classic cursive Asma (A-s-m-a) single pendant, capitalA doubleleft loop and connectedsm a, polished18Kyellowgold no stones. CRITICAL preserve distinctive ROLO chain: same prominent circular round links, alternating interlocking round rings, visibly round rather than fine elongated cable or square box. Both jump rings firmly joined to pendant. Same lettering/proportions and goldwidth, no floating letters, disconnected rings, brokenlinks, added stones or extra jewelry. Portrait4:5, realistic gold reflections, no textoverlay/logo/watermark/collage.",
+      "source": "/Users/sanchay/.codex/generated_images/01a07388-1798-7110-ab6f-d9336ca35aa5/exec-afd67c90-3a52-4068-bfeb-ea1f18694477.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Direct visual review: same classic Asma name and round Rolo chain links, secure interlocks and pendant rings; no observed breakage; camera view correct."
+      },
+      "sha256": "f4cd6c22edc87375b8e434c294dcfea655eada86eba7110a7f77b4296baaf4c1",
+      "generatedAt": "2026-09-06T08:39:51.265493+00:00",
+      "cost": null
+    },
+    {
+      "id": "rolo-close",
+      "patch": {
+        "chain": "Rolo"
+      },
+      "parent": "/atelier/v2/rolo-studio.png",
+      "file": "rolo-close.png",
+      "view": "Close-up",
+      "prompt": "Use case: precise-object-edit. Input image is exact necklace reference. Create ONE premium photoreal jewelry ecommerce photograph. Macro product photograph on cream silk and limestone, slight angle to show polished gold thickness, whole name plus both jump rings visible filling80%width. Preserve exact classic cursive Asma (A-s-m-a) single pendant, capitalA doubleleft loop and connectedsm a, polished18Kyellowgold no stones. CRITICAL preserve distinctive ROLO chain: same prominent circular round links, alternating interlocking round rings, visibly round rather than fine elongated cable or square box. Both jump rings firmly joined to pendant. Same lettering/proportions and goldwidth, no floating letters, disconnected rings, brokenlinks, added stones or extra jewelry. Portrait4:5, realistic gold reflections, no textoverlay/logo/watermark/collage.",
+      "source": "/Users/sanchay/.codex/generated_images/01a07388-1798-7110-ab6f-d9336ca35aa5/exec-be9127f6-1446-4324-ad48-4a91edba2be9.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Direct visual review: same classic Asma name and round Rolo chain links, secure interlocks and pendant rings; no observed breakage; camera view correct."
+      },
+      "sha256": "42e8626b21503df8990b2dfcd475f77e4de909c474b60c52af349bf9556a3d89",
+      "generatedAt": "2026-09-06T08:39:51.296734+00:00",
+      "cost": null
+    },
+    {
+      "id": "rolo-dark",
+      "patch": {
+        "chain": "Rolo"
+      },
+      "parent": "/atelier/v2/rolo-studio.png",
+      "file": "rolo-dark.png",
+      "view": "Dark",
+      "prompt": "Use case: precise-object-edit. Input image is exact necklace reference. Create ONE premium photoreal jewelry ecommerce photograph. Dark black velvet backdrop, subtle dramatic warm side light, pendant fully visible at65%width, chain to uppercorners. Preserve exact classic cursive Asma (A-s-m-a) single pendant, capitalA doubleleft loop and connectedsm a, polished18Kyellowgold no stones. CRITICAL preserve distinctive ROLO chain: same prominent circular round links, alternating interlocking round rings, visibly round rather than fine elongated cable or square box. Both jump rings firmly joined to pendant. Same lettering/proportions and goldwidth, no floating letters, disconnected rings, brokenlinks, added stones or extra jewelry. Portrait4:5, realistic gold reflections, no textoverlay/logo/watermark/collage.",
+      "source": "/Users/sanchay/.codex/generated_images/01a07388-1798-7110-ab6f-d9336ca35aa5/exec-d81cec93-8aeb-4bbd-9d7d-0dcd236d4f5f.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Direct visual review: same classic Asma name and round Rolo chain links, secure interlocks and pendant rings; no observed breakage; camera view correct."
+      },
+      "sha256": "e9d64db589d3c87e8de74dd4ec53719703135d953bc8528c2682c3fc46d67578",
+      "generatedAt": "2026-09-06T08:39:51.324934+00:00",
+      "cost": null
+    },
+    {
+      "id": "box-worn",
+      "patch": {
+        "chain": "Box"
+      },
+      "parent": "/atelier/v2/box-studio.png",
+      "file": "box-worn.png",
+      "view": "On skin",
+      "prompt": "Use case: precise-object-edit. Reference is exact jewelry identity. Create ONE premium photoreal ecommerce photograph. Worn on an adult woman's collarbone, lower chin to upper chest crop, natural warm medium skin, cream clothing, believable32mm pendant near60%height. Preserve exact classic cursive Asma (A-s-m-a), looping capitalA, connected readable sm a, polished18Kyellowgold and no stones. CRITICAL same BOX chain: narrow continuous squared cuboid interlocking links, crisp rectangular facets, not rounded Rolo or cable. Keep both attached jumprings, exact pendant proportions and lettering. All gold coherent, no disconnected letters/links or floatingpieces. Portrait4:5, realistic fine jewelry texture/reflections; no textoverlay, watermark, logo, collage, extra jewelry.",
+      "source": "/Users/sanchay/.codex/generated_images/01a07388-1798-7110-ab6f-d9336ca35aa5/exec-6a2385ab-611b-4982-b171-142ee15477e7.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Direct visual review: classic Asma retained, distinctive square Box chain facets and continuous links, both rings attached, no observed broken metal."
+      },
+      "sha256": "7ec73160fcb5e6d2173311f8303883405ac98833ce33e29baa73b3a53ffb5ecc",
+      "generatedAt": "2026-09-06T08:42:48.948785+00:00",
+      "cost": null
+    },
+    {
+      "id": "box-close",
+      "patch": {
+        "chain": "Box"
+      },
+      "parent": "/atelier/v2/box-studio.png",
+      "file": "box-close.png",
+      "view": "Close-up",
+      "prompt": "Use case: precise-object-edit. Reference is exact jewelry identity. Create ONE premium photoreal ecommerce photograph. Macro product photograph on cream silk and limestone, slight angle to show polished gold thickness, whole name plus both jump rings visible filling80%width. Preserve exact classic cursive Asma (A-s-m-a), looping capitalA, connected readable sm a, polished18Kyellowgold and no stones. CRITICAL same BOX chain: narrow continuous squared cuboid interlocking links, crisp rectangular facets, not rounded Rolo or cable. Keep both attached jumprings, exact pendant proportions and lettering. All gold coherent, no disconnected letters/links or floatingpieces. Portrait4:5, realistic fine jewelry texture/reflections; no textoverlay, watermark, logo, collage, extra jewelry.",
+      "source": "/Users/sanchay/.codex/generated_images/01a07388-1798-7110-ab6f-d9336ca35aa5/exec-dbedc259-95be-4380-aa45-48a12da69759.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Direct visual review: classic Asma retained, distinctive square Box chain facets and continuous links, both rings attached, no observed broken metal."
+      },
+      "sha256": "8302400440e93bafaff65efde24c03f6509e404fd88f6dd71c9120bc71768a6f",
+      "generatedAt": "2026-09-06T08:42:49.151472+00:00",
+      "cost": null
+    },
+    {
+      "id": "box-dark",
+      "patch": {
+        "chain": "Box"
+      },
+      "parent": "/atelier/v2/box-studio.png",
+      "file": "box-dark.png",
+      "view": "Dark",
+      "prompt": "Use case: precise-object-edit. Reference is exact jewelry identity. Create ONE premium photoreal ecommerce photograph. Dark black velvet backdrop, subtle dramatic warm side light, pendant fully visible at65%width, chain to uppercorners. Preserve exact classic cursive Asma (A-s-m-a), looping capitalA, connected readable sm a, polished18Kyellowgold and no stones. CRITICAL same BOX chain: narrow continuous squared cuboid interlocking links, crisp rectangular facets, not rounded Rolo or cable. Keep both attached jumprings, exact pendant proportions and lettering. All gold coherent, no disconnected letters/links or floatingpieces. Portrait4:5, realistic fine jewelry texture/reflections; no textoverlay, watermark, logo, collage, extra jewelry.",
+      "source": "/Users/sanchay/.codex/generated_images/01a07388-1798-7110-ab6f-d9336ca35aa5/exec-c8b5cab8-f289-47ec-965f-a43872d6707b.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Direct visual review: classic Asma retained, distinctive square Box chain facets and continuous links, both rings attached, no observed broken metal."
+      },
+      "sha256": "42a84b8cbfc562787fb58f06ecbb739d0fc3281a2ee8c075b8eb2e6fcfb07344",
+      "generatedAt": "2026-09-06T08:42:49.231800+00:00",
+      "cost": null
+    },
+    {
+      "id": "small-worn",
+      "patch": {
+        "size": 22
+      },
+      "parent": "/atelier/v2/small-studio.png",
+      "file": "small-worn.png",
+      "view": "On skin",
+      "prompt": "Use case: precise-object-edit. Input is exact petite necklace reference. Create ONE premium photoreal ecommerce photograph. Worn on an adult woman's collarbone, lower chin to upper chest crop, natural warm medium skin, cream clothing, believable22mm pendant near60%height. Preserve exact classic cursive Asma (A-s-m-a) single pendant, loopingA, connected s-m-a, polished18Kyellowgold no stones, finecablechain attached bothends. This is the PETITE22mm version, physically small delicate pendant, substantially smaller than32mm standard relative to chain links and human neck. In worn view name spans about one-fifth neckbase width, not oversized. Same exact lettering shape/proportions. No brokenlinks/floatingmetal/disconnected letters. Portrait4:5; complete pendant visible, refined realisticgold reflections. No textoverlay/logo/watermark/collage/extra jewelry.",
+      "source": "/Users/sanchay/.codex/generated_images/01a07388-1798-7110-ab6f-d9336ca35aa5/exec-30adcab6-bc9f-4884-b106-59354ddacb1d.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Direct visual review: petite Asma shape and connected cable chain retained; distinctly smaller worn scale and dark presentation; physical22mm approximate."
+      },
+      "sha256": "806271b9bc4dd7ac0fa32414b5351b193dff523844bba965fa2bcfbc5f535d25",
+      "generatedAt": "2026-09-06T08:45:23.825426+00:00",
+      "cost": null
+    },
+    {
+      "id": "small-dark",
+      "patch": {
+        "size": 22
+      },
+      "parent": "/atelier/v2/small-studio.png",
+      "file": "small-dark.png",
+      "view": "Dark",
+      "prompt": "Use case: precise-object-edit. Input is exact petite necklace reference. Create ONE premium photoreal ecommerce photograph. Dark black velvet backdrop, subtle dramatic warm side light, pendant fully visible at65%width, chain to uppercorners. Preserve exact classic cursive Asma (A-s-m-a) single pendant, loopingA, connected s-m-a, polished18Kyellowgold no stones, finecablechain attached bothends. This is the PETITE22mm version, physically small delicate pendant, substantially smaller than32mm standard relative to chain links and human neck. In worn view name spans about one-fifth neckbase width, not oversized. Same exact lettering shape/proportions. No brokenlinks/floatingmetal/disconnected letters. Portrait4:5; complete pendant visible, refined realisticgold reflections. No textoverlay/logo/watermark/collage/extra jewelry.",
+      "source": "/Users/sanchay/.codex/generated_images/01a07388-1798-7110-ab6f-d9336ca35aa5/exec-22fb7435-3c6b-4bad-990e-1292211da7c1.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Direct visual review: petite Asma shape and connected cable chain retained; distinctly smaller worn scale and dark presentation; physical22mm approximate."
+      },
+      "sha256": "732e24aec1f72adb5bac7f166718207bf14ded505d461428e11d95b173a29d16",
+      "generatedAt": "2026-09-06T08:45:23.955099+00:00",
+      "cost": null
+    },
+    {
+      "id": "small-close",
+      "patch": {
+        "size": 22
+      },
+      "parent": "/atelier/v2/small-studio.png",
+      "file": "small-close.png",
+      "view": "Close-up",
+      "prompt": "Use case: precise-object-edit. Create a macro CLOSE-UP photograph of the exact pendant in this reference. Move the camera much closer: the gold Asma name must occupy80-85% of image width, from around8%left to92%right. Show entire name with both attachmentrings and only short chain segments exiting side/topedges; no broad empty full-necklace scene. Preserve the exact petite classic cursive Asma A-s-m-a, connected polished18Kyellowgold, no stones, finecable chain, same physical jewelry geometry. Cream silk/limestone backdrop, realistic macro texture and gold depth. Portrait4:5. This is a zoomed camera view, NOT a physically enlarged pendant. No extra jewelry/text/watermark/collage; no clipping letters, brokenlinks or floatingmetal.",
+      "source": "/Users/sanchay/.codex/generated_images/01a07388-1798-7110-ab6f-d9336ca35aa5/exec-b3f05dcd-cbba-413f-916c-0f515e1b5ac1.png",
+      "review": {
+        "status": "accepted-concept",
+        "scope": "Direct visual review: corrected macro framing, entire exact petite Asma and attached cable rings visible, no observed broken components; physical dimensions approximate."
+      },
+      "attempts": [
+        {
+          "source": "/Users/sanchay/.codex/generated_images/01a07388-1798-7110-ab6f-d9336ca35aa5/exec-e7387591-88c0-4d44-a6c0-e8c7f6b8d9b7.png",
+          "prompt": "Use case: precise-object-edit. Input is exact petite necklace reference. Create ONE premium photoreal ecommerce photograph. Macro product photograph on cream silk and limestone, slight angle to show polished gold thickness, whole name plus both jump rings visible filling80%width. Preserve exact classic cursive Asma (A-s-m-a) single pendant, loopingA, connected s-m-a, polished18Kyellowgold no stones, finecablechain attached bothends. This is the PETITE22mm version, physically small delicate pendant, substantially smaller than32mm standard relative to chain links and human neck. In worn view name spans about one-fifth neckbase width, not oversized. Same exact lettering shape/proportions. No brokenlinks/floatingmetal/disconnected letters. Portrait4:5; complete pendant visible, refined realisticgold reflections. No textoverlay/logo/watermark/collage/extra jewelry.",
+          "status": "rejected-framing",
+          "reason": "Camera remained wide; not sufficient Close-up."
+        }
+      ],
+      "sha256": "7a742697fc7fbb66bc7248f8dfb4e1e609093b9229823663fc573bc39e6c43cd",
+      "generatedAt": "2026-09-06T08:46:53.730712+00:00",
+      "cost": null
+    }
+  ]
+}
