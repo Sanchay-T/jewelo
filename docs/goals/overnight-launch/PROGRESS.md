@@ -18,8 +18,11 @@ Branch: `codex/overnight-launch-2026-09-08` (base `main` at `e8d3dc0`).
 
 ## Done (with evidence)
 
+- 03:10 Supabase: new project `jewelo-caleums` created in Devonel org, ref `jggalwuvpcqoenhirmnl`, ap-south-1, Free, Postgres 17, status healthy. PAT `jewelo-agent-2026-09-08` (30 days) created. `.env` rewritten with the new SUPABASE_* values (legacy JWT anon/service_role keys; project ref, URLs, DB password, DB URL, access token); every TRIGGER_* line removed; old `.env` backed up in the session scratchpad only. REST on the new project answered 200 with the service key; Management API answered 200 with the PAT. Finding: the old project `jewelo-v2-mumbai` is the same ref as the old `.env` and IS reachable from this Chrome and from the stored CLI login (the goal's premise was wrong); it is kept until the new project is verified, then deleted. Finding: the Devonel org is in a Free-plan grace period (egress 52.5 of 5 GB, 1,049%) until 29 Sep 2026; after that all its projects return 402. This needs Sanchay (upgrade to Pro or move to another org).
+- 03:15 Plan review done: `docs/goals/overnight-launch/reviews/plan-review.md`. Corrections sent to W0a, W0b, W2.
+
 - 02:52 Env schema: empty string for optional URL/key fields now means unset (`packages/config/src/index.ts`, `optionalOf` preprocess). Unit test added. `pnpm --filter @jewelo/config test` -> 7 passed; typecheck clean.
-- Agent definitions created in `.claude/agents/`: implementer, platform, image-lab, viewer, browser-qa, reviewer (model claude-opus-5, effort xhigh).
+- Agent definitions created in `.claude/agents/`: implementer, platform, image-lab, viewer, browser-qa, reviewer (model claude-opus-5, effort xhigh). This session's Agent tool did not pick up new definitions created after startup ("Agent type 'implementer' not found"), so each role is dispatched as a general-purpose agent with model opus and the role text inline; frontmatter effort therefore could not be applied. Each agent reports its model id in its first report line.
 
 ## In progress
 
