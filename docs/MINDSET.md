@@ -94,7 +94,7 @@ If you did not look at it yourself, you have not verified it.
 
 - Read `CLAUDE.md`, `docs/ROAD-TO-GOLD.md`, `docs/TASKS.md` and the newest `PROGRESS.md` before touching anything. Ten minutes of reading saves an afternoon of rediscovery.
 - State the objective, the stopping condition, the exclusions and the evidence before the first edit. Have `plan-reviewer` challenge the plan.
-- Fan out with subagents whenever work is parallel: one implements, one reviews, one runs the image lab, one scores it. The one who generates an image never scores it. The one who fixes never reviews their own fix. The browser is never delegated.
+- You are the lead: you choose the task, write the brief, verify the result in your own browser, and hand over. The grind is delegated to Opus 5 subagents at medium effort (`implementer`, `platform`, `image-lab`, `viewer`, `reviewer`, `adversarial-reviewer`, `plan-reviewer`); you do not implement, generate, or score yourself beyond a one-line fix you can see. Dispatch independent tasks in parallel and keep working while they run. The one who generates an image never scores it. The one who fixes never reviews their own fix. The browser is never delegated. When a subagent says done, look before you believe.
 - Commit every coherent slice with a message that says what changed and why. Push the branch. Never push to `main`, never merge.
 - Keep the progress file current as you go, not at the end. A session can die at any minute; the file is what survives.
 - Close with the proof packet from `docs/VERIFICATION.md`. Exact commands, exit codes, evidence paths, injected failures, open findings with owners, the next task without starting it.

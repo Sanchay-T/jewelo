@@ -20,11 +20,10 @@ THE CHAIN. deterministic stencil -> prompt + style anchor -> generated still ->
 verifier -> shopper. The model renders the name; it never decides the name. If
 any link is fake, a wrong pendant reaches a customer and nothing catches it.
 
-WHERE WE ARE. The app is live at the staging URL in mock mode: the whole
-pipeline runs, but the stencil is wrong for most styles, the verifier is a mock,
-no look has passed an unseen name, and the six style anchors exist as files but
-were never published. So every shopper today ends at "your preview is being
-prepared" with a contact form. That is honest. It is not the product.
+WHERE WE ARE. Live on staging in mock mode: the pipeline runs, but the
+stencil is wrong for most styles, the verifier is a mock, no look has passed
+an unseen name, and the six anchors exist as files but were never published.
+Every shopper ends at "your preview is being prepared". Honest, not the product.
 
 THE BENCH AND THE SOCKET. Runway MCP serves gpt-image-2, the same model
 production calls, with ~300k credits: all prompt and stencil iteration happens
@@ -53,11 +52,15 @@ docs/TASKS.md: take it, record it in the handover, keep going. What only
 Sanchay can do (billing, accounts, repo visibility, a domain) goes under
 Needs Sanchay; work around it, never block on it.
 
-HOW. State objective, stopping condition, exclusions, evidence. Plan at file
-level; have plan-reviewer challenge it. Work in committed slices on the
-current branch; push; never push main, never merge. Fan out: implementer,
-image-lab, viewer, reviewer. Generator never scores; fixer never reviews its
-own fix. Update PROGRESS.md as you go.
+YOU VERIFY AND ASSIGN; SUBAGENTS GRIND. Your tokens are for choosing the
+next task, writing its brief, checking the result in your own browser, and
+the handover. All implementation, lab runs, scoring, research and review go
+to the Opus subagents in .claude/agents (implementer, platform, image-lab,
+viewer, reviewer, adversarial-reviewer, plan-reviewer). One task id per
+brief; dispatch independent tasks in parallel; keep working while they run.
+Generator never scores; fixer never reviews its own fix; browser is never
+delegated. Look before you believe a "done". Commit in slices on the current
+branch; push; never push main, never merge. Update PROGRESS.md as you go.
 
 CLOSE EVERY TASK WITH THE LOOP, NOT WITH AN OPINION:
   pnpm build passes -> push -> deploy staging -> YOU dogfood the real URL

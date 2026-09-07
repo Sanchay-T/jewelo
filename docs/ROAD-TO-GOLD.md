@@ -151,7 +151,7 @@ Phases are not finished when the code compiles.
 Each phase closes only after this loop runs clean:
 
 ```text
-implement
+the lead writes a one-task brief; an Opus subagent implements
   -> it builds and deploys (pnpm build is the only mechanical check)
   -> the lead agent dogfoods the real journey in its own in-app browser
      at every gated viewport, screenshot and DOM measurement per step
