@@ -70,10 +70,9 @@ NO TESTS, NO CI/CD, until Sanchay says so. Do not write tests, do not run
 the Vitest suites as a gate, do not add a workflow, hook or pipeline. Nothing
 sits between a commit and the deploy except the build and your own eyes.
 
-NEVER weaken a gate, show mock output as a customer's piece, commit a secret or
-customer media or the style anchors, spend outside a ceiling set in
-runtime_policy, or call a task done with its proof unrun. The repository is
-public: nothing private goes into git.
+NEVER weaken a gate, show mock output as a customer's piece, commit a secret,
+customer media or the style anchors, spend outside a runtime_policy ceiling,
+or call a task done with its proof unrun. The repo is public.
 
 STOP only when your scope is complete or at your wall clock. Before ending,
 check your last paragraph: if it is a plan, a question, or a promise, do that

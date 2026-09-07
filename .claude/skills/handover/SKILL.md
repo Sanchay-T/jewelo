@@ -26,10 +26,11 @@ Sanchay reads the link and nothing else, so the description must be complete and
 
    ```bash
    export GH_TOKEN=$(gh auth token -u Sanchay-T)
-   gh pr edit 12 --title "CALEUMS: road to gold" --body-file docs/goals/road-to-gold/HANDOVER.md
-   gh pr view 12 --json url --jq .url
+   python3 -c 'import json,sys; print(json.dumps({"title":"CALEUMS: road to gold","body":open("docs/goals/road-to-gold/HANDOVER.md").read()}))' \
+     | gh api repos/Sanchay-T/jewelo/pulls/12 -X PATCH --input - --jq .html_url
    ```
 
+   Use the REST call, not `gh pr edit`: the GraphQL path exits 1 on a projects-classic deprecation warning even when nothing is wrong.
    The `GH_TOKEN` line matters: the active `gh` account on this machine is a different user and gets 403 on this repository.
 
    The pull request is number 12, base `main`, draft. Never mark it ready, never merge, never change branch protection.
