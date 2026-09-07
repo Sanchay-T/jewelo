@@ -9,7 +9,6 @@ import {
   metals,
   type Draft,
   type View,
-  type Run,
   views,
   visualFields,
   type VisualField,
@@ -136,33 +135,12 @@ export function differences(a: Draft, b: Draft): VisualField[] {
     return a[field] !== b[field];
   });
 }
-/** Missing combinations use an explicitly described example, never an exact-match claim. */
-export function resolveSample(d: Draft, view: View, focus?: VisualField) {
-  const matched = exact.get(sampleKey(d, view));
-  if (matched)
-    return { asset: matched, exact: true, differences: [] as VisualField[] };
-  // Legacy focus is accepted for saved drafts but never changes photographic identity.
-  void focus;
-  const candidates = samples.filter((sample) => sample.view === view);
-  const weight: Partial<Record<VisualField, number>> = {
-    script: 1e9,
-    twoNames: 1e8,
-    layout: 1e7,
-    construction: 1e6,
-    lettering: 1e5,
-    metal: 1e4,
-    coverage: 1e3,
-    gem: 100,
-    size: 10,
-    chain: 1,
-  };
-  const score = (sample: Sample) =>
-    differences(d, sample.draft).reduce((n, f) => n + (weight[f] ?? 2), 0);
-  const asset = candidates.reduce((best, candidate) =>
-    score(candidate) < score(best) ? candidate : best,
-  );
-  return { asset, exact: false, differences: differences(d, asset.draft) };
-}
+/* The nearest-image resolver that used to live here is deliberately gone. It
+   scored every photograph against the selection and returned the closest one,
+   which is how a shopper could be shown a different construction, script or
+   lettering as their design. `resolveIllustration` below replaces it: exact
+   match on Tier 1, otherwise a labelled sibling that keeps the look. Do not
+   reintroduce a distance-scored fallback. */
 /** All selectable categorical combinations; no invented compatibility exclusions. */
 export function* configurations(): Generator<Draft> {
   for (const script of ["English", "Arabic"] as const)
@@ -211,38 +189,6 @@ export function catalogueCoverage() {
     missingImages: configurationsCount * 4 - exactImages,
     byView,
   };
-}
-
-/** Keep all camera views in the same photographic configuration family. */
-export function sampleFamily(draft: Draft, focus?: VisualField) {
-  const anchor = resolveSample(draft, "Studio", focus);
-  return {
-    anchor,
-    assets: (["Studio", "On skin", "Close-up", "Dark"] as View[])
-      .map((view) => exact.get(sampleKey(anchor.asset.draft, view)))
-      .filter((asset): asset is Sample => !!asset),
-  };
-}
-
-export function readySample(
-  draft: Draft,
-  run: Run | undefined,
-  activeView: View,
-  failedImages: readonly string[],
-  focus?: VisualField,
-): Sample | undefined {
-  const ready = run?.slots.filter((slot) => slot.status === "ready") ?? [];
-  const ordered = [
-    ...ready.filter((slot) => slot.view === activeView),
-    ...ready.filter((slot) => slot.view !== activeView),
-  ];
-  return ordered
-    .map((slot) =>
-      sampleFamily(draft, focus).assets.find(
-        (asset) => asset.view === slot.view,
-      ),
-    )
-    .find((asset) => !!asset && !failedImages.includes(asset.src));
 }
 
 /* ------------------------------------------------------------------ *

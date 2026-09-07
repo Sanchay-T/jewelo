@@ -192,6 +192,17 @@ test("the customer's own studio photograph becomes the hero and the sample moves
   await expect(page.locator('[data-own-outcome="personalized"]')).toBeVisible();
   await expect(page.locator('p[data-view="Studio"]')).toContainText("Ready");
   await expect(page.locator('p[data-view="Dark"]')).toContainText("Being prepared");
+  // Every camera tile that is still the illustrated catalogue says so, so the
+  // rail can never be read as "my four views".
+  const rail = page.getByRole("button", { name: "Dark", exact: true });
+  await expect(rail.locator("em")).toHaveText("Sample");
+  await expect(rail.locator("img")).toHaveAttribute(
+    "alt",
+    "Sample photograph of the Dark view, not your piece",
+  );
+  await expect(
+    page.getByRole("button", { name: "Studio", exact: true }).locator("em"),
+  ).not.toHaveText("Sample");
   // The illustrated sample is still reachable, now from the small tile row.
   const sampleTile = page.getByRole("button", { name: "Asma example" });
   await expect(sampleTile).toBeVisible();
@@ -214,19 +225,59 @@ test("a run that cannot start degrades honestly and captures a way to be contact
   await allReady(page);
   await preview(page);
   await page.getByRole("checkbox", { name: "I confirm the spelling" }).check();
+  // Before a contact exists nothing is being prepared, so the headline says
+  // what actually happened and asks for the one thing that changes it.
+  await expect(
+    page.getByText(
+      "We could not photograph your piece here. Leave one way to reach you and we will send it.",
+    ),
+  ).toBeVisible();
   await expect(
     page.getByText("Your personalized preview is being prepared. We will send it to you."),
-  ).toBeVisible();
+  ).toHaveCount(0);
   // The labelled illustrated sample is still on screen: nothing is claimed.
   await expect(page.locator('img[data-caleums-photo="sample"]').first()).toBeVisible();
   await page.getByRole("button", { name: "WhatsApp", exact: true }).click();
   await page.getByLabel("Number with country code").fill("+971501234567");
   await page.getByRole("button", { name: "Send this to me" }).click();
   await expect(page.getByText("Saved. Our team has your request.")).toBeVisible();
+  // Now the promise is true: the shop holds the request.
+  await expect(
+    page.getByText("Your personalized preview is being prepared. We will send it to you."),
+  ).toBeVisible();
   await expect(page.locator("[data-preview-request-id]")).toContainText("44444444-4444-4444-8444-444444444444");
   await page.getByRole("button", { name: "Add to bag", exact: true }).click();
   await expect(page.getByRole("dialog", { name: /Your bag/ })).toBeVisible();
   expect((await snapshot(page)).bag[0].personalized.previewRequestId).toBe("44444444-4444-4444-8444-444444444444");
+});
+
+test("the spelling confirmation survives a reload and never buys a second run", async ({ page }) => {
+  // The confirmation belongs to the approved revision, not to the tab. Without
+  // it a reload said "we have your request" and "you have not confirmed your
+  // name" at the same time, with Add to bag disabled.
+  const approvals: string[] = [];
+  page.on("request", (request) => {
+    if (new URL(request.url()).pathname === "/api/revisions/approve")
+      approvals.push(request.url());
+  });
+  await page.goto(path);
+  await page.getByLabel("Name on your pendant").fill("Noor");
+  await page.getByLabel("Name on your pendant").blur();
+  await allReady(page);
+  await preview(page);
+  const confirm = page.getByRole("checkbox", { name: "I confirm the spelling" });
+  await confirm.check();
+  await expect(page.getByRole("button", { name: "Add to bag", exact: true })).toBeEnabled();
+  await expect.poll(() => approvals.length).toBe(1);
+  await page.reload();
+  await expect(page.getByRole("checkbox", { name: "I confirm the spelling" })).toBeChecked();
+  await expect(page.getByRole("button", { name: "Add to bag", exact: true })).toBeEnabled();
+  // Re-ticking is idempotent: the stored submission already marks this
+  // specification as started.
+  await page.getByRole("checkbox", { name: "I confirm the spelling" }).uncheck();
+  await page.getByRole("checkbox", { name: "I confirm the spelling" }).check();
+  await page.waitForTimeout(500);
+  expect(approvals.length).toBe(1);
 });
 
 test("individual retry does not cancel a different angle still loading", async ({ page }) => {

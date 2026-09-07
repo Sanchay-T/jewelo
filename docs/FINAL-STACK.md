@@ -186,8 +186,8 @@ Local Next.js execution is optional. Docker, local Postgres, local Storage, Kube
 Accessed 26 August 2026:
 
 - OpenAI GPT Image 2: https://developers.openai.com/api/docs/models/gpt-image-2
-- Trigger concurrency: https://trigger.dev/docs/queue-concurrency
-- Trigger fan-out: https://trigger.dev/docs/triggering
+- Inngest concurrency: https://www.inngest.com/docs/guides/concurrency
+- Inngest self-hosting: https://www.inngest.com/docs/self-hosting
 - fal concurrency and retention: https://fal.ai/docs/documentation/model-apis/faq
 - fal MCP: https://fal.ai/docs/documentation/setting-up/mcp
 - Seedance 2.0: https://fal.ai/seedance-2.0

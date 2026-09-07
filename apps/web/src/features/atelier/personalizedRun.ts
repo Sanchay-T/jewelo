@@ -312,20 +312,51 @@ export function pastCeiling(
 }
 
 /**
- * Refusals the client can prove before spending anything. The Arabic identity
- * engine solves exactly one name (`unsupported_arabic_two_name`), so a two-name
- * Arabic pendant would burn a run, a reservation and a slot of the daily
- * allowance only to end blocked. It goes straight to request capture instead.
+ * Refusals the client can prove before spending anything.
+ *
+ * - `arabic_two_name`: the Arabic identity engine solves exactly one name
+ *   (`unsupported_arabic_two_name`), so a two-name Arabic pendant would burn a
+ *   run, a reservation and a slot of the daily allowance only to end blocked.
+ * - `unsupported_construction` and `unsupported_lettering`: the pendant
+ *   construction and the English lettering style are recorded on the draft and
+ *   the immutable revision, but neither the compiled prompt nor the identity
+ *   stencil carries them - `create_prompt_release` pins a fixed 14-variable set
+ *   with no construction slot (packages/ai/src/prompt-registry.ts), and the
+ *   Latin stencil is hard-coded to Playfair Display
+ *   (apps/jobs/src/identity-anchor.ts). A run for Origami ribbon or for
+ *   Signature English would therefore photograph a Classical, Playfair pendant
+ *   and label it "Your piece": a picture of a different design. Arabic
+ *   lettering is exempt because `arabicStyle` IS threaded through the
+ *   specification into both the prompt and the identity engine, which then
+ *   fails closed on its own for a style it has not certified.
+ *
+ * Each of these goes straight to request capture instead of a run.
  */
-export type PreflightRefusal = "arabic_two_name";
+export type PreflightRefusal =
+  | "arabic_two_name"
+  | "unsupported_construction"
+  | "unsupported_lettering";
+
+/** The one construction and the one English lettering the pipeline can render. */
+const RENDERABLE_CONSTRUCTION = "Classical";
+const RENDERABLE_ENGLISH_LETTERING = "Classic";
 
 export function preflightRefusal(specification: {
   script: string;
   names: readonly string[];
+  construction: string;
+  lettering: string;
 }): PreflightRefusal | undefined {
-  return specification.script === "Arabic" && specification.names.length > 1
-    ? "arabic_two_name"
-    : undefined;
+  if (specification.script === "Arabic" && specification.names.length > 1)
+    return "arabic_two_name";
+  if (specification.construction !== RENDERABLE_CONSTRUCTION)
+    return "unsupported_construction";
+  if (
+    specification.script !== "Arabic" &&
+    specification.lettering !== RENDERABLE_ENGLISH_LETTERING
+  )
+    return "unsupported_lettering";
+  return undefined;
 }
 
 /**
@@ -349,4 +380,83 @@ export function shouldStartRun(input: {
     input.stage === "review" &&
     input.startedFor !== input.signature
   );
+}
+/**
+ * Whether durable state should still be polled for this run.
+ *
+ * `watchRun` stops itself on a settled run. This is the other terminal state: a
+ * run that produced nothing before the ceiling has already handed the shopper
+ * the capture path, so a shop tablet must not keep re-signing every media URL
+ * every three seconds for the rest of the day.
+ */
+export function shouldWatchRun(input: {
+  enabled: boolean;
+  runId?: string;
+  stalled: boolean;
+}): boolean {
+  return input.enabled && !!input.runId && !input.stalled;
+}
+
+/**
+ * A submission that was persisted before the first network call.
+ *
+ * The browser writes the signature, the idempotency key and the start time
+ * BEFORE it asks the server for anything, so a reload in the middle of a start
+ * still finds evidence that this specification was already submitted.
+ */
+export interface SubmissionRecord {
+  signature: string;
+  requestKey: string;
+  runId?: string;
+}
+
+export interface ResumedSubmission {
+  /** The specification a run was already bought for; blocks a second one. */
+  startedFor: string;
+  phase: "watching" | "degraded";
+  reason?: DegradeReason;
+}
+
+/**
+ * What a fresh mount may do with a stored submission.
+ *
+ * With a run id, the run is read back out of durable state and watched. Without
+ * one, this browser started a submission and lost the handle - either the start
+ * failed, or the tab reloaded mid-flight. Either way the specification is marked
+ * as already started, so re-confirming cannot buy a second run, and the honest
+ * capture path opens instead of a spinner that can never resolve.
+ */
+export function resumeSubmission(
+  stored: SubmissionRecord | undefined,
+  currentSignature: string,
+): ResumedSubmission | undefined {
+  if (!stored || stored.signature !== currentSignature) return undefined;
+  return stored.runId
+    ? { startedFor: stored.signature, phase: "watching" }
+    : {
+        startedFor: stored.signature,
+        phase: "degraded",
+        reason: "unavailable",
+      };
+}
+
+/**
+ * The idempotency key for one start attempt.
+ *
+ * A retry after a failed start reuses the key of the attempt it is retrying:
+ * `approve_and_start_studio` is keyed on (principal, approval key), so the retry
+ * replays the same approval and returns the same run instead of buying a second
+ * one. A submission that already has a run id is finished with, so a genuinely
+ * new attempt gets a fresh key.
+ */
+export function startAttemptKey(
+  previous: SubmissionRecord | undefined,
+  currentSignature: string,
+  freshKey: string,
+): string {
+  return previous &&
+    previous.signature === currentSignature &&
+    !previous.runId
+    ? previous.requestKey
+    : freshKey;
 }

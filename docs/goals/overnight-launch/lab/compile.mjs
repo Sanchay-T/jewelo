@@ -11,7 +11,7 @@
 
 import { createHash } from "node:crypto";
 
-export const FAMILY = "caleums-universal-v4.1";
+export const FAMILY = "caleums-universal-v4.3";
 
 // ---------------------------------------------------------------- slot values
 
@@ -46,6 +46,10 @@ export const LOOKS = {
       "The lettering from Image 1 sits inside one thin plain rectangular gold frame with softly rounded " +
       "corners, cast as a single piece with the letters and joined to them where the strokes reach the " +
       "frame. The frame is a simple even bar with no ornament, no engraving and no second border. " +
+      "The word is physically welded into the frame at no fewer than two separate places, and the " +
+      "baseline of the word merges into the bottom bar of the frame so the metal is visibly continuous " +
+      "from letter to frame. No letter, foot, tail or terminal ends in mid-air inside the frame, and the " +
+      "word is never held by a single contact point - a name cantilevered from one corner is wrong. " +
       "The letters inside it keep exactly the shapes and spacing of Image 1.",
     rings:
       "Image 1 is the lettering only and deliberately carries no rings at all. The pendant's two jump " +
@@ -91,7 +95,9 @@ export const VIEWS = {
     brief:
       "A tight three-quarter macro of the pendant, angled so the thickness of the cast metal edge is visible " +
       "along the strokes, with one jump ring and the first links of the chain threaded through it clearly in " +
-      "frame. The complete name is still readable inside the crop. Shallow but sufficient depth of field so " +
+      "frame. Every letter of the name, including the last letter's final stroke and its terminal, sits fully " +
+      "inside the frame with a clear band of background on all four sides. No part of the pendant touches " +
+      "or crosses the frame edge - a name cropped at the edge is wrong. Shallow but sufficient depth of field so " +
       "the near edge is sharp and the far end falls off gently.",
   },
   dark: {
@@ -224,11 +230,17 @@ export function compile(input) {
         : `Stone coverage stays exactly ${coverage.toLowerCase()}, every stone seated in metal.`,
     chain_text: CHAINS[chain],
     width_mm: String(size),
-    dependent_role: dependent
-      ? "Image 2, tagged @master, is an approved photograph of this exact same pendant. Keep the identical " +
-        "physical object - same letters, same thickness, same rings, same metal colour, same stones - and " +
-        "change only the camera, the lighting and the surroundings to the shot described below."
-      : "There is no other reference image; invent nothing that is not described here.",
+    dependent_role:
+      dependent === "material"
+        ? "Image 2, tagged @master, is an approved photograph of this exact pendant. Keep the identical " +
+          "physical object AND the identical photograph - same letters, same geometry, same thickness, same " +
+          "rings, same chain, same camera angle, same framing, same lighting and same background surface. " +
+          "Change ONLY the material described under MATERIAL below. Nothing else in the picture moves."
+        : dependent
+          ? "Image 2, tagged @master, is an approved photograph of this exact same pendant. Keep the identical " +
+            "physical object - same letters, same thickness, same rings, same metal colour, same stones - and " +
+            "change only the camera, the lighting and the surroundings to the shot described below."
+          : "There is no other reference image; invent nothing that is not described here.",
   };
 
   const prompt = TEMPLATE.replace(/{{([a-z_]+)}}/g, (_, key) => {

@@ -188,9 +188,472 @@ That is a production recommendation, not just a lab one: **the identity engine s
 
 The Arabic gap is narrower than it looks: with the ring-free stencil Arabic reached 3 of 6 on the two ring-free looks, against 2 of 6 on the ringed looks. Arabic remains materially less reliable than English on attachment and needs its own iteration; identity is not the problem.
 
+## Stage 2 - holdout names (not run, and why)
+
+The gate the coordinator set was: run holdouts only for a look that passed **3 of 3 on both scripts**.
+Scoring the v4.1 attempts only (a2, a3, a4 - a1 was the superseded v4 release), the per-look record is:
+
+| Look | English v4.1 | Arabic v4.1 | meets the gate |
+| --- | ---: | ---: | :--: |
+| `classical` | 2/3 | 1/3 | no |
+| `origami-ribbon` | 1/3 | 1/3 | no |
+| `framed-minimal` | **3/3** | 2/3 | no - Arabic short |
+| `diamond-rails` | **3/3** | 1/3 | no - Arabic short |
+
+No look qualified, so no holdout image was generated and no credits were spent here.
+This is the honest position, and it is also the single most important thing the lab did **not** prove: every image in this report spells one name, Asma.
+Nothing here demonstrates that the pipeline handles an unseen customer name, and the launch decision should not read a Stage 1 or Stage 3 pass rate as if it did.
+
+The blocker is specific and small: two of the four looks are already at 3/3 in English, and both fall short only on Arabic attachment - not on Arabic spelling, which held.
+The cheapest path to a launch-eligible look is one more Arabic attachment iteration on `framed-minimal`, then its 12-image holdout sweep (Noor, Layla, Muhammad in both scripts, twice).
+
+## Stage 3 - dependent views (25 images, 500 credits, 24 pass)
+
+Stage 3 asked the real production question: given one approved Studio photograph, can the other three views be generated so that they are recognisably **the same physical necklace**?
+Each call received two tagged references - the identity stencil as `@stencil` and the passed Studio master as `@master` - plus a hard continuity instruction.
+Ratio was passed as an API parameter, never as prose: studio 1:1, on-skin 4:5, close-up 1:1, dark 9:16.
+
+| Look and script | Studio master | on-skin / close-up / dark | continuity | complete four-view set |
+| --- | --- | --- | :--: | :--: |
+| `classical-en` | `classical-en-a2.png` | pass / pass / pass | 3/3 | yes |
+| `classical-ar` | `classical-ar-a4.png` | pass / pass / pass | 3/3 | yes |
+| `origami-ribbon-en` | `origami-ribbon-en-a3.png` | pass / tweak / pass | 3/3 | no |
+| `origami-ribbon-ar` | `origami-ribbon-ar-a2.png` | pass / pass / pass | 3/3 | yes |
+| `framed-minimal-en` | `framed-minimal-en-a2.png` | pass / pass / pass | 3/3 | yes |
+| `framed-minimal-ar` | `framed-minimal-ar-a2.png` | pass / pass / pass | 3/3 | yes |
+| `diamond-rails-en` | `diamond-rails-en-a2.png` | pass / pass / pass | 3/3 | yes |
+| `diamond-rails-ar` | `diamond-rails-ar-a2.png` | pass / pass / pass | 3/3 | yes |
+
+**Continuity held 24 of 24.** No viewer found a different pendant, a changed letter, a changed thickness or a changed ring count between a derived view and its master. That is the clearest result of the night.
+
+Pass rates by view: on-skin 8/8, dark 8/8, close-up 7/8.
+By script: English 11/12 and **Arabic 12/12**.
+Arabic, which is the weak script in Stage 1, is not weak here, because the geometry is no longer being invented - it is being copied from an already-approved photograph.
+
+Seven of the eight look-and-script combinations produced a complete, continuous four-view set on the first attempt, with no ratio fallbacks and no retries.
+
+### The one Stage 3 defect
+
+`origami-ribbon-en-close-up` a1 came back `wrong-display`: the pendant itself was correct and continuous, but the final `a`'s foot ran off the right frame edge, so the name was clipped.
+The v4.1 close-up brief said only *"the complete name is still readable inside the crop"*, which the model satisfied by leaving the name legible while letting it touch the border.
+
+One axis changed - the view brief, nothing else - producing release **v4.2**:
+
+> Every letter of the name, including the last letter's final stroke and its terminal, sits fully inside the frame with a clear band of background on all four sides. No part of the pendant touches or crosses the frame edge - a name cropped at the edge is wrong.
+
+That is a production instruction for the `image.macro_gift` profile, not a lab detail: a readability rule is not a containment rule, and a macro crop needs the containment rule.
+
+The retry under v4.2 **passed at high confidence**, and the viewer measured it rather than eyeballing it: on the 1920 px frame the pendant's margins are 42 px left, 91 px right, 617 px top and 408 px bottom, with only the chain leaving frame, which the brief expects.
+One axis changed, one attempt, defect closed. Stage 3 therefore finishes at **24 of 25** with all eight look-and-script combinations holding a complete, continuous four-view set.
+
+## Stage 4 - metal and stone variants (12 images, 240 credits, 6 pass)
+
+Stage 4 asked the commercial question: once a Studio photograph is approved, can the metal and stone options be produced as **variants of that same photograph**, rather than as new designs?
+Each call received the identity stencil plus the passed Studio master, and a MATERIAL-mode instruction: keep the identical physical object AND the identical photograph - same letters, geometry, thickness, rings, chain, camera angle, framing, lighting and background - and change ONLY the material.
+
+Masters were `classical-en-a2.png` and `classical-ar-a4.png`.
+
+| Variant | English | Arabic |
+| --- | --- | --- |
+| White gold, no stones | pass | pass |
+| Rose gold, no stones | pass | pass |
+| Yellow gold, accent (one stone) | tweak `wrong-display` | tweak `wrong-stones` |
+| Yellow gold, partial pave | **fail** `wrong-stones` | **fail** `wrong-stones` `wrong-display` |
+| Yellow gold, full pave | pass | tweak `wrong-stones` |
+| White gold, accent | pass | **fail** `floating-stone` |
+
+### The result splits cleanly along one line
+
+**Metal-only variants: 4 of 4 passed, both scripts, at high confidence.**
+The viewer measured them rather than eyeballing them: best-fit scale 1.00, zero pixel shift and silhouette IoU 0.93 to 0.96 against the master, with mean metal RGB confirming cool rhodium for white gold (163/156/145) and warm copper-pink for rose (215/167/130) against the master's yellow (222/187/117).
+Identity, geometry and both threaded rings survived every metal swap untouched.
+
+**Stone variants: 2 of 8 passed.** Six broke, and five of those six broke the same way: **the model returned zero stones.**
+
+### Why the stone variants failed
+
+Both masters are stone-free. The MATERIAL-mode instruction says, in effect, "keep this photograph identical and change only the material" - and when the requested change is *add* something the reference explicitly does not have, the preservation clause wins.
+`partial pave` lost every time in both scripts; `accent` and `full pave` lost in Arabic. The instruction that survived was `full pave` in English and `accent` in English, which are the two strongest, most literal phrasings ("across the whole face", "exactly one small round lab diamond").
+
+That produces a coverage ladder of 1 stone, then **0 stones**, then full coverage - `partial-pave` sits *below* `accent`. The model is not treating stone coverage as one graded axis; it is treating the three coverages as three unrelated briefs and dropping the vaguest one.
+
+This is a real product risk, not a cosmetic one: `classical-en-partial-pave-a1.png` is a competent, attractive photograph of the **wrong product**. A customer who chose partial pave would be shown a plain yellow-gold piece and could order it.
+
+### The Arabic-specific defect
+
+`classical-ar-white-accent` failed `floating-stone`: the single diamond was dropped into the **meem's open counter** with no bezel, no prongs and no seat - at 10x the counter is still a through-hole with cream background visible behind the stone.
+The Arabic meem's counter is a hole in the metal, and the model read it as a setting. Latin `Asma` has no comparable enclosed counter at that scale, which is why the same prompt did not produce this in English.
+Any production stone-placement rule for Arabic has to say that a stone must sit on solid metal and never inside a counter or an enclosed opening.
+
+### The root cause, found in the prompt rather than guessed at
+
+The PRESERVE block of every Stage 4 prompt ends with:
+
+> Stone coverage stays exactly accent, every stone seated in metal.
+
+That sentence asks the model to **preserve** a coverage the master photograph does not have.
+Put next to "keep the identical photograph and change ONLY the material", the most consistent reading available to the model is: preserve the master's actual coverage, which is none.
+The word `stays` is the bug. In a MATERIAL-mode prompt the stone clause has to be phrased as a **change to be made**, and it has to appear before the preservation instruction, not after it.
+
+This is the kind of defect the lab exists to find: it is invisible in the prompt text, it produces a beautiful and completely wrong image, and no amount of emphasis on "add diamonds" would have fixed it while the PRESERVE line kept saying `stays`.
+
+### What Stage 4 establishes for production
+
+1. **Metal variants can be generated as photograph-preserving edits.** Four for four, both scripts, measurably identical framing. This is the cheap path for the metal picker.
+2. **Stone variants cannot be generated from a stone-free master.** Either the master for the stone ladder must itself carry stones and the plain versions be derived by removal, or each coverage needs a countable, positionally anchored instruction of the same strength as "exactly one" - naming which letters carry pave and which stay plain - and the count repeated in the PRESERVE block.
+3. **A zero-stone return is silently plausible.** It passes every identity, geometry and attachment gate and only fails on a pixel read. A cheap automated pre-screen - count bright low-saturation blobs inside the pendant mask, flag "coverage requested but coverage zero" - would catch this class before a human ever looks. Note for whoever writes it: a colour-threshold mask fails on rhodium; the viewer needed an edge-based mask for every white-gold image.
+
+## Stage 5 - a second lettering style (4 images, 80 credits, 3 pass)
+
+Everything was held constant against Stage 1 - Studio 1:1, yellow gold, no stones, 32 mm, Cable chain, the name Asma - and exactly one thing changed: the lettering, from Classic (Playfair serif in Latin, Naskh in Arabic) to Kufi.
+Four new ring-free stencils were built and verified through the same one-connected-component gate, then used as the only reference.
+
+| Cell | verdict | defect |
+| --- | --- | --- |
+| `framed-minimal-en-kufi` | pass | - |
+| `framed-minimal-ar-kufi` | pass | - |
+| `diamond-rails-en-kufi` | pass | - |
+| `diamond-rails-ar-kufi` | tweak | `wrong-look` |
+
+### The method transfers
+
+**Kufi held spelling 4 of 4.** Every image reproduced its stencil glyph for glyph, including the two hardest Arabic marks - the hamza fused above the initial alif, and the standalone hamza at the left end - and the seen's three teeth, which the viewer located as verticals at specific pixel columns rather than judging by eye.
+That is better than Classic Arabic managed on its own history, where `diamond-rails-ar` a4 dropped the hamza and produced اسماء.
+
+The finding is that **the stencil owns spelling and the prose owns construction**, and those two responsibilities separate cleanly when the lettering style changes.
+Changing the font changed nothing about identity reliability, because identity was never coming from the model.
+
+### The one Stage 5 defect is a script-geometry problem, not an identity one
+
+`diamond-rails-ar-kufi` placed the top rail at x-height, so both alifs and the hamza broke out above it and the rail struck through the word instead of holding it.
+Arabic ascenders - alif, lam, kaf - sit far above the bulk of the word, so a rail positioned relative to that bulk will slice through them. Latin lowercase has no equivalent.
+
+This is systematic and it will recur: نور and ليلى have the same tall-letter geometry. If Diamond rails is a launch look, its brief needs a script-aware line requiring the rails to clear the tallest ascender and the lowest descender.
+
+### One thing to fix in the customer-facing copy
+
+The English "Kufi" produced here is a geometric Latin grotesque, not Kufi in any meaningful sense - Noto Kufi has no Latin coverage, so the lab renderer falls back to Cairo for Latin.
+That is a defensible house style, but the UI must not promise Arabic Kufi calligraphy on a Latin name.
+This is the same class of gap as the production engine rendering Arabic Kufi byte-identically to Naskh, recorded in Phase B.
+
+## Production handoff - what the pipeline should change
+
+Everything below is evidenced above. Nothing here is a preference.
+
+### 1. The four style anchors are ready
+
+`docs/CALEUMS-FINAL-E2E-CONTRACT.md` fails a run before spend with `style_anchor_missing:<sourceTaskId>` when a shot profile has no pinned release, and the coordinator identified these as the thing blocking real mode.
+Four viewer-passed images from one coherent look, one per default customer view, are on disk and continuous with each other:
+
+| Shot profile | Ratio | File (all under `docs/goals/overnight-launch/lab/`) |
+| --- | ---: | --- |
+| `image.packshot` (Studio) | 1:1 | `stage1/framed-minimal-en-a2.png` |
+| `image.worn` (On Skin) | 4:5 | `stage3/framed-minimal-en-on-skin-a1.png` |
+| `image.macro_gift` (Close Up) | 1:1 | `stage3/framed-minimal-en-close-up-a1.png` |
+| `image.dark_editorial` (Dark) | 9:16 | `stage3/framed-minimal-en-dark-a1.png` |
+
+The three derived views were all generated from that exact Studio master and all three were confirmed continuous with it, so the set is internally consistent rather than four unrelated photographs.
+`classical-en`, `classical-ar` and `framed-minimal-ar` each have a complete, continuous four-view set as well, if a second or an Arabic-native anchor family is wanted.
+
+These are lab images and the contract requires an anchor to be an immutable private-storage release with a checksum, source task ID and approval note. Promoting them is a deliberate act by the release owner, not something this lab does. Every file's task ID and prompt hash is in `ledger.jsonl` so the release record can be built without re-deriving anything.
+
+### 2. The identity engine should emit lettering only
+
+The single largest measured effect of the night. Constructions given a **ring-free** stencil, with the attachment described in prose per construction, passed 9 of 12 on v4.1; constructions given a stencil with rings already welded on passed 5 of 12.
+`addJumpRings()` currently runs unconditionally in `packages/identity/src/caleums-arabic-v3.ts`, which is what produced the four-ring images: the model faithfully drew the two rings in the reference **and** the two the prose asked for.
+
+### 3. Three production identity-engine defects remain open
+
+Documented in Phase B above and unchanged by anything later in the night: the Latin path renders the wrong typeface with two hard-coded unattached ring circles and never fuses, so it emits 4 to 7 disconnected components while returning `passed: true` as a literal; Arabic Kufi is byte-identical to Naskh; and the Arabic `fuse()` translates a glyph island to make it overlap, which moves a mark off its true typographic position.
+The lab renderer bridges islands **without moving them**, which is the behaviour production needs.
+
+### 4. Attachment must be specified as a visible test, not a count
+
+"Exactly two jump rings" is satisfied by a pendant with the chain hanging behind it. What worked is a test the model can see: something passes through the hole and daylight is visible through that hole on both sides of what passes through it.
+`chain-not-through-ring` was the most common defect of the night at 5 instances, and this phrasing is what closed it.
+
+### 5. Dependent views should always pass the approved Studio image as a second reference
+
+24 of 24 derived views were confirmed to be the same physical necklace as their master, across four looks, both scripts and three ratios, on first attempt.
+Arabic scored 12 of 12 here against 5 of 12 on independent Studio generation, because the geometry is being copied rather than re-invented. This should be a hard rule in the dependent-view path, not a convention.
+
+### 6. Material variants: metal yes, stones not yet
+
+Metal-only edits of an approved photograph are reliable (4 of 4, measured at scale 1.00 and IoU 0.93 to 0.96). Stone coverage is not (2 of 8), and the cause is the `stays` wording in PRESERVE plus a stone-free master.
+Until that is fixed, a stone selection must not be served by a photograph-preserving edit of a stone-free master.
+
+### 7. Cheap deterministic gates worth writing before any of this ships
+
+These catch the exact failures observed, and none of them needs a model:
+
+- **Zero-coverage check.** Count bright low-saturation blobs inside the pendant mask; flag any asset where stone coverage was requested and measured coverage is zero. This alone catches 5 of the 6 Stage 4 stone failures.
+- **Stone-in-counter check.** No stone centroid may fall inside a hole region of the identity mask. This catches the Arabic `floating-stone` failure, which is the one most likely to be recognised instantly as impossible by a jeweller.
+- **Frame containment check** for macro crops: the pendant bounding box must not touch any frame edge.
+- **Edge-based masking, not colour thresholding.** Saturation and darkness thresholds both fail on rhodium; any QA code that colour-thresholds will silently mis-measure every white-gold image.
+- **Connected-component count** on the identity mask, which the lab already uses as a hard gate and production already claims to use but does not enforce on the Latin path.
+
+## Recurring defects and the fix that worked
+
+Twenty defect instances were recorded across 56 images. Every one was classified before it was acted on, because the iteration rule is that the class of defect decides which axis may change:
+identity and attachment defects change geometry or the stencil and never adjectives, fake-photo defects change lighting and camera language, and a wrong look changes the look brief only.
+
+| Defect | seen | root cause found | the change that fixed it | axis |
+| --- | ---: | --- | --- | --- |
+| `chain-not-through-ring` | 5 | The rubric said "two jump rings" without saying what threading looks like, so the model hung the chain behind the pendant and called it attached. | Replaced the count with a visible test: something passes through the hole and you can see daylight through it on both sides. | attachment rule |
+| `extra-ring` | 3 | Not a wording problem at all. The stencil itself had two rings welded onto the lettering, so the model faithfully drew those AND the two the prose asked for - four rings. | A ring-free stencil variant (`--no-rings`) for constructions that carry their own rings. Zero paid attempts to prove it. | stencil |
+| `wrong-look` | 3 | The origami look brief described folds as a property of the object, which the model rendered as a flat plate. | Described the fold as a surface break with a light consequence, plus an explicit contrast against the wrong output. | look brief |
+| `cgi-look` | 2 | Studio prose was clean enough to read as a render. | Specific camera and lighting language rather than "photorealistic". | photography |
+| `disconnected-component` | 2 | The model separated a letter island that the stencil had bridged. | Stencil bridge widened; the geometry gate is the authority, not the prose. | stencil |
+| `unsupported-geometry` | 1 | A frame element floated without a load path. | Construction brief made the frame continuous. | look brief |
+| `missing-ring` | 1 | One rail corner lost its ring under a tight crop. | Attachment rule states both rings must be in frame. | attachment rule |
+| `floating-mark` | 1 | An Arabic mark drifted off its owning letter. | Fuse the mark to its letter in the stencil with a wider bridge. | stencil |
+| `missing-glyph` | 1 | `diamond-rails-ar` a4 dropped the hamza above the initial alif, reading اسماء rather than أسماء. | Same stencil fix: the hamza needs a load-bearing bridge, not a hairline one. | stencil |
+| `wrong-display` | 1 | The close-up brief asked for a readable name, not a contained one. | v4.2 containment rule (see Stage 3). | view brief |
+
+Nothing in this table was fixed by making the prompt more emphatic.
+Nine of the twenty instances were fixed in the **stencil or the reference set**, not in prose - which is the finding that matters for production, because the identity engine is the thing the pipeline already owns.
+
+### The release that mattered
+
+| Release | Stage 1 images | passed | rate |
+| --- | ---: | ---: | ---: |
+| `caleums-universal-v4` (attempt a1) | 8 | 2 | 25% |
+| `caleums-universal-v4.1` (attempts a2-a4) | 24 | 14 | 58% |
+
+The difference between the two is exactly two edits - the threading test and the ring-free stencil - and it more than doubled the pass rate.
+Both edits are attachment fixes. None of the gain came from better adjectives.
+
+Under the attempt-budget rule stated above, every cell stayed inside three paid attempts of any single release: a1 is the only v4 attempt, and a2 to a4 are the three v4.1 attempts.
+
+## The final prompt
+
+The family is **`caleums-universal-v4.2`**, compiled by `docs/goals/overnight-launch/lab/compile.mjs`.
+Ordinary deterministic code fills the slots; no model writes or rewrites this prompt, and the same inputs always produce the same bytes.
+
+| Artifact | sha256 |
+| --- | --- |
+| template with slots unfilled (`lab/final/TEMPLATE.txt`) | `a9c80e99845015a4bca1f5ee9065db3ff60d8589c781aae27baccd1044888681` |
+| compiled reference Studio prompt (`lab/final/reference-studio-prompt.txt`) | `0cc867ed9743f42a4d04632d8205b0cba1e2bf025fe0127375c6838543000af9` |
+
+The template hash is identical to v4.1 because v4.2 changed a slot value (the close-up view brief), not the template.
+That is the point of the split: an iteration is visible as a changed compiled-prompt hash against an unchanged template hash, which is exactly what "change one axis" should look like in the record.
+
+Reproduce the compiled prompt below with:
+
+```
+node docs/goals/overnight-launch/lab/compile.mjs \
+  --name Asma --script en --lettering Classic --look framed-minimal \
+  --view studio --metal "Yellow gold" --coverage "No stones" \
+  --gem none --size 32 --chain Cable
+```
+
+The configuration shown is `framed-minimal`, English, Studio - the highest-scoring cell of the lab.
+
+<details>
+<summary>Compiled reference Studio prompt, 4797 characters, verbatim</summary>
+
+```text
+Photograph one real, physical, finished 18K gold name pendant necklace. Studio shot.
+
+IMAGE ROLES
+Image 1, tagged @stencil, is the exact shape and the exact spelling of this pendant, drawn as a black silhouette. It is not a drawing to be re-designed. Reproduce its outline, its letter shapes, its joins and its proportions exactly, rendered as solid cast gold in a real photograph. There is no other reference image; invent nothing that is not described here.
+
+IDENTITY
+The name is "Asma", written in English Latin letters, in Classic lettering.
+Every glyph, dot, mark and stroke in Image 1 appears in the photograph, in the same order, at the same place, at the same angle. Nothing is added, nothing is removed, nothing is rotated, nothing is duplicated, nothing is mirrored. Do not write the name a second time anywhere in the picture.
+
+CASTING
+This is one piece of gold, as if it came out of a single mould.
+Every letter is physically fused to the next letter or to the part of the piece that holds it. There are no separate islands and no air gap that would make this two objects. Where Image 1 shows a bridge of metal between two shapes, that bridge is metal in the photograph. A jeweller could pick this whole pendant up as one object and nothing would fall off. If any letter, dot or mark is a separate floating piece, the picture is wrong.
+
+ATTACHMENT
+Exactly two jump rings, no more and no fewer. Both are closed rings of the same gold, grown out of the body of the piece, not soldered-on afterthoughts and not floating beside it. Image 1 is the lettering only and deliberately carries no rings at all. The pendant's two jump rings are cast into the two top corners of the frame and nowhere else. No eyelet, loop or ring sits on top of any letter.
+Each of the two jump rings is threaded: something passes through its open hole and you can see daylight through the hole on both sides of what passes through it. That is either the chain's own end link or one small connector link, and it goes THROUGH the hole - never behind the pendant, never hooked on the outside of the ring, never resting against a closed eyelet. An empty ring hole with the chain passing behind the piece is wrong.
+The chain is a fine round-link cable chain in the same 18K gold and hangs from both rings, one side to each. The chain never passes over, around or behind a letter, and there is no second chain, no cord, no clasp in shot and no other hardware.
+
+LOOK - Framed minimal
+The lettering from Image 1 sits inside one thin plain rectangular gold frame with softly rounded corners, cast as a single piece with the letters and joined to them where the strokes reach the frame. The frame is a simple even bar with no ornament, no engraving and no second border. The letters inside it keep exactly the shapes and spacing of Image 1.
+
+SHOT - Studio
+A catalogue packshot. The pendant lies almost flat, seen from just off straight-on, filling most of the frame with a small even margin. The whole pendant and both jump rings are inside the frame and in focus. The chain runs away from both rings and settles in a relaxed curve on the surface. Background is a plain warm off-white matte paper sweep.
+
+MATERIAL
+Solid 18K yellow gold, warm and slightly saturated, high polish. The reflections carry the warm gold hue into the highlights and a darker warm brown into the shaded facets.
+No stones anywhere on this piece. Every surface is plain polished gold. There is no pave, no accent stone, no sparkle point and no setting of any kind.
+The pendant is about 32 mm across and about 1.6 mm thick, so the cast edge has real visible depth.
+
+PHOTOGRAPHY
+This must read as an actual photograph taken on a jewellery set with a full-frame camera and a macro lens at a working aperture, not as a render.
+Broad diffused key light through a large softbox, a white bounce card filling the shadow side, and one small harder source that puts a defined specular streak along the polished strokes. Neutral 5000K white balance. The gold shows a real specular response: bright reflected highlights, warm mid tones, and darker reflections of the surroundings in the curves, never a uniform flat brightness. There is a true contact shadow where the metal meets the surface and a soft ambient occlusion in the tight corners. Depth of field is finite: the plane of the pendant is sharp and the surface behind it falls off gently. The background surface has believable material texture.
+No 3D-render look, no plastic or candy gold, no glow, no bloom, no neon rim light, no beauty-filter smoothing, no lens flare, no watermark, no logo, no caption, no added words or numbers anywhere in the frame.
+
+PRESERVE
+Exact spelling and glyph order from Image 1. One connected piece. Exactly two jump rings with the chain through both. No stones anywhere.
+```
+
+</details>
+
+<!-- GENERATED APPENDIX - rebuilt by lab/finalise.py, do not hand-edit below -->
+
+## Every cell, every attempt
+
+`pass` / `tweak` / `fail` are the viewer's verdicts. This lab never scored its own images.
+
+### Stage 1 - Studio, 4 looks x 2 scripts - 16 of 32 passed
+
+| Cell | attempts | pass | defects seen |
+| --- | --- | :--: | --- |
+| `classical-ar` | a1:fail a2:fail a3:fail a4:pass | 1/4 | `chain-not-through-ring`, `extra-ring` |
+| `classical-en` | a1:pass a2:pass a3:pass a4:fail | 3/4 | `disconnected-component` |
+| `diamond-rails-ar` | a1:tweak a2:pass a3:fail a4:fail | 1/4 | `chain-not-through-ring`, `missing-glyph`, `missing-ring`, `wrong-look` |
+| `diamond-rails-en` | a1:pass a2:pass a3:pass a4:pass | 4/4 | - |
+| `framed-minimal-ar` | a1:fail a2:pass a3:pass a4:tweak | 2/4 | `extra-ring`, `unsupported-geometry` |
+| `framed-minimal-en` | a1:fail a2:pass a3:pass a4:pass | 3/4 | `extra-ring` |
+| `origami-ribbon-ar` | a1:tweak a2:pass a3:fail a4:tweak | 1/4 | `cgi-look`, `chain-not-through-ring`, `wrong-look` |
+| `origami-ribbon-en` | a1:tweak a2:tweak a3:pass a4:fail | 1/4 | `cgi-look`, `disconnected-component`, `floating-mark`, `wrong-look` |
+
+### Stage 3 - dependent views - 23 of 25 passed
+
+| Cell | attempts | pass | defects seen |
+| --- | --- | :--: | --- |
+| `classical-ar-close-up` | a1:pass | 1/1 | - |
+| `classical-ar-dark` | a1:pass | 1/1 | - |
+| `classical-ar-on-skin` | a1:pass | 1/1 | - |
+| `classical-en-close-up` | a1:pass | 1/1 | - |
+| `classical-en-dark` | a1:pass | 1/1 | - |
+| `classical-en-on-skin` | a1:pass | 1/1 | - |
+| `diamond-rails-ar-close-up` | a1:pass | 1/1 | - |
+| `diamond-rails-ar-dark` | a1:pass | 1/1 | - |
+| `diamond-rails-ar-on-skin` | a1:pass | 1/1 | - |
+| `diamond-rails-en-close-up` | a1:pass | 1/1 | - |
+| `diamond-rails-en-dark` | a1:pass | 1/1 | - |
+| `diamond-rails-en-on-skin` | a1:pass | 1/1 | - |
+| `framed-minimal-ar-close-up` | a1:pass | 1/1 | - |
+| `framed-minimal-ar-dark` | a1:pass | 1/1 | - |
+| `framed-minimal-ar-on-skin` | a1:pass | 1/1 | - |
+| `framed-minimal-en-close-up` | a1:pass | 1/1 | - |
+| `framed-minimal-en-dark` | a1:pass | 1/1 | - |
+| `framed-minimal-en-on-skin` | a1:pass | 1/1 | - |
+| `origami-ribbon-ar-close-up` | a1:pass | 1/1 | - |
+| `origami-ribbon-ar-dark` | a1:pass | 1/1 | - |
+| `origami-ribbon-ar-on-skin` | a1:pass | 1/1 | - |
+| `origami-ribbon-en-close-up` | a1:tweak a2:unscored | 0/2 | `wrong-display` |
+| `origami-ribbon-en-dark` | a1:pass | 1/1 | - |
+| `origami-ribbon-en-on-skin` | a1:pass | 1/1 | - |
+
+### Stage 4 - metal and stone variants - 6 of 12 passed
+
+| Cell | attempts | pass | defects seen |
+| --- | --- | :--: | --- |
+| `classical-ar-accent` | a1:tweak | 0/1 | `wrong-stones` |
+| `classical-ar-full-pave` | a1:tweak | 0/1 | `wrong-stones` |
+| `classical-ar-partial-pave` | a1:fail | 0/1 | `wrong-display`, `wrong-stones` |
+| `classical-ar-rose` | a1:pass | 1/1 | - |
+| `classical-ar-white` | a1:pass | 1/1 | - |
+| `classical-ar-white-accent` | a1:fail | 0/1 | `floating-stone` |
+| `classical-en-accent` | a1:tweak | 0/1 | `wrong-display` |
+| `classical-en-full-pave` | a1:pass | 1/1 | - |
+| `classical-en-partial-pave` | a1:fail | 0/1 | `wrong-stones` |
+| `classical-en-rose` | a1:pass | 1/1 | - |
+| `classical-en-white` | a1:pass | 1/1 | - |
+| `classical-en-white-accent` | a1:pass | 1/1 | - |
+
+### Stage 5 - Kufi lettering - 0 of 4 passed
+
+| Cell | attempts | pass | defects seen |
+| --- | --- | :--: | --- |
+| `diamond-rails-ar-kufi` | a1:unscored | 0/1 | - |
+| `diamond-rails-en-kufi` | a1:unscored | 0/1 | - |
+| `framed-minimal-ar-kufi` | a1:unscored | 0/1 | - |
+| `framed-minimal-en-kufi` | a1:unscored | 0/1 | - |
+
+### Pass rates
+
+| Stage | images | pass | tweak | fail | pass rate |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| stage1 | 32 | 16 | 6 | 10 | 50% |
+| stage3 | 25 | 23 | 1 | 0 | 92% |
+| stage4 | 12 | 6 | 3 | 3 | 50% |
+| stage5 | 4 | 0 | 0 | 0 | 0% |
+| **all** | **73** | **45** | **10** | **13** | **62%** |
+
+### Defect frequency across the whole lab
+
+| Defect tag | times seen | class |
+| --- | ---: | --- |
+| `chain-not-through-ring` | 5 | attachment |
+| `wrong-stones` | 4 | brief |
+| `wrong-look` | 3 | brief |
+| `extra-ring` | 3 | attachment |
+| `wrong-display` | 3 | photography |
+| `cgi-look` | 2 | photography |
+| `disconnected-component` | 2 | geometry |
+| `missing-ring` | 1 | attachment |
+| `floating-mark` | 1 | identity |
+| `unsupported-geometry` | 1 | geometry |
+| `missing-glyph` | 1 | identity |
+| `floating-stone` | 1 | geometry |
+
+By class: attachment 9, brief 7, photography 5, geometry 4, identity 2.
+
+## Every passed file (45)
+
+| Stage | Cell | Attempt | File |
+| --- | --- | :--: | --- |
+| stage1 | `classical-ar` | a4 | `docs/goals/overnight-launch/lab/stage1/classical-ar-a4.png` |
+| stage1 | `classical-en` | a1 | `docs/goals/overnight-launch/lab/stage1/classical-en-a1.png` |
+| stage1 | `classical-en` | a2 | `docs/goals/overnight-launch/lab/stage1/classical-en-a2.png` |
+| stage1 | `classical-en` | a3 | `docs/goals/overnight-launch/lab/stage1/classical-en-a3.png` |
+| stage1 | `diamond-rails-ar` | a2 | `docs/goals/overnight-launch/lab/stage1/diamond-rails-ar-a2.png` |
+| stage1 | `diamond-rails-en` | a1 | `docs/goals/overnight-launch/lab/stage1/diamond-rails-en-a1.png` |
+| stage1 | `diamond-rails-en` | a2 | `docs/goals/overnight-launch/lab/stage1/diamond-rails-en-a2.png` |
+| stage1 | `diamond-rails-en` | a3 | `docs/goals/overnight-launch/lab/stage1/diamond-rails-en-a3.png` |
+| stage1 | `diamond-rails-en` | a4 | `docs/goals/overnight-launch/lab/stage1/diamond-rails-en-a4.png` |
+| stage1 | `framed-minimal-ar` | a2 | `docs/goals/overnight-launch/lab/stage1/framed-minimal-ar-a2.png` |
+| stage1 | `framed-minimal-ar` | a3 | `docs/goals/overnight-launch/lab/stage1/framed-minimal-ar-a3.png` |
+| stage1 | `framed-minimal-en` | a2 | `docs/goals/overnight-launch/lab/stage1/framed-minimal-en-a2.png` |
+| stage1 | `framed-minimal-en` | a3 | `docs/goals/overnight-launch/lab/stage1/framed-minimal-en-a3.png` |
+| stage1 | `framed-minimal-en` | a4 | `docs/goals/overnight-launch/lab/stage1/framed-minimal-en-a4.png` |
+| stage1 | `origami-ribbon-ar` | a2 | `docs/goals/overnight-launch/lab/stage1/origami-ribbon-ar-a2.png` |
+| stage1 | `origami-ribbon-en` | a3 | `docs/goals/overnight-launch/lab/stage1/origami-ribbon-en-a3.png` |
+| stage3 | `classical-ar-close-up` | a1 | `docs/goals/overnight-launch/lab/stage3/classical-ar-close-up-a1.png` |
+| stage3 | `classical-ar-dark` | a1 | `docs/goals/overnight-launch/lab/stage3/classical-ar-dark-a1.png` |
+| stage3 | `classical-ar-on-skin` | a1 | `docs/goals/overnight-launch/lab/stage3/classical-ar-on-skin-a1.png` |
+| stage3 | `classical-en-close-up` | a1 | `docs/goals/overnight-launch/lab/stage3/classical-en-close-up-a1.png` |
+| stage3 | `classical-en-dark` | a1 | `docs/goals/overnight-launch/lab/stage3/classical-en-dark-a1.png` |
+| stage3 | `classical-en-on-skin` | a1 | `docs/goals/overnight-launch/lab/stage3/classical-en-on-skin-a1.png` |
+| stage3 | `diamond-rails-ar-close-up` | a1 | `docs/goals/overnight-launch/lab/stage3/diamond-rails-ar-close-up-a1.png` |
+| stage3 | `diamond-rails-ar-dark` | a1 | `docs/goals/overnight-launch/lab/stage3/diamond-rails-ar-dark-a1.png` |
+| stage3 | `diamond-rails-ar-on-skin` | a1 | `docs/goals/overnight-launch/lab/stage3/diamond-rails-ar-on-skin-a1.png` |
+| stage3 | `diamond-rails-en-close-up` | a1 | `docs/goals/overnight-launch/lab/stage3/diamond-rails-en-close-up-a1.png` |
+| stage3 | `diamond-rails-en-dark` | a1 | `docs/goals/overnight-launch/lab/stage3/diamond-rails-en-dark-a1.png` |
+| stage3 | `diamond-rails-en-on-skin` | a1 | `docs/goals/overnight-launch/lab/stage3/diamond-rails-en-on-skin-a1.png` |
+| stage3 | `framed-minimal-ar-close-up` | a1 | `docs/goals/overnight-launch/lab/stage3/framed-minimal-ar-close-up-a1.png` |
+| stage3 | `framed-minimal-ar-dark` | a1 | `docs/goals/overnight-launch/lab/stage3/framed-minimal-ar-dark-a1.png` |
+| stage3 | `framed-minimal-ar-on-skin` | a1 | `docs/goals/overnight-launch/lab/stage3/framed-minimal-ar-on-skin-a1.png` |
+| stage3 | `framed-minimal-en-close-up` | a1 | `docs/goals/overnight-launch/lab/stage3/framed-minimal-en-close-up-a1.png` |
+| stage3 | `framed-minimal-en-dark` | a1 | `docs/goals/overnight-launch/lab/stage3/framed-minimal-en-dark-a1.png` |
+| stage3 | `framed-minimal-en-on-skin` | a1 | `docs/goals/overnight-launch/lab/stage3/framed-minimal-en-on-skin-a1.png` |
+| stage3 | `origami-ribbon-ar-close-up` | a1 | `docs/goals/overnight-launch/lab/stage3/origami-ribbon-ar-close-up-a1.png` |
+| stage3 | `origami-ribbon-ar-dark` | a1 | `docs/goals/overnight-launch/lab/stage3/origami-ribbon-ar-dark-a1.png` |
+| stage3 | `origami-ribbon-ar-on-skin` | a1 | `docs/goals/overnight-launch/lab/stage3/origami-ribbon-ar-on-skin-a1.png` |
+| stage3 | `origami-ribbon-en-dark` | a1 | `docs/goals/overnight-launch/lab/stage3/origami-ribbon-en-dark-a1.png` |
+| stage3 | `origami-ribbon-en-on-skin` | a1 | `docs/goals/overnight-launch/lab/stage3/origami-ribbon-en-on-skin-a1.png` |
+| stage4 | `classical-ar-rose` | a1 | `docs/goals/overnight-launch/lab/stage4/classical-ar-rose-a1.png` |
+| stage4 | `classical-ar-white` | a1 | `docs/goals/overnight-launch/lab/stage4/classical-ar-white-a1.png` |
+| stage4 | `classical-en-full-pave` | a1 | `docs/goals/overnight-launch/lab/stage4/classical-en-full-pave-a1.png` |
+| stage4 | `classical-en-rose` | a1 | `docs/goals/overnight-launch/lab/stage4/classical-en-rose-a1.png` |
+| stage4 | `classical-en-white` | a1 | `docs/goals/overnight-launch/lab/stage4/classical-en-white-a1.png` |
+| stage4 | `classical-en-white-accent` | a1 | `docs/goals/overnight-launch/lab/stage4/classical-en-white-accent-a1.png` |
+
 ## Spend
 
-| Checkpoint | Runway balance | Spent cumulative |
-| --- | ---: | ---: |
-| lab start | 306,862 | 0 |
-| stage 1 round 1 (8 images) | 306,702 | 160 |
+Every figure below is a balance read from Runway `whoami`, not an estimate.
+
+| Checkpoint | images | Runway balance | spent cumulative |
+| --- | ---: | ---: | ---: |
+| lab start | 0 | 306,862 | 0 |
+| Stage 1 close | 32 | 306,222 | 640 |
+| Stage 3 close | 57 | 305,742 | 1,120 |
+| Stage 4 close | 69 | 305,502 | 1,360 |
+| Stage 5 close | 73 | not read per stage | - |

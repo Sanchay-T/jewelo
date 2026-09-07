@@ -205,20 +205,41 @@ export async function executePresentationTask(
     throw new Error("task_prompt_release_mismatch");
   let snapshot = existingSnapshot;
   if (!snapshot) {
-    const variables = buildPromptVariableSnapshot({
-      approvedName: revision.identity_anchor.approvedText,
-      language: revision.identity_anchor.language,
-      specification: revision.specification,
-      presentationView: task.presentation_view,
-    });
-    const compiled = compilePrompt({
-      profile: release.profile,
-      template: release.template,
-      variables,
-    });
-    const compiledPrompt = task.dependency_task_id
-      ? `${DEPENDENT_REFERENCE_RULE} ${compiled.compiledPrompt}`
-      : compiled.compiledPrompt;
+    let compiled: ReturnType<typeof compilePrompt>;
+    let compiledPrompt: string;
+    try {
+      const variables = buildPromptVariableSnapshot({
+        approvedName: revision.identity_anchor.approvedText,
+        language: revision.identity_anchor.language,
+        specification: revision.specification,
+        presentationView: task.presentation_view,
+      });
+      compiled = compilePrompt({
+        profile: release.profile,
+        template: release.template,
+        variables,
+      });
+      compiledPrompt = task.dependency_task_id
+        ? `${DEPENDENT_REFERENCE_RULE} ${compiled.compiledPrompt}`
+        : compiled.compiledPrompt;
+    } catch (error) {
+      // A revision whose specification cannot fill the release's pinned
+      // variable set can never compile, however often it is re-dispatched.
+      // Left to throw, the task stays `queued` at attempt 0 and the two-minute
+      // stale sweeper re-queues it for ever. This is a pre-spend gate like the
+      // identity and anchor gates: block once, release the reservation, and
+      // send it to operator review.
+      await repository.blockPreSpend({
+        task,
+        run,
+        error: new Error(
+          `prompt_compile_failed:${
+            error instanceof Error ? error.message : "unknown"
+          }`,
+        ),
+      });
+      return { status: "operator_review" as const, attempt: task.attempt };
+    }
     snapshot = await repository.materializePromptSnapshot({
       task,
       release,
@@ -436,7 +457,14 @@ export async function executePresentationTask(
         inputAssetIds,
       });
       if (completed === "cancelled") return { status: "cancelled" as const };
-      return { status: "ready" as const, attempt: reservation.attempt };
+      // The run id travels with the result so the caller can scope its
+      // dependent-outbox dispatch to this run instead of claiming every
+      // principal's pending rows.
+      return {
+        status: "ready" as const,
+        attempt: reservation.attempt,
+        runId: task.run_id,
+      };
     }
   } catch (error) {
     if (isTaskCancelled(error)) return { status: "cancelled" as const };

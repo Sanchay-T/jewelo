@@ -3,11 +3,13 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   functions,
   presentationTask,
+  runPresentationTask,
   staleMediaRecovery,
   videoPoll,
   videoSubmit,
 } from "./functions";
 import { JOB_EVENTS } from "./client";
+import type { dispatchPendingOutbox } from "@jewelo/jobs/outbox";
 
 const ids = (list: { id(): string }[]) => list.map((fn) => fn.id());
 
@@ -55,6 +57,35 @@ describe("Inngest job functions", () => {
 
   it("polls video without holding a fal submission slot", () => {
     expect(videoPoll.opts.concurrency).toBeUndefined();
+  });
+
+  it("scopes the dependent-view dispatch to the run it just finished", async () => {
+    // Unscoped, a customer-triggered function claims every principal's pending
+    // outbox rows and bypasses the INNGEST_CRON_ENABLED guard on the crons.
+    const step = { run: async <T,>(_id: string, handler: () => T | Promise<T>) => handler() };
+    const dispatch = vi.fn<typeof dispatchPendingOutbox>(async () => ({
+      accepted: [],
+      pending: [],
+    }));
+    await runPresentationTask("task-1", step, {
+      execute: async () => ({ status: "ready" as const, attempt: 1, runId: "run-9" }),
+      dispatch,
+    });
+    expect(dispatch).toHaveBeenCalledTimes(1);
+    expect(dispatch.mock.calls[0]![3]).toEqual({ aggregateId: "run-9" });
+  });
+
+  it("dispatches nothing when the still did not become ready", async () => {
+    const step = { run: async <T,>(_id: string, handler: () => T | Promise<T>) => handler() };
+    const dispatch = vi.fn<typeof dispatchPendingOutbox>(async () => ({
+      accepted: [],
+      pending: [],
+    }));
+    await runPresentationTask("task-1", step, {
+      execute: async () => ({ status: "operator_review" as const, attempt: 3 }),
+      dispatch,
+    });
+    expect(dispatch).not.toHaveBeenCalled();
   });
 
   it("maps every durable outbox operation to exactly one event name", () => {

@@ -4,7 +4,10 @@ import {
   customerViewStatus,
   pastCeiling,
   preflightRefusal,
+  resumeSubmission,
   shouldStartRun,
+  shouldWatchRun,
+  startAttemptKey,
   PERSONALIZED_RUN_CEILING_MS,
   dispatchRejected,
   heroSlot,
@@ -212,10 +215,34 @@ describe("classifying why a run could not start", () => {
 });
 
 describe("refusing before spending, and giving up watching", () => {
+  const spec = (over: Partial<Parameters<typeof preflightRefusal>[0]> = {}) => ({
+    script: "English",
+    names: ["Asma"],
+    construction: "Classical",
+    lettering: "Classic",
+    ...over,
+  });
   it("never starts a run the Arabic identity engine cannot solve", () => {
-    expect(preflightRefusal({ script: "Arabic", names: ["أسماء", "فاطمة"] })).toBe("arabic_two_name");
-    expect(preflightRefusal({ script: "Arabic", names: ["أسماء"] })).toBeUndefined();
-    expect(preflightRefusal({ script: "English", names: ["Asma", "Fatima"] })).toBeUndefined();
+    expect(preflightRefusal(spec({ script: "Arabic", names: ["أسماء", "فاطمة"] }))).toBe("arabic_two_name");
+    expect(preflightRefusal(spec({ script: "Arabic", names: ["أسماء"] }))).toBeUndefined();
+    expect(preflightRefusal(spec({ names: ["Asma", "Fatima"] }))).toBeUndefined();
+  });
+  it("never starts a run for a look the prompt and the stencil cannot carry", () => {
+    // Neither the pinned prompt variables nor the Latin stencil carry the
+    // construction or the English lettering, so a run for these would
+    // photograph a Classical Playfair pendant and call it "Your piece".
+    expect(preflightRefusal(spec({ construction: "Diamond rails", lettering: "Signature" })))
+      .toBe("unsupported_construction");
+    expect(preflightRefusal(spec({ lettering: "Signature" }))).toBe("unsupported_lettering");
+    expect(preflightRefusal(spec({ construction: "Origami ribbon" }))).toBe("unsupported_construction");
+    expect(preflightRefusal(spec())).toBeUndefined();
+    // arabicStyle IS threaded into the specification, the compiled prompt and
+    // the Arabic identity engine, which fails closed on its own for a style it
+    // has not certified. Arabic lettering is therefore not refused here.
+    expect(preflightRefusal(spec({ script: "Arabic", names: ["أسماء"], lettering: "Kufi" })))
+      .toBeUndefined();
+    expect(preflightRefusal(spec({ script: "Arabic", names: ["أسماء"], construction: "Framed minimal", lettering: "Kufi" })))
+      .toBe("unsupported_construction");
   });
   it("opens the honest capture path once a run has run past its ceiling", () => {
     expect(pastCeiling(1_000, 1_000 + PERSONALIZED_RUN_CEILING_MS)).toBe(true);
@@ -248,5 +275,48 @@ describe("buying exactly one run per specification", () => {
     expect(shouldStartRun({ ...base, stage: "design" })).toBe(false);
     expect(shouldStartRun({ ...base, loaded: false })).toBe(false);
     expect(shouldStartRun({ ...base, enabled: false })).toBe(false);
+  });
+});
+
+describe("one submission per specification, across a reload", () => {
+  const key = "3f6d4e2a-1111-4222-8333-444455556666";
+  it("resumes a stored run and watches it", () => {
+    expect(resumeSubmission({ signature: "sig-a", requestKey: key, runId: "run-1" }, "sig-a"))
+      .toEqual({ startedFor: "sig-a", phase: "watching" });
+  });
+  it("blocks a second run when the reload lost the run id", () => {
+    // The submission is written BEFORE the first request, so a tab that
+    // reloaded mid-start still finds it. Re-confirming must not buy a second
+    // run; the honest capture path opens instead.
+    expect(resumeSubmission({ signature: "sig-a", requestKey: key }, "sig-a"))
+      .toEqual({ startedFor: "sig-a", phase: "degraded", reason: "unavailable" });
+    expect(
+      shouldStartRun({
+        enabled: true,
+        loaded: true,
+        stage: "review",
+        confirmed: true,
+        signature: "sig-a",
+        startedFor: resumeSubmission({ signature: "sig-a", requestKey: key }, "sig-a")!.startedFor,
+      }),
+    ).toBe(false);
+  });
+  it("ignores a submission that belongs to a different specification", () => {
+    expect(resumeSubmission({ signature: "sig-a", requestKey: key }, "sig-b")).toBeUndefined();
+    expect(resumeSubmission(undefined, "sig-a")).toBeUndefined();
+  });
+  it("replays one approval when a failed start is retried", () => {
+    // approve_and_start_studio is keyed on (principal, approval key): reusing
+    // the key returns the same run instead of buying a second one.
+    expect(startAttemptKey({ signature: "sig-a", requestKey: key }, "sig-a", "fresh")).toBe(key);
+    expect(startAttemptKey({ signature: "sig-a", requestKey: key, runId: "run-1" }, "sig-a", "fresh")).toBe("fresh");
+    expect(startAttemptKey({ signature: "sig-b", requestKey: key }, "sig-a", "fresh")).toBe("fresh");
+    expect(startAttemptKey(undefined, "sig-a", "fresh")).toBe("fresh");
+  });
+  it("stops polling durable state once the honest capture path has opened", () => {
+    expect(shouldWatchRun({ enabled: true, runId: "run-1", stalled: false })).toBe(true);
+    expect(shouldWatchRun({ enabled: true, runId: "run-1", stalled: true })).toBe(false);
+    expect(shouldWatchRun({ enabled: true, runId: undefined, stalled: false })).toBe(false);
+    expect(shouldWatchRun({ enabled: false, runId: "run-1", stalled: false })).toBe(false);
   });
 });

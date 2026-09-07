@@ -26,6 +26,60 @@ const TASK_COLUMNS = [
   "model_release",
 ].join(",");
 
+// Customer-visible asset columns. `bucket_id` and `object_path` are read for
+// the signing call and dropped before the response: a private storage path is
+// not something the browser ever needs, and publishing it hands an attacker the
+// exact key to ask the storage API for.
+const ASSET_READ_COLUMNS = [
+  "id",
+  "run_id",
+  "task_id",
+  "presentation_view",
+  "provider",
+  "model",
+  "prompt_release",
+  "input_asset_ids",
+  "attempt",
+  "verification_result",
+  "mime_type",
+  "created_at",
+] as const;
+const ASSET_COLUMNS = [...ASSET_READ_COLUMNS, "bucket_id", "object_path"].join(
+  ",",
+);
+
+// The audit trail a customer may read: what happened, to which design, when.
+// The `detail` payload is operator lineage - task ids, reservation cents,
+// outbox ids - and stays server-side.
+const AUDIT_READ_COLUMNS = [
+  "id",
+  "design_id",
+  "actor_type",
+  "action",
+  "created_at",
+] as const;
+const AUDIT_COLUMNS = AUDIT_READ_COLUMNS.join(",");
+
+/** Projected in code as well as in the query, so the shape holds either way. */
+function project(
+  row: Record<string, unknown>,
+  columns: readonly string[],
+): Record<string, unknown> {
+  return Object.fromEntries(columns.map((column) => [column, row[column]]));
+}
+
+/**
+ * The verifier record is customer-visible lineage, but a name-rejected attempt
+ * records the private storage paths of the images it threw away. Those never
+ * leave the server.
+ */
+function customerVerification(value: unknown) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return value;
+  const rest = { ...(value as Record<string, unknown>) };
+  delete rest.rejectedObjectPaths;
+  return rest;
+}
+
 const DESIGN_SCOPED = new Set([
   "design_drafts",
   "design_revisions",
@@ -68,7 +122,13 @@ export async function GET(request: Request) {
         supabaseRequest<Array<Record<string, unknown>>>(
           config,
           `/rest/v1/${table}?select=${
-            table === "generation_tasks" ? TASK_COLUMNS : "*"
+            table === "generation_tasks"
+              ? TASK_COLUMNS
+              : table === "assets"
+                ? ASSET_COLUMNS
+                : table === "audit_events"
+                  ? AUDIT_COLUMNS
+                  : "*"
           }&order=created_at${scope(table)}`,
           {},
           bearer,
@@ -105,14 +165,20 @@ export async function GET(request: Request) {
           bearer,
         );
         const relative = signed.signedURL ?? signed.signedUrl;
+        // Projected, not spread: the private location stays on this server.
+        const projected = project(asset, ASSET_READ_COLUMNS);
         return {
-          ...asset,
+          ...projected,
+          verification_result: customerVerification(asset.verification_result),
           signed_url: relative?.startsWith("http")
             ? relative
             : `${config.url}/storage/v1${relative}`,
         };
       }),
     );
+    rows.audit_events = (
+      rows.audit_events as Array<Record<string, unknown>>
+    ).map((event) => project(event, AUDIT_READ_COLUMNS));
     const { price_snapshots: estimates, ...rest } = rows;
     return Response.json(
       {

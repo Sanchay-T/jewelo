@@ -5,8 +5,8 @@ import { Inngest } from "inngest";
 import type { DispatchOperation } from "@jewelo/data/outbox-dispatch";
 
 /**
- * Inngest is the durable job engine (user-instructed replacement for
- * Trigger.dev, 7 September 2026). The functions are served from this Next.js
+ * Inngest is the durable job engine (user-instructed replacement for the
+ * previous hosted job engine, 7 September 2026; see D-017). The functions are served from this Next.js
  * app at `/api/inngest`, so there is no separate worker deployable.
  *
  * Cloud vs self-hosted is a one-variable switch:

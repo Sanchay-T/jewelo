@@ -4,6 +4,12 @@ import {
   type ArabicTransliterationResult,
 } from "@jewelo/ai";
 
+import {
+  ApiError,
+  authenticatedUser,
+  jsonError,
+} from "../../../lib/backend/supabase-rest";
+
 const MAX_BODY_BYTES = 1024;
 const WINDOW_MS = 60_000;
 const REQUESTS_PER_WINDOW = 20;
@@ -56,20 +62,43 @@ function validLatinName(value: unknown): value is string {
   );
 }
 
+/**
+ * This route spends real OpenAI budget, so it is closed twice.
+ *
+ * It is a customer route and carries the same authenticated anonymous principal
+ * as every other one: an unauthenticated caller could otherwise drive provider
+ * spend that no run, reservation or daily cap accounts for. And it refuses
+ * outright unless the deployment is in real provider mode, so a mock or preview
+ * environment - which has no spend ceiling of its own - can never reach OpenAI
+ * through it.
+ */
+function assertRealProviderMode() {
+  if (process.env.PROVIDER_MODE !== "real")
+    throw new Response(
+      "transliteration_unavailable:Arabic name refinement is unavailable here.",
+      { status: 503 },
+    );
+}
+
 export async function handleTransliteration(
   request: Request,
   createTransliterator: () => ArabicNameTransliterator = () => {
     const apiKey = process.env.OPENAI_API_KEY;
     if (!apiKey)
-      throw new Response("Arabic refinement unavailable", { status: 503 });
+      throw new Response(
+        "transliteration_unavailable:Arabic name refinement is unavailable here.",
+        { status: 503 },
+      );
     return new OpenAIArabicNameTransliterator(
       apiKey,
       arabicTransliterationProfile.model,
     );
   },
+  authenticate: (request: Request) => Promise<unknown> = authenticatedUser,
 ) {
   try {
     sameOrigin(request);
+    await authenticate(request);
     assertRateLimit(request);
     const declared = Number(request.headers.get("content-length") ?? 0);
     if (declared > MAX_BODY_BYTES)
@@ -85,6 +114,8 @@ export async function handleTransliteration(
     if (!validLatinName(input.name))
       throw new Response("Enter a valid Latin-script name", { status: 400 });
     const name = input.name.trim();
+    // After the free validation, before anything that can cost money.
+    assertRealProviderMode();
     const cacheKey = name.toLocaleLowerCase("en");
     const cached = resultCache.get(cacheKey);
     const result = cached ?? (await createTransliterator().transliterate(name));
@@ -93,6 +124,7 @@ export async function handleTransliteration(
       headers: { "cache-control": "private, max-age=3600" },
     });
   } catch (error) {
+    if (error instanceof ApiError) return jsonError(error);
     if (error instanceof Response) {
       const text = await error.text();
       const [code, ...rest] = text.split(":");

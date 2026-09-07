@@ -8,6 +8,7 @@ import {
   parseSubmission,
   PipelineError,
   startPersonalizedRun,
+  watchRun,
   type PipelineDeps,
 } from "./previewPipeline";
 
@@ -196,5 +197,42 @@ describe("submission continuity across a reload", () => {
     expect(parseSubmission(JSON.stringify({ ...stored, version: 2 }))).toBeUndefined();
     expect(parseSubmission(JSON.stringify({ ...stored, runId: 7 }))).toBeUndefined();
     expect(parseSubmission(JSON.stringify({ ...stored, startedAt: "now" }))).toBeUndefined();
+  });
+});
+
+describe("polling stops when there is nothing left to learn", () => {
+  const settledPayload = {
+    generation_runs: [{ id: "run-1", design_id: "design-1", status: "partial" }],
+    generation_tasks: [
+      { id: "t1", run_id: "run-1", presentation_view: "studio", status: "blocked", attempt: 1 },
+      { id: "t2", run_id: "run-1", presentation_view: "on_skin", status: "queued", attempt: 0 },
+    ],
+    assets: [],
+  };
+
+  it("stops after the first read of a settled run", async () => {
+    // A settled run cannot change again without a new run, so continuing to
+    // poll would only mint a fresh signed URL for every asset every 3 seconds.
+    vi.useFakeTimers();
+    try {
+      const { deps, fetchImpl } = harness(
+        Array.from({ length: 8 }, () => ({ body: settledPayload })),
+      );
+      const updates: Array<string | undefined> = [];
+      const stop = watchRun({
+        deps,
+        handles: { designId: "design-1", runId: "run-1" },
+        onUpdate: (run) => updates.push(run?.outcome),
+        intervalMs: 1000,
+      });
+      await vi.waitFor(() => expect(updates.length).toBe(1));
+      expect(updates[0]).toBe("unavailable");
+      const readsAfterSettle = fetchImpl.mock.calls.length;
+      await vi.advanceTimersByTimeAsync(5000);
+      expect(fetchImpl.mock.calls.length).toBe(readsAfterSettle);
+      stop();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

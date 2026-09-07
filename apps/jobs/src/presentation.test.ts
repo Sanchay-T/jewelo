@@ -14,6 +14,7 @@ import {
 function fixture() {
   const events: string[] = [];
   let attempt = 0;
+  let blockedReason: string | undefined;
   let storedSnapshot:
     | {
         task_id: string;
@@ -121,8 +122,10 @@ function fixture() {
     async signedInspirationUrl() {
       return undefined;
     },
-    async blockPreSpend() {
+    async blockPreSpend(input) {
       events.push("pre_spend_blocked");
+      blockedReason =
+        input.error instanceof Error ? input.error.message : "unknown";
     },
     async storeProviderOutput() {
       events.push("stored");
@@ -148,6 +151,7 @@ function fixture() {
       attempt = value;
     },
     getSnapshot: () => storedSnapshot,
+    getBlockedReason: () => blockedReason,
   };
 }
 
@@ -208,7 +212,7 @@ describe("generic presentation execution", () => {
     };
     await expect(
       executePresentationTask("task-1", state.repository, generator, verifier),
-    ).resolves.toEqual({ status: "ready", attempt: 1 });
+    ).resolves.toEqual({ status: "ready", attempt: 1, runId: "run-1" });
     expect(state.events).toEqual([
       "snapshot",
       "generating",
@@ -252,7 +256,7 @@ describe("generic presentation execution", () => {
         { generate },
         verifier,
       ),
-    ).resolves.toEqual({ status: "ready", attempt: 1 });
+    ).resolves.toEqual({ status: "ready", attempt: 1, runId: "run-1" });
     expect(generate).not.toHaveBeenCalled();
     expect(state.events).not.toContain("stored");
     expect(state.events).toContain("verifying");
@@ -362,6 +366,35 @@ describe("generic presentation execution", () => {
       executePresentationTask("task-1", state.repository, generator, verifier),
     ).resolves.toEqual({ status: "operator_review", attempt: 0 });
     expect(state.events).toContain("pre_spend_blocked");
+    expect(state.repository.reserveAttempt).not.toHaveBeenCalled();
+    expect(generator.generate).not.toHaveBeenCalled();
+  });
+
+  it("blocks a revision whose specification cannot compile the pinned prompt", async () => {
+    // A revision written before a variable was added compiles to
+    // "Missing required prompt value: metal_karat" every single time. Left to
+    // throw, the task stayed `queued` at attempt 0 and the two-minute stale
+    // sweeper re-dispatched it for ever: 13 failed runs on 7 Sep 2026.
+    const state = fixture();
+    const load = state.repository.load.bind(state.repository);
+    state.repository.load = async (taskId: string) => {
+      const loaded = await load(taskId);
+      const { metalKarat: _dropped, ...rest } = loaded.revision
+        .specification as Record<string, unknown>;
+      return { ...loaded, revision: { ...loaded.revision, specification: rest } };
+    };
+    state.repository.reserveAttempt = vi.fn();
+    const generator: StudioGenerator = {
+      generate: vi.fn(),
+    } as unknown as StudioGenerator;
+    const verifier: StudioVerifier = {
+      verify: vi.fn(),
+    } as unknown as StudioVerifier;
+    await expect(
+      executePresentationTask("task-1", state.repository, generator, verifier),
+    ).resolves.toEqual({ status: "operator_review", attempt: 0 });
+    expect(state.events).toContain("pre_spend_blocked");
+    expect(state.getBlockedReason()).toMatch(/^prompt_compile_failed:/);
     expect(state.repository.reserveAttempt).not.toHaveBeenCalled();
     expect(generator.generate).not.toHaveBeenCalled();
   });

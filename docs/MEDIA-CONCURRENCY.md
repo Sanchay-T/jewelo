@@ -138,9 +138,8 @@ Other media-agent/editor projects reviewed were not appropriate as the authorita
 Accessed 26 August 2026:
 
 - OpenAI GPT Image 2: https://developers.openai.com/api/docs/models/gpt-image-2
-- Trigger queues: https://trigger.dev/docs/queue-concurrency
-- Trigger task fan-out: https://trigger.dev/docs/triggering
-- Trigger idempotency: https://trigger.dev/docs/idempotency
+- Inngest concurrency: https://www.inngest.com/docs/guides/concurrency
+- Inngest event idempotency: https://www.inngest.com/docs/guides/handling-idempotency
 - fal concurrency/retention: https://fal.ai/docs/documentation/model-apis/faq
 - fal MCP: https://fal.ai/docs/documentation/setting-up/mcp
 - Seedance 2.0: https://fal.ai/seedance-2.0

@@ -160,12 +160,14 @@ describe("remote one-view client flow", () => {
                 status: "queued",
                 attempt: 0,
               });
+            // Exactly what /api/state projects: no `detail`, which is operator
+            // lineage (task ids, reservation cents, outbox ids), not customer
+            // state.
             state.audit_events.push({
               id: 1,
               design_id: "design-1",
               actor_type: "customer",
               action: "revision.approved_run.started",
-              detail: { outboxId: "outbox-1" },
               created_at: "2026-08-27T00:00:00Z",
             });
           }
@@ -254,7 +256,8 @@ describe("remote one-view client flow", () => {
       specification,
     });
     expect(design.runs[0]?.tasks[0]?.state).toBe("queued");
-    expect(design.audit[0]?.detail).toContain("outbox-1");
+    expect(design.audit[0]?.action).toBe("revision.approved_run.started");
+    expect(design.audit[0]?.detail).toBe("{}");
     expect(storage.get("caleums:idempotency:v1:approve:draft-1")).toBeTruthy();
 
     const listener = vi.fn();

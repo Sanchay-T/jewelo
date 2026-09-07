@@ -1,0 +1,36 @@
+Photograph one real, physical, finished 18K gold name pendant necklace. Studio shot.
+
+IMAGE ROLES
+Image 1, tagged @stencil, is the exact shape and the exact spelling of this pendant, drawn as a black silhouette. It is not a drawing to be re-designed. Reproduce its outline, its letter shapes, its joins and its proportions exactly, rendered as solid cast gold in a real photograph. Image 2, tagged @master, is an approved photograph of this exact pendant. Keep the identical physical object AND the identical photograph - same letters, same geometry, same thickness, same rings, same chain, same camera angle, same framing, same lighting and same background surface. Change ONLY the material described under MATERIAL below. Nothing else in the picture moves.
+
+IDENTITY
+The name is "أسماء", written in Arabic script, read right to left, in Classic lettering.
+Every glyph, dot, mark and stroke in Image 1 appears in the photograph, in the same order, at the same place, at the same angle. Nothing is added, nothing is removed, nothing is rotated, nothing is duplicated, nothing is mirrored. Do not write the name a second time anywhere in the picture.
+
+CASTING
+This is one piece of gold, as if it came out of a single mould.
+Every letter is physically fused to the next letter or to the part of the piece that holds it. There are no separate islands and no air gap that would make this two objects. Where Image 1 shows a bridge of metal between two shapes, that bridge is metal in the photograph. A jeweller could pick this whole pendant up as one object and nothing would fall off. If any letter, dot or mark is a separate floating piece, the picture is wrong.
+
+ATTACHMENT
+Exactly two jump rings, no more and no fewer. Both are closed rings of the same gold, grown out of the body of the piece, not soldered-on afterthoughts and not floating beside it. Both jump rings sit exactly where Image 1 places them, grown out of the top edge of the lettering.
+Each of the two jump rings is threaded: something passes through its open hole and you can see daylight through the hole on both sides of what passes through it. That is either the chain's own end link or one small connector link, and it goes THROUGH the hole - never behind the pendant, never hooked on the outside of the ring, never resting against a closed eyelet. An empty ring hole with the chain passing behind the piece is wrong.
+The chain is a fine round-link cable chain in the same 18K gold and hangs from both rings, one side to each. The chain never passes over, around or behind a letter, and there is no second chain, no cord, no clasp in shot and no other hardware.
+
+LOOK - Classical
+The letters themselves are the entire pendant. There is no frame, no plate, no rail and no border. The outline of the piece is exactly the outline in Image 1. Stroke weight is even, edges are softly rounded where a polishing wheel would reach, and the metal has a single consistent thickness.
+
+SHOT - Studio
+A catalogue packshot. The pendant lies almost flat, seen from just off straight-on, filling most of the frame with a small even margin. The whole pendant and both jump rings are inside the frame and in focus. The chain runs away from both rings and settles in a relaxed curve on the surface. Background is a plain warm off-white matte paper sweep.
+
+MATERIAL
+Solid 18K rose gold, a soft warm copper-pink, high polish. The pink reads in the mid tones, not only in the highlights.
+No stones anywhere on this piece. Every surface is plain polished gold. There is no pave, no accent stone, no sparkle point and no setting of any kind.
+The pendant is about 32 mm across and about 1.6 mm thick, so the cast edge has real visible depth.
+
+PHOTOGRAPHY
+This must read as an actual photograph taken on a jewellery set with a full-frame camera and a macro lens at a working aperture, not as a render.
+Broad diffused key light through a large softbox, a white bounce card filling the shadow side, and one small harder source that puts a defined specular streak along the polished strokes. Neutral 5000K white balance. The gold shows a real specular response: bright reflected highlights, warm mid tones, and darker reflections of the surroundings in the curves, never a uniform flat brightness. There is a true contact shadow where the metal meets the surface and a soft ambient occlusion in the tight corners. Depth of field is finite: the plane of the pendant is sharp and the surface behind it falls off gently. The background surface has believable material texture.
+No 3D-render look, no plastic or candy gold, no glow, no bloom, no neon rim light, no beauty-filter smoothing, no lens flare, no watermark, no logo, no caption, no added words or numbers anywhere in the frame.
+
+PRESERVE
+Exact spelling and glyph order from Image 1. One connected piece. Exactly two jump rings with the chain through both. No stones anywhere.

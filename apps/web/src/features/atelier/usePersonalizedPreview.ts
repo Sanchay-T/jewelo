@@ -22,8 +22,11 @@ import {
   pastCeiling,
   PERSONALIZED_RUN_CEILING_MS,
   preflightRefusal,
+  resumeSubmission,
   shouldStartRun,
+  shouldWatchRun,
   slotFor,
+  startAttemptKey,
   type CustomerViewStatus,
   type DegradeReason,
   type PersonalizedRun,
@@ -101,6 +104,13 @@ export interface PersonalizedPreview {
   captureStatus: "idle" | "sending" | "captured" | "error";
   captureError?: string;
   capturedRequestId?: string;
+  /**
+   * The last reference this shopper was given, even after they edited the piece.
+   * Editing starts a new specification and clears the capture, but the operator
+   * still holds the earlier request: losing its reference would leave the
+   * shopper with nothing to quote in the shop.
+   */
+  previousRequestId?: string;
   runId?: string;
   designId?: string;
   readyAssets: { view: View; assetId: string }[];
@@ -136,6 +146,10 @@ export function usePersonalizedPreview(input: {
   const [capturedRequestId, setCapturedRequestId] = useState<
     string | undefined
   >();
+  /** Deliberately survives a specification change; see `previousRequestId`. */
+  const [previousRequestId, setPreviousRequestId] = useState<
+    string | undefined
+  >();
 
   const injected = input.deps;
   const depsRef = useRef<PipelineDeps | undefined>(injected);
@@ -163,6 +177,13 @@ export function usePersonalizedPreview(input: {
     [input.locale],
   );
 
+  /**
+   * The submission this browser has already made for the piece on screen. It is
+   * a ref, not state, because it is read inside the start effect: it must be
+   * current without re-running that effect and buying another run.
+   */
+  const written = useRef<StoredSubmission | undefined>(undefined);
+
   const remember = useCallback((next: Submission, requestId?: string) => {
     const stored: StoredSubmission = {
       version: 1,
@@ -174,6 +195,7 @@ export function usePersonalizedPreview(input: {
       ...(next.runId ? { runId: next.runId } : {}),
       ...(requestId ? { previewRequestId: requestId } : {}),
     };
+    written.current = stored;
     saveSubmission(stored);
   }, []);
 
@@ -182,8 +204,12 @@ export function usePersonalizedPreview(input: {
   useEffect(() => {
     if (!enabled || !input.loaded || submission) return;
     const stored = loadSubmission();
-    if (!stored || stored.signature !== currentSignature) return;
-    startedFor.current = stored.signature;
+    const resumed = resumeSubmission(stored, currentSignature);
+    if (!stored || !resumed) return;
+    written.current = stored;
+    // Marked as started whether or not a run id survived, so re-confirming
+    // after a mid-flight reload cannot buy a second run.
+    startedFor.current = resumed.startedFor;
     setSubmission({
       signature: stored.signature,
       requestKey: stored.requestKey,
@@ -194,9 +220,11 @@ export function usePersonalizedPreview(input: {
     });
     if (stored.previewRequestId) {
       setCapturedRequestId(stored.previewRequestId);
+      setPreviousRequestId(stored.previewRequestId);
       setCaptureStatus("captured");
     }
-    setPhase(stored.runId ? "watching" : "idle");
+    if (resumed.reason) setReason(resumed.reason);
+    setPhase(resumed.phase);
   }, [enabled, input.loaded, currentSignature, submission]);
 
   // The specification changed under the run: nothing from the old run may be
@@ -211,6 +239,7 @@ export function usePersonalizedPreview(input: {
       setCaptureStatus("idle");
       setCapturedRequestId(undefined);
       startedFor.current = undefined;
+      written.current = undefined;
       clearSubmission();
     }
   }, [currentSignature, submission]);
@@ -231,13 +260,19 @@ export function usePersonalizedPreview(input: {
     )
       return;
     startedFor.current = currentSignature;
-    const requestKey = crypto.randomUUID();
+    // A retry after a failed start replays the same approval instead of buying
+    // a second run.
+    const requestKey = startAttemptKey(
+      written.current,
+      currentSignature,
+      crypto.randomUUID(),
+    );
     const startedAt = Date.now();
     const preview = buildRequest(crypto.randomUUID());
     const refusal = preflightRefusal(preview.specification);
     if (refusal) {
-      // Proved unmakeable by the identity engine before a single cent is
-      // reserved: this goes straight to the shop instead of a blocked run.
+      // Proved unmakeable before a single cent is reserved: this goes straight
+      // to the shop instead of a blocked run.
       setSubmission({ signature: currentSignature, requestKey, startedAt });
       remember({ signature: currentSignature, requestKey, startedAt });
       setReason("unsupported");
@@ -246,6 +281,10 @@ export function usePersonalizedPreview(input: {
     }
     setPhase("starting");
     setSubmission({ signature: currentSignature, requestKey, startedAt });
+    // Write-ahead: persisted BEFORE the first request, so a reload between the
+    // approval and its answer still finds this submission and refuses to start
+    // a second run for the same piece.
+    remember({ signature: currentSignature, requestKey, startedAt });
     let cancelled = false;
     void startPersonalizedRun({
       request: preview,
@@ -274,6 +313,10 @@ export function usePersonalizedPreview(input: {
         setReason(failure);
         setPhase("degraded");
         remember({ signature: currentSignature, requestKey, startedAt });
+        // A failed start must be retryable: re-confirming reuses this same
+        // request key, so the retry replays one approval rather than buying a
+        // second run.
+        startedFor.current = undefined;
       });
     return () => {
       cancelled = true;
@@ -289,28 +332,8 @@ export function usePersonalizedPreview(input: {
     remember,
   ]);
 
-  // Durable state, polled and accelerated by Realtime.
   const runId = submission?.runId;
   const designId = submission?.designId;
-  useEffect(() => {
-    if (!enabled || !runId) return;
-    return watchRun({
-      deps,
-      handles: { runId, designId },
-      onUpdate: (next) => {
-        if (!next) return;
-        setRun(next);
-        if (next.outcome === "unavailable") {
-          setReason((old) => old ?? "unavailable");
-          setPhase("degraded");
-        }
-      },
-      onError: () => {
-        // A transient read failure is not a customer-visible failure; the next
-        // poll answers. Nothing is claimed here.
-      },
-    });
-  }, [enabled, runId, designId, deps]);
 
   // A shopper standing in a shop should not be watched by a spinner for ever.
   const startedAt = submission?.startedAt;
@@ -329,6 +352,30 @@ export function usePersonalizedPreview(input: {
   const heroReady = !!heroSlot(run);
   const stalled =
     ceilingReached && !personalized && !!startedAt && pastCeiling(startedAt, Date.now());
+
+  // Durable state, polled and accelerated by Realtime. The watcher stops itself
+  // on a settled run; this effect also tears it down once the honest capture
+  // path has replaced it.
+  const watching = shouldWatchRun({ enabled, runId, stalled });
+  useEffect(() => {
+    if (!watching || !runId) return;
+    return watchRun({
+      deps,
+      handles: { runId, designId },
+      onUpdate: (next) => {
+        if (!next) return;
+        setRun(next);
+        if (next.outcome === "unavailable") {
+          setReason((old) => old ?? "unavailable");
+          setPhase("degraded");
+        }
+      },
+      onError: () => {
+        // A transient read failure is not a customer-visible failure; the next
+        // poll answers. Nothing is claimed here.
+      },
+    });
+  }, [watching, runId, designId, deps]);
   const capturing =
     enabled &&
     input.stage === "review" &&
@@ -382,6 +429,7 @@ export function usePersonalizedPreview(input: {
         }),
       });
       setCapturedRequestId(record.id);
+      setPreviousRequestId(record.id);
       setCaptureStatus("captured");
       remember(
         {
@@ -428,6 +476,7 @@ export function usePersonalizedPreview(input: {
     captureStatus,
     captureError,
     capturedRequestId,
+    previousRequestId,
     runId: submission?.runId,
     designId: submission?.designId,
     readyAssets,

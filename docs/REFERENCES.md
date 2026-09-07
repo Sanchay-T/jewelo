@@ -20,16 +20,12 @@ Accessed 26 August 2026.
 - Storage access: https://supabase.com/docs/guides/storage/security/access-control
 - Pricing: https://supabase.com/pricing
 
-## Trigger.dev
+## Inngest (self-hosted, since 7 September 2026)
 
-- Product: https://trigger.dev/product
-- Triggering and batch fan-out: https://trigger.dev/docs/triggering
-- Queue concurrency: https://trigger.dev/docs/queue-concurrency
-- Idempotency: https://trigger.dev/docs/idempotency
-- Preview branches: https://trigger.dev/docs/deployment/preview-branches
-- MCP: https://trigger.dev/docs/mcp-introduction
-- Skills: https://trigger.dev/docs/skills
-- Pricing: https://trigger.dev/pricing
+- Self-hosting: https://www.inngest.com/docs/self-hosting
+- Concurrency: https://www.inngest.com/docs/guides/concurrency
+- Idempotency: https://www.inngest.com/docs/guides/handling-idempotency
+- Crons: https://www.inngest.com/docs/guides/scheduled-functions
 
 ## OpenAI image and verification
 

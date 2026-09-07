@@ -157,11 +157,18 @@ expect_eq "03 drafts.confirm-spelling persisted" "true" "$(j '.spelling_confirme
 
 # /api/transliterate takes {"name": "<Latin name>"} and calls OpenAI directly
 # with no mock path, so the happy case is opt-in and off by default: this
-# driver must not spend provider budget. The rejection case is validated
-# before any provider call, so it always runs.
+# driver must not spend provider budget. It is a customer route: it requires the
+# same authenticated anonymous principal as the rest, and it refuses outright
+# unless the deployment runs PROVIDER_MODE=real. The rejection cases are settled
+# before any provider call, so they always run.
 if [[ "${E2E_TRANSLITERATE:-0}" == "1" ]]; then
   req POST /api/transliterate '{"name":"Layla"}' "${AUTH_A[@]}"
-  expect_status "04 transliterate(short name)" "200" "$(j '.')"
+  if [[ "${PROVIDER_MODE:-mock}" == "real" ]]; then
+    expect_status "04 transliterate(short name)" "200" "$(j '.')"
+  else
+    expect_status "04 transliterate(mock mode refuses)" "503" "$(err)"
+    expect_code "04 transliterate code (want transliteration_unavailable)"
+  fi
 else
   skip "04 transliterate(short name)" "real OpenAI call; set E2E_TRANSLITERATE=1 to include it"
 fi
@@ -169,6 +176,10 @@ LONG=$(python3 -c 'print("Layla"*20)')
 req POST /api/transliterate "{\"name\":\"$LONG\"}" "${AUTH_A[@]}"
 expect_status "04b transliterate(100 chars rejected)" "422" "route caps names at 36 characters"
 expect_code "04b transliterate code (want invalid_input)"
+
+req POST /api/transliterate '{"name":"Layla"}'
+expect_status "04c transliterate(no bearer rejected)" "401" "customer routes require an anonymous principal"
+expect_code "04c transliterate code (want unauthenticated)"
 
 # ---------------------------------------------------------------------------
 # 3. Reference upload (multipart)

@@ -1,0 +1,14 @@
+[
+  {
+    "cell": "origami-ribbon-en-close-up",
+    "look": "origami-ribbon",
+    "script": "en",
+    "view": "close-up",
+    "ratio": "1:1",
+    "intendedName": "Asma",
+    "masterFile": "origami-ribbon-en-a3.png",
+    "stencilKey": "asma-en-classic",
+    "promptPath": "docs/goals/overnight-launch/lab/stage3/prompts/v42/origami-ribbon-en-close-up.txt",
+    "promptSha256": "4f0b88578c87f9cc6b2dc9da06675a8b877e01e043acee5b2aaa14543d682217"
+  }
+]

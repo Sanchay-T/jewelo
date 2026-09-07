@@ -65,6 +65,58 @@ function jobEnvironment(): Record<string, string | undefined> {
  * (the raw provider image bytes) into Inngest step state, which both bloats the
  * run and puts customer media outside private Supabase Storage.
  */
+/**
+ * The subset of the Inngest step tooling this body uses. Deliberately untyped
+ * in its return: `step.run` answers `Jsonify<T>`, which is the same JSON this
+ * function already returns, and pinning the generic here would only fight it.
+ */
+interface StepRunner {
+  run(id: string, handler: () => unknown): Promise<unknown>;
+}
+
+type PresentationOutcome = Awaited<ReturnType<typeof executePresentationTask>>;
+
+/**
+ * The body, exported so the outbox scoping below is unit-testable without a
+ * live Inngest run.
+ */
+export async function runPresentationTask(
+  taskId: string,
+  step: StepRunner,
+  overrides: {
+    execute?: (taskId: string) => Promise<PresentationOutcome>;
+    dispatch?: typeof dispatchPendingOutbox;
+  } = {},
+) {
+  const execute =
+    overrides.execute ??
+    ((id: string) => {
+      const dependencies = productionPresentationDependencies();
+      return executePresentationTask(
+        id,
+        dependencies.repository,
+        dependencies.generator,
+        dependencies.verifier,
+        dependencies.nameReader,
+      );
+    });
+  const dispatch = overrides.dispatch ?? dispatchPendingOutbox;
+  const result = (await step.run("execute-presentation-task", () =>
+    execute(taskId),
+  )) as PresentationOutcome;
+  // A ready still releases its dependent views through the same outbox.
+  // Scoped to this run: an unscoped sweep claims other principals' pending rows
+  // from inside a customer-triggered function, which both bypasses the
+  // INNGEST_CRON_ENABLED guard on the recovery crons and races them.
+  if (result.status === "ready" && result.runId) {
+    const runId = result.runId;
+    await step.run("dispatch-dependent-outbox", () =>
+      dispatch(jobEnvironment(), sendJobEvent, fetch, { aggregateId: runId }),
+    );
+  }
+  return result;
+}
+
 export const presentationTask = inngest.createFunction(
   {
     id: "presentation-task",
@@ -73,25 +125,8 @@ export const presentationTask = inngest.createFunction(
     concurrency: [openAIImageConcurrency],
     retries: 0,
   },
-  async ({ event, step }) => {
-    const taskId = String(event.data.taskId);
-    const result = await step.run("execute-presentation-task", async () => {
-      const dependencies = productionPresentationDependencies();
-      return executePresentationTask(
-        taskId,
-        dependencies.repository,
-        dependencies.generator,
-        dependencies.verifier,
-        dependencies.nameReader,
-      );
-    });
-    // A ready still releases its dependent views through the same outbox.
-    if (result.status === "ready")
-      await step.run("dispatch-dependent-outbox", () =>
-        dispatchPendingOutbox(jobEnvironment(), sendJobEvent),
-      );
-    return result;
-  },
+  async ({ event, step }) =>
+    runPresentationTask(String(event.data.taskId), step),
 );
 
 /**

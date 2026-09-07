@@ -32,6 +32,9 @@ for row in rows:
     row["defects"] = v.get("defects", [])
     row["viewerAxis"] = v.get("axis")
     row["viewerConfidence"] = v.get("confidence")
+    for extra in ("sameAsMaster", "samePhotograph", "letteringIsKufi"):
+        if extra in v:
+            row[extra] = v[extra]
     row["verdictSource"] = src
     merged += 1
 

@@ -26,7 +26,7 @@ import {
   restore,
   signature,
   validate,
-  sampleSource,
+  savedExampleSource,
   canAdd,
   putInBag,
   beginBagEdit,
@@ -255,6 +255,16 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
         }[status];
   const ownPhoto = own.imageFor(view);
   const showingOwnPhoto = !!ownPhoto && !showSample;
+  /**
+   * The shopper's own run exists but no photograph of it has arrived yet. The
+   * image on screen is still the labelled illustrated sample - the chip over it
+   * says so - but the piece this page is about is theirs, so the captions must
+   * stop calling it an example.
+   */
+  const ownDesignInProgress =
+    state.stage === "review" &&
+    (!!own.run || own.captureStatus === "captured") &&
+    !own.personalized;
   const heroSource = showingOwnPhoto ? ownPhoto! : source;
   /** Only the cameras this family was photographed in; Studio is always one. */
   const shownViews = views.filter((v) => piece.availableViews.includes(v));
@@ -299,6 +309,13 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
     canAdd(d, run, confirmed, ownKept) &&
     (currentReady || ownKept) &&
     !saving;
+  /**
+   * The bottom action is one of exactly two things, and which one depends only
+   * on whether a run exists for the specification on screen - never on which
+   * step chip was pressed last. `run` is already the current run or nothing:
+   * an edit makes the old one stale and leaves this true again.
+   */
+  const needsPreview = !run;
   const rotatingViews = views.filter(
     (v) =>
       piece.views[v] &&
@@ -412,15 +429,25 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
     );
     try {
       const saved = restore(localStorage.getItem(STORAGE_KEY));
-      setState({
-        ...saved,
-        runs: saved.runs.map((r) => ({
-          ...r,
-          slots: r.slots.map((slot) =>
-            slot.status === "pending" ? { ...slot, status: "failed" } : slot,
-          ),
-        })),
-      });
+      const runs = saved.runs.map((r) => ({
+        ...r,
+        slots: r.slots.map((slot) =>
+          slot.status === "pending"
+            ? { ...slot, status: "failed" as const }
+            : slot,
+        ),
+      }));
+      setState({ ...saved, runs });
+      // The spelling confirmation belongs to the approved revision, not to this
+      // tab. Without it, a reload on the review stage says "we have your
+      // request" and "you have not confirmed your name" at the same time, and
+      // Add to bag stays disabled. Re-ticking is still idempotent: the stored
+      // submission already marks this specification as started.
+      const restoredRun = runs.at(-1);
+      setConfirmed(
+        !!restoredRun?.confirmed &&
+          restoredRun.signature === signature(saved.draft),
+      );
     } catch {
       setNotice("Your saved draft could not be read. A fresh draft is ready.");
     }
@@ -458,13 +485,27 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
     if (d[key] === value) return;
     setAutoplay(false);
     setPlayRequested(false);
-    setConfirmed(false);
+    confirmSpelling(false);
     setErrors({});
     setState((old) => ({
       ...old,
       draft: { ...old.draft, [key]: value },
       sampleFocus: (visualFields as readonly string[]).includes(key) ? key as VisualField : old.sampleFocus,
     }));
+  }
+  /** Local for this render, durable on the run it approves. */
+  function confirmSpelling(next: boolean) {
+    setConfirmed(next);
+    setState((old) => {
+      const last = old.runs.at(-1);
+      if (!last || last.signature !== signature(old.draft)) return old;
+      return {
+        ...old,
+        runs: old.runs.map((run) =>
+          run.id === last.id ? { ...run, confirmed: next } : run,
+        ),
+      };
+    });
   }
   function go(stage: "design" | "review", section?: string) {
     setState((old) => ({ ...old, stage }));
@@ -490,7 +531,7 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
       );
       return;
     }
-    setConfirmed(false);
+    confirmSpelling(false);
     setAutoplay(false);
     setImageErrors([]);
     const capturedDraft = structuredClone(d);
@@ -660,17 +701,21 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
     setSaving(true);
     // Durable identifiers only: a signed media URL lives five minutes, so the bag
     // keeps the run and asset ids and re-reads the photograph from /api/state.
+    // The reference of the request the shop is holding for this shopper. An
+    // edit starts a new specification and clears the live capture, but the
+    // operator still has to be able to reconcile the two.
+    const requestReference = own.capturedRequestId ?? own.previousRequestId;
     const personalized = own.runId
       ? {
           runId: own.runId,
           ...(own.designId ? { designId: own.designId } : {}),
           ...(own.readyAssets.length ? { assets: own.readyAssets } : {}),
-          ...(own.capturedRequestId
-            ? { previewRequestId: own.capturedRequestId }
+          ...(requestReference
+            ? { previewRequestId: requestReference }
             : {}),
         }
-      : own.capturedRequestId
-        ? { runId: "", previewRequestId: own.capturedRequestId }
+      : requestReference
+        ? { runId: "", previewRequestId: requestReference }
         : undefined;
     try {
       // The illustrated sample is a nicety here; a shopper whose combination has
@@ -710,7 +755,7 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
         setNotice(
           "Your piece is in this bag for this session. Image storage is unavailable; keep this tab open.",
         );
-      setConfirmed(false);
+      confirmSpelling(false);
       openBag();
     } catch {
       setNotice(
@@ -723,7 +768,7 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
   function newPiece() {
     bag.current?.close();
     setState((old) => ({ ...initialState(), bag: old.bag }));
-    setConfirmed(false);
+    confirmSpelling(false);
     setView("Studio");
     setExpanded(["name"]);
     focusDesign();
@@ -734,7 +779,7 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
     bag.current?.close();
     setView("Studio");
     setState((old) => beginBagEdit(old, id));
-    setConfirmed(false);
+    confirmSpelling(false);
     setExpanded(["name"]);
     focusDesign();
   }
@@ -946,7 +991,7 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
           <button
             onClick={() => {
               setState(cancelBagEdit);
-              setConfirmed(false);
+              confirmSpelling(false);
               setView("Studio");
               focusDesign();
             }}
@@ -1267,14 +1312,18 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                       ? "قطعة شخصية. تفاصيل مدروسة."
                       : "Personal by design."}
                   </p>
-                  <span>Checkout is coming soon.</span>
+                  <span>
+                    {locale === "ar"
+                      ? "الدفع الإلكتروني قريبًا."
+                      : "Checkout is coming soon."}
+                  </span>
                 </div>
 
                 <label className={s.confirm}>
                   <input
                     type="checkbox"
                     checked={confirmed}
-                    onChange={(e) => setConfirmed(e.target.checked)}
+                    onChange={(e) => confirmSpelling(e.target.checked)}
                   />
                   <span>
                     {locale === "ar"
@@ -1306,6 +1355,16 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                           : "Confirm the spelling above and we photograph this piece with your name."}
                       </p>
                     )}
+                    {/* Editing starts a new specification and clears the
+                        capture, but the shop still holds the earlier request:
+                        the shopper keeps its reference. */}
+                    {own.captureStatus !== "captured" &&
+                      !!own.previousRequestId && (
+                        <p data-earlier-request-id={own.previousRequestId}>
+                          {locale === "ar" ? "طلبك السابق" : "Your earlier request"}{" "}
+                          <b dir="ltr">{own.previousRequestId}</b>
+                        </p>
+                      )}
                     {own.phase === "starting" && (
                       <p className={s.ownStatusRow}>
                         <span className={s.spinner} />
@@ -1338,18 +1397,24 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                     )}
                     {own.capturing && own.captureStatus !== "captured" && (
                       <>
+                        {/* Before a contact is captured nothing is being
+                            prepared yet, so the headline says what actually
+                            happened and asks for the one thing that changes it.
+                            The daily allowance is per anonymous principal, and
+                            one shop tablet is one principal, so it is the
+                            device's limit and not this shopper's. */}
                         <p className={s.ownHeadline}>
                           {own.reason === "daily_limit"
                             ? locale === "ar"
-                              ? "لقد وصلت إلى حدّ المعاينات اليوم. من فضلك حاول مرة أخرى غدًا."
-                              : "You have reached today's preview limit. Please try again tomorrow."
+                              ? "وصل هذا الجهاز إلى حدّ المعاينات اليوم. من فضلك حاول مرة أخرى غدًا."
+                              : "This device has reached today's preview limit. Please try again tomorrow."
                             : own.personalized
                               ? locale === "ar"
                                 ? "أين نرسل قطعتك؟"
                                 : "Where should we send it?"
                               : locale === "ar"
-                                ? "جارٍ تحضير معاينتك الشخصية. سنرسلها إليك."
-                                : "Your personalized preview is being prepared. We will send it to you."}
+                                ? "لم نتمكن من تصوير قطعتك هنا. اترك طريقة للتواصل معك وسنرسلها إليك."
+                                : "We could not photograph your piece here. Leave one way to reach you and we will send it."}
                         </p>
                         <div
                           className={s.channelPicker}
@@ -1460,6 +1525,13 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                             ? "تم الحفظ. فريقنا لديه طلبك."
                             : "Saved. Our team has your request."}
                         </p>
+                        {!own.personalized && (
+                          <p>
+                            {locale === "ar"
+                              ? "جارٍ تحضير معاينتك الشخصية. سنرسلها إليك."
+                              : "Your personalized preview is being prepared. We will send it to you."}
+                          </p>
+                        )}
                         <p data-preview-request-id={own.capturedRequestId}>
                           {locale === "ar" ? "الرقم المرجعي" : "Reference"}{" "}
                           <b dir="ltr">{own.capturedRequestId}</b>
@@ -1536,10 +1608,14 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                   <img
                     key={heroSource}
                     src={heroSource}
+                    /* No construction here: the compiled prompt and the
+                       identity stencil do not carry one, so naming it would
+                       describe the photograph as a look it was never asked to
+                       be. */
                     alt={
                       locale === "ar"
-                        ? `صورة قلادتك باسم ${pendantName(d)}، ${t(d.construction)}، ذهب عيار ١٨ ${t(d.metal)}، ${d.size} مم، ${t(view)}`
-                        : `Photograph of your ${d.construction.toLowerCase()} name pendant reading ${pendantName(d)}, 18K ${d.metal.toLowerCase()}, ${d.size} mm, ${view} view`
+                        ? `صورة قلادتك باسم ${pendantName(d)}، ذهب عيار ١٨ ${t(d.metal)}، ${d.size} مم، ${t(view)}`
+                        : `Photograph of your name pendant reading ${pendantName(d)}, 18K ${d.metal.toLowerCase()}, ${d.size} mm, ${view} view`
                     }
                     data-personalized-view={view}
                     data-caleums-photo="personalized"
@@ -1617,7 +1693,11 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                   <span dir="auto">
                     {showingOwnPhoto
                       ? `${pendantName(d)} · ${ownPhotoLabel}`
-                      : `${exampleNames(shown.script === "Arabic" ? " و" : " & ")} · ${t("Asma example")}`}
+                      : ownDesignInProgress
+                        ? `${pendantName(d)} · ${
+                            locale === "ar" ? "قيد التحضير" : "Being prepared"
+                          }`
+                        : `${exampleNames(shown.script === "Arabic" ? " و" : " & ")} · ${t("Asma example")}`}
                   </span>
                 </div>
               </div>
@@ -1654,7 +1734,13 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                     {rotatingViews.length > 1 && (
                       <button
                         aria-label={
-                          autoplay ? "Pause slideshow" : "Play slideshow"
+                          locale === "ar"
+                            ? autoplay
+                              ? "إيقاف العرض التلقائي"
+                              : "تشغيل العرض التلقائي"
+                            : autoplay
+                              ? "Pause slideshow"
+                              : "Play slideshow"
                         }
                         aria-pressed={autoplay}
                         onClick={() => {
@@ -1708,6 +1794,10 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                     const ownStatus = own.statusFor(v);
                     const thumbnail = ownView ?? photo.asset.src;
                     const missing = !thumbnail;
+                    /* Once the shopper's own photographs exist, the rail is
+                       read as "my four views". Any tile still showing the
+                       illustrated catalogue must say so, in words. */
+                    const sampleTile = own.personalized && !ownView && !missing;
                     return (
                       <button
                         key={v}
@@ -1723,6 +1813,12 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                         onClick={() => chooseView(v)}
                       >
                         <span id={`view-status-${index}`} className={s.srOnly}>
+                          {/* The button's own aria-label is the view name, so
+                              the sample marker has to travel with the status
+                              this describes it by. */}
+                          {sampleTile
+                            ? (locale === "ar" ? "عينة. " : "Sample. ")
+                            : ""}
                           {ownStatus
                             ? ownStatusText(ownStatus)
                             : missing
@@ -1745,16 +1841,26 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                         {!missing ? (
                           <img
                             src={thumbnail}
-                            alt=""
-                            aria-hidden="true"
+                            alt={
+                              sampleTile
+                                ? locale === "ar"
+                                  ? `صورة عينة لزاوية ${t(v)}، وليست قطعتك`
+                                  : `Sample photograph of the ${v} view, not your piece`
+                                : ""
+                            }
+                            aria-hidden={sampleTile ? undefined : "true"}
                             data-caleums-photo={ownView ? "personalized" : "sample"}
                           />
                         ) : (
                           <div className={s.missingAngle}>—</div>
                         )}
                         <span>{t(v)}</span>
-                        <em aria-hidden="true">
-                          {missing
+                        <em aria-hidden="true" data-sample-tile={sampleTile || undefined}>
+                          {sampleTile
+                            ? locale === "ar"
+                              ? "عينة"
+                              : "Sample"
+                            : missing
                             ? locale === "ar"
                               ? "جار التحضير"
                               : "Preparing"
@@ -1874,9 +1980,21 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
       <div className={s.actionBar}>
         <div>
           <small>{t("Price unconfirmed")}</small>
-          <span>{locale === "ar" ? "مثال التصميم" : "Design example"}</span>
+          {/* Once the shopper's own run exists, this is their design, whether
+              the photograph has arrived or the shop is preparing it. */}
+          <span>
+            {own.personalized
+              ? ownPhotoLabel
+              : ownDesignInProgress
+                ? locale === "ar"
+                  ? "تصميمك · قيد التحضير"
+                  : "Your design · being prepared"
+                : locale === "ar"
+                  ? "مثال التصميم"
+                  : "Design example"}
+          </span>
         </div>
-        {state.stage === "design" || stale ? (
+        {needsPreview ? (
           <button
             className={s.primary}
             /* A sample photograph that does not exist yet never blocks the
@@ -1923,7 +2041,15 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
               </button>
             </div>
           ) : (
-            state.bag.map((item) => (
+            state.bag.map((item) => {
+              /* The stored sample, or a v1 example only when that example
+                 really is this design. `sampleSource` alone can cross script
+                 and construction, which would show a saved piece as a design
+                 it is not. */
+              const savedExample = item.sampleId
+                ? samples.find((asset) => asset.id === item.sampleId)?.src
+                : savedExampleSource("Studio", item.draft);
+              return (
               <article className={s.bagItem} key={item.id}>
                 {/* Only an asset the current state read still returns is shown as
                     the customer's piece; otherwise the labelled sample. */}
@@ -1941,19 +2067,15 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                     snapshotId={item.snapshot.id}
                     alt="Saved pendant configuration"
                   />
-                ) : item.sampleId &&
-                  !samples.some((asset) => asset.id === item.sampleId) ? (
+                ) : savedExample ? (
+                  <img
+                    src={savedExample}
+                    alt="Previously saved example pendant"
+                  />
+                ) : (
                   <div role="img" aria-label="Previously saved example pendant">
                     This saved example is unavailable.
                   </div>
-                ) : (
-                  <img
-                    src={
-                      samples.find((asset) => asset.id === item.sampleId)
-                        ?.src ?? sampleSource("Studio", item.draft)
-                    }
-                    alt="Previously saved example pendant"
-                  />
                 )}
                 <div>
                   <small>NAME PENDANT · YOUR DESIGN</small>
@@ -2026,7 +2148,8 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                   </div>
                 </div>
               </article>
-            ))
+              );
+            })
           )}
         </div>
         <div className={s.bagFooter}>

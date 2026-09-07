@@ -8,7 +8,7 @@
 
 ## Locked-stack compliance
 
-- [ ] Next.js/DigitalOcean App Platform + Supabase + Trigger.dev topology is preserved.
+- [ ] Next.js/DigitalOcean App Platform + Supabase + Inngest topology is preserved.
 - [ ] No Convex/Neon/Clerk/R2/Docker/local-service substitution.
 - [ ] Provider SDKs remain behind adapters.
 - [ ] Browser/web/workflow secret boundaries are preserved.
@@ -29,7 +29,7 @@ command → exit/result
 
 - DigitalOcean staging URL + deployment ID + git SHA:
 - Supabase project/branch:
-- Trigger environment/branch:
+- Inngest environment (self-hosted app / Cloud):
 - Provider mode:
 - Production access: none / approved exception
 

@@ -101,6 +101,13 @@ export type Run = {
   signature: string;
   draft: Draft;
   slots: Slot[];
+  /**
+   * The customer's own confirmation of their spelling. It belongs to the
+   * approved revision, not to the browser tab, so it is stored with the run:
+   * a shopper who reloads on the review stage must not be told at once that
+   * their request is captured and that they have not confirmed their name.
+   */
+  confirmed?: boolean;
 };
 export type BagItem = {
   version: 1;
@@ -357,7 +364,8 @@ function runValid(x: unknown): x is Run {
         Number.isInteger(s.attempt) &&
         s.attempt > 0 &&
         typeof s.fail === "boolean",
-    )
+    ) &&
+    (x.confirmed === undefined || typeof x.confirmed === "boolean")
   );
 }
 export function restore(raw: string | null): State {
@@ -438,6 +446,29 @@ export function restore(raw: string | null): State {
       ? recovered.editing
       : null,
   };
+}
+/**
+ * The example photograph for a saved bag row, or nothing.
+ *
+ * `sampleSource` returns one of exactly three v1 photographs, and all of them
+ * are the default construction and the default lettering: one English name, one
+ * Arabic name, two English names. Handing any other design one of them would
+ * show a saved piece as a design it is not - a different look, or an Arabic
+ * piece illustrated by an English photograph. A row outside that set gets no
+ * image at all and keeps its "Previously saved example pendant" label.
+ */
+export function savedExampleSource(view: View, draft: Draft): string | undefined {
+  if (
+    draft.construction !== emptyDraft.construction ||
+    draft.lettering !== emptyDraft.lettering
+  )
+    return undefined;
+  const src = sampleSource(view, draft);
+  const depictedScript = src.includes("arabic") ? "Arabic" : "English";
+  const depictsTwoNames = src.includes("fatima");
+  return depictedScript === draft.script && depictsTwoNames === draft.twoNames
+    ? src
+    : undefined;
 }
 export const sampleSource = (view: View, draft?: Draft) =>
   view === "Studio" && draft?.twoNames
