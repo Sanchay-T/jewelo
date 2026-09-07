@@ -379,8 +379,10 @@ describe("generic presentation execution", () => {
     const load = state.repository.load.bind(state.repository);
     state.repository.load = async (taskId: string) => {
       const loaded = await load(taskId);
-      const { metalKarat: _dropped, ...rest } = loaded.revision
-        .specification as Record<string, unknown>;
+      const rest = {
+        ...(loaded.revision.specification as Record<string, unknown>),
+      };
+      delete rest.metalKarat;
       return { ...loaded, revision: { ...loaded.revision, specification: rest } };
     };
     state.repository.reserveAttempt = vi.fn();
