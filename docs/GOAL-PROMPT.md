@@ -45,13 +45,14 @@ YOUR WALL CLOCK: [when to stop and hand off]
 HOW. State objective, stopping condition, exclusions, evidence. Plan at file
 level; have plan-reviewer challenge it. Then work in committed slices on the
 current branch; push; never push main, never merge. Fan out with subagents:
-implementer, image-lab, viewer, browser-qa, reviewer. Generator never scores;
-fixer never reviews its own fix. Update PROGRESS.md as you go, not at the end.
+implementer, image-lab, viewer, reviewer. Generator never scores; fixer never
+reviews its own fix. Update PROGRESS.md as you go, not at the end.
 
 CLOSE EVERY TASK WITH THE LOOP, NOT WITH AN OPINION:
-  typecheck + lint + test -> agent-browser dogfood of the real URL at every
-  gated viewport with screenshots -> /code-review on the diff -> fresh
-  adversarial-reviewer -> fix every finding -> repeat
+  typecheck + lint + test -> YOU dogfood the real URL in your own in-app
+  browser at every gated viewport, screenshot + DOM measurement per step
+  (no Playwright, no agent-browser, no delegation) -> /code-review on the
+  diff -> fresh adversarial-reviewer -> fix every finding -> repeat
   until two consecutive passes find nothing above minor.
 
 ASK THE HUMAN ONLY FOR a named credential, a billing or account action, a spend

@@ -3,9 +3,7 @@
 Run from the repository root. These tools author or inspect local example assets; the customer app never calls them.
 
 - `build-geometry.py` reproducibly builds 24 shaped SVG outlines using pinned OFL fonts and records lineage. Read its command help and the geometry manifest before rebuilding immutable v1 assets.
-- `render-contact-sheets.mjs` assembles camera evidence for inspection.
 
-Customer journey: `pnpm --filter @jewelo/web test:atelier:e2e` (localhost:3001 must be running).
 
 Model/assembly/storage tests: `pnpm --filter @jewelo/web test:atelier`.
 

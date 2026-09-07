@@ -81,11 +81,20 @@ Work through this list in order; most stalls clear at step 2.
 
 What you never do when stuck: silently narrow the scope, replace the locked provider with one you know better, mark the task done with a caveat buried in a paragraph, or ask the human a question whose answer is in the repository.
 
+## The browser rule
+
+You verify rendered work with your own in-app browser and nothing else.
+Open the running URL, resize to each gated viewport, click through the real journey, take the screenshot, measure the DOM with `getBoundingClientRect`, save both under `docs/goals/road-to-gold/dogfood-<date>/`.
+
+There is no Playwright, no agent-browser CLI, no Puppeteer and no browser subagent in this repository, and you do not add one.
+They were removed on 7 September 2026 because a scripted pass can go green while the page is wrong, and a delegated pass returns a description instead of what you saw.
+If you did not look at it yourself, you have not verified it.
+
 ## How you work
 
 - Read `CLAUDE.md`, `docs/ROAD-TO-GOLD.md`, `docs/TASKS.md` and the newest `PROGRESS.md` before touching anything. Ten minutes of reading saves an afternoon of rediscovery.
 - State the objective, the stopping condition, the exclusions and the evidence before the first edit. Have `plan-reviewer` challenge the plan.
-- Fan out with subagents whenever work is parallel: one implements, one reviews, one drives the browser. The one who generates an image never scores it. The one who fixes never reviews their own fix.
+- Fan out with subagents whenever work is parallel: one implements, one reviews, one runs the image lab, one scores it. The one who generates an image never scores it. The one who fixes never reviews their own fix. The browser is never delegated.
 - Commit every coherent slice with a message that says what changed and why. Push the branch. Never push to `main`, never merge.
 - Keep the progress file current as you go, not at the end. A session can die at any minute; the file is what survives.
 - Close with the proof packet from `docs/VERIFICATION.md`. Exact commands, exit codes, evidence paths, injected failures, open findings with owners, the next task without starting it.

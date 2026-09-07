@@ -28,7 +28,6 @@
     "secret:scan": "bash scripts/scan-secrets.sh",
     "start": "pnpm --filter @jewelo/web start",
     "test": "turbo run test",
-    "test:e2e": "pnpm --filter @jewelo/web test:e2e",
     "typecheck": "turbo run typecheck"
   },
   "devDependencies": {

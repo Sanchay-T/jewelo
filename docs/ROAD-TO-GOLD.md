@@ -153,7 +153,8 @@ Each phase closes only after this loop runs clean:
 ```text
 implement
   -> pnpm typecheck, pnpm lint, pnpm test
-  -> agent-browser dogfood of the real journey at every gated viewport
+  -> the lead agent dogfoods the real journey in its own in-app browser
+     at every gated viewport, screenshot and DOM measurement per step
   -> /code-review on the diff
   -> fresh adversarial-reviewer with no prior context
   -> fix every finding
@@ -163,14 +164,16 @@ until two consecutive passes produce no new finding above "minor"
 
 Rules for the loop:
 
-- The dogfood pass drives the deployed URL, not a description of it, and captures a screenshot after every step.
+- The dogfood pass is done by the lead agent itself, in its in-app browser, against the running URL: local for iteration, staging before handoff.
+  It is not delegated and it is not scripted.
+  There is no Playwright, no agent-browser CLI and no other browser automation in this repository; they were removed on 7 September 2026 on Sanchay's instruction.
+- Every step gets a screenshot saved under `docs/goals/road-to-gold/dogfood-<date>/`, and every geometry claim gets a DOM measurement (`getBoundingClientRect`) written into the report, not eyeballed.
 - A reviewer never fixes what it finds, and a fixer never reviews its own work.
 - A finding is closed by evidence, not by an assertion that it was addressed.
 - Anything left open is written into the handoff with an owner, never silently dropped.
 
 Gated viewports for every UI pass: 1440x900, 1280x720, 1024x768, 768x1024, 390x844, 390x600, 320x568, plus RTL and reduced motion.
-`apps/web/playwright.customer.config.ts` currently gates 1440x900, 1024x900, 768x900, 390x900 and 320x568.
-The two short-desktop heights where the sticky panel is tightest are missing and must be added, with a geometry assertion that the preview panel's bottom never passes the action bar's top.
+The sticky preview panel is tightest at the two short desktop heights; measure `previewSticky` bottom against `actionBar` top at scroll 0 and after scrolling, and record both numbers.
 
 ## What "ready for Omran" means
 

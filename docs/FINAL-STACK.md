@@ -41,7 +41,7 @@ This is the production architecture Jewelo v2 will implement. It was selected ag
 | Fast motion preview | `bytedance/seedance-2.0/fast/image-to-video` | Four 4-second, 9:16, 720p, silent previews when fal concurrency >= 4. |
 | Selected final motion | `bytedance/seedance-2.0/image-to-video` | Optional 6-second standard-quality render for the selected direction. |
 | Observability | Sentry + PostHog + Inngest/provider traces | Correlate request, run, task, variation, provider-call and cost IDs; redact PII. |
-| Testing | Vitest, Playwright, MSW, axe, visual screenshots | Unit, contract, integration, browser, accessibility, concurrency and failure injection. |
+| Testing | Vitest, MSW; the lead agent's in-app browser for every rendered check | Unit, contract, integration, concurrency and failure injection in Vitest. Browser verification is done by the agent driving the real URL itself, with screenshots and DOM measurements committed as evidence. No Playwright, no agent-browser CLI, no other browser automation. |
 | CI/CD | GitHub Actions + DigitalOcean/Supabase integrations | Staging deploys are gated until the integrated app exists; production is manual and commit-pinned. |
 
 ## Repository layout

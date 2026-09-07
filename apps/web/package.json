@@ -8,10 +8,8 @@
     "lint": "eslint src next.config.ts postcss.config.mjs",
     "start": "next start",
     "test": "vitest run",
-    "test:e2e": "playwright test",
     "typecheck": "tsc --noEmit",
-    "test:atelier": "vitest run src/features/atelier",
-    "test:atelier:e2e": "playwright test -c playwright.customer.config.ts"
+    "test:atelier": "vitest run src/features/atelier"
   },
   "dependencies": {
     "@fontsource/inter": "5.2.8",
@@ -32,7 +30,6 @@
     "react-zoom-pan-pinch": "3.7.0"
   },
   "devDependencies": {
-    "@playwright/test": "1.58.2",
     "@tailwindcss/postcss": "4.3.3",
     "@testing-library/jest-dom": "6.9.1",
     "@testing-library/react": "16.3.2",
