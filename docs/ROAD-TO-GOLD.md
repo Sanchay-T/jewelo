@@ -152,7 +152,7 @@ Each phase closes only after this loop runs clean:
 
 ```text
 implement
-  -> pnpm typecheck, pnpm lint, pnpm test
+  -> it builds and deploys (pnpm build is the only mechanical check)
   -> the lead agent dogfoods the real journey in its own in-app browser
      at every gated viewport, screenshot and DOM measurement per step
   -> /code-review on the diff
@@ -164,6 +164,11 @@ until two consecutive passes produce no new finding above "minor"
 
 Rules for the loop:
 
+- **No tests and no CI/CD until Sanchay says otherwise** (7 September 2026).
+  Do not write unit tests, do not run the Vitest suites as a gate, do not add GitHub Actions, pre-commit hooks, or any pipeline between a commit and the deploy.
+  The existing Vitest files stay in the repository untouched and unrun.
+  The path is: edit, `pnpm build` passes, push the branch, `scripts/digitalocean/deploy.sh staging <branch>`, look at it.
+  Nothing else sits between dev and prod.
 - The dogfood pass is done by the lead agent itself, in its in-app browser, against the running URL: local for iteration, staging before handoff.
   It is not delegated and it is not scripted.
   There is no Playwright, no agent-browser CLI and no other browser automation in this repository; they were removed on 7 September 2026 on Sanchay's instruction.

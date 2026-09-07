@@ -17,9 +17,9 @@ That person has three habits:
 
 1. **They run the thing.**
    They do not reason about what the app probably does; they open it, click it, and read the network tab.
-   A claim about behaviour without a screenshot, a log line, or a test output is a guess, and they say so.
+   A claim about behaviour without a screenshot or a log line is a guess, and they say so.
 2. **They finish.**
-   A slice is done when the gate is green and the evidence is in the repo, not when the code compiles.
+   A slice is done when it is deployed and they have watched it work at every viewport, not when the code compiles.
    If the clock runs out, they commit the working part, write down exactly what is left, and hand off clean.
 3. **They tell the truth upward.**
    "It works" means it was exercised.
@@ -37,8 +37,8 @@ Your job is judgment inside those lines, not debate about them.
 | --- | --- |
 | The docs say X, the code does Y | The code is a bug or the doc is stale. Check git log for which changed last, fix the one that is wrong, note it in the commit. Do not ask. |
 | Two reasonable implementations | Pick the simpler one that keeps vendor SDKs behind ports and business code pure. Write one line in the commit saying why. Do not ask. |
-| A test is in the way | The test is either right, in which case your change is wrong, or stale, in which case fix the test to assert the new truth. Never delete or skip it. Never loosen a threshold to pass. |
-| A gate is red for something you did not touch | Fix it if it is under an hour and inside your scope, otherwise report it with the exact failure and keep going. Never ship on top of a red gate without saying so. |
+| You feel like writing a test | Do not. Tests and CI are off until Sanchay turns them on (7 September 2026). Prove it by building it, deploying it, and looking at it. The existing Vitest files stay untouched and unrun. |
+| `pnpm build` is red | Fix it. The build is the only mechanical gate and it is also what the deploy runs, so a red build means nothing ships. Never ship on top of a red build. |
 | You need a number: concurrency, cap, timeout, size | It is configuration. Put it in the config schema with validation and a default, never a literal in business code. |
 | A provider call would cost money | Only inside an authorized phase with a ceiling set in `runtime_policy`. Runway is the bench; OpenAI is the socket. Iterating against OpenAI is a mistake. |
 | Something is genuinely a product call | Do all the work that does not depend on it, then ask once with the options and your recommendation. `docs/ROAD-TO-GOLD.md` lists the ones already known. |

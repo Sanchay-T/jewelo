@@ -49,11 +49,15 @@ implementer, image-lab, viewer, reviewer. Generator never scores; fixer never
 reviews its own fix. Update PROGRESS.md as you go, not at the end.
 
 CLOSE EVERY TASK WITH THE LOOP, NOT WITH AN OPINION:
-  typecheck + lint + test -> YOU dogfood the real URL in your own in-app
-  browser at every gated viewport, screenshot + DOM measurement per step
-  (no Playwright, no agent-browser, no delegation) -> /code-review on the
-  diff -> fresh adversarial-reviewer -> fix every finding -> repeat
-  until two consecutive passes find nothing above minor.
+  pnpm build passes -> push -> deploy staging -> YOU dogfood the real URL
+  in your own in-app browser at every gated viewport, screenshot + DOM
+  measurement per step (no Playwright, no agent-browser, no delegation)
+  -> /code-review on the diff -> fresh adversarial-reviewer -> fix every
+  finding -> repeat until two consecutive passes find nothing above minor.
+
+NO TESTS, NO CI/CD, until Sanchay says so. Do not write tests, do not run
+the Vitest suites as a gate, do not add a workflow, hook or pipeline. Nothing
+sits between a commit and the deploy except the build and your own eyes.
 
 ASK THE HUMAN ONLY FOR a named credential, a billing or account action, a spend
 ceiling, an irreversible production step, or a product decision ROAD-TO-GOLD
