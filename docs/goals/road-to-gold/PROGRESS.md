@@ -17,9 +17,13 @@ Done:
 - Runway MCP confirmed from this session: workspace "Sanchay", `gpt-image-2` available, 305,042 credits.
 - Local dev server runs from `.claude/launch.json` on port 3011 (3001 is held by an unrelated two-day-old `server.mjs`).
 
-Open:
+- Four read-only gap analyses (identity engine and verifier, prompt lab and anchors, infra and operator, plus my own localhost measurements) became `docs/TASKS.md`: 11 decisions for Sanchay, phases 0 to 7 plus launch, every task with files, change, proof, size, owner.
+- Lab state corrected: the holdout trio (Noor, Layla, Muhammad) was already generated for v4.3, 5 of 6 scored passed, 11 images unscored; 91 ledger rows, not 73.
+- Removed Playwright (6 configs, 5 specs, 2 scripts, the dependency) and the vendored `agent-browser` skill, `skills-lock.json`, the `browser-qa` agent. Tests and CI/CD suspended on Sanchay's instruction; `pnpm build` and the lead agent's own in-app browser are the gate. Recorded in `FINAL-STACK.md`, `VERIFICATION.md`, `ROAD-TO-GOLD.md`, `MINDSET.md`, `GOAL-PROMPT.md`.
+- Rewrote `CLAUDE.md` (62 lines, no launch-time imports) per the Claude Code memory and best-practice docs, the HumanLayer CLAUDE.md guidance, and the Fable 5.1 prompting guide (autonomy block, scope is the deliverable, finish the turn, targeted edits, lead keeps working while subagents run). `AGENTS.md` is now a symlink to it so Codex reads the same file.
+- Local git push is pinned to the `Sanchay-T` account in `.git/config`; the active `gh` account had switched to `sanchay-devstrum` and was getting 403.
 
-- `docs/TASKS.md` is being built from four gap analyses (identity and verifier, prompt lab and anchors, infra and operator, localhost dogfood).
+Open:
 - Product decisions still unanswered: which looks the shop sells if only framed minimal plus Classic prove out; wait-on-page versus send-it-to-you.
 - Supabase Devonel org egress grace ends 29 September 2026: Sanchay's action.
 - Repository `Sanchay-T/jewelo` is public: Sanchay's action.
