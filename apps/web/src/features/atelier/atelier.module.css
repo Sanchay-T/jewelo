@@ -932,7 +932,7 @@
     gap: 24px;
   }
   .photo {
-    aspect-ratio: 3/4;
+    aspect-ratio: 4/5;
   }
   .previewSticky {
     top: 20px;
@@ -1207,12 +1207,28 @@
   }
 }
 @media (min-width: 768px) {
+  /* Every catalogue photograph is 1122x1402, exactly 4:5. Matching the frame to
+     the source ratio shows the complete pendant; the previous fixed height with
+     a cover crop showed roughly the middle 46% and cut letters at 1024/1440.
+     The width is derived from the same height cap, so a short window makes the
+     frame smaller instead of letterboxing it or cropping the name. */
   .photo {
-    height: clamp(340px, 56vh, 620px);
-    aspect-ratio: auto;
+    --frame-max-block: clamp(220px, calc(100dvh - 340px), 560px);
+    aspect-ratio: 4/5;
+    block-size: auto;
+    /* The width follows the resolved height through the ratio, so the frame is
+       always exactly the shape of the photograph: no crop and no letterbox,
+       however short the window makes the sticky column. */
+    inline-size: auto;
+    max-block-size: var(--frame-max-block);
+    max-inline-size: 100%;
+    margin-inline: auto;
+    align-self: center;
   }
-  .photo > img {
-    object-position: 50% 65%;
+  .photo > img,
+  .previousPhoto {
+    object-fit: contain;
+    object-position: 50% 50%;
   }
 }
 .app button,
@@ -1282,7 +1298,7 @@
 }
 @media (min-width: 768px) {
   .photo {
-    height: clamp(220px, calc(100dvh - 340px), 560px);
+    --frame-max-block: clamp(220px, calc(100dvh - 340px), 560px);
   }
   .previewSummary {
     padding-block: 12px 8px;
@@ -1301,7 +1317,7 @@
 }
 @media (min-width: 768px) and (max-width: 1099px) {
   .photo {
-    height: clamp(200px, calc(100dvh - 440px), 460px);
+    --frame-max-block: clamp(200px, calc(100dvh - 440px), 460px);
   }
 }
 
@@ -1376,6 +1392,12 @@
   transform: translateY(-2px);
   border-color: #9a875c;
 }
+.previewNote {
+  font-size: 11px;
+  line-height: 1.5;
+  color: #59564d;
+  margin: 0 0 10px !important;
+}
 .sampleDetails {
   border-block-end: 1px solid #d8d0c0;
   padding: 0 0 10px;
@@ -1447,12 +1469,13 @@
   .previewSticky {
     display: flex;
     flex-direction: column;
-    height: min(940px, calc(100dvh - 124px));
+    height: auto;
+    max-height: min(940px, calc(100dvh - 124px));
   }
   .previewSticky .photo {
     height: auto;
-    flex: 1 1 auto;
-    min-height: 160px;
+    flex: 0 1 auto;
+    align-self: center;
   }
   .previewDock {
     flex: none;
@@ -1461,7 +1484,7 @@
     height: auto;
   }
   .previewSticky:has(.sampleDetails[open]) .photo {
-    height: 240px;
+    --frame-max-block: 240px;
     flex: none;
   }
 }
@@ -1540,7 +1563,7 @@
     height: auto;
   }
   .previewSticky .photo {
-    height: 280px;
+    --frame-max-block: 280px;
     flex: none;
   }
 }
@@ -1704,3 +1727,86 @@
 
 .previousPhoto { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 65%; opacity: .28; pointer-events: none; }
 .previewState > :not(.previousPhoto) { position: relative; z-index: 1; }
+
+/* W4 - the customer's own preview: added states only, existing palette,
+   typography and spacing scale. Nothing above is restyled. */
+.ownPreview {
+  background: #f6f2eb;
+  border-inline-start: 2px solid var(--gold);
+  padding: 16px 18px;
+  margin-block: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow-wrap: anywhere;
+}
+.ownPreview > small {
+  font-size: 8px;
+  letter-spacing: 1.2px;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+.ownPreview p {
+  font-size: 12px;
+  line-height: 1.7;
+}
+.ownHeadline {
+  font: 19px var(--serif);
+  line-height: 1.45 !important;
+}
+.ownStatusRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 6px;
+}
+.ownStatusRow b {
+  font-weight: 500;
+}
+.ownStatusRow span {
+  color: var(--muted);
+}
+.ownStatusRow[data-status="ready"] span {
+  color: #6c6a2f;
+}
+.channelPicker {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.channelPicker button {
+  border: 1px solid var(--line);
+  background: var(--paper);
+  padding: 10px 14px;
+  font-size: 11px;
+  min-height: 44px;
+}
+.channelPicker button[aria-pressed="true"] {
+  border-color: var(--ink);
+}
+.photoSwitch {
+  display: flex;
+  gap: 8px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line);
+}
+.photoSwitch button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--line);
+  background: var(--paper);
+  padding: 8px 12px;
+  font-size: 11px;
+  min-height: 44px;
+}
+.photoSwitch button[aria-pressed="true"] {
+  border-color: var(--ink);
+}
+.photoSwitch img {
+  width: 28px;
+  height: 28px;
+  object-fit: cover;
+}

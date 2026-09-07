@@ -1,9 +1,11 @@
 # DigitalOcean deployment
 
 This is the operating runbook for Jewelo's Next.js web unit. DigitalOcean App
-Platform hosts the web process; Supabase remains the system of record and
-Trigger.dev continues to run OpenAI and fal jobs. Do not move long-running AI
-work into App Platform request handlers.
+Platform hosts the web process and, since 7 September 2026, a second
+self-hosted `inngest` service component that is the durable job engine.
+Supabase remains the system of record. Long-running AI work still never runs in
+a customer request handler: it runs in an Inngest function served at
+`/api/inngest`, which Inngest calls over the app's private network.
 
 ## Current state
 
@@ -17,7 +19,9 @@ work into App Platform request handlers.
 | Production app | `jewelo-production` (created only at approved cutover) |
 | Production deployment configuration | Repository workflows, scripts, and `infra/digitalocean/spec-contract.json`; not yet production-accepted |
 | Runtime | Node.js 24, pnpm 11.23.0, DigitalOcean Node buildpack |
-| Compute | One fixed shared 1-vCPU/1-GiB instance per app |
+| Compute | One fixed shared 1-vCPU/1-GiB instance per component |
+| Components | `web` (git, Node buildpack, public `/`) and `inngest` (Docker Hub `inngest/inngest:v1.44.0-amd64`, `internal_ports: [8288]`, no public route) |
+| Job engine | Self-hosted Inngest. `web` reaches it at `${inngest.PRIVATE_URL}`; it reaches `web` at `${web.PRIVATE_URL}/api/inngest` |
 
 The staging URL and `/api/health` have returned HTTP 200 for deployed commit
 `a842443`. This is staging evidence, not production acceptance. A production URL
@@ -90,9 +94,11 @@ validation; a PostHog key also requires its host. `NEXT_PUBLIC_APP_URL` is the
 the Next.js browser bundle; never place privileged credentials under that
 prefix.
 
-The upload allowlist excludes Trigger.dev, OpenAI, fal, database passwords, and
-other job-only credentials. Keep those in the job platform that executes the
-work. The GitHub `Preview` and `Production` environments contain the scoped
+The upload allowlist covers the web component's own configuration, including
+`INNGEST_EVENT_KEY` and `INNGEST_SIGNING_KEY`, because the Inngest functions run
+inside this component. `INNGEST_BASE_URL` and `INNGEST_CRON_ENABLED` are shipped
+only when present. The Inngest server component's own configuration
+(`INNGEST_POSTGRES_URI`) is set on that component, never on `web`. The GitHub `Preview` and `Production` environments contain the scoped
 `DIGITALOCEAN_ACCESS_TOKEN`; do not put application configuration in workflow
 YAML or GitHub output.
 
@@ -189,8 +195,13 @@ requires HTTP 200 from `/api/health`, and checks that the response is JSON:
 pnpm do:smoke -- https://APP.ondigitalocean.app
 ```
 
+It also requires HTTP 200 from `/api/readiness` with
+`"keyEnvironment":"prod"`, which is true only when `INNGEST_SIGNING_KEY` is set
+and `INNGEST_DEV` is not, so a deployment that would silently skip signature
+verification fails the smoke test.
+
 The smoke test is liveness evidence only. Release acceptance must also exercise
-the relevant browser, Supabase authorization/RLS/Storage/Realtime, Trigger
+the relevant browser, Supabase authorization/RLS/Storage/Realtime, Inngest
 dispatch, and provider flows.
 
 Rollback restores the complete spec and immutable source ref from a known-good
@@ -223,3 +234,56 @@ Stop after one failed externally mutating retry unless the failure is clearly
 transient and the next action is safe. Preserve deployment IDs and logs as
 evidence; never solve deployment failures by weakening verification or exposing
 credentials.
+
+## Inngest component (added 7 September 2026)
+
+Trigger.dev was removed. The durable job engine is a self-hosted Inngest server
+running as a second App Platform service component in the same app.
+
+```text
+inngest (image inngest/inngest:v1.44.0-amd64, run_command "inngest start")
+  internal_ports: [8288]        no public ingress rule; the dashboard is private
+  instance_count: 1             the queue lives in the process, never scale out
+  health_check: TCP 8288
+  INNGEST_EVENT_KEY             shared with web
+  INNGEST_SIGNING_KEY           shared with web, BARE 64-char hex
+  INNGEST_POSTGRES_URI          IPv4 session pooler, search_path=inngest
+  INNGEST_SDK_URL               ${web.PRIVATE_URL}/api/inngest
+  INNGEST_PORT / INNGEST_HOST   8288 / 0.0.0.0
+
+web
+  INNGEST_BASE_URL              ${inngest.PRIVATE_URL}
+  INNGEST_CRON_ENABLED          1   (only this environment registers the crons)
+```
+
+Every `inngest start` flag is also an `INNGEST_<FLAG>` environment variable, so
+the component needs no argument list beyond `inngest start`.
+
+Two hard constraints discovered on 7 September:
+
+- Supabase's direct database host (`db.<ref>.supabase.co`) resolves to IPv6
+  only, and App Platform has no IPv6 egress. `INNGEST_POSTGRES_URI` must use the
+  IPv4 **session** pooler on port 5432
+  (`postgres.<ref>@aws-0-ap-south-1.pooler.supabase.com:5432`), not the
+  transaction pooler on 6543 that the dashboard offers by default.
+- A second service with `http_port` makes App Platform generate an ingress rule
+  that collides with `web`'s `/` prefix. Use `internal_ports` instead: the
+  component is then reachable only on the app's private network.
+- `inngest start` rejects a prefixed signing key
+  (`signing-key must be hex string with even number of chars`). Use bare hex
+  from `openssl rand -hex 32`. The SDK accepts bare hex and also strips the
+  `signkey-<env>-` prefix that Inngest Cloud issues, so one value serves both.
+
+Inngest's own tables are kept out of the Supabase migration surface with
+`?options=-c search_path=inngest` on the pooler URI and a pre-created `inngest`
+schema, so `supabase db diff` stays clean.
+
+`scripts/digitalocean/deploy.sh` selects the git-backed service by name (`web`),
+never by index, because `services[0]` is no longer guaranteed to be the web app.
+
+### Switching to Inngest Cloud
+
+Cloud is a one-variable switch. Remove `INNGEST_BASE_URL` from `web`, replace
+`INNGEST_EVENT_KEY` and `INNGEST_SIGNING_KEY` with the Cloud values, delete the
+`inngest` component, and sync `https://APP.ondigitalocean.app/api/inngest` from
+the Inngest dashboard. No application code changes.

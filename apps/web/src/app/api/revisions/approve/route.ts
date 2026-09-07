@@ -4,7 +4,7 @@ import {
   readJson,
   supabaseRequest,
 } from "../../../../lib/backend/supabase-rest";
-import { attemptImmediateDispatch } from "../../../../lib/backend/trigger-dispatch";
+import { attemptImmediateDispatch } from "../../../../lib/backend/job-dispatch";
 
 export async function POST(request: Request) {
   try {

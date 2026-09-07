@@ -4,7 +4,6 @@ import {
   assertBrowserSafeEnv,
   jobsEnvSchema,
   parseBrowserEnv,
-  parseTriggerConfigEnv,
 } from "./index";
 
 describe("environment boundaries", () => {
@@ -59,13 +58,30 @@ describe("environment boundaries", () => {
     }
   });
 
-  it("requires a Trigger project before loading its config", () => {
-    expect(() => parseTriggerConfigEnv({})).toThrow(/TRIGGER_PROJECT_REF/);
-    expect(
-      parseTriggerConfigEnv({ TRIGGER_PROJECT_REF: "proj_development" }),
-    ).toEqual({
-      TRIGGER_PROJECT_REF: "proj_development",
+  it("keeps the Inngest keys optional but blank-safe", () => {
+    const parsed = jobsEnvSchema.safeParse({
+      SUPABASE_URL: "https://example.supabase.co",
+      SUPABASE_SERVICE_ROLE_KEY: "service-role",
+      INNGEST_EVENT_KEY: "",
+      INNGEST_BASE_URL: "",
+      INNGEST_CRON_ENABLED: "",
     });
+    expect(parsed.success).toBe(true);
+    if (parsed.success) {
+      expect(parsed.data.INNGEST_EVENT_KEY).toBeUndefined();
+      expect(parsed.data.INNGEST_BASE_URL).toBeUndefined();
+      expect(parsed.data.INNGEST_CRON_ENABLED).toBeUndefined();
+    }
+    const selfHosted = jobsEnvSchema.safeParse({
+      SUPABASE_URL: "https://example.supabase.co",
+      SUPABASE_SERVICE_ROLE_KEY: "service-role",
+      INNGEST_EVENT_KEY: "event-key",
+      // `inngest start` requires bare hex; Inngest Cloud adds a signkey- prefix.
+      INNGEST_SIGNING_KEY: "deadbeefdeadbeef",
+      INNGEST_BASE_URL: "http://inngest:8288",
+      INNGEST_CRON_ENABLED: "1",
+    });
+    expect(selfHosted.success).toBe(true);
   });
 
   it("accepts real mode only when provider credentials are server-side", () => {

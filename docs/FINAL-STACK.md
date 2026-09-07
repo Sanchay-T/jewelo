@@ -1,5 +1,14 @@
 > UI reset — 5 September 2026: customer UI and prior screen/flow proposals were discarded by the user. Read `docs/START-HERE.md` and `docs/OMRAN-BUSINESS-CONTEXT.md` first. Customer-journey prescriptions below are superseded for brainstorming; retained backend contracts do not approve a new UI.
 
+> Stack change - 7 September 2026 (user instruction): **Inngest replaces
+> Trigger.dev** as the durable job engine, self-hosted as a second DigitalOcean
+> App Platform component, with functions served from the Next.js app at
+> `/api/inngest`. Inngest Cloud is a one-environment-variable switch. Every
+> "Trigger.dev" sentence below that describes the *engine* now describes
+> Inngest; the durable-execution responsibilities themselves are unchanged.
+> See `docs/goals/overnight-launch/w0/INNGEST.md` and `docs/DECISION-REGISTER.md`
+> (D-017 supersedes D-005).
+
 # Final production stack
 
 **Decision date:** 26 August 2026  
@@ -25,22 +34,24 @@ This is the production architecture Jewelo v2 will implement. It was selected ag
 | Identity | Supabase Auth | Anonymous guest first; link email, phone, or OAuth later. |
 | Realtime | Supabase Realtime | Subscribe to run/task/asset milestones filtered by run or design. |
 | Media | Supabase private Storage | RLS, signed URLs, resumable/S3 upload paths, immutable object keys. |
-| Durable jobs | Trigger.dev Cloud | Durable fan-out, queues, retries, waits, idempotency, cancellation, preview branches. |
+| Durable jobs | Inngest, self-hosted (superseded Trigger.dev Cloud, 7 Sep 2026) | Durable steps, event-id idempotency, keyed concurrency, crons, retries, cancellation. Functions are served by `apps/web` at `/api/inngest`; the server runs as its own App Platform component. |
 | Product/worn images | OpenAI `gpt-image-2-2026-04-21` | Direct OpenAI adapter; four independent variation calls with canonical references. |
 | Visual QA | OpenAI `gpt-5.6-luna` plus deterministic checks | Structured verifier; canonical geometry remains authoritative. |
 | Motion gateway | fal.ai | Managed model inference/queue API, not the business workflow engine. |
 | Fast motion preview | `bytedance/seedance-2.0/fast/image-to-video` | Four 4-second, 9:16, 720p, silent previews when fal concurrency >= 4. |
 | Selected final motion | `bytedance/seedance-2.0/image-to-video` | Optional 6-second standard-quality render for the selected direction. |
-| Observability | Sentry + PostHog + Trigger/provider traces | Correlate request, run, task, variation, provider-call and cost IDs; redact PII. |
+| Observability | Sentry + PostHog + Inngest/provider traces | Correlate request, run, task, variation, provider-call and cost IDs; redact PII. |
 | Testing | Vitest, Playwright, MSW, axe, visual screenshots | Unit, contract, integration, browser, accessibility, concurrency and failure injection. |
-| CI/CD | GitHub Actions + DigitalOcean/Supabase/Trigger integrations | Staging deploys are gated until the integrated app exists; production is manual and commit-pinned. |
+| CI/CD | GitHub Actions + DigitalOcean/Supabase integrations | Staging deploys are gated until the integrated app exists; production is manual and commit-pinned. |
 
 ## Repository layout
 
 ```text
 apps/
-  web/                  Next.js application and BFF routes
-  jobs/                 Trigger.dev tasks and orchestration
+  web/                  Next.js application, BFF routes, and the Inngest
+                        functions served at /api/inngest
+  jobs/                 pure job bodies (no engine SDK): presentation, video,
+                        outbox dispatch, identity anchor
 
 packages/
   domain/               pure business types, policies, state machines
@@ -77,9 +88,12 @@ Supabase wins for Jewelo because:
 - branch environments isolate database, Auth, Storage, Realtime, and API credentials;
 - Trigger.dev is a purpose-built durable execution layer for media fan-out and long waits.
 
-## Why Trigger.dev remains the orchestration layer
+## Why a durable job engine remains the orchestration layer
 
-Neither OpenAI nor fal.ai is the Jewelo workflow engine. AI generation needs:
+Neither OpenAI nor fal.ai is the Jewelo workflow engine. Trigger.dev held this
+role until 7 September 2026 and was replaced by Inngest at the user's
+instruction after the Trigger.dev credits ran out; the requirements it was
+chosen against are unchanged. AI generation needs:
 
 - four-way fan-out with progressive downstream release;
 - provider-specific and per-organization concurrency limits;
@@ -89,7 +103,7 @@ Neither OpenAI nor fal.ai is the Jewelo workflow engine. AI generation needs:
 - deployment-safe task versions;
 - one inspectable timeline across OpenAI, fal and Supabase.
 
-Trigger.dev owns orchestration. Supabase owns durable business truth. OpenAI and fal execute model inference.
+Inngest owns orchestration. Supabase owns durable business truth. OpenAI and fal execute model inference.
 
 ## Why direct OpenAI for stills
 

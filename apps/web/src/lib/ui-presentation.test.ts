@@ -27,12 +27,14 @@ describe("Caleums UI presentation mappings", () => {
     });
   });
 
-  it("marks only Classic and Minimal Arabic as provider-supported", () => {
+  // Since commit d2bfe4e every Arabic style generates for visitors; the
+  // pre-spend operator-review gate lives in the jobs pipeline, not here.
+  it("marks every Arabic style as provider-supported for visitors", () => {
     expect(arabicStyleLabel("contemporary")).toBe("Arabic · Classic");
     expect(isProviderSupportedArabicStyle("contemporary")).toBe(true);
     expect(isProviderSupportedArabicStyle("minimal")).toBe(true);
-    expect(isProviderSupportedArabicStyle("diwani")).toBe(false);
-    expect(isProviderSupportedArabicStyle("kufi")).toBe(false);
+    expect(isProviderSupportedArabicStyle("diwani")).toBe(true);
+    expect(isProviderSupportedArabicStyle("kufi")).toBe(true);
   });
 
   it("defines the four independent still presentations and ratios", () => {

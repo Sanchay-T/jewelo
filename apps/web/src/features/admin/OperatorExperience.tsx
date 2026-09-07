@@ -15,6 +15,7 @@ import {
 import { CaleumsWordmark } from "@/components/app-shell";
 import { useJewelo } from "@/lib/jewelo-provider";
 import { PromptLibrary } from "./PromptLibrary";
+import { PreviewRequestQueue } from "./PreviewRequestQueue";
 import {
   arabicStyleLabel,
   isProviderSupportedArabicStyle,
@@ -267,6 +268,7 @@ export function OperatorExperience({ locale }: { locale: Locale }) {
                 </span>
               </section>
             )}
+            <PreviewRequestQueue />
             {reviewDrafts.length > 0 && (
               <section
                 className="clm-review-handoff"

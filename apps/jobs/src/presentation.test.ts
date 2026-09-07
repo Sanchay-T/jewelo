@@ -160,6 +160,31 @@ const media: GeneratedMedia = {
   estimatedCostCents: 0,
 };
 
+/**
+ * Re-points the fixture at a dependent view (`on_skin`), which is the only
+ * shape that reaches the style-anchor gate and the dependency gate.
+ */
+function asDependentView(state: ReturnType<typeof fixture>) {
+  const load = state.repository.load.bind(state.repository);
+  state.repository.load = async (taskId: string) => {
+    const loaded = await load(taskId);
+    return {
+      ...loaded,
+      task: {
+        ...loaded.task,
+        presentation_view: "on_skin" as const,
+        aspect_ratio: "4:5" as const,
+        dependency_task_id: "task-studio",
+      },
+    };
+  };
+  state.repository.signedDependencyStillUrl = async () => ({
+    url: "https://signed.invalid/studio.png",
+    assetId: "asset-studio",
+  });
+  return state;
+}
+
 describe("generic presentation execution", () => {
   it("stores provider output before verification and completion", async () => {
     const state = fixture();
@@ -296,7 +321,10 @@ describe("generic presentation execution", () => {
   });
 
   it("blocks a missing exact style anchor before reserving or calling a provider", async () => {
+    // The studio still deliberately receives no style anchor, so the gate is
+    // only reachable from a dependent view.
     const state = fixture();
+    asDependentView(state);
     state.repository.signedStyleAnchorUrl = vi.fn(async () => {
       throw new Error(
         "style_anchor_missing:ddd3862a-05cb-4b95-9b6b-aa8d6453293b",
@@ -315,5 +343,45 @@ describe("generic presentation execution", () => {
     expect(state.repository.reserveAttempt).not.toHaveBeenCalled();
     expect(generator.generate).not.toHaveBeenCalled();
     expect(state.events).toContain("pre_spend_blocked");
+  });
+  it("blocks a dependent view once when its studio still is terminal", async () => {
+    // Without this the stale sweeper re-queues the view every two minutes
+    // forever: 120 outbox rows accumulated for one blocked run on 7 Sep 2026.
+    const state = fixture();
+    asDependentView(state);
+    state.repository.signedDependencyStillUrl = async () => undefined;
+    state.repository.dependencyTerminalStatus = vi.fn(async () => "blocked");
+    state.repository.reserveAttempt = vi.fn();
+    const generator: StudioGenerator = {
+      generate: vi.fn(),
+    } as unknown as StudioGenerator;
+    const verifier: StudioVerifier = {
+      verify: vi.fn(),
+    } as unknown as StudioVerifier;
+    await expect(
+      executePresentationTask("task-1", state.repository, generator, verifier),
+    ).resolves.toEqual({ status: "operator_review", attempt: 0 });
+    expect(state.events).toContain("pre_spend_blocked");
+    expect(state.repository.reserveAttempt).not.toHaveBeenCalled();
+    expect(generator.generate).not.toHaveBeenCalled();
+  });
+
+  it("still defers a dependent view whose studio still can yet arrive", async () => {
+    const state = fixture();
+    asDependentView(state);
+    state.repository.signedDependencyStillUrl = async () => undefined;
+    state.repository.dependencyTerminalStatus = vi.fn(async () => undefined);
+    state.repository.reserveAttempt = vi.fn();
+    const generator: StudioGenerator = {
+      generate: vi.fn(),
+    } as unknown as StudioGenerator;
+    const verifier: StudioVerifier = {
+      verify: vi.fn(),
+    } as unknown as StudioVerifier;
+    await expect(
+      executePresentationTask("task-1", state.repository, generator, verifier),
+    ).resolves.toEqual({ status: "deferred" });
+    expect(state.events).not.toContain("pre_spend_blocked");
+    expect(state.repository.reserveAttempt).not.toHaveBeenCalled();
   });
 });

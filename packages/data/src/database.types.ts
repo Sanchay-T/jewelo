@@ -901,6 +901,82 @@ export type Database = {
         }
         Relationships: []
       }
+      preview_requests: {
+        Row: {
+          contact: Json
+          contacted_at: string | null
+          created_at: string
+          design_id: string | null
+          design_revision_id: string | null
+          generation_run_id: string | null
+          id: string
+          locale: string
+          operator_note: string | null
+          principal_id: string
+          request_key: string | null
+          sample_reference: Json | null
+          specification: Json
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          contact: Json
+          contacted_at?: string | null
+          created_at?: string
+          design_id?: string | null
+          design_revision_id?: string | null
+          generation_run_id?: string | null
+          id?: string
+          locale: string
+          operator_note?: string | null
+          principal_id: string
+          request_key?: string | null
+          sample_reference?: Json | null
+          specification: Json
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          contact?: Json
+          contacted_at?: string | null
+          created_at?: string
+          design_id?: string | null
+          design_revision_id?: string | null
+          generation_run_id?: string | null
+          id?: string
+          locale?: string
+          operator_note?: string | null
+          principal_id?: string
+          request_key?: string | null
+          sample_reference?: Json | null
+          specification?: Json
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "preview_requests_design_id_fkey"
+            columns: ["design_id"]
+            isOneToOne: false
+            referencedRelation: "designs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "preview_requests_design_revision_id_fkey"
+            columns: ["design_revision_id"]
+            isOneToOne: false
+            referencedRelation: "design_revisions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "preview_requests_generation_run_id_fkey"
+            columns: ["generation_run_id"]
+            isOneToOne: false
+            referencedRelation: "generation_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       price_snapshots: {
         Row: {
           assumptions: Json
@@ -1313,6 +1389,8 @@ export type Database = {
         Row: {
           daily_generation_limit: number
           environment: string
+          global_daily_generation_limit: number
+          global_max_reserved_spend_cents: number
           id: boolean
           max_reserved_spend_cents: number
           studio_reservation_cents: number
@@ -1323,6 +1401,8 @@ export type Database = {
         Insert: {
           daily_generation_limit?: number
           environment?: string
+          global_daily_generation_limit?: number
+          global_max_reserved_spend_cents?: number
           id?: boolean
           max_reserved_spend_cents?: number
           studio_reservation_cents?: number
@@ -1333,6 +1413,8 @@ export type Database = {
         Update: {
           daily_generation_limit?: number
           environment?: string
+          global_daily_generation_limit?: number
+          global_max_reserved_spend_cents?: number
           id?: boolean
           max_reserved_spend_cents?: number
           studio_reservation_cents?: number

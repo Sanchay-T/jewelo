@@ -43,6 +43,17 @@ export const trustedWebEnvSchema = z.object({
   SUPABASE_URL: url,
   SUPABASE_SERVICE_ROLE_KEY: nonEmpty,
   SUPABASE_PUBLISHABLE_KEY: optionalNonEmpty,
+  // Inngest is the durable job engine. The keys are optional in the schema so a
+  // mock/dev checkout still validates; the dispatch path itself fails closed
+  // with `not_configured` when the event key is absent.
+  INNGEST_EVENT_KEY: optionalNonEmpty,
+  INNGEST_SIGNING_KEY: optionalNonEmpty,
+  // Set only when the app talks to a self-hosted Inngest server. Unset means
+  // Inngest Cloud, which is the one-variable switch between the two.
+  INNGEST_BASE_URL: optionalUrl,
+  // Cron functions claim work from the shared outbox, so exactly one deployed
+  // environment may register them. Local dev leaves this unset.
+  INNGEST_CRON_ENABLED: optionalOf(z.enum(["0", "1"])),
   SHOPIFY_STORE_DOMAIN: optionalNonEmpty,
   SHOPIFY_CLIENT_ID: optionalNonEmpty,
   SHOPIFY_CLIENT_SECRET: optionalNonEmpty,
@@ -52,14 +63,8 @@ export const trustedWebEnvSchema = z.object({
   OPERATOR_SESSION_SECRET: optionalNonEmpty,
 });
 
-export const triggerConfigEnvSchema = z.object({
-  TRIGGER_PROJECT_REF: nonEmpty,
-});
-
 export const jobsEnvSchema = trustedWebEnvSchema
   .extend({
-    TRIGGER_PROJECT_REF: optionalNonEmpty,
-    TRIGGER_SECRET_KEY: optionalNonEmpty,
     PROVIDER_MODE: z.enum(["mock", "real"]).default("mock"),
     FAL_KEY: optionalNonEmpty,
     OPENAI_API_KEY: optionalNonEmpty,
@@ -114,12 +119,6 @@ export function parseBrowserEnv(input: Record<string, string | undefined>) {
 
 export function parseJobsEnv(input: Record<string, string | undefined>) {
   return jobsEnvSchema.parse(input);
-}
-
-export function parseTriggerConfigEnv(
-  input: Record<string, string | undefined>,
-) {
-  return triggerConfigEnvSchema.parse(input);
 }
 
 export function assertBrowserSafeEnv(

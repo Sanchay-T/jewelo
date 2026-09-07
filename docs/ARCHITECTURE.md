@@ -1,5 +1,14 @@
 > UI reset — 5 September 2026: customer UI and prior screen/flow proposals were discarded by the user. Read `docs/START-HERE.md` and `docs/OMRAN-BUSINESS-CONTEXT.md` first. Customer-journey prescriptions below are superseded for brainstorming; retained backend contracts do not approve a new UI.
 
+> Stack change - 7 September 2026 (user instruction): **Inngest replaces
+> Trigger.dev** as the durable job engine, self-hosted as a second DigitalOcean
+> App Platform component, with functions served from the Next.js app at
+> `/api/inngest`. Inngest Cloud is a one-environment-variable switch. Every
+> "Trigger.dev" sentence below that describes the *engine* now describes
+> Inngest; the durable-execution responsibilities themselves are unchanged.
+> See `docs/goals/overnight-launch/w0/INNGEST.md` and `docs/DECISION-REGISTER.md`
+> (D-017 supersedes D-005).
+
 # Jewelo v2 architecture
 
 The final Caleums parent/child asset graph and provider split are frozen in
@@ -17,13 +26,15 @@ Next.js on DigitalOcean App Platform
   |-- authenticated command routes
   |-- server-rendered reads
   |-- signed media access
+  |-- /api/inngest: the durable job functions themselves
   |
   +--------------------+
   |                    |
   v                    v
-Supabase Mumbai        Trigger.dev Cloud
-Postgres/Auth/         durable queues, retries,
-Realtime/Storage       fan-out, waits, observability
+Supabase Mumbai        Inngest (self-hosted,
+Postgres/Auth/         same App Platform app):
+Realtime/Storage       durable steps, queues,
+                       retries, crons, observability
   ^                    |
   |                    |
   | task/asset updates |
@@ -58,12 +69,12 @@ The application is a modular monolith with two deployable units—web and jobs�
 - realtime milestone delivery;
 - branch-isolated preview data.
 
-### Trigger.dev
+### Inngest (self-hosted; superseded Trigger.dev on 7 September 2026)
 
-- consume outbox-dispatched run IDs;
+- receive outbox-dispatched events whose event id is the durable dispatch key;
 - enforce global provider, per-organization and per-profile queues;
 - batch fan out four independent variation pipelines;
-- retry classified transient failures with stable idempotency keys;
+- re-dispatch classified transient failures through the durable outbox, never through a blind process retry;
 - wait/poll external providers without tying up web requests;
 - checkpoint metadata and write durable results to Supabase;
 - cancel queued/dependent work and reconcile lost dispatches;
@@ -168,7 +179,7 @@ The pipeline is **streaming by variation**, not staged behind global barriers:
 - a slow/failing sibling cannot block a successful variation;
 - selecting a direction may start an optional standard-quality final motion render without replacing the fast preview.
 
-Do not wrap waitable Trigger child calls in arbitrary `Promise.all()`. Use Trigger batch fan-out APIs and named queues so child execution, retries and metadata remain visible.
+Progressive release is carried by the outbox, not by a parent task awaiting children: a still that passes QA writes its dependents' outbox rows and dispatches them in the same Inngest run. Keyed concurrency (`"openai-image"`, `"fal-video"`) replaces the named Trigger queues.
 
 ## Task state
 
@@ -182,6 +193,8 @@ pending -> queued -> running -> verifying -> succeeded
 Run status is derived from task state and may be `partial_success`. Successful assets are never discarded because a sibling failed.
 
 ## Queue and concurrency defaults
+
+Keyed Inngest concurrency, one constant key per provider resource:
 
 ```text
 openai-image
@@ -204,7 +217,11 @@ organization
 
 Provider concurrency and requests-per-minute values are environment policy, not domain constants. If a provider quota is below the desired parallelism, Trigger queues excess work and the customer sees `queued`; the system never claims false parallelism.
 
-Stable idempotency key:
+Stable idempotency key. It is written on the outbox row as
+`dispatch_idempotency_key` and sent to Inngest as the **event id**, which is
+Inngest's exactly-once identity. A legitimate re-dispatch (operator retry, the
+stale sweeper) writes a new key and is therefore a new event; a duplicate
+dispatch of the same row is silently deduplicated.
 
 ```text
 run:{runId}:variation:{index}:{kind}:release:{releaseId}

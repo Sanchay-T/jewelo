@@ -11,7 +11,11 @@ import {
   sampleKey,
   samples,
   visualFields,
+  connected,
+  resolveOptionFamily,
 } from "./catalogue";
+import v2Manifest from "./sample-assets.json";
+import v6Manifest from "./sample-assets-v6.json";
 import { emptyDraft, views, mockGeneration } from "./model";
 
 describe("pre-generated sample catalogue", () => {
@@ -154,3 +158,53 @@ it("every configuration rotates only a single coherent sample family", () => {
   expect(ruby.assets.map((photo) => photo.view)).toEqual(["Studio"]);
   expect(ruby.anchor.asset.id).toBe("ruby");
 }, 30_000); // Exhaustive 131,328-configuration family audit.
+
+describe("reviewer-rejected files stay disconnected", () => {
+  // The Diwani master and its three dependent views spell أسمك ("your name"),
+  // not the exemplar name أسماء. A word-by-word read on 8 September 2026
+  // disconnected them. The files stay on disk for lineage; a shopper who picks
+  // Arabic + Diwani must see "no photo", never a misspelled pendant.
+  const rejectedFiles = [
+    "/atelier/v2/arabic-diwani-v2.png",
+    "/atelier/v6/arabic-diwani-v2-worn.png",
+    "/atelier/v6/arabic-diwani-v2-close.png",
+    "/atelier/v6/arabic-diwani-v2-dark.png",
+  ];
+  it("keeps every rejected manifest entry out of the displayable catalogue", () => {
+    for (const manifest of [v2Manifest, v6Manifest]) {
+      for (const entry of manifest) {
+        if (!entry.rejected) continue;
+        expect(entry.rejected.length).toBeGreaterThan(20);
+        expect(samples.some((sample) => sample.src.endsWith(entry.file))).toBe(false);
+      }
+    }
+    for (const file of rejectedFiles) {
+      expect(existsSync(new URL("../../../public" + file, import.meta.url))).toBe(true);
+      expect(samples.map((sample) => sample.src)).not.toContain(file);
+    }
+  });
+  it("shows a labelled Arabic sibling for Arabic Diwani, never the misspelled files", () => {
+    const draft = { ...emptyDraft, script: "Arabic" as const, name: "أسماء", lettering: "Diwani" as const };
+    const family = resolveOptionFamily(draft);
+    // The option stays selectable and is marked "sample coming"; the preview
+    // keeps a photograph of the same look in the same script, clearly labelled.
+    expect(family.missing).toBe(true);
+    expect(family.basis).toBe("sibling");
+    expect(family.assets.length).toBeGreaterThan(0);
+    expect(family.tier1Differences).toEqual(["lettering"]);
+    for (const photo of family.assets) {
+      expect(photo.src).not.toContain("diwani");
+      expect(photo.draft.script).toBe("Arabic");
+      expect(photo.draft.construction).toBe("Classical");
+      expect(photo.draft.lettering).not.toBe("Diwani");
+    }
+    for (const view of views)
+      expect(resolveSample(draft, view).exact).toBe(false);
+  });
+  it("drops rejected entries and keeps reviewed ones", () => {
+    expect(connected([{ id: "a", file: "a.png", view: "Studio", patch: {} }], 2))
+      .toEqual([{ id: "a", file: "a.png", view: "Studio", patch: {}, version: 2 }]);
+    expect(connected([{ id: "b", file: "b.png", view: "Studio", patch: {}, rejected: "wrong-spelling" }], 2))
+      .toEqual([]);
+  });
+});

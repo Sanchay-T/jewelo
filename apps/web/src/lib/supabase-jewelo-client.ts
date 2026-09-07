@@ -398,11 +398,13 @@ export class SupabaseJeweloClient implements LegacyJeweloClient {
     const onVisible = () => {
       if (document.visibilityState === "visible") refresh();
     };
-    document.addEventListener("visibilitychange", onVisible);
+    const hasDocument = typeof document !== "undefined";
+    if (hasDocument) document.addEventListener("visibilitychange", onVisible);
     return () => {
       stopped = true;
       window.clearInterval(pollingFallback);
-      document.removeEventListener("visibilitychange", onVisible);
+      if (hasDocument)
+        document.removeEventListener("visibilitychange", onVisible);
       if (channel) void this.#ensureSupabase().removeChannel(channel);
     };
   }

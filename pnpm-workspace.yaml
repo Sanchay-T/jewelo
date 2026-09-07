@@ -4,6 +4,9 @@ packages:
 allowBuilds:
   "@depot/cli": true
   esbuild: true
+  # Inngest pulls protobufjs in via OpenTelemetry. Its postinstall only
+  # regenerates files that already ship in the published package.
+  protobufjs: false
   sharp: true
 minimumReleaseAgeExclude:
   - "@turbo/darwin-64@2.10.12"

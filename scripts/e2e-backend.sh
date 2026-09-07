@@ -10,8 +10,10 @@
 #   E2E_MOCK      1 = run the mock-only steps       (default 1)
 #   E2E_MOCKFAIL_TIMEOUT  seconds allowed for the MOCKFAIL block/re-block polls
 #                 (default 900)
-#   E2E_BAD_TRIGGER_BASE  optional second web instance with a broken Trigger
-#                 key, used for the injected dispatch-failure step
+#   E2E_BAD_INNGEST_BASE  optional second web instance whose Inngest transport
+#                 is broken (unreachable INNGEST_BASE_URL, or a rejected
+#                 INNGEST_EVENT_KEY), used for the injected dispatch-failure
+#                 step
 #
 # Supabase service-role credentials come from the repository .env.
 # Operator credentials (OPERATOR_EMAIL / OPERATOR_PASSPHRASE) are optional;
@@ -188,7 +190,11 @@ RUN_A=$(j '.run_id'); DESIGN_A=$(j '.approved_design_id'); REV_A=$(j '.revision_
 APPROVE_MS=$(( $(now) - TA ))
 expect_status "06 revisions.approve" "201" "run=$RUN_A dispatch=$(j '{dispatchState,acceptedCount,pendingCount}') in ${APPROVE_MS}ms"
 expect_eq "06 approve dispatchState" "accepted" "$(j '.dispatchState')"
-expect_eq "06 approve acceptedCount" "4" "$(j '.acceptedCount')"
+# Studio-first chain (migration 20260827150000): approve dispatches only the
+# studio still. release_dependent_tasks creates the other three outbox rows
+# after the studio still is ready, so 1 is the truthful value at this instant
+# and step 08b below proves all four are published by the end of the run.
+expect_eq "06 approve acceptedCount" "1" "$(j '.acceptedCount')"
 mark approve
 note_id run_a "$RUN_A"
 note_id design_a "$DESIGN_A"
@@ -206,7 +212,7 @@ fi
 TASK_IDS=$(echo "$STILLS" | jq -r 'map(.id)|join(",")')
 OUTBOX=$(db "outbox_events?or=(aggregate_id.eq.$RUN_A,aggregate_id.in.($TASK_IDS))&select=state,aggregate_type,payload")
 PUBLISHED=$(echo "$OUTBOX" | jq '[.[]|select(.state=="published")]|length')
-expect_eq "08 db.outbox published" "4" "$PUBLISHED" "states=$(echo "$OUTBOX" | jq -c 'map(.state)')"
+expect_eq "08 db.outbox published (studio only)" "1" "$PUBLISHED" "states=$(echo "$OUTBOX" | jq -c 'map(.state)')"
 
 # ---------------------------------------------------------------------------
 # 5. One active run per design; idempotent replay
@@ -263,10 +269,20 @@ else
   info "14 poll.four-stills-ready" "-" "last=$(echo "$LAST_ROWS" | jq -c 'map({(.presentation_view):.status})|add')"
 fi
 mark all_stills_ready
+OUTBOX=$(db "outbox_events?or=(aggregate_id.eq.$RUN_A,aggregate_id.in.($TASK_IDS))&select=state,aggregate_type,payload")
+PUBLISHED=$(echo "$OUTBOX" | jq '[.[]|select(.state=="published")]|length')
+expect_eq "08b db.outbox published (all four views)" "4" "$PUBLISHED" "states=$(echo "$OUTBOX" | jq -c 'map(.state)')"
 RUNST=$(db "generation_runs?id=eq.$RUN_A&select=status,reserved_spend_cents,actual_spend_cents,operator_review_reason")
 expect_eq "15 run.status complete" "complete" "$(echo "$RUNST" | jq -r '.[0].status')" "$(echo "$RUNST" | jq -c '.[0]')"
 ASSETS=$(db "assets?run_id=eq.$RUN_A&select=id,presentation_view,byte_size,provider,model,mime_type")
-expect_eq "16 db.assets count" "4" "$(echo "$ASSETS" | jq 'length')" "$(echo "$ASSETS" | jq -c 'map({(.presentation_view):.byte_size})|add') provider=$(echo "$ASSETS" | jq -r '.[0].provider')"
+# The four stills are the assertion. A motion asset may or may not exist: the
+# mock preview can finish before the step-12 cancel lands, and an asset that was
+# fully generated and copied to private storage is deliberately kept (rule 11)
+# even though its task ends `cancelled`.
+STILL_ASSETS=$(echo "$ASSETS" | jq '[.[]|select(.presentation_view!="motion_preview")]|length')
+expect_eq "16 db.assets count (stills)" "4" "$STILL_ASSETS" "$(echo "$ASSETS" | jq -c 'map({(.presentation_view):.byte_size})|add') provider=$(echo "$ASSETS" | jq -r '.[0].provider')"
+MOTION_ASSETS=$(echo "$ASSETS" | jq '[.[]|select(.presentation_view=="motion_preview")]|length')
+[[ "$MOTION_ASSETS" != "0" ]] && info "16b motion asset kept after cancel" "-" "$MOTION_ASSETS (preview finished before the cancel landed)"
 
 TS=$(now)
 req GET /api/state "" "${AUTH_A[@]}"
@@ -416,9 +432,9 @@ if [[ "$E2E_MOCK" == "1" ]]; then
   note_id run_mockfail "$RUN_F"
 
   if [[ -n "$RUN_F" && "$RUN_F" != "null" ]]; then
-    # `presentation-task-v1` runs with maxAttempts 1, so a non-terminal provider
-    # failure parks the task in `retrying` until the 7-minute stale sweeper
-    # (cron */2) re-dispatches it. The driver calls the same service-role
+    # The `presentation-task` Inngest function runs with retries 0, so a
+    # non-terminal provider failure parks the task in `retrying` until the
+    # stale sweeper (cron */2) re-dispatches it. The driver calls the same service-role
     # recovery RPC with a now() window so the scenario finishes in minutes
     # instead of ~20; the recovery path exercised is identical.
     nudge_recovery() {
@@ -476,8 +492,8 @@ fi
 # ---------------------------------------------------------------------------
 # 12. Mock-only injected dispatch failure
 # ---------------------------------------------------------------------------
-if [[ -n "${E2E_BAD_TRIGGER_BASE:-}" ]]; then
-  SAVED=$BASE; BASE=$E2E_BAD_TRIGGER_BASE
+if [[ -n "${E2E_BAD_INNGEST_BASE:-}" ]]; then
+  SAVED=$BASE; BASE=$E2E_BAD_INNGEST_BASE
   req POST /api/designs/drafts "{\"locale\":\"ar\",\"specification\":$SPEC_OK}" "${AUTH_B[@]}"
   DRAFT_D=$(j '.id')
   req POST /api/revisions/approve "{\"draftId\":\"$DRAFT_D\",\"specification\":$SPEC_OK,\"idempotencyKey\":\"$(uuid)\"}" "${AUTH_B[@]}"
@@ -491,7 +507,7 @@ if [[ -n "${E2E_BAD_TRIGGER_BASE:-}" ]]; then
   poll_until "44 dispatch-failure.reconciled" 180 5 dispatch_reconciled \
     && ok "44 dispatch-failure.reconciled" "-" "outbox published by reconciliation"
 else
-  skip "43-44 injected dispatch failure" "set E2E_BAD_TRIGGER_BASE to a web instance with a broken Trigger key"
+  skip "43-44 injected dispatch failure" "set E2E_BAD_INNGEST_BASE to a web instance with an unreachable INNGEST_BASE_URL"
 fi
 
 # ---------------------------------------------------------------------------
@@ -505,6 +521,84 @@ OPEN_SUM=$(echo "$OPEN" | jq '[.[]?|.reservation_cents]|add // 0' 2>/dev/null ||
 info "45 reservations.raw" "-" "usage=$(echo "$USAGE" | jq -c .) open_tasks=$(echo "$OPEN" | jq -c 'map({s:.status,c:.reservation_cents})')"
 expect_eq "45 reservations.usage == open task reservations" "$OPEN_SUM" "$USAGE_RESERVED" "(cents)"
 info "46 run.reserved_spend_cents" "-" "$(db "generation_runs?id=eq.$RUN_A&select=status,reserved_spend_cents,actual_spend_cents" | jq -c '.[0]')"
+
+# ---------------------------------------------------------------------------
+# 14. Honest degrade: preview request capture (W4)
+#
+# The production failure state: the shopper keeps the labelled illustrated
+# sample and leaves a way to be contacted, and the request becomes durable
+# operator work. Skipped until the preview_requests migration is applied.
+# ---------------------------------------------------------------------------
+PR_TABLE=$(curl -s -o /dev/null -m 30 -w '%{http_code}' "${SR[@]}" "$SUPABASE_URL/rest/v1/preview_requests?select=id&limit=1")
+if [[ "$PR_TABLE" != "200" ]]; then
+  skip "47-53 preview-request capture" "preview_requests table absent (rest=$PR_TABLE); apply supabase/migrations/20260907010000_preview_requests.sql"
+else
+  PR_SPEC='{"script":"Arabic","names":["ليلى"],"construction":"Diamond rails","lettering":"Kufi","gold":{"karat":"18K","color":"Rose gold"},"stones":{"coverage":"Accent","gemstone":"Lab diamond"},"pendantWidthMm":32,"chainStyle":"Rolo"}'
+  PR_SAMPLE='{"manifestId":"sample-assets-v9","sampleId":"akr-white-none-Studio-v9","view":"Studio","assetPath":"/atelier/arabic-kufi-rails-white-none-studio.png"}'
+  PR_KEY=$(uuid)
+  PR_BODY="{\"locale\":\"ar\",\"specification\":$PR_SPEC,\"contact\":{\"channel\":\"whatsapp\",\"value\":\"+971 50 123 4567\",\"name\":\"Layla\"},\"sampleReference\":$PR_SAMPLE,\"requestKey\":\"$PR_KEY\"}"
+
+  req POST /api/preview-requests "$PR_BODY" "${AUTH_A[@]}"
+  PREQ=$(j '.id')
+  expect_status "47 preview-request.create" "201" "id=$PREQ status=$(j '.status')"
+  note_id preview_request_a "$PREQ"
+  expect_eq "47 preview-request.status new" "new" "$(j '.status')"
+  expect_eq "47 preview-request.customer read hides operator fields" "nullnull" "$(j '.contact')$(j '.operatorNote')"
+
+  if [[ -n "$PREQ" && "$PREQ" != "null" ]]; then
+    PRROW=$(db "preview_requests?id=eq.$PREQ&select=principal_id,status,contact,sample_reference,request_key")
+    expect_eq "48 preview-request.owner is the anonymous principal" "$UID_A" "$(echo "$PRROW" | jq -r '.[0].principal_id')"
+    expect_eq "48 preview-request.contact normalized to E.164" "+971501234567" "$(echo "$PRROW" | jq -r '.[0].contact.value')"
+    expect_eq "48 preview-request.labelled sample recorded" "illustrative-reference-only" "$(echo "$PRROW" | jq -r '.[0].sample_reference.role')"
+    AUDITED=$(db "audit_events?action=eq.preview_request.captured&select=detail" | jq --arg id "$PREQ" '[.[]?|select(.detail.previewRequestId==$id)]|length')
+    expect_eq "48 preview-request.audit row appended" "1" "$AUDITED"
+
+    req POST /api/preview-requests "$PR_BODY" "${AUTH_A[@]}"
+    expect_status "49 preview-request.idempotent-replay" "200" "id=$(j '.id')"
+    expect_eq "49 preview-request.replay same id" "$PREQ" "$(j '.id')"
+    expect_eq "49 preview-request.replay creates no duplicate" "1" "$(db "preview_requests?principal_id=eq.$UID_A&request_key=eq.$PR_KEY&select=id" | jq 'length')"
+
+    req GET "/api/preview-requests/$PREQ" "" "${AUTH_A[@]}"
+    expect_status "50 preview-request.owner reload" "200" "status=$(j '.status')"
+
+    req GET "/api/preview-requests/$PREQ" "" "${AUTH_B[@]}"
+    expect_status "51 neg.cross-tenant preview-request GET" "403 404" ""
+    expect_code "51 neg.cross-tenant preview-request code (want not_found)"
+  fi
+
+  req POST /api/preview-requests "{\"locale\":\"ar\",\"specification\":$PR_SPEC,\"contact\":{\"channel\":\"whatsapp\",\"value\":\"12345\"}}" "${AUTH_A[@]}"
+  expect_status "52 neg.preview-request unusable contact" "422" ""
+  expect_code "52 neg.preview-request contact code (want invalid_input)"
+
+  req POST /api/preview-requests "$PR_BODY"
+  expect_status "52b neg.preview-request without bearer" "401" ""
+
+  PRJAR="$(mktemp -t e2e-preview-operator-jar)"
+  if [[ -n "${OPERATOR_EMAIL:-}" && -n "${OPERATOR_PASSPHRASE:-}" && -n "$PREQ" && "$PREQ" != "null" ]]; then
+    req POST /api/operator/session "{\"email\":\"$OPERATOR_EMAIL\",\"passphrase\":\"$OPERATOR_PASSPHRASE\"}" -c "$PRJAR"
+    if [[ "$HTTP" == "200" ]]; then
+      req GET /api/operator/preview-requests "" -b "$PRJAR"
+      expect_status "53 operator.preview-requests list" "200" "count=$(j '.previewRequests|length')"
+      LISTED=$(echo "$BODY" | jq --arg id "$PREQ" '[.previewRequests[]?|select(.id==$id)]|length')
+      expect_eq "53 operator.list contains the capture" "1" "$LISTED" "summary=$(echo "$BODY" | jq -r --arg id "$PREQ" '[.previewRequests[]?|select(.id==$id)|.summary][0] // "-"')"
+
+      req POST /api/operator/commands "{\"command\":\"preview_request.mark_contacted\",\"targetId\":\"$PREQ\",\"idempotencyKey\":\"$(uuid)\",\"payload\":{\"note\":\"E2E driver\"}}" -b "$PRJAR"
+      expect_status "53b operator.mark_contacted" "200" "$(j '{id,status}')"
+      PRAFTER=$(db "preview_requests?id=eq.$PREQ&select=status,contacted_at,operator_note" | jq -c '.[0]')
+      expect_eq "53b preview-request.status contacted" "contacted" "$(echo "$PRAFTER" | jq -r '.status')" "$PRAFTER"
+      expect_true "53b preview-request.contacted_at set" "timestamp recorded" "$(echo "$PRAFTER" | jq '.contacted_at != null')"
+
+      req DELETE /api/operator/session "" -b "$PRJAR" -c "$PRJAR"
+      expect_status "53c operator.session.delete" "200" ""
+    else
+      skip "53 operator.preview-requests list" "operator session rejected (http=$HTTP)"
+    fi
+  else
+    skip "53 operator.preview-requests list" "OPERATOR_EMAIL/OPERATOR_PASSPHRASE absent from .env"
+    skip "53b operator.mark_contacted" "operator credentials absent"
+  fi
+  rm -f "$PRJAR"
+fi
 
 # ---------------------------------------------------------------------------
 # Summary

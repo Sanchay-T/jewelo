@@ -1,3 +1,12 @@
+> Stack change - 7 September 2026 (user instruction): **Inngest replaces
+> Trigger.dev** as the durable job engine, self-hosted as a second DigitalOcean
+> App Platform component, with functions served from the Next.js app at
+> `/api/inngest`. Inngest Cloud is a one-environment-variable switch. Every
+> "Trigger.dev" sentence below that describes the *engine* now describes
+> Inngest; the durable-execution responsibilities themselves are unchanged.
+> See `docs/goals/overnight-launch/w0/INNGEST.md` and `docs/DECISION-REGISTER.md`
+> (D-017 supersedes D-005).
+
 # Media concurrency and fast-result contract
 
 **Decision date:** 26 August 2026  
@@ -10,12 +19,12 @@ four-variation media topology where the final contract differs.
 
 ## What owns what
 
-- **Trigger.dev** is the durable workflow and concurrency layer.
+- **Inngest** (self-hosted, since 7 September 2026) is the durable workflow and concurrency layer.
 - **OpenAI** is the primary still-image provider through the direct API.
 - **fal.ai** is the managed inference gateway for Seedance video generation.
 - **Supabase** is the durable source of truth for runs, tasks, assets, usage, and customer-visible progress.
 
-fal.ai is not the Jewelo workflow engine. Its queue API and webhooks execute model jobs; Trigger.dev owns business orchestration, retries, dependencies, fairness, cancellation, and recovery.
+fal.ai is not the Jewelo workflow engine. Its queue API and webhooks execute model jobs; Inngest owns business orchestration, retries, dependencies, fairness, cancellation, and recovery.
 
 ## Pipeline
 
@@ -36,7 +45,7 @@ Trigger parent batch-dispatches variations 1..4
 
 There is no artificial barrier that waits for all four products before starting downstream work. The first verified product appears immediately; its worn image and motion preview start while other variations are still processing.
 
-## Trigger.dev queues
+## Inngest concurrency keys
 
 ```text
 openai-image        concurrency 4 initially
@@ -46,19 +55,19 @@ fal-seedance-final  concurrency 1-2
 per-organization    concurrency key, default 4 active variation pipelines
 ```
 
-Actual provider limits are configuration, not domain constants. Trigger tasks use idempotency keys shaped as:
+Actual provider limits are configuration, not domain constants. Every dispatch carries the durable outbox key as its Inngest event id, shaped as:
 
 ```text
 run:{runId}:variation:{index}:{kind}:release:{releaseId}
 ```
 
-Use Trigger batch fan-out APIs rather than `Promise.all()` around waitable child tasks. Every child persists milestones independently so partial success is visible and recoverable.
+Progressive release runs through the outbox: a verified still writes and dispatches its dependents inside the same run. Every task persists milestones independently so partial success is visible and recoverable.
 
 ## Provider quota gates
 
 ### OpenAI
 
-Four product requests may start together. Worn calls unlock progressively. OpenAI publishes GPT Image 2 tier limits from 5 IPM at Tier 1 to 20 IPM at Tier 2 and higher thereafter. Before real traffic, the project must demonstrate enough effective capacity for the selected pipeline; otherwise Trigger queues excess work without lying to the UI.
+Four product requests may start together. Worn calls unlock progressively. OpenAI publishes GPT Image 2 tier limits from 5 IPM at Tier 1 to 20 IPM at Tier 2 and higher thereafter. Before real traffic, the project must demonstrate enough effective capacity for the selected pipeline; otherwise Inngest queues excess work without lying to the UI.
 
 ### fal.ai
 
@@ -120,7 +129,7 @@ queued -> generating -> verifying -> ready
 
 ## Open-source framework decision
 
-Genblaze was the strongest open-source media-pipeline candidate reviewed. It offers provider-agnostic Python pipelines and provenance, but it would add a Python runtime and duplicate Trigger.dev's workflow responsibilities. Jewelo borrows its provenance-manifest ideas, not its execution runtime.
+Genblaze was the strongest open-source media-pipeline candidate reviewed. It offers provider-agnostic Python pipelines and provenance, but it would add a Python runtime and duplicate the job engine's workflow responsibilities. Jewelo borrows its provenance-manifest ideas, not its execution runtime.
 
 Other media-agent/editor projects reviewed were not appropriate as the authoritative production workflow for customer orders.
 

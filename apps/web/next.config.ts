@@ -28,6 +28,9 @@ const nextConfig: NextConfig = {
   },
   reactStrictMode: true,
   transpilePackages: ["@jewelo/config"],
+  // `@jewelo/jobs` renders the deterministic identity anchor with sharp, a
+  // native module the Inngest route loads at runtime; it must not be bundled.
+  serverExternalPackages: ["sharp"],
   turbopack: {
     root: workspaceRoot,
   },

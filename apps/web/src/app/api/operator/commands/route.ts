@@ -5,7 +5,7 @@ import {
   supabaseRequest,
 } from "../../../../lib/backend/supabase-rest";
 import { requireOperatorSession } from "../../../../lib/backend/operator-session";
-import { attemptImmediateDispatch } from "../../../../lib/backend/trigger-dispatch";
+import { attemptImmediateDispatch } from "../../../../lib/backend/job-dispatch";
 
 export async function POST(request: Request) {
   try {
@@ -13,16 +13,22 @@ export async function POST(request: Request) {
     const admin = adminConfig();
     const input = await readJson<{
       command: string;
-      designId: string;
+      designId?: string;
       targetId: string;
       payload?: Record<string, unknown>;
       idempotencyKey: string;
-    }>(request, ["command", "designId", "targetId", "idempotencyKey"]);
+    }>(request, ["command", "targetId", "idempotencyKey"]);
+    // An honest-degrade capture can exist without a design, so `designId` is
+    // required per command instead of for the whole envelope.
+    if (input.command !== "preview_request.mark_contacted" && !input.designId)
+      throw new Error("designId required");
+    // Every design-scoped command has already been rejected above without one.
+    const designId = input.designId ?? "";
     let result: unknown;
     if (input.command === "issue_quote") {
       result = await supabaseRequest(
         admin,
-        `/rest/v1/quotes?id=eq.${encodeURIComponent(input.targetId)}&design_id=eq.${encodeURIComponent(input.designId)}&status=eq.requested`,
+        `/rest/v1/quotes?id=eq.${encodeURIComponent(input.targetId)}&design_id=eq.${encodeURIComponent(designId)}&status=eq.requested`,
         {
           method: "PATCH",
           headers: { prefer: "return=representation" },
@@ -83,6 +89,30 @@ export async function POST(request: Request) {
           body: JSON.stringify({ status: input.payload?.status }),
         },
       );
+    } else if (input.command === "preview_request.mark_contacted") {
+      // Only a `new` capture transitions, so a repeated click is a no-op and
+      // never rewrites contacted_at. The current row is still returned.
+      const note = input.payload?.note;
+      const patched = await supabaseRequest<Array<Record<string, unknown>>>(
+        admin,
+        `/rest/v1/preview_requests?id=eq.${encodeURIComponent(input.targetId)}&status=eq.new`,
+        {
+          method: "PATCH",
+          headers: { prefer: "return=representation" },
+          body: JSON.stringify({
+            status: "contacted",
+            contacted_at: new Date().toISOString(),
+            operator_note:
+              typeof note === "string" ? note.slice(0, 2000) : undefined,
+          }),
+        },
+      );
+      result = patched.length
+        ? patched
+        : await supabaseRequest<Array<Record<string, unknown>>>(
+            admin,
+            `/rest/v1/preview_requests?id=eq.${encodeURIComponent(input.targetId)}&select=id,status,contacted_at&limit=1`,
+          );
     } else if (input.command === "request_video") {
       result = await supabaseRequest(admin, "/rest/v1/rpc/request_video_task", {
         method: "POST",

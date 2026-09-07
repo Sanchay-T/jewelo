@@ -1,0 +1,190 @@
+{
+  "captured_at": "2026-09-07T00:24:55+00:00",
+  "engine": "inngest self-hosted (inngest-cli dev 1.44.0-a54673a45) at http://localhost:8288",
+  "app_id": "jewelo-caleums",
+  "app_serve_url": [
+    "http://localhost:3001/api/inngest"
+  ],
+  "cron_functions_registered_via": "INNGEST_CRON_ENABLED=1",
+  "synced_functions": [
+    {
+      "slug": "jewelo-caleums-outbox-recovery",
+      "triggers": [
+        {
+          "cron": "* * * * *"
+        }
+      ],
+      "concurrency": [
+        {
+          "limit": 1,
+          "scope": "Fn"
+        }
+      ]
+    },
+    {
+      "slug": "jewelo-caleums-presentation-task",
+      "triggers": [
+        {
+          "event": "jewelo/presentation.requested"
+        }
+      ],
+      "concurrency": [
+        {
+          "limit": 4,
+          "key": "\"openai-image\"",
+          "scope": "Fn"
+        }
+      ]
+    },
+    {
+      "slug": "jewelo-caleums-stale-media-recovery",
+      "triggers": [
+        {
+          "cron": "*/2 * * * *"
+        }
+      ],
+      "concurrency": [
+        {
+          "limit": 1,
+          "scope": "Fn"
+        }
+      ]
+    },
+    {
+      "slug": "jewelo-caleums-video-poll",
+      "triggers": [
+        {
+          "event": "jewelo/video.poll.requested"
+        }
+      ],
+      "concurrency": []
+    },
+    {
+      "slug": "jewelo-caleums-video-submit",
+      "triggers": [
+        {
+          "event": "jewelo/video.submit.requested"
+        }
+      ],
+      "concurrency": [
+        {
+          "limit": 2,
+          "key": "\"fal-video\"",
+          "scope": "Fn"
+        }
+      ]
+    }
+  ],
+  "generation_run_id": "461d3960-559a-4f7b-bff2-f67eef97bd1f",
+  "generation_tasks": [
+    {
+      "presentation_view": "close_up",
+      "status": "ready",
+      "attempt": 1,
+      "dependent_on_studio": true
+    },
+    {
+      "presentation_view": "dark",
+      "status": "ready",
+      "attempt": 1,
+      "dependent_on_studio": true
+    },
+    {
+      "presentation_view": "motion_preview",
+      "status": "ready",
+      "attempt": 1,
+      "dependent_on_studio": true
+    },
+    {
+      "presentation_view": "on_skin",
+      "status": "ready",
+      "attempt": 1,
+      "dependent_on_studio": true
+    },
+    {
+      "presentation_view": "studio",
+      "status": "ready",
+      "attempt": 1,
+      "dependent_on_studio": false
+    }
+  ],
+  "outbox_events": [
+    {
+      "aggregate_type": "run",
+      "event_type": "presentation.requested",
+      "state": "published",
+      "attempt_count": 1,
+      "dispatch_idempotency_key": "outbox:461d3960-559a-4f7b-bff2-f67eef97bd1f:studio:release:00000000-0000-0000-0000-000000000401",
+      "inngest_event_id": "01M1WM03X97P1921EW7E6E4R77"
+    },
+    {
+      "aggregate_type": "run",
+      "event_type": "presentation.requested",
+      "state": "published",
+      "attempt_count": 1,
+      "dispatch_idempotency_key": "outbox:461d3960-559a-4f7b-bff2-f67eef97bd1f:close_up:release:00000000-0000-0000-0000-000000000503",
+      "inngest_event_id": "01M1WM05QABNQ8WRYFH989XKFS"
+    },
+    {
+      "aggregate_type": "run",
+      "event_type": "presentation.requested",
+      "state": "published",
+      "attempt_count": 1,
+      "dispatch_idempotency_key": "outbox:461d3960-559a-4f7b-bff2-f67eef97bd1f:dark:release:00000000-0000-0000-0000-000000000504",
+      "inngest_event_id": "01M1WM05R00N95C1XY1MBMTH2F"
+    },
+    {
+      "aggregate_type": "run",
+      "event_type": "presentation.requested",
+      "state": "published",
+      "attempt_count": 1,
+      "dispatch_idempotency_key": "outbox:461d3960-559a-4f7b-bff2-f67eef97bd1f:on_skin:release:00000000-0000-0000-0000-000000000502",
+      "inngest_event_id": "01M1WM05RDHJAGS7485XWS446C"
+    },
+    {
+      "aggregate_type": "task",
+      "event_type": "video.requested",
+      "state": "published",
+      "attempt_count": 1,
+      "dispatch_idempotency_key": "outbox:video:auto-preview:461d3960-559a-4f7b-bff2-f67eef97bd1f:77b07e92-8133-4446-a0ee-5b4891c10e19",
+      "inngest_event_id": "01M1WM07ADCYJ9AM9ZS1WJCWNK"
+    }
+  ],
+  "inngest_runs": [
+    {
+      "run_id": "01M1WM03YHTKG1DBC7D7M2KV49",
+      "event_id": "01M1WM03X97P1921EW7E6E4R77",
+      "status": "Completed",
+      "run_started_at": "2026-09-07T00:23:56.625Z",
+      "ended_at": "2026-09-07T00:23:58.520401Z"
+    },
+    {
+      "run_id": "01M1WM05XCVMKVEJYDCB0D7NAW",
+      "event_id": "01M1WM05QABNQ8WRYFH989XKFS",
+      "status": "Completed",
+      "run_started_at": "2026-09-07T00:23:58.636Z",
+      "ended_at": "2026-09-07T00:24:00.835544Z"
+    },
+    {
+      "run_id": "01M1WM05XCRPBCNGDPQENMQ97F",
+      "event_id": "01M1WM05R00N95C1XY1MBMTH2F",
+      "status": "Completed",
+      "run_started_at": "2026-09-07T00:23:58.636Z",
+      "ended_at": "2026-09-07T00:24:00.510483Z"
+    },
+    {
+      "run_id": "01M1WM05XCMQ88R82R1MG5NNGG",
+      "event_id": "01M1WM05RDHJAGS7485XWS446C",
+      "status": "Completed",
+      "run_started_at": "2026-09-07T00:23:58.636Z",
+      "ended_at": "2026-09-07T00:24:00.939999Z"
+    },
+    {
+      "run_id": "01M1WM07CKQ7F73CCD1B77YM58",
+      "event_id": "01M1WM07ADCYJ9AM9ZS1WJCWNK",
+      "status": "Completed",
+      "run_started_at": "2026-09-07T00:24:00.147Z",
+      "ended_at": "2026-09-07T00:24:01.366577Z"
+    }
+  ]
+}

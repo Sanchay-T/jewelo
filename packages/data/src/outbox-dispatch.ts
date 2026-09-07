@@ -18,18 +18,23 @@ interface OutboxEvent {
 
 type ClaimedOutboxEvent = OutboxEvent;
 
-export interface TriggerDispatchOptions {
+/**
+ * The only transport guarantee the outbox needs: the durable dispatch key that
+ * the job engine must treat as the deduplication identity of this event.
+ */
+export interface JobDispatchOptions {
   idempotencyKey: string;
-  idempotencyKeyTTL: "30d";
-  ttl: "1h";
+  /** Lineage only; a transport may ignore it. */
   tags: string[];
 }
 
-export interface TriggerDispatchResult {
+export interface JobDispatchResult {
+  /** The engine-side identity of the accepted dispatch (an Inngest event id). */
   id: string;
 }
 
 export interface OutboxDispatchSummary {
+  /** `triggerRunId` is the legacy name of the `outbox_events.trigger_run_id` column. */
   accepted: Array<{ outboxId: string; triggerRunId: string }>;
   pending: Array<{ outboxId: string; errorCode: string }>;
 }
@@ -38,6 +43,9 @@ interface DispatchEnvironment {
   SUPABASE_URL?: string;
   SUPABASE_SERVICE_ROLE_KEY?: string;
 }
+
+/** Absorbs clock skew between a web/job instance and Postgres. */
+const CLOCK_SKEW_TOLERANCE_MS = 30_000;
 
 function operationFor(event: OutboxEvent): DispatchOperation {
   return (
@@ -60,8 +68,8 @@ export async function dispatchPendingOutbox(
       operation: DispatchOperation;
       pollCount?: number;
     },
-    options: TriggerDispatchOptions,
-  ) => Promise<TriggerDispatchResult>,
+    options: JobDispatchOptions,
+  ) => Promise<JobDispatchResult>,
   fetcher: typeof fetch = fetch,
   scope: { aggregateId?: string } = {},
 ): Promise<OutboxDispatchSummary> {
@@ -76,8 +84,18 @@ export async function dispatchPendingOutbox(
   const aggregateFilter = scope.aggregateId
     ? `&aggregate_id=eq.${encodeURIComponent(scope.aggregateId)}`
     : "";
+  // `available_at` is written by Postgres `now()`; this filter is evaluated
+  // against the *caller's* clock. A web instance whose clock lags Postgres by
+  // even a few hundred milliseconds - routine after a laptop sleep/wake, and
+  // possible on any host between NTP syncs - would read zero rows for an
+  // outbox event it had just committed, report "nothing to dispatch", and
+  // leave the run stranded until the recovery cron noticed. The tolerance
+  // makes the read a cheap pre-filter only; `claim_outbox_event` re-checks
+  // `available_at <= now()` inside the database, so an event that is genuinely
+  // still backing off is refused there and simply skipped.
+  const readHorizon = new Date(Date.now() + CLOCK_SKEW_TOLERANCE_MS);
   const response = await fetcher(
-    `${url}/rest/v1/outbox_events?state=in.(pending,failed,dispatching)&available_at=lte.${encodeURIComponent(new Date().toISOString())}${aggregateFilter}&order=created_at&limit=50`,
+    `${url}/rest/v1/outbox_events?state=in.(pending,failed,dispatching)&available_at=lte.${encodeURIComponent(readHorizon.toISOString())}${aggregateFilter}&order=created_at&limit=50`,
     { headers },
   );
   if (!response.ok) throw new Error(`Outbox read failed:${response.status}`);
@@ -122,8 +140,6 @@ export async function dispatchPendingOutbox(
           },
           {
             idempotencyKey: claimed.dispatch_idempotency_key,
-            idempotencyKeyTTL: "30d",
-            ttl: "1h",
             tags: [
               "caleums",
               `task:${claimed.payload.taskId}`,
@@ -131,7 +147,7 @@ export async function dispatchPendingOutbox(
             ],
           },
         );
-        if (!result.id) throw new Error("trigger_run_id_missing");
+        if (!result.id) throw new Error("dispatch_run_id_missing");
         const acknowledged = await fetcher(
           `${url}/rest/v1/rpc/ack_outbox_event`,
           {

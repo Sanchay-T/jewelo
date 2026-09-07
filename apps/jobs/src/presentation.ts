@@ -159,6 +159,12 @@ export interface PresentationRepository {
   signedDependencyStillUrl?(
     task: TaskRow,
   ): Promise<{ url: string; assetId: string } | undefined>;
+  /**
+   * Terminal status of `dependency_task_id`, or undefined while it can still
+   * produce a still. A dependent view whose parent is terminal can never
+   * become dispatchable, so it must stop instead of deferring forever.
+   */
+  dependencyTerminalStatus?(task: TaskRow): Promise<string | undefined>;
   signedInspirationUrl(
     revision: RevisionRow,
     ownerId: string,
@@ -237,9 +243,17 @@ export async function executePresentationTask(
   try {
     if (task.dependency_task_id) {
       reference = await repository.signedDependencyStillUrl?.(task);
-      // A recovery dispatch can arrive before the studio still exists; wait for
-      // the release instead of spending on a scene with no pendant to copy.
-      if (!reference) return { status: "deferred" as const };
+      if (!reference) {
+        // A dependent view whose studio still is terminal can never get a
+        // pendant to copy. Deferring would let the stale sweeper re-queue it
+        // every two minutes forever; block it once instead, which also
+        // releases its reservation through the pre-spend path below.
+        const terminal = await repository.dependencyTerminalStatus?.(task);
+        if (terminal) throw new Error(`dependency_${terminal}`);
+        // Otherwise a recovery dispatch simply arrived before the studio still
+        // existed: wait for the release rather than spend on an empty scene.
+        return { status: "deferred" as const };
+      }
     }
     // Identity and exact style release existence are hard pre-spend gates.
     identity = await repository.signedIdentityUrl(
@@ -768,6 +782,13 @@ export class SupabasePresentationRepository implements PresentationRepository {
       url: await this.signedStorageUrl(asset.bucket_id, asset.object_path),
       assetId: asset.id,
     };
+  }
+  async dependencyTerminalStatus(task: TaskRow) {
+    if (!task.dependency_task_id) return undefined;
+    const rows = await this.#request<Array<{ status: string }>>(
+      `/rest/v1/generation_tasks?id=eq.${task.dependency_task_id}&status=in.(blocked,failed,cancelled)&select=status&limit=1`,
+    );
+    return rows[0]?.status;
   }
   async signedInspirationUrl(revision: RevisionRow, ownerId: string) {
     const reference = revision.specification.referenceAsset;

@@ -133,6 +133,31 @@ export type Gemstone =
   | "pink-sapphire";
 export type ConnectorStyle =
   "none" | "heart" | "infinity" | "plain" | "interlocked";
+/**
+ * Pendant construction and lettering are customer choices the atelier has always
+ * shown but the backend specification could not carry, so they were dropped on
+ * the way to a design revision. They are additive and optional: every existing
+ * revision, the `approve_and_start_studio` RPC and the fixed prompt-variable set
+ * keep working untouched. They are deliberately NOT threaded into
+ * `prompt_releases` - `create_prompt_release` pins an exact 14-variable set in
+ * the database, so widening it is a migration, not a UI change. Until then these
+ * ride on the draft and the immutable revision only, which is enough to keep the
+ * approved specification a faithful record of what the customer chose.
+ */
+export type PendantConstruction =
+  | "classical"
+  | "origami-ribbon"
+  | "framed-minimal"
+  | "diamond-rails";
+export type LetteringStyle =
+  | "classic"
+  | "minimal"
+  | "diwani"
+  | "kufi"
+  | "signature"
+  | "thuluth-inspired";
+/** Which customer surface produced the draft. Lineage only; never a provider input. */
+export type SpecificationOrigin = "caleums-atelier";
 export type SizeProfile = "delicate" | "classic" | "statement" | "custom";
 export type ChainStyle = "cable" | "curb" | "rolo" | "box";
 export interface ApprovedName {
@@ -167,6 +192,13 @@ export interface JewelrySpecification {
   stoneCoverage: StoneCoverage;
   gemstone: Gemstone;
   connector: ConnectorStyle;
+  /** Optional: absent on every revision approved before 7 September 2026. */
+  construction?: PendantConstruction;
+  /** The chosen lettering for either script. `arabicStyle` stays the Arabic
+   * identity-engine selector; this records the customer's choice for English,
+   * where the backend had no field at all. */
+  lettering?: LetteringStyle;
+  origin?: SpecificationOrigin;
   sizeProfile: SizeProfile;
   dimensions: PendantDimensions;
   chain: ChainSpecification;

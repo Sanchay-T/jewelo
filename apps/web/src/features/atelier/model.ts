@@ -118,6 +118,19 @@ export type BagItem = {
   };
   sampleId?: string;
   sampleFocus?: VisualField;
+  /**
+   * What the shopper actually got from the real pipeline, if anything.
+   * Signed media URLs live five minutes, so only durable identifiers are kept
+   * here and the image is re-read from `/api/state` under the same anonymous
+   * principal. When no personalized photograph exists, `previewRequestId` is the
+   * operator's reference for the captured request instead.
+   */
+  personalized?: {
+    runId: string;
+    designId?: string;
+    assets?: { view: View; assetId: string }[];
+    previewRequestId?: string;
+  };
 };
 export type State = {
   version: 1;
@@ -152,9 +165,6 @@ export function specification(d: Draft): Draft {
   };
 }
 export const signature = (d: Draft) => JSON.stringify(specification(d));
-export const nameLabel = (d: Draft) =>
-  [d.name, ...(d.twoNames ? [d.secondName] : [])].filter(Boolean).join(" & ") ||
-  "Your name";
 export function validate(
   d: Draft,
 ): Partial<Record<"name" | "secondName", string>> {
@@ -216,13 +226,23 @@ export const mockGeneration: GenerationPort = {
     ),
   }),
 };
-export function canAdd(d: Draft, run: Run | undefined, confirmed: boolean) {
+export function canAdd(
+  d: Draft,
+  run: Run | undefined,
+  confirmed: boolean,
+  /**
+   * A photograph of the customer's own piece, or a captured request the shop
+   * will answer. Either one is a complete reason to keep the piece, even when
+   * the illustrated sample for this combination could not be loaded.
+   */
+  personalized = false,
+) {
   return (
     confirmed &&
     Object.keys(validate(d)).length === 0 &&
     !!run &&
     run.signature === signature(d) &&
-    run.slots.some((s) => s.status === "ready")
+    (personalized || run.slots.some((s) => s.status === "ready"))
   );
 }
 export function putInBag(
@@ -230,9 +250,10 @@ export function putInBag(
   confirmed: boolean,
   id: string,
   sampleId?: string,
+  personalized?: BagItem["personalized"],
 ): State {
   const run = state.runs.at(-1);
-  if (!canAdd(state.draft, run, confirmed) || !run) return state;
+  if (!canAdd(state.draft, run, confirmed, !!personalized) || !run) return state;
   const existing = state.bag.find((item) => item.id === state.editing);
   const item: BagItem = {
     version: 1,
@@ -243,6 +264,7 @@ export function putInBag(
     confirmed: true,
     ...(sampleId ? { sampleId } : {}),
     ...(state.sampleFocus ? { sampleFocus: state.sampleFocus } : {}),
+    ...(personalized ? { personalized } : {}),
   };
   return {
     ...state,
@@ -381,6 +403,23 @@ export function restore(raw: string | null): State {
             b.snapshot.availableViews.every((v) =>
               (views as readonly unknown[]).includes(v),
             ))) &&
+        (b.personalized === undefined ||
+          (record(b.personalized) &&
+            typeof b.personalized.runId === "string" &&
+            b.personalized.runId.length <= 100 &&
+            (b.personalized.designId === undefined ||
+              typeof b.personalized.designId === "string") &&
+            (b.personalized.previewRequestId === undefined ||
+              typeof b.personalized.previewRequestId === "string") &&
+            (b.personalized.assets === undefined ||
+              (Array.isArray(b.personalized.assets) &&
+                b.personalized.assets.every(
+                  (a) =>
+                    record(a) &&
+                    (views as readonly unknown[]).includes(a.view) &&
+                    typeof a.assetId === "string" &&
+                    a.assetId.length <= 100,
+                ))))) &&
         (b.sampleId === undefined ||
           (typeof b.sampleId === "string" && b.sampleId.length <= 100)) &&
         Number.isInteger(b.quantity) &&

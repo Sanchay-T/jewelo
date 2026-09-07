@@ -10,14 +10,32 @@ export const buildConfig = [
 export const runtimeConfig = [
   "SUPABASE_URL",
   "SUPABASE_SERVICE_ROLE_KEY",
-  "TRIGGER_SECRET_KEY",
+  // Inngest replaced Trigger.dev on 7 September 2026. Without both keys the
+  // app cannot dispatch a run, so readiness reports not_ready and the deploy
+  // contract must fail rather than ship a silently broken pipeline.
+  "INNGEST_EVENT_KEY",
+  "INNGEST_SIGNING_KEY",
   "OPENAI_API_KEY",
   "OPERATOR_EMAIL",
   "OPERATOR_PASSPHRASE",
   "OPERATOR_SESSION_SECRET",
 ];
 
+// Shipped when present, never required: `INNGEST_BASE_URL` is unset on Inngest
+// Cloud and set on the self-hosted server, and only one environment registers
+// the outbox cron functions.
+export const optionalRuntimeConfig = [
+  "INNGEST_BASE_URL",
+  "INNGEST_CRON_ENABLED",
+  // Defaults to "mock" in the config schema, so it is not required; shipped
+  // explicitly so the deployed provider mode is visible in the app spec
+  // instead of implied.
+  "PROVIDER_MODE",
+];
+
 export const requiredWebConfig = [...new Set([...buildConfig, ...runtimeConfig])];
+
+export const knownWebConfig = [...new Set([...requiredWebConfig, ...optionalRuntimeConfig])];
 
 export function parseEnv(contents) {
   const values = new Map();
@@ -64,7 +82,7 @@ export function validateWebEnv(values) {
 
 export function appSecretEnvs(values) {
   const envs = [];
-  for (const name of requiredWebConfig) {
+  for (const name of knownWebConfig) {
     const value = values.get(name);
     if (!value) continue;
     envs.push({

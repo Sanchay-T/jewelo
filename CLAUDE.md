@@ -19,14 +19,14 @@ You are implementing a first-principles production rebuild. The architecture is 
 - Web: Next.js 16.2, React 19, strict TypeScript, DigitalOcean App Platform.
 - Repository: pnpm workspace + Turborepo.
 - Data platform: Supabase Mumbai — Postgres, Auth, Realtime, private Storage.
-- Workflow: Trigger.dev Cloud.
+- Workflow: Inngest, self-hosted as a second DigitalOcean App Platform component (user instruction, 7 September 2026; supersedes Trigger.dev Cloud). Functions live in `apps/web/src/inngest` and are served at `/api/inngest`; `apps/jobs` holds the engine-free job bodies. Inngest Cloud is a one-variable switch (`INNGEST_BASE_URL`).
 - Still images: direct OpenAI GPT Image 2 snapshot.
 - Motion: fal.ai with Seedance 2.0 Fast for four previews and Seedance 2.0 Standard for the selected final upgrade.
-- Observability: Sentry, PostHog, Trigger/provider traces.
+- Observability: Sentry, PostHog, Inngest/provider traces.
 - Development: managed remote environments; no required Docker/local database/local storage.
 - Media UI: Motion, Embla Carousel, `react-zoom-pan-pinch`, `react-dropzone`, native short-form video.
 
-These may change only after an explicit user instruction or a proved blocking incompatibility. An agent must not substitute Convex, Neon, Clerk, Firebase, R2, Runway, another workflow engine, another image model, or another video gateway because it prefers that vendor.
+These may change only after an explicit user instruction or a proved blocking incompatibility. An agent must not substitute Convex, Neon, Clerk, Firebase, R2, Runway, another workflow engine, another image model, or another video gateway because it prefers that vendor. Trigger.dev was removed on 7 September 2026 by explicit user instruction; do not reintroduce it.
 
 For final Caleums integration, `docs/CALEUMS-FINAL-E2E-CONTRACT.md` overrides
 older goal examples that describe a different media graph or provider split.
@@ -42,14 +42,14 @@ older goal examples that describe a different media graph or provider split.
 7. Keep the browser on publishable Supabase credentials only. Service-role and provider credentials are server/job only.
 8. Canonical name-pendant identity is deterministic. Generative models render it; they do not decide spelling or geometry.
 9. Generation is durable, idempotent, individually retryable, concurrency-controlled, observable, cancellable, and able to finish partially.
-10. Use an outbox/reconciliation boundary so a committed design run cannot be lost if Trigger dispatch fails.
+10. Use an outbox/reconciliation boundary so a committed design run cannot be lost if the Inngest dispatch fails. The outbox row's `dispatch_idempotency_key` is sent as the Inngest event id and is the only exactly-once mechanism; never add a function-level `idempotency` key on `taskId`, because operator retries and the stale sweeper legitimately re-dispatch the same task under a new key.
 11. Preserve old successful assets when refining or regenerating. New work creates a new run/revision.
-12. Batch-dispatch four independent variation pipelines. Start all four product stills concurrently within verified OpenAI quota.
+12. Dispatch independent pipelines as independent outbox events under one keyed Inngest concurrency pool (`"openai-image"`), sized to verified OpenAI quota. No parent task awaits its children.
 13. As soon as one product passes QA, persist/reveal it and start that variation’s worn still and fast Seedance preview concurrently. Never add a global “wait for all products” barrier.
 14. Four Seedance previews require a verified fal account concurrency limit of at least four. Otherwise queue truthfully; do not fake parallel progress.
 15. Showcase motion profile: four 4-second, 9:16, 720p, silent Seedance Fast previews. Optional selected final: 6-second Seedance Standard.
 16. Provider concurrency, requests-per-minute, attempt limits, and spend ceilings are validated configuration—not hard-coded business rules.
-17. Use Trigger batch fan-out and named queues; do not use ad hoc `Promise.all()` around waitable child tasks.
+17. Release dependent work through the outbox from inside the run that produced its input; use Inngest keyed concurrency instead of named queues. Do not use ad hoc `Promise.all()` around durable work, and never register the outbox cron functions in more than one environment (`INNGEST_CRON_ENABLED=1`).
 18. Idempotency keys include run, variation, asset kind, and prompt release. Duplicate dispatch/callback must not duplicate charges or assets.
 19. fal.ai is an inference gateway, not Jewelo’s workflow engine or durable storage. Immediately copy successful provider media into private Supabase Storage.
 20. Do not add Genblaze or another autonomous media-agent framework. Borrow provenance ideas only; keep execution deterministic and typed.

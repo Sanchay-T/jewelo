@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "build": "next build",
-    "dev": "next dev",
+    "dev": "next dev -p 3001",
     "lint": "eslint src next.config.ts postcss.config.mjs",
     "start": "next start",
     "test": "vitest run",
@@ -20,15 +20,16 @@
     "@jewelo/config": "workspace:*",
     "@jewelo/contracts": "workspace:*",
     "@jewelo/data": "workspace:*",
+    "@jewelo/jobs": "workspace:*",
     "@phosphor-icons/react": "2.1.10",
     "embla-carousel-react": "8.6.0",
+    "inngest": "4.20.0",
     "motion": "12.23.24",
     "next": "16.2.12",
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "react-dropzone": "14.3.8",
-    "react-zoom-pan-pinch": "3.7.0",
-    "three": "0.185.1"
+    "react-zoom-pan-pinch": "3.7.0"
   },
   "devDependencies": {
     "@playwright/test": "1.58.2",
@@ -37,7 +38,6 @@
     "@testing-library/react": "16.3.2",
     "@types/react": "19.2.18",
     "@types/react-dom": "19.2.5",
-    "@types/three": "0.185.4",
     "tailwindcss": "4.3.3"
   }
 }

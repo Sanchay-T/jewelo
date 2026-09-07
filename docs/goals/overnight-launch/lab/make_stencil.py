@@ -198,7 +198,7 @@ def recentre(mask: np.ndarray) -> np.ndarray:
     return out
 
 
-def build(text: str, script: str, lettering: str, out: Path) -> dict:
+def build(text: str, script: str, lettering: str, out: Path, rings: bool = True) -> dict:
     text = unicodedata.normalize("NFC", text)
     font = FONT_DIR / FONTS[lettering][script]
     if not font.exists():
@@ -228,7 +228,7 @@ def build(text: str, script: str, lettering: str, out: Path) -> dict:
     for _ in range(THICKEN):
         canvas = ndimage.binary_dilation(canvas, structure=np.ones((3, 3), bool))
     bridges = bridge_all(canvas, BRIDGE_W)
-    rings = add_rings(canvas)
+    ring_centres = add_rings(canvas) if rings else []
     canvas = recentre(canvas)
     _, final_n = components(canvas)
     if final_n != 1:
@@ -250,7 +250,7 @@ def build(text: str, script: str, lettering: str, out: Path) -> dict:
         "bridges": bridges,
         "thickenPasses": THICKEN,
         "bridgeWidthPx": BRIDGE_W,
-        "jumpRings": len(rings),
+        "jumpRings": len(ring_centres),
         "ringOuterPx": RING_OUTER,
         "ringInnerPx": RING_INNER,
         "componentsFinal": int(final_n),
@@ -265,8 +265,10 @@ def main() -> None:
     ap.add_argument("--script", required=True, choices=["ar", "en"])
     ap.add_argument("--lettering", required=True, choices=list(FONTS))
     ap.add_argument("--out", required=True)
+    ap.add_argument("--no-rings", action="store_true",
+                    help="lettering only, for constructions that carry their own rings")
     args = ap.parse_args()
-    rec = build(args.text, args.script, args.lettering, Path(args.out))
+    rec = build(args.text, args.script, args.lettering, Path(args.out), rings=not args.no_rings)
     json.dump(rec, sys.stdout, ensure_ascii=False, indent=2)
     print()
 

@@ -31,7 +31,14 @@ doctl apps get "$app_id" --output json | SOURCE_REF="$source_ref" node -e '
   process.stdin.on("end", () => {
     const value = JSON.parse(input);
     const app = Array.isArray(value) ? value[0] : value;
-    app.spec.services[0].git.branch = process.env.SOURCE_REF;
+    // The app also runs an image-based `inngest` service that has no git
+    // source, so the web service is selected by name, never by index.
+    const web = app.spec.services.find((service) => service.name === "web");
+    if (!web?.git) {
+      process.stderr.write("app spec has no git-backed service named \"web\"\n");
+      process.exit(1);
+    }
+    web.git.branch = process.env.SOURCE_REF;
     process.stdout.write(JSON.stringify(app.spec));
   });
 ' > "$spec_file"
