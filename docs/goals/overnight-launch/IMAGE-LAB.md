@@ -135,24 +135,58 @@ The viewer flagged a genuine rubric ambiguity: four of eight images put a small 
 Settled: the pendant's two integral eyelets are the two jump rings; one connector link per side is allowed **only if it visibly passes through the eyelet hole**. An empty eyelet with the chain running behind the piece is the defect.
 Fix, on the geometry axis: state it as a visible test rather than a count - "something passes through its open hole and you can see daylight through the hole on both sides of what passes through it ... never behind the pendant, never hooked on the outside".
 
-### Round 2 - `caleums-universal-v4.1`, in progress
+### Round 2 - `caleums-universal-v4.1`, 24 images, 480 credits
 
 Template sha256 `a9c80e99845015a4bca1f5ee9065db3ff60d8589c781aae27baccd1044888681`.
-Three changes, one per defect class above. Nothing else moved: `CASTING`, `IDENTITY`, `SHOT`, `MATERIAL` and `PHOTOGRAPHY` are byte-identical to v4.
-`framed-minimal` and `diamond-rails` now receive the ring-free stencil; `classical` and `origami-ribbon` keep the ringed one.
+Three changes, one per defect class above. Nothing else moved: `IDENTITY`, `CASTING`, `SHOT`, `MATERIAL` and `PHOTOGRAPHY` are byte-identical to v4.
+`framed-minimal` and `diamond-rails` receive the ring-free stencil; `classical` and `origami-ribbon` keep the ringed one.
+Every image scored by an independent viewer that opened the file and cropped the ring junctions: `lab/stage1/verdicts-v41*.jsonl`.
 
-8 cells x 3 attempts = 24 images, 480 credits. Results below when the viewer has scored them.
-
-| Cell | a2 | a3 | a4 | 3 of 3 | Recurring defects |
+| Cell | a2 | a3 | a4 | v4.1 pass rate | Remaining defects |
 | --- | --- | --- | --- | --- | --- |
-| classical-en | | | | | |
-| classical-ar | | | | | |
-| origami-ribbon-en | | | | | |
-| origami-ribbon-ar | | | | | |
-| framed-minimal-en | | | | | |
-| framed-minimal-ar | | | | | |
-| diamond-rails-en | | | | | |
-| diamond-rails-ar | | | | | |
+| classical-en | pass | pass | fail | 2/3 | `disconnected-component` |
+| classical-ar | fail | fail | pass | 1/3 | `chain-not-through-ring`, `extra-ring` |
+| origami-ribbon-en | tweak | pass | fail | 1/3 | `cgi-look`, `disconnected-component`, `floating-mark` |
+| origami-ribbon-ar | pass | fail | tweak | 1/3 | `cgi-look`, `chain-not-through-ring` |
+| framed-minimal-en | pass | pass | pass | **3/3** | - |
+| framed-minimal-ar | pass | pass | tweak | 2/3 | `unsupported-geometry` |
+| diamond-rails-en | pass | pass | pass | **3/3** | - |
+| diamond-rails-ar | pass | fail | fail | 1/3 | `chain-not-through-ring`, `missing-glyph`, `missing-ring` |
+
+**v4.1 pass rate: 14 of 24 (58 percent).** English 9 of 12 (75 percent), Arabic 5 of 12 (42 percent).
+v4 attempt 1 was 2 of 8 (25 percent), so the three one-axis fixes roughly doubled the rate.
+
+Identity held at **31 of 32** across both rounds.
+The single miss is `diamond-rails-ar-a4`, which dropped the hamza above the initial alif and so reads اسماء rather than أسماء.
+That is one `missing-glyph` in 32 images, against 16 Arabic images; the other 15 Arabic images carried the hamza, the seen's teeth, the meem counter and the standalone hamza correctly.
+It is a real defect and it is the one that would be unacceptable to a customer, so it is not rounded away: the mark that failed is a small raster island the stencil attaches with a narrow bridge, and the fix belongs in the stencil (fuse the mark into its owning letter with a wider bridge) rather than in prose.
+
+### Did any look advance?
+
+The gate is 3 of 3 on **both** scripts. Under that gate, **no look advanced**, so Stage 2 (holdout names) was correctly not started.
+
+- `framed-minimal` 3/3 English, 2/3 Arabic - 5 of 6, the closest.
+- `diamond-rails` 3/3 English, 1/3 Arabic.
+- `classical` 2/3 English, 1/3 Arabic.
+- `origami-ribbon` 1/3 English, 1/3 Arabic.
+
+### What the failures actually are
+
+Every remaining defect except that one is attachment or photography.
+
+- `chain-not-through-ring` is the single most common failure and is concentrated in Arabic. The eyelet renders closed and the chain hooks around a letter beside it instead of passing through the hole.
+- `disconnected-component` appears late in English (classical-en a4, origami-ribbon-en a4): the bridge between two letters thins to nothing in a single sample even though the stencil bridge is solid. It is stochastic, not a stencil defect.
+- `cgi-look` appears when the background sweep blows out to a clipped white void. The viewer measured it: background mean 254.0 and grain 0.43 on the failing image against grain 1.24 and 1.22 on passing ones. That threshold is a cheap automatic pre-filter the lab should run before an image ever reaches a viewer.
+
+### The strongest structural finding
+
+The two looks that reached 3/3 in English, `framed-minimal` and `diamond-rails`, are exactly the two that receive a **ring-free stencil** and are told in prose where to put the rings. The two that receive a stencil with rings already drawn on the lettering, `classical` and `origami-ribbon`, are the two that keep failing the ring gate.
+
+Across v4.1 the ring-free topology (a drilled hole in a frame or rail plus a separate jump ring) passed 9 of 12; the letter-formed eyelet topology passed 5 of 12.
+
+That is a production recommendation, not just a lab one: **the identity engine should emit lettering only, and the attachment should be specified per construction in the prompt.** It also removes the four-ring defect described above, because the engine currently welds two rings onto every stencil unconditionally.
+
+The Arabic gap is narrower than it looks: with the ring-free stencil Arabic reached 3 of 6 on the two ring-free looks, against 2 of 6 on the ringed looks. Arabic remains materially less reliable than English on attachment and needs its own iteration; identity is not the problem.
 
 ## Spend
 

@@ -256,3 +256,125 @@ Both failures come from **committed commit d2bfe4e** ("All Arabic styles generat
 | `identity-anchor.test.ts` - "routes unsupported Arabic styles and two-name layouts before spend" | d2bfe4e added `diwani`, `signature`, `kufi` and `thuluth-inspired` to `LIVE_STYLES` on the certified Naskh face, so `arabicStyle: "signature"` is now supported and no longer rejected. The `unsupported_arabic_style` code still exists for styles the registry does not know. | Assert against a style the registry does not know (`art-deco-neon`); the `unsupported_arabic_two_name` half is unchanged and still passes. |
 | `presentation.test.ts` - "blocks a missing exact style anchor before reserving or calling a provider" | d2bfe4e made the studio still skip `signedStyleAnchorUrl` entirely, and the fixture builds `presentation_view: "studio"`, so the throwing stub was never called. | New `asDependentView()` helper re-points the fixture at `on_skin` with a `dependency_task_id`, which is the only shape that still reaches the anchor gate. |
 
+## Backend e2e gate: exit 0 (7 September 2026, 11:15 IST)
+
+```text
+BASE=http://localhost:3001 E2E_MOCK=1 bash scripts/e2e-backend.sh
+=== Caleums backend E2E · BASE=http://localhost:3001 · E2E_MOCK=1 ===
+=== PASS · 0 failed assertions · 412396ms ===
+EXIT=0
+```
+
+Two steps report `SKIP`, both by design and both pre-existing:
+`04 transliterate` needs a real OpenAI call (`E2E_TRANSLITERATE=1`), and `43-44 injected dispatch failure` needs a second web instance with an unreachable `INNGEST_BASE_URL`.
+Neither is a failed assertion.
+
+W0a's earlier run had four failures. Each is accounted for below.
+
+### 06 and 08 - stale assertions, corrected
+
+Migration `20260827150000_caleums_studio_first_chain.sql` made the pipeline studio-first: approve dispatches only the studio still, and `release_dependent_tasks` creates the other three outbox rows after that still is ready.
+The script still asserted the pre-chain value of 4 at approve time.
+
+Corrected to the current contract, and the strength of the check is preserved by asserting the end state instead of dropping it:
+
+```text
+[ 1990ms] 06 approve dispatchState -> - ok accepted
+[ 2007ms] 06 approve acceptedCount -> - ok 1
+[ 2460ms] 08 db.outbox published (studio only) -> - ok 1 states=["published"]
+[ 7400ms] 14 poll.four-stills-ready -> - ok {"close_up":"ready","dark":"ready","on_skin":"ready","studio":"ready"}
+[ 7601ms] 08b db.outbox published (all four views) -> - ok 4 states=["published","published","published","published"]
+```
+
+`08b` is new: after the four stills are ready, all four outbox rows must be `published`.
+
+### 16 - a real race, assertion made truthful
+
+`16 db.assets count` asserted exactly 4 assets for the run and got 5.
+The fifth is the motion preview: the mock fal submit and poll now complete about 0.9 s after the studio still is ready, which is before the step-12 cancel lands.
+The task ends `cancelled`; the asset it had already generated and copied into private storage is deliberately kept (rule 11 - a successful asset is never discarded).
+
+The assertion now counts the four stills strictly and reports the motion asset separately:
+
+```text
+[ 7817ms] 16 db.assets count (stills) -> - ok 4 {...} provider=mock
+[ 7853ms] 16b motion asset kept after cancel -> - INFO 1 (preview finished before the cancel landed)
+```
+
+### 38 and 39 - the crons, not a missing retry path
+
+Both W0a symptoms had one cause: `outbox-recovery` (`* * * * *`) and `stale-media-recovery` (`*/2 * * * *`) are gated behind `INNGEST_CRON_ENABLED`, which was unset on the local dev server, so neither was registered and nothing reconciled.
+
+**No new code was needed for the retry path.**
+The stale sweeper's existing `status = 'retrying' and attempt_status = 'failed'` branch writes the retry outbox row; with the cron off, that branch simply never ran.
+
+Direct proof, from the run W0a reported as stuck (`beb4c195`):
+
+```text
+outbox a0adf84c  created_at 00:38:28  state pending  attempt_count 0   (19 minutes stranded)
+--- 3001 restarted with INNGEST_CRON_ENABLED=1 at ~00:56 ---
+outbox a0adf84c  published_at 00:57:07  attempt_count 1
+```
+
+`outbox-recovery` picked up the 19-minute-old pending event within one minute of the crons existing.
+The studio task then ran, failed on the mock provider, and the stale sweeper drove it forward on its own schedule.
+
+The same path, watched live end to end on the new run:
+
+```text
+05:22:23  studio retrying a1   run running
+05:26:33  studio retrying a2   run running
+05:30:44  studio blocked  a3 mock_generation_failed   run operator_review mock_generation_failed
+```
+
+Attempt 1 -> 2 -> 3 -> `blocked`, each step driven by the `*/2` sweeper, ending in the honest-degrade state, with the retry budget then refusing a fourth paid attempt:
+
+```text
+[409151ms] 39 mockfail.poll operator_review+blocked -> - ok run=operator_review blocked=[{"a":3,"e":"mock_generation_failed"}]
+[409678ms] 40.1 mockfail.retry (attempt=3, budget exhausted) -> 409 ok {"code":"state_conflict","error":"provider attempt budget exhausted"}
+```
+
+The 409 s the scenario takes is the sweeper cadence, not a hang.
+
+### One real defect found and fixed: clock-skew blindness in the outbox read
+
+W0a also saw `38 mockfail.approve` return HTTP 200 with `acceptedCount 0, pendingCount 0` - immediate dispatch reporting "nothing to dispatch" for an event it had just committed.
+The stranded row's `attempt_count` was 0 until the cron claimed it, so `claim_outbox_event` was never called: the *read* had returned zero rows.
+
+`dispatchPendingOutbox` filtered `available_at=lte.<caller clock>`, while `available_at` is written by Postgres `now()`.
+A web instance whose clock lags Postgres - routine after a laptop sleep/wake, possible on any host between NTP syncs - reads zero rows for its own fresh event and leaves the run stranded until a cron notices.
+
+`packages/data/src/outbox-dispatch.ts` now reads with a 30 s skew tolerance and lets the database stay authoritative: `claim_outbox_event` re-checks `available_at <= now()` inside Postgres, so an event that is genuinely still backing off is refused there and skipped.
+The 200 was not reproducible afterwards; step 38 returned 201 `accepted` on both subsequent runs.
+
+### `PROVIDER_MODE` on the DigitalOcean web component
+
+It was absent. Added from a fresh `doctl apps spec get`, as `GENERAL` / `RUN_TIME` with value `mock`, and added to `optionalRuntimeConfig` in `scripts/digitalocean/env-contract.mjs` (the config schema defaults it to `mock`, so it is optional, but the deployed mode should be visible in the spec rather than implied).
+
+Env key **names** on the `web` component after the update:
+
+```text
+NEXT_PUBLIC_JEWELO_DATA_MODE  NEXT_PUBLIC_SUPABASE_URL  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+SUPABASE_URL  SUPABASE_SERVICE_ROLE_KEY  OPENAI_API_KEY  OPERATOR_EMAIL  OPERATOR_PASSPHRASE
+OPERATOR_SESSION_SECRET  NEXT_PUBLIC_APP_URL  JEWELO_CLOUD_BUILD  INNGEST_EVENT_KEY
+INNGEST_SIGNING_KEY  INNGEST_BASE_URL  INNGEST_CRON_ENABLED  PROVIDER_MODE
+```
+
+`node scripts/digitalocean/check-env.mjs staging .env` -> `staging web environment is valid`.
+Deployment `b28ca9c7-f5f3-460d-af57-15aa0321422f` was created by the update.
+
+### Local runtime state left behind
+
+The 3001 dev server was relaunched from `apps/web` with `INNGEST_CRON_ENABLED=1` in its environment (PID 53292); `/api/readiness` reports `"cronsRegistered": true`, and the Inngest dev server lists all five functions:
+
+```text
+jewelo-caleums connected=True count=5
+    jewelo-caleums-outbox-recovery        CRON  * * * * *
+    jewelo-caleums-presentation-task      EVENT jewelo/presentation.requested
+    jewelo-caleums-stale-media-recovery   CRON  */2 * * * *
+    jewelo-caleums-video-poll             EVENT jewelo/video.poll.requested
+    jewelo-caleums-video-submit           EVENT jewelo/video.submit.requested
+```
+
+`INNGEST_CRON_ENABLED` remains commented out in `.env`; only this process has it.
+
