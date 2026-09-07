@@ -12,23 +12,26 @@
 - When a task's evidence changes what the plan says, update `docs/ROAD-TO-GOLD.md` in the same commit.
 - Sizes: S under half a day, M one to two days, L three days or more.
 
-## Decisions Sanchay owns
+## Decisions with defaults
 
-Work continues around these; each one gates the tasks that name it.
+Sanchay is not available during a run.
+Each row has a default; the agent takes the default, records it in `docs/goals/road-to-gold/HANDOVER.md` under "Decisions taken by default", and keeps going.
+Sanchay overrides by editing the Default column; the next session picks it up.
+Rows whose default is "Sanchay's action" cannot be taken by an agent: work around them, list them under "Needs Sanchay", never block on them.
 
-| Id | Decision | Recommendation | Gates |
+| Id | Decision | Default (applies unless Sanchay edits this cell) | Gates |
 | --- | --- | --- | --- |
-| DS-1 | Supabase Devonel org is at 52.5 GB of 5 GB egress; grace ends **29 September 2026**, then every project returns 402 | Upgrade the org to Pro this week, or move `jewelo-caleums` to another org; delete the old `jewelo-v2-mumbai` project either way | everything after that date |
-| DS-2 | `Sanchay-T/jewelo` is public | Make it private | anything that would ever commit brand or shop material |
-| DS-3 | Identity engine: (A) keep Pango by family name and only prove stencils on Linux, or (B) new engine that opens the pinned font bytes directly with HarfBuzz and is deterministic on every machine | B. It changes the engine release named in `docs/CALEUMS-FINAL-E2E-CONTRACT.md` (`caleums-arabic-v3` becomes v4); the fingerprint already includes the engine release so nothing else moves | P1-2 onward |
-| DS-4 | Which looks the shop sells if only framed minimal plus Classic prove out | Sell what is proven; show the rest as "the shop prepares this one" only if Omran wants the range on the page | P6-2 |
-| DS-5 | Wait on the page for the photograph, or keep send-it-to-you as the default | Wait when the studio still arrives inside 90 seconds, otherwise capture and send; measure the real latency in P5 first | P6-3 |
-| DS-6 | Phase 5 smoke before or after anchor publication | Studio-only smoke before publication, so one run bills one image, not up to twelve | P5-1 |
-| DS-7 | Shop URL: launch on the staging URL, or bootstrap `jewelo-production` plus a Caleums domain | Production app plus domain before Omran demos to a customer; staging until then | L-1 |
-| DS-8 | New-request notification channel for the shop | WhatsApp to Omran's number if an API account exists, otherwise email | P7-3 |
-| DS-9 | Error tracking accounts (Sentry, PostHog) | Create both, hand over DSN and key | P7-5 |
-| DS-10 | Inngest durability: accept in-process loss with operator recovery, Inngest Cloud account, or a DO Valkey instance | Inngest Cloud; one env var, free tier fits the load | P7-6 |
-| DS-11 | Development spend ceiling for the paid replay of the vision readers in P2-5 | USD 10 | P2-5 |
+| DS-1 | Supabase Devonel org is at 52.5 GB of 5 GB egress; grace ends **29 September 2026**, then every project returns 402 | Sanchay's action: upgrade the org to Pro or move `jewelo-caleums`; delete `jewelo-v2-mumbai` either way. Agent: keep building, list it first under Needs Sanchay | everything after that date |
+| DS-2 | `Sanchay-T/jewelo` is public | Sanchay's action: make it private. Agent: never commit brand material or customer media | anything that would ever commit brand or shop material |
+| DS-3 | Identity engine: (A) keep Pango by family name and only prove stencils on Linux, or (B) new engine that opens the pinned font bytes directly with HarfBuzz and is deterministic on every machine | **B.** Record it as D-019 in `docs/DECISION-REGISTER.md` and bump the engine release to `caleums-identity-v4` in `docs/CALEUMS-FINAL-E2E-CONTRACT.md`; the fingerprint already includes the engine release so nothing else moves | P1-2 onward |
+| DS-4 | Which looks the shop sells if only framed minimal plus Classic prove out | **Sell only what phase 3 proved.** Hide the rest from the design stage; keep their code paths so a later proof re-enables them with one flag | P6-2 |
+| DS-5 | Wait on the page for the photograph, or keep send-it-to-you as the default | **Wait while the studio still arrives inside 90 seconds** (measure the real latency in P5-2 first); past that, capture contact and send. Both paths stay | P6-3 |
+| DS-6 | Phase 5 smoke before or after anchor publication | **Studio-only smoke before publication**, so one run bills one image, not up to twelve | P5-1 |
+| DS-7 | Shop URL: launch on the staging URL, or bootstrap `jewelo-production` plus a Caleums domain | **Staging URL** until Sanchay approves production bootstrap (his action, needs a domain from Omran); prepare the spec so it is one command | L-1 |
+| DS-8 | New-request notification channel for the shop | **Email** via the existing Supabase SMTP if configured, otherwise build the Inngest function against a stub and list the account under Needs Sanchay | P7-3 |
+| DS-9 | Error tracking accounts (Sentry, PostHog) | Sanchay's action to create; agent wires the SDKs behind empty DSN and lists it | P7-5 |
+| DS-10 | Inngest durability: accept in-process loss with operator recovery, Inngest Cloud account, or a DO Valkey instance | **Accept in-process loss with operator recovery** (P7-1 makes `operator_review` visible); Cloud stays a one-variable switch for Sanchay to flip | P7-6 |
+| DS-11 | Development spend ceiling for the paid replay of the vision readers in P2-5 | **USD 10**, set in `runtime_policy` before the replay, actual spend recorded in the handover | P2-5 |
 
 ## Phase 0 - unblockers and hygiene (all S, all agent)
 

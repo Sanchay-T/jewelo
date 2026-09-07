@@ -1,7 +1,7 @@
 # Goal prompt
 
 Paste the block below into a fresh Claude Code or Codex session at the root of the `jewelo` checkout.
-It is under 4,000 characters on purpose.
+It is under 4,000 characters on purpose; check with `awk` before editing it longer.
 It carries the storyline and the pointers; every detail lives in the files it names, so the prompt does not go stale when the plan moves.
 
 Fill the two bracketed lines.
@@ -27,26 +27,37 @@ were never published. So every shopper today ends at "your preview is being
 prepared" with a contact form. That is honest. It is not the product.
 
 THE BENCH AND THE SOCKET. Runway MCP serves gpt-image-2, the same model
-production calls, with ~300k credits. All prompt and stencil iteration happens
-there for free. OpenAI is the production adapter: wired, fail-closed, flipped
-once at the end as a smoke test. Iterating against OpenAI is a mistake.
+production calls, with ~300k credits: all prompt and stencil iteration happens
+there. OpenAI is the socket: wired, fail-closed, flipped once at the end.
 
 READ, IN ORDER, BEFORE ANY EDIT:
-  1. CLAUDE.md and what it imports        (locked stack and contracts)
+  1. CLAUDE.md                             (locked stack, commands, rules)
   2. docs/ROAD-TO-GOLD.md                  (defects with evidence, seven
                                             phases, the gate ending each)
-  3. docs/TASKS.md                         (the ordered task list; pick the
-                                            first open task in your scope)
+  3. docs/TASKS.md                         (the ordered task list and the
+                                            decision defaults)
   4. docs/goals/road-to-gold/PROGRESS.md   (what the last session did)
+  5. docs/goals/road-to-gold/HANDOVER.md   (what Sanchay last received)
 
-YOUR SCOPE: [phase numbers or task ids from docs/TASKS.md]
+YOUR SCOPE: [task ids from docs/TASKS.md, or "next open tasks in order"]
 YOUR WALL CLOCK: [when to stop and hand off]
 
+THE DELIVERABLE IS THE LINK. Pull request #12 on Sanchay-T/jewelo is the
+handover. Sanchay reads its description and nothing else. Run /handover
+before you stop for any reason: it rewrites HANDOVER.md from the real state,
+mirrors it into the PR, pushes, and prints the link. Your last message is
+that link, the Status table, and the Needs-Sanchay list.
+
+NOBODY IS WATCHING. Do not ask questions. Every decision has a default in
+docs/TASKS.md: take it, record it in the handover, keep going. What only
+Sanchay can do (billing, accounts, repo visibility, a domain) goes under
+Needs Sanchay; work around it, never block on it.
+
 HOW. State objective, stopping condition, exclusions, evidence. Plan at file
-level; have plan-reviewer challenge it. Then work in committed slices on the
-current branch; push; never push main, never merge. Fan out with subagents:
-implementer, image-lab, viewer, reviewer. Generator never scores; fixer never
-reviews its own fix. Update PROGRESS.md as you go, not at the end.
+level; have plan-reviewer challenge it. Work in committed slices on the
+current branch; push; never push main, never merge. Fan out: implementer,
+image-lab, viewer, reviewer. Generator never scores; fixer never reviews its
+own fix. Update PROGRESS.md as you go.
 
 CLOSE EVERY TASK WITH THE LOOP, NOT WITH AN OPINION:
   pnpm build passes -> push -> deploy staging -> YOU dogfood the real URL
@@ -59,18 +70,14 @@ NO TESTS, NO CI/CD, until Sanchay says so. Do not write tests, do not run
 the Vitest suites as a gate, do not add a workflow, hook or pipeline. Nothing
 sits between a commit and the deploy except the build and your own eyes.
 
-ASK THE HUMAN ONLY FOR a named credential, a billing or account action, a spend
-ceiling, an irreversible production step, or a product decision ROAD-TO-GOLD
-lists as open. Everything else is yours. Do the work that does not depend on
-the answer first, then ask once, precisely, with a recommendation.
+NEVER weaken a gate, show mock output as a customer's piece, commit a secret or
+customer media or the style anchors, spend outside a ceiling set in
+runtime_policy, or call a task done with its proof unrun. The repository is
+public: nothing private goes into git.
 
-NEVER weaken a test or a gate, show mock output as a customer's piece, commit a
-secret or customer media, spend outside a set ceiling, or call a task done with
-a gate unrun. The repository is public: nothing private goes into git.
-
-STOP when your scope is complete, or a named external action is the only
-blocker, or at your wall clock. Leave the proof packet from docs/VERIFICATION.md
-and the next open task named in PROGRESS.md.
+STOP only when your scope is complete or at your wall clock. Before ending,
+check your last paragraph: if it is a plan, a question, or a promise, do that
+work now. Then /handover.
 ```
 
 ## Why it is shaped this way

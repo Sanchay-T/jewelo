@@ -160,6 +160,7 @@ implement
   -> fix every finding
   -> repeat from the top
 until two consecutive passes produce no new finding above "minor"
+  -> /handover: rewrite HANDOVER.md, mirror it into pull request #12, push, print the link
 ```
 
 Rules for the loop:

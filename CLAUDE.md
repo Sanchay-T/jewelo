@@ -28,7 +28,7 @@ These are pointers. Open the one your task needs; do not read all of them.
 - Build gate: `corepack pnpm build`. This is the only mechanical gate.
 - Deploy: `bash scripts/digitalocean/deploy.sh staging <branch>` then `bash scripts/digitalocean/smoke.sh <url>`. `doctl` is authenticated on `home-mini` (ssh, `export PATH=/opt/homebrew/bin:$PATH`, `source scripts/digitalocean/common.sh; load_digitalocean_token`), not on the laptop.
 - Database: `corepack pnpm db:push` and `corepack pnpm db:types` (both read `.env`). Migrations in `supabase/migrations/` are the schema source of truth; never add an ORM migration source.
-- Git: push goes through the `Sanchay-T` account (set in this repo's local git config); the active `gh` account may differ. Work on the current branch, push it, open a PR to `main`, never push `main`, never merge.
+- Git: push goes through the `Sanchay-T` account (set in this repo's local git config). For `gh` commands run `export GH_TOKEN=$(gh auth token -u Sanchay-T)` first; the active `gh` account is a different user and gets 403 here. Work on the current branch, push it, never push `main`, never merge.
 - Secrets live in `.env` at the repo root (gitignored, copied from `home-mini`). Never print a value; confirm by name.
 
 ## Environment facts that bite
@@ -43,7 +43,7 @@ IMPORTANT: the GitHub repository is public. Never commit a secret, a customer ph
 
 ## How you work here
 
-You are operating autonomously. Sanchay is not watching in real time and cannot answer questions mid-task, so asking "Shall I…?" blocks the work. For reversible actions that follow from the task, proceed. Stop only for a destructive action, a paid provider call outside a set ceiling, or a product decision `docs/ROAD-TO-GOLD.md` lists as open. Offering follow-ups after the task is done is fine; asking permission before doing the work is not.
+You are operating autonomously. Sanchay is not watching in real time and cannot answer questions mid-task, so asking "Shall I…?" blocks the work. For reversible actions that follow from the task, proceed. Stop only for a destructive action or a paid provider call outside a set ceiling. Offering follow-ups after the task is done is fine; asking permission before doing the work is not.
 
 The task you were given, or the plan reviewed with `plan-reviewer`, sets the scope, and the scope is the deliverable. Do not quietly narrow, widen, or swap it. Read ambiguity the way a careful colleague would: make routine calls yourself, note them in the commit, and check in only when different readings lead to materially different work. If part of the task is blocked, finish every other part in full and say exactly what you left out and why. If you find a pre-existing bug the task does not mention, report it as a follow-up in `PROGRESS.md`; do not fix it in this change unless the task cannot work without it.
 
@@ -57,6 +57,10 @@ Edit in place with targeted edits; do not rewrite whole files or create new file
 
 Commit each coherent slice with a message that says what changed and why, in plain hyphens, no attribution trailers. Keep `PROGRESS.md` current as you go, not at the end; a session can die at any minute and that file is what survives. When compacting, preserve the task id you are on, the files you changed, the exact commands run with their results, and every open finding.
 
-## Ask Sanchay only for
+## The deliverable is a link
 
-A named credential, an account or billing action, a spend ceiling, an irreversible production step, or one of the open product decisions in `docs/TASKS.md`. Do everything that does not depend on the answer first, then ask once, precisely, with a recommendation.
+Pull request #12 (`codex/overnight-launch-2026-09-08` → `main`, draft) is the handover. Sanchay reads its description and nothing else. Before you stop for any reason, run `/handover`: it rewrites `docs/goals/road-to-gold/HANDOVER.md` from the real state, mirrors it into the PR, pushes, and prints the link. Your last message is that link, the Status table, and the Needs-Sanchay list.
+
+## Decisions have defaults
+
+Sanchay is not available during a run. Every decision an agent might need has a default in `docs/TASKS.md`; take it, record it in the handover, keep going. What only Sanchay can do (billing, accounts, repo visibility, a domain) goes under Needs Sanchay in the handover; work around it, never block on it. The only reasons to stop early are a destructive action or a paid call outside a ceiling set in `runtime_policy`.
