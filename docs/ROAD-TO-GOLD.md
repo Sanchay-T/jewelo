@@ -205,6 +205,11 @@ This is Sanchay's action and no phase above can compensate for it.
 
 | Thing | Where |
 | --- | --- |
+| The task list, ordered | `docs/TASKS.md` |
+| The persona and the unstick procedure | `docs/MINDSET.md` |
+| The paste-in prompt | `docs/GOAL-PROMPT.md` |
+| Session-by-session progress | `docs/goals/road-to-gold/PROGRESS.md` |
+| Dogfood evidence | `docs/goals/road-to-gold/dogfood-<date>/` |
 | Customer UI | `apps/web/src/features/atelier/` |
 | Identity engine | `apps/jobs/src/identity-anchor.ts`, `packages/identity/` |
 | Pipeline execution | `apps/jobs/src/presentation.ts` |
