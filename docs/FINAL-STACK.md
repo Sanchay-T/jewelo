@@ -25,7 +25,7 @@ This is the production architecture Jewelo v2 will implement. It was selected ag
 | Media | Supabase private Storage | RLS, signed URLs, resumable/S3 upload paths, immutable object keys. |
 | Durable jobs | Trigger.dev Cloud | Durable fan-out, queues, retries, waits, idempotency, cancellation, preview branches. |
 | Product/worn images | OpenAI `gpt-image-2-2026-04-21` | Direct OpenAI adapter; four independent variation calls with canonical references. |
-| Visual QA | OpenAI `gpt-5.6-luna` plus deterministic checks | Structured verifier; canonical geometry remains authoritative. |
+| Visual QA | none | Removed 27 Aug 2026. Identity is enforced by the pre-spend deterministic solver and canonical PNG; no model grades a generated still. |
 | Motion gateway | fal.ai | Managed model inference/queue API, not the business workflow engine. |
 | Fast motion preview | `bytedance/seedance-2.0/fast/image-to-video` | Four 4-second, 9:16, 720p, silent previews when fal concurrency >= 4. |
 | Selected final motion | `bytedance/seedance-2.0/image-to-video` | Optional 6-second standard-quality render for the selected direction. |
@@ -115,7 +115,7 @@ Model IDs never appear in domain code. They are named deployment profiles:
 
 ```text
 still.production       -> gpt-image-2-2026-04-21 (direct OpenAI)
-still.verifier         -> gpt-5.6-luna
+name.arabic.suggest    -> gpt-5.6-luna (design entry only; never sees an image)
 still.fallback         -> openai/gpt-image-2 on fal (disabled)
 motion.preview         -> bytedance/seedance-2.0/fast/image-to-video
 motion.final           -> bytedance/seedance-2.0/image-to-video
@@ -136,7 +136,6 @@ Initial queue configuration:
 
 ```text
 openai-image        4 active calls, adjusted to the verified OpenAI project quota
-visual-verifier     independently bounded
 fal-seedance-fast   4 active calls after quota verification
 fal-seedance-final  1-2 active calls
 organization        4 active variation pipelines by default

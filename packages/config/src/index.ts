@@ -52,7 +52,7 @@ export const jobsEnvSchema = trustedWebEnvSchema
     OPENAI_IMAGE_MODEL: z
       .literal("gpt-image-2-2026-04-21")
       .default("gpt-image-2-2026-04-21"),
-    OPENAI_VERIFIER_MODEL: nonEmpty.default("gpt-5.6-luna"),
+    OPENAI_NAME_MODEL: nonEmpty.default("gpt-5.6-luna"),
     PIPELINE_RELEASE: z
       .literal("caleums-final-media-v1")
       .default("caleums-final-media-v1"),
@@ -61,19 +61,13 @@ export const jobsEnvSchema = trustedWebEnvSchema
       .int()
       .min(1)
       .max(32)
-      .default(2),
+      .default(4),
     FAL_VIDEO_CONCURRENCY_LIMIT: z.coerce
       .number()
       .int()
       .min(1)
       .max(32)
       .default(2),
-    VERIFIER_CONCURRENCY_LIMIT: z.coerce
-      .number()
-      .int()
-      .min(1)
-      .max(32)
-      .default(4),
     MAX_PROVIDER_ATTEMPTS: z.coerce.number().int().min(1).max(3).default(3),
     OPENAI_STILL_ESTIMATED_COST_CENTS: z.coerce
       .number()

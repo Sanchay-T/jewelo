@@ -126,6 +126,10 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
   const [arabicOne, setArabicOne] = useState("ليلى");
   const [arabicTwo, setArabicTwo] = useState("مريم");
   const [arabicStyle, setArabicStyle] = useState<ArabicStyle>("contemporary");
+  const [suggesting, setSuggesting] = useState(false);
+  const [suggestion, setSuggestion] = useState<
+    { confidence: "high" | "medium" | "low"; note: string } | undefined
+  >();
   const [layout, setLayout] = useState<PendantLayout>("connected-heart");
   const [source, setSource] = useState<"fresh" | "inspiration" | "upload">(
     "fresh",
@@ -255,6 +259,33 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
       );
     if (index === 1) return source !== "upload" || Boolean(referenceName);
     return true;
+  }
+
+  async function suggestArabic() {
+    setSuggesting(true);
+    setSuggestion(undefined);
+    try {
+      const response = await fetch("/api/identity/arabic-name", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ englishName: nameOne }),
+      });
+      if (!response.ok) throw new Error("suggestion_failed");
+      const result = (await response.json()) as {
+        arabic: string;
+        confidence: "high" | "medium" | "low";
+        note: string;
+      };
+      setArabicOne(result.arabic);
+      setSuggestion({ confidence: result.confidence, note: result.note });
+    } catch {
+      setSuggestion({
+        confidence: "low",
+        note: "Could not suggest a spelling. Please type it yourself.",
+      });
+    } finally {
+      setSuggesting(false);
+    }
   }
 
   async function approve() {
@@ -503,9 +534,29 @@ export function NewDesignExperience({ locale }: { locale: Locale }) {
                         id="arabic-name-one"
                         dir="rtl"
                         value={arabicOne}
-                        onChange={(event) => setArabicOne(event.target.value)}
+                        onChange={(event) => {
+                          setArabicOne(event.target.value);
+                          setSuggestion(undefined);
+                        }}
                       />
                     </label>
+                    <button
+                      type="button"
+                      className="clm-ghost-button"
+                      onClick={suggestArabic}
+                      disabled={suggesting || !nameOne.trim()}
+                    >
+                      {suggesting
+                        ? "Suggesting…"
+                        : `Suggest Arabic for "${nameOne.trim() || "…"}"`}
+                    </button>
+                    {suggestion && (
+                      <p className="clm-hint" role="status">
+                        Suggested spelling ({suggestion.confidence} confidence).
+                        Check it carefully — this exact spelling is engraved.
+                        {suggestion.note ? ` ${suggestion.note}` : ""}
+                      </p>
+                    )}
                     {nameCount === 2 && (
                       <label className="clm-label">
                         Approved Arabic spelling 2

@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { buildDrape, buildPieceSpec, caleumsTemplate } from "./caleums-prompt";
 
 export const PROMPT_PROFILES = [
   "image.studio",
@@ -10,7 +11,6 @@ export const PROMPT_PROFILES = [
   "image.billboard",
   "video.preview",
   "video.final",
-  "verification.image",
 ] as const;
 export type PromptProfile = (typeof PROMPT_PROFILES)[number];
 
@@ -33,17 +33,42 @@ export const PROMPT_VARIABLES = {
   chain_style: "Approved chain style",
   chain_length: "Approved chain length",
   presentation_view: "Requested presentation view",
-  inspiration_rule: "Pinned optional inspiration handling",
+  piece_spec: "Composed jeweller description of the physical piece",
+  drape: "Chain drape sentence fragment, worn shots only",
 } as const;
 export type PromptVariable = keyof typeof PROMPT_VARIABLES;
 export type PromptVariableSnapshot = Record<PromptVariable, string>;
 
-const PRODUCT_VARIABLES = Object.freeze(
-  Object.keys(PROMPT_VARIABLES) as PromptVariable[],
-);
-const LEGACY_VARIABLES = PRODUCT_VARIABLES.filter(
-  (variable) => variable !== "inspiration_rule",
-);
+// The ZIP keeps geometry out of words entirely: no prompt carries the name,
+// script or lettering style, because the silhouette reference is the only
+// legitimate source for those. The remaining dynamic text is one composed
+// `piece_spec` clause, plus a drape fragment voiced only in worn shots.
+const IMAGE_VARIABLES = Object.freeze<PromptVariable[]>(["piece_spec"]);
+const WORN_VARIABLES = Object.freeze<PromptVariable[]>(["piece_spec", "drape"]);
+const LEGACY_VARIABLES = Object.freeze<PromptVariable[]>([
+  "approved_name",
+  "language",
+  "arabic_style",
+  "layout",
+  "metal_karat",
+  "metal_color",
+  "finish",
+  "stone_coverage",
+  "gemstone",
+  "size_profile",
+  "dimensions",
+  "chain_style",
+  "chain_length",
+  "presentation_view",
+]);
+const MOTION_VARIABLES = Object.freeze<PromptVariable[]>(["piece_spec"]);
+
+function variablesFor(profile: PromptProfile): readonly PromptVariable[] {
+  if (profile === "image.studio") return LEGACY_VARIABLES;
+  if (profile === "image.worn") return WORN_VARIABLES;
+  if (profile.startsWith("video.")) return MOTION_VARIABLES;
+  return IMAGE_VARIABLES;
+}
 
 export const PROMPT_PROFILE_REGISTRY: Readonly<
   Record<
@@ -57,10 +82,8 @@ export const PROMPT_PROFILE_REGISTRY: Readonly<
   PROMPT_PROFILES.map((profile) => [
     profile,
     {
-      allowedVariables:
-        profile === "image.studio" ? LEGACY_VARIABLES : PRODUCT_VARIABLES,
-      requiredVariables:
-        profile === "image.studio" ? LEGACY_VARIABLES : PRODUCT_VARIABLES,
+      allowedVariables: variablesFor(profile),
+      requiredVariables: variablesFor(profile),
     },
   ]),
 ) as Record<
@@ -80,40 +103,23 @@ export const BASELINE_PROMPT_TEMPLATES: Readonly<
     "Use {{metal_karat}} {{metal_color}} metal with a {{finish}} finish, {{stone_coverage}} {{gemstone}}, {{size_profile}} scale, and approved dimensions {{dimensions}}.",
     "Show the pendant on its {{chain_style}} chain at {{chain_length}}. Do not invent, remove, or reshape identity details.",
   ].join(" "),
-  "image.packshot": imageTemplate(
-    "Catalogue photograph of the full necklace against a neutral ivory cream background, both sides of the chain falling naturally toward the pendant with slightly different curves and a soft accurate shadow beneath it.",
-  ),
-  "image.worn": imageTemplate(
-    "Jewellery-focused photograph of a woman wearing the necklace at {{chain_length}}, with a modest neckline, natural skin and fabric texture, an asymmetric chain drape and a thin soft shadow.",
-  ),
-  "image.macro_gift": imageTemplate(
-    "Macro product photograph of the necklace laid on black suede, the chain following a loose natural curve, with resolved suede fibres, deep soft edge shadows and shallow depth of field.",
-  ),
-  "image.dark_editorial": imageTemplate(
-    "Elegant editorial jewellery photograph at the neck and collarbone against a near-black setting, with one warm directional spotlight on the necklace and everything else in deep soft shadow.",
-  ),
-  "image.studio_hero": imageTemplate(
-    "Studio photograph of the necklace against a warm ivory-grey seamless paper sweep, lit by one upper-left softbox and a right bounce card, with asymmetric falloff and a soft accurate shadow.",
-  ),
-  "image.billboard": imageTemplate(
-    "Campaign photograph of the necklace toward the right of a matte-black paper sweep, lit by one narrow warm spotlight with subtle metal rim light and calm empty darkness to the left.",
-  ),
+  "image.packshot": caleumsTemplate("packshot"),
+  "image.worn": caleumsTemplate("worn"),
+  "image.macro_gift": caleumsTemplate("macroGift"),
+  "image.dark_editorial": caleumsTemplate("darkEditorial"),
+  "image.studio_hero": caleumsTemplate("studioHero"),
+  "image.billboard": caleumsTemplate("billboard"),
   "video.preview": [
-    "Create a restrained silent {{presentation_view}} motion preview from the approved still for {{approved_name}} ({{language}}; Arabic style: {{arabic_style}}).",
-    "Keep {{layout}} geometry, spelling and attachments unchanged throughout every frame.",
-    "Preserve {{metal_karat}} {{metal_color}} metal, {{finish}} finish, {{stone_coverage}} {{gemstone}}, {{size_profile}} scale, {{dimensions}}, and the {{chain_style}} chain at {{chain_length}}.",
-    "Use only subtle product-camera movement and controlled specular light; no morphing or new objects. {{inspiration_rule}}",
+    "Create a restrained silent motion preview from the approved still.",
+    "{{piece_spec}}",
+    "Keep the pendant geometry, spelling and attachments unchanged in every frame.",
+    "Use only subtle product-camera movement and controlled specular light; no morphing, no new objects, no text.",
   ].join(" "),
   "video.final": [
-    "Create a polished silent {{presentation_view}} final product film from the approved still for {{approved_name}} ({{language}}; Arabic style: {{arabic_style}}).",
-    "Keep exact spelling, {{layout}} geometry and attachments stable for the full shot.",
-    "Preserve {{metal_karat}} {{metal_color}} metal, {{finish}} finish, {{stone_coverage}} {{gemstone}}, {{size_profile}} scale, {{dimensions}}, and the {{chain_style}} chain at {{chain_length}}.",
-    "Use elegant, restrained camera motion and realistic light only; do not morph the pendant or introduce unapproved details. {{inspiration_rule}}",
-  ].join(" "),
-  "verification.image": [
-    "Verify the supplied generated image against the immutable silhouette and approved configuration for {{approved_name}} ({{language}}; Arabic style: {{arabic_style}}).",
-    "Require exact spelling and script, the same identity and {{layout}} geometry, exactly two connected jump rings with coherent {{chain_style}} chain attachment at {{chain_length}}, {{metal_karat}} {{metal_color}} {{finish}} metal, {{stone_coverage}} {{gemstone}}, {{size_profile}} dimensions {{dimensions}}, and the requested {{presentation_view}} shot.",
-    "Reject any added letters, names, charms, duplicate pendants, missing or third rings, malformed chain attachment, incoherent pendant, or wrong shot. {{inspiration_rule}}",
+    "Create a polished silent final product film from the approved still.",
+    "{{piece_spec}}",
+    "Keep the pendant geometry, spelling and attachments stable for the full shot.",
+    "Use elegant restrained camera motion and realistic light only; do not morph the pendant or introduce unapproved details.",
   ].join(" "),
 };
 
@@ -203,33 +209,19 @@ export function validatePromptTemplate(
 }
 
 export function buildPromptVariableSnapshot(input: {
-  approvedName: unknown;
-  language: unknown;
+  profile: PromptProfile;
   specification: Readonly<Record<string, unknown>>;
-  presentationView: unknown;
 }): PromptVariableSnapshot {
-  const specification = input.specification;
-  const dimensions = asObject(specification.dimensions);
-  const chain = asObject(specification.chain);
-  return {
-    approved_name: scalar(input.approvedName),
-    language: scalar(input.language),
-    arabic_style: scalar(specification.arabicStyle),
-    layout: scalar(specification.layout),
-    metal_karat: scalar(specification.metalKarat),
-    metal_color: scalar(specification.metalColor),
-    finish: scalar(specification.finish),
-    stone_coverage: scalar(specification.stoneCoverage),
-    gemstone: scalar(specification.gemstone),
-    size_profile: scalar(specification.sizeProfile),
-    dimensions: `${scalar(dimensions.widthMm)} × ${scalar(dimensions.heightMm)} × ${scalar(dimensions.thicknessMm)} mm`,
-    chain_style: scalar(chain.style),
-    chain_length: `${scalar(chain.lengthCm)} cm`,
-    presentation_view: scalar(input.presentationView),
-    inspiration_rule: specification.referenceAsset
-      ? "Use the optional third input only as customer inspiration; never copy text, identity, branding or unapproved objects from it."
-      : "No customer inspiration input is approved for this task.",
-  };
+  const snapshot = {} as PromptVariableSnapshot;
+  for (const variable of PROMPT_PROFILE_REGISTRY[input.profile]
+    .requiredVariables) {
+    if (variable === "piece_spec")
+      snapshot.piece_spec = buildPieceSpec(input.specification);
+    else if (variable === "drape")
+      snapshot.drape = buildDrape(input.specification);
+    else throw new Error(`unsupported_prompt_variable:${variable}`);
+  }
+  return snapshot;
 }
 
 export function compilePrompt(input: {
@@ -268,26 +260,4 @@ export function compilePrompt(input: {
     sha256: createHash("sha256").update(compiledPrompt, "utf8").digest("hex"),
     variableSnapshot: snapshot,
   };
-}
-
-function asObject(value: unknown): Record<string, unknown> {
-  return value && typeof value === "object" && !Array.isArray(value)
-    ? (value as Record<string, unknown>)
-    : {};
-}
-
-function scalar(value: unknown): string {
-  if (typeof value === "string" || typeof value === "number")
-    return String(value).trim();
-  return "";
-}
-
-function imageTemplate(scene: string): string {
-  return [
-    scene,
-    "The first supplied image is the ONE AND ONLY geometry law: reproduce its exact black pendant silhouette, character order, fused marks and two hollow jump rings without adding, removing, separating or redrawing anything.",
-    "The second supplied image is a style reference only: match its framing, light, palette, setting and mood, but never copy its pendant, name, letterforms, text or objects.",
-    "The piece is a personalised pendant for {{approved_name}} ({{language}}; Arabic style {{arabic_style}}), preserving {{layout}} geometry. Render {{metal_karat}} {{metal_color}} metal with a {{finish}} finish, {{stone_coverage}} {{gemstone}}, {{size_profile}} scale and approved dimensions {{dimensions}}. Use its {{chain_style}} chain at {{chain_length}}.",
-    "Requested presentation view: {{presentation_view}}. The pendant is the sharpest visual hero. Stones are placed into approved stroke areas, never coated over letterform boundaries. The chain threads into both jump rings with no gap. Real unretouched photograph with faint grain; no artificial glow, text, logos, watermarks, extra jewellery, charms, letters, names or duplicate pendants. {{inspiration_rule}}",
-  ].join(" ");
 }

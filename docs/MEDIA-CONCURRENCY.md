@@ -40,7 +40,6 @@ There is no artificial barrier that waits for all four products before starting 
 
 ```text
 openai-image        concurrency 4 initially
-visual-verifier     independently bounded
 fal-seedance-fast   concurrency 4 launch target
 fal-seedance-final  concurrency 1-2
 per-organization    concurrency key, default 4 active variation pipelines

@@ -3,7 +3,6 @@ import type {
   GeneratedMedia,
   PromptVariableSnapshot,
   StudioGenerator,
-  StudioVerifier,
 } from "@jewelo/ai";
 import { BASELINE_PROMPT_TEMPLATES } from "@jewelo/ai";
 import {
@@ -32,7 +31,7 @@ function fixture() {
     status: "queued",
     attempt: 0,
     dispatch_idempotency_key: "task:run-1:studio:release:release-a",
-    prompt_release: "image.studio@v1",
+    prompt_release: "image.packshot@v1",
     prompt_release_id: "release-a",
     style_anchor_release_id: "style-a",
     pipeline_release: "caleums-final-media-v1",
@@ -68,8 +67,8 @@ function fixture() {
   };
   const release = {
     id: "release-a",
-    profile: "image.studio" as const,
-    template: BASELINE_PROMPT_TEMPLATES["image.studio"],
+    profile: "image.packshot" as const,
+    template: BASELINE_PROMPT_TEMPLATES["image.packshot"],
   };
   const repository: PresentationRepository = {
     async load() {
@@ -154,35 +153,16 @@ const media: GeneratedMedia = {
 };
 
 describe("generic presentation execution", () => {
-  it("stores provider output before verification and completion", async () => {
+  it("stores provider output before completion, with no model verification step", async () => {
     const state = fixture();
     const generator: StudioGenerator = { generate: vi.fn(async () => media) };
-    const verifier: StudioVerifier = {
-      verify: vi.fn(async () => {
-        state.events.push("verified");
-        return {
-          passed: true,
-          exactText: true,
-          exactScript: true,
-          identityScore: 1,
-          correctMetalAndStones: true,
-          coherentPendant: true,
-          exactlyTwoConnectedRings: true,
-          correctShot: true,
-          noAddedIdentityElements: true,
-          notes: "ok",
-        };
-      }),
-    };
     await expect(
-      executePresentationTask("task-1", state.repository, generator, verifier),
+      executePresentationTask("task-1", state.repository, generator),
     ).resolves.toEqual({ status: "ready", attempt: 1 });
     expect(state.events).toEqual([
       "snapshot",
       "generating",
       "stored",
-      "verifying",
-      "verified",
       "complete",
     ]);
   });
@@ -194,17 +174,14 @@ describe("generic presentation execution", () => {
         throw new Error("transient");
       }),
     };
-    const verifier: StudioVerifier = {
-      verify: vi.fn(),
-    } as unknown as StudioVerifier;
     await expect(
-      executePresentationTask("task-1", state.repository, generator, verifier),
+      executePresentationTask("task-1", state.repository, generator),
     ).rejects.toThrow("transient");
     await expect(
-      executePresentationTask("task-1", state.repository, generator, verifier),
+      executePresentationTask("task-1", state.repository, generator),
     ).rejects.toThrow("transient");
     await expect(
-      executePresentationTask("task-1", state.repository, generator, verifier),
+      executePresentationTask("task-1", state.repository, generator),
     ).resolves.toEqual({ status: "operator_review", attempt: 3 });
     expect(state.getAttempt()).toBe(3);
     expect(state.events.filter((item) => item === "retry")).toHaveLength(2);
@@ -221,16 +198,15 @@ describe("generic presentation execution", () => {
         throw new Error("retry-me");
       }),
     };
-    const verifier = { verify: vi.fn() } as unknown as StudioVerifier;
     await expect(
-      executePresentationTask("task-1", state.repository, generator, verifier),
+      executePresentationTask("task-1", state.repository, generator),
     ).rejects.toThrow("retry-me");
     const pinned = state.getSnapshot()?.compiled_prompt;
     await expect(
-      executePresentationTask("task-1", state.repository, generator, verifier),
+      executePresentationTask("task-1", state.repository, generator),
     ).rejects.toThrow("retry-me");
     expect(prompts).toEqual([pinned, pinned]);
-    expect(pinned).toContain("Layla");
+    expect(pinned).toContain("polished 18K yellow gold");
   });
 
   it("does not call a provider after cancellation", async () => {
@@ -239,11 +215,8 @@ describe("generic presentation execution", () => {
     const generator: StudioGenerator = {
       generate: vi.fn(),
     } as unknown as StudioGenerator;
-    const verifier: StudioVerifier = {
-      verify: vi.fn(),
-    } as unknown as StudioVerifier;
     await expect(
-      executePresentationTask("task-1", state.repository, generator, verifier),
+      executePresentationTask("task-1", state.repository, generator),
     ).resolves.toEqual({ status: "cancelled" });
     expect(generator.generate).not.toHaveBeenCalled();
   });
@@ -259,11 +232,8 @@ describe("generic presentation execution", () => {
     const generator: StudioGenerator = {
       generate: vi.fn(),
     } as unknown as StudioGenerator;
-    const verifier: StudioVerifier = {
-      verify: vi.fn(),
-    } as unknown as StudioVerifier;
     await expect(
-      executePresentationTask("task-1", state.repository, generator, verifier),
+      executePresentationTask("task-1", state.repository, generator),
     ).resolves.toEqual({ status: "operator_review", attempt: 0 });
     expect(state.repository.reserveAttempt).not.toHaveBeenCalled();
     expect(generator.generate).not.toHaveBeenCalled();

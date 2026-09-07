@@ -6,6 +6,8 @@ import {
 } from "@jewelo/contracts";
 
 export * from "./studio";
+export * from "./caleums-prompt";
+export * from "./arabic-name";
 export * from "./prompt-registry";
 
 export interface FoundationProvider {

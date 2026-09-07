@@ -6,7 +6,7 @@ Architecture defaults are locked, but every model release/profile change must pa
 
 ```text
 still.production   gpt-image-2-2026-04-21 (direct OpenAI)
-still.verifier     gpt-5.6-luna
+name.arabic.suggest gpt-5.6-luna  (design entry only; retired as image verifier 27 Aug 2026)
 still.fallback     openai/gpt-image-2 on fal, disabled
 motion.preview     bytedance/seedance-2.0/fast/image-to-video
 motion.final       bytedance/seedance-2.0/image-to-video

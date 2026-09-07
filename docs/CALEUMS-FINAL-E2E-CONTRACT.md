@@ -78,12 +78,16 @@ Default customer fanout is concurrent and progressive:
 profiles but are not part of default customer fanout. A failed sibling never
 deletes or invalidates ready siblings.
 
-OpenAI verification compares each generated still with the identity silhouette
-and approved configuration. `ready` requires exact spelling/script and identity,
-correct metal/stones and shot, a coherent pendant, exactly two connected jump
-rings with chain attachment, and no added letters, names, charms, or duplicates.
-Provider output is copied immediately into private Supabase Storage before the
-verification transition.
+There is no model verification of generated stills. A still becomes `ready`
+once the provider returns bytes and those bytes are copied into private Supabase
+Storage. Identity is owned entirely by the pre-spend deterministic gate: the
+versioned solver, the immutable canonical PNG, and the pinned style anchor. No
+model grades, scores, or approves a generated image.
+
+Superseded on 27 August 2026. The previous contract routed every still through a
+`gpt-5.6-luna` structured verifier. That verifier passed images whose letterforms
+visibly diverged from the canonical silhouette, so it was providing assurance it
+could not actually deliver, at 5-12s and one paid call per still.
 
 ## Style anchors
 
@@ -106,9 +110,10 @@ The authoritative source task IDs are:
 
 Managed immutable profiles are `image.packshot`, `image.worn`,
 `image.macro_gift`, `image.dark_editorial`, `image.studio_hero`,
-`image.billboard`, `video.preview`, `video.final`, and
-`verification.image`. `image.studio` remains readable only for legacy seeded
-tasks. Draft/validate/publish/rollback/history reject unknown, malformed, or
+`image.billboard`, `video.preview`, and `video.final`. `image.studio` and
+`verification.image` remain readable for legacy seeded tasks and audit history
+only; neither is published, and `verification.image` can never be published
+again. Draft/validate/publish/rollback/history reject unknown, malformed, or
 missing `{{variables}}`; publication affects only new tasks.
 
 Every run pins the pipeline, identity engine/font, provider model, prompt and
@@ -120,7 +125,7 @@ paid attempt with the same idempotency key.
 
 ## Motion
 
-Motion alone derives from one verified still. fal Seedance preview is 4 seconds,
+Motion alone derives from one stored `ready` still. fal Seedance preview is 4 seconds,
 9:16; optional final is 6 seconds. Both are 720p and submit
 `generate_audio:false`. Submission request/status/result URLs are durable
 server-side task lineage; Trigger polls with bounded idempotent runs, then copies
@@ -133,7 +138,10 @@ order, or fulfillment.
   usage, commerce lineage, audit, outbox, RLS, Realtime, and private Storage.
 - Trigger.dev owns outbox dispatch, provider-specific concurrency, durable
   polling, retry/cancel/resume, and recovery. No Redis or custom queue server.
-- OpenAI handles all still generation and still verification server-side.
+- OpenAI handles all still generation server-side. It performs no verification.
+  `gpt-5.6-luna` is used in exactly one place in the whole product: suggesting an
+  Arabic spelling for an English name at design entry, which the customer must
+  confirm before a revision is frozen. It never sees a generated image.
 - fal handles video only.
 - Shopify retains Draft Order/checkout/payment ownership; the accepted,
   unexpired, spelling-confirmed quote and webhook-deduplication gates remain.

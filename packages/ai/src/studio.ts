@@ -19,32 +19,8 @@ export interface GeneratedMedia {
   estimatedCostCents: number;
 }
 
-export interface VerificationDecision {
-  passed: boolean;
-  exactText: boolean;
-  exactScript: boolean;
-  identityScore: number;
-  correctMetalAndStones: boolean;
-  coherentPendant: boolean;
-  exactlyTwoConnectedRings: boolean;
-  correctShot: boolean;
-  noAddedIdentityElements: boolean;
-  notes: string;
-}
-
 export interface StudioGenerator {
   generate(input: StudioGenerationInput): Promise<GeneratedMedia>;
-}
-
-export interface StudioVerifier {
-  verify(input: {
-    approvedText: string;
-    identityFingerprint: string;
-    identityImageUrl: string;
-    presentationView: string;
-    specification: Readonly<Record<string, unknown>>;
-    media: GeneratedMedia;
-  }): Promise<VerificationDecision>;
 }
 
 export class MockStudioGenerator implements StudioGenerator {
@@ -60,23 +36,6 @@ export class MockStudioGenerator implements StudioGenerator {
       bytes: new Uint8Array(transparentPng),
       mimeType: "image/png",
       estimatedCostCents: 0,
-    };
-  }
-}
-
-export class MockStudioVerifier implements StudioVerifier {
-  async verify(): Promise<VerificationDecision> {
-    return {
-      passed: true,
-      exactText: true,
-      exactScript: true,
-      identityScore: 1,
-      correctMetalAndStones: true,
-      coherentPendant: true,
-      exactlyTwoConnectedRings: true,
-      correctShot: true,
-      noAddedIdentityElements: true,
-      notes: "Mock verification passed without a provider call.",
     };
   }
 }
@@ -154,103 +113,6 @@ const OPENAI_SIZE_BY_RATIO = {
   "9:16": "1024x1824",
   "16:9": "1536x864",
 } as const;
-
-export class OpenAIStudioVerifier implements StudioVerifier {
-  constructor(
-    private readonly apiKey: string,
-    private readonly model: string,
-    private readonly fetcher: Fetch = fetch,
-  ) {}
-
-  async verify(input: {
-    approvedText: string;
-    identityFingerprint: string;
-    identityImageUrl: string;
-    presentationView: string;
-    specification: Readonly<Record<string, unknown>>;
-    media: GeneratedMedia;
-  }): Promise<VerificationDecision> {
-    const base64 = Buffer.from(input.media.bytes).toString("base64");
-    const response = await this.fetcher("https://api.openai.com/v1/responses", {
-      method: "POST",
-      headers: {
-        authorization: `Bearer ${this.apiKey}`,
-        "content-type": "application/json",
-      },
-      body: JSON.stringify({
-        model: this.model,
-        input: [
-          {
-            role: "user",
-            content: [
-              {
-                type: "input_text",
-                text: [
-                  `Compare the generated pendant with the immutable identity silhouette and approved exact text ${JSON.stringify(input.approvedText)}.`,
-                  `Identity fingerprint: ${input.identityFingerprint}. Required shot: ${input.presentationView}.`,
-                  `Approved configuration: ${JSON.stringify(input.specification)}.`,
-                  "Fail unless spelling and script are exact, identity is preserved, metal and stones match, the pendant is coherent, exactly two connected jump rings attach the chain, the shot is correct, and there are no added letters, names, charms or duplicate pendants.",
-                ].join(" "),
-              },
-              { type: "input_image", image_url: input.identityImageUrl },
-              {
-                type: "input_image",
-                image_url: `data:${input.media.mimeType};base64,${base64}`,
-              },
-            ],
-          },
-        ],
-        text: {
-          format: {
-            type: "json_schema",
-            name: "caleums_image_verification",
-            strict: true,
-            schema: {
-              type: "object",
-              additionalProperties: false,
-              properties: {
-                passed: { type: "boolean" },
-                exactText: { type: "boolean" },
-                exactScript: { type: "boolean" },
-                identityScore: { type: "number" },
-                correctMetalAndStones: { type: "boolean" },
-                coherentPendant: { type: "boolean" },
-                exactlyTwoConnectedRings: { type: "boolean" },
-                correctShot: { type: "boolean" },
-                noAddedIdentityElements: { type: "boolean" },
-                notes: { type: "string" },
-              },
-              required: [
-                "passed",
-                "exactText",
-                "exactScript",
-                "identityScore",
-                "correctMetalAndStones",
-                "coherentPendant",
-                "exactlyTwoConnectedRings",
-                "correctShot",
-                "noAddedIdentityElements",
-                "notes",
-              ],
-            },
-          },
-        },
-      }),
-    });
-    if (!response.ok)
-      throw new Error(`OpenAI verification failed:${response.status}`);
-    const parsed = JSON.parse(
-      extractResponseText(await response.json()),
-    ) as VerificationDecision;
-    if (
-      typeof parsed.passed !== "boolean" ||
-      typeof parsed.exactText !== "boolean" ||
-      typeof parsed.exactlyTwoConnectedRings !== "boolean"
-    )
-      throw new Error("OpenAI verification was malformed");
-    return parsed;
-  }
-}
 
 export interface MotionSubmission {
   provider: "fal";
@@ -344,16 +206,4 @@ export class FalSeedanceVideoAdapter {
       throw new Error("fal video result omitted video URL");
     return { state: "ready", temporaryOutputUrl: result.video.url };
   }
-}
-
-function extractResponseText(value: unknown): string {
-  const response = value as {
-    output_text?: string;
-    output?: Array<{ content?: Array<{ type?: string; text?: string }> }>;
-  };
-  if (response.output_text) return response.output_text;
-  for (const item of response.output ?? [])
-    for (const content of item.content ?? [])
-      if (content.type === "output_text" && content.text) return content.text;
-  throw new Error("OpenAI verification omitted output text");
 }

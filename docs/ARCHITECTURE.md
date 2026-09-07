@@ -186,9 +186,6 @@ openai-image
   concurrency: 4 initially
   quota: verified against the OpenAI project IPM before real launch
 
-visual-verifier
-  separately bounded so verification cannot starve generation
-
 fal-seedance-fast
   concurrency: 4 only after fal account limit >= 4 is verified
 
@@ -212,7 +209,7 @@ run:{runId}:variation:{index}:{kind}:release:{releaseId}
 
 ```text
 still.production  = gpt-image-2-2026-04-21 (direct OpenAI)
-still.verifier    = gpt-5.6-luna
+name.arabic.suggest = gpt-5.6-luna (design entry only; never sees an image)
 still.fallback    = openai/gpt-image-2 on fal, disabled
 motion.preview    = bytedance/seedance-2.0/fast/image-to-video
 motion.final      = bytedance/seedance-2.0/image-to-video

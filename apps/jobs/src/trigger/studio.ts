@@ -10,7 +10,7 @@ const openAIImageQueue = queue({
   name: "openai-image",
   concurrencyLimit: Math.max(
     1,
-    Math.min(32, Number(process.env.OPENAI_STILL_CONCURRENCY_LIMIT ?? 2)),
+    Math.min(32, Number(process.env.OPENAI_STILL_CONCURRENCY_LIMIT ?? 4)),
   ),
 });
 
@@ -30,7 +30,6 @@ export const studioPresentationTask = task({
       payload.taskId,
       dependencies.repository,
       dependencies.generator,
-      dependencies.verifier,
     );
   },
 });

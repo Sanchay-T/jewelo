@@ -4,7 +4,6 @@ import {
   FalSeedanceVideoAdapter,
   MockFoundationProvider,
   OpenAIStillAdapter,
-  OpenAIStudioVerifier,
 } from "./index";
 
 describe("mock provider adapter", () => {
@@ -71,55 +70,6 @@ describe("OpenAI still HTTP contract", () => {
     });
   });
 
-  it("parses nested Responses API output text", async () => {
-    const decision = {
-      passed: true,
-      exactText: true,
-      exactScript: true,
-      identityScore: 1,
-      correctMetalAndStones: true,
-      coherentPendant: true,
-      exactlyTwoConnectedRings: true,
-      correctShot: true,
-      noAddedIdentityElements: true,
-      notes: "ok",
-    };
-    const fetcher = vi.fn<typeof fetch>().mockResolvedValue(
-      new Response(
-        JSON.stringify({
-          output: [
-            {
-              content: [
-                { type: "output_text", text: JSON.stringify(decision) },
-              ],
-            },
-          ],
-        }),
-        { status: 200 },
-      ),
-    );
-    const verifier = new OpenAIStudioVerifier("test-key", "verifier", fetcher);
-    await expect(
-      verifier.verify({
-        approvedText: "ليلى",
-        identityFingerprint: "fingerprint",
-        identityImageUrl: "https://signed.invalid/identity.png",
-        presentationView: "studio",
-        specification: {},
-        media: {
-          provider: "openai",
-          model: "gpt-image-2-2026-04-21",
-          requestId: "request",
-          bytes: new Uint8Array([1]),
-          mimeType: "image/png",
-          estimatedCostCents: 20,
-        },
-      }),
-    ).resolves.toEqual(decision);
-  });
-});
-
-describe("fal Seedance HTTP contract", () => {
   it("submits silent four-second 9:16 preview motion from one verified still", async () => {
     const fetcher = vi.fn<typeof fetch>().mockResolvedValue(
       new Response(

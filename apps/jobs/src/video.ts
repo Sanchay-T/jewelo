@@ -320,12 +320,9 @@ async function materializePrompt(
     `generation_prompt_snapshots?task_id=eq.${context.task.id}`,
   );
   if (snapshots[0]) return String(snapshots[0].compiled_prompt);
-  const anchor = context.revision.identity_anchor as Record<string, unknown>;
   const variables = buildPromptVariableSnapshot({
-    approvedName: anchor.approvedText,
-    language: anchor.language,
+    profile: context.release.profile as PromptProfile,
     specification: context.revision.specification as Record<string, unknown>,
-    presentationView: context.task.presentation_view,
   });
   const compiled = compilePrompt({
     profile: context.release.profile as PromptProfile,

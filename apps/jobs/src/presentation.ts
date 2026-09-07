@@ -1,9 +1,7 @@
 import { createHash } from "node:crypto";
 import {
   MockStudioGenerator,
-  MockStudioVerifier,
   OpenAIStillAdapter,
-  OpenAIStudioVerifier,
   PRESENTATION_ASPECT_RATIO,
   buildPromptVariableSnapshot,
   compilePrompt,
@@ -11,7 +9,6 @@ import {
   type PromptProfile,
   type PromptVariableSnapshot,
   type StudioGenerator,
-  type StudioVerifier,
 } from "@jewelo/ai";
 import { parseJobsEnv } from "@jewelo/config";
 import { renderIdentityAnchor } from "./identity-anchor";
@@ -107,7 +104,6 @@ export interface PresentationRepository {
     attempt: number;
     media: GeneratedMedia;
     stored: { bucket: string; path: string; checksum: string };
-    verification: Record<string, unknown>;
     identityFingerprint: string;
     identityArtifactId: string;
   }): Promise<void>;
@@ -140,7 +136,6 @@ export async function executePresentationTask(
   taskId: string,
   repository: PresentationRepository,
   generator: StudioGenerator,
-  verifier: StudioVerifier,
 ) {
   const {
     task,
@@ -157,10 +152,8 @@ export async function executePresentationTask(
   let snapshot = existingSnapshot;
   if (!snapshot) {
     const variables = buildPromptVariableSnapshot({
-      approvedName: revision.identity_anchor.approvedText,
-      language: revision.identity_anchor.language,
+      profile: release.profile,
       specification: revision.specification,
-      presentationView: task.presentation_view,
     });
     const compiled = compilePrompt({
       profile: release.profile,
@@ -235,24 +228,6 @@ export async function executePresentationTask(
       attempt: reservation.attempt,
       media,
     });
-    await repository.markTask(task.id, "verifying");
-    const verification = await verifier.verify({
-      approvedText: revision.identity_anchor.approvedText,
-      identityFingerprint: identity.fingerprint,
-      identityImageUrl: identity.url,
-      presentationView: task.presentation_view,
-      specification: revision.specification,
-      media,
-    });
-    if (
-      !verification.passed ||
-      !verification.exactText ||
-      !verification.exactScript ||
-      !verification.exactlyTwoConnectedRings ||
-      !verification.correctShot ||
-      !verification.noAddedIdentityElements
-    )
-      throw new Error("identity_verification_failed");
     await repository.complete({
       task,
       run,
@@ -260,7 +235,6 @@ export async function executePresentationTask(
       attempt: reservation.attempt,
       media,
       stored,
-      verification: verification as unknown as Record<string, unknown>,
       identityFingerprint: identity.fingerprint,
       identityArtifactId: identity.artifactId,
     });
@@ -300,8 +274,12 @@ export class SupabasePresentationRepository implements PresentationRepository {
       throw new Error(
         `Supabase job request ${response.status}:${(await response.text()).slice(0, 300)}`,
       );
+    // PostgREST answers a plain insert with 201 and an empty body unless
+    // `return=representation` is requested, so an empty payload is success.
     if (response.status === 204) return undefined as T;
-    return response.json() as Promise<T>;
+    const body = await response.text();
+    if (!body) return undefined as T;
+    return JSON.parse(body) as T;
   }
   async load(taskId: string) {
     const tasks = await this.#request<TaskRow[]>(
@@ -420,26 +398,32 @@ export class SupabasePresentationRepository implements PresentationRepository {
           body: uploadBody,
         },
       );
-      if (!upload.ok && upload.status !== 409)
+      if (!upload.ok && !(await isDuplicateObject(upload)))
         throw new Error(`identity anchor upload failed:${upload.status}`);
     }
-    await this.#request("/rest/v1/identity_artifacts", {
-      method: "POST",
-      headers: { prefer: "resolution=ignore-duplicates" },
-      body: JSON.stringify({
-        revision_id: revision.id,
-        owner_principal_id: ownerId,
-        engine_release: String(rendered.report.engineRelease),
-        font_release: String(rendered.report.fontSha256 ?? "existing-latin"),
-        approved_text: revision.identity_anchor.approvedText,
-        script: revision.identity_anchor.language,
-        fingerprint: rendered.fingerprint,
-        bucket_id: "identity-anchors",
-        object_path: `${basePath}.png`,
-        png_sha256: rendered.pngSha256,
-        validation_report: rendered.report,
-      }),
-    });
+    // `resolution=ignore-duplicates` resolves against the primary key unless
+    // the conflicting constraint is named, so concurrent siblings inserting the
+    // same revision identity must target (revision_id, fingerprint) explicitly.
+    await this.#request(
+      "/rest/v1/identity_artifacts?on_conflict=revision_id,fingerprint",
+      {
+        method: "POST",
+        headers: { prefer: "resolution=ignore-duplicates" },
+        body: JSON.stringify({
+          revision_id: revision.id,
+          owner_principal_id: ownerId,
+          engine_release: String(rendered.report.engineRelease),
+          font_release: String(rendered.report.fontSha256 ?? "existing-latin"),
+          approved_text: revision.identity_anchor.approvedText,
+          script: revision.identity_anchor.language,
+          fingerprint: rendered.fingerprint,
+          bucket_id: "identity-anchors",
+          object_path: `${basePath}.png`,
+          png_sha256: rendered.pngSha256,
+          validation_report: rendered.report,
+        }),
+      },
+    );
     const artifacts = await this.#request<Array<{ id: string }>>(
       `/rest/v1/identity_artifacts?revision_id=eq.${revision.id}&fingerprint=eq.${rendered.fingerprint}&select=id`,
     );
@@ -559,7 +543,7 @@ export class SupabasePresentationRepository implements PresentationRepository {
         body: Buffer.from(input.media.bytes),
       },
     );
-    if (!response.ok && response.status !== 409)
+    if (!response.ok && !(await isDuplicateObject(response)))
       throw new Error(`asset upload failed:${response.status}`);
     return { bucket: "generated-assets", path, checksum };
   }
@@ -570,11 +554,10 @@ export class SupabasePresentationRepository implements PresentationRepository {
     attempt: number;
     media: GeneratedMedia;
     stored: { bucket: string; path: string; checksum: string };
-    verification: Record<string, unknown>;
     identityFingerprint: string;
     identityArtifactId: string;
   }) {
-    await this.#request("/rest/v1/assets", {
+    await this.#request("/rest/v1/assets?on_conflict=task_id,attempt", {
       method: "POST",
       headers: { prefer: "resolution=ignore-duplicates" },
       body: JSON.stringify({
@@ -596,7 +579,11 @@ export class SupabasePresentationRepository implements PresentationRepository {
         identity_fingerprint: input.identityFingerprint,
         identity_artifact_id: input.identityArtifactId,
         attempt: input.attempt,
-        verification_result: input.verification,
+        verification_result: {
+          mode: "none",
+          gate: "deterministic-identity-only",
+          note: "Model image verification is not part of this pipeline. Identity is owned by the pre-spend deterministic solver.",
+        },
         pipeline_release: input.task.pipeline_release,
         style_anchor_release_id: input.task.style_anchor_release_id,
       }),
@@ -728,6 +715,28 @@ export class SupabasePresentationRepository implements PresentationRepository {
   }
 }
 
+// Supabase Storage reports an existing immutable key as HTTP 400 carrying a
+// 409 duplicate body, so the outer status alone cannot classify the conflict.
+// Concurrent siblings share one identity anchor object; a duplicate is success.
+async function isDuplicateObject(response: Response): Promise<boolean> {
+  if (response.status === 409) return true;
+  if (response.status !== 400) return false;
+  try {
+    const body = (await response.clone().json()) as {
+      statusCode?: string;
+      code?: string;
+      error?: string;
+    };
+    return (
+      body.statusCode === "409" ||
+      body.code === "KeyAlreadyExists" ||
+      body.error === "Duplicate"
+    );
+  } catch {
+    return false;
+  }
+}
+
 export function productionPresentationDependencies(
   environment: Record<string, string | undefined> = process.env,
 ) {
@@ -738,21 +747,13 @@ export function productionPresentationDependencies(
     config.PROVIDER_MODE === "mock",
   );
   if (config.PROVIDER_MODE === "mock")
-    return {
-      repository,
-      generator: new MockStudioGenerator(),
-      verifier: new MockStudioVerifier(),
-    };
+    return { repository, generator: new MockStudioGenerator() };
   return {
     repository,
     generator: new OpenAIStillAdapter(
       config.OPENAI_API_KEY!,
       config.OPENAI_IMAGE_MODEL,
       config.OPENAI_STILL_ESTIMATED_COST_CENTS,
-    ),
-    verifier: new OpenAIStudioVerifier(
-      config.OPENAI_API_KEY!,
-      config.OPENAI_VERIFIER_MODEL,
     ),
   };
 }

@@ -20,6 +20,8 @@
 | D-014 | Managed remote dev/previews; no required Docker/local infra | accepted | explicit user reversal or vendor outage strategy |
 | D-015 | No autonomous/open-source media-agent framework in production execution | accepted | a framework proves simpler without duplicating Trigger or adding another runtime |
 | D-016 | Motion, Embla, react-zoom-pan-pinch, react-dropzone, native short MP4 video | accepted UI foundation | accessibility/performance evidence requires replacement |
+| D-017 | No model verification of generated stills; identity enforced only by the deterministic solver and canonical PNG | accepted 27 Aug 2026, supersedes the verifier half of D-006 | a verification method is proved to catch canonical-geometry drift that the deterministic gate cannot |
+| D-018 | `gpt-5.6-luna` is confined to suggesting an Arabic spelling for an English name at design entry, customer-confirmed | accepted 27 Aug 2026 | the suggestion proves unreliable enough to warrant removal, or a deterministic transliteration replaces it |
 
 ## Capacity gates
 
