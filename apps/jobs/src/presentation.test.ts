@@ -6,6 +6,7 @@ import type {
 } from "@jewelo/ai";
 import {
   executePresentationTask,
+  SupabasePresentationRepository,
   type PresentationRepository,
 } from "./presentation";
 
@@ -143,5 +144,75 @@ describe("generic presentation execution", () => {
       executePresentationTask("task-1", state.repository, generator, verifier),
     ).resolves.toEqual({ status: "cancelled" });
     expect(generator.generate).not.toHaveBeenCalled();
+  });
+});
+
+describe("SupabasePresentationRepository", () => {
+  it("accepts an empty successful PATCH response", async () => {
+    const fetchMock = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValue(new Response(null, { status: 204 }));
+    const repository = new SupabasePresentationRepository(
+      "https://supabase.invalid",
+      "service-key",
+    );
+
+    await expect(repository.markTask("task-1", "generating")).resolves.toBe(
+      undefined,
+    );
+    expect(fetchMock).toHaveBeenCalledOnce();
+    fetchMock.mockRestore();
+  });
+
+  it("accepts a whitespace-only successful response", async () => {
+    const fetchMock = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValue(new Response("   ", { status: 200 }));
+    const repository = new SupabasePresentationRepository(
+      "https://supabase.invalid",
+      "service-key",
+    );
+
+    await expect(repository.markTask("task-1", "generating")).resolves.toBe(
+      undefined,
+    );
+    fetchMock.mockRestore();
+  });
+
+  it("treats Supabase Storage's HTTP 400 duplicate payload as idempotent", async () => {
+    const duplicate = () =>
+      new Response(
+        JSON.stringify({ statusCode: "409", code: "KeyAlreadyExists" }),
+        { status: 400 },
+      );
+    const fetchMock = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce(duplicate())
+      .mockResolvedValueOnce(duplicate())
+      .mockResolvedValueOnce(
+        Response.json({ signedURL: "https://signed.invalid/identity.png" }),
+      );
+    const repository = new SupabasePresentationRepository(
+      "https://supabase.invalid",
+      "service-key",
+    );
+
+    await expect(
+      repository.signedIdentityUrl(
+        {
+          id: "revision-1",
+          specification: {},
+          identity_anchor: {
+            approvedText: "Zara",
+            language: "en",
+            typography: "Playfair Display Italic",
+            fingerprint: "fingerprint",
+          },
+        },
+        "owner-1",
+      ),
+    ).resolves.toBe("https://signed.invalid/identity.png");
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+    fetchMock.mockRestore();
   });
 });

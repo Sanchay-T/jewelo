@@ -69,15 +69,21 @@ describe("remote one-view client flow", () => {
   const storage = new Map<string, string>();
   let state = emptyState();
   let fetcher: ReturnType<typeof vi.fn>;
+  let locationAssign: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
     state = emptyState();
     storage.clear();
+    locationAssign = vi.fn();
     vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "https://example.supabase.co");
     vi.stubEnv("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY", "publishable-test-key");
     vi.stubGlobal("window", {
       setInterval: globalThis.setInterval,
       clearInterval: globalThis.clearInterval,
+      location: {
+        origin: "https://jewelo.test",
+        assign: locationAssign,
+      },
       localStorage: {
         getItem: (key: string) => storage.get(key) ?? null,
         setItem: (key: string, value: string) => storage.set(key, value),
@@ -285,7 +291,10 @@ describe("remote one-view client flow", () => {
     await client.setRole("customer");
     await client.acceptQuote("design-1");
     await client.createOrder("design-1");
-    expect(client.getDesign("design-1")?.order?.id).toBe("order-1");
+    expect(client.getDesign("design-1")?.order).toBeUndefined();
+    expect(locationAssign).toHaveBeenCalledWith(
+      "https://jewelo.test/en/commerce/design-1?checkout=mock",
+    );
     expect(storage.get("caleums:idempotency:v1:checkout:quote-1")).toBeTruthy();
 
     const reloaded = new SupabaseJeweloClient();

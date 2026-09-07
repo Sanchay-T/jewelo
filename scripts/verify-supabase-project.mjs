@@ -14,12 +14,6 @@ export function verifySupabaseProject(projects, projectRef, target) {
       `Supabase project ref ${projectRef} is not visible to the authenticated account`,
     );
   }
-  if (project.region !== "ap-south-1") {
-    throw new Error(
-      `Supabase project must be in Mumbai (ap-south-1), received ${project.region}`,
-    );
-  }
-
   const name = String(project.name ?? "").toLowerCase();
   if (productionMarker.test(name)) {
     throw new Error(
@@ -43,7 +37,8 @@ function proveNegativeFixtures() {
   const rejected = [
     [project("jewelo-production-dev"), "fixture-ref", "development"],
     [project("jewelo-prod-preview"), "fixture-ref", "preview"],
-    [project("jewelo-development", "us-east-1"), "fixture-ref", "development"],
+    [project("jewelo-sandbox"), "fixture-ref", "development"],
+    [project("jewelo-development"), "fixture-ref", "production"],
     [project("jewelo-development"), "missing-ref", "development"],
   ];
 
@@ -61,11 +56,15 @@ function proveNegativeFixtures() {
   }
 
   verifySupabaseProject(
-    project("jewelo-development"),
+    project("jewelo-development", "ap-northeast-2"),
     "fixture-ref",
     "development",
   );
-  verifySupabaseProject(project("jewelo-pr-42"), "fixture-ref", "preview");
+  verifySupabaseProject(
+    project("jewelo-pr-42", "us-east-1"),
+    "fixture-ref",
+    "preview",
+  );
   console.log("Supabase remote-target negative fixtures passed.");
 }
 

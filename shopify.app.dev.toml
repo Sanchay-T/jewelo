@@ -1,0 +1,22 @@
+# Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
+
+client_id = "6680f4c9c13f97400f3ff0d5e283ac2c"
+name = "Jewelo Checkout"
+application_url = "https://blake-handbags-profession-beautifully.trycloudflare.com"
+embedded = false
+
+[access_scopes]
+# Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
+scopes = "write_draft_orders,read_orders"
+optional_scopes = [ ]
+use_legacy_install_flow = false
+
+[auth]
+redirect_urls = [ ]
+
+[webhooks]
+api_version = "2026-07"
+
+[[webhooks.subscriptions]]
+topics = ["orders/paid"]
+uri = "/api/webhooks/shopify"

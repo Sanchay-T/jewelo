@@ -179,8 +179,9 @@ export class SupabasePresentationRepository implements PresentationRepository {
       throw new Error(
         `Supabase job request ${response.status}:${(await response.text()).slice(0, 300)}`,
       );
-    if (response.status === 204) return undefined as T;
-    return response.json() as Promise<T>;
+    const body = await response.text();
+    if (!body.trim()) return undefined as T;
+    return JSON.parse(body) as T;
   }
   async load(taskId: string) {
     const tasks = await this.#request<TaskRow[]>(
@@ -262,8 +263,18 @@ export class SupabasePresentationRepository implements PresentationRepository {
           body: uploadBody,
         },
       );
-      if (!upload.ok && upload.status !== 409)
-        throw new Error(`identity anchor upload failed:${upload.status}`);
+      if (!upload.ok) {
+        const problem = (await upload.json().catch(() => ({}))) as {
+          code?: string;
+          statusCode?: string | number;
+        };
+        const duplicate =
+          upload.status === 409 ||
+          Number(problem.statusCode) === 409 ||
+          problem.code === "KeyAlreadyExists";
+        if (!duplicate)
+          throw new Error(`identity anchor upload failed:${upload.status}`);
+      }
     }
     const path = `${basePath}.png`;
     const result = await this.#request<{

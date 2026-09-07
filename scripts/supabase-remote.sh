@@ -25,7 +25,7 @@ if ! projects_json="$(pnpm exec supabase projects list --output json 2>/dev/null
 fi
 
 if ! JEWELO_PROJECTS_JSON="$projects_json" node scripts/verify-supabase-project.mjs "$SUPABASE_PROJECT_REF" "$target"; then
-  echo "Supabase target verification failed; use a Mumbai project whose remote name explicitly contains development/dev or preview/branch/pr for the selected target." >&2
+  echo "Supabase target verification failed; use a visible non-production project whose name explicitly contains development/dev or preview/branch/pr for the selected target." >&2
   exit 2
 fi
 

@@ -1,12 +1,12 @@
 # Decision register
 
-**Updated:** 26 August 2026
+**Updated:** 27 August 2026
 
 | ID | Decision | Status | Revisit trigger |
 | --- | --- | --- | --- |
 | D-001 | Next.js 16.2/React 19 on Vercel | accepted | measured hosting/runtime incompatibility |
 | D-002 | pnpm workspace + Turborepo | accepted | repository remains one inseparable app after Goal 02 |
-| D-003 | Supabase Mumbai as system of record, Auth, Realtime, Storage | accepted | data residency, measured scale, or platform failure |
+| D-003 | Production Supabase remains in Mumbai; managed development and preview projects may use any available region | accepted | data residency, measured scale, or platform failure |
 | D-004 | SQL migrations/RLS + generated Supabase types; no competing ORM migration source | accepted | proved developer/transaction limitation |
 | D-005 | Trigger.dev Cloud for durable AI jobs and concurrency | accepted | cost/regional/operability threshold breached |
 | D-006 | Direct OpenAI GPT Image 2 snapshot for product and worn stills | accepted default | jewelry evaluation gate fails or superior tested profile |

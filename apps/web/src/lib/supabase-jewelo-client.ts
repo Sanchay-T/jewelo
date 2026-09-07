@@ -492,14 +492,28 @@ export class SupabaseJeweloClient implements LegacyJeweloClient {
     const quote = this.#requireDesign(designId).quote;
     if (!quote || quote.status !== "accepted")
       throw new Error("Accepted quote required");
-    await this.#request("/api/checkout", {
-      method: "POST",
-      body: JSON.stringify({
-        quoteId: quote.id,
-        idempotencyKey: this.#idempotency("checkout", quote.id),
-      }),
-    });
-    await this.#loadState(designId);
+    const result = await this.#request<{ checkoutUrl?: unknown }>(
+      "/api/checkout",
+      {
+        method: "POST",
+        body: JSON.stringify({
+          quoteId: quote.id,
+          idempotencyKey: this.#idempotency("checkout", quote.id),
+        }),
+      },
+    );
+    if (typeof result.checkoutUrl !== "string" || !result.checkoutUrl.trim())
+      throw new Error("Checkout is still being prepared. Try again.");
+    const destination = new URL(result.checkoutUrl, window.location.origin);
+    const sameOrigin = destination.origin === window.location.origin;
+    if (
+      (sameOrigin &&
+        destination.protocol !== "http:" &&
+        destination.protocol !== "https:") ||
+      (!sameOrigin && destination.protocol !== "https:")
+    )
+      throw new Error("Checkout returned an unsafe destination");
+    window.location.assign(destination.href);
     return structuredClone(this.#requireDesign(designId));
   }
 
