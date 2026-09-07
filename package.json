@@ -5,13 +5,24 @@
   "description": "Implementation-ready Jewelo v2 clean-room specification",
   "packageManager": "pnpm@11.23.0",
   "engines": {
-    "node": ">=24 <25"
+    "node": ">=24 <25",
+    "pnpm": "11.23.0"
   },
   "scripts": {
+    "gcp:build": "pnpm --filter @jewelo/web... build",
+    "gcp:bootstrap": "bash scripts/gcp/bootstrap.sh",
+    "gcp:deploy": "bash scripts/gcp/deploy.sh",
+    "gcp:github": "bash scripts/gcp/configure-github.sh",
+    "gcp:rollback": "bash scripts/gcp/rollback.sh",
+    "gcp:secrets": "node scripts/gcp/sync-secrets.mjs",
+    "gcp:smoke": "bash scripts/gcp/smoke.sh",
+    "gcp:terraform:check": "terraform -chdir=infra/gcp init -backend=false -input=false && terraform -chdir=infra/gcp fmt -check -recursive && terraform -chdir=infra/gcp validate",
+    "gcp-build": "pnpm gcp:build",
     "doctor": "bash scripts/doctor.sh",
     "goals": "node scripts/list-goals.mjs",
     "verify": "bash scripts/verify-foundation.sh",
     "goal:new": "bash scripts/new-goal.sh",
-    "pr:draft": "bash scripts/open-pr.sh"
+    "pr:draft": "bash scripts/open-pr.sh",
+    "start": "pnpm --filter @jewelo/web start"
   }
 }

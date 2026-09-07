@@ -4,7 +4,7 @@
 
 | ID | Decision | Status | Revisit trigger |
 | --- | --- | --- | --- |
-| D-001 | Next.js 16.2/React 19 on Vercel | accepted | measured hosting/runtime incompatibility |
+| D-001 | Next.js 16.2/React 19 on Google Cloud Run Mumbai | accepted by explicit user direction | measured hosting/runtime incompatibility |
 | D-002 | pnpm workspace + Turborepo | accepted | repository remains one inseparable app after Goal 02 |
 | D-003 | Supabase Mumbai as system of record, Auth, Realtime, Storage | accepted | data residency, measured scale, or platform failure |
 | D-004 | SQL migrations/RLS + generated Supabase types; no competing ORM migration source | accepted | proved developer/transaction limitation |
@@ -20,6 +20,7 @@
 | D-014 | Managed remote dev/previews; no required Docker/local infra | accepted | explicit user reversal or vendor outage strategy |
 | D-015 | No autonomous/open-source media-agent framework in production execution | accepted | a framework proves simpler without duplicating Trigger or adding another runtime |
 | D-016 | Motion, Embla, react-zoom-pan-pinch, react-dropzone, native short MP4 video | accepted UI foundation | accessibility/performance evidence requires replacement |
+| D-017 | All web environment values originate in Google Secret Manager; GitHub uses keyless OIDC | accepted | provider limitation or proved rotation/availability failure |
 
 ## Capacity gates
 

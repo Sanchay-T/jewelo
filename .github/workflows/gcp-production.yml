@@ -1,0 +1,63 @@
+name: gcp-production
+
+on:
+  workflow_dispatch:
+    inputs:
+      image:
+        description: Immutable staging-tested Artifact Registry digest
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: gcp-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    environment: Production
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: auth
+        uses: google-github-actions/auth@v3
+        with:
+          project_id: ${{ vars.GCP_PROJECT_ID }}
+          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.GCP_DEPLOYER_SERVICE_ACCOUNT }}
+
+      - uses: google-github-actions/setup-gcloud@v3
+
+      - id: deploy
+        name: Deploy candidate without production traffic
+        env:
+          GITHUB_SHA: ${{ github.sha }}
+        run: bash scripts/gcp/deploy.sh production "${{ inputs.image }}"
+
+      - name: Smoke test candidate
+        run: bash scripts/gcp/smoke.sh "${{ steps.deploy.outputs.candidate_url }}"
+
+      - name: Promote verified revision
+        run: |
+          gcloud run services update-traffic jewelo-production \
+            --project="${{ vars.GCP_PROJECT_ID }}" \
+            --region="${{ vars.GCP_REGION }}" \
+            --to-revisions="${{ steps.deploy.outputs.revision }}=100" \
+            --quiet
+
+      - name: Smoke test production URL
+        run: bash scripts/gcp/smoke.sh "${{ steps.deploy.outputs.service_url }}"
+
+      - name: Publish deployment summary
+        run: |
+          {
+            echo "## Jewelo production"
+            echo "- URL: ${{ steps.deploy.outputs.service_url }}"
+            echo "- Revision: ${{ steps.deploy.outputs.revision }}"
+            echo "- Image: ${{ inputs.image }}"
+            echo "- Rollback: \`pnpm gcp:rollback -- production PREVIOUS_REVISION\`"
+          } >>"$GITHUB_STEP_SUMMARY"

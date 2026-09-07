@@ -6,7 +6,9 @@ Accessed 26 August 2026.
 
 - Next.js 16.2 release: https://nextjs.org/blog/next-16-2
 - Next.js deployment: https://nextjs.org/docs/app/getting-started/deploying
-- Vercel MCP: https://vercel.com/docs/mcp/vercel-mcp
+- Cloud Run Next.js: https://cloud.google.com/run/docs/quickstarts/frameworks/deploy-nextjs-service
+- Google Node.js buildpacks: https://cloud.google.com/docs/buildpacks/nodejs
+- GitHub Workload Identity Federation: https://github.com/google-github-actions/auth
 
 ## Supabase
 

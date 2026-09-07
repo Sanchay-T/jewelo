@@ -16,3 +16,9 @@ playwright-report/
 supabase/.temp/
 supabase/.branches/
 .worktrees/
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+infra/gcp/backend.hcl
+gha-creds-*.json

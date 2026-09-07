@@ -1,0 +1,74 @@
+name: gcp-staging
+
+on:
+  push:
+    branches:
+      - rebuild/v2-first-principles
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: gcp-staging
+  cancel-in-progress: true
+
+jobs:
+  verify-build-deploy:
+    environment: Preview
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.23.0
+          run_install: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm verify
+
+      - id: auth
+        uses: google-github-actions/auth@v3
+        with:
+          project_id: ${{ vars.GCP_PROJECT_ID }}
+          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.GCP_DEPLOYER_SERVICE_ACCOUNT }}
+
+      - uses: google-github-actions/setup-gcloud@v3
+
+      - id: image
+        name: Build immutable web image
+        shell: bash
+        run: |
+          image="${{ vars.GCP_REGION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/jewelo/web:${GITHUB_SHA}"
+          gcloud builds submit . \
+            --project="${{ vars.GCP_PROJECT_ID }}" \
+            --region="${{ vars.GCP_REGION }}" \
+            --config=cloudbuild.yaml \
+            --service-account="projects/${{ vars.GCP_PROJECT_ID }}/serviceAccounts/${{ vars.GCP_BUILD_SERVICE_ACCOUNT }}" \
+            --gcs-log-dir="gs://${{ vars.GCP_PROJECT_ID }}-build-logs/staging" \
+            --substitutions="_ENV=staging,_IMAGE=${image}" \
+            --quiet
+          digest="$(gcloud artifacts docker images describe "$image" --format='value(image_summary.digest)')"
+          echo "reference=${{ vars.GCP_REGION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/jewelo/web@${digest}" >>"$GITHUB_OUTPUT"
+
+      - id: deploy
+        name: Deploy staging
+        run: bash scripts/gcp/deploy.sh staging "${{ steps.image.outputs.reference }}"
+
+      - name: Smoke test staging
+        run: bash scripts/gcp/smoke.sh "${{ steps.deploy.outputs.service_url }}"
+
+      - name: Publish deployment summary
+        run: |
+          {
+            echo "## Jewelo staging"
+            echo "- URL: ${{ steps.deploy.outputs.service_url }}"
+            echo "- Revision: ${{ steps.deploy.outputs.revision }}"
+            echo "- Image: ${{ steps.image.outputs.reference }}"
+            echo "- Commit: ${GITHUB_SHA}"
+          } >>"$GITHUB_STEP_SUMMARY"

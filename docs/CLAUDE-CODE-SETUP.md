@@ -36,7 +36,7 @@ Check:
 
 ## MCP control plane
 
-The project `.mcp.json` contains Vercel, Supabase, dev-only Trigger.dev, and fal model MCP definitions.
+The project `.mcp.json` contains Supabase, dev-only Trigger.dev, and fal model MCP definitions. Google Cloud operations use the official `gcloud` and Terraform CLIs.
 
 In Claude Code, open `/mcp` and authenticate the applicable servers. Scope Supabase to the Jewelo development project. Trigger remains dev-only until explicit production authorization.
 
@@ -45,7 +45,7 @@ fal authentication is read from `FAL_KEY` through environment-variable expansion
 Service capabilities:
 
 - GitHub/`gh`: branches, commits, PRs, checks.
-- Vercel MCP/CLI: projects, previews, env, deploy/log inspection.
+- Google Cloud CLI/Terraform: projects, Cloud Run revisions, Secret Manager, builds, IAM, and logs.
 - Supabase MCP/CLI: project/branch/database/function/storage/debugging operations.
 - Trigger MCP/CLI: initialize, deploy, trigger, inspect, cancel, debug, preview branches.
 - fal MCP: search models/docs, inspect Seedance schemas/pricing, upload bounded test input, submit/check/cancel development jobs.
@@ -58,7 +58,7 @@ MCP is an agent operating surface, not an application runtime dependency.
 
 Goal 00 may stop to ask for one or more of:
 
-1. authenticate the Vercel MCP/CLI;
+1. authenticate `gcloud` with the approved Google Workspace identity and link project billing;
 2. authenticate Supabase and select/create the organization/project;
 3. authenticate Trigger.dev;
 4. set `FAL_KEY` and authorize the fal MCP locally;

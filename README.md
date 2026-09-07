@@ -8,7 +8,7 @@ This branch is the clean-room source of truth for rebuilding Jewelo from first p
 
 - Next.js 16.2 + React 19 + strict TypeScript
 - pnpm workspace + Turborepo
-- Vercel for web and preview deployments
+- Google Cloud Run in Mumbai for web staging and production deployments
 - Supabase Mumbai for Postgres, Auth, Realtime, and private Storage
 - Trigger.dev Cloud for durable, parallel AI workflows
 - direct OpenAI `gpt-image-2-2026-04-21` for product and worn stills
@@ -89,6 +89,10 @@ The human is required only for:
 - merging and launch approval.
 
 Normal development must not require Docker, a local database, local object-storage emulators, Kubernetes, or self-hosting.
+
+Google Cloud deployment is documented in `docs/GCP-DEPLOYMENT.md`. Application
+configuration and trusted runtime values are versioned in Google Secret Manager;
+no deployment secret is stored in GitHub or committed to this repository.
 
 ## Goal branches
 

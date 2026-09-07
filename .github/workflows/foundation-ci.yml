@@ -17,4 +17,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 24
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.15.8
       - run: bash scripts/verify-foundation.sh
+      - run: npm run gcp:terraform:check

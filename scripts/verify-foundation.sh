@@ -10,9 +10,15 @@ required=(
   docs/DECISION-REGISTER.md docs/AGENT-WORKFLOW.md docs/VERIFICATION.md
   docs/GOAL-ROADMAP.md docs/CLAUDE-CODE-SETUP.md docs/GOLD-PROMPT.md
   docs/ENTRY-PROMPT.md docs/PROMPT-PLAYBOOK.md docs/AI-MODEL-EVALUATION.md
-  docs/REFERENCES.md .claude/skills/goal/SKILL.md
+  docs/REFERENCES.md docs/GCP-DEPLOYMENT.md cloudbuild.yaml
+  infra/gcp/main.tf infra/gcp/iam.tf infra/gcp/variables.tf
+  infra/gcp/outputs.tf infra/gcp/versions.tf infra/gcp/.terraform.lock.hcl
+  .github/workflows/gcp-staging.yml .github/workflows/gcp-production.yml
+  .claude/skills/goal/SKILL.md
   .claude/skills/ship-pr/SKILL.md scripts/doctor.sh scripts/new-goal.sh
-  scripts/open-pr.sh
+  scripts/open-pr.sh scripts/gcp/bootstrap.sh scripts/gcp/common.sh
+  scripts/gcp/configure-github.sh scripts/gcp/deploy.sh
+  scripts/gcp/rollback.sh scripts/gcp/smoke.sh scripts/gcp/sync-secrets.mjs
 )
 for file in "${required[@]}"; do
   [[ -s "$file" ]] || { echo "missing or empty: $file" >&2; exit 1; }
@@ -69,6 +75,8 @@ NODE
 
 node scripts/list-goals.mjs >/dev/null
 for script in scripts/*.sh; do bash -n "$script"; done
+for script in scripts/gcp/*.sh; do bash -n "$script"; done
+node --check scripts/gcp/sync-secrets.mjs
 
 grep -q 'Supabase Postgres' docs/FINAL-STACK.md
 grep -q 'Trigger.dev Cloud' docs/FINAL-STACK.md
@@ -81,6 +89,9 @@ grep -q 'verified concurrency limit of at least four' docs/MEDIA-CONCURRENCY.md
 grep -q 'FAL_KEY' .env.example
 grep -q 'mcp.fal.ai/mcp' .mcp.json
 grep -q 'four preview requests overlap' docs/goals/06-real-motion.md
+grep -q 'Google Cloud Run' docs/FINAL-STACK.md
+grep -q '2 vCPU | 2 GiB | 0 | 3' docs/GCP-DEPLOYMENT.md
+grep -q '1 vCPU | 1 GiB | 1 | 20' docs/GCP-DEPLOYMENT.md
 
 if grep -R -n \
   -E 'RUNWAYML_API_SECRET|gemini_omni_flash|Runway API|Runway adapter|selected-first Runway' \

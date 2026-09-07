@@ -1,0 +1,52 @@
+steps:
+  - id: build-web-image
+    name: gcr.io/k8s-skaffold/pack
+    entrypoint: bash
+    secretEnv:
+      - NEXT_PUBLIC_APP_URL
+      - NEXT_PUBLIC_JEWELO_DATA_MODE
+      - NEXT_PUBLIC_SUPABASE_URL
+      - NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+      - NEXT_PUBLIC_POSTHOG_KEY
+      - NEXT_PUBLIC_POSTHOG_HOST
+      - NEXT_PUBLIC_SENTRY_DSN
+    args:
+      - -ceu
+      - |
+        pack build "${_IMAGE}" \
+          --builder "gcr.io/buildpacks/builder:latest" \
+          --publish \
+          --path . \
+          --env "NEXT_PUBLIC_APP_URL=$${NEXT_PUBLIC_APP_URL}" \
+          --env "NEXT_PUBLIC_JEWELO_DATA_MODE=$${NEXT_PUBLIC_JEWELO_DATA_MODE}" \
+          --env "NEXT_PUBLIC_SUPABASE_URL=$${NEXT_PUBLIC_SUPABASE_URL}" \
+          --env "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=$${NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY}" \
+          --env "NEXT_PUBLIC_POSTHOG_KEY=$${NEXT_PUBLIC_POSTHOG_KEY}" \
+          --env "NEXT_PUBLIC_POSTHOG_HOST=$${NEXT_PUBLIC_POSTHOG_HOST}" \
+          --env "NEXT_PUBLIC_SENTRY_DSN=$${NEXT_PUBLIC_SENTRY_DSN}"
+
+availableSecrets:
+  secretManager:
+    - versionName: projects/${PROJECT_ID}/secrets/${_ENV}-next-public-app-url/versions/latest
+      env: NEXT_PUBLIC_APP_URL
+    - versionName: projects/${PROJECT_ID}/secrets/${_ENV}-next-public-jewelo-data-mode/versions/latest
+      env: NEXT_PUBLIC_JEWELO_DATA_MODE
+    - versionName: projects/${PROJECT_ID}/secrets/${_ENV}-next-public-supabase-url/versions/latest
+      env: NEXT_PUBLIC_SUPABASE_URL
+    - versionName: projects/${PROJECT_ID}/secrets/${_ENV}-next-public-supabase-publishable-key/versions/latest
+      env: NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+    - versionName: projects/${PROJECT_ID}/secrets/${_ENV}-next-public-posthog-key/versions/latest
+      env: NEXT_PUBLIC_POSTHOG_KEY
+    - versionName: projects/${PROJECT_ID}/secrets/${_ENV}-next-public-posthog-host/versions/latest
+      env: NEXT_PUBLIC_POSTHOG_HOST
+    - versionName: projects/${PROJECT_ID}/secrets/${_ENV}-next-public-sentry-dsn/versions/latest
+      env: NEXT_PUBLIC_SENTRY_DSN
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+
+timeout: 1800s
+
+substitutions:
+  _ENV: staging
+  _IMAGE: asia-south1-docker.pkg.dev/jewelo-cloud-lhq-20260827/jewelo/web:manual

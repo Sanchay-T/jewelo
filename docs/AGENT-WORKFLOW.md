@@ -30,7 +30,7 @@ Parallel subagents may work only on independent files/acceptance checks. Do not 
 ## Managed control plane
 
 - GitHub: `git` and `gh`.
-- Vercel: CLI/MCP.
+- Google Cloud: `gcloud`, Terraform, Cloud Build, Cloud Run, and Secret Manager.
 - Supabase: remote MCP/CLI, project/preview branches.
 - Trigger.dev: CLI/MCP, dev/staging/preview/production environments.
 - OpenAI/Runway: SDKs and bounded development keys.

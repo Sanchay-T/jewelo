@@ -8,7 +8,7 @@
 
 ## Locked-stack compliance
 
-- [ ] Next.js/Vercel + Supabase + Trigger.dev topology is preserved.
+- [ ] Next.js/Cloud Run + Supabase + Trigger.dev topology is preserved.
 - [ ] No Convex/Neon/Clerk/R2/Docker/local-service substitution.
 - [ ] Provider SDKs remain behind adapters.
 - [ ] Browser/web/workflow secret boundaries are preserved.
@@ -27,7 +27,7 @@ command → exit/result
 
 ### Managed environment
 
-- Vercel preview + git SHA:
+- Cloud Run staging URL + git SHA:
 - Supabase project/branch:
 - Trigger environment/branch:
 - Provider mode:

@@ -1,0 +1,5 @@
+project_id         = "jewelo-cloud-lhq-20260827"
+region             = "asia-south1"
+billing_account_id = "000000-000000-000000"
+budget_currency    = "USD"
+budget_units       = "100"
