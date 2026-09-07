@@ -21,6 +21,17 @@
 | D-015 | No autonomous/open-source media-agent framework in production execution | accepted | a framework proves simpler without duplicating Trigger or adding another runtime |
 | D-016 | Motion, Embla, react-zoom-pan-pinch, react-dropzone, native short MP4 video | accepted UI foundation | accessibility/performance evidence requires replacement |
 | D-017 | Inngest is the durable job engine, self-hosted as a second DigitalOcean App Platform component; functions are served by `apps/web` at `/api/inngest`; Inngest Cloud is a one-variable switch (`INNGEST_BASE_URL`) | accepted 7 Sep 2026 on user instruction | Inngest Cloud account exists and its free tier suits the load, or a measured operability failure of the self-hosted server |
+| D-018 | Runway MCP serving `gpt-image-2` is the bench for all prompt and stencil work; OpenAI stays the production still provider, wired fail-closed and called only at the phase 5 gate in `docs/ROAD-TO-GOLD.md` | accepted 7 Sep 2026 on user instruction | Runway stops serving the same model as production, so lab results no longer transfer |
+
+## D-018 detail
+
+Runway is not taking a locked provider role, so this does not reopen D-006.
+It serves the same model the production adapter calls, and the lab already invokes
+the production identity renderer unmodified, so a prompt proven on Runway is the
+prompt OpenAI runs. The lab's output is a text prompt plus reference images, both
+provider neutral. Credits are effectively unlimited for this work, which removes
+cost as a reason to stop short of real generation and leaves only correctness.
+Iterating against the paid OpenAI endpoint is now a mistake, not a shortcut.
 
 ## D-017 detail
 
