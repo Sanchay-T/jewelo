@@ -99,11 +99,12 @@ Done:
 
 - Bar-fallback routing committed in `acb2706` (lead: jobs and config builds exit 0, diff read): `IDENTITY_BAR_FALLBACK_REVIEW` (default on) read once in `productionPresentationDependencies`; a `ringPlacement: "bar"` construction is blocked pre-spend with `identity_bar_fallback` before the budget, the reservation and any provider call; harness proved bar-on blocked with zero provider calls, bar-off and welded proceed. `.claude/worktrees/` gitignored in `6b31fe7` (the harness creates it for isolated reviewers). Follow-up: at attempt > 0 the pre-spend RPC refuses and the code lands as `identity_bar_fallback|pre_spend_block_failed:<class>`, shared by every pre-spend gate.
 
+- P3-3 committed (lead: opened `muhammad-en-kufi-norings.png`, one piece, eight islands bridged, no ring holes; manifest diff is 538 insertions and zero deletions): six Kufi rings-off holdout stencils from the lab renderer, `verify_stencil.py` components 1 on all six; 16 rings-off records manifested; `build_stencils.py` now additive, idempotent, refuses production-sourced files. Zero Runway credits (balance 305,042). Follow-up: no Python in the repo or on PATH runs the lab scripts (scipy missing); the agent built a scratch uv venv (3.12, numpy 2.5.3, scipy 1.18.1, pillow 12.3.0) that reproduces the published bytes; pin it in the lab.
+
 Doing:
 
 - Deploy `f3f8775` to staging and re-prove (platform): dry-run key list, deployment id, smoke, `Ali` and `أمير` runs, `verification_result` allowlist, `ringPlacement` in the identity claims, readiness with a forged cookie, transliterate 429 on the 21st call, name schema refusals.
 - Fresh review of security fix 2 and pipeline fix 2 (reviewer); report to `reviews/fix-2-review-1.md`.
-- P3-3 (image-lab, no generation): the six Kufi rings-off holdout stencils, manifest, `verify_stencil.py` one component each.
 - Adversarial pass 4 on the identity engine (adversarial-reviewer) against `f221b44`; report to `reviews/identity-engine-adversarial-4.md`. P1-5 closes only after two consecutive passes find nothing above minor.
 
 Follow-ups found by subagents, not fixed (outside the task rows):
