@@ -30,3 +30,13 @@ Open:
 - A Claude session is parked mid-task in a jewelo tmux pane on `home-mini`, out of usage credits.
 
 Next: first open task in `docs/TASKS.md`.
+
+## 2026-09-08 - session 2 (laptop, Fable 5.1 lead, Opus 5 subagents)
+
+Scope: next open tasks in order, Phase 0 then Phase 1.
+
+Doing:
+
+- Dispatched in parallel at session start: P0-2 (platform), P0-7 (platform, home-mini), P0-3, P0-4, P0-5 (implementer), P1-1 (implementer).
+- P0-6 queued behind P0-2 because both edit `docs/DIGITALOCEAN-DEPLOYMENT.md`.
+- DS-3 default B taken for Phase 1: to be recorded as D-019 with P1-2.
