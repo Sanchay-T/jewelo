@@ -1,5 +1,6 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 
+import { trustedClientIpHeader } from "@jewelo/config";
 import { hasOperatorSession } from "../../../lib/backend/operator-session";
 
 /**
@@ -49,7 +50,23 @@ export function GET(request: Request) {
         ? "branch"
         : "prod";
   const configured = Boolean(eventKey && signingKey);
-  const ready = supabaseConfigured && configured;
+  // Fix-3 review minor 9: `TRUSTED_CLIENT_IP_HEADER` is parsed at module scope
+  // in `request-guard.ts`, which Next only evaluates on the first request to a
+  // route that imports it, so a typo used to leave this probe green and 500 the
+  // shopper's first guarded call. Readiness parses the same schema itself
+  // rather than importing `request-guard.ts`: that module's import builds
+  // process-wide guard state and throws on a bad value, and a probe that must
+  // answer even when the app is misconfigured cannot take either. The value is
+  // never reported, only whether it parses - it is host configuration.
+  const trustedHeaderValid = (() => {
+    try {
+      trustedClientIpHeader();
+      return true;
+    } catch {
+      return false;
+    }
+  })();
+  const ready = supabaseConfigured && configured && trustedHeaderValid;
 
   // A readiness probe must answer, always. Both checks read configuration that
   // can be absent - `hasOperatorSession` throws when `OPERATOR_SESSION_SECRET`
@@ -82,6 +99,7 @@ export function GET(request: Request) {
           cronsRegistered: process.env.INNGEST_CRON_ENABLED === "1",
         },
         openai: process.env.OPENAI_API_KEY ? "configured" : "missing",
+        trustedClientIpHeader: trustedHeaderValid ? "valid" : "invalid",
       },
     },
     {

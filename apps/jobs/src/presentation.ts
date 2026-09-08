@@ -28,6 +28,11 @@ import {
 import { REFERENCE_ASSET_ID } from "@jewelo/contracts";
 import { isDuplicateObject } from "@jewelo/media";
 import sharp from "sharp";
+// Fix-3 review M1: `errorClass` used to be private to this file, so the video
+// job wrote fal's raw refusal into the same customer-visible columns. It is a
+// shared jobs module now and every category write in `apps/jobs` goes through
+// it.
+import { errorClass, nameMismatchCode } from "./error-class";
 import { renderIdentityAnchor } from "./identity-anchor";
 
 interface TaskRow {
@@ -290,69 +295,6 @@ export function promptSnapshotRejectionClass(
   // job does not know is not classified, because an unrecognised raise may yet
   // be about the moment rather than the row.
   return sqlState === "22023" ? "invalid_argument" : undefined;
-}
-
-/**
- * The leading category token of an error message, and nothing else.
- *
- * Used where a second failure has to be recorded next to the first one. An
- * error raised inside this job is already a category string; an error raised by
- * PostgREST is `Supabase job request <status>: <body>`, whose body can carry
- * row values. Cutting at the first colon or newline keeps the class and drops
- * the detail, so a customer's name can never reach `terminal_error_code`.
- *
- * Pipeline fix review 1 finding 7: the token used to keep spaces, dots and
- * mixed case, so a first line that is prose rather than a category ("Sara &
- * Omar is not a valid name") survived as prose. It is now lower-cased and
- * reduced to `[a-z0-9_]`, the alphabet the codes this job writes are spelled
- * in; any word from a customer's name that reaches here arrives as an
- * unreadable run of letters at most 60 characters long, and no caller appends
- * the original message next to it.
- *
- * Fix-2 review M1: this is now the only door into `terminal_error_code` and
- * `mark_task_pre_spend_blocked(p_reason)`. Both write sites call it, so no
- * caller can hand a raw message to a column the browser polls. `|` is the
- * job's own composition delimiter (`blockPreSpendTerminally` records two
- * classes at once) and is the single character kept beyond `[a-z0-9_]`. Each
- * part is still capped at 60 characters on its own, so composing does not
- * widen how much of any one message can survive.
- */
-function errorClass(error: unknown): string {
-  const message = error instanceof Error ? error.message : String(error);
-  const head = message.split(/[:\n]/, 1)[0] ?? "";
-  const token = head
-    .trim()
-    .toLowerCase()
-    .replaceAll(/[^a-z0-9_|]/g, "")
-    .split("|")
-    .map((part) => part.slice(0, 60))
-    .filter((part) => part.length > 0)
-    .join("|");
-  return token || "unknown";
-}
-
-/**
- * What a name rejection is allowed to say: a code, a count and a script name.
- *
- * Pipeline fix review 1 finding 7. This used to be `name_mismatch:<read text>`,
- * and `terminal_error_code` is a customer-visible column (`/api/state` selects
- * it), so a wrong reading of somebody's name was published back to the browser.
- * An operator who needs the actual letters reads `verification_result.nameCheck`
- * on the attempt, which never leaves the server.
- *
- * The length is of the comparison form - the letters that decided the verdict,
- * after presentation forms are folded and marks and punctuation dropped - so it
- * describes the decision rather than the raw string. `script` is `none` when the
- * reader returned no letters at all, which is a different failure from a reading
- * in the wrong script and has to be told apart in the operator console.
- */
-function nameMismatchCode(readText: string): string {
-  const letters = normalizeIdentityText(readText.normalize("NFKC"));
-  const arabic = /\p{Script=Arabic}/u.test(letters);
-  const latin = /\p{Script=Latin}/u.test(letters);
-  const script =
-    arabic && latin ? "mixed" : arabic ? "arabic" : latin ? "latin" : "none";
-  return `name_mismatch:len=${letters.length},script=${script}`;
 }
 
 export async function executePresentationTask(
@@ -1221,33 +1163,51 @@ export class SupabasePresentationRepository implements PresentationRepository {
    * the inspiration read threw - including a PostgREST body carrying row
    * values. Only the class goes to the RPC; the full message is recorded once
    * in an audit event, which no customer-facing route reads.
+   *
+   * Fix-3 review M2: that audit insert used to run first and unguarded, so a
+   * failed logging write threw before `mark_task_pre_spend_blocked` ever ran.
+   * The caller's fallback then reached `fail` at attempt 0, where
+   * `reconcile_provider_attempt` finds no attempt row and returns, and the
+   * run-start reservation stayed booked for the rest of the day. The RPC that
+   * blocks the task and releases the reservation goes first now, and the
+   * detail is written after it and cannot propagate: an explanation is never
+   * allowed to be a prerequisite for releasing money.
    */
   async blockPreSpend(input: { task: TaskRow; run: RunRow; error: unknown }) {
     const message =
       input.error instanceof Error
         ? input.error.message
         : "pre_spend_gate_failed";
-    await this.#request("/rest/v1/audit_events", {
-      method: "POST",
-      body: JSON.stringify({
-        design_id: input.run.design_id,
-        principal_id: input.task.owner_principal_id,
-        actor_type: "job",
-        action: "task.pre_spend_block_detail",
-        detail: {
-          taskId: input.task.id,
-          errorClass: errorClass(input.error),
-          error: message.slice(0, 300),
-        },
-      }),
-    });
+    const code = errorClass(input.error);
     await this.#request("/rest/v1/rpc/mark_task_pre_spend_blocked", {
       method: "POST",
       body: JSON.stringify({
         p_task_id: input.task.id,
-        p_reason: errorClass(input.error),
+        p_reason: code,
       }),
     });
+    try {
+      await this.#request("/rest/v1/audit_events", {
+        method: "POST",
+        body: JSON.stringify({
+          design_id: input.run.design_id,
+          principal_id: input.task.owner_principal_id,
+          actor_type: "job",
+          action: "task.pre_spend_block_detail",
+          detail: {
+            taskId: input.task.id,
+            errorClass: code,
+            error: message.slice(0, 300),
+          },
+        }),
+      });
+    } catch (auditError) {
+      console.error("pre_spend_block_detail_write_failed", {
+        taskId: input.task.id,
+        errorClass: code,
+        auditErrorClass: errorClass(auditError),
+      });
+    }
   }
   async storeProviderOutput(input: {
     task: TaskRow;

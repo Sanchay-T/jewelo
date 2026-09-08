@@ -470,6 +470,15 @@ export const webGuardEnvSchema = z.object({
 /* derived as the image timeout plus the two vision timeouts plus the validated */
 /* allowance for the local work around them, so the sweeper can never fire     */
 /* while a dispatch this process started is still legally running.             */
+/*                                                                            */
+/* Fix-3 review M4: the cap is not enforced by the deployed runtime. App       */
+/* Platform serves the app with a standalone `next start`, which has no        */
+/* request-path consumer of `maxDuration`; that export is build metadata for a */
+/* serverless host and a hosting hint here. What the cap actually governs is   */
+/* this derivation - the stale window is the cap plus the margin - so the two  */
+/* numbers stay one invariant. The bound a request really has in production is */
+/* DigitalOcean's ingress timeout, recorded under "Request timeout at the      */
+/* edge" in docs/DIGITALOCEAN-DEPLOYMENT.md.                                   */
 /* ------------------------------------------------------------------------- */
 
 export const pipelineLimitsSchema = z
@@ -527,6 +536,18 @@ export const pipelineLimitsSchema = z
      */
     signedUrlRefreshMarginSeconds: positiveInt.min(10).max(600),
     /**
+     * The shortest hold a browser may fall back to, in whole seconds.
+     *
+     * Fix-3 review minor 8: a client that receives a payload without
+     * `signedUrlRefreshAfterMs` - the only way to see one is an older
+     * `/api/state` still answering during a rolling deploy - used to switch its
+     * URL cache off, which restores the iOS Safari decode defect for the length
+     * of the deploy. `/api/state` publishes this alongside the window, so the
+     * fallback is a shorter hold rather than no hold. It is validated below to
+     * be no longer than the window itself.
+     */
+    signedUrlRefreshFloorSeconds: positiveInt.min(5).max(120),
+    /**
      * Paid attempts one task may make. The database is the authority - the
      * `runtime_policy.provider_attempt_budget` column, which every SQL gate
      * reads - and this is the value that column defaults to, used by the job
@@ -567,6 +588,8 @@ export const pipelineLimitsSchema = z
     signedUrlRefreshAfterMs:
       (value.signedUrlExpirySeconds - value.signedUrlRefreshMarginSeconds) *
       1_000,
+    /** The same floor in milliseconds; published next to the window above. */
+    signedUrlRefreshFloorMs: value.signedUrlRefreshFloorSeconds * 1_000,
     /**
      * Derived, never configured: see the note above.
      *
@@ -579,7 +602,16 @@ export const pipelineLimitsSchema = z
      */
     staleRecoveryWindowMs:
       value.executorRequestCapSeconds * 1_000 + value.staleRecoveryMarginMs,
-  }));
+  }))
+  // A floor longer than the window would make the degraded hold the longer of
+  // the two, which is the direction that serves an expired URL.
+  .refine(
+    (value) => value.signedUrlRefreshFloorMs <= value.signedUrlRefreshAfterMs,
+    {
+      message:
+        "signedUrlRefreshFloorSeconds must not exceed the published refresh window",
+    },
+  );
 export type PipelineLimits = z.infer<typeof pipelineLimitsSchema>;
 
 export const pipelineLimits: PipelineLimits = pipelineLimitsSchema.parse({
@@ -592,6 +624,10 @@ export const pipelineLimits: PipelineLimits = pipelineLimitsSchema.parse({
   videoPollIntervalSeconds: 10,
   signedUrlExpirySeconds: 300,
   signedUrlRefreshMarginSeconds: 60,
+  // Matched by `SIGNED_URL_REFRESH_FLOOR_MS` in
+  // `apps/web/src/features/atelier/previewPipeline.ts`, the assumption a client
+  // makes about a server too old to publish this number at all.
+  signedUrlRefreshFloorSeconds: 30,
   providerAttemptBudget: 3,
 });
 

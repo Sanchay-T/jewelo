@@ -15,6 +15,17 @@ import { functions } from "../../../inngest/functions";
 // `pipelineLimits.executorRequestCapSeconds`: the image timeout, the two vision
 // timeouts and the validated allowance for the render, downloads, upload and
 // writes around them.
+//
+// Fix-3 review M4: what this number is not. App Platform runs the app as a
+// standalone `next start`, and that server has no consumer of `maxDuration` on
+// the request path - it is build metadata a serverless host reads. Nothing here
+// kills or extends a request on the deployed runtime; the real ceiling is
+// DigitalOcean's own ingress timeout, which is measured and recorded under
+// "Request timeout at the edge" in `docs/DIGITALOCEAN-DEPLOYMENT.md`. This
+// number is two things and no third: the executor cap the stale window is
+// derived from, which is what makes "the sweeper cannot fire while a dispatch
+// is still legally running" true, and a hosting hint for any platform that does
+// read it.
 export const maxDuration = 360;
 export const dynamic = "force-dynamic";
 

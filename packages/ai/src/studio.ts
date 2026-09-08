@@ -326,6 +326,15 @@ function normalizeComparisonText(value: string): string {
  * a refusal, never a match. A name with no letters ("-", "1234") normalises to
  * `""`, and `"" === ""` used to pass any still at all, whatever was engraved
  * on it. There is nothing to compare, so there is nothing that can pass.
+ *
+ * Fix-3 review minor 12: folding the approved side too widened the comparison
+ * in both directions, so a modifier letter in the approved text now compares
+ * equal to its base letter - `identityTextMatches("Halima", "ʰalima")` is
+ * true. What keeps that unreachable is not this function: it is the shaping
+ * coverage gate, which refuses to cut any approved string containing a
+ * character the identity engine has no glyph for, `\p{Lm}` included, before a
+ * run can exist. The strictness lives there; if that gate is ever relaxed, this
+ * comparison stops being safe and has to be tightened with it.
  */
 export function identityTextMatches(
   readText: string,

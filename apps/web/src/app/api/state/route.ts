@@ -124,6 +124,60 @@ const DESIGN_SCOPED = new Set([
   "audit_events",
 ]);
 
+/**
+ * One asset, signed and projected for the browser.
+ *
+ * Lifted out of the map in `GET` so a refusal here can be caught per asset
+ * rather than taking the whole payload down with it (fix-3 review minor 11).
+ */
+async function signAsset(
+  asset: Record<string, unknown>,
+  config: { url: string; key: string },
+  bearer: string,
+) {
+  const path = String(asset.object_path);
+  // Fix-2 review minor 10. Per-segment encoding keeps a `/` inside a name
+  // part of that name, and nothing more: `encodeURIComponent` leaves `.`
+  // untouched, so `..` survived it and was resolved by whatever normalises
+  // the path, and an empty segment collapses. Both are refused here, before
+  // anything is signed, exactly as the job-side signer refuses them
+  // (`apps/jobs/src/presentation.ts:signedStorageUrl`). The bucket is a path
+  // segment too and is encoded rather than interpolated.
+  const segments = path.split("/");
+  if (
+    segments.some((segment) => !segment || segment === "." || segment === "..")
+  )
+    throw new Error("signed_storage_path_invalid");
+  const signed = await supabaseRequest<{
+    signedURL?: string;
+    signedUrl?: string;
+  }>(
+    config,
+    `/storage/v1/object/sign/${encodeURIComponent(
+      String(asset.bucket_id),
+    )}/${segments.map(encodeURIComponent).join("/")}`,
+    {
+      method: "POST",
+      // Pipeline fix review 1 finding 6: the customer-facing signer kept the
+      // literal every other call site had already given up.
+      body: JSON.stringify({
+        expiresIn: pipelineLimits.signedUrlExpirySeconds,
+      }),
+    },
+    bearer,
+  );
+  const relative = signed.signedURL ?? signed.signedUrl;
+  // Projected, not spread: the private location stays on this server.
+  const projected = project(asset, ASSET_READ_COLUMNS);
+  return {
+    ...projected,
+    verification_result: customerVerification(asset.verification_result),
+    signed_url: relative?.startsWith("http")
+      ? relative
+      : `${config.url}/storage/v1${relative}`,
+  };
+}
+
 export async function GET(request: Request) {
   try {
     const operator = hasOperatorSession(request);
@@ -182,53 +236,28 @@ export async function GET(request: Request) {
         rows.generation_tasks as Array<Record<string, unknown>>
       ).filter((task) => runIds.has(String(task.run_id)));
     }
-    const assets = await Promise.all(
-      (rows.assets as Array<Record<string, unknown>>).map(async (asset) => {
-        const path = String(asset.object_path);
-        // Fix-2 review minor 10. Per-segment encoding keeps a `/` inside a name
-        // part of that name, and nothing more: `encodeURIComponent` leaves `.`
-        // untouched, so `..` survived it and was resolved by whatever
-        // normalises the path, and an empty segment collapses. Both are refused
-        // here, before anything is signed, exactly as the job-side signer
-        // refuses them (`apps/jobs/src/presentation.ts:signedStorageUrl`). The
-        // bucket is a path segment too and is encoded rather than interpolated.
-        const segments = path.split("/");
-        if (
-          segments.some(
-            (segment) => !segment || segment === "." || segment === "..",
-          )
-        )
-          throw new Error("signed_storage_path_invalid");
-        const signed = await supabaseRequest<{
-          signedURL?: string;
-          signedUrl?: string;
-        }>(
-          config,
-          `/storage/v1/object/sign/${encodeURIComponent(
-            String(asset.bucket_id),
-          )}/${segments.map(encodeURIComponent).join("/")}`,
-          {
-            method: "POST",
-            // Pipeline fix review 1 finding 6: the customer-facing signer kept
-            // the literal every other call site had already given up.
-            body: JSON.stringify({
-              expiresIn: pipelineLimits.signedUrlExpirySeconds,
-            }),
-          },
-          bearer,
-        );
-        const relative = signed.signedURL ?? signed.signedUrl;
-        // Projected, not spread: the private location stays on this server.
-        const projected = project(asset, ASSET_READ_COLUMNS);
-        return {
-          ...projected,
-          verification_result: customerVerification(asset.verification_result),
-          signed_url: relative?.startsWith("http")
-            ? relative
-            : `${config.url}/storage/v1${relative}`,
-        };
-      }),
-    );
+    // Fix-3 review minor 11: one asset with a bad segment used to throw out of
+    // `Promise.all` and take the whole response with it, so the shopper lost
+    // all four views over one unsignable row. A refused asset is dropped from
+    // the payload and named in the server log instead: three verified views is
+    // a degraded page, no views is a broken one, and the object path never
+    // reaches the browser either way.
+    const assets = (
+      await Promise.all(
+        (rows.assets as Array<Record<string, unknown>>).map(async (asset) => {
+          try {
+            return await signAsset(asset, config, bearer);
+          } catch (error) {
+            console.error("state_asset_dropped", {
+              assetId: String(asset.id ?? "unknown"),
+              reason:
+                error instanceof Error ? error.message : "asset_sign_failed",
+            });
+            return undefined;
+          }
+        }),
+      )
+    ).filter((asset) => asset !== undefined);
     rows.audit_events = (
       rows.audit_events as Array<Record<string, unknown>>
     ).map((event) => project(event, AUDIT_READ_COLUMNS));
@@ -242,6 +271,11 @@ export async function GET(request: Request) {
         // signs with. The atelier used to carry its own literal, which a lower
         // configured expiry would have silently turned into expired URLs.
         signedUrlRefreshAfterMs: pipelineLimits.signedUrlRefreshAfterMs,
+        // Fix-3 review minor 8: the floor a client falls back to when the
+        // window above is missing from a payload, so degrading shortens the
+        // hold instead of switching the cache off and re-opening the iOS
+        // Safari decode defect for the length of a rolling deploy.
+        signedUrlRefreshFloorMs: pipelineLimits.signedUrlRefreshFloorMs,
         ...rest,
         estimates,
         assets,

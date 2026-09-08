@@ -333,6 +333,25 @@ transient and the next action is safe. Preserve deployment IDs and logs as
 evidence; never solve deployment failures by weakening verification or exposing
 credentials.
 
+## Request timeout at the edge
+
+How long a single HTTP request to the app may run before DigitalOcean's own
+ingress cuts it, which is the only request bound this deployment actually
+enforces.
+
+`maxDuration` in `apps/web/src/app/api/inngest/route.ts` is not that bound.
+App Platform serves the app with a standalone `next start`, which has no
+request-path consumer of that export: it is build metadata a serverless host
+reads, plus the executor cap `pipelineLimits.staleRecoveryWindowMs` is derived
+from.
+A still that runs past the edge timeout is killed with the image already paid
+for, so this number is what the executor cap has to be checked against.
+
+measured: pending
+
+Fill it by timing a request that deliberately holds the connection open on the
+staging app and recording where it is cut, with the deployment id and the date.
+
 ## Inngest component (added 7 September 2026)
 
 Trigger.dev was removed. The durable job engine is a self-hosted Inngest server

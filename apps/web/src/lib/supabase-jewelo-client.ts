@@ -26,6 +26,7 @@ import type {
   Representation,
   RepresentationKind,
 } from "./legacy-direction-compat";
+import { readSignedUrlRefreshWindow } from "../features/atelier/previewPipeline";
 import type { DesignInput } from "./types";
 import { loadReferenceUrl } from "./reference-store";
 
@@ -54,12 +55,16 @@ function text(value: unknown, fallback = "") {
   return typeof value === "string" ? value : fallback;
 }
 
-// /api/state mints a fresh 5-minute signed URL for every asset on every call,
-// and subscribeToRun re-loads state every 3s. Handing the browser a new src on
-// each poll restarts every <Image> download, so cards that are not `priority`
-// never finish decoding on iOS Safari. Reuse one URL per asset and rotate it a
-// minute before the 300s signature expires.
-const SIGNED_URL_TTL_MS = 240_000;
+// /api/state mints a fresh signed URL for every asset on every call, and
+// subscribeToRun re-loads state every 3s. Handing the browser a new src on each
+// poll restarts every <Image> download, so cards that are not `priority` never
+// finish decoding on iOS Safari. Reuse one URL per asset and rotate it before
+// the signature expires.
+//
+// Fix-3 review minor 7: this held its own literal 240 000 while the atelier had
+// already moved to the published window, so the operator console was the one
+// surface a lowered `signedUrlExpirySeconds` would have left showing expired
+// URLs. It reads the same number the same way now, through the same reader.
 
 function estimateFromSnapshot(row: Row, directionId: string): LegacyEstimate {
   return {
@@ -577,14 +582,15 @@ export class SupabaseJeweloClient implements LegacyJeweloClient {
     return this.getState();
   }
 
-  #stabiliseSignedUrls(assets: Row[] = []) {
+  #stabiliseSignedUrls(assets: Row[] = [], payload?: unknown) {
     const now = Date.now();
+    const window = readSignedUrlRefreshWindow(payload);
     for (const asset of assets) {
       const id = text(asset.id);
       const fresh = text(asset.signed_url);
       if (!id || !fresh) continue;
       const cached = this.#signedUrls.get(id);
-      if (cached && now - cached.issuedAt < SIGNED_URL_TTL_MS) {
+      if (cached && now - cached.issuedAt < window) {
         asset.signed_url = cached.url;
         continue;
       }
@@ -594,7 +600,7 @@ export class SupabaseJeweloClient implements LegacyJeweloClient {
 
   async #loadState(activeDesignId = this.#state.activeDesignId) {
     const payload = await this.#request<StatePayload>("/api/state");
-    this.#stabiliseSignedUrls(payload.assets);
+    this.#stabiliseSignedUrls(payload.assets, payload);
     this.#drafts.clear();
     for (const row of payload.design_drafts)
       this.#rememberDraft(

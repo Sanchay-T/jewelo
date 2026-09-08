@@ -112,6 +112,19 @@ export function validateWebEnv(values) {
     errors.push("NEXT_PUBLIC_JEWELO_DATA_MODE must select the remote data client");
   }
 
+  // Fix-3 review minor 9: the header name is parsed at module scope by
+  // `request-guard.ts`, so a typo shipped through here becomes a 500 on the
+  // shopper's first guarded call rather than a deploy failure. This is the same
+  // rule as `trustedClientIpHeaderSchema` in packages/config - at most 64
+  // characters of a-z, 0-9, underscore or hyphen, or empty to trust no header -
+  // checked before the value is shipped. The value is never printed.
+  const trustedHeader = values.get("TRUSTED_CLIENT_IP_HEADER");
+  if (trustedHeader !== undefined && !/^[a-z0-9_-]{0,64}$/u.test(trustedHeader.trim().toLowerCase())) {
+    errors.push(
+      "TRUSTED_CLIENT_IP_HEADER must be at most 64 characters of a-z, 0-9, underscore or hyphen, or empty to trust no header",
+    );
+  }
+
   return errors;
 }
 

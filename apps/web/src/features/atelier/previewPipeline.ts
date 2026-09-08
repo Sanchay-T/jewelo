@@ -256,6 +256,18 @@ export async function loadRun(
 }
 
 /**
+ * The last-resort hold, used only by a payload that publishes neither number.
+ *
+ * The only way to see one is a rolling deploy where an older `/api/state` is
+ * still answering: every deployed version publishes
+ * `signedUrlRefreshFloorMs`, and this is the value it publishes, kept here as
+ * the assumption about a server too old to say. It is deliberately far below
+ * any signed lifetime the config allows (the minimum is 60 s), so holding a
+ * URL for it can never outlive the signature.
+ */
+const SIGNED_URL_REFRESH_FLOOR_MS = 30_000;
+
+/**
  * How long a signed asset URL may be held before it is replaced, as the server
  * that signed it says.
  *
@@ -266,20 +278,36 @@ export async function loadRun(
  * re-exports `load-env`, which imports `node:fs` - so the number travels the
  * other way the boundary allows: `/api/state` publishes it as
  * `signedUrlRefreshAfterMs`, derived there from the same validated expiry and
- * refresh margin the signing call uses, and this module only reads it. There is
- * no fallback literal: a payload that does not carry the number leaves the
- * cache off, so every poll hands out the freshest URL, which is slower on iOS
- * but never expired.
+ * refresh margin the signing call uses, and this module only reads it.
+ *
+ * Fix-3 review minor 8: a payload without the number used to leave the cache
+ * off entirely, which reinstates the iOS Safari decode defect - images that are
+ * not `priority` never finish decoding when their `src` changes on every poll -
+ * for the whole of a rolling deploy. It falls back instead: to
+ * `signedUrlRefreshFloorMs`, the minimum the server publishes alongside, and to
+ * `SIGNED_URL_REFRESH_FLOOR_MS` when the payload carries neither. Degrading
+ * shortens the hold; it never turns it off.
  */
-let signedUrlRefreshAfterMs: number | undefined;
+export function readSignedUrlRefreshWindow(payload: unknown): number {
+  const published = payload as {
+    signedUrlRefreshAfterMs?: unknown;
+    signedUrlRefreshFloorMs?: unknown;
+  };
+  const positive = (value: unknown): number | undefined =>
+    typeof value === "number" && Number.isFinite(value) && value > 0
+      ? value
+      : undefined;
+  return (
+    positive(published?.signedUrlRefreshAfterMs) ??
+    positive(published?.signedUrlRefreshFloorMs) ??
+    SIGNED_URL_REFRESH_FLOOR_MS
+  );
+}
+
+let signedUrlRefreshAfterMs = SIGNED_URL_REFRESH_FLOOR_MS;
 
 function rememberSignedUrlRefreshWindow(payload: StatePayload): void {
-  const published = (payload as { signedUrlRefreshAfterMs?: unknown })
-    .signedUrlRefreshAfterMs;
-  signedUrlRefreshAfterMs =
-    typeof published === "number" && Number.isFinite(published) && published > 0
-      ? published
-      : undefined;
+  signedUrlRefreshAfterMs = readSignedUrlRefreshWindow(payload);
 }
 
 /**
@@ -299,8 +327,7 @@ export function createSignedUrlCache() {
     const slots = run.slots.map((slot): PersonalizedViewSlot => {
       if (!slot.assetId || !slot.imageUrl) return slot;
       const held = cache.get(slot.assetId);
-      const window = signedUrlRefreshAfterMs;
-      if (window !== undefined && held && now - held.issuedAt < window)
+      if (held && now - held.issuedAt < signedUrlRefreshAfterMs)
         return { ...slot, imageUrl: held.url };
       cache.set(slot.assetId, { url: slot.imageUrl, issuedAt: now });
       return slot;

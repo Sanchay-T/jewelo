@@ -3,7 +3,12 @@
 import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { appSecretEnvs, readEnvFiles, validateWebEnv } from "./env-contract.mjs";
+import {
+  appSecretEnvs,
+  deployTarget,
+  readEnvFiles,
+  validateWebEnv,
+} from "./env-contract.mjs";
 
 const repositoryRoot = resolve(import.meta.dirname, "../..");
 const contract = JSON.parse(
@@ -21,6 +26,28 @@ if (!contract.environments[environment] || !envFiles.length) {
 }
 
 const values = readEnvFiles(envFiles);
+// Fix-3 review minor 13: `deploy.sh` refuses to merge an env file that does not
+// declare the environment it belongs to, and this script builds a whole app
+// spec out of the same file with no such check, so `do:bootstrap production`
+// from a laptop would have created the production app out of the staging
+// values. The same rule, the same wording, the same exit code. Only environment
+// names are printed, never a value from the file.
+const declaredTarget = deployTarget(values);
+if (!declaredTarget) {
+  console.error(
+    `refusing to build the ${environment} app spec from ${envFiles.join(", ")}: it does not declare JEWELO_DEPLOY_TARGET`,
+  );
+  console.error(
+    `add JEWELO_DEPLOY_TARGET=${environment} to that file, or pass the file that belongs to ${environment}`,
+  );
+  process.exit(2);
+}
+if (declaredTarget !== environment) {
+  console.error(
+    `refusing to build the ${environment} app spec from ${envFiles.join(", ")}: JEWELO_DEPLOY_TARGET is ${declaredTarget}`,
+  );
+  process.exit(2);
+}
 const token = process.env.DIGITALOCEAN_ACCESS_TOKEN ?? values.get("DIGITALOCEAN_ACCESS_TOKEN");
 if (!token) throw new Error("DIGITALOCEAN_ACCESS_TOKEN is required");
 

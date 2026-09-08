@@ -1193,6 +1193,7 @@ export type Database = {
           provider_request_id: string | null
           status: string
           task_id: string
+          usage_date: string
         }
         Insert: {
           actual_cost_cents?: number | null
@@ -1210,6 +1211,7 @@ export type Database = {
           provider_request_id?: string | null
           status: string
           task_id: string
+          usage_date?: string
         }
         Update: {
           actual_cost_cents?: number | null
@@ -1227,6 +1229,7 @@ export type Database = {
           provider_request_id?: string | null
           status?: string
           task_id?: string
+          usage_date?: string
         }
         Relationships: [
           {

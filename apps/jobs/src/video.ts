@@ -8,6 +8,7 @@ import {
 } from "@jewelo/ai";
 import { parseJobsEnv, pipelineLimits } from "@jewelo/config";
 import { isDuplicateObject } from "@jewelo/media";
+import { errorClass } from "./error-class";
 import { isTaskCancelled } from "./presentation";
 
 type Row = Record<string, unknown>;
@@ -152,12 +153,18 @@ export async function pollVideoTask(
   if (result.state === "failed") {
     const terminal =
       Number(context.task.attempt) >= (await api.attemptBudget());
+    // Fix-3 review M1: `result.error` is fal's own prose. A content-policy
+    // refusal quotes back what it refused, which is the shopper's name, and
+    // both columns below are read by `/api/state` on every poll. Only the
+    // class is written; the provider's sentence is kept once in an audit
+    // event, which no customer-facing route reads.
+    const errorCode = errorClass(result.error);
     await api.rpc("reconcile_provider_attempt", {
       p_task_id: taskId,
       p_attempt: context.task.attempt,
       p_status: "failed",
       p_actual_cost_cents: 0,
-      p_error_class: result.error,
+      p_error_class: errorCode,
       p_terminal: terminal,
     });
     const transition = await api.transition(
@@ -165,12 +172,35 @@ export async function pollVideoTask(
       ["queued", "generating", "verifying", "retrying"],
       terminal ? "blocked" : "retrying",
       {
-        terminal_error_code: terminal ? result.error.slice(0, 120) : null,
+        terminal_error_code: terminal ? errorCode : null,
         provider_status_url: null,
         provider_response_url: null,
       },
     );
     if (transition === "cancelled") return { status: "cancelled" as const };
+    // The provider's sentence, for an operator only, and after the two writes
+    // above: this record is how the failure is explained, never how it is
+    // durable, so its own failure must not take the reconciliation with it.
+    try {
+      await api.post("audit_events", {
+        design_id: context.run.design_id,
+        principal_id: context.task.owner_principal_id,
+        actor_type: "job",
+        action: "video.provider_failed",
+        detail: {
+          taskId,
+          attempt: Number(context.task.attempt),
+          errorClass: errorCode,
+          error: result.error.slice(0, 300),
+        },
+      });
+    } catch (auditError) {
+      console.error("video_provider_failed_audit_write_failed", {
+        taskId,
+        errorClass: errorCode,
+        auditErrorClass: errorClass(auditError),
+      });
+    }
     if (!terminal)
       await api.post(
         "outbox_events",
