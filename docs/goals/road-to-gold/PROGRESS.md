@@ -46,10 +46,12 @@ Done:
 - P1-1 proof is durable: `corepack pnpm --filter @jewelo/jobs measure-stencils [dir] [manifest]` (tsx 4.23.13 dev dependency). Production stencils measure 4 to 7 components for every English name with no claim in `render-report.json`.
 - plan-reviewer challenged P1-3 to P1-7 and found four blockers (test import breaks the build gate on export removal; solver has no PNG decoder; ring-free contradicts the frozen prompts; canvas and ink rule unspecified) and six majors (style-to-font map, pipeline release pin, silent identity failures, Next asset tracing, WASM deployability found last). Rows amended in `9f6f160`: P1-2b deploy probe and P1-5a prompt dependency added, rings default on with `IDENTITY_RINGLESS_CONSTRUCTIONS` behind config.
 
+- P1-2b in `8838de5`, deployed to staging as `6a536690-41aa-4182-a051-486f864b11cc` (smoke passed). The lead called the route on the live URL: 401 without a session, 200 with one, harfbuzz 14.4.0, `wasmLoaded: true`, Playfair, Naskh and Kufi resolved from `.next/server/assets` with the same shas as the laptop. The probe found a live defect on its first run: `identityFontUrl` built the URL by string interpolation, which Turbopack cannot follow, so the deployed bundle returned Amiri for every requested face; fixed with a static per-file `import.meta.url` map and an unknown file now throws. No Next config change was needed; staging Node is 24.15.0 against the pinned 24.18.1.
+- P1-3 in `2f51a44`: path-only SVG from the HarfBuzz outlines on the 1024 lab canvas, black on white, no alpha; one `IdentityRasterizer` and `solveIdentity` for both scripts; Kufi English on `cairo.ttf`; `<text>`, fontconfig and the bucketed Latin advance table deleted; tests excluded from the jobs tsconfig; `render-stencils` script. Lead opened the renders: real Playfair, Cairo, Naskh, Kufi; letters still overlap because `fuse()` moves islands and rings still land on glyphs (P1-4, P1-5).
+
 Doing:
 
-- P1-2b (platform): operator diagnostics route, deploy to staging, prove harfbuzz WASM and fonts survive the buildpack.
-- P1-3 (implementer): path-only 1024x1024 rasteriser from the HarfBuzz outlines, one `IdentityRasterizer` for both scripts, test files excluded from the build tsconfig.
+- P1-4 (implementer): port `bridge_all` and `draw_bar`; islands are never moved; ink preservation asserted in pre-recentre coordinates.
 
 Follow-ups found by subagents, not fixed (outside the task rows):
 
