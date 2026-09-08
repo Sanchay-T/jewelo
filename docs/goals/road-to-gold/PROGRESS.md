@@ -101,6 +101,8 @@ Doing:
 
 - Deploy `f3f8775` to staging and re-prove (platform): dry-run key list, deployment id, smoke, `Ali` and `أمير` runs, `verification_result` allowlist, `ringPlacement` in the identity claims, readiness with a forged cookie, transliterate 429 on the 21st call, name schema refusals.
 - Fresh review of security fix 2 and pipeline fix 2 (reviewer); report to `reviews/fix-2-review-1.md`.
+- Bar-fallback routing (implementer): `IDENTITY_BAR_FALLBACK_REVIEW` in `packages/config`, `presentation.ts` blocks pre-spend with `identity_bar_fallback` when `construction.ringPlacement` is `bar`.
+- P3-3 (image-lab, no generation): the six Kufi rings-off holdout stencils, manifest, `verify_stencil.py` one component each.
 - Adversarial pass 4 on the identity engine (adversarial-reviewer) against `f221b44`; report to `reviews/identity-engine-adversarial-4.md`. P1-5 closes only after two consecutive passes find nothing above minor.
 
 Follow-ups found by subagents, not fixed (outside the task rows):
