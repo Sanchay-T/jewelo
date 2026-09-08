@@ -12,6 +12,7 @@
     "build": "tsc -p tsconfig.json",
     "lint": "eslint src",
     "measure-stencils": "tsx scripts/measure-stencils.mts",
+    "render-stencils": "tsx scripts/render-stencils.mts",
     "test": "vitest run",
     "typecheck": "tsc -p tsconfig.json"
   },

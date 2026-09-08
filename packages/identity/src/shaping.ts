@@ -11,7 +11,9 @@
  * spelling is the font's, never a fallback's and never the model's.
  *
  * The module is deliberately free of sharp and of any rasteriser: it returns
- * glyph outlines as SVG path data in font units. `P1-3` fills those paths.
+ * glyph outlines as SVG path data in font units, and (P1-3) lays those outlines
+ * out on the stencil canvas as a path-only SVG. Painting that SVG is the
+ * caller's job, behind the `IdentityRasterizer` port.
  *
  * Node-only imports are limited to `node:crypto` (already used by the solver).
  * Font bytes are read by the caller; `identityFontUrl` resolves the pinned
@@ -284,5 +286,348 @@ export async function shapeText(input: ShapeTextInput): Promise<ShapedText> {
       notdefGlyphs === 0 &&
       uncoveredCodePoints.length === 0,
     harfbuzzVersion: hb.versionString(),
+  };
+}
+
+/* -------------------------------------------------------------------------
+ * Stencil layout: the shaped outlines become a path-only SVG.
+ *
+ * P1-3. Nothing below draws an SVG `<text>` element or names a font family:
+ * the geometry is the outlines HarfBuzz read out of the pinned bytes above, so
+ * no renderer, no fontconfig and no system fallback can change the spelling.
+ * The numbers mirror `docs/goals/overnight-launch/lab/make_stencil.py` exactly,
+ * which is the construction the image lab proved.
+ * ---------------------------------------------------------------------- */
+
+/** Stencil canvas, square, in pixels (`make_stencil.py` CANVAS). */
+export const IDENTITY_CANVAS = 1024;
+
+/** Clear space kept around the whole piece, in pixels (MARGIN). */
+export const IDENTITY_MARGIN = 56;
+
+/** Vertical room reserved above the lettering for the jump rings (RING_BAND). */
+export const IDENTITY_RING_BAND = 110;
+
+/** Bridge capsule width in pixels, about 1.0 mm at a 32 mm pendant (BRIDGE_W). */
+export const IDENTITY_BRIDGE_WIDTH = 24;
+
+/** Dilation passes that kill hairlines without closing counters (THICKEN). */
+export const IDENTITY_THICKEN_PASSES = 2;
+
+/** Jump ring outer radius in pixels (RING_OUTER). */
+export const IDENTITY_RING_OUTER = 42;
+
+/** Jump ring inner radius in pixels (RING_INNER). */
+export const IDENTITY_RING_INNER = 24;
+
+/** Ring weld fillet width in pixels (STEM_W). */
+export const IDENTITY_RING_STEM_WIDTH = 30;
+
+/** How far the ring body sinks into the stroke it sits on (WELD_OVERLAP). */
+export const IDENTITY_RING_WELD_OVERLAP = 16;
+
+/** Font size the fit probe is measured at (`make_stencil.py:211`). */
+export const IDENTITY_PROBE_FONT_SIZE = 200;
+
+/** Fit bounds, in pixels (`make_stencil.py:213`). */
+export const IDENTITY_MIN_FONT_SIZE = 40;
+export const IDENTITY_MAX_FONT_SIZE = 900;
+
+/**
+ * Head-room the fit leaves for the growth that thickening and bridging add
+ * (`make_stencil.py:208-209`). The name occupies the width between the margins
+ * and the height below the reserved ring band.
+ */
+export const IDENTITY_BODY_WIDTH =
+  IDENTITY_CANVAS -
+  2 * IDENTITY_MARGIN -
+  2 * (IDENTITY_THICKEN_PASSES + Math.floor(IDENTITY_BRIDGE_WIDTH / 2));
+
+export const IDENTITY_BODY_HEIGHT =
+  IDENTITY_CANVAS -
+  2 * IDENTITY_MARGIN -
+  IDENTITY_RING_BAND -
+  2 * (IDENTITY_THICKEN_PASSES + Math.floor(IDENTITY_BRIDGE_WIDTH / 2));
+
+/** An axis-aligned box. `width`/`height` are inclusive of both extremes. */
+export interface StencilBox {
+  readonly x: number;
+  readonly y: number;
+  readonly width: number;
+  readonly height: number;
+}
+
+export interface StencilSvg {
+  /** A path-only SVG: white background, black outlines, no `<text>`. */
+  readonly svg: string;
+  /** Pixel size the outlines are drawn at, after the fit-by-probe pass. */
+  readonly fontSize: number;
+  /** Where the outline bounding box lands on the canvas, in pixels. */
+  readonly inkBox: StencilBox;
+  /** Per-glyph x advances at `fontSize`, in pixels, in visual order. */
+  readonly advances: readonly number[];
+}
+
+interface Extents {
+  minX: number;
+  minY: number;
+  maxX: number;
+  maxY: number;
+}
+
+const EMPTY_EXTENTS = (): Extents => ({
+  minX: Number.POSITIVE_INFINITY,
+  minY: Number.POSITIVE_INFINITY,
+  maxX: Number.NEGATIVE_INFINITY,
+  maxY: Number.NEGATIVE_INFINITY,
+});
+
+function includePoint(box: Extents, x: number, y: number): void {
+  if (x < box.minX) box.minX = x;
+  if (x > box.maxX) box.maxX = x;
+  if (y < box.minY) box.minY = y;
+  if (y > box.maxY) box.maxY = y;
+}
+
+/** Value of a quadratic Bezier at `t`. */
+function quadraticAt(p0: number, p1: number, p2: number, t: number): number {
+  const u = 1 - t;
+  return u * u * p0 + 2 * u * t * p1 + t * t * p2;
+}
+
+/** Value of a cubic Bezier at `t`. */
+function cubicAt(
+  p0: number,
+  p1: number,
+  p2: number,
+  p3: number,
+  t: number,
+): number {
+  const u = 1 - t;
+  return (
+    u * u * u * p0 + 3 * u * u * t * p1 + 3 * u * t * t * p2 + t * t * t * p3
+  );
+}
+
+/** Parameter in (0,1) where a quadratic Bezier reaches its extreme, if any. */
+function quadraticExtreme(
+  p0: number,
+  p1: number,
+  p2: number,
+): number | undefined {
+  const denominator = p0 - 2 * p1 + p2;
+  if (denominator === 0) return undefined;
+  const t = (p0 - p1) / denominator;
+  return t > 0 && t < 1 ? t : undefined;
+}
+
+/**
+ * Exact bounding box of one glyph outline in font units, offset by the pen
+ * position. Curve extremes are solved rather than approximated by the control
+ * hull, so the fit uses the ink the rasteriser will actually paint.
+ */
+function includePath(box: Extents, path: string, dx: number, dy: number): void {
+  const tokens = path.match(/[MLQCZmlqcz]|-?\d*\.?\d+(?:e[-+]?\d+)?/g);
+  if (!tokens) return;
+  let index = 0;
+  let currentX = 0;
+  let currentY = 0;
+  let startX = 0;
+  let startY = 0;
+  const number = () => Number(tokens[index++] ?? 0);
+  while (index < tokens.length) {
+    const command = tokens[index++];
+    switch (command) {
+      case "M": {
+        currentX = number() + dx;
+        currentY = number() + dy;
+        startX = currentX;
+        startY = currentY;
+        includePoint(box, currentX, currentY);
+        break;
+      }
+      case "L": {
+        currentX = number() + dx;
+        currentY = number() + dy;
+        includePoint(box, currentX, currentY);
+        break;
+      }
+      case "Q": {
+        const cx = number() + dx;
+        const cy = number() + dy;
+        const x = number() + dx;
+        const y = number() + dy;
+        includePoint(box, x, y);
+        const tx = quadraticExtreme(currentX, cx, x);
+        if (tx !== undefined)
+          includePoint(box, quadraticAt(currentX, cx, x, tx), currentY);
+        const ty = quadraticExtreme(currentY, cy, y);
+        if (ty !== undefined)
+          includePoint(box, currentX, quadraticAt(currentY, cy, y, ty));
+        currentX = x;
+        currentY = y;
+        break;
+      }
+      case "C": {
+        const c1x = number() + dx;
+        const c1y = number() + dy;
+        const c2x = number() + dx;
+        const c2y = number() + dy;
+        const x = number() + dx;
+        const y = number() + dy;
+        includePoint(box, x, y);
+        for (const t of cubicExtremes(currentX, c1x, c2x, x))
+          includePoint(box, cubicAt(currentX, c1x, c2x, x, t), currentY);
+        for (const t of cubicExtremes(currentY, c1y, c2y, y))
+          includePoint(box, currentX, cubicAt(currentY, c1y, c2y, y, t));
+        currentX = x;
+        currentY = y;
+        break;
+      }
+      case "Z":
+      case "z": {
+        currentX = startX;
+        currentY = startY;
+        break;
+      }
+      default:
+        // hb-js emits only absolute M, L, Q, C and Z; anything else is skipped
+        // rather than silently mis-measured.
+        break;
+    }
+  }
+}
+
+/** Parameters in (0,1) where a cubic Bezier reaches an extreme on one axis. */
+function cubicExtremes(
+  p0: number,
+  p1: number,
+  p2: number,
+  p3: number,
+): number[] {
+  const a = -p0 + 3 * p1 - 3 * p2 + p3;
+  const b = 2 * (p0 - 2 * p1 + p2);
+  const c = p1 - p0;
+  const roots: number[] = [];
+  if (Math.abs(a) < 1e-9) {
+    if (Math.abs(b) > 1e-9) roots.push(-c / b);
+  } else {
+    const discriminant = b * b - 4 * a * c;
+    if (discriminant >= 0) {
+      const root = Math.sqrt(discriminant);
+      roots.push((-b + root) / (2 * a), (-b - root) / (2 * a));
+    }
+  }
+  return roots.filter((t) => t > 0 && t < 1);
+}
+
+/** Pen position of every glyph in the run, in font units, y up. */
+function penPositions(
+  shaped: ShapedText,
+): { x: number; y: number; glyph: ShapedGlyph }[] {
+  let penX = 0;
+  let penY = 0;
+  const placed = shaped.glyphs.map((glyph) => {
+    const position = {
+      x: penX + glyph.xOffset,
+      y: penY + glyph.yOffset,
+      glyph,
+    };
+    penX += glyph.xAdvance;
+    penY += glyph.yAdvance;
+    return position;
+  });
+  return placed;
+}
+
+/**
+ * Bounding box of the whole shaped run in font units. HarfBuzz returns the
+ * buffer in visual order for both directions, so the pen advances left to right
+ * for Arabic exactly as it does for Latin.
+ */
+function runExtents(shaped: ShapedText): Extents {
+  const box = EMPTY_EXTENTS();
+  for (const placed of penPositions(shaped))
+    if (placed.glyph.path)
+      includePath(box, placed.glyph.path, placed.x, placed.y);
+  return box;
+}
+
+function round3(value: number): number {
+  return Math.round(value * 1000) / 1000;
+}
+
+/**
+ * Builds the stencil SVG for one shaped run.
+ *
+ * Sizing is the lab's fit-by-probe (`make_stencil.py:207-219`): measure the run
+ * at the probe size, scale it into the body box, then one refinement pass so a
+ * long name lands inside the box. The run is centred horizontally and centred
+ * vertically inside the body box, which starts below the reserved ring band.
+ */
+export function identityStencilSvg(shaped: ShapedText): StencilSvg {
+  const extents = runExtents(shaped);
+  if (!Number.isFinite(extents.minX) || !Number.isFinite(extents.minY))
+    throw new Error(`identity_stencil_empty_outline:${shaped.text}`);
+
+  const unitWidth = extents.maxX - extents.minX;
+  const unitHeight = extents.maxY - extents.minY;
+  const clamp = (size: number) =>
+    Math.max(
+      IDENTITY_MIN_FONT_SIZE,
+      Math.min(IDENTITY_MAX_FONT_SIZE, Math.trunc(size)),
+    );
+  const fitScale = (size: number) =>
+    Math.min(
+      IDENTITY_BODY_WIDTH / ((unitWidth * size) / shaped.upem),
+      IDENTITY_BODY_HEIGHT / ((unitHeight * size) / shaped.upem),
+    );
+
+  let fontSize = clamp(
+    IDENTITY_PROBE_FONT_SIZE * fitScale(IDENTITY_PROBE_FONT_SIZE),
+  );
+  const refinement = fitScale(fontSize);
+  if (refinement < 0.97 || refinement > 1.03)
+    fontSize = clamp(fontSize * refinement);
+
+  const scale = fontSize / shaped.upem;
+  const width = unitWidth * scale;
+  const height = unitHeight * scale;
+  const left = Math.floor((IDENTITY_CANVAS - width) / 2);
+  const top =
+    IDENTITY_MARGIN +
+    IDENTITY_RING_BAND +
+    Math.floor((IDENTITY_BODY_HEIGHT - height) / 2);
+
+  // The group flips the y axis: inside it the coordinates are the font's own
+  // units with y up, so each glyph is placed by its pen position untouched.
+  const translateX = left - scale * extents.minX;
+  const translateY = top + scale * extents.maxY;
+
+  const paths = penPositions(shaped)
+    .filter((placed) => placed.glyph.path)
+    .map(
+      (placed) =>
+        `<path transform="translate(${round3(placed.x)} ${round3(placed.y)})" d="${placed.glyph.path}"/>`,
+    )
+    .join("");
+
+  const svg =
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${IDENTITY_CANVAS}" height="${IDENTITY_CANVAS}" viewBox="0 0 ${IDENTITY_CANVAS} ${IDENTITY_CANVAS}">` +
+    `<rect width="${IDENTITY_CANVAS}" height="${IDENTITY_CANVAS}" fill="#ffffff"/>` +
+    `<g transform="translate(${round3(translateX)} ${round3(translateY)}) scale(${round3(scale)} ${round3(-scale)})" fill="#000000" fill-rule="nonzero">` +
+    paths +
+    `</g></svg>`;
+
+  return {
+    svg,
+    fontSize,
+    inkBox: {
+      x: left,
+      y: top,
+      width: round3(width),
+      height: round3(height),
+    },
+    advances: shaped.glyphs.map((glyph) => round3(glyph.xAdvance * scale)),
   };
 }

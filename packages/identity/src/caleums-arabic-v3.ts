@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import type { ShapingMeasurement } from "./shaping";
+import type { IdentityScript, ShapingMeasurement } from "./shaping";
 
 // D-019: the engine opens the pinned font bytes and shapes them with HarfBuzz
 // instead of asking a rendering library for a family name, and it now serves
@@ -13,7 +13,8 @@ export type CaleumsArabicStyle =
 
 export interface IdentitySolverInput {
   approvedNames: readonly string[];
-  language: "ar";
+  /** One solver serves both scripts since P1-3; the script picks the font. */
+  language: IdentityScript;
   style: string;
   layout: string;
   connector: string;
@@ -38,18 +39,27 @@ export interface TypesetResult {
   readonly shaping: ShapingMeasurement;
 }
 
-export interface ArabicIdentityRasterizer {
+/** The pinned faces the live styles may use, per script. */
+export type IdentityFontFile =
+  | "Amiri-Regular.ttf"
+  | "ScheherazadeNew-Regular.ttf"
+  | "NotoNaskhArabic-Regular.ttf"
+  | "ArefRuqaa-Regular.ttf"
+  | "NotoKufiArabic-Regular.ttf"
+  | "rakkas.ttf"
+  | "PlayfairDisplay-SemiBold.ttf"
+  | "cairo.ttf";
+
+/**
+ * The rasteriser port. One implementation serves both scripts since P1-3: it
+ * shapes the pinned bytes, builds the path-only stencil SVG and paints it, so
+ * there is no size or padding to pass - the fit is `identityStencilSvg`'s.
+ */
+export interface IdentityRasterizer {
   typeset(input: {
     approvedText: string;
-    fontFile:
-      | "Amiri-Regular.ttf"
-      | "ScheherazadeNew-Regular.ttf"
-      | "NotoNaskhArabic-Regular.ttf"
-      | "ArefRuqaa-Regular.ttf"
-      | "NotoKufiArabic-Regular.ttf"
-      | "rakkas.ttf";
-    fontSize: number;
-    padding: number;
+    fontFile: IdentityFontFile;
+    script: IdentityScript;
   }): Promise<TypesetResult>;
   encodePng(mask: RasterMask): Promise<Uint8Array>;
   shapingVersions(): Readonly<Record<string, string>>;
@@ -101,19 +111,41 @@ export class IdentitySolverError extends Error {
   }
 }
 
+interface PinnedFace {
+  readonly fontFile: IdentityFontFile;
+  /** Sha of the bytes this style pins; shaping must load exactly these. */
+  readonly fontSha256: string;
+}
+
+const NASKH = "NotoNaskhArabic-Regular.ttf" as const;
+const NASKH_SHA =
+  "67b5a525a661b607971fbd3f96a81b89d3a768e74534fca84f18ac97e6fab72f" as const;
+const PLAYFAIR = "PlayfairDisplay-SemiBold.ttf" as const;
+const PLAYFAIR_SHA =
+  "c40f2293766a503bc70cce9e512ef844a4ccb7cbcde792fe2ea31d191917d8d6" as const;
+
+/**
+ * The live styles, each pinning one face per script by file name and by the
+ * sha of that file's bytes. The Latin column mirrors `make_stencil.py` FONTS:
+ * Playfair Display is the certified serif, and Kufi has no Latin coverage at
+ * all, so the English side of the Kufi family uses Cairo, the geometric sans
+ * from the same licensed pack.
+ */
 const LIVE_STYLES = {
   classic: {
     // Amiri stacks lam-ya under HarfBuzz; Noto Naskh keeps the flat form the
     // approved renders used.
-    fontFile: "NotoNaskhArabic-Regular.ttf",
-    fontSha256:
-      "67b5a525a661b607971fbd3f96a81b89d3a768e74534fca84f18ac97e6fab72f",
+    ar: { fontFile: NASKH, fontSha256: NASKH_SHA },
+    en: { fontFile: PLAYFAIR, fontSha256: PLAYFAIR_SHA },
     dilationPixels: 1,
   },
   minimal: {
-    fontFile: "ScheherazadeNew-Regular.ttf",
-    fontSha256:
-      "794bac8dc9e83d1d620bc471ea694f5f31d0965ce8006490a79dfc51a2d283b3",
+    ar: {
+      fontFile: "ScheherazadeNew-Regular.ttf",
+      fontSha256:
+        "794bac8dc9e83d1d620bc471ea694f5f31d0965ce8006490a79dfc51a2d283b3",
+    },
+    en: { fontFile: PLAYFAIR, fontSha256: PLAYFAIR_SHA },
     dilationPixels: 2,
   },
   // Opened to all customers on 2026-08-27: no atelier gate on style.
@@ -121,30 +153,41 @@ const LIVE_STYLES = {
   // horizontal pendant; both styles render on the certified Naskh face and
   // reach the model as a style word through {{arabic_style}} instead.
   diwani: {
-    fontFile: "NotoNaskhArabic-Regular.ttf",
-    fontSha256:
-      "67b5a525a661b607971fbd3f96a81b89d3a768e74534fca84f18ac97e6fab72f",
+    ar: { fontFile: NASKH, fontSha256: NASKH_SHA },
+    en: { fontFile: PLAYFAIR, fontSha256: PLAYFAIR_SHA },
     dilationPixels: 1,
   },
   signature: {
-    fontFile: "NotoNaskhArabic-Regular.ttf",
-    fontSha256:
-      "67b5a525a661b607971fbd3f96a81b89d3a768e74534fca84f18ac97e6fab72f",
+    ar: { fontFile: NASKH, fontSha256: NASKH_SHA },
+    en: { fontFile: PLAYFAIR, fontSha256: PLAYFAIR_SHA },
     dilationPixels: 1,
   },
   kufi: {
-    fontFile: "NotoKufiArabic-Regular.ttf",
-    fontSha256:
-      "494f6b61469d7a02a2d63f0fc4930bb007388d8cfe551de5eb98354e100889f3",
+    ar: {
+      fontFile: "NotoKufiArabic-Regular.ttf",
+      fontSha256:
+        "494f6b61469d7a02a2d63f0fc4930bb007388d8cfe551de5eb98354e100889f3",
+    },
+    en: {
+      fontFile: "cairo.ttf",
+      fontSha256:
+        "667c987182391c91f4e57a2f455b1794fb5e3ee6ca4ef3383e86bb690fa9c964",
+    },
     dilationPixels: 1,
   },
   "thuluth-inspired": {
-    fontFile: "rakkas.ttf",
-    fontSha256:
-      "54278882e4774c14d50c3b555f127d0fe586366d5b787316ebbcbd8108829e60",
+    ar: {
+      fontFile: "rakkas.ttf",
+      fontSha256:
+        "54278882e4774c14d50c3b555f127d0fe586366d5b787316ebbcbd8108829e60",
+    },
+    en: { fontFile: PLAYFAIR, fontSha256: PLAYFAIR_SHA },
     dilationPixels: 1,
   },
-} as const;
+} as const satisfies Record<
+  string,
+  Record<IdentityScript, PinnedFace> & { dilationPixels: number }
+>;
 
 export function classifyArabicIdentityInput(
   input: IdentitySolverInput,
@@ -158,27 +201,27 @@ export function classifyArabicIdentityInput(
   return { supported: true, style: input.style as CaleumsArabicStyle };
 }
 
-export async function solveArabicIdentity(
+export async function solveIdentity(
   input: IdentitySolverInput,
-  rasterizer: ArabicIdentityRasterizer,
+  rasterizer: IdentityRasterizer,
 ): Promise<IdentityArtifact> {
   const support = classifyArabicIdentityInput(input);
   if (!support.supported) throw new IdentitySolverError(support.code);
   const approvedText = input.approvedNames[0]?.normalize("NFC").trim();
   if (!approvedText) throw new IdentitySolverError("approved_text_missing");
   const style = LIVE_STYLES[support.style];
+  const face = style[input.language];
   const { mask, shaping } = await rasterizer.typeset({
     approvedText,
-    fontFile: style.fontFile,
-    fontSize: 560,
-    padding: 186,
+    fontFile: face.fontFile,
+    script: input.language,
   });
   // The bytes that were shaped must be the bytes the style pins: a font
   // swapped on disk changes the spelling without changing anything else.
-  if (shaping.fontSha256Measured !== style.fontSha256)
+  if (shaping.fontSha256Measured !== face.fontSha256)
     throw new IdentitySolverError(
       "identity_font_bytes_mismatch",
-      `${style.fontFile}: loaded ${shaping.fontSha256Measured}`,
+      `${face.fontFile}: loaded ${shaping.fontSha256Measured}`,
     );
   if (!shaping.exactCharactersPreserved)
     throw new IdentitySolverError(
@@ -207,7 +250,7 @@ export async function solveArabicIdentity(
     [
       CALEUMS_ARABIC_ENGINE_RELEASE,
       input.pipelineRelease,
-      "ar",
+      input.language,
       approvedText,
       support.style,
       input.layout,
@@ -225,8 +268,8 @@ export async function solveArabicIdentity(
       pipelineRelease: input.pipelineRelease,
       approvedCharacters: approvedText,
       style: support.style,
-      fontFile: style.fontFile,
-      fontSha256: style.fontSha256,
+      fontFile: face.fontFile,
+      fontSha256: face.fontSha256,
       fontSha256Measured: shaping.fontSha256Measured,
       shaping: {
         ...rasterizer.shapingVersions(),
