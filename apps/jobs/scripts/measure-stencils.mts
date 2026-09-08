@@ -9,11 +9,18 @@
 // (adversarial review 2, finding 6). MATCH is this script's decode of the bytes
 // against the engine's own decode of the same bytes: one ruler read twice, so
 // it catches a file that changed after it was written, and nothing else. CLAIM
-// is the engine's measurement against the engine's *construction account* - the
+// is this script's own decode against the engine's *construction account* - the
 // rings it says it welded and where, the islands it says it bridged, the ink it
-// says it preserved - so a renderer whose account and whose raster disagree is
-// caught by a source that did not write the raster. The third ruler, and the
-// only fully independent one, stays `lab/verify_stencil.py`.
+// says it preserved.
+//
+// Adversarial review 3, finding 6: CLAIM used to read both sides out of the
+// manifest, `report.measured` against `report.claimed`, so a report whose two
+// blocks agreed passed however far either of them was from the bytes. Every
+// measured number CLAIM uses now comes from this script's `decodeMask` and
+// `findMaskHoles` of the file on disk, and the only thing read from the
+// manifest is the claim itself. A claimed ring centre moved 20 px away from
+// where the hole actually is now fails. The third ruler, and the only one that
+// shares no code at all, stays `lab/verify_stencil.py`.
 //
 // Run it (Node is pinned to 24.18.1):
 //   corepack pnpm --filter @jewelo/jobs measure-stencils
@@ -80,14 +87,18 @@ interface StencilClaim {
   readonly crossCheck: StencilCrossCheck | null;
 }
 
-/** The two blocks of a solver report, as far as the cross-check reads them. */
+/** What this script measured off the bytes, for the cross-check to judge. */
+interface MeasuredStencil {
+  readonly inkPixels: number;
+  readonly componentsFinal: number;
+  /** Distinct enclosed holes found at the claimed ring centres. */
+  readonly jumpRingCount: number;
+  /** The centroid of the hole at each claimed ring centre, in file order. */
+  readonly ringHoles: readonly ({ centreX: number; centreY: number } | null)[];
+}
+
+/** The construction account of a solver report, as the cross-check reads it. */
 interface StencilCrossCheck {
-  readonly measured: {
-    readonly inkPixels: number;
-    readonly componentsFinal: number;
-    readonly jumpRingCount: number;
-    readonly ringHoles: readonly { centreX: number; centreY: number }[];
-  };
   readonly claimed: {
     readonly jumpRings: number;
     readonly ringCentres: readonly { x: number; y: number }[];
@@ -104,12 +115,15 @@ interface StencilCrossCheck {
 }
 
 /**
- * Compares the engine's decode of a stencil with the engine's construction
- * account of the same stencil. Returns the disagreements, empty when the two
- * tell the same story.
+ * Compares this script's own measurement of a stencil with the engine's
+ * construction account of the same stencil. Returns the disagreements, empty
+ * when the two tell the same story.
  */
-function crossCheckClaim(check: StencilCrossCheck): string[] {
-  const { measured, claimed } = check;
+function crossCheckClaim(
+  check: StencilCrossCheck,
+  measured: MeasuredStencil,
+): string[] {
+  const { claimed } = check;
   const failures: string[] = [];
   if (measured.jumpRingCount !== claimed.jumpRings)
     failures.push(
@@ -217,20 +231,12 @@ function readClaims(manifestPath: string): StencilClaim[] {
             (hole) => [hole.centreX, hole.centreY] as const,
           ) ?? null,
         sha256: entry.pngSha256 ?? null,
+        // Finding 6: only the claim is read here now. Everything the claim is
+        // judged against is measured off the bytes in the loop below.
         crossCheck:
-          measured?.inkPixels !== undefined &&
-          measured.componentsFinal !== undefined &&
-          measured.jumpRingCount !== undefined &&
           claimed !== undefined
-            ? ({
-                measured: {
-                  inkPixels: measured.inkPixels,
-                  componentsFinal: measured.componentsFinal,
-                  jumpRingCount: measured.jumpRingCount,
-                  ringHoles: measured.ringHoles ?? [],
-                },
-                claimed: claimed as StencilCrossCheck["claimed"],
-              } satisfies StencilCrossCheck)
+            ? ({ claimed: claimed as StencilCrossCheck["claimed"] } satisfies
+                StencilCrossCheck)
             : null,
       };
     });
@@ -317,12 +323,41 @@ for (const claim of claims) {
 
   if (claim.crossCheck) {
     crossCheckable += 1;
-    const failures = crossCheckClaim(claim.crossCheck);
+    const { claimed } = claim.crossCheck;
+    // The measured side of CLAIM, taken from this script's own decode of the
+    // file on disk and its own hole geometry, looked up at the ring centres the
+    // manifest claims after the transform the manifest claims. A claim that
+    // moved is a claim that no longer lands in its hole.
+    const claimedHoles = claimed.ringCentres.map((centre) => {
+      const x = centre.x * claimed.recentreScale + claimed.recentreOffsetX;
+      const y = centre.y * claimed.recentreScale + claimed.recentreOffsetY;
+      const region = geometry.regionAt(Math.round(x), Math.round(y));
+      return region >= 0 ? (geometry.holes[region] ?? null) : null;
+    });
+    const measuredStencil = {
+      inkPixels: report.inkPixels,
+      componentsFinal: report.components,
+      jumpRingCount: new Set(
+        claimed.ringCentres
+          .map((centre) =>
+            geometry.regionAt(
+              Math.round(
+                centre.x * claimed.recentreScale + claimed.recentreOffsetX,
+              ),
+              Math.round(
+                centre.y * claimed.recentreScale + claimed.recentreOffsetY,
+              ),
+            ),
+          )
+          .filter((region) => region >= 0),
+      ).size,
+      ringHoles: claimedHoles,
+    } satisfies MeasuredStencil;
+    const failures = crossCheckClaim(claim.crossCheck, measuredStencil);
     if (failures.length === 0) crossChecked += 1;
     else claimFailures.push(`${claim.file}: ${failures.join("; ")}`);
-    const { measured: engineMeasured, claimed } = claim.crossCheck;
     const deltas = claimed.ringCentres.map((centre, index) => {
-      const hole = engineMeasured.ringHoles[index];
+      const hole = measuredStencil.ringHoles[index];
       if (!hole) return "MISSING";
       const x = centre.x * claimed.recentreScale + claimed.recentreOffsetX;
       const y = centre.y * claimed.recentreScale + claimed.recentreOffsetY;
@@ -330,10 +365,10 @@ for (const claim of claims) {
     });
     console.log(
       `CLAIM ${claim.file.padEnd(26)}` +
-        `rings ${claimed.jumpRings}/${engineMeasured.jumpRingCount}  ` +
+        `rings ${claimed.jumpRings}/${measuredStencil.jumpRingCount}  ` +
         `centre delta [${deltas.join(" ")}]  ` +
-        `islands ${claimed.islandsBeforeBridging}-${claimed.bridges} bars -> comp ${engineMeasured.componentsFinal}  ` +
-        `ink ${claimed.inkPixelsPreserved}/${claimed.inkPixelsBeforeBridging} kept, ${engineMeasured.inkPixels} final at scale ${claimed.recentreScale.toFixed(3)}  ` +
+        `islands ${claimed.islandsBeforeBridging}-${claimed.bridges} bars -> comp ${measuredStencil.componentsFinal}  ` +
+        `ink ${claimed.inkPixelsPreserved}/${claimed.inkPixelsBeforeBridging} kept, ${measuredStencil.inkPixels} final at scale ${claimed.recentreScale.toFixed(3)}  ` +
         (failures.length === 0 ? "ok" : `FAILED: ${failures.join("; ")}`),
     );
   }

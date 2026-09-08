@@ -14,10 +14,14 @@ import {
   IDENTITY_MIN_RECENTRE_SCALE,
   IDENTITY_RECENTRE_BOX,
   IDENTITY_RESAMPLE_INK_THRESHOLD,
+  IDENTITY_RING_ANCHOR_CANDIDATES,
   IDENTITY_RING_ANCHOR_EROSION,
   IDENTITY_RING_ANCHOR_MIN_ISLAND_FRACTION,
+  IDENTITY_RING_ANCHOR_OUTER_SPANS,
   IDENTITY_RING_ANCHOR_SPANS,
   IDENTITY_RING_INNER,
+  IDENTITY_RING_MARK_MAX_COMPACTNESS,
+  IDENTITY_RING_MAX_INWARD_SHIFT,
   IDENTITY_RING_MAX_LIFT,
   IDENTITY_RING_MAX_OUTWARD_SHIFT,
   IDENTITY_RING_OUTER,
@@ -1158,6 +1162,69 @@ function intersect(left: Uint8Array, right: Uint8Array): Uint8Array {
 }
 
 /**
+ * Chebyshev distance to the nearest background pixel, for every ink pixel of
+ * `ink`, with the outside of the canvas counted as background.
+ *
+ * Two sequential passes over the grid, forward then backward, which is the
+ * exact chessboard transform: the distance at a pixel is one more than the
+ * smallest distance among its already-settled 8-neighbours. The value at a
+ * pixel is the half-side of the largest square of ink centred there, so the
+ * maximum over an island is that island's inradius - how many stroke widths
+ * of metal it is made of.
+ */
+function chebyshevDistanceTransform(
+  width: number,
+  height: number,
+  ink: Uint8Array,
+): Int32Array {
+  const distance = new Int32Array(ink.length);
+  const edge = (x: number, y: number) =>
+    x === 0 || y === 0 || x === width - 1 || y === height - 1;
+  for (let y = 0; y < height; y += 1)
+    for (let x = 0; x < width; x += 1) {
+      const index = y * width + x;
+      if (!ink[index]) continue;
+      if (edge(x, y)) {
+        distance[index] = 1;
+        continue;
+      }
+      distance[index] =
+        Math.min(
+          distance[index - width - 1] as number,
+          distance[index - width] as number,
+          distance[index - width + 1] as number,
+          distance[index - 1] as number,
+        ) + 1;
+    }
+  for (let y = height - 1; y >= 0; y -= 1)
+    for (let x = width - 1; x >= 0; x -= 1) {
+      const index = y * width + x;
+      if (!ink[index]) continue;
+      if (edge(x, y)) {
+        distance[index] = 1;
+        continue;
+      }
+      const below =
+        Math.min(
+          distance[index + width - 1] as number,
+          distance[index + width] as number,
+          distance[index + width + 1] as number,
+          distance[index + 1] as number,
+        ) + 1;
+      if (below < (distance[index] as number)) distance[index] = below;
+    }
+  return distance;
+}
+
+/** The pre-bridge islands, with the ones a jump ring may be anchored to. */
+interface RingAnchorCarrier {
+  /** Island label per pixel of the pre-bridge raster; 0 is background. */
+  readonly labels: Int32Array;
+  /** 1 where the pixel belongs to an island that may carry a ring. */
+  readonly carrier: Uint8Array;
+}
+
+/**
  * The metal a jump ring is allowed to be anchored to: the letter bodies, and
  * nothing else.
  *
@@ -1166,37 +1233,70 @@ function intersect(left: Uint8Array, right: Uint8Array): Uint8Array {
  * `IDENTITY_BRIDGE_WIDTH` bar and is indistinguishable, in the finished raster,
  * from a stroke. The distinction survives one step earlier: `beforeBridging` is
  * the thickened raster *before* any bar was drawn, where a dot is its own small
- * 4-connected island. So the carrier is built there - every island at least
- * `IDENTITY_RING_ANCHOR_MIN_ISLAND_FRACTION` of the largest one - and bridge
- * bars, which are ink in neither island, are excluded for free: a ring welded
- * to a 24 px bar would hang the whole pendant off the thinnest metal on it.
+ * 4-connected island. So the carrier is built there, and bridge bars - ink in
+ * no island - are excluded for free: a ring welded to a 24 px bar would hang
+ * the whole pendant off the thinnest metal on it.
+ *
+ * What separates a mark from a letter is not how big it is next to its
+ * neighbours. Adversarial review 3: comparing areas is exactly wrong for Latin,
+ * where every letter is its own island, so the tittle of the i is measured
+ * against whatever the biggest letter happens to be and passes at 13.5% in
+ * "Ali". A mark is a *blob*: a lump of metal about as wide as it is thick. A
+ * letter is a *stroke*: a run of metal several stroke widths long, bent around
+ * a shape. So each island is measured against itself -
+ * `area / thickness^2`, thickness taken from its own largest inscribed square -
+ * and anything at or below `IDENTITY_RING_MARK_MAX_COMPACTNESS` is a mark.
+ * The largest island of the piece is always a carrier whatever it measures, so
+ * the search always has somewhere legitimate to look.
  */
 function ringAnchorCarrier(
   mask: RasterMask,
   beforeBridging: Uint8Array,
-): Uint8Array {
+): RingAnchorCarrier {
   const { labels, count } = label4(
     mask.width,
     mask.height,
     beforeBridging,
     (value) => value !== 0,
   );
-  if (count === 0) return new Uint8Array(mask.ink.length);
+  const carrier = new Uint8Array(mask.ink.length);
+  if (count === 0) return { labels, carrier };
   const sizes = new Int32Array(count + 1);
+  const inradius = new Int32Array(count + 1);
+  const distance = chebyshevDistanceTransform(
+    mask.width,
+    mask.height,
+    beforeBridging,
+  );
   for (let index = 0; index < labels.length; index += 1) {
     const label = labels[index] as number;
-    if (label > 0) sizes[label] = (sizes[label] as number) + 1;
+    if (label <= 0) continue;
+    sizes[label] = (sizes[label] as number) + 1;
+    if ((distance[index] as number) > (inradius[label] as number))
+      inradius[label] = distance[index] as number;
   }
   let largest = 0;
   for (let label = 1; label <= count; label += 1)
-    if ((sizes[label] as number) > largest) largest = sizes[label] as number;
-  const minimum = largest * IDENTITY_RING_ANCHOR_MIN_ISLAND_FRACTION;
-  const carrier = new Uint8Array(mask.ink.length);
+    if ((sizes[label] as number) > (sizes[largest] as number)) largest = label;
+  const minimumArea =
+    (sizes[largest] as number) * IDENTITY_RING_ANCHOR_MIN_ISLAND_FRACTION;
+  const isCarrier = new Uint8Array(count + 1);
+  for (let label = 1; label <= count; label += 1) {
+    const thickness = 2 * (inradius[label] as number) - 1;
+    const compactness =
+      thickness > 0 ? (sizes[label] as number) / (thickness * thickness) : 0;
+    isCarrier[label] =
+      label === largest ||
+      (compactness > IDENTITY_RING_MARK_MAX_COMPACTNESS &&
+        (sizes[label] as number) >= minimumArea)
+        ? 1
+        : 0;
+  }
   for (let index = 0; index < labels.length; index += 1) {
     const label = labels[index] as number;
-    if (label > 0 && (sizes[label] as number) >= minimum) carrier[index] = 1;
+    if (label > 0 && isCarrier[label]) carrier[index] = 1;
   }
-  return carrier;
+  return { labels, carrier };
 }
 
 /**
@@ -1226,7 +1326,7 @@ function addRings(
     mask.ink,
     IDENTITY_RING_ANCHOR_EROSION,
   );
-  const carrier = ringAnchorCarrier(mask, beforeBridging);
+  const { labels, carrier } = ringAnchorCarrier(mask, beforeBridging);
   // The anchor has to be load-bearing in two different senses, and the erosion
   // only answers the first. Eroded ink is metal thick enough to hold a chain;
   // carrier ink is metal that belongs to a *letter body* rather than to a dot,
@@ -1249,102 +1349,153 @@ function addRings(
     IDENTITY_RING_OUTER * IDENTITY_RING_OUTWARD_FRACTION,
   );
 
+  const leftmostRingX = IDENTITY_RING_OUTER + IDENTITY_RING_TOP_CLEARANCE;
+  const rightmostRingX =
+    mask.width - 1 - IDENTITY_RING_TOP_CLEARANCE - IDENTITY_RING_OUTER;
+  const lowest = IDENTITY_RING_OUTER + IDENTITY_RING_TOP_CLEARANCE;
+
   for (const side of ["left", "right"] as const) {
     const outward = side === "left" ? -1 : 1;
-    let anchorX = -1;
-    let anchorY = -1;
-    for (const fraction of IDENTITY_RING_ANCHOR_SPANS) {
+    // The anchors this side may be seated on, best first: the topmost pixel of
+    // each distinct carrier island inside the end band, widening the band until
+    // there are enough of them. The first one is what the lab picked and what a
+    // jeweller would pick; the rest exist because a name must not die when the
+    // best anchor happens to have no clean seat above it (adversarial review 3,
+    // finding 3).
+    const anchors: { x: number; y: number }[] = [];
+    const seenIslands = new Set<number>();
+    const seenAnchors = new Set<string>();
+    const collect = (fraction: number, perIsland: boolean) => {
+      if (anchors.length >= IDENTITY_RING_ANCHOR_CANDIDATES) return;
       const boundary =
         side === "left" ? minX + span * fraction : maxX - span * fraction;
-      // Row-major scan: the first hit is the topmost row of the band, and its
-      // leftmost pixel, exactly what `np.argmin` picks out of `np.nonzero`.
-      for (let y = 0; y < mask.height && anchorY < 0; y += 1)
+      // Row-major scan: the first hit on an island is its topmost row, and the
+      // leftmost pixel of that row, exactly what `np.argmin` picks out of
+      // `np.nonzero`.
+      for (
+        let y = 0;
+        y < mask.height && anchors.length < IDENTITY_RING_ANCHOR_CANDIDATES;
+        y += 1
+      )
         for (let x = 0; x < mask.width; x += 1) {
-          if (!solid[y * mask.width + x]) continue;
+          const index = y * mask.width + x;
+          if (!solid[index]) continue;
           if (side === "left" ? x >= boundary : x <= boundary) continue;
-          anchorX = x;
-          anchorY = y;
+          if (perIsland && seenIslands.has(labels[index] as number)) continue;
+          seenIslands.add(labels[index] as number);
+          const key = `${x},${y}`;
+          if (!seenAnchors.has(key)) {
+            seenAnchors.add(key);
+            anchors.push({ x, y });
+          }
+          // One candidate per island when scanning the inward bands; one
+          // candidate per band when scanning the outer ones.
+          if (!perIsland) return;
           break;
         }
-      if (anchorY >= 0) break;
-    }
-    if (anchorY < 0)
+    };
+    // The end band widening inward, one candidate per carrier island: the first
+    // of them is the anchor the lab picks and the one a jeweller would pick.
+    for (const fraction of IDENTITY_RING_ANCHOR_SPANS) collect(fraction, true);
+    // Then the narrower bands toward the end of the name, which is the only
+    // place left to look on a piece that is a single island.
+    for (const fraction of IDENTITY_RING_ANCHOR_OUTER_SPANS)
+      collect(fraction, false);
+    if (anchors.length === 0)
       throw new IdentitySolverError(
         "identity_ring_anchor_missing",
         `identity_ring_anchor_missing:side=${side}`,
       );
 
-    const leftmostRingX = IDENTITY_RING_OUTER + IDENTITY_RING_TOP_CLEARANCE;
-    const rightmostRingX =
-      mask.width - 1 - IDENTITY_RING_TOP_CLEARANCE - IDENTITY_RING_OUTER;
-    const seatX = anchorX + outward * outwardStep;
-    const lowest = IDENTITY_RING_OUTER + IDENTITY_RING_TOP_CLEARANCE;
-    const seat = Math.max(
-      lowest,
-      anchorY - IDENTITY_RING_OUTER + IDENTITY_RING_WELD_OVERLAP,
+    // The lab seats the ring at one place and stops. Three things go wrong at
+    // that one seat, and each costs a customer the right name. A hairline that
+    // rises above the load-bearing anchor loses a few pixels to the hole; a
+    // floating dot outside the weld joint disappears into the ring metal, which
+    // reads as a different letter while every other gate stays green; and a
+    // ring already against the canvas edge has nowhere outward to go. So the
+    // solver spends, in order, the reserved ring band above the anchor, the
+    // outward room, the inward room, and then the next anchor on the carrier.
+    // It takes the first seat where the hole punches nothing out and no ink
+    // outside the weld lies under the ring metal. Failing all of that it keeps
+    // the least-bad seat and lets the measured gates below refuse the piece,
+    // which is the honest answer only when no clean seat exists at all.
+    let chosen = anchors[0] as { x: number; y: number };
+    let cx = Math.min(
+      rightmostRingX,
+      Math.max(leftmostRingX, chosen.x + outward * outwardStep),
     );
-    // The lab seats the ring here and stops. Two things go wrong at that one
-    // seat, and both cost a customer the right name. A hairline that rises
-    // above the load-bearing anchor loses a few pixels to the hole, and a
-    // floating dot outside the weld joint disappears into the ring metal
-    // (adversarial finding 2), which reads as a different letter while every
-    // other gate stays green. So the solver spends the reserved ring band and,
-    // if that is not enough, the outward room: it lifts the ring one pixel at a
-    // time and then pushes it away from the name, and takes the first seat
-    // where the hole punches nothing out and no ink outside the weld zone lies
-    // under the ring metal. Failing that it keeps the least-bad seat and lets
-    // the measured gates below refuse the piece.
-    let cy = seat;
-    let cx = Math.min(rightmostRingX, Math.max(leftmostRingX, seatX));
+    let cy = Math.max(
+      lowest,
+      chosen.y - IDENTITY_RING_OUTER + IDENTITY_RING_WELD_OVERLAP,
+    );
     let cost = Number.POSITIVE_INFINITY;
-    search: for (let lift = 0; lift <= IDENTITY_RING_MAX_LIFT; lift += 1) {
-      const candidateY = Math.max(lowest, seat - lift);
-      if (lift > 0 && candidateY === Math.max(lowest, seat - (lift - 1)))
-        break search;
-      for (
-        let shift = 0;
-        shift <= IDENTITY_RING_MAX_OUTWARD_SHIFT;
-        shift += 1
-      ) {
-        // A ring pushed off the canvas would have its annulus clipped, so its
-        // hole would no longer be enclosed. Fix pass 3, finding 2: the illegal
-        // x used to `break`, which left the *shift* loop - and because x does
-        // not change with the lift, a seat that was already against the canvas
-        // edge broke at shift 0 on every pass, so the lift loop tried nothing
-        // at all. Five of the 32 committed rings were seated that way. The x is
-        // clamped into the legal band instead, so the lift is searched
-        // independently of how far the ring can travel sideways.
-        const candidateX = Math.min(
-          rightmostRingX,
-          Math.max(leftmostRingX, seatX + outward * shift),
-        );
-        const ring = {
-          x: candidateX,
-          y: candidateY,
-          anchorX,
-          anchorY,
-        } satisfies IdentityRingCentre;
-        const punched = countDisk(
-          mask,
-          beforeRings,
-          candidateX,
-          candidateY,
-          IDENTITY_RING_INNER,
-        );
-        const welded = countGlyphPixelsUnderRingMetal(mask, beforeRings, ring);
-        if (punched === 0 && welded === 0) {
-          cx = candidateX;
-          cy = candidateY;
-          cost = 0;
-          break search;
-        }
-        if (punched + welded < cost) {
-          cost = punched + welded;
-          cx = candidateX;
-          cy = candidateY;
+    search: for (const anchor of anchors) {
+      const anchorX = anchor.x;
+      const anchorY = anchor.y;
+      const seatX = anchorX + outward * outwardStep;
+      const seat = Math.max(
+        lowest,
+        anchorY - IDENTITY_RING_OUTER + IDENTITY_RING_WELD_OVERLAP,
+      );
+      // A ring pushed off the canvas would have its annulus clipped, so its
+      // hole would no longer be enclosed: the legal band is the canvas margin
+      // and nothing narrower. Fix pass 3 clamped every illegal x onto that
+      // margin, which made 25 shifts collapse onto one candidate and left the
+      // ring unable to travel at all (adversarial review 3, finding 7). The
+      // candidates are collected once here instead, outward first and then
+      // inward, deduplicated, so a clamp costs one candidate rather than the
+      // whole search.
+      const columns: number[] = [];
+      const offer = (value: number) => {
+        const clamped = Math.min(rightmostRingX, Math.max(leftmostRingX, value));
+        if (!columns.includes(clamped)) columns.push(clamped);
+      };
+      for (let shift = 0; shift <= IDENTITY_RING_MAX_OUTWARD_SHIFT; shift += 1)
+        offer(seatX + outward * shift);
+      for (let shift = 1; shift <= IDENTITY_RING_MAX_INWARD_SHIFT; shift += 1)
+        offer(seatX - outward * shift);
+
+      for (let lift = 0; lift <= IDENTITY_RING_MAX_LIFT; lift += 1) {
+        const candidateY = Math.max(lowest, seat - lift);
+        if (lift > 0 && candidateY === Math.max(lowest, seat - (lift - 1)))
+          break;
+        for (const candidateX of columns) {
+          const ring = {
+            x: candidateX,
+            y: candidateY,
+            anchorX,
+            anchorY,
+          } satisfies IdentityRingCentre;
+          const punched = countDisk(
+            mask,
+            beforeRings,
+            candidateX,
+            candidateY,
+            IDENTITY_RING_INNER,
+          );
+          const welded = countGlyphPixelsUnderRingMetal(
+            mask,
+            beforeRings,
+            ring,
+          );
+          if (punched === 0 && welded === 0) {
+            cx = candidateX;
+            cy = candidateY;
+            chosen = anchor;
+            cost = 0;
+            break search;
+          }
+          if (punched + welded < cost) {
+            cost = punched + welded;
+            cx = candidateX;
+            cy = candidateY;
+            chosen = anchor;
+          }
         }
       }
     }
+    const anchorX = chosen.x;
+    const anchorY = chosen.y;
     drawDisk(mask, cx, cy, IDENTITY_RING_OUTER, 1);
     drawDisk(mask, cx, cy, IDENTITY_RING_INNER, 0);
     // The weld fillet: metal continuity from under the ring into the stroke.
@@ -1389,13 +1540,24 @@ function addRings(
 /**
  * Pre-ring ink pixels that lie under one ring's metal outside the weld itself.
  *
- * "Under the metal" is the ring annulus (between the hole and the outer edge)
- * plus the weld fillet capsule, measured geometrically rather than as a change
- * of state, because `drawDisk(..., 1)` writes 1 over a pixel that was already
- * 1 and leaves no trace. The one exemption is the weld: the capsule running
- * from the ring centre down into the anchor stroke, which is exactly the metal
- * `drawBar` lays to join them, so ink there is the joint being made. Ink
- * anywhere else under the metal is a piece of the name the ring absorbed.
+ * "Under the metal" is every pixel the ring adds metal over: the annulus
+ * between the hole and the outer edge, and the weld fillet, which on a lifted
+ * ring reaches far below the annulus. It is measured geometrically rather than
+ * as a change of state, because `drawDisk(..., 1)` writes 1 over a pixel that
+ * was already 1 and leaves no trace, so the scan covers the bounding box of the
+ * ring *and* the fillet rather than the ring alone.
+ *
+ * The one exemption is the weld, and it is exactly the metal `drawBar` lays:
+ * the same capsule predicate on the same segment, so the measurement and the
+ * drawing cannot drift apart. Ink there is the joint being made. Ink anywhere
+ * else under the metal is a piece of the name the ring absorbed.
+ *
+ * Fix pass 3 exempted two capsules, the drawn fillet and a second one running
+ * from the ring *centre* into the anchor. Adversarial review 3, finding 2: that
+ * second capsule is metal the solver never lays, it covered the corridor
+ * between the hole and the stroke, and together the pair made 30.8% of every
+ * annulus unmeasurable - a detached mark parked in that corridor was invisible
+ * to the gate that exists to catch exactly that. It is gone.
  */
 function countGlyphPixelsUnderRingMetal(
   mask: RasterMask,
@@ -1408,31 +1570,45 @@ function countGlyphPixelsUnderRingMetal(
   const barY1 = ring.anchorY + IDENTITY_RING_WELD_ANCHOR_DEPTH;
   const barX1 = ring.anchorX;
   const barRadius = IDENTITY_RING_WELD_WIDTH / 2;
-  const yMin = Math.max(0, ring.y - IDENTITY_RING_OUTER);
-  const yMax = Math.min(mask.height - 1, ring.y + IDENTITY_RING_OUTER);
-  const xMin = Math.max(0, ring.x - IDENTITY_RING_OUTER);
-  const xMax = Math.min(mask.width - 1, ring.x + IDENTITY_RING_OUTER);
+  // The box the ring and its fillet together occupy.
+  const yMin = Math.max(
+    0,
+    Math.trunc(Math.min(ring.y - IDENTITY_RING_OUTER, barY0, barY1) - barRadius),
+  );
+  const yMax = Math.min(
+    mask.height - 1,
+    Math.ceil(Math.max(ring.y + IDENTITY_RING_OUTER, barY0, barY1) + barRadius),
+  );
+  const xMin = Math.max(
+    0,
+    Math.trunc(Math.min(ring.x - IDENTITY_RING_OUTER, barX0, barX1) - barRadius),
+  );
+  const xMax = Math.min(
+    mask.width - 1,
+    Math.ceil(Math.max(ring.x + IDENTITY_RING_OUTER, barX0, barX1) + barRadius),
+  );
   let welded = 0;
   for (let y = yMin; y <= yMax; y += 1)
     for (let x = xMin; x <= xMax; x += 1) {
       if (!source[y * mask.width + x]) continue;
       const radial = (x - ring.x) ** 2 + (y - ring.y) ** 2;
-      // Only the annulus adds metal over the name; the hole is the punch
-      // count's business and the fillet is the weld, exempted below.
-      if (radial > IDENTITY_RING_OUTER ** 2 || radial <= IDENTITY_RING_INNER ** 2)
-        continue;
-      // The exemption, and the whole of it. Fix pass 3, finding 1: this used to
-      // be a disk of `IDENTITY_RING_WELD_ZONE` (46 px) centred on the anchor,
-      // which covers about 18% of the annulus and made that share of every ring
-      // unmeasurable by construction - a dot swallowed just inside it was
-      // invisible to the gate that exists to catch exactly that. The joint is
-      // not a disk. It is the capsule the solver welds: `IDENTITY_RING_WELD_WIDTH`
-      // across, running from the ring down into the anchor stroke. Ink there is
-      // the metal the weld is made of. Ink anywhere else under the annulus is a
-      // piece of the name the ring absorbed, and it counts.
-      if (insideCapsule(x, y, ring.x, ring.y, barX1, barY1, barRadius))
-        continue;
-      if (insideCapsule(x, y, barX0, barY0, barX1, barY1, barRadius)) continue;
+      const underAnnulus =
+        radial <= IDENTITY_RING_OUTER ** 2 &&
+        radial > IDENTITY_RING_INNER ** 2;
+      const underFillet = insideCapsule(
+        x,
+        y,
+        barX0,
+        barY0,
+        barX1,
+        barY1,
+        barRadius,
+      );
+      // The hole is the punch count's business; anywhere the ring lays no
+      // metal is nobody's.
+      if (!underAnnulus && !underFillet) continue;
+      // The exemption, and the whole of it: the fillet the solver welds.
+      if (underFillet) continue;
       welded += 1;
     }
   return welded;

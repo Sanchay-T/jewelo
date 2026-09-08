@@ -181,8 +181,10 @@ survives an 11 px erosion, while the 24 px bridge bar that attaches it survives
 too, so the dot was part of the largest eroded component and was the topmost
 pixel on the right.
 And the measurement exempted every pre-ring pixel within `IDENTITY_RING_WELD_ZONE`
-(46 px) of the anchor - about 18% of each annulus - so a dot swallowed just
-inside that disk was invisible to the gate that exists to catch it.
+(46 px) of the anchor, so a dot swallowed just inside that disk was invisible to
+the gate that exists to catch it.
+(Correction, fix pass 4: this paragraph first said the disk was "about 18% of
+each annulus". Measured over the 32 committed rings it is 35.6%.)
 
 The fix is in two parts.
 The anchor must now be eroded ink that also belongs to a *letter body*: islands
@@ -190,11 +192,15 @@ are counted on the thickened raster before any bridge bar is drawn, and a ring
 may only be anchored to an island at least
 `IDENTITY_RING_ANCHOR_MIN_ISLAND_FRACTION` (10%) of the largest island of its
 piece, which also excludes the bars themselves.
-And the exemption is now the weld and nothing else: the capsule
-`IDENTITY_RING_WELD_WIDTH` across running from the ring centre down into the
-anchor stroke, which is exactly the metal `drawBar` lays.
+And the exemption is narrowed to two capsules `IDENTITY_RING_WELD_WIDTH` across:
+the fillet `drawBar` lays, and a second one from the ring *centre* down into the
+anchor stroke.
 Everything else under the annulus counts and trips
 `identity_ring_welded_to_glyph`.
+(Correction, fix pass 4: this paragraph first said the exemption was "the weld
+and nothing else". It was the weld plus that second capsule, which is metal the
+solver never lays; the pair covers 31.0% of each annulus, measured over the 32
+committed rings. Fix pass 4 removes the second one.)
 
 The 10% threshold is measured, not chosen.
 Over the 232-cell sweep, the largest island that ever carried a mark-anchored
@@ -202,6 +208,14 @@ ring is 9.9% of its piece's largest island (`aya-ar-thuluth-inspired`), and the
 smallest island that carries a ring under the new rule is 11.3%.
 Every one of the 61 anchors the rule moved was on a dot, a hamza or a nuqta at
 2.4% to 9.9%, and every one of them moved onto a letter at 11.3% to 100%.
+(Correction, fix pass 4: those two numbers are real but they are not a gap, and
+this paragraph read as if they were. They were measured over the 232 cells that
+sweep covered, and the sweep covered no name whose spelling lives in a Latin
+tittle. On a wider corpus the same rule admits the tittle of the i as a carrier
+at 13.5% in `Ali`, 10.5% in `Niki` and 14.5% in `Li`, because in Latin every
+letter is its own island and the ratio is taken against whatever the biggest
+letter happens to be. The rule is kept, for what it does catch, and a second
+test is added beside it in fix pass 4.)
 
 ### The sweep
 
@@ -421,3 +435,343 @@ stamped. The fix-pass-2 proof still reads:
 release mismatch: identity_pipeline_release_mismatch:task=caleums-final-media-v1,report=caleums-final-media-v2
 fetch calls during the release-mismatch check: 0
 ```
+
+## Fix pass 4 (adversarial review 3)
+
+Review 3 falsified three of fix pass 3's claims and found four more things.
+The lead confirmed the first by eye on `Ali` in Playfair: the right ring was
+welded onto the tittle of the i, which hangs off the stem by a bridge bar.
+A chain on that ring would have hung the pendant from a dot, which is the same
+defect review 2 found on ن and the same one fix pass 3 was supposed to close.
+
+### 1. What separates a mark from a letter
+
+Fix pass 3 asked whether an island was at least 10% of the largest island of its
+piece.
+That question has no answer in Latin.
+Arabic joins, so the largest island is a whole run of letters and a nuqta is a
+few per cent of it; Latin does not join, so the largest island is one letter and
+the tittle of the i is 13.5% of the A in `Ali`, 10.5% in `Niki`, 14.5% in `Li`.
+The rule admitted all three.
+It also admits `nunu` in Arabic classic at 10.3%.
+
+The new question never compares one island with another.
+A mark is a *blob*: a lump of metal about as wide as it is thick.
+A letter is a *stroke*: a run of metal several stroke widths long, bent around a
+shape.
+So each island is measured against itself, as `area / thickness^2`, where
+`thickness` is `2 * r - 1` and `r` is the largest Chebyshev inradius of that
+island - the half-side of the biggest square of its own ink that fits inside it.
+The measure is scale-free, face-free and script-free.
+It is `IDENTITY_RING_MARK_MAX_COMPACTNESS` in `packages/identity/src/shaping.ts`,
+and the distance transform that computes the inradius is a private helper in
+`caleums-arabic-v3.ts`.
+
+Compactness cannot see one shape: two nuqtas fused into a single slab, which in
+the `minimal` face measures 3.5 to 4.0 and reads as a stroke.
+The fix-pass-3 area rule catches exactly that, at 7.4% of the piece in `تسنيم`.
+So both tests are kept and an island has to clear both:
+
+```
+carrier = the largest island of the piece
+        | compactness > 3.35 and area >= 10% of the largest island
+```
+
+The largest island is always a carrier, so the carrier can never be empty.
+
+### 2. The corpus and the margin
+
+The threshold was measured over the union of three corpora: the `render-stencils`
+matrix (now 36 names x 2 scripts x 6 styles = 432 cells), the adversarial-3
+sweep of 35 short names in 6 styles, and the stress list review 3 named - `Ali`,
+`Amir`, `Niki`, `Titi`, `Jiji`, `Li`, `Ij`, `Maji`, `nunu`, `أمير`, `قق`, `نور`,
+`يزن`, `بيان`, `تيم`, `ذكرى`, `غيث`, `شمس`, `ياسين`, `إيمان`, each in both
+scripts and all six styles.
+Deduplicated that is 92 name-and-script pairs, 552 solves, 2698 islands.
+The 18 stress names are now in `MATRIX_NAMES` in `render-stencils.mts`, so the
+sweep covers them permanently.
+
+```
+corepack pnpm --filter @jewelo/jobs exec tsx <scratchpad>/pass4/sweep.mts
+```
+
+```
+UNION SWEEP  552 solves (92 names x scripts x 6 styles)
+  solved 552/552, threw 0
+  rings placed 1104, seats found at cost 0: 1104/1104
+  islands 2698, marks 806, carriers 1892
+  compactness test, over the 1474 islands the area test admits:
+    largest mark    2.857  zain/ar/thuluth-inspired 153x111 t=61 area 10632
+    smallest stroke 3.433  rua/ar/thuluth-inspired 255x274 t=95 area 30987
+    margin 0.576 (20.2%)
+  area test, over the 1370 islands the compactness test admits:
+    largest mark    0.100  shsh/ar/minimal 131x77 t=39 area 5912
+    smallest stroke 0.100  shsh/ar/minimal 131x78 t=39 area 5919
+  least compact island that actually carried a ring: 3.587  warda/ar/thuluth-inspired right
+```
+
+The margin that matters is the first one: once the area test has taken the small
+islands away, the largest thing compactness calls a mark and the smallest thing
+it calls a stroke are 20.2% apart.
+Both ends were confirmed by eye, on rasters painted island by island: the 2.857
+island is the two fused nuqtas of ز in `زين`, the 3.433 island is the ى of
+`رؤى`.
+The second margin is zero by construction - `شش` has two three-dot clusters that
+differ by seven pixels and the 10% line falls between them - and it is harmless
+here, because compactness has already refused every cluster that a ring could
+have reached; the least compact island that actually carried a ring in the whole
+sweep measures 3.587 and is a letter.
+
+The number a newly pinned face has to re-measure is 20.2%.
+
+### 3. The under-metal count
+
+`countGlyphPixelsUnderRingMetal` scanned the ring's bounding box only, and
+exempted two capsules: the fillet `drawBar` lays, and a second one running from
+the ring *centre* into the anchor.
+The second is metal the solver never lays, and it covered the corridor between
+the hole and the stroke, so a detached mark parked there was invisible.
+The scan is now the bounding box of the ring *and* the fillet, the metal test is
+the annulus or the fillet, and the exemption is the fillet and nothing else -
+the same `insideCapsule` predicate on the same segment `drawBar` fills.
+
+Measured over the 32 committed rings:
+
+```
+node <scratchpad>/pass4/exempt4.mjs \
+  docs/goals/overnight-launch/lab/stencils/production/render-report.json
+```
+
+```
+32 rings, annulus 119424px total: fix pass 4 exempts 30428 (25.5%, the drawn
+fillet only), fix pass 3 exempted 37063 (31.0%, fillet plus the ring-centre
+capsule), the pre-pass-3 46 px anchor disc exempted 42502 (35.6%)
+```
+
+25.5% is not small, and it is honest: the fillet is `IDENTITY_RING_WELD_WIDTH`
+(39 px) across and it crosses an annulus that is 18 px wide, so a quarter of the
+annulus really is weld metal.
+What changed is that the exemption is now the shape the solver draws rather than
+a shape drawn around it.
+
+The corridor that used to be exempt, on one ring seat and one detached mark:
+
+```
+node <scratchpad>/pass4/exempt-diff.mjs
+```
+
+```
+ring 752,440 anchor 741,483
+detached mark 10x23 at 726,452 = 230 pixels
+  fix pass 3 (drawn fillet + centre capsule exempt): welded 50
+  fix pass 4 (drawn fillet exempt only)            : welded 153
+```
+
+103 pixels of that mark used to be unmeasurable and now count.
+The synthetic probe itself no longer reaches the gate, because the widened
+search below moves the ring clear of the mark instead:
+
+```
+corepack pnpm --filter @jewelo/jobs exec tsx <scratchpad>/pass4/probe4.mts
+```
+
+```
+live engine (search on)   body only        rings [...,{"x":752,"y":440,...}] welded 0 punched 0
+live engine (search on)   mark 726,455,743,467 (234 px)  rings [...,{"x":785,"y":439,...}] welded 0 punched 0
+first seat, pass 4 count  mark 726,455,743,467 (234 px)  THREW identity_ring_welded_to_glyph:pixels=460
+first seat, pass 3 count  mark 726,455,743,467 (234 px)  THREW identity_ring_welded_to_glyph:pixels=409
+```
+
+The third and fourth lines are the same engine with the placement search removed,
+so the ring stays at the lab's single seat: the pass 4 count sees 51 pixels of
+that mark that the pass 3 count did not.
+
+### 4. The placement search, and the names that used to die
+
+Under fix pass 3 five cells threw where the pre-fix engine had rendered:
+`Maji` in Kufi (`identity_ring_welded_to_glyph:pixels=38`), `أمير` in Kufi
+(`identity_ring_punched_ink:pixels=12`) and `قق` in classic, diwani and
+signature (`identity_ring_welded_to_glyph:pixels=217`).
+The search kept the least-bad seat when it could not reach cost 0 and the gate
+then refused the piece, so a customer lost a name because the ring could not find
+a seat that existed.
+
+Three things widen it, all inside validated configuration:
+
+- the ring may now be pushed *inward* as well as outward, by
+  `IDENTITY_RING_MAX_INWARD_SHIFT` (half the outward travel), because a ring
+  already against the canvas edge has no outward room left;
+- the x candidates are collected once, deduplicated, so a clamp onto the canvas
+  margin costs one candidate instead of collapsing all 25 shifts onto the same
+  column (review 3, finding 7);
+- and when no seat above the first anchor is clean the search tries the next
+  anchor: the topmost pixel of each other carrier island, and then the topmost
+  pixel in each of `IDENTITY_RING_ANCHOR_OUTER_SPANS`, the narrower bands toward
+  the end of the name. That last one is what `قق` needs: both ق join into one
+  island, so widening the band inward always returns the same shoulder under the
+  four dots, and only a band pushed the other way finds the lower shoulder with
+  clear air above it.
+
+```
+corepack pnpm --filter @jewelo/jobs exec tsx <scratchpad>/pass3/adv3-regress.mts
+```
+
+```
+Maji     kufi     3ce45ed (committed)  OK   rings [{"x":44,"y":281,...},{"x":710,"y":392,...}]
+Amir-ar  kufi     3ce45ed (committed)  OK   rings [{"x":149,"y":460,...},{"x":940,"y":198,...}]
+qq-ar    classic  3ce45ed (committed)  OK   rings [{"x":91,"y":648,...},{"x":873,"y":330,...}]
+qq-ar    diwani   3ce45ed (committed)  OK   rings [{"x":91,"y":648,...},{"x":873,"y":330,...}]
+qq-ar    signature3ce45ed (committed)  OK   rings [{"x":91,"y":648,...},{"x":873,"y":330,...}]
+Ali      classic  3ce45ed (committed)  OK   rings [{"x":185,"y":492,...},{"x":942,"y":425,anchorX:893,anchorY:451}]
+```
+
+(The label `3ce45ed (committed)` is the script's own; it is the working tree.)
+`Ali` is the one to look at: the right anchor moved from `856,279`, the tittle,
+to `893,451`, the shoulder of the i.
+Every one of the 552 solves in the union corpus now finds a seat at cost 0.
+There is no name in the corpus the solver has to refuse.
+
+### 5. The harness measures the bytes now
+
+`render-stencils.mts` read `welded` and `punched` off `rendered.construction`,
+which the solver had already thrown on, so the assertion could not fail; and
+`aboveAnchor` was arithmetic on two numbers the engine claimed.
+Both are measured now.
+
+For each cell the script renders the same name a second time through the public
+API with the construction in the ring-free set, decodes both PNGs, and maps the
+rings-off decode back into pre-recentre coordinates, where the ring centres the
+engine claims are also expressed.
+Pre-ring ink under the annulus outside the fillet is `welded`; pre-ring ink
+inside the hole is `punched`.
+That is a comparison of two files against a claim, with no engine counter in it.
+`aboveAnchor` is now the lowest row of the measured hole, found by walking the
+decoded image outward from the point that landed in it, against the anchor the
+manifest claims mapped through the transform the manifest claims.
+
+`measure-stencils.mts` read both sides of `CLAIM` out of the manifest.
+Every measured number it uses now comes from its own `decodeMask` and
+`findMaskHoles` of the file on disk; only the claim is read from the manifest.
+
+The measurement is live, which a gate that always reads zero has to prove. The
+same two decoded PNGs, measured against the ring geometry the engine claims and
+against the same rings pushed 60 px down into the lettering:
+
+```
+corepack pnpm --filter @jewelo/jobs exec tsx <scratchpad>/pass4/harness-negative.mts
+```
+
+```
+Ali/en/classic  pre-ring ink read back from the rings-off PNG: 145550 px
+  at the claimed ring centres          {"welded":0,"punched":0}
+  at the same rings pushed 60 px down  {"welded":85,"punched":60}
+أمير/ar/kufi  pre-ring ink read back from the rings-off PNG: 128242 px
+  at the claimed ring centres          {"welded":0,"punched":0}
+  at the same rings pushed 60 px down  {"welded":1411,"punched":1793}
+```
+
+### 6. The runs
+
+```
+corepack pnpm --filter @jewelo/jobs render-stencils \
+  /Users/sanchay/hq/projects/devonel/jewelo/docs/goals/overnight-launch/lab/stencils/production
+```
+
+```
+WELDED-GLYPH 0/16 lab cells have ink welded into ring metal
+LUMINANCE 16/16
+SINGLE-PIECE 16/16
+MATRIX SINGLE-PIECE 432/432
+MATRIX MOVED-INK 0/432
+MATRIX RECENTRE-DOWNSCALED 297/432
+MATRIX WELDED-GLYPH 0/432 cells have ink welded into ring metal
+MATRIX RINGS 432/432 cells have exactly 2 ring holes, each clear of the stroke it is welded to, with no punched-out and no welded-in ink
+MATRIX RING HOLE SIZE min 1119 max 1437 mean 1325
+```
+
+448 of 448 rings-on cells pass, with welded and punched measured off the decoded
+PNGs rather than reported by the engine, exit code 0.
+The `matrix/` subdirectory was deleted rather than committed.
+
+```
+corepack pnpm --filter @jewelo/jobs measure-stencils \
+  /Users/sanchay/hq/projects/devonel/jewelo/docs/goals/overnight-launch/lab/stencils/production render-report.json
+```
+
+```
+SINGLE-PIECE 16/16
+MATCH 16/16
+CLAIM 16/16
+```
+
+The tamper, which is the point of the rewrite. One claimed ring centre in a copy
+of the manifest is moved 20 px and nothing else changes:
+
+```
+node <scratchpad>/pass4/tamper.mjs <production> <scratchpad>/pass4/tampered
+corepack pnpm --filter @jewelo/jobs measure-stencils <scratchpad>/pass4/tampered render-report.json
+```
+
+```
+tampered asma-en-classic.png: claimed ring centre 150,400 -> 170,400
+CLAIM FAILED 1/16
+  asma-en-classic.png: ring 0 claimed at 170.0,391.0 but measured at 149.8,386.7
+MATCH 16/16
+```
+
+exit status 1. `MATCH` still passes, because the bytes did not change; only the
+claim moved, and only `CLAIM` can see that.
+
+The Python oracle, which shares no code with either:
+
+```
+<scratchpad>/venv/bin/python <scratchpad>/compare.py \
+  docs/goals/overnight-launch/lab/stencils/production
+```
+
+```
+ALL IDENTICAL 16/16
+```
+
+### 7. `materializePromptSnapshot`
+
+`presentation.ts` left every failure of the snapshot RPC to the stale sweeper.
+That is right for a transport fault and wrong for a raise: the RPC
+(`20260827060000_caleums_prompt_registry.sql:284-289`) raises deterministically
+for four conditions that depend only on rows, and
+`recover_stale_generation_tasks`
+(`20260907020000_dependent_view_terminal_gate.sql:150-172`) has no attempt cap on
+`attempt = 0 and status = 'queued'` and bumps `updated_at`, so one such raise
+becomes an outbox row every two minutes for ever.
+
+The failure is classified now. A 4xx whose body carries SQLSTATE `P0001` with one
+of the four known messages, or `22023`, is a property of the task: it goes
+through `blockPreSpendTerminally` with `prompt_snapshot_rejected:<class>`, which
+carries no prompt text and no customer name. Anything else is rethrown and the
+sweeper keeps it.
+
+```
+corepack pnpm --filter @jewelo/jobs exec tsx <scratchpad>/pass4/snapshot-negatives.mts
+```
+
+```
+P0001 release does not match task pin     outcome {"status":"operator_review","attempt":2}
+  terminal_error_code prompt_snapshot_rejected:release_pin
+P0001 invalid compiled prompt length      outcome {"status":"operator_review","attempt":2}
+  terminal_error_code prompt_snapshot_rejected:length
+P0001 compiled prompt checksum mismatch   outcome {"status":"operator_review","attempt":2}
+  terminal_error_code prompt_snapshot_rejected:checksum
+P0001 invalid prompt variable snapshot    outcome {"status":"operator_review","attempt":2}
+  terminal_error_code prompt_snapshot_rejected:variables
+22023 invalid_parameter_value             outcome {"status":"operator_review","attempt":2}
+  terminal_error_code prompt_snapshot_rejected:invalid_argument
+P0001 a message this job does not know    RETHROWN to the sweeper
+500 internal error                        RETHROWN to the sweeper
+503 upstream unavailable                  RETHROWN to the sweeper
+fetch never answered                      RETHROWN to the sweeper
+```
+
+The task is at attempt 2 and the stubbed `mark_task_pre_spend_blocked` answers
+with the error the live RPC raises for a task whose attempt is not 0, so every
+terminal case has to fall through to the `fail` path. No request leaves the
+machine.

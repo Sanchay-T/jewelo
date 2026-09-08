@@ -435,8 +435,8 @@ export const IDENTITY_RING_COUNT = 2;
  * This answers one question only: is the metal thick enough to hold a chain.
  * The lab's comment claimed it also removed dots and hamzas, and adversarial
  * review 2 showed that is false - a Kufi dot is a solid square that survives it
- * with room to spare. `IDENTITY_RING_ANCHOR_MIN_ISLAND_FRACTION` below is what
- * keeps a mark from carrying the chain.
+ * with room to spare. `IDENTITY_RING_MARK_MAX_COMPACTNESS` below is what keeps
+ * a mark from carrying the chain.
  */
 export const IDENTITY_RING_ANCHOR_EROSION = 11;
 
@@ -479,26 +479,68 @@ export const IDENTITY_RING_MAX_LIFT = IDENTITY_RING_BAND;
 
 /**
  * Smallest pre-bridge island a jump ring may be anchored to, as a fraction of
- * the largest pre-bridge island of the same piece.
+ * the largest pre-bridge island of the same piece: one of the two tests that
+ * separate a mark from a letter.
  *
- * Adversarial review 2, finding 1: the erosion above proves the metal is thick
- * enough to hold a chain, and nothing more. It cannot tell a stroke from the
- * dot of ن, because a Kufi dot is a solid square that survives an 11 px erosion
- * with room to spare, and because the `IDENTITY_BRIDGE_WIDTH` bar that attaches
- * it survives too - so in the bridged raster the dot is part of the largest
- * eroded component and was picked as the topmost pixel on the right of نور. The
- * shop would have hung the pendant from a dot.
+ * Adversarial review 2, finding 1 introduced it, and adversarial review 3
+ * falsified it as a rule on its own: in Latin every letter is its own island,
+ * so the ratio is taken against whatever the biggest letter happens to be, and
+ * the tittle of the i clears 10% at 13.5% in "Ali", 10.5% in "Niki", 14.5% in
+ * "Li". `IDENTITY_RING_MARK_MAX_COMPACTNESS` below is the test that catches
+ * those. This one is kept because it catches what compactness cannot: two
+ * nuqtas fused into one slab, 7.4% of the piece in `تسنيم` at `minimal`, which
+ * measures 3.53 and would otherwise pass as a stroke. An island has to clear
+ * both tests to carry a chain.
  *
- * A dot, a hamza and a nuqta are separate islands one step earlier, before any
- * bar is drawn, and they are small. Measured over the whole 232-cell sweep of
- * `render-stencils`: the largest island that ever carried a mark-anchored ring
- * is 9.9% of its piece's largest island (`aya-ar-thuluth-inspired`), and the
- * smallest island that carries a ring under this rule is 11.3%. Ten per cent
- * sits in that gap. It is a ratio and not a pixel count, so it holds at every
- * fitted size, and the gap is what a later sweep has to re-measure if a new
- * face is pinned.
+ * Measured over the 232-cell sweep of fix pass 3: the largest island that ever
+ * carried a mark-anchored ring was 9.9% of its piece's largest island
+ * (`aya-ar-thuluth-inspired`), and the smallest island that carried a ring
+ * under this rule was 11.3%. Ten per cent sits in that gap. It is a ratio and
+ * not a pixel count, so it holds at every fitted size.
  */
 export const IDENTITY_RING_ANCHOR_MIN_ISLAND_FRACTION = 0.1;
+
+/**
+ * Largest compactness a pre-bridge island may have and still be refused as a
+ * jump ring anchor: the line between a mark and a letter stroke.
+ *
+ * Compactness is `area / thickness^2`, where `thickness` is `2 * r - 1` and `r`
+ * is the island's largest Chebyshev inradius - the half-side of the biggest
+ * square of its own ink that fits inside it. It is the number of stroke-widths
+ * of metal the island is made of, so it is scale-free, face-free and script-
+ * free: a dot, a tittle, a nuqta pair fused into one slab and a madda are all
+ * blobs about as wide as they are thick and land near 1 to 3, while a letter is
+ * a stroke run around a shape and lands above 3.4 however large or small the
+ * name was fitted.
+ *
+ * Adversarial review 2, finding 1 replaced "eroded ink" with "at least 10% of
+ * the largest island", and adversarial review 3 falsified that in turn: in
+ * Latin every letter is its own island, so the ratio is taken against whatever
+ * the biggest letter happens to be, and the tittle of the i is 13.5% of the A
+ * in "Ali", 10.5% in "Niki", 14.5% in "Li" - all of them admitted as carriers,
+ * and "Ali" in Playfair welded its right ring onto that tittle. Compactness
+ * does not have that failure mode, because it never compares one island with
+ * another.
+ *
+ * Measured over the union corpus of fix pass 4 - the 448-cell `render-stencils`
+ * matrix, the 210-solve adversarial-3 sweep and the mandated stress list, 552
+ * solves and 2698 islands in all. The largest island compactness alone calls a
+ * mark is 3.288 (the madda of آية in thuluth-inspired) and the smallest it
+ * keeps as a carrier is 3.433 (the ى of رؤى in thuluth-inspired); both were
+ * confirmed by eye on a painted raster. The threshold sits in that gap. The gap
+ * is 4.4%, which is narrow, and it is the number a newly pinned face has to
+ * re-measure.
+ *
+ * It is narrow because compactness cannot see one shape: two nuqtas fused into
+ * one slab, which in the `minimal` face measures 3.5 to 4.0 and would pass. So
+ * this is not the only test. An island is a mark when compactness calls it one
+ * *or* when it is smaller than `IDENTITY_RING_ANCHOR_MIN_ISLAND_FRACTION` of
+ * the largest island, which is the fix-pass-3 rule kept as the second half of
+ * the pair; the two fail in opposite directions and neither is dropped. The
+ * largest island of a piece is a carrier whatever it measures, so the carrier
+ * can never be empty.
+ */
+export const IDENTITY_RING_MARK_MAX_COMPACTNESS = 3.35;
 
 /**
  * How far outward of its computed centre a ring may be pushed, in pixels, when
@@ -507,6 +549,50 @@ export const IDENTITY_RING_ANCHOR_MIN_ISLAND_FRACTION = 0.1;
  * this is capped at one ring diameter's worth of travel.
  */
 export const IDENTITY_RING_MAX_OUTWARD_SHIFT = IDENTITY_RING_OUTER;
+
+/**
+ * How far *inward* of its computed centre a ring may be pushed, in pixels.
+ *
+ * Adversarial review 3, finding 3: a ring whose seat is already against the
+ * canvas edge has no outward room left, so before this the search had one
+ * column of candidates and, when none of them was clean, the solver kept the
+ * least-bad seat and the measured gate refused the whole piece - `Maji` in
+ * Kufi, `أمير` in Kufi and `قق` in three styles all died that way while a clean
+ * seat existed a few pixels the other side. Inward is toward the middle of the
+ * name, so it is tried only after every outward candidate has failed, and it is
+ * held to half the outward travel: the ring must stay over the end of the name,
+ * not wander into the middle of it.
+ */
+export const IDENTITY_RING_MAX_INWARD_SHIFT = Math.trunc(
+  IDENTITY_RING_OUTER / 2,
+);
+
+/**
+ * Narrower end bands searched for a fallback anchor, after the spans above.
+ *
+ * `IDENTITY_RING_ANCHOR_SPANS` widens *inward* until it finds metal, so on a
+ * piece that is one connected island it always returns the same pixel however
+ * far it widens. `قق` is that piece: both ق join into one body, the topmost
+ * carrier pixel is the shoulder directly under the four dots, and no lift and
+ * no sideways travel gets the annulus off them. These bands go the other way,
+ * toward the end of the name, where the same body has a lower shoulder with
+ * clear air above it.
+ */
+export const IDENTITY_RING_ANCHOR_OUTER_SPANS: readonly number[] = Object.freeze(
+  [0.1, 0.05, 0.02],
+);
+
+/**
+ * How many anchors the placement search may try on one side before it gives up.
+ *
+ * The first anchor is the topmost carrier pixel in the end band, which is what
+ * the lab picked and what a jeweller would pick. When no seat above it is clean
+ * the search moves on rather than refusing the name: to the next distinct
+ * carrier island in the band, and then to the outer bands above. Six covers
+ * every anchor the union corpus needs; the bound exists so a pathological piece
+ * cannot turn the search into a scan of every pixel.
+ */
+export const IDENTITY_RING_ANCHOR_CANDIDATES = 6;
 
 /** Weld fillet width in pixels (`int(STEM_W * 1.3)`). */
 export const IDENTITY_RING_WELD_WIDTH = Math.trunc(

@@ -184,6 +184,64 @@ export interface PresentationRepository {
 export const DEPENDENT_REFERENCE_RULE =
   "REFERENCE: the first supplied image is the finished pendant photographed in the studio; reproduce this exact object - same letterforms, same metal, same stones, same chain - in the new scene. The second image is its black stencil (identical shape). The third image is style only.";
 
+/**
+ * The deterministic refusals `materialize_prompt_snapshot` raises
+ * (`supabase/migrations/20260827060000_caleums_prompt_registry.sql:284-289`),
+ * each mapped to a reason class.
+ *
+ * The message text is the RPC's own; the class is what this job is allowed to
+ * write into `terminal_error_code`. Neither the compiled prompt nor the
+ * customer's name ever appears in one.
+ */
+const PROMPT_SNAPSHOT_REJECTIONS: readonly (readonly [string, string])[] = [
+  ["prompt release does not match task pin", "release_pin"],
+  ["invalid prompt variable snapshot", "variables"],
+  ["invalid compiled prompt length", "length"],
+  ["compiled prompt checksum mismatch", "checksum"],
+];
+
+/**
+ * Whether a failed `materialize_prompt_snapshot` call is a property of the task
+ * rather than of the moment, and if so which one.
+ *
+ * Adversarial review 3: the call used to be left to the stale sweeper on every
+ * failure. That is right for a transport fault or a 5xx, which the next
+ * dispatch will not see. It is wrong for the four `raise exception`s the RPC
+ * carries, because they depend only on rows that a re-dispatch cannot change -
+ * and `recover_stale_generation_tasks`
+ * (`supabase/migrations/20260907020000_dependent_view_terminal_gate.sql:150-172`)
+ * has no attempt cap on `attempt = 0 and status = 'queued'` and bumps
+ * `updated_at`, so one deterministic raise becomes an outbox row every two
+ * minutes for ever.
+ *
+ * PostgREST answers a raise with a 4xx whose body carries the SQLSTATE and the
+ * message. `SupabasePresentationRepository.#request` folds both into its error
+ * message and truncates the body at 300 characters, so the body is matched as
+ * text rather than parsed: a truncated JSON object still carries the code and
+ * the message, which are the first fields PostgREST writes. Anything else -
+ * a 5xx, a fetch that never answered, a `P0001` this job does not recognise -
+ * returns undefined and keeps the sweeper path.
+ */
+export function promptSnapshotRejectionClass(
+  error: unknown,
+): string | undefined {
+  const message = error instanceof Error ? error.message : String(error);
+  const status = /Supabase job request (\d{3}):/.exec(message);
+  if (!status) return undefined;
+  const code = Number(status[1]);
+  if (!Number.isFinite(code) || code < 400 || code >= 500) return undefined;
+  const body = message.slice(status.index + status[0].length);
+  const sqlState = /"code"\s*:\s*"([0-9A-Za-z]{5})"/.exec(body)?.[1];
+  if (sqlState !== "P0001" && sqlState !== "22023") return undefined;
+  for (const [raised, reason] of PROMPT_SNAPSHOT_REJECTIONS)
+    if (body.includes(raised)) return reason;
+  // `22023` is invalid_parameter_value: the argument itself is wrong, so the
+  // next dispatch sends the same wrong argument. A `P0001` with a message this
+  // job does not know is not classified, because an unrecognised raise may yet
+  // be about the moment rather than the row.
+  return sqlState === "22023" ? "invalid_argument" : undefined;
+}
+
 export async function executePresentationTask(
   taskId: string,
   repository: PresentationRepository,
@@ -269,14 +327,31 @@ export async function executePresentationTask(
         ),
       );
     }
-    snapshot = await repository.materializePromptSnapshot({
-      task,
-      release,
-      variables: compiled.variableSnapshot,
-      compiledPrompt,
-      compilerVersion: compiled.compilerVersion,
-      sha256: createHash("sha256").update(compiledPrompt, "utf8").digest("hex"),
-    });
+    try {
+      snapshot = await repository.materializePromptSnapshot({
+        task,
+        release,
+        variables: compiled.variableSnapshot,
+        compiledPrompt,
+        compilerVersion: compiled.compilerVersion,
+        sha256: createHash("sha256")
+          .update(compiledPrompt, "utf8")
+          .digest("hex"),
+      });
+    } catch (error) {
+      // A write against Supabase fails in two different ways and they need
+      // opposite answers. A transport fault or a 5xx is about the moment: the
+      // same task succeeds on the next dispatch, so it is rethrown and the
+      // stale sweeper recovers it. A deterministic raise from the RPC is about
+      // the rows, so re-dispatching it turns one bad row into an outbox event
+      // every two minutes for ever; it is refused once, pre-spend, like the
+      // other gates here.
+      const reason = promptSnapshotRejectionClass(error);
+      if (reason === undefined) throw error;
+      return blockPreSpendTerminally(
+        new Error(`prompt_snapshot_rejected:${reason}`),
+      );
+    }
   }
   // A stored snapshot that belongs to another task, another release or another
   // prompt text is wrong in the row, not in this attempt: the same comparison
