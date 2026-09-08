@@ -51,10 +51,13 @@ Done:
 
 - P1-4 in `af13e2b`: `fuse()` deleted; `bridgeAll` and `drawBar` ported with an exact distance transform and capsule bars; ink preservation asserted before recentre (`identity_bridge_moved_ink`); recentre matches Pillow LANCZOS and reports offset and scale; 216 cells (17 ZIP names plus Asma, both scripts, six live styles) are one piece with zero moved pixels, and the Python ruler agrees on all. Lead opened `muhammad-en-classic` and `asma-ar-classic`: letters where the font put them, bars on the baseline, rings still on the old rule. Behaviour change noted: every style now thickens two passes like the lab, not one.
 
+- P1-5 and P1-5a in `c68fdc7`: `addRings` ported from `make_stencil.py` (11x11 erosion, corner anchors, weld fillet) plus one deliberate improvement, the ring lifts until its hole holds no name ink (the lab punches 7 to 55 pixels out of a hairline on 6 of its own 16 stencils; this engine punches 0 on 464 renders). 232/232 rings-on cells have exactly two ring holes, sizes within 1.7% of the lab's; rings-off gives 0 ring holes and one piece. `IDENTITY_RINGLESS_CONSTRUCTIONS` is validated config (normalises case, spaces, trailing comma; rejects non-hyphen ids) and is absent from the staging spec. Lead compared `asma-en-classic` against the committed lab stencil: same rings, same holes.
+- Review 1 of the engine (P1-2 to P1-4) recorded in `docs/goals/road-to-gold/reviews/identity-engine-review-1.md`: the port's maths verified against the sources; four majors (ink assertion checked before rings, endpoint-only cluster coverage, ring literal 560, customer name in error-class columns) and ten minors, each with an owner.
+
 Doing:
 
-- P1-5 (implementer): port `add_rings` (erosion, outer-corner centres, weld fillet), rings default on, `IDENTITY_RINGLESS_CONSTRUCTIONS` config flag, ring-free proven by script only.
-- reviewer (fresh context) over the committed P1-2 to P1-4 diff; findings go into P1-6.
+- Review 1 fix pass (implementer): findings 1, 2, 4, 7, 9, 11.
+- P1-6 next, then P1-7.
 
 Follow-ups found by subagents, not fixed (outside the task rows):
 
