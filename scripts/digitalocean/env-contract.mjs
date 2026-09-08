@@ -42,10 +42,6 @@ export const optionalRuntimeConfig = [
   // Platform sets and overwrites. Shipped when present so a move to another
   // host can name its own header, or empty it, without a code change.
   "TRUSTED_CLIENT_IP_HEADER",
-  // Defaults to "1": a D-020 bar-fallback construction is a different piece
-  // from the one the shopper approved, so it stops pre-spend and waits for the
-  // shop. Ship "0" only once bar pieces are agreed to be sellable.
-  "IDENTITY_BAR_FALLBACK_REVIEW",
 ];
 
 // Read from the environment file, never shipped to the app.

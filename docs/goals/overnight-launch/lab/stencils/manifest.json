@@ -94,13 +94,13 @@
       ],
       "stencil_source": "production",
       "productionGap": null,
-      "sha256": "34e0e5fd234d6d78e7fbd6e567e55d8a36ae1f5669eb0d4932fc81070882e8e7",
+      "sha256": "aeca9c818776974f5dbae0679753ba92bba9c37cb2c79eaf79121ac76e464e56",
       "pixelSize": [
         1024,
         1024
       ],
       "components": 1,
-      "holes": 3,
+      "holes": 5,
       "engineReport": {
         "engineRelease": "caleums-identity-v4",
         "pipelineRelease": "caleums-final-media-v2",
@@ -119,12 +119,14 @@
         "jumpRings": 2,
         "ringPlacement": "welded",
         "componentsFinal": 1,
-        "ringSpan": 738.4578525549036,
+        "ringSpan": 780.3000777831339,
+        "ringTilt": 0.0013722893641105794,
+        "ringOverhang": 0.0976028086270723,
         "pinholes": 0,
         "exactCharactersPreserved": true,
         "passed": true
       },
-      "regeneratedNote": "Regenerated 8 September 2026 (P1-5 fix pass 5, D-020): this cell is production-sourced, and both its bytes and this row predated D-019 and D-020 - the row still described a 1485x805 Pango render on engine release caleums-arabic-v3. It is now a byte copy of stencils/production/asma-ar-classic.png and the fields above are that render's own report. The lab-sourced files in this directory are inputs to the prompt lab and are untouched, and so is stencils/lab/, whose own lab-manifest.json names make_stencil.py as its generator."
+      "regeneratedNote": "Regenerated 9 September 2026 (P1-5 fix pass 6, D-020): this cell is production-sourced and its bytes and this row were stale pass-5 copies. Fix pass 6 deleted the bar rail, chose the ring pair jointly for level and balance, and added the tilt and overhang gates, so the same name now renders a different piece. It is a byte copy of the current engine's render (docs/goals/overnight-launch/lab/render-production-stencils.mts) and the fields above are that render's own report. The lab-sourced files in this directory are inputs to the prompt lab and are untouched, and so is stencils/lab/, whose own lab-manifest.json names make_stencil.py as its generator."
     },
     {
       "file": "asma-ar-classic-norings.png",
@@ -377,13 +379,13 @@
       ],
       "stencil_source": "production",
       "productionGap": null,
-      "sha256": "7b24bde2a184506d3d67f2879f96146804f11fb8853c958603ae11197caf1ae7",
+      "sha256": "d972b8269dbd812452d11900236390ed87bf6555fde594bdf084c3cca6930cbd",
       "pixelSize": [
         1024,
         1024
       ],
       "components": 1,
-      "holes": 3,
+      "holes": 4,
       "engineReport": {
         "engineRelease": "caleums-identity-v4",
         "pipelineRelease": "caleums-final-media-v2",
@@ -402,12 +404,14 @@
         "jumpRings": 2,
         "ringPlacement": "welded",
         "componentsFinal": 1,
-        "ringSpan": 692.1215800896291,
+        "ringSpan": 836,
+        "ringTilt": 0,
+        "ringOverhang": 0.04111842105263158,
         "pinholes": 0,
         "exactCharactersPreserved": true,
         "passed": true
       },
-      "regeneratedNote": "Regenerated 8 September 2026 (P1-5 fix pass 5, D-020): this cell is production-sourced, and both its bytes and this row predated D-019 and D-020 - the row still described a 1485x805 Pango render on engine release caleums-arabic-v3. It is now a byte copy of stencils/production/noor-ar-classic.png and the fields above are that render's own report. The lab-sourced files in this directory are inputs to the prompt lab and are untouched, and so is stencils/lab/, whose own lab-manifest.json names make_stencil.py as its generator."
+      "regeneratedNote": "Regenerated 9 September 2026 (P1-5 fix pass 6, D-020): this cell is production-sourced and its bytes and this row were stale pass-5 copies. Fix pass 6 deleted the bar rail, chose the ring pair jointly for level and balance, and added the tilt and overhang gates, so the same name now renders a different piece. It is a byte copy of the current engine's render (docs/goals/overnight-launch/lab/render-production-stencils.mts) and the fields above are that render's own report. The lab-sourced files in this directory are inputs to the prompt lab and are untouched, and so is stencils/lab/, whose own lab-manifest.json names make_stencil.py as its generator."
     },
     {
       "file": "noor-ar-classic-norings.png",
@@ -657,13 +661,13 @@
       ],
       "stencil_source": "production",
       "productionGap": null,
-      "sha256": "bf8aac91410eb2734e92a514cc63adcb6f9279ec7b7db6c26bcedeaf07a3a8b8",
+      "sha256": "5d0893a9e49f5a82012de490f54cef8ff93521b063cad92b09160679469628d0",
       "pixelSize": [
         1024,
         1024
       ],
       "components": 1,
-      "holes": 2,
+      "holes": 3,
       "engineReport": {
         "engineRelease": "caleums-identity-v4",
         "pipelineRelease": "caleums-final-media-v2",
@@ -682,12 +686,14 @@
         "jumpRings": 2,
         "ringPlacement": "welded",
         "componentsFinal": 1,
-        "ringSpan": 739.4067298770339,
+        "ringSpan": 837.3368328111202,
+        "ringTilt": 3.2380524407540476,
+        "ringOverhang": 0.04111842105263158,
         "pinholes": 0,
         "exactCharactersPreserved": true,
         "passed": true
       },
-      "regeneratedNote": "Regenerated 8 September 2026 (P1-5 fix pass 5, D-020): this cell is production-sourced, and both its bytes and this row predated D-019 and D-020 - the row still described a 1485x805 Pango render on engine release caleums-arabic-v3. It is now a byte copy of stencils/production/layla-ar-classic.png and the fields above are that render's own report. The lab-sourced files in this directory are inputs to the prompt lab and are untouched, and so is stencils/lab/, whose own lab-manifest.json names make_stencil.py as its generator."
+      "regeneratedNote": "Regenerated 9 September 2026 (P1-5 fix pass 6, D-020): this cell is production-sourced and its bytes and this row were stale pass-5 copies. Fix pass 6 deleted the bar rail, chose the ring pair jointly for level and balance, and added the tilt and overhang gates, so the same name now renders a different piece. It is a byte copy of the current engine's render (docs/goals/overnight-launch/lab/render-production-stencils.mts) and the fields above are that render's own report. The lab-sourced files in this directory are inputs to the prompt lab and are untouched, and so is stencils/lab/, whose own lab-manifest.json names make_stencil.py as its generator."
     },
     {
       "file": "layla-ar-classic-norings.png",
@@ -948,7 +954,7 @@
       ],
       "stencil_source": "production",
       "productionGap": null,
-      "sha256": "ef66dce750ce34857ff006da593f69c0cb41f1b297ffca643f9409517167687e",
+      "sha256": "7811215a8ec6c797f6f171fceb7cbedf57f8e68c7edee39e6e1efab52148d851",
       "pixelSize": [
         1024,
         1024
@@ -973,12 +979,14 @@
         "jumpRings": 2,
         "ringPlacement": "welded",
         "componentsFinal": 1,
-        "ringSpan": 787.3969773881533,
+        "ringSpan": 836,
+        "ringTilt": 0,
+        "ringOverhang": 0.04111842105263158,
         "pinholes": 0,
         "exactCharactersPreserved": true,
         "passed": true
       },
-      "regeneratedNote": "Regenerated 8 September 2026 (P1-5 fix pass 5, D-020): this cell is production-sourced, and both its bytes and this row predated D-019 and D-020 - the row still described a 1485x805 Pango render on engine release caleums-arabic-v3. It is now a byte copy of stencils/production/muhammad-ar-classic.png and the fields above are that render's own report. The lab-sourced files in this directory are inputs to the prompt lab and are untouched, and so is stencils/lab/, whose own lab-manifest.json names make_stencil.py as its generator."
+      "regeneratedNote": "Regenerated 9 September 2026 (P1-5 fix pass 6, D-020): this cell is production-sourced and its bytes and this row were stale pass-5 copies. Fix pass 6 deleted the bar rail, chose the ring pair jointly for level and balance, and added the tilt and overhang gates, so the same name now renders a different piece. It is a byte copy of the current engine's render (docs/goals/overnight-launch/lab/render-production-stencils.mts) and the fields above are that render's own report. The lab-sourced files in this directory are inputs to the prompt lab and are untouched, and so is stencils/lab/, whose own lab-manifest.json names make_stencil.py as its generator."
     },
     {
       "file": "muhammad-ar-classic-norings.png",

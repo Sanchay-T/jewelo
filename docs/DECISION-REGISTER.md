@@ -74,7 +74,9 @@ On `قق` it touched the name along 11% of its span and the whole pendant hung f
 Making it honest means bridging the rail down to every base glyph and scanning under the rail exactly as a fillet is scanned - the weld machinery a second time, with weaker evidence - and the result is a different physical product, a nameplate on a bar, that the shop has never approved.
 Whether such a piece is sellable is a question for Omran (adversarial pass 5, major 4) and it is not answered by building one.
 So the rail is deleted. `ringPlacement` has two values, `welded` and `none`, and `none` means the construction carries its own suspension, never a failure.
-A name that cannot seat two rings under the gates raises `identity_no_ring_seat`: a terminal pre-spend block with a code and no customer text, which is the same routing the bar path already reached through `identity_bar_fallback` with its default on, and the same outcome for the shopper, without a piece that pretends to be one.
+A name that cannot seat two rings under the gates raises `identity_no_ring_seat`: the solver refuses it inside the identity render, so the run is blocked pre-spend - before the attempt budget, before any reservation, before any provider call - terminal, with a code and no customer text, and the request reaches the shop for review rather than the shopper.
+That is the same routing and the same outcome the bar path used to reach through `identity_bar_fallback`, without a piece that pretends to be one.
+The flag that made that routing optional, `IDENTITY_BAR_FALLBACK_REVIEW`, was removed on 8 September 2026 together with its schema in `@jewelo/config`, its entry in the DigitalOcean env contract and the `ringPlacement === "bar"` gate in `apps/jobs/src/presentation.ts`: with no rail to build, there is nothing for it to let through.
 
 ### Level, and balanced
 
