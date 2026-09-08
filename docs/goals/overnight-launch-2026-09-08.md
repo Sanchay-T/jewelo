@@ -59,7 +59,7 @@ Not authorized: Shopify payment, pricing claims, fal video generation, changing 
 A shopper on the live URL can:
 
 1. Type a name in English or Arabic and pick a look while seeing an honest, continuous sample pendant that changes with every relevant click (never a dead end, never a wrong design).
-2. Press Preview my piece and, within a few minutes, see their own name rendered as a real-looking pendant in the chosen look and metal, in at least the Studio view, with the other views filling in.
+2. Press Review my piece, confirm the spelling, and within a few minutes see their own name rendered as a real-looking pendant in the chosen look and metal, in at least the Studio view, with the other views filling in.
 3. Add it to the bag and leave a way to be contacted.
 
 If the personalized generation cannot pass its quality gate by 06:30, the deployed app must degrade honestly: the shopper sees the illustrated sample plus "Your personalized preview is being prepared. We will send it to you." and the request is stored for the operator.
@@ -180,7 +180,7 @@ Style unchanged. Restructure only what the shopper sees while choosing.
 
 1. Two tiers. Tier 1 is illustrated live from the catalogue: language, one or two names (with layout), construction, lettering. Tier 2 is applied at preview: gold colour, stones, gem, size, chain. Tier 2 controls stay exactly where they are, keep their swatches, and get one quiet line in the preview panel: "Shown in 18K yellow gold with no stones. Your gold and stones appear in your personalized preview."
 2. The resolver keys the illustrated photo on Tier 1 only, still exact-match, still order-independent. If a Tier 1 combination has no continuous family, the option is shown but marked "sample coming" and the preview keeps the last valid family for the same script and construction, clearly labelled as the sample for that look (this is a labelled sibling of the same look, not the rejected nearest-image fallback across looks; write a unit test that proves a metal or stone click can never change the displayed design).
-3. Preview my piece is never disabled for a missing sample. It always leads to review with the customer's specification.
+3. Review my piece is never disabled for a missing sample. It always leads to review with the customer's specification.
 4. Camera tiles: unavailable views are hidden rather than shown as grey placeholders when a family has fewer than four views; Studio is always present.
 5. Every catalogue family shown must come from W2 stage outputs or from the existing families the viewer re-approved in W1 step 3.
 
@@ -188,7 +188,7 @@ Gate: unit tests for tiering and the never-changes-design invariant; Playwright 
 
 ## Workstream W4 - Personalized preview through the real pipeline (implementer, after W1, in parallel with W3)
 
-Goal: Preview my piece creates a real run for the customer's name and the review stage shows the generated Studio image, then the other views as they land.
+Goal: confirming the spelling on the review stage creates a real run for the customer's name and the review stage shows the generated Studio image, then the other views as they land.
 
 1. Map the atelier draft to `CreateDraftInput` in `previewHandoff.ts`. Resolve the eight recorded gaps with explicit product defaults documented in the code (finish polished, connector integral rings, chain length 45 cm, size profile from 22/32 mm, complexity from stones, source `caleums-atelier`), and add `construction` and English `lettering` to the contracts where missing. No invented values without a comment naming the default and why.
 2. Replace `runMockPersonalizedPreview` with a real implementation of the same shape that calls `POST /api/auth/anonymous` (if needed), `POST /api/designs/drafts`, `POST /api/revisions/approve` with `spellingConfirmed` from the checkbox, `POST /api/designs/{id}/run`, then subscribes to `GET /api/state` (poll, then Realtime if already wired). Keep the mock path behind `PROVIDER_MODE=mock` for tests.

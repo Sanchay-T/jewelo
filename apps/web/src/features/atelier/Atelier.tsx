@@ -2,6 +2,7 @@
 
 import {
   useEffect,
+  useMemo,
   useRef,
   useState,
   type ReactNode,
@@ -58,7 +59,10 @@ const arabic: Record<string, string> = {
   "Gold & Stones": "الذهب والأحجار",
   "Size & Chain": "المقاس والسلسلة",
   "Personal touches": "لمسات شخصية",
-  "Preview my piece": "معاينة قطعتي",
+  // The step-01 button carries the shopper to the review, where confirming the
+  // spelling is what buys the run. It is named for what it does; the key had to
+  // change with it or the Arabic journey would silently read the English one.
+  "Review my piece": "مراجعة قطعتي",
   "Back to design": "العودة للتصميم",
   "Your piece, in every light.": "قطعتك في كل ضوء.",
   "Add to bag": "أضف إلى الحقيبة",
@@ -173,6 +177,31 @@ const arabic: Record<string, string> = {
   "This is the longest name we can make: 30 characters.":
     "هذا أطول اسم يمكننا صنعه: ٣٠ حرفًا.",
   "Edit the name": "تعديل الاسم",
+  // The five notices. They are stored in state as their English text and
+  // translated where they are rendered, so the check that reads one of them
+  // (`notice.includes("Storage is unavailable")`) still reads one fixed string.
+  "Your saved draft could not be read. A fresh draft is ready.":
+    "تعذّرت قراءة مسودتك المحفوظة. جهّزنا مسودة جديدة.",
+  "Storage is unavailable. Keep this tab open; changes cannot be recovered after reload.":
+    "التخزين غير متاح. أبقِ هذه الصفحة مفتوحة؛ لا يمكن استرجاع التغييرات بعد إعادة التحميل.",
+  "The preview could not be saved. Please retry before adding this piece.":
+    "تعذّر حفظ المعاينة. أعد المحاولة قبل إضافة هذه القطعة.",
+  "Your piece is in this bag for this session. Image storage is unavailable; keep this tab open.":
+    "قطعتك في الحقيبة لهذه الجلسة فقط. تخزين الصور غير متاح؛ أبقِ هذه الصفحة مفتوحة.",
+  "Editing a saved piece.": "تعديل قطعة محفوظة.",
+  "This example photo could not load.": "تعذّر تحميل صورة المثال.",
+  // The bag and the zoom dialog: every label an assistive technology reads.
+  "CALEUMS design": "تصميم CALEUMS",
+  "Photograph of your pendant": "صورة قلادتك",
+  "Saved pendant configuration": "إعدادات قلادة محفوظة",
+  "Previously saved example pendant": "قلادة مثال محفوظة سابقًا",
+  "This saved example is unavailable.": "هذا المثال المحفوظ غير متاح.",
+  "NAME PENDANT · YOUR DESIGN": "قلادة اسم · تصميمك",
+  Quantity: "الكمية",
+  "Decrease quantity": "إنقاص الكمية",
+  "Increase quantity": "زيادة الكمية",
+  "Enlarged photograph of your pendant": "صورة مكبّرة لقلادتك",
+  "Enlarged configured sample pendant": "صورة مكبّرة لقلادة المثال",
   "Not photographed for this look": "لم تُصوَّر لهذا الأسلوب",
   "This angle was not photographed for this look. Your own preview still covers it.":
     "لم تُصوَّر هذه الزاوية لهذا الأسلوب. معاينتك الشخصية تغطيها.",
@@ -183,6 +212,7 @@ import { usePhotographicPiece } from "./usePhotographicPiece";
 import { assemblyKey } from "./assembly";
 import type { Run } from "./model";
 import { buildPersonalizedPreviewRequest, runMockPersonalizedPreview } from "./previewHandoff";
+import { fixturePipelineDeps } from "./previewPipeline";
 import { usePersonalizedPreview } from "./usePersonalizedPreview";
 import type { CustomerViewStatus } from "./personalizedRun";
 
@@ -235,6 +265,25 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
   draftRef.current = state.draft;
   const [debug, setDebug] = useState(false);
   const [failView, setFailView] = useState(false);
+  /**
+   * Dev-only: drive the customer's own run from a fixture that ends without a
+   * photograph, so the terminal-failure screens can be looked at locally. Gated
+   * twice - the panel that sets it is development plus `?preview-test`, and the
+   * fixture transport is only built in a development build - so it can never
+   * front a shopper's real run. It is not gated on the data mode: the laptop
+   * `.env` is the remote mode (a copy of staging's), and the lead's browser pass
+   * has to reach these screens without editing that file.
+   */
+  const [fixtureTerminalRun, setFixtureTerminalRun] = useState(false);
+  const fixtureRun =
+    fixtureTerminalRun && process.env.NODE_ENV === "development";
+  const fixtureDeps = useMemo(
+    () =>
+      fixtureRun
+        ? fixturePipelineDeps({ run: "operator_review", studio: "failed" })
+        : undefined,
+    [fixtureRun],
+  );
   const [imageErrors, setImageErrors] = useState<string[]>([]);
   // Once the customer's own photograph exists it is the piece; the illustrated
   // sample moves to the small tile row and is only shown when asked for.
@@ -247,7 +296,7 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
   const title = useRef<HTMLHeadingElement>(null);
   const d = state.draft;
   /**
-   * The draft checked on every render, not only when "Preview my piece" was
+   * The draft checked on every render, not only when "Review my piece" was
    * pressed. Step 02 stays reachable - a shopper can switch to two names from
    * the review stage and leave the second one empty - so the confirmation must
    * read the draft as it is now, or it hands an unmakeable specification to the
@@ -276,10 +325,16 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
     // actually make.
     confirmed: confirmed && !confirmBlockedBy,
     sample: piece.family.anchor.asset,
+    ...(fixtureDeps ? { deps: fixtureDeps, enabled: true } : {}),
   });
   /** Kept out of the shared dictionary so two workstreams do not collide on it. */
   const ownPhotoLabel = locale === "ar" ? "قطعتك" : "Your piece";
-  /** The whole customer vocabulary for a view: a terminal error code never shows. */
+  /**
+   * The whole customer vocabulary for a view: a terminal error code never shows.
+   * `unavailable` is a view this run will not produce, so it says what the shop
+   * does about that - photograph it and send it - and never "being prepared",
+   * which promised work that had already stopped.
+   */
   const ownStatusText = (status: CustomerViewStatus) =>
     locale === "ar"
       ? {
@@ -287,14 +342,14 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
           working: "جارٍ التصوير",
           checking: "جارٍ التحقق من الكتابة",
           ready: "جاهزة",
-          preparing: "قيد التحضير",
+          unavailable: "سنصوّرها في المتجر ونرسلها إليك",
         }[status]
       : {
           waiting: "Waiting to start",
           working: "Photographing",
           checking: "Checking the spelling",
           ready: "Ready",
-          preparing: "Being prepared",
+          unavailable: "We will photograph it in the shop and send it",
         }[status];
   const ownPhoto = own.imageFor(view);
   const showingOwnPhoto = !!ownPhoto && !showSample;
@@ -308,6 +363,13 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
     state.stage === "review" &&
     (!!own.run || own.captureStatus === "captured") &&
     !own.personalized;
+  /**
+   * The run is over and produced no photograph of this piece. The action bar
+   * used to keep saying "being prepared" here, which is the contradiction the
+   * review found: nothing is being prepared by the pipeline any more, the shop
+   * takes it from here.
+   */
+  const ownRunOver = own.run?.outcome === "unavailable";
   const heroSource = showingOwnPhoto ? ownPhoto! : source;
   /** Only the cameras this family was photographed in; Studio is always one. */
   const shownViews = views.filter((v) => piece.availableViews.includes(v));
@@ -995,7 +1057,7 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
         <a
           className={s.wordmark}
           href={`/${locale}/design/new`}
-          aria-label="CALEUMS design"
+          aria-label={t("CALEUMS design")}
         >
           CALEUMS
         </a>
@@ -1046,12 +1108,12 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
       </nav>
       {notice && (
         <div role="status" className={s.notice}>
-          {notice}
+          {t(notice)}
         </div>
       )}
       {state.editing && (
         <div className={s.notice}>
-          Editing a saved piece.{" "}
+          {t("Editing a saved piece.")}{" "}
           <button
             onClick={() => {
               setState(cancelBagEdit);
@@ -1588,6 +1650,11 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                             }
                             value={own.contact.value}
                             aria-invalid={own.captureStatus === "error"}
+                            aria-describedby={
+                              own.captureStatus === "error"
+                                ? "preview-contact-error"
+                                : undefined
+                            }
                             onChange={(e) =>
                               own.setContact({
                                 ...own.contact,
@@ -1602,18 +1669,36 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                           />
                         </label>
                         {own.captureStatus === "error" && (
-                          <p className={s.error}>
-                            {own.captureError === "invalid"
-                              ? locale === "ar"
-                                ? "تحقق من طريقة التواصل ثم أعد المحاولة."
-                                : "Check that contact detail and try again."
-                              : own.captureError === "required"
-                                ? locale === "ar"
-                                  ? "اترك وسيلة تواصل واحدة."
-                                  : "Leave one way to reach you."
-                                : locale === "ar"
-                                  ? "تعذّر الحفظ. حاول مرة أخرى."
-                                  : "That could not be saved. Please try again."}
+                          /* The server's own contact rules, said inline and in
+                             the shopper's language: the format guidance a 422
+                             carries used to be thrown away. `contactProblem`
+                             decides these before anything is sent, so the same
+                             sentence would have come back from the server. */
+                          <p className={s.error} id="preview-contact-error">
+                            {
+                              {
+                                empty:
+                                  locale === "ar"
+                                    ? "اترك وسيلة تواصل واحدة."
+                                    : "Leave one way to reach you.",
+                                phone_format:
+                                  locale === "ar"
+                                    ? "اكتب الرقم بالصيغة الدولية، مثال ‎+971501234567."
+                                    : "Enter a number in international format, for example +971501234567.",
+                                email_format:
+                                  locale === "ar"
+                                    ? "اكتب بريدًا إلكترونيًا صحيحًا."
+                                    : "Enter a valid email address.",
+                                invalid:
+                                  locale === "ar"
+                                    ? "تحقق من طريقة التواصل ثم أعد المحاولة."
+                                    : "Check that contact detail and try again.",
+                                failed:
+                                  locale === "ar"
+                                    ? "تعذّر الحفظ. حاول مرة أخرى."
+                                    : "That could not be saved. Please try again.",
+                              }[own.captureError ?? "failed"]
+                            }
                           </p>
                         )}
                         <button
@@ -1641,9 +1726,17 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                         </p>
                         {!own.personalized && (
                           <p>
-                            {locale === "ar"
-                              ? "جارٍ تحضير معاينتك الشخصية. سنرسلها إليك."
-                              : "Your personalized preview is being prepared. We will send it to you."}
+                            {/* A run that is over is not being prepared. The
+                                shop photographs the piece by hand from this
+                                request and sends it; that is the whole promise,
+                                with no technical reason attached. */}
+                            {ownRunOver
+                              ? locale === "ar"
+                                ? "سنصوّر قطعتك في المتجر ونرسلها إليك."
+                                : "We will photograph your piece in the shop and send it to you."
+                              : locale === "ar"
+                                ? "جارٍ تحضير معاينتك الشخصية. سنرسلها إليك."
+                                : "Your personalized preview is being prepared. We will send it to you."}
                           </p>
                         )}
                         <p data-preview-request-id={own.capturedRequestId}>
@@ -1667,6 +1760,14 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                     onChange={(e) => setFailView(e.target.checked)}
                   />
                   Simulate a failed Dark view on the next preview
+                </label>
+                <label className={s.confirm}>
+                  <input
+                    type="checkbox"
+                    checked={fixtureTerminalRun}
+                    onChange={(e) => setFixtureTerminalRun(e.target.checked)}
+                  />
+                  Simulate a personalized run that ends without a photograph
                 </label>
               </details>
             )}
@@ -1764,11 +1865,11 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                       <>
                         <Diamond size={36} />
                         <h2>{locale === "ar" ? "عينة هذا الأسلوب قيد التحضير" : "The sample photo for this look is coming"}</h2>
-                        <p>{locale === "ar" ? "تم حفظ جميع اختياراتك. يمكنك المتابعة إلى معاينة قطعتك بمواصفاتك." : "Your selections are saved. Preview my piece still works and uses your own specification."}</p>
+                        <p>{locale === "ar" ? "تم حفظ جميع اختياراتك. يمكنك المتابعة إلى مراجعة قطعتك بمواصفاتك." : "Your selections are saved. Review my piece still works and uses your own specification."}</p>
                       </>
                     ) : imageFailed || piece.status === "failed" ? (
                       <>
-                        <p>This example photo could not load.</p>
+                        <p>{t("This example photo could not load.")}</p>
                         <button onClick={retryImage}>{t("Retry")}</button>
                       </>
                     ) : slot?.status === "unavailable" ? (
@@ -1828,7 +1929,13 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                       ? `${pendantName(d)} · ${ownPhotoLabel}`
                       : ownDesignInProgress
                         ? `${pendantName(d)} · ${
-                            locale === "ar" ? "قيد التحضير" : "Being prepared"
+                            ownRunOver
+                              ? locale === "ar"
+                                ? "سنرسل الصورة"
+                                : "we will send the photograph"
+                              : locale === "ar"
+                                ? "قيد التحضير"
+                                : "Being prepared"
                           }`
                         : `${exampleNames(shown.script === "Arabic" ? " و" : " & ")} · ${t("Asma example")}`}
                   </span>
@@ -2132,9 +2239,13 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
             {own.personalized
               ? ownPhotoLabel
               : ownDesignInProgress
-                ? locale === "ar"
-                  ? "تصميمك · قيد التحضير"
-                  : "Your design · being prepared"
+                ? ownRunOver
+                  ? locale === "ar"
+                    ? "تصميمك · سنرسل الصورة"
+                    : "Your design · we will send the photograph"
+                  : locale === "ar"
+                    ? "تصميمك · قيد التحضير"
+                    : "Your design · being prepared"
                 : locale === "ar"
                   ? "مثال التصميم"
                   : "Design example"}
@@ -2148,7 +2259,7 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
             disabled={!loaded || (!noSample && piece.status === "pending") || saving}
             onClick={generate}
           >
-            {t("Preview my piece")}
+            {t("Review my piece")}
             <ArrowRight size={19} />
           </button>
         ) : (
@@ -2205,26 +2316,29 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                 own.imageFor(item.personalized.assets[0].view) ? (
                   <img
                     src={own.imageFor(item.personalized.assets[0].view)}
-                    alt="Photograph of your pendant"
+                    alt={t("Photograph of your pendant")}
                     data-caleums-photo="personalized"
                   />
                 ) : item.snapshot ? (
                   <SnapshotImage
                     snapshotId={item.snapshot.id}
-                    alt="Saved pendant configuration"
+                    alt={t("Saved pendant configuration")}
                   />
                 ) : savedExample ? (
                   <img
                     src={savedExample}
-                    alt="Previously saved example pendant"
+                    alt={t("Previously saved example pendant")}
                   />
                 ) : (
-                  <div role="img" aria-label="Previously saved example pendant">
-                    This saved example is unavailable.
+                  <div
+                    role="img"
+                    aria-label={t("Previously saved example pendant")}
+                  >
+                    {t("This saved example is unavailable.")}
                   </div>
                 )}
                 <div>
-                  <small>NAME PENDANT · YOUR DESIGN</small>
+                  <small>{t("NAME PENDANT · YOUR DESIGN")}</small>
                   <h3 dir="auto">{pendantName(item.draft)}</h3>
                   <p>
                     18K {t(item.draft.metal)} · {item.draft.size} mm
@@ -2239,7 +2353,7 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                   <span>{t("Price unconfirmed")}</span>
                   <div className={s.quantity}>
                     <button
-                      aria-label={`Decrease quantity for ${pendantName(item.draft)}`}
+                      aria-label={`${t("Decrease quantity")} · ${pendantName(item.draft)}`}
                       disabled={item.quantity === 1}
                       onClick={() =>
                         setState((old) => ({
@@ -2254,9 +2368,9 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                     >
                       <Minus />
                     </button>
-                    <output aria-label="Quantity">{item.quantity}</output>
+                    <output aria-label={t("Quantity")}>{item.quantity}</output>
                     <button
-                      aria-label={`Increase quantity for ${pendantName(item.draft)}`}
+                      aria-label={`${t("Increase quantity")} · ${pendantName(item.draft)}`}
                       disabled={item.quantity === 99}
                       onClick={() =>
                         setState((old) => ({
@@ -2341,8 +2455,8 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                     src={heroSource}
                     alt={
                       showingOwnPhoto
-                        ? "Enlarged photograph of your pendant"
-                        : "Enlarged configured sample pendant"
+                        ? t("Enlarged photograph of your pendant")
+                        : t("Enlarged configured sample pendant")
                     }
                   />
                 )}

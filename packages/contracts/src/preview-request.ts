@@ -88,22 +88,99 @@ const SAMPLE_ASSET_PATH = /^\/atelier\/[a-zA-Z0-9_./ -]+$/;
 
 const optionalText = (max: number) => z.string().trim().max(max).optional();
 
-const phoneValue = z
-  .string()
-  .trim()
-  .max(32)
-  .transform((value) => value.replace(/[\s()./-]/g, ""))
-  .refine(
-    (value) => E164.test(value),
-    "Enter a number in international format, for example +971501234567.",
-  );
+/**
+ * What is wrong with the one contact detail the shopper left. The names are
+ * rules, not sentences, so the atelier can say them in Arabic while the server
+ * says them in English about the very same value.
+ */
+export type ContactProblem = "empty" | "phone_format" | "email_format";
 
-const emailValue = z
-  .string()
-  .trim()
-  .max(254)
-  .transform((value) => value.toLowerCase())
-  .pipe(z.email("Enter a valid email address."));
+/**
+ * The contact value exactly as this schema stores it: a phone number without the
+ * separators people type, an address in lower case. Check the length of this,
+ * never of the raw field.
+ */
+export function normalizeContact(
+  channel: PreviewRequestContactChannel,
+  value: string,
+): string {
+  const trimmed = value.trim();
+  return channel === "email"
+    ? trimmed.toLowerCase()
+    : trimmed.replace(/[\s()./-]/g, "");
+}
+
+/**
+ * The one implementation of the contact rules. The schema below and the
+ * atelier's own check both call it, so the shop's screen and the server can
+ * never disagree about whether a way to reach the shopper is usable. The
+ * shopper is told the rule before the request is sent, not after it is refused.
+ *
+ * `value` may be raw; it is normalized here.
+ */
+export function contactProblem(
+  channel: PreviewRequestContactChannel,
+  value: string,
+): ContactProblem | undefined {
+  const normalized = normalizeContact(channel, value);
+  if (!normalized) return "empty";
+  if (channel === "email")
+    return normalized.length <= 254 && z.email().safeParse(normalized).success
+      ? undefined
+      : "email_format";
+  return E164.test(normalized) ? undefined : "phone_format";
+}
+
+/** The sentence the server returns for a rule; one per problem, never prose. */
+export function contactProblemMessage(problem: ContactProblem): string {
+  return {
+    empty: "Leave one way to reach you.",
+    phone_format:
+      "Enter a number in international format, for example +971501234567.",
+    email_format: "Enter a valid email address.",
+  }[problem];
+}
+
+const CONTACT_PROBLEMS: readonly ContactProblem[] = [
+  "empty",
+  "phone_format",
+  "email_format",
+];
+
+/**
+ * The rule behind a refusal sentence the server sent back.
+ *
+ * `previewRequestIssueMessage` prefixes the offending path, so the prefix is
+ * dropped before matching. A sentence that is not one of the contact rules
+ * returns undefined and the caller falls back to its own generic line rather
+ * than showing an English server string inside the Arabic journey.
+ */
+export function contactProblemFromMessage(
+  message: string,
+): ContactProblem | undefined {
+  const sentence = message.includes(": ")
+    ? message.slice(message.indexOf(": ") + 2)
+    : message;
+  return CONTACT_PROBLEMS.find(
+    (problem) => contactProblemMessage(problem) === sentence,
+  );
+}
+
+const contactValue = (channel: PreviewRequestContactChannel) =>
+  z
+    .string()
+    // A bound before any work is done; the rules themselves are in
+    // `contactProblem`, which is what actually decides the sentence.
+    .max(320)
+    .transform((value) => normalizeContact(channel, value))
+    .superRefine((value, ctx) => {
+      const problem = contactProblem(channel, value);
+      if (problem)
+        ctx.addIssue({ code: "custom", message: contactProblemMessage(problem) });
+    });
+
+const phoneValue = contactValue("phone");
+const emailValue = contactValue("email");
 
 const contactName = z.string().trim().min(1).max(80).optional();
 

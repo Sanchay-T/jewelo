@@ -14,6 +14,12 @@
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+import {
+  contactProblem,
+  contactProblemFromMessage,
+  type ContactProblem,
+} from "@jewelo/contracts";
+
 import type { Sample } from "./catalogue";
 import { signature, type Draft, type View } from "./model";
 import {
@@ -21,6 +27,7 @@ import {
   heroSlot,
   pastCeiling,
   PERSONALIZED_RUN_CEILING_MS,
+  PERSONALIZED_RUN_WATCH_MS,
   preflightRefusal,
   resumeSubmission,
   shouldStartRun,
@@ -102,7 +109,14 @@ export interface PersonalizedPreview {
   setContact(next: ContactDraft): void;
   submitContact(): Promise<void>;
   captureStatus: "idle" | "sending" | "captured" | "error";
-  captureError?: string;
+  /**
+   * Why the capture was refused. `empty`, `phone_format` and `email_format` are
+   * the server's own contact rules, decided here before anything is sent so the
+   * shopper gets the format guidance instead of a round trip that discards it;
+   * `invalid` is a 422 whose sentence is not one of them, `failed` everything
+   * else.
+   */
+  captureError?: ContactProblem | "invalid" | "failed";
   capturedRequestId?: string;
   /**
    * The last reference this shopper was given, even after they edited the piece.
@@ -134,6 +148,8 @@ export function usePersonalizedPreview(input: {
   const [run, setRun] = useState<PersonalizedRun | undefined>();
   const [reason, setReason] = useState<DegradeReason | undefined>();
   const [ceilingReached, setCeilingReached] = useState(false);
+  /** This page's reading window; see `PERSONALIZED_RUN_WATCH_MS`. */
+  const [watchWindowClosed, setWatchWindowClosed] = useState(false);
   const [contact, setContact] = useState<ContactDraft>({
     channel: "whatsapp",
     value: "",
@@ -142,7 +158,9 @@ export function usePersonalizedPreview(input: {
   const [captureStatus, setCaptureStatus] = useState<
     "idle" | "sending" | "captured" | "error"
   >("idle");
-  const [captureError, setCaptureError] = useState<string | undefined>();
+  const [captureError, setCaptureError] = useState<
+    ContactProblem | "invalid" | "failed" | undefined
+  >();
   const [capturedRequestId, setCapturedRequestId] = useState<
     string | undefined
   >();
@@ -207,8 +225,9 @@ export function usePersonalizedPreview(input: {
     const resumed = resumeSubmission(stored, currentSignature);
     if (!stored || !resumed) return;
     written.current = stored;
-    // Marked as started whether or not a run id survived, so re-confirming
-    // after a mid-flight reload cannot buy a second run.
+    // Marked as started only when a run id survived. Without one the start is
+    // unfinished, and re-confirming has to be able to finish it; the stored
+    // request key makes that a replay of the same approval, never a second run.
     startedFor.current = resumed.startedFor;
     setSubmission({
       signature: stored.signature,
@@ -223,7 +242,6 @@ export function usePersonalizedPreview(input: {
       setPreviousRequestId(stored.previewRequestId);
       setCaptureStatus("captured");
     }
-    if (resumed.reason) setReason(resumed.reason);
     setPhase(resumed.phase);
   }, [enabled, input.loaded, currentSignature, submission]);
 
@@ -236,6 +254,7 @@ export function usePersonalizedPreview(input: {
       setReason(undefined);
       setPhase("idle");
       setCeilingReached(false);
+      setWatchWindowClosed(false);
       setCaptureStatus("idle");
       setCapturedRequestId(undefined);
       startedFor.current = undefined;
@@ -369,10 +388,27 @@ export function usePersonalizedPreview(input: {
   const stalled =
     ceilingReached && !personalized && !!startedAt && pastCeiling(startedAt, Date.now());
 
+  // This page's own reading window, started at mount and not at the submission:
+  // a reload always reads the run once more, however long ago it was bought.
+  useEffect(() => {
+    if (!runId || watchWindowClosed) return;
+    const timer = setTimeout(
+      () => setWatchWindowClosed(true),
+      PERSONALIZED_RUN_WATCH_MS,
+    );
+    return () => clearTimeout(timer);
+  }, [runId, watchWindowClosed]);
+
   // Durable state, polled and accelerated by Realtime. The watcher stops itself
-  // on a settled run; this effect also tears it down once the honest capture
-  // path has replaced it.
-  const watching = shouldWatchRun({ enabled, runId, stalled });
+  // on a settled run; this effect also tears it down when this page's reading
+  // window closes. Passing the shopper's ceiling is not a reason to stop: the
+  // capture path opens, and the run is still shown if it finishes afterwards.
+  const watching = shouldWatchRun({
+    enabled,
+    runId,
+    settled: !!run?.settled,
+    watchWindowClosed,
+  });
   useEffect(() => {
     if (!watching || !runId) return;
     return watchRun({
@@ -384,6 +420,13 @@ export function usePersonalizedPreview(input: {
         if (next.outcome === "unavailable") {
           setReason((old) => old ?? "unavailable");
           setPhase("degraded");
+        }
+        // The piece arrived after all - late, or after a reload that resumed
+        // into the capture path. A run the server can still deliver must never
+        // stay pinned behind an earlier degrade.
+        if (next.outcome === "personalized") {
+          setReason(undefined);
+          setPhase("watching");
         }
       },
       onError: () => {
@@ -414,8 +457,12 @@ export function usePersonalizedPreview(input: {
 
   const submitContact = useCallback(async () => {
     const value = contact.value.trim();
-    if (!value) {
-      setCaptureError("required");
+    // The server's own rules, run here first: a shopper who mistypes a number
+    // is told the format on the spot instead of waiting for a 422 whose
+    // guidance the browser then threw away (ux review minor 7).
+    const problem = contactProblem(contact.channel, value);
+    if (problem) {
+      setCaptureError(problem);
       setCaptureStatus("error");
       return;
     }
@@ -460,13 +507,26 @@ export function usePersonalizedPreview(input: {
       );
     } catch (error) {
       setCaptureStatus("error");
-      setCaptureError(
-        error instanceof PipelineError && error.reason === "invalid"
-          ? "invalid"
-          : "failed",
-      );
+      if (!(error instanceof PipelineError) || error.reason !== "invalid") {
+        setCaptureError("failed");
+        return;
+      }
+      // A 422 the client did not predict. When the server's sentence is one of
+      // the contact rules it is shown as that rule, in the shopper's own
+      // language; otherwise the form says only what it can honestly say.
+      setCaptureError(contactProblemFromMessage(error.message) ?? "invalid");
     }
   }, [contact, deps, submission, buildRequest, remember, currentSignature]);
+
+  /**
+   * Editing the contact clears the refusal it earned. A format sentence left
+   * standing under a corrected number is a stale accusation.
+   */
+  const updateContact = useCallback((next: ContactDraft) => {
+    setContact(next);
+    setCaptureStatus((old) => (old === "error" ? "idle" : old));
+    setCaptureError(undefined);
+  }, []);
 
   const readyAssets = useMemo(
     () =>
@@ -487,7 +547,7 @@ export function usePersonalizedPreview(input: {
     heroReady,
     capturing,
     contact,
-    setContact,
+    setContact: updateContact,
     submitContact,
     captureStatus,
     captureError,

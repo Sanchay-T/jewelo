@@ -54,6 +54,15 @@ const IN_FLIGHT: readonly PersonalizedViewState[] = [
   "retrying",
 ];
 /**
+ * The `run_status` values a run never leaves (`packages/data/src/database.types.ts`,
+ * enum `run_status`: queued, running, partial, complete, cancelled,
+ * operator_review). Only the two that mean "no worker will touch this again"
+ * are listed: a run in one of them cannot produce another photograph, so its
+ * tasks must not be presented as still on their way.
+ */
+const TERMINAL_RUN_STATUSES: readonly string[] = ["cancelled", "operator_review"];
+
+/**
  * `PROVIDER_MODE=mock` writes a placeholder asset with provider `mock` so the
  * durable pipeline can be exercised without spending. It is real plumbing and a
  * fake photograph: presenting it as the shopper's pendant would be exactly the
@@ -143,11 +152,18 @@ export function readPersonalizedRun(
     (row) => text(row.presentation_view) === "studio",
   );
   const studioState = studioTask ? viewState(studioTask.status) : "absent";
+  // The run itself has stopped. `complete` and `partial` are deliberately not
+  // here: they are written as the last tasks finish, so treating them as a stop
+  // could beat an asset row to this read and call a finished run unavailable.
+  // `cancelled` and `operator_review` are unambiguous - no worker will pick a
+  // task of theirs up again - so a task still sitting in `queued` under one of
+  // them is not in flight, whatever its own row says.
+  const runStopped = TERMINAL_RUN_STATUSES.includes(runStatus);
   // The three model views depend on the studio still. If studio can no longer
   // become ready, or the whole run was stopped, they will never be dispatched.
   const dependentsStranded =
     ["failed", "blocked", "cancelled", "absent"].includes(studioState) ||
-    ["cancelled", "operator_review"].includes(runStatus);
+    runStopped;
   const slots = views.map((view): PersonalizedViewSlot => {
     const presentation = PRESENTATION_BY_VIEW[view];
     const task = taskRows.find(
@@ -175,7 +191,9 @@ export function readPersonalizedRun(
         !PLACEHOLDER_PROVIDERS.has(provider),
       reachable:
         state === "ready" ||
-        (isInFlight(state) && !(view !== "Studio" && dependentsStranded)),
+        (isInFlight(state) &&
+          !runStopped &&
+          !(view !== "Studio" && dependentsStranded)),
     };
   });
   const ready = slots.filter((slot) => slot.presentable).map((slot) => slot.view);
@@ -274,13 +292,22 @@ export type CustomerViewStatus =
   | "working"
   | "checking"
   | "ready"
-  | "preparing";
+  /**
+   * Terminal without a photograph. This used to be `preparing`, which read as
+   * "being prepared" on a view that had already failed: the shopper was told
+   * something was on its way while nothing was (ux review major 3, seen on
+   * staging). The shop photographs it by hand and sends it, and that is what
+   * the sentence for this status has to say.
+   */
+  | "unavailable";
 
 export function customerViewStatus(
   slot: PersonalizedViewSlot,
 ): CustomerViewStatus {
   if (slot.presentable) return "ready";
-  if (!slot.reachable) return "preparing";
+  // Nothing can move this view any more: the task ended, or the run it belongs
+  // to stopped, or the still it depends on will never exist.
+  if (!slot.reachable) return "unavailable";
   switch (slot.state) {
     case "generating":
       return "working";
@@ -292,7 +319,7 @@ export function customerViewStatus(
     default:
       // ready-without-a-usable-asset, failed, blocked, cancelled and absent all
       // mean the same thing to a customer: this view is not coming from this run.
-      return "preparing";
+      return "unavailable";
   }
 }
 
@@ -302,6 +329,20 @@ export function customerViewStatus(
  * capture path opens so they can leave and still receive the piece.
  */
 export const PERSONALIZED_RUN_CEILING_MS = 6 * 60 * 1000;
+
+/**
+ * How long one page may keep reading durable state for its run.
+ *
+ * The ceiling above is about the shopper: past it they are offered the capture
+ * path instead of a spinner. It used to be about the browser as well - polling
+ * stopped there - so a run that finished at seven minutes could never be shown,
+ * not even after a reload, because the reload recomputed the same expired
+ * ceiling and never read the run at all (ux review major 1). Reading is now
+ * bounded on its own clock, which starts fresh on every mount: a reload always
+ * gets an immediate read, and a shop tablet left open on an abandoned piece
+ * still stops re-signing media URLs.
+ */
+export const PERSONALIZED_RUN_WATCH_MS = 30 * 60 * 1000;
 
 export function pastCeiling(
   startedAt: number,
@@ -382,19 +423,27 @@ export function shouldStartRun(input: {
   );
 }
 /**
- * Whether durable state should still be polled for this run.
+ * Whether durable state should still be read for this run.
  *
- * `watchRun` stops itself on a settled run. This is the other terminal state: a
- * run that produced nothing before the ceiling has already handed the shopper
- * the capture path, so a shop tablet must not keep re-signing every media URL
- * every three seconds for the rest of the day.
+ * `watchRun` stops itself on a settled run; this stops the rest. The shopper's
+ * six-minute ceiling is deliberately not a reason to stop reading: a run that
+ * finishes after it must still appear, on the next poll or the next reload.
+ * What does stop reading is the run being over, or this page having watched for
+ * `PERSONALIZED_RUN_WATCH_MS` without one - a shop tablet must not re-sign every
+ * media URL every three seconds for the rest of the day.
  */
 export function shouldWatchRun(input: {
   enabled: boolean;
   runId?: string;
-  stalled: boolean;
+  settled: boolean;
+  watchWindowClosed: boolean;
 }): boolean {
-  return input.enabled && !!input.runId && !input.stalled;
+  return (
+    input.enabled &&
+    !!input.runId &&
+    !input.settled &&
+    !input.watchWindowClosed
+  );
 }
 
 /**
@@ -411,20 +460,29 @@ export interface SubmissionRecord {
 }
 
 export interface ResumedSubmission {
-  /** The specification a run was already bought for; blocks a second one. */
-  startedFor: string;
-  phase: "watching" | "degraded";
-  reason?: DegradeReason;
+  /**
+   * The specification a run was already bought for; blocks a second one. Absent
+   * when this browser has a submission but no run to show for it: that start
+   * has to be finishable, and its replay is what makes it safe.
+   */
+  startedFor?: string;
+  phase: "watching" | "idle";
 }
 
 /**
  * What a fresh mount may do with a stored submission.
  *
- * With a run id, the run is read back out of durable state and watched. Without
- * one, this browser started a submission and lost the handle - either the start
- * failed, or the tab reloaded mid-flight. Either way the specification is marked
- * as already started, so re-confirming cannot buy a second run, and the honest
- * capture path opens instead of a spinner that can never resolve.
+ * With a run id, the run is read back out of durable state and watched.
+ *
+ * Without one, this browser started a submission and lost the handle - either
+ * the start failed, or the tab reloaded between the approval and its answer.
+ * This used to resume as `degraded` with the specification marked as started,
+ * which was a dead end: the capture card was shown, the confirmation was still
+ * ticked, and re-confirming did nothing because the specification was pinned
+ * (ux review major 2). It resumes as `idle` instead, so the confirmation is
+ * live again. That cannot buy a second run: `startAttemptKey` replays the
+ * stored request key, and `approve_and_start_studio` is keyed on (principal,
+ * approval key), so the replay returns the same run the first attempt made.
  */
 export function resumeSubmission(
   stored: SubmissionRecord | undefined,
@@ -433,11 +491,7 @@ export function resumeSubmission(
   if (!stored || stored.signature !== currentSignature) return undefined;
   return stored.runId
     ? { startedFor: stored.signature, phase: "watching" }
-    : {
-        startedFor: stored.signature,
-        phase: "degraded",
-        reason: "unavailable",
-      };
+    : { phase: "idle" };
 }
 
 /**

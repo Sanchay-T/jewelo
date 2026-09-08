@@ -241,6 +241,67 @@ export async function startPersonalizedRun(input: {
   };
 }
 
+/**
+ * A transport that answers the personalized pipeline from a fixture, so the
+ * terminal-failure screens can be seen without a Supabase project and without
+ * spending anything.
+ *
+ * There is no other way to reach them locally: `PERSONALIZED_PREVIEW_ENABLED` is
+ * false in the mock data mode, and the mock provider mode on staging produces
+ * placeholder assets, which the review stage correctly refuses to present but
+ * which is not the same state as a run that ended. The caller is responsible for
+ * gating this on development and on the mock data mode; nothing here is reachable
+ * from a shopper's journey.
+ *
+ * `run` is the run row's status and `studio` the studio task's, which together
+ * decide every customer-visible state: `operator_review` + `failed` is a run
+ * that ended with no photograph.
+ */
+export function fixturePipelineDeps(fixture: {
+  run: string;
+  studio: string;
+}): PipelineDeps {
+  const designId = "fixture-design";
+  const runId = "fixture-run";
+  const task = (view: string, status: string) => ({
+    id: `fixture-task-${view}`,
+    run_id: runId,
+    presentation_view: view,
+    status,
+    attempt: 1,
+  });
+  const state = {
+    generation_runs: [{ id: runId, design_id: designId, status: fixture.run }],
+    generation_tasks: [
+      task("studio", fixture.studio),
+      task("on_skin", "queued"),
+      task("close_up", "queued"),
+      task("dark", "queued"),
+    ],
+    assets: [],
+  };
+  const fetchImpl: typeof fetch = async (target) => {
+    const url = typeof target === "string" ? target : String(target);
+    const body = url.startsWith("/api/state")
+      ? state
+      : url.includes("/drafts")
+        ? { id: designId }
+        : url.includes("/approve")
+          ? {
+              run_id: runId,
+              approved_design_id: designId,
+              revision_id: "fixture-revision",
+              dispatchState: "published",
+            }
+          : { id: "fixture-request", status: "new" };
+    return new Response(JSON.stringify(body), {
+      status: 200,
+      headers: { "content-type": "application/json" },
+    });
+  };
+  return { session: { accessToken: async () => "fixture" }, fetchImpl };
+}
+
 export async function loadRun(
   deps: PipelineDeps,
   handles: { designId?: string; runId: string },
