@@ -91,9 +91,19 @@ Both directions stay on the app's private network, so neither the Inngest dashbo
 
 `--postgres-uri` persists configuration, apps, functions, runs and history. Queue and run state stay in the process (an embedded Redis with SQLite snapshots) unless `--redis-uri` is given, and App Platform has no persistent volume. A restart of the `inngest` component therefore loses in-flight run state. That is tolerable only because Supabase, the outbox and the two-minute stale sweeper remain the durable truth: a lost run leaves its task stale and it is re-dispatched. It is the strongest argument for moving to Inngest Cloud, and it is why `instance_count` is pinned at 1.
 
+Measured on staging on 2026-09-08 (P7-6, full record in `docs/goals/road-to-gold/dogfood-2026-09-08/staging-journey.md`).
+`doctl apps restart <app> --components inngest --wait` takes about 90 s end to end and the old container only takes its signal near the end of that window; `web` keeps serving throughout.
+The loss is visible in the component's own log as `error checkpointing async steps: run not found in state store`, five times in two seconds while a run was finishing.
+The run finished anyway - four tasks `ready` at attempt 1, run `complete` - because the job body executes in `web` and writes its result to Supabase itself; what a restart loses is Inngest's bookkeeping, not the task.
+
+Two corrections to how the recovery is often described.
+The sweeper's window is derived, not four minutes: `staleRecoveryWindowMs = executorRequestCapSeconds * 1000 + staleRecoveryMarginMs` is `360000 + 120000 = 480000 ms` with the shipped defaults, and `stale-media-recovery` runs on `*/2 * * * *`, so a stale task is reclaimed eight to ten minutes after it went quiet.
+And `operator_review` is not the route an `inngest` restart takes: that branch is guarded by `attempt_status in ('reserved','submitted','ambiguous')`, which means a paid attempt whose `web` worker died. An `inngest` restart leaves the task `queued` or `generating` with no live reservation, so the sweeper re-dispatches it and the run continues.
+The `operator_review` branch itself was proved directly against the deployed function on a synthetic back-dated row inside a rolled-back transaction: `recovery_action operator_review`, task `blocked` with `operator_review_ambiguous_paid_request`, run `operator_review` with `stale_worker_ambiguous_paid_request`, attempt closed `ambiguous` at its estimate, one `task.stale_paid_request_blocked` audit event, and zero outbox rows.
+
 ### Switching to Inngest Cloud
 
-One environment variable. Remove `INNGEST_BASE_URL` from `web`, replace the two keys with the Cloud values, delete the `inngest` component, and sync `https://<app>/api/inngest` from the Inngest dashboard. No application code changes: the client already reads `baseUrl`, `eventKey` and `signingKey` from the environment.
+One environment variable and two values. Remove `INNGEST_BASE_URL` from `web`, replace `INNGEST_EVENT_KEY` and `INNGEST_SIGNING_KEY` with the Cloud values, delete the `inngest` component, and sync `https://<app>/api/inngest` from the Inngest dashboard. `INNGEST_CRON_ENABLED` is unchanged. No application code changes: the client already reads `baseUrl`, `eventKey` and `signingKey` from the environment.
 
 ## Gate
 

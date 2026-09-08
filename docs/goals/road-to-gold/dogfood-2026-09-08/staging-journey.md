@@ -173,3 +173,120 @@ The zero-code alternative, if the lead prefers not to add a column before the fi
 The launch caps were proved binding above and then set back to the previous values (`daily_generation_limit 30`, `global_max_reserved_spend_cents 6000`, `global_daily_generation_limit 100`), read back in the same statement.
 Reason: staging stays in mock mode for days yet, and a global limit of 2 runs a day blocks the lead's dogfooding, Umayr's testing on his phone and the P7-6 durability drill.
 The caps go on as the first step of P5-2, immediately before `PROVIDER_MODE=real` is shipped, using the UPDATE recorded in the P5-1 section.
+
+## P7-6 durability drill (2026-09-08, 21:58-22:05 UTC)
+
+Question the task row asks: kill the `inngest` component mid mock run on staging and watch the task reach `operator_review` inside four minutes.
+The drill was run against `https://jewelo-staging-gqumd.ondigitalocean.app` (app `ec09c9fd-84e4-45c5-b60a-fd62277af322`, `PROVIDER_MODE=mock`).
+The answer is that the premise is wrong in two independent ways, and both are now measured rather than argued.
+
+### What was run
+
+`doctl apps restart` does have a component flag on the installed `doctl 1.167.0-release`, so no scaling and no spec update were needed:
+
+```text
+doctl apps restart ec09c9fd-84e4-45c5-b60a-fd62277af322 --components inngest --format ID,Phase,Cause --wait
+Notice: Restarted
+ID                                      Phase     Cause
+489c7b72-d49e-415d-9fc3-80deb2ba7c81    ACTIVE    restarting app
+exit=0
+```
+
+Two restarts were issued: `489c7b72-d49e-415d-9fc3-80deb2ba7c81` (fired 22:00:04, `Restarted` 22:01:33, 89 s wall) to calibrate how long a restart takes, and `7fbb8f4c-8465-46ea-8e1a-98009f2b0eb2` (fired 22:02:09, created 22:02:12, ACTIVE 22:03:28) as the drill itself, with `doctl apps logs <app> inngest --type run --follow` recording the component the whole time.
+Both deployments carry the cause `restarting app`; the `web` component kept answering HTTP throughout, so a component-scoped restart is not an app-wide outage.
+
+### Timeline, UTC, 2026-09-08
+
+```text
+21:58    runtime_policy read before starting: global_daily_generation_limit 100,
+         daily_generation_limit 30, updated_at 2026-09-07T06:13:48Z.
+         Newest generation_run was 19:50, so no concurrent driver was visible.
+21:59    GET /api/readiness with x-readiness-token -> 200
+         inngest {configured:true, keyEnvironment:"prod", transport:"self_hosted",
+         cronsRegistered:true}, supabase configured, openai configured.
+22:00:04 restart 1 fired.
+22:00:31 new inngest container: "initialized database" db=postgres,
+         "ran database migrations", "starting server" addr 0.0.0.0:8288.
+22:01:33 doctl reports Restarted (deployment 489c7b72).
+22:01:54 the concurrent P5-1 agent rewrote runtime_policy:
+         global_daily_generation_limit 100 -> 24, daily_generation_limit 30 -> 2.
+22:02:09 restart 2 fired (deployment 7fbb8f4c).
+22:02:48 run 45892bcc-0dba-43bf-99b8-edd1e0aa0b8f (P5-1's, not this drill's)
+         dispatches its studio still; 22:02:53 the three dependent views follow.
+22:03:01 this drill's own POST /api/revisions/approve is refused:
+         429 {"error":"global daily generation limit exceeded","code":"spend_guard"}
+         principal_daily_usage for 2026-09-08 summed to 24 of the new cap of 24.
+22:03:01.971 inngest ERROR "error checkpointing async steps"
+             error="run not found in state store"
+22:03:02.169 same
+22:03:02.461 same
+22:03:02.906 same
+22:03:03.716 same
+22:03:04.805 run 45892bcc reaches status complete; all four tasks ready at
+             attempt 1, four provider_attempts succeeded at actual_cost_cents 0.
+22:03:37.492 old inngest container takes the signal: "queue waiting to quit",
+             "in-progress jobs finished, exiting queue processor",
+             "shutting down server".
+22:04    GET /api/readiness -> 200, same JSON as before the restart.
+         scripts/digitalocean/smoke.sh -> exit 0, health and readiness pass.
+```
+
+### Reading 1: the in-process loss is real and it is visible
+
+`error checkpointing async steps: run not found in state store`, five times inside two seconds, is the caveat in `docs/goals/overnight-launch/w0/INNGEST.md` observed rather than predicted: a restarted Inngest server has no memory of runs the previous process was holding, so their step checkpoints are refused.
+
+### Reading 2: it does not reach the customer, because Postgres is the truth
+
+The run that was in flight across the restart finished normally: `complete`, four tasks `ready` at attempt 1, `terminal_error_code null`, four `provider_attempts` `succeeded`.
+The job body executes inside the `web` component and writes its result to Supabase itself; what Inngest loses is its own bookkeeping, not the task.
+So the honest statement of the risk is narrower than the task row assumes: a restart can lose an *event that has not been picked up yet*, or the *second step* of a run that had already written its first, and both of those are re-dispatched by the sweeper rather than escalated.
+
+### Reading 3: `operator_review` is not the route an inngest restart takes, and four minutes is not achievable
+
+`operator_review` comes from exactly one branch of `public.recover_stale_generation_tasks`, the one guarded by `attempt_status in ('reserved','submitted','ambiguous')`.
+That state means a *paid provider attempt* was reserved and its worker never came back, which is a `web` process death, not an `inngest` process death.
+An `inngest` restart leaves the task `queued` or `generating` with no live reservation, so the sweeper takes its `dispatch` or `retry` branch and the run continues.
+
+The four-minute figure is not reachable either.
+The sweeper's window is derived, not configured: `staleRecoveryWindowMs = executorRequestCapSeconds * 1000 + staleRecoveryMarginMs` in `packages/config/src/index.ts`, and with the shipped defaults `providerRequestTimeoutMs 180000`, `visionRequestTimeoutMs 60000` twice, `localWorkAllowanceMs 60000`, `staleRecoveryMarginMs 120000` that is `360000 + 120000 = 480000 ms`, eight minutes.
+`stale-media-recovery` then runs on `*/2 * * * *`.
+The earliest a stale task can be recovered is therefore about eight minutes and the latest about ten; four minutes would require shortening the executor request cap, which is deliberately tied to the route's `maxDuration` so the sweeper can never fire while a provider call is still legally running.
+
+### The recovery contract itself, proved by SQL and rolled back
+
+Because no live run could be started (see below), the branch was exercised directly against the deployed function through the session pooler.
+An existing row cannot be back-dated - `tasks_touch` is a `BEFORE UPDATE` trigger that rewrites `updated_at` - so the drill inserts a synthetic copy of one finished run and its studio task with `updated_at` fifteen minutes old and a `provider_attempts` row still `reserved`, calls the sweeper with the deployed 480 s window, and rolls the whole transaction back.
+
+```text
+psql "$SUPABASE_DB_POOLER_URL" -f sweeper2.sql
+BEGIN / set local role service_role
+
+ phase  |   status   | attempt | run_status | attempt_status | estimated_cost_cents |   age
+ before | generating |       1 | running    | reserved       |                  100 | 00:15:00.3
+
+ select * from public.recover_stale_generation_tasks(now() - interval '480 seconds', 100);
+ task_id                              | recovery_action | outbox_id
+ fc0cb1e2-6cc2-4d15-9c2a-7906470dcffa | operator_review | null
+
+ phase | status  | terminal_error_code                    | run_status      | operator_review_reason              | attempt_status | error_class            | actual_cost_cents
+ after | blocked | operator_review_ambiguous_paid_request | operator_review | stale_worker_ambiguous_paid_request | ambiguous      | stale_worker_ambiguous |               100
+
+ audit | task.stale_paid_request_blocked | attempt 1 | cost 100 | paidRequestRepeated false
+ outbox | rows_for_task 0
+ROLLBACK
+```
+
+Everything DS-10 promises is there: the run is stopped for an operator, the attempt is closed as `ambiguous` and charged conservatively at its estimate rather than re-spent, an audit event records it, and **no outbox row is written**, so a paid request is never repeated on a guess.
+
+### What could not be done, and why
+
+One live end-to-end run through a restart was not possible.
+At 22:01:54 the concurrent P5-1 agent set `global_daily_generation_limit` to 24, and `principal_daily_usage` for 2026-09-08 already summed to exactly 24, so `POST /api/revisions/approve` answered 429 `spend_guard` at 22:03:01.
+Per the task's own instruction the cap was not raised; the counter is keyed on `usage_date`, so it clears at 00:00 UTC.
+The restart that was fired did land on a live run - P5-1's `45892bcc` - and that run completed unharmed, which is the observation recorded above; no other agent's work was damaged.
+
+### Cloud switch, confirmed by reading only
+
+Nothing was changed. The `web` component would need `INNGEST_BASE_URL` removed and `INNGEST_EVENT_KEY` and `INNGEST_SIGNING_KEY` replaced with the Cloud values; the `inngest` component, which carries `INNGEST_EVENT_KEY`, `INNGEST_SIGNING_KEY`, `INNGEST_POSTGRES_URI`, `INNGEST_SDK_URL`, `INNGEST_PORT` and `INNGEST_HOST`, would be deleted from the spec; and the app URL would be synced once from the Inngest dashboard.
+`INNGEST_CRON_ENABLED` stays as it is.
+That is one variable to remove, two values to swap and one component to delete - no application code, since the client already reads `baseUrl`, `eventKey` and `signingKey` from the environment.
