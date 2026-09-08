@@ -380,3 +380,56 @@ The sweeper's `task.dependency_terminal_blocked` branch releases those, as it di
 
 `preview_requests`: no request was captured, as instructed, and the five most recent rows all still carry `notified_at null`.
 So the P7-3 notification path was not exercised by this deploy and nothing claims to have been notified.
+
+## Deploy `f19f6b0c` (`c9265aa`)
+
+Branch `codex/overnight-launch-2026-09-08` at pushed tip `c9265aa`, which carries P3-7 `9e52bcc` (the `construction` prompt variable the published `@v2` templates need).
+This deploy is the remedy for the outage recorded in the `7db85045` section: staging could not complete a run from 22:25 UTC because the deployed build did not know the `construction` variable.
+
+```
+ssh home-mini ... git fetch && git checkout codex/overnight-launch-2026-09-08 && git pull --ff-only
+  d3dbd25..c9265aa fast-forward, clean, no untracked-file conflict this time
+bash scripts/digitalocean/deploy.sh staging codex/overnight-launch-2026-09-08   exit 0
+  deployment_id=f19f6b0c-cce7-4c7d-a973-148865e87c3b
+  service_url=https://jewelo-staging-gqumd.ondigitalocean.app
+doctl apps get-deployment ...  ACTIVE 9/9 at 22:56 UTC (created 22:41:41 UTC)
+bash scripts/digitalocean/smoke.sh https://jewelo-staging-gqumd.ondigitalocean.app   exit 0
+```
+
+15 env keys merged, same set as `7db85045`, no value printed.
+Five alerts merged, unchanged.
+
+### Runs complete again on the `@v2` prompt slot
+
+Two runs driven over HTTPS against the deployed app with fresh anonymous principals, `PROVIDER_MODE=mock`, zero spend.
+
+- `Ali` classic, run `ef347927-b5e6-4571-8a77-052caeb76932` (design `09d547bb`, revision `35552f2b`): `status complete`, `pipeline_release_id caleums-final-media-v2`, `operator_review_reason null`, `reserved_spend_cents 0`, `actual_spend_cents 0`.
+  Four tasks `ready` at attempt 1, `terminal_error_code null`, prompt releases `studio image.packshot@v2`, `on_skin image.worn@v2`, `close_up image.macro_gift@v2`, `dark image.dark_editorial@v2`.
+  The run passes through `partial` for about 30 s after the studio still lands and before the three dependents dispatch; that is the normal fan-out window, not a terminal state.
+- `آية` classic (`arabicStyle: "contemporary"`), run `8613aff6-455b-4edb-9046-af1d8e3fc185` (design `16e9e0ee`, revision `41052e30`): `status complete`, four tasks `ready` at attempt 1 with the same four `@v2` releases, zero spend, no operator review.
+  Identity artifact `19f31f63`, `engine_release caleums-identity-v4`, `pipelineRelease caleums-final-media-v2`: `claimed.ringPlacement welded`, `measured.ringTilt 0`, `measured.ringOverhang 0.050059594755661505`, `measured.componentsFinal 1`, `claimed.glyphPixelsUnderRingMetal 0`, `claimed.glyphPixelsPunchedByRings 0`, rings on glyphs 1 and 5, `exactCharactersPreserved true`.
+  Byte-for-byte the same geometry the pass 6 engine produced for this name under deploy `b1ea4b6d`, so the prompt fix changed nothing in the stencil.
+
+So `prompt_compile_failed:Unknown prompt variable: construction` is gone: the same four templates that refused to compile at 22:25 now compile and dispatch.
+
+### The two failed runs were swept clean
+
+`4fed38ec-b0ff-4e96-8903-e4370421a123` and `5268aa7d-6d61-49de-bb57-9cc4dbc9d7a6` both show `reserved_spend_cents 0` and `actual_spend_cents 0` at `updated_at 2026-09-08T22:46:00Z`.
+Their three dependent tasks moved from `queued` to `blocked` with `terminal_error_code dependency_blocked` and `reservation_cents 0`, so the sweeper's `task.dependency_terminal_blocked` branch released all 300 cents on each run.
+No row in `principal_daily_usage` for `2026-09-08` carries `reserved_spend_cents > 0`.
+
+### Policy readback, unchanged
+
+```
+id | studio_only | daily_generation_limit | max_reserved_spend_cents | global_max_reserved_spend_cents | global_daily_generation_limit | provider_attempt_budget | updated_at
+t  | f           |                     30 |                     6000 |                            6000 |                           100 |                       3 | 2026-09-08 22:13:13.147122+00
+```
+
+Read, not written, by this deploy.
+
+### Endpoint checks
+
+- `/en/design/new` 200 and contains "Not yet photographed"; `/ar/design/new` 200 and contains "لم تُصوَّر بعد". P6-2 is live at both locales.
+- `/en/operator` 200, the login page (two "Operator" strings and one `type="password"` field), no operator data.
+- `/api/state?designId=09d547bb-...` with no session -> 401 `{"error":"Unauthorized","code":"unauthenticated"}`.
+- `/api/readiness` with `x-readiness-token` -> 200 `{"status":"ready"}`, `supabase configured`, `inngest {configured:true, keyEnvironment:"prod", transport:"self_hosted", cronsRegistered:true}`, `openai configured`, `trustedClientIpHeader valid`.
