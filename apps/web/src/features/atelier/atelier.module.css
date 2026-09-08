@@ -1,5 +1,9 @@
 .app {
   --serif: "Playfair Display", Georgia, serif;
+  /* The fixed action bar is 16px + a 50px button + 16px + a 1px border = 83px,
+     reserved as 86px. Every element that must stay clear of it subtracts or
+     adds this one number instead of guessing its own. */
+  --action-bar-block: 86px;
   background: var(--paper);
   min-height: 100dvh;
   color: var(--ink);
@@ -129,7 +133,9 @@
 .main {
   max-width: 1440px;
   margin: auto;
-  padding: 8px 5% 40px;
+  /* The last control in the left column must end above the fixed bar, not
+     under it, at the very end of the scroll. */
+  padding: 8px 5% calc(40px + var(--action-bar-block));
 }
 .intro {
   padding: 12px 0 32px;
@@ -1016,11 +1022,14 @@
   .previewSticky {
     position: static;
   }
+  /* Same frame and same containment as the desktop preview: a 9:16 dark still
+     was cropped to roughly half by the old 1.16 landscape frame with a cover
+     fit. The catalogue photographs are exactly 4:5, so they still fill it. */
   .photo {
-    aspect-ratio: 1.16;
+    aspect-ratio: 4/5;
   }
   .photo > img {
-    object-position: 50% 60%;
+    object-fit: contain;
   }
   .photoLabel {
     inset-block-start: 12px;
@@ -1470,7 +1479,12 @@
     display: flex;
     flex-direction: column;
     height: auto;
-    max-height: min(940px, calc(100dvh - 124px));
+    /* 124px is the sticky top offset and its breathing room; the action bar
+       is the second thing the panel can never grow into. */
+    max-height: min(940px, calc(100dvh - 124px - var(--action-bar-block)));
+    /* Whatever the content does - an opened example, a wrapped note - the
+       panel scrolls inside its own budget instead of painting over the bar. */
+    overflow-y: auto;
   }
   .previewSticky .photo {
     height: auto;
@@ -1561,6 +1575,9 @@
   .previewSticky {
     position: static;
     height: auto;
+    /* A panel that no longer follows the viewport must not keep the viewport's
+       height budget, or its own max-height clips the dock. */
+    max-height: none;
   }
   .previewSticky .photo {
     --frame-max-block: 280px;
@@ -1701,8 +1718,11 @@
   object-position: 50% 50%;
 }
 @media (min-width: 768px) {
+  /* The floor the photograph shrinks to before the panel would rather scroll.
+     280px did not fit beside the dock and the action bar at 900px of viewport
+     height; 240px does, and still shows the whole pendant. */
   .previewSticky .photo {
-    min-height: 280px;
+    min-height: 240px;
   }
 }
 :global(html):has(.app) {
@@ -1713,14 +1733,6 @@
 .controls textarea {
   scroll-margin-block: 110px;
 }
-/* Tall two-name assemblies must retain both complete words in short windows. */
-.photo[data-fit="full"] > img {
-  object-fit: contain;
-}
-.photo[data-fit="full"][data-carousel-view="Dark"] {
-  background: #171614;
-}
-
 /* Original portrait photography: keep the pendant in the main preview crop. */
 .photo > img { object-position: 50% 65%; }
 .photo[data-carousel-view="On skin"] > img { object-position: 50% 55%; }
@@ -1809,4 +1821,74 @@
   width: 28px;
   height: 28px;
   object-fit: cover;
+}
+
+/* P6-1 - a short desktop window holds the photograph, the dock and the fixed
+   action bar at once. Below 820px of viewport height the dock gives back its
+   optional whitespace first, and only then does the photograph give back
+   height. Everything here is spacing; no control and no label is removed. */
+@media (min-width: 768px) and (max-height: 820px) {
+  .previewDock {
+    padding: 10px 12px;
+  }
+  .previewNote {
+    margin-bottom: 6px !important;
+  }
+  .dockHeading h2 {
+    font-size: 19px;
+  }
+  .carouselProgress {
+    margin-bottom: 8px;
+  }
+  .previewDock .views {
+    gap: 6px;
+    padding: 8px 0 6px;
+  }
+  .previewDock .views button img {
+    height: 44px;
+  }
+  .previewDock .views button span {
+    padding: 5px 0 1px;
+  }
+  .missingAngle {
+    height: 44px;
+  }
+  .sampleDetails {
+    padding-bottom: 6px;
+  }
+  .selectionSummary {
+    padding-block-start: 8px;
+  }
+  .selectionName b {
+    font-size: 20px;
+  }
+  .previewDock .specChips > span {
+    padding: 3px 6px;
+  }
+  .previewSticky .photo {
+    min-height: 170px;
+  }
+}
+
+/* A directional arrow follows the reading direction. Icons that are not
+   directional - the bag, the close cross - must not flip, so this names the
+   two arrow icons rather than every svg. */
+:global([dir="rtl"]) .app :global(.lucide-arrow-left),
+:global([dir="rtl"]) .app :global(.lucide-arrow-right) {
+  transform: scaleX(-1);
+}
+
+/* Reduced motion removes every animation above, which left the "photographing"
+   indicator as a static broken ring saying nothing. A fade carries the same
+   "still working" message without moving anything across the screen. */
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation: spinnerBreath 1.8s ease-in-out infinite !important;
+    border-top-color: #bda982;
+  }
+}
+@keyframes spinnerBreath {
+  50% {
+    opacity: 0.3;
+  }
 }
