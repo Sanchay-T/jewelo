@@ -41,11 +41,19 @@ export async function POST(request: Request) {
           )
         : [];
     const replay = (await existing())[0];
-    if (replay)
+    if (replay) {
+      // Storyline review 1, B3. The replay used to answer without announcing.
+      // A shopper whose first submission raced an Inngest outage - or landed on
+      // a build with no shop address - would replay into a 200 for ever and the
+      // shop would never hear about the request. The event id is derived from
+      // the row id, so re-emitting it is one event, and the `notified_at` claim
+      // in the database makes it one message.
+      await announceCapturedRequest(replay.id);
       return Response.json(customerPreviewRequest(replay), {
         status: 200,
         headers: NO_STORE,
       });
+    }
     try {
       const rows = await supabaseRequest<PreviewRequestRow[]>(
         config,
@@ -71,6 +79,10 @@ export async function POST(request: Request) {
         throw error;
       const raced = (await existing())[0];
       if (!raced) throw error;
+      // Same reason as the replay above: the winner of the race inserted the
+      // row and announced it, but this branch also runs when the winner's own
+      // announcement failed, so it re-emits the same idempotent event.
+      await announceCapturedRequest(raced.id);
       return Response.json(customerPreviewRequest(raced), {
         status: 200,
         headers: NO_STORE,

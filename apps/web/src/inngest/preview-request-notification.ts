@@ -4,7 +4,7 @@ import {
   previewRequestContactSchema,
   previewRequestSpecificationSchema,
 } from "@jewelo/contracts";
-import { parseNotificationEnv } from "@jewelo/config";
+import { notificationSweepLimits, parseNotificationEnv } from "@jewelo/config";
 import {
   createNotificationSender,
   previewRequestNotificationMessage,
@@ -186,6 +186,127 @@ export async function notifyPreviewRequest(
     throw error;
   }
 }
+
+/* ------------------------------------------------------------------------- */
+/* The sweep.                                                                 */
+/*                                                                            */
+/* Storyline review 1, B3. Announcing was a single best-effort send on the     */
+/* create path of `POST /api/preview-requests`, and best effort is exactly     */
+/* what it says: an Inngest outage, a deployment without a shop address, or a  */
+/* shopper who replayed an existing request left a captured request that       */
+/* nobody was told about, and no job ever looked at the unannounced set        */
+/* again. On 9 September 2026 that set held 13 rows.                          */
+/*                                                                            */
+/* The sweep closes it. Every two minutes it reads the rows whose             */
+/* `notified_at` is still null (the `preview_requests_unnotified` index) and   */
+/* re-emits `preview-request/created` with the same event id the route uses,   */
+/* so the claim function does the rest: Inngest deduplicates the id, and the   */
+/* `notified_at` claim in the database makes the message exactly one even if   */
+/* it did not.                                                                */
+/* ------------------------------------------------------------------------- */
+
+/** One announcement event, in the id shape the route sends. */
+export interface AnnouncementEvent {
+  id: string;
+  name: typeof PREVIEW_REQUEST_CREATED_EVENT;
+  data: { previewRequestId: string };
+}
+
+export function announcementEvent(requestId: string): AnnouncementEvent {
+  return {
+    id: `preview-request-created:${requestId}`,
+    name: PREVIEW_REQUEST_CREATED_EVENT,
+    data: { previewRequestId: requestId },
+  };
+}
+
+interface SweepDependencies {
+  admin: () => { url: string; key: string };
+  /** The shop's address; without one there is nobody to announce to. */
+  to: () => string | undefined;
+  send: (events: AnnouncementEvent[]) => Promise<unknown>;
+  now: () => Date;
+}
+
+/**
+ * The rows the sweep may announce: unannounced, older than the floor, oldest
+ * first, capped by the validated batch. Only the id is selected - the message
+ * is composed by the claim function with the service role, so no contact detail
+ * is read here and none can travel in an event.
+ */
+export function unannouncedRequestsQuery(before: string): string {
+  return `/rest/v1/preview_requests?select=id&notified_at=is.null&created_at=lt.${encodeURIComponent(before)}&order=created_at.asc&limit=${notificationSweepLimits.notificationSweepBatch}`;
+}
+
+export type SweepOutcome =
+  | { status: "not_configured" }
+  | { status: "swept"; requestIds: string[] };
+
+/**
+ * The body, exported so it can be driven without a live Inngest run. `send` is
+ * injectable so a harness can print the ids a sweep would emit and emit
+ * nothing.
+ */
+export async function sweepUnannouncedRequests(
+  overrides: Partial<SweepDependencies> = {},
+): Promise<SweepOutcome> {
+  const dependencies: SweepDependencies = {
+    admin: () => ({
+      url: process.env.SUPABASE_URL ?? "",
+      key: process.env.SUPABASE_SERVICE_ROLE_KEY ?? "",
+    }),
+    to: () => process.env.NOTIFICATION_TO?.trim() || undefined,
+    send: (events) => inngest.send(events),
+    now: () => new Date(),
+    ...overrides,
+  };
+  // No shop address means every event this sweep sent would end in
+  // `not_configured`. Reporting the deployment state and stopping is honest;
+  // emitting 50 events every two minutes to a function that cannot send is not.
+  if (!dependencies.to()) return { status: "not_configured" };
+  const admin = dependencies.admin();
+  if (!admin.url || !admin.key)
+    throw new Error("preview_request_notification_supabase_missing");
+  const before = new Date(
+    dependencies.now().getTime() -
+      notificationSweepLimits.notificationSweepMinAgeMs,
+  ).toISOString();
+  const response = await fetch(`${admin.url}${unannouncedRequestsQuery(before)}`, {
+    headers: {
+      apikey: admin.key,
+      authorization: `Bearer ${admin.key}`,
+      accept: "application/json",
+    },
+  });
+  if (!response.ok)
+    throw new Error(
+      `preview_request_notification_sweep_read_failed:${response.status}`,
+    );
+  const rows = (await response.json()) as { id: string }[];
+  const requestIds = rows.map((row) => row.id).filter(Boolean);
+  if (requestIds.length === 0) return { status: "swept", requestIds };
+  await dependencies.send(requestIds.map(announcementEvent));
+  console.warn("preview_request_notification_swept", {
+    count: requestIds.length,
+  });
+  return { status: "swept", requestIds };
+}
+
+export const previewRequestNotificationSweep = inngest.createFunction(
+  {
+    id: "preview-request-notification-sweep",
+    name: "New request notification sweep",
+    triggers: [{ cron: "*/2 * * * *" }],
+    // Two ticks must never read the same unannounced set at once; the event id
+    // and the database claim would still make it one message, but the second
+    // tick's work is pure waste.
+    concurrency: 1,
+    // The sweep is the backstop, and the next tick is two minutes away: a read
+    // that fails is retried by the clock rather than by the engine.
+    retries: 0,
+  },
+  async ({ step }) => step.run("sweep-unannounced", () => sweepUnannouncedRequests()),
+);
 
 export const previewRequestNotification = inngest.createFunction(
   {

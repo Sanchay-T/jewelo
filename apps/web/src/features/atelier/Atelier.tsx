@@ -76,6 +76,11 @@ const arabic: Record<string, string> = {
   Arabic: "العربية",
   "One name": "اسم واحد",
   "Two names": "اسمان",
+  // Storyline review 1, minor: the Arabic two-name refusal used to arrive only
+  // after the shopper had confirmed the spelling. It is said on the option now.
+  "One name in Arabic": "اسم واحد بالعربية",
+  "Arabic pendants are cast with one name; the shop makes a two-name piece by hand":
+    "القلادات العربية تُصاغ باسم واحد؛ ويصنع المتجر قطعة الاسمين يدويًا.",
   "Name on your pendant": "الاسم على القلادة",
   "Second name": "الاسم الثاني",
   "Language / script": "اللغة / الكتابة",
@@ -1043,6 +1048,28 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
       }) === reason
     );
   }
+  /**
+   * Two Arabic names are refused before anything is reserved
+   * (`preflightRefusal`, `arabic_two_name`): the Arabic identity engine solves
+   * exactly one name. Until now the shopper only met that fact after ticking
+   * the spelling confirmation on the review, having chosen "Two names" and
+   * typed both (storyline review 1, minor). It is said here instead, on the
+   * control that causes it, and only while the pendant is Arabic - it is not a
+   * fact about the option, it is a fact about the option in this script.
+   *
+   * Deliberately not routed through `unphotographed`: that marks a look the shop
+   * cannot photograph at all, and this is a piece the shop makes by hand.
+   */
+  function twoArabicNamesNote(option: string | number) {
+    return d.script === "Arabic" && option === "Two names"
+      ? {
+          tile: t("One name in Arabic"),
+          note: t(
+            "Arabic pendants are cast with one name; the shop makes a two-name piece by hand",
+          ),
+        }
+      : undefined;
+  }
   function choices<T extends string | number>(
     label: string,
     options: readonly T[],
@@ -1053,6 +1080,14 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
     note?: (value: T) => string | undefined,
     /** Options the shop cannot photograph today. Wins over the sample note. */
     unphotographed?: (value: T) => boolean,
+    /**
+     * A fact about this option that is neither "unavailable" nor "no sample
+     * yet": a choice the shop can make, but not the way this journey shows the
+     * others. Orthogonal to `unphotographed` on purpose, so the two are never
+     * confused in the DOM or in what the shopper is told. `tile` is the line
+     * under the option, `note` the sentence under the field once it is chosen.
+     */
+    advisory?: (value: T) => { tile: string; note: string } | undefined,
   ) {
     return (
       <fieldset className={s.field}>
@@ -1060,9 +1095,11 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
         <div className={visual ? s.visualChoices : s.choices}>
           {options.map((option, i) => {
             const refused = !!unphotographed?.(option);
+            const advice = refused ? undefined : advisory?.(option);
             // One note per option: a look with no photograph at all does not
-            // also get told that its sample is on its way.
-            const coming = refused ? undefined : note?.(option);
+            // also get told that its sample is on its way, and an option the
+            // shop makes differently says that rather than "sample coming".
+            const coming = refused || advice ? undefined : note?.(option);
             return (
               <button
                 key={option}
@@ -1070,11 +1107,14 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                 aria-label={
                   refused
                     ? `${t(String(option))} - ${t("Not yet photographed")}`
-                    : t(String(option))
+                    : advice
+                      ? `${t(String(option))} - ${advice.tile}`
+                      : t(String(option))
                 }
                 aria-pressed={option === value}
                 disabled={disabled?.includes(option)}
                 data-not-photographed={refused ? true : undefined}
+                data-advisory={advice ? true : undefined}
                 data-sample-coming={coming ? true : undefined}
                 onClick={() => onChange(option)}
                 className={s.choice}
@@ -1088,6 +1128,8 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                   <small>{t("Unavailable")}</small>
                 ) : refused ? (
                   <small>{t("Not yet photographed")}</small>
+                ) : advice ? (
+                  <small>{advice.tile}</small>
                 ) : (
                   coming && <small>{coming}</small>
                 )}
@@ -1098,6 +1140,11 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
         {unphotographed?.(value) && (
           <p className={s.fieldNote} data-not-photographed="selected">
             {t("Not yet photographed; the shop will confirm this look by hand")}
+          </p>
+        )}
+        {!unphotographed?.(value) && advisory?.(value) && (
+          <p className={s.fieldNote} data-advisory="selected">
+            {advisory(value)!.note}
           </p>
         )}
       </fieldset>
@@ -1118,7 +1165,10 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
     {
       id: "size",
       label: "Size & Chain",
-      value: `${d.size} mm · ${t(d.chain)}`,
+      // The unit is translated here for the same reason it is on the size tile:
+      // a Latin "mm" standing in the middle of an Arabic summary line was the
+      // one word of the step 04 heading that stayed English (storyline review 1).
+      value: `${d.size} ${t("mm")} · ${t(d.chain)}`,
     },
     {
       id: "personal",
@@ -1281,6 +1331,8 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                       undefined,
                       undefined,
                       (x) => comingNote({ twoNames: x === "Two names" }),
+                      undefined,
+                      twoArabicNamesNote,
                     )}
                     <label className={s.inputLabel} htmlFor="pendant-name">
                       {t("Name on your pendant")}

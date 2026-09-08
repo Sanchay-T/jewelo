@@ -30,9 +30,14 @@ const isProduction = process.env.NODE_ENV === "production";
  *
  * `connect-src` is an allowlist, so a Sentry DSN or a PostHog host that is not
  * named here is a report the browser silently refuses to send - a dead
- * observability stack that looks configured. Derived from the same two public
- * variables the SDKs read, so the policy cannot drift from what is enabled:
- * with both empty this list is empty and the shipped policy is unchanged.
+ * observability stack that looks configured. The other direction is the one
+ * storyline review 1 caught (M4): an origin named while its SDK is switched off
+ * is a permission granted to a vendor the app never talks to. Each origin is
+ * therefore gated on the credential that actually loads its SDK -
+ * `NEXT_PUBLIC_POSTHOG_KEY` for the PostHog host, `NEXT_PUBLIC_SENTRY_DSN` for
+ * Sentry, which is its own origin - so the policy cannot drift from what is
+ * enabled in either direction. With the keys empty this list is empty and the
+ * shipped policy names no vendor at all.
  */
 const observabilityOrigins = observabilityConnectOrigins();
 const observabilityConnectSrc = observabilityOrigins.length

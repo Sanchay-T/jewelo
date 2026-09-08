@@ -17,7 +17,10 @@ import { reportError } from "@jewelo/observability/server";
 
 import { sendJobEvent } from "../lib/backend/job-dispatch";
 import { cronFunctionsEnabled, inngest, JOB_EVENTS } from "./client";
-import { previewRequestNotification } from "./preview-request-notification";
+import {
+  previewRequestNotification,
+  previewRequestNotificationSweep,
+} from "./preview-request-notification";
 
 /**
  * A provider concurrency limit, validated by `packages/config` rather than
@@ -278,7 +281,16 @@ export const functions = [
   // environment, because the shop must be told about a request captured on that
   // environment and nothing else claims shared work.
   previewRequestNotification,
-  ...(cronFunctionsEnabled() ? [outboxRecovery, staleMediaRecovery] : []),
+  ...(cronFunctionsEnabled()
+    ? [
+        outboxRecovery,
+        staleMediaRecovery,
+        // B3. A cron like the other two: it reads the shared `preview_requests`
+        // table with service-role credentials, so exactly one environment may
+        // run it or two deployments announce the same request twice over.
+        previewRequestNotificationSweep,
+      ]
+    : []),
 ];
 
 async function recoverStaleTasks(

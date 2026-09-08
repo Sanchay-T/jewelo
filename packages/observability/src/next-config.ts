@@ -22,13 +22,28 @@ type NextConfigLike = Record<string, unknown>;
  * The origins the browser must be allowed to talk to once each vendor is
  * configured, for `connect-src`. Empty when nothing is configured, which is
  * why the shipped policy is unchanged today.
+ *
+ * Storyline review 1, M4. The PostHog host used to be added on its own, so a
+ * deployment that carries `NEXT_PUBLIC_POSTHOG_HOST` with no
+ * `NEXT_PUBLIC_POSTHOG_KEY` - which is every deployment today - named
+ * `us.i.posthog.com` in the shipped Content-Security-Policy while the SDK was
+ * never loaded. `connect-src` is an allowlist, so that is a permission granted
+ * to an analytics vendor the app does not talk to: strictly wider than it needs
+ * to be, and it reads as a configured analytics stack to anyone auditing the
+ * header. Each origin now depends on the credential that actually switches its
+ * SDK on: the key for PostHog, the DSN for Sentry - which is also the origin,
+ * so an unset DSN could never have added one.
  */
 export function observabilityConnectOrigins(
   env: Record<string, string | undefined> = process.env,
 ): string[] {
   const origins: string[] = [];
-  for (const value of [env.NEXT_PUBLIC_SENTRY_DSN, env.NEXT_PUBLIC_POSTHOG_HOST]) {
-    if (!configured(value)) continue;
+  const candidates: [enabled: boolean, value: string | undefined][] = [
+    [configured(env.NEXT_PUBLIC_SENTRY_DSN), env.NEXT_PUBLIC_SENTRY_DSN],
+    [configured(env.NEXT_PUBLIC_POSTHOG_KEY), env.NEXT_PUBLIC_POSTHOG_HOST],
+  ];
+  for (const [enabled, value] of candidates) {
+    if (!enabled || !configured(value)) continue;
     try {
       origins.push(new URL(value.trim()).origin);
     } catch {

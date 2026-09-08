@@ -103,6 +103,17 @@ export const optionalRuntimeConfig = [
   "NEXT_PUBLIC_SENTRY_DSN",
   "NEXT_PUBLIC_POSTHOG_KEY",
   "NEXT_PUBLIC_POSTHOG_HOST",
+  // M1 / D-022. Which pendant constructions and which lettering the shop sells,
+  // as customer-facing option labels in a comma list. All three are optional and
+  // unset everywhere today: the defaults in `@jewelo/config`'s `sellable` module
+  // are exactly the behaviour the page already had (Classical, Classic, every
+  // Arabic lettering), so an app spec without them is the app spec it was. They
+  // are filled from P3-5's measured result, which is why they are configuration
+  // and not code. `NEXT_PUBLIC_`, because the atelier refuses an unsellable look
+  // in the browser before anything is reserved.
+  "NEXT_PUBLIC_SELLABLE_CONSTRUCTIONS",
+  "NEXT_PUBLIC_SELLABLE_ENGLISH_LETTERING",
+  "NEXT_PUBLIC_SELLABLE_ARABIC_LETTERING",
 ];
 
 // Read from the environment file, never shipped to the app.

@@ -12,6 +12,9 @@
  *   partial success, not a failure of the whole run;
  * - nothing here invents a percentage, an estimate or a remaining time.
  */
+import { PRESENTABLE_PROVIDERS } from "@jewelo/contracts";
+import { sellableLooks } from "@jewelo/config/sellable";
+
 import { views, type View } from "./model";
 
 export type StateRow = Record<string, unknown>;
@@ -80,12 +83,18 @@ const RUN_STATUSES = [
 const TERMINAL_RUN_STATUSES: readonly string[] = ["cancelled", "operator_review"];
 
 /**
- * `PROVIDER_MODE=mock` writes a placeholder asset with provider `mock` so the
- * durable pipeline can be exercised without spending. It is real plumbing and a
- * fake photograph: presenting it as the shopper's pendant would be exactly the
- * borrowed-image lie this product forbids.
+ * The providers whose stills may be presented as the shopper's own photograph.
+ *
+ * Storyline review 1, M3. It was a denylist of one string (`mock`) until now, so
+ * an asset row carrying any other provider name - a new adapter, a fixture, a
+ * row written by a build this page predates - was presented as the customer's
+ * piece. The allowlist is the contract's (`PRESENTABLE_PROVIDERS`), so an
+ * unknown provider fails closed: real plumbing with a fake photograph, which is
+ * what `PROVIDER_MODE=mock` writes, is never shown as gold.
  */
-const PLACEHOLDER_PROVIDERS = new Set(["mock"]);
+const PRESENTABLE_PROVIDER_SET: ReadonlySet<string> = new Set(
+  PRESENTABLE_PROVIDERS,
+);
 
 export const PRESENTATION_BY_VIEW: Readonly<Record<View, string>> = {
   Studio: "studio",
@@ -218,7 +227,7 @@ export function readPersonalizedRun(
         state === "ready" &&
         !!imageUrl &&
         !!provider &&
-        !PLACEHOLDER_PROVIDERS.has(provider),
+        PRESENTABLE_PROVIDER_SET.has(provider),
       reachable:
         state === "ready" ||
         (isInFlight(state) &&
@@ -398,9 +407,9 @@ export function pastCeiling(
  *   (apps/jobs/src/identity-anchor.ts). A run for Origami ribbon or for
  *   Signature English would therefore photograph a Classical, Playfair pendant
  *   and label it "Your piece": a picture of a different design. Arabic
- *   lettering is exempt because `arabicStyle` IS threaded through the
- *   specification into both the prompt and the identity engine, which then
- *   fails closed on its own for a style it has not certified.
+ *   lettering is unrestricted by default because `arabicStyle` IS threaded
+ *   through the specification into both the prompt and the identity engine,
+ *   which then fails closed on its own for a style it has not certified.
  *
  * Each of these goes straight to request capture instead of a run.
  */
@@ -409,9 +418,30 @@ export type PreflightRefusal =
   | "unsupported_construction"
   | "unsupported_lettering";
 
-/** The one construction and the one English lettering the pipeline can render. */
-const RENDERABLE_CONSTRUCTION = "Classical";
-const RENDERABLE_ENGLISH_LETTERING = "Classic";
+/**
+ * M1 / D-022. What the shop sells is configuration, not a literal.
+ *
+ * The two names above used to be `RENDERABLE_CONSTRUCTION = "Classical"` and
+ * `RENDERABLE_ENGLISH_LETTERING = "Classic"`, written here from what the
+ * deterministic stencil can draw. Which looks are good enough to sell is
+ * phase 3's measurement, so it is read from validated configuration and filled
+ * from P3-5's result before P5-2. The defaults are exactly the two literals
+ * that were here, so nothing on the page moves until that result exists.
+ *
+ * The three variables are written out in full because Next inlines
+ * `process.env.NEXT_PUBLIC_*` into the browser bundle only where the whole
+ * member expression appears in application code; `sellableLooks` validates them
+ * against the contract's own option lists. Read once at module load: the values
+ * are fixed for the life of a build.
+ */
+const SELLABLE = sellableLooks({
+  NEXT_PUBLIC_SELLABLE_CONSTRUCTIONS:
+    process.env.NEXT_PUBLIC_SELLABLE_CONSTRUCTIONS,
+  NEXT_PUBLIC_SELLABLE_ENGLISH_LETTERING:
+    process.env.NEXT_PUBLIC_SELLABLE_ENGLISH_LETTERING,
+  NEXT_PUBLIC_SELLABLE_ARABIC_LETTERING:
+    process.env.NEXT_PUBLIC_SELLABLE_ARABIC_LETTERING,
+});
 
 export function preflightRefusal(specification: {
   script: string;
@@ -421,13 +451,13 @@ export function preflightRefusal(specification: {
 }): PreflightRefusal | undefined {
   if (specification.script === "Arabic" && specification.names.length > 1)
     return "arabic_two_name";
-  if (specification.construction !== RENDERABLE_CONSTRUCTION)
+  if (!SELLABLE.constructions.has(specification.construction))
     return "unsupported_construction";
-  if (
-    specification.script !== "Arabic" &&
-    specification.lettering !== RENDERABLE_ENGLISH_LETTERING
-  )
-    return "unsupported_lettering";
+  const lettering =
+    specification.script === "Arabic"
+      ? SELLABLE.arabicLettering
+      : SELLABLE.englishLettering;
+  if (!lettering.has(specification.lettering)) return "unsupported_lettering";
   return undefined;
 }
 
