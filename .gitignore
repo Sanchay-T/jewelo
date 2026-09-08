@@ -17,3 +17,6 @@ dist/
 node_modules/
 supabase/.branches/
 supabase/.temp/
+
+# Agent worktrees created by the Claude Code harness
+.claude/worktrees/
