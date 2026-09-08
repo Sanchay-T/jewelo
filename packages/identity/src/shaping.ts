@@ -430,8 +430,13 @@ export const IDENTITY_RING_COUNT = 2;
 
 /**
  * Side of the square erosion window that decides what counts as load-bearing
- * metal before a ring is anchored (`np.ones((11, 11), bool)`). A dot, a hamza
- * or a hairline serif does not survive it, so it can never carry the chain.
+ * metal before a ring is anchored (`np.ones((11, 11), bool)`).
+ *
+ * This answers one question only: is the metal thick enough to hold a chain.
+ * The lab's comment claimed it also removed dots and hamzas, and adversarial
+ * review 2 showed that is false - a Kufi dot is a solid square that survives it
+ * with room to spare. `IDENTITY_RING_ANCHOR_MIN_ISLAND_FRACTION` below is what
+ * keeps a mark from carrying the chain.
  */
 export const IDENTITY_RING_ANCHOR_EROSION = 11;
 
@@ -473,19 +478,27 @@ export const IDENTITY_RING_WELD_ANCHOR_DEPTH = 14;
 export const IDENTITY_RING_MAX_LIFT = IDENTITY_RING_BAND;
 
 /**
- * Radius of the weld zone around a ring's anchor pixel, in pixels.
+ * Smallest pre-bridge island a jump ring may be anchored to, as a fraction of
+ * the largest pre-bridge island of the same piece.
  *
- * Adversarial finding 2: `drawDisk(..., IDENTITY_RING_OUTER, 1)` only adds ink,
- * so a ring that lands on top of a floating dot or a hairline fuses it into the
- * ring metal - a different letter, with every other gate still green. The weld
- * is the one place the ring is *meant* to touch the name: the body sinks
- * `IDENTITY_RING_WELD_OVERLAP` into the stroke and the fillet is
- * `IDENTITY_RING_STEM_WIDTH` wide, so metal within that reach of the anchor is
- * the joint. Anything the ring covers further out than this is a letter under
- * the metal, and `identity_ring_welded_to_glyph` refuses it.
+ * Adversarial review 2, finding 1: the erosion above proves the metal is thick
+ * enough to hold a chain, and nothing more. It cannot tell a stroke from the
+ * dot of ن, because a Kufi dot is a solid square that survives an 11 px erosion
+ * with room to spare, and because the `IDENTITY_BRIDGE_WIDTH` bar that attaches
+ * it survives too - so in the bridged raster the dot is part of the largest
+ * eroded component and was picked as the topmost pixel on the right of نور. The
+ * shop would have hung the pendant from a dot.
+ *
+ * A dot, a hamza and a nuqta are separate islands one step earlier, before any
+ * bar is drawn, and they are small. Measured over the whole 232-cell sweep of
+ * `render-stencils`: the largest island that ever carried a mark-anchored ring
+ * is 9.9% of its piece's largest island (`aya-ar-thuluth-inspired`), and the
+ * smallest island that carries a ring under this rule is 11.3%. Ten per cent
+ * sits in that gap. It is a ratio and not a pixel count, so it holds at every
+ * fitted size, and the gap is what a later sweep has to re-measure if a new
+ * face is pinned.
  */
-export const IDENTITY_RING_WELD_ZONE =
-  IDENTITY_RING_STEM_WIDTH + IDENTITY_RING_WELD_OVERLAP;
+export const IDENTITY_RING_ANCHOR_MIN_ISLAND_FRACTION = 0.1;
 
 /**
  * How far outward of its computed centre a ring may be pushed, in pixels, when

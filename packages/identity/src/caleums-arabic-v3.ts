@@ -15,6 +15,7 @@ import {
   IDENTITY_RECENTRE_BOX,
   IDENTITY_RESAMPLE_INK_THRESHOLD,
   IDENTITY_RING_ANCHOR_EROSION,
+  IDENTITY_RING_ANCHOR_MIN_ISLAND_FRACTION,
   IDENTITY_RING_ANCHOR_SPANS,
   IDENTITY_RING_INNER,
   IDENTITY_RING_MAX_LIFT,
@@ -26,7 +27,6 @@ import {
   IDENTITY_RING_WELD_OVERLAP,
   IDENTITY_RING_WELD_START_GAP,
   IDENTITY_RING_WELD_WIDTH,
-  IDENTITY_RING_WELD_ZONE,
   IDENTITY_THICKEN_PASSES,
   type IdentityScript,
   type ShapingMeasurement,
@@ -268,8 +268,8 @@ export interface IdentityConstructionMeasurement {
   readonly glyphPixelsPunchedByRings: number;
   /**
    * Glyph ink pixels the rings swallowed: pixels that were ink after bridging
-   * and lie under the ring annulus or its weld fillet further from the anchor
-   * than `IDENTITY_RING_WELD_ZONE`. The punch count above cannot see these,
+   * and lie under the ring annulus outside the weld capsule that joins the ring
+   * to its anchor stroke. The punch count above cannot see these,
    * because adding metal over ink changes no pixel; a floating dot absorbed
    * into a ring is a different letter, so the solver refuses any piece where
    * this is not zero (adversarial finding 2).
@@ -466,7 +466,7 @@ export async function solveIdentity(
           glyphPixelsPunchedByRings: 0,
           glyphPixelsUnderRingMetal: 0,
         }
-      : addRings(mask);
+      : addRings(mask, beforeBridging);
   // The second half of the ink-preservation invariant, and the reason it is not
   // vacuous: `drawBar` only ever adds metal, but `drawDisk(..., 0)` clears it,
   // so the rings are the one step that can take a piece of the name away. The
@@ -577,7 +577,11 @@ export async function solveIdentity(
       },
       exactCharactersPreserved: shaping.exactCharactersPreserved,
       // Every gate above threw on disagreement, so this is the conjunction of
-      // measurements rather than a promise. Only `measured` and the shaping
+      // measurements rather than a promise - and, adversarial review 2 finding
+      // 5, that means it cannot be false here: each conjunct has already thrown
+      // by the time this object is built. It is written out because the row is
+      // stored and read by people and by the database check, not because this
+      // line is the thing that stops a bad piece. Only `measured` and the shaping
       // measurement take part; `construction.jumpRings` appears as the ring
       // count the caller asked for (rings on or off), never as a claim about
       // what the raster contains, and the gate above already threw if the
@@ -1145,30 +1149,99 @@ function erodeSquare(
   return eroded;
 }
 
+/** Pixels that are set in both masks. */
+function intersect(left: Uint8Array, right: Uint8Array): Uint8Array {
+  const both = new Uint8Array(left.length);
+  for (let index = 0; index < both.length; index += 1)
+    both[index] = left[index] && right[index] ? 1 : 0;
+  return both;
+}
+
+/**
+ * The metal a jump ring is allowed to be anchored to: the letter bodies, and
+ * nothing else.
+ *
+ * The mask the rings are welded onto is already one piece, so by the time
+ * `addRings` runs a dot, a hamza or a nuqta is joined to its letter by a
+ * `IDENTITY_BRIDGE_WIDTH` bar and is indistinguishable, in the finished raster,
+ * from a stroke. The distinction survives one step earlier: `beforeBridging` is
+ * the thickened raster *before* any bar was drawn, where a dot is its own small
+ * 4-connected island. So the carrier is built there - every island at least
+ * `IDENTITY_RING_ANCHOR_MIN_ISLAND_FRACTION` of the largest one - and bridge
+ * bars, which are ink in neither island, are excluded for free: a ring welded
+ * to a 24 px bar would hang the whole pendant off the thinnest metal on it.
+ */
+function ringAnchorCarrier(
+  mask: RasterMask,
+  beforeBridging: Uint8Array,
+): Uint8Array {
+  const { labels, count } = label4(
+    mask.width,
+    mask.height,
+    beforeBridging,
+    (value) => value !== 0,
+  );
+  if (count === 0) return new Uint8Array(mask.ink.length);
+  const sizes = new Int32Array(count + 1);
+  for (let index = 0; index < labels.length; index += 1) {
+    const label = labels[index] as number;
+    if (label > 0) sizes[label] = (sizes[label] as number) + 1;
+  }
+  let largest = 0;
+  for (let label = 1; label <= count; label += 1)
+    if ((sizes[label] as number) > largest) largest = sizes[label] as number;
+  const minimum = largest * IDENTITY_RING_ANCHOR_MIN_ISLAND_FRACTION;
+  const carrier = new Uint8Array(mask.ink.length);
+  for (let index = 0; index < labels.length; index += 1) {
+    const label = labels[index] as number;
+    if (label > 0 && (sizes[label] as number) >= minimum) carrier[index] = 1;
+  }
+  return carrier;
+}
+
 /**
  * Two jump rings welded onto the top edge, one over each end of the name. A
  * port of `add_rings` (`make_stencil.py:143-178`).
  *
- * The anchor is chosen on eroded ink, so only metal that is at least
- * `IDENTITY_RING_ANCHOR_EROSION` pixels thick in both axes can carry a chain: a
- * dot, a hamza or a hairline serif is gone before the search starts. The ring
+ * The anchor is chosen on eroded ink that also belongs to a letter body, so it
+ * is both thick enough to carry a chain (`IDENTITY_RING_ANCHOR_EROSION` pixels
+ * in both axes) and part of the name rather than one of its marks: a dot, a
+ * hamza, a hairline serif or a bridge bar is gone before the search starts. The ring
  * centre then steps outward from that anchor, away from the middle of the name,
  * and up by `IDENTITY_RING_OUTER - IDENTITY_RING_WELD_OVERLAP`, so the ring body
  * sinks into the stroke it sits on - integral metal, not a floating circle - and
  * the hole itself clears the lettering into the reserved ring band.
  */
-function addRings(mask: RasterMask): RingPlacement {
+function addRings(
+  mask: RasterMask,
+  beforeBridging: Uint8Array,
+): RingPlacement {
   const glyphBox = inkBox(mask);
   const [minX, , maxX] = glyphBox;
   const span = Math.max(1, maxX - minX);
 
-  let solid = erodeSquare(
+  const eroded = erodeSquare(
     mask.width,
     mask.height,
     mask.ink,
     IDENTITY_RING_ANCHOR_EROSION,
   );
-  if (!solid.some((value) => value === 1)) solid = mask.ink;
+  const carrier = ringAnchorCarrier(mask, beforeBridging);
+  // The anchor has to be load-bearing in two different senses, and the erosion
+  // only answers the first. Eroded ink is metal thick enough to hold a chain;
+  // carrier ink is metal that belongs to a *letter body* rather than to a dot,
+  // a hamza or a bridge bar. Fix pass 3, finding 1: on نور in Kufi the eroded
+  // mask is a single component, because a 24 px bridge bar survives an 11 px
+  // erosion, so "largest eroded component" still offers the dot of ن as the
+  // topmost pixel on the right - and the shop would hang the pendant from that
+  // dot. Both conditions together, and only then the fallbacks, weakest last.
+  let solid = intersect(eroded, carrier);
+  // The one fallback, and it stays inside the letter bodies: a piece whose
+  // strokes are everywhere thinner than the erosion window has no load-bearing
+  // metal at all, and the old fallback to the raw mask would then hand the
+  // search a dot again. Carrier ink is never empty - the largest island always
+  // qualifies - so the search always has somewhere legitimate to look.
+  if (!solid.some((value) => value === 1)) solid = carrier;
 
   const beforeRings = mask.ink.slice();
   const centres: IdentityRingCentre[] = [];
@@ -1201,6 +1274,9 @@ function addRings(mask: RasterMask): RingPlacement {
         `identity_ring_anchor_missing:side=${side}`,
       );
 
+    const leftmostRingX = IDENTITY_RING_OUTER + IDENTITY_RING_TOP_CLEARANCE;
+    const rightmostRingX =
+      mask.width - 1 - IDENTITY_RING_TOP_CLEARANCE - IDENTITY_RING_OUTER;
     const seatX = anchorX + outward * outwardStep;
     const lowest = IDENTITY_RING_OUTER + IDENTITY_RING_TOP_CLEARANCE;
     const seat = Math.max(
@@ -1219,7 +1295,7 @@ function addRings(mask: RasterMask): RingPlacement {
     // under the ring metal. Failing that it keeps the least-bad seat and lets
     // the measured gates below refuse the piece.
     let cy = seat;
-    let cx = seatX;
+    let cx = Math.min(rightmostRingX, Math.max(leftmostRingX, seatX));
     let cost = Number.POSITIVE_INFINITY;
     search: for (let lift = 0; lift <= IDENTITY_RING_MAX_LIFT; lift += 1) {
       const candidateY = Math.max(lowest, seat - lift);
@@ -1230,15 +1306,18 @@ function addRings(mask: RasterMask): RingPlacement {
         shift <= IDENTITY_RING_MAX_OUTWARD_SHIFT;
         shift += 1
       ) {
-        const candidateX = seatX + outward * shift;
         // A ring pushed off the canvas would have its annulus clipped, so its
-        // hole would no longer be enclosed: stop travelling at the edge.
-        if (
-          candidateX - IDENTITY_RING_OUTER < IDENTITY_RING_TOP_CLEARANCE ||
-          candidateX + IDENTITY_RING_OUTER >
-            mask.width - 1 - IDENTITY_RING_TOP_CLEARANCE
-        )
-          break;
+        // hole would no longer be enclosed. Fix pass 3, finding 2: the illegal
+        // x used to `break`, which left the *shift* loop - and because x does
+        // not change with the lift, a seat that was already against the canvas
+        // edge broke at shift 0 on every pass, so the lift loop tried nothing
+        // at all. Five of the 32 committed rings were seated that way. The x is
+        // clamped into the legal band instead, so the lift is searched
+        // independently of how far the ring can travel sideways.
+        const candidateX = Math.min(
+          rightmostRingX,
+          Math.max(leftmostRingX, seatX + outward * shift),
+        );
         const ring = {
           x: candidateX,
           y: candidateY,
@@ -1308,87 +1387,81 @@ function addRings(mask: RasterMask): RingPlacement {
 }
 
 /**
- * Pre-ring ink pixels that lie under one ring's metal outside its weld zone.
+ * Pre-ring ink pixels that lie under one ring's metal outside the weld itself.
  *
  * "Under the metal" is the ring annulus (between the hole and the outer edge)
  * plus the weld fillet capsule, measured geometrically rather than as a change
  * of state, because `drawDisk(..., 1)` writes 1 over a pixel that was already
- * 1 and leaves no trace. The weld zone is the disk of radius
- * `IDENTITY_RING_WELD_ZONE` around the anchor: that is where the ring is meant
- * to grip the stroke, so ink there is the joint. Ink anywhere else under the
- * metal is a piece of the name the ring absorbed.
+ * 1 and leaves no trace. The one exemption is the weld: the capsule running
+ * from the ring centre down into the anchor stroke, which is exactly the metal
+ * `drawBar` lays to join them, so ink there is the joint being made. Ink
+ * anywhere else under the metal is a piece of the name the ring absorbed.
  */
 function countGlyphPixelsUnderRingMetal(
   mask: RasterMask,
   source: Uint8Array,
   ring: IdentityRingCentre,
 ): number {
+  // The fillet `drawBar` lays: from just below the hole down into the stroke.
   const barY0 = ring.y + IDENTITY_RING_INNER + IDENTITY_RING_WELD_START_GAP;
   const barX0 = ring.x;
   const barY1 = ring.anchorY + IDENTITY_RING_WELD_ANCHOR_DEPTH;
   const barX1 = ring.anchorX;
   const barRadius = IDENTITY_RING_WELD_WIDTH / 2;
-  const yMin = Math.max(
-    0,
-    Math.min(
-      ring.y - IDENTITY_RING_OUTER,
-      Math.trunc(Math.min(barY0, barY1) - barRadius) - 1,
-    ),
-  );
-  const yMax = Math.min(
-    mask.height - 1,
-    Math.max(
-      ring.y + IDENTITY_RING_OUTER,
-      Math.trunc(Math.max(barY0, barY1) + barRadius) + 1,
-    ),
-  );
-  const xMin = Math.max(
-    0,
-    Math.min(
-      ring.x - IDENTITY_RING_OUTER,
-      Math.trunc(Math.min(barX0, barX1) - barRadius) - 1,
-    ),
-  );
-  const xMax = Math.min(
-    mask.width - 1,
-    Math.max(
-      ring.x + IDENTITY_RING_OUTER,
-      Math.trunc(Math.max(barX0, barX1) + barRadius) + 1,
-    ),
-  );
-  const dy = barY1 - barY0;
-  const dx = barX1 - barX0;
-  const segment = dy * dy + dx * dx;
+  const yMin = Math.max(0, ring.y - IDENTITY_RING_OUTER);
+  const yMax = Math.min(mask.height - 1, ring.y + IDENTITY_RING_OUTER);
+  const xMin = Math.max(0, ring.x - IDENTITY_RING_OUTER);
+  const xMax = Math.min(mask.width - 1, ring.x + IDENTITY_RING_OUTER);
   let welded = 0;
   for (let y = yMin; y <= yMax; y += 1)
     for (let x = xMin; x <= xMax; x += 1) {
       if (!source[y * mask.width + x]) continue;
-      if (
-        (x - ring.anchorX) ** 2 + (y - ring.anchorY) ** 2 <=
-        IDENTITY_RING_WELD_ZONE ** 2
-      )
-        continue;
       const radial = (x - ring.x) ** 2 + (y - ring.y) ** 2;
-      if (
-        radial <= IDENTITY_RING_OUTER ** 2 &&
-        radial > IDENTITY_RING_INNER ** 2
-      ) {
-        welded += 1;
+      // Only the annulus adds metal over the name; the hole is the punch
+      // count's business and the fillet is the weld, exempted below.
+      if (radial > IDENTITY_RING_OUTER ** 2 || radial <= IDENTITY_RING_INNER ** 2)
         continue;
-      }
-      // The same capsule `drawBar` fills, evaluated as a predicate.
-      const t =
-        segment === 0
-          ? 0
-          : Math.min(
-              1,
-              Math.max(0, ((y - barY0) * dy + (x - barX0) * dx) / segment),
-            );
-      const py = barY0 + t * dy;
-      const px = barX0 + t * dx;
-      if ((y - py) ** 2 + (x - px) ** 2 <= barRadius * barRadius) welded += 1;
+      // The exemption, and the whole of it. Fix pass 3, finding 1: this used to
+      // be a disk of `IDENTITY_RING_WELD_ZONE` (46 px) centred on the anchor,
+      // which covers about 18% of the annulus and made that share of every ring
+      // unmeasurable by construction - a dot swallowed just inside it was
+      // invisible to the gate that exists to catch exactly that. The joint is
+      // not a disk. It is the capsule the solver welds: `IDENTITY_RING_WELD_WIDTH`
+      // across, running from the ring down into the anchor stroke. Ink there is
+      // the metal the weld is made of. Ink anywhere else under the annulus is a
+      // piece of the name the ring absorbed, and it counts.
+      if (insideCapsule(x, y, ring.x, ring.y, barX1, barY1, barRadius))
+        continue;
+      if (insideCapsule(x, y, barX0, barY0, barX1, barY1, barRadius)) continue;
+      welded += 1;
     }
   return welded;
+}
+
+/**
+ * Whether `(x, y)` lies inside the capsule of radius `radius` around the
+ * segment `(x0, y0) - (x1, y1)`: the same region `drawBar` fills, as a
+ * predicate, so the measurement and the drawing cannot drift apart.
+ */
+function insideCapsule(
+  x: number,
+  y: number,
+  x0: number,
+  y0: number,
+  x1: number,
+  y1: number,
+  radius: number,
+): boolean {
+  const dx = x1 - x0;
+  const dy = y1 - y0;
+  const segment = dx * dx + dy * dy;
+  const t =
+    segment === 0
+      ? 0
+      : Math.min(1, Math.max(0, ((y - y0) * dy + (x - x0) * dx) / segment));
+  const px = x0 + t * dx;
+  const py = y0 + t * dy;
+  return (y - py) ** 2 + (x - px) ** 2 <= radius * radius;
 }
 
 /**

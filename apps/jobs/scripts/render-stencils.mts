@@ -718,6 +718,17 @@ interface MatrixCell {
   readonly holesAboveGlyphTop: number;
   readonly glyphPixelsPunchedByRings: number;
   readonly glyphPixelsUnderRingMetal: number;
+  /**
+   * The solver's own ring centres and anchors, in pre-recentre coordinates.
+   * Recorded so a placement change can be compared cell by cell against an
+   * earlier sweep instead of being taken on trust.
+   */
+  readonly ringCentres: readonly {
+    readonly x: number;
+    readonly y: number;
+    readonly anchorX: number;
+    readonly anchorY: number;
+  }[];
 }
 
 const matrix = new Map<string, MatrixCell>();
@@ -766,6 +777,12 @@ for (const name of MATRIX_NAMES) {
           rendered.construction.glyphPixelsPunchedByRings,
         glyphPixelsUnderRingMetal:
           rendered.construction.glyphPixelsUnderRingMetal,
+        ringCentres: rendered.construction.ringCentres.map((centre) => ({
+          x: centre.x,
+          y: centre.y,
+          anchorX: centre.anchorX,
+          anchorY: centre.anchorY,
+        })),
         islandsBeforeBridging: rendered.construction.islandsBeforeBridging,
         bridges: rendered.construction.bridges,
         moved:

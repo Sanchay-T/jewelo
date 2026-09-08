@@ -201,8 +201,40 @@ export async function executePresentationTask(
   if (task.status === "ready") return { status: "deduplicated" as const };
   if (task.status === "cancelled" || task.cancel_requested_at)
     return { status: "cancelled" as const };
+  /**
+   * The one way out of a pre-spend failure, used by every pre-spend gate below.
+   *
+   * Adversarial review 1 finding 3: `mark_task_pre_spend_blocked` raises for a
+   * task whose attempt is not 0, because the pre-spend gate cannot follow a
+   * provider reservation. Adversarial review 2 finding 4: only one of the call
+   * sites carried that fallback, and the gates that simply threw carried none,
+   * so on a retry the throw escaped `executePresentationTask` (the Inngest
+   * function runs with `retries: 0`), the task stayed `retrying` with no
+   * `terminal_error_code`, and the two-minute stale sweeper re-dispatched it
+   * for ever. Every deterministic pre-spend refusal now ends the same way:
+   * block if the RPC will take it, terminal `fail` with the same message if it
+   * will not, and `operator_review` either way. The messages are category
+   * strings; a customer name never appears in one.
+   */
+  const blockPreSpendTerminally = async (error: unknown) => {
+    try {
+      await repository.blockPreSpend({ task, run, error });
+    } catch {
+      await repository.fail({
+        task,
+        run,
+        attempt: task.attempt,
+        error,
+        terminal: true,
+        actualCostCents: 0,
+      });
+    }
+    return { status: "operator_review" as const, attempt: task.attempt };
+  };
+  // The release row the job loaded is not the release the task is pinned to.
+  // That is a property of the two rows, so re-dispatching cannot change it.
   if (release.id !== task.prompt_release_id)
-    throw new Error("task_prompt_release_mismatch");
+    return blockPreSpendTerminally(new Error("task_prompt_release_mismatch"));
   let snapshot = existingSnapshot;
   if (!snapshot) {
     let compiled: ReturnType<typeof compilePrompt>;
@@ -229,16 +261,13 @@ export async function executePresentationTask(
       // stale sweeper re-queues it for ever. This is a pre-spend gate like the
       // identity and anchor gates: block once, release the reservation, and
       // send it to operator review.
-      await repository.blockPreSpend({
-        task,
-        run,
-        error: new Error(
+      return blockPreSpendTerminally(
+        new Error(
           `prompt_compile_failed:${
             error instanceof Error ? error.message : "unknown"
           }`,
         ),
-      });
-      return { status: "operator_review" as const, attempt: task.attempt };
+      );
     }
     snapshot = await repository.materializePromptSnapshot({
       task,
@@ -249,6 +278,9 @@ export async function executePresentationTask(
       sha256: createHash("sha256").update(compiledPrompt, "utf8").digest("hex"),
     });
   }
+  // A stored snapshot that belongs to another task, another release or another
+  // prompt text is wrong in the row, not in this attempt: the same comparison
+  // fails on every redispatch, so it is a pre-spend refusal like the others.
   if (
     snapshot.task_id !== task.id ||
     snapshot.prompt_release_id !== task.prompt_release_id ||
@@ -256,7 +288,9 @@ export async function executePresentationTask(
       .update(snapshot.compiled_prompt, "utf8")
       .digest("hex") !== snapshot.sha256
   )
-    throw new Error("prompt_snapshot_lineage_mismatch");
+    return blockPreSpendTerminally(
+      new Error("prompt_snapshot_lineage_mismatch"),
+    );
   let identity: { url: string; fingerprint: string; artifactId: string };
   let styleAnchorUrl: string | undefined;
   let inspirationImageUrl: string | undefined;
@@ -293,25 +327,7 @@ export async function executePresentationTask(
       task.owner_principal_id,
     );
   } catch (error) {
-    try {
-      await repository.blockPreSpend({ task, run, error });
-    } catch {
-      // Adversarial finding 3: `mark_task_pre_spend_blocked` raises for a task
-      // whose attempt is not 0, because the pre-spend gate cannot follow a
-      // provider reservation. A pre-spend throw on a retry would then escape
-      // this catch and leave the task `retrying` for ever with no
-      // `terminal_error_code`, so the reason the pendant never arrived would
-      // be nowhere in the record. The terminal path writes the same message.
-      await repository.fail({
-        task,
-        run,
-        attempt: task.attempt,
-        error,
-        terminal: true,
-        actualCostCents: 0,
-      });
-    }
-    return { status: "operator_review" as const, attempt: task.attempt };
+    return blockPreSpendTerminally(error);
   }
   const checkpoint = await repository.loadStoredOutput(task);
   const provider = generator instanceof MockStudioGenerator ? "mock" : "openai";
@@ -691,6 +707,19 @@ export class SupabasePresentationRepository implements PresentationRepository {
     ownerId: string,
     task: TaskRow,
   ) {
+    // Adversarial review 1 finding 1: the release the engine stamps into the
+    // artifact has to be the release the task is pinned to. Two releases in one
+    // run mean media from two different identity engines under one order, and
+    // nothing downstream would say which pendant the customer is looking at.
+    // Both values are release ids from the registry, never customer text.
+    // Review 2 finding 7: the comparison used to run after the stencil had been
+    // shaped, rasterised, measured and encoded, so a mismatch cost a full
+    // render before it refused. The release the engine will stamp is the one
+    // handed to it, so the comparison belongs here, where it costs nothing.
+    if (this.pipelineReleaseId !== task.pipeline_release)
+      throw new Error(
+        `identity_pipeline_release_mismatch:task=${task.pipeline_release},report=${this.pipelineReleaseId}`,
+      );
     const rendered = await renderIdentityAnchor(
       {
         approvedText: revision.identity_anchor.approvedText,
@@ -702,11 +731,9 @@ export class SupabasePresentationRepository implements PresentationRepository {
       this.pipelineReleaseId,
       this.ringlessConstructions,
     );
-    // Adversarial finding 1: the release the engine stamped into the artifact
-    // has to be the release the task is pinned to. Two releases in one run mean
-    // media from two different identity engines under one order, and nothing
-    // downstream would say which pendant the customer is looking at. Both
-    // values are release ids from the registry, never customer text.
+    // And the same statement about what the engine actually stamped, which is
+    // cheap now that the report exists and keeps the check honest if the solver
+    // ever stops echoing the release it was given.
     if (rendered.report.pipelineRelease !== task.pipeline_release)
       throw new Error(
         `identity_pipeline_release_mismatch:task=${task.pipeline_release},report=${rendered.report.pipelineRelease}`,

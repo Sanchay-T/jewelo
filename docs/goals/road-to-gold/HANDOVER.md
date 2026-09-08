@@ -45,7 +45,8 @@ Then a request the shop can act on from a phone.
 
 The agent takes the default written against each `DS-*` row in `docs/TASKS.md` and records it here with the task that used it.
 
-- none yet
+- P1-5, adversarial review 2 finding 3: a ring hole must be above the anchor stroke it is welded to, not above the top of the whole name.
+  The lab's own `make_stencil.py` seats rings at corner anchors of the eroded body, which for a tall Arabic letter sits inside the name band, and the prompts were proven on those stencils, so `render-stencils.mts` keeps `aboveAnchor` as the gate and the P1-5 proof cell was reworded to say so.
 
 ## Needs Sanchay
 
