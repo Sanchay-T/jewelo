@@ -1,5 +1,5 @@
 {
   "extends": "../../tsconfig.base.json",
-  "include": ["src/**/*.ts", "trigger.config.ts"],
+  "include": ["src/**/*.ts", "scripts/**/*.mts", "trigger.config.ts"],
   "exclude": ["src/**/*.test.ts"]
 }
