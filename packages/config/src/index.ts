@@ -1,5 +1,11 @@
 export * from "./load-env";
 export * from "./observability";
+export * from "./sellable";
+import {
+  sellableArabicLetteringSchema,
+  sellableConstructionsSchema,
+  sellableEnglishLetteringSchema,
+} from "./sellable";
 import { z } from "zod";
 
 /**
@@ -218,6 +224,12 @@ export const browserEnvSchema = z
     NEXT_PUBLIC_POSTHOG_KEY: optionalNonEmpty,
     NEXT_PUBLIC_POSTHOG_HOST: optionalUrl,
     NEXT_PUBLIC_SENTRY_DSN: optionalUrl,
+    // M1 / D-022. Which looks the shop sells, validated against the contract's
+    // own option lists in `./sellable`. Listed here so a bad entry fails the
+    // build (`next.config.ts` calls `parseBrowserEnv`) rather than the page.
+    NEXT_PUBLIC_SELLABLE_CONSTRUCTIONS: sellableConstructionsSchema,
+    NEXT_PUBLIC_SELLABLE_ENGLISH_LETTERING: sellableEnglishLetteringSchema,
+    NEXT_PUBLIC_SELLABLE_ARABIC_LETTERING: sellableArabicLetteringSchema,
   })
   .superRefine((value, context) => {
     const hasUrl = value.NEXT_PUBLIC_SUPABASE_URL !== undefined;
@@ -558,6 +570,44 @@ export const webGuardEnvSchema = z.object({
 });
 
 /* ------------------------------------------------------------------------- */
+/* The new-request notification sweep.                                        */
+/*                                                                            */
+/* Storyline review 1, B3. The announcement used to happen in exactly one      */
+/* place, the create path of `POST /api/preview-requests`, and the send there  */
+/* is best effort: an Inngest outage, a replayed submission or a deployment    */
+/* with no shop address left a captured request announced to nobody, and       */
+/* nothing ever looked at it again (13 such rows live). The sweep is the       */
+/* backstop: every two minutes it re-emits `preview-request/created` for the   */
+/* rows that are still unannounced, with the same event id, so the             */
+/* `notified_at` claim in the database keeps it exactly one message.           */
+/* ------------------------------------------------------------------------- */
+
+export const notificationSweepLimitsSchema = z.object({
+  /**
+   * Rows one tick may re-announce. The sweep runs every two minutes, so this is
+   * also the recovery rate: 50 rows a tick clears any backlog a shop can
+   * produce while keeping one tick's work bounded and its Inngest send small.
+   */
+  notificationSweepBatch: z.number().int().positive().max(500),
+  /**
+   * How old a row must be before the sweep touches it. The create path emits
+   * its own event, and the notification function is allowed to retry; without a
+   * floor the sweep would race a request that was captured a second ago and
+   * make two attempts at the same claim for no gain.
+   */
+  notificationSweepMinAgeMs: z.number().int().positive().min(30_000),
+});
+export type NotificationSweepLimits = z.infer<
+  typeof notificationSweepLimitsSchema
+>;
+
+export const notificationSweepLimits: NotificationSweepLimits =
+  notificationSweepLimitsSchema.parse({
+    notificationSweepBatch: 50,
+    notificationSweepMinAgeMs: 60_000,
+  });
+
+/* ------------------------------------------------------------------------- */
 /* Generation pipeline timing and budgets.                                    */
 /*                                                                            */
 /* Pipeline review 1, findings 2 and 10. Every one of these numbers used to be */
@@ -661,6 +711,17 @@ export const pipelineLimitsSchema = z
      * only when the policy row cannot be read.
      */
     providerAttemptBudget: positiveInt.max(10),
+    /**
+     * The largest JSON body an API route will read into memory.
+     *
+     * Security review 2 L-6: `readJson` used to buffer the whole body before
+     * any schema saw it, so the only bound on a request to a route that reads
+     * JSON was the platform's, and a validated shape was checked after the
+     * bytes had already been paid for. Every body this app sends is a small
+     * object - a specification, a command envelope, a note - so 64 KiB is
+     * generous; the prompts route keeps its own tighter 32 KiB template bound.
+     */
+    requestBodyMaxBytes: positiveInt.min(4_096).max(1_048_576),
   })
   .transform((value) => ({
     ...value,
@@ -736,6 +797,7 @@ export const pipelineLimits: PipelineLimits = pipelineLimitsSchema.parse({
   // makes about a server too old to publish this number at all.
   signedUrlRefreshFloorSeconds: 30,
   providerAttemptBudget: 3,
+  requestBodyMaxBytes: 65_536,
 });
 
 /* ------------------------------------------------------------------------- */

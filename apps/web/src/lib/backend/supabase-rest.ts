@@ -1,5 +1,6 @@
 import "server-only";
 
+import { pipelineLimits } from "@jewelo/config";
 import { reportError } from "@jewelo/observability/server";
 
 interface SupabaseConfig {
@@ -173,6 +174,13 @@ export async function readJson<T extends Record<string, unknown>>(
   request: Request,
   required: Array<keyof T & string> = [],
 ): Promise<T> {
+  // Security review 2 L-6: the body used to be buffered whole before any bound
+  // applied, so a route that reads JSON had no size of its own. The declared
+  // length is refused first, from validated configuration rather than a literal
+  // here; a caller that lies about it still meets the schema on the far side.
+  const declared = Number(request.headers.get("content-length") ?? 0);
+  if (Number.isFinite(declared) && declared > pipelineLimits.requestBodyMaxBytes)
+    throw new ApiError("Request body is too large", 413, "payload_too_large");
   const body = (await request.json().catch(() => {
     throw new Error("malformed body");
   })) as T;

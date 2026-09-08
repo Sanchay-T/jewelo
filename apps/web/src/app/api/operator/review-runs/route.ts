@@ -1,4 +1,7 @@
-import { requireOperatorSession } from "../../../../lib/backend/operator-session";
+import {
+  assertSameOrigin,
+  requireOperatorSession,
+} from "../../../../lib/backend/operator-session";
 import {
   adminConfig,
   jsonError,
@@ -42,6 +45,9 @@ const MAX_LIMIT = 200;
 export async function GET(request: Request) {
   try {
     requireOperatorSession(request);
+    // Security review 2 L-1: an operator cookie is not a licence for another
+    // origin's page to read the review queue.
+    assertSameOrigin(request);
     const requested = Number(
       new URL(request.url).searchParams.get("limit") ?? DEFAULT_LIMIT,
     );

@@ -30,6 +30,10 @@ partial="$target.partial"
 started=$(date +%s)
 
 log "pg_dump -> $target (schemas: ${SCHEMAS[*]})"
+# Security review 2 L-5: pg_dump creates the partial file itself, under whatever
+# umask the caller had, and the dump carries every shopper's contact detail. The
+# chmod below only closes the window after the write; this closes it before.
+umask 077
 args=(--format=custom --compress=6 --no-owner --no-privileges --file="$partial")
 for schema in "${SCHEMAS[@]}"; do args+=(--schema="$schema"); done
 # No connection arguments: PG* env vars carry the credentials.

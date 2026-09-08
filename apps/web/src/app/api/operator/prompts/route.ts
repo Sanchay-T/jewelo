@@ -1,5 +1,6 @@
 import { isPromptProfile, validatePromptTemplate } from "@jewelo/ai";
 import {
+  assertSameOrigin,
   operatorMockMode,
   operatorSessionScope,
   requireOperatorSession,
@@ -29,27 +30,6 @@ function requestId(request: Request) {
   return (
     request.headers.get("x-request-id")?.slice(0, 100) ?? crypto.randomUUID()
   );
-}
-
-function assertSameOrigin(request: Request, mutation = false) {
-  if (request.headers.get("sec-fetch-site") === "cross-site")
-    throw new Response("Cross-site request rejected", { status: 403 });
-  if (mutation) {
-    const origin = request.headers.get("origin");
-    const targetHost =
-      request.headers.get("x-forwarded-host") ??
-      request.headers.get("host") ??
-      new URL(request.url).host;
-    const originHost = (() => {
-      try {
-        return origin ? new URL(origin).host : "";
-      } catch {
-        return "";
-      }
-    })();
-    if (!originHost || originHost !== targetHost)
-      throw new Response("Same-origin request required", { status: 403 });
-  }
 }
 
 function releaseDto(release: StoredPromptRelease) {

@@ -300,8 +300,24 @@ export interface PreviewRequestRecord {
 }
 
 /** The operator queue additionally sees the contact and the operator note. */
+/**
+ * Security review 2 L-2. A stored `contact` that no longer parses - a row from
+ * an older contract, or anything a future writer got wrong - must not become a
+ * `mailto:` or `tel:` href built from whatever the column happened to hold. The
+ * queue degrades to this record instead and shows the operator that the row
+ * needs looking at, with no link on it.
+ */
+export interface UnreadablePreviewRequestContact {
+  channel: "unknown";
+  value: string;
+  name?: string;
+}
+export type OperatorPreviewRequestContact =
+  | PreviewRequestContact
+  | UnreadablePreviewRequestContact;
+
 export interface OperatorPreviewRequestRecord extends PreviewRequestRecord {
-  contact: PreviewRequestContact;
+  contact: OperatorPreviewRequestContact;
   summary: string;
   operatorNote?: string;
 }

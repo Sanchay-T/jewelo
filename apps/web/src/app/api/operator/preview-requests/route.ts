@@ -1,4 +1,7 @@
-import { requireOperatorSession } from "../../../../lib/backend/operator-session";
+import {
+  assertSameOrigin,
+  requireOperatorSession,
+} from "../../../../lib/backend/operator-session";
 import {
   adminConfig,
   jsonError,
@@ -18,6 +21,9 @@ const MAX_LIMIT = 200;
 export async function GET(request: Request) {
   try {
     requireOperatorSession(request);
+    // Security review 2 L-1: this answer carries every shopper's contact
+    // detail, so a cross-site read is refused before the query is built.
+    assertSameOrigin(request);
     const parameters = new URL(request.url).searchParams;
     const status = parameters.get("status") ?? "";
     const requested = Number(parameters.get("limit") ?? DEFAULT_LIMIT);

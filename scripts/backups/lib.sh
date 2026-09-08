@@ -42,6 +42,14 @@ export_pg_env_from_url() {
   command -v python3 >/dev/null 2>&1 || die "python3 is required to parse the connection URL"
   tmp="$(mktemp)"
   chmod 600 "$tmp"
+  # Security review 2 L-5: the file below holds PGPASSWORD in clear text. Under
+  # `set -e` a failure inside the sourcing left it behind for the life of the
+  # machine's temp directory; RETURN fires on every exit from this function,
+  # including that one.
+  # The trap clears itself: a RETURN trap set inside a function stays in the
+  # shell's trap table and would otherwise fire again when the caller returns,
+  # where `tmp` is out of scope and `set -u` turns that into an error.
+  trap 'rm -f "${tmp:-}"; trap - RETURN' RETURN
   printf '%s' "$url" | python3 -c '
 import sys, shlex
 from urllib.parse import urlsplit, unquote, parse_qsl

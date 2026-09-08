@@ -50,11 +50,11 @@ function storage(): Storage | undefined {
 export type DeviceState = {
   state: State;
   /**
-   * `full` is this journey's own saved draft. `bag` is a record written by the
-   * other language: the pieces the shopper already kept are theirs and follow
-   * them, the working draft and the name do not. `none` is a first visitor.
+   * `full` is this journey's own saved draft. `none` is a first visitor, and
+   * also anyone whose saved record belongs to another journey: security review
+   * 2 M-2, see `loadDeviceState`.
    */
-  restored: "full" | "bag" | "none";
+  restored: "full" | "none";
   /** A record this build cannot read; the caller tells the shopper once. */
   unreadable: boolean;
 };
@@ -77,9 +77,17 @@ export function loadDeviceState(locale: "en" | "ar"): DeviceState {
       store.removeItem(STORAGE_KEY);
       return fresh;
     }
+    // Security review 2 M-2: a record stamped with another journey used to
+    // carry its `bag` across the boundary, and a bag holds the ids and the
+    // draft the previous shopper kept. Switching language on the shop tablet is
+    // exactly how one shopper's pieces reached the next one's screen. A scope
+    // that does not match is removed, like an unreadable one, and this journey
+    // starts empty.
+    if (parsed.scope !== scopeOf(locale)) {
+      store.removeItem(STORAGE_KEY);
+      return fresh;
+    }
     const state = restore(JSON.stringify(parsed.state));
-    if (parsed.scope !== scopeOf(locale))
-      return { state: { ...initialState(), bag: state.bag }, restored: "bag", unreadable: false };
     return { state, restored: "full", unreadable: false };
   } catch {
     store.removeItem(STORAGE_KEY);

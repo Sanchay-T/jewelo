@@ -75,6 +75,24 @@ export interface VerificationResult {
    */
   notes: string;
 }
+/**
+ * The image providers whose output may be presented to a shopper as their own
+ * photograph.
+ *
+ * Storyline review 1, M3. This used to be the other way round: the browser held
+ * a denylist of one string (`mock`), so every provider name the denylist did not
+ * happen to know - a new adapter, a fixture writer, a typo, a row written by a
+ * future build - presented a picture as the customer's piece. An allowlist fails
+ * the safe way: a provider nobody has certified is never presented, and adding
+ * one is an edit here, in the contract, rather than an accident in a route.
+ *
+ * `openai` is the only entry because `gpt-image-2` is the only model that makes
+ * a still this product will show (D-018, docs/CALEUMS-FINAL-E2E-CONTRACT.md);
+ * `mock` writes real plumbing and a fake photograph and is deliberately absent.
+ */
+export const PRESENTABLE_PROVIDERS = ["openai"] as const;
+export type PresentableProvider = (typeof PRESENTABLE_PROVIDERS)[number];
+
 export interface AssetLineage {
   revisionId: string;
   runId: string;
@@ -269,11 +287,46 @@ export interface Quote {
   expiresAt: string;
   snapshot: Estimate;
 }
+/**
+ * The fulfillment states an order moves through, in shop order.
+ *
+ * The same four the `orders` check constraint accepts
+ * (`supabase/migrations/20260827000000_caleums_one_view_backend.sql`). The
+ * generated types in `packages/data/src/database.types.ts` carry the column as
+ * plain `text`, so this list is the one vocabulary the code has and the
+ * database is the one that refuses anything else.
+ */
+export const ORDER_FULFILLMENT_STATUSES = [
+  "confirmed",
+  "in-production",
+  "quality-check",
+  "ready",
+] as const;
+export type OrderFulfillmentStatus = (typeof ORDER_FULFILLMENT_STATUSES)[number];
+
+/**
+ * Security review 2 M-4. The operator command that moves an order along used to
+ * hand `payload.status` to PostgREST as it arrived and filter on the order id
+ * alone, so any string the check constraint happened to accept could be written
+ * to any order in the shop. The envelope is validated here, `designId` is
+ * required, and the route puts it in the filter.
+ */
+export const fulfillmentTransitionCommandSchema = z.object({
+  command: z.literal("fulfillment_transition"),
+  designId: z.uuid(),
+  targetId: z.uuid(),
+  idempotencyKey: z.string().min(1).max(200),
+  payload: z.object({ status: z.enum(ORDER_FULFILLMENT_STATUSES) }),
+});
+export type FulfillmentTransitionCommandInput = z.infer<
+  typeof fulfillmentTransitionCommandSchema
+>;
+
 export interface Order {
   id: string;
   designId: string;
   quoteId: string;
-  status: "confirmed" | "in-production" | "quality-check" | "ready";
+  status: OrderFulfillmentStatus;
   acceptedTotal: number;
   acceptedAt: string;
   revisionId: string;

@@ -80,6 +80,12 @@ async function client(): Promise<SentryModule | undefined> {
       maxBreadcrumbs: observabilityLimits.maxBreadcrumbs,
       sendDefaultPii: false,
       beforeSend: (event) => scrub(event),
+      // Security review 2 H-1: the SDK turns every `console.*` call into a
+      // breadcrumb attached to the next error, so one job log line naming a
+      // shopper would leave the process the day a DSN is set. Console
+      // breadcrumbs are dropped; the request and navigation ones stay.
+      beforeBreadcrumb: (breadcrumb) =>
+        breadcrumb.category === "console" ? null : breadcrumb,
     });
     sentry = module;
     return module;

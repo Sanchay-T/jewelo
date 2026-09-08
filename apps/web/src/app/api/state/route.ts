@@ -2,6 +2,7 @@ import { pipelineLimits } from "@jewelo/config";
 import { hasOperatorSession } from "../../../lib/backend/operator-session";
 import {
   adminConfig,
+  ApiError,
   authenticatedUser,
   jsonError,
   supabaseRequest,
@@ -185,6 +186,19 @@ export async function GET(request: Request) {
     const config = customer ? customer.config : adminConfig();
     const bearer = customer ? customer.bearer : config.key;
     const designId = new URL(request.url).searchParams.get("designId");
+    // Security review 2 H-2. The customer branch is scoped by RLS to the rows
+    // the shopper's own principal owns, so an unscoped read there is that one
+    // shopper's own state. The operator branch reads with the service key,
+    // where an unscoped read is every design, every audit event and a freshly
+    // signed URL for every asset in the shop, in one response. An operator
+    // console always opens one design, so the id is required rather than
+    // clamped: a paged export is not a thing this route offers.
+    if (operator && !designId)
+      throw new ApiError(
+        "designId is required for an operator read",
+        422,
+        "invalid_input",
+      );
     const scope = (table: string) => {
       if (!designId) return "";
       if (table === "designs") return `&id=eq.${encodeURIComponent(designId)}`;

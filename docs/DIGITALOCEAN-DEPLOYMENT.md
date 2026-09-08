@@ -523,6 +523,17 @@ Inngest retry and a manual replay announce the request exactly once.
 A failed send releases the claim, so the next attempt announces it rather than
 swallowing it.
 
+The announcement is not left to one send.
+`POST /api/preview-requests` emits the event on all three of its answers - the row it inserts, the replay of an existing `request_key`, and the loser of the unique-index race - and the cron function `preview-request-notification-sweep` runs every two minutes as the backstop.
+The sweep reads up to `notificationSweepBatch` (50, `packages/config/src/index.ts`) rows whose `notified_at` is still null and which are older than `notificationSweepMinAgeMs` (60 s), oldest first, over the `preview_requests_unnotified` index, and re-emits `preview-request/created` with the same event id the route uses, so the claim in the database still makes it exactly one message.
+It reads the shared table with service-role credentials, so like the other crons it is registered only where `INNGEST_CRON_ENABLED=1`.
+With `NOTIFICATION_TO` unset it stops before the read and reports `not_configured`, because every event it could send would end there anyway.
+A tick that announces rows logs one `preview_request_notification_swept` line with the count and no ids.
+
+Storyline review 1 (B3) found this the hard way: 13 captured requests were sitting unannounced because the create-path send is best effort and nothing ever looked at them again.
+Those 13 rows are still unannounced by choice - they are old test requests, and the deployment has no shop address, so the sweep stops on `not_configured`.
+The first tick after `NOTIFICATION_TO` is set will announce every unannounced row, including them; clear them first with a single SQL update setting `notified_at = now()` on the rows that predate the shop's address if the shop should not receive them.
+
 Which transport runs is `NOTIFICATION_TRANSPORT`:
 
 ```text
@@ -542,10 +553,12 @@ All nine are optional in the app spec and ship only when present.
 fails `pnpm do:check-env` rather than the first shopper's request; the same rule
 is `assertNotificationConfigured` in `packages/config/src/index.ts`.
 
-`log` is the shipped default and is not a silent drop: the whole message,
-including the contact detail, is written to the DigitalOcean runtime log as
-`notification_logged`, and the durable truth stays the operator queue row that
-P7-1 renders. With `NOTIFICATION_TO` unset the job returns `not_configured` and
+`log` is the shipped default and is not a silent drop: the DigitalOcean runtime
+log carries one `notification_logged` line naming the transport and the request
+id, and the operator reads the message itself - the contact detail and the
+shopper's own words - in the queue row that P7-1 renders. The contact detail is
+deliberately not in the log line (security review 2 H-1): a runtime log has no
+retention bound and no deletion path. With `NOTIFICATION_TO` unset the job returns `not_configured` and
 logs `preview_request_notification_not_configured` instead of retrying.
 
 There is no mail account yet. The Supabase project has no custom SMTP host

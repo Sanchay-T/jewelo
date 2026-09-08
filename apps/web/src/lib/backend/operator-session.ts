@@ -84,6 +84,39 @@ export function requireOperatorSession(request: Request) {
     throw new Response("Operator authentication required", { status: 401 });
 }
 
+/**
+ * A browser page on another origin must not be able to drive an operator route
+ * with the operator's own cookie.
+ *
+ * Security review 2 L-1: this used to be a private copy in the commands route
+ * and another in the prompts route, so the two operator GETs that never got a
+ * copy - `review-runs` and `preview-requests` - answered a cross-site read with
+ * the queue and every shopper's contact detail in it. One helper, called by
+ * every operator route, is the only version of this rule that cannot drift.
+ *
+ * `mutation` adds the `Origin` check: a request that changes something must
+ * name this host, and a missing header is a refusal rather than a pass.
+ */
+export function assertSameOrigin(request: Request, mutation = false) {
+  if (request.headers.get("sec-fetch-site") === "cross-site")
+    throw new Response("Cross-site request rejected", { status: 403 });
+  if (!mutation) return;
+  const origin = request.headers.get("origin");
+  const targetHost =
+    request.headers.get("x-forwarded-host") ??
+    request.headers.get("host") ??
+    new URL(request.url).host;
+  const originHost = (() => {
+    try {
+      return origin ? new URL(origin).host : "";
+    } catch {
+      return "";
+    }
+  })();
+  if (!originHost || originHost !== targetHost)
+    throw new Response("Same-origin request required", { status: 403 });
+}
+
 export function operatorSessionScope(request: Request) {
   return (
     request.headers

@@ -7,12 +7,14 @@
  * mode switch on the studio adapters in `./studio.ts`.
  *
  * Two senders ship:
- *   - `LogNotificationSender` (`log`, the default): writes the whole message to
- *     the job log and sends nothing. This is the honest state of the shop
- *     today - the Supabase project has no custom SMTP host configured, so there
- *     is no account to send from. It is not a silent drop: the message is
- *     readable in the DigitalOcean runtime log, and the durable truth stays the
- *     operator queue row.
+ *   - `LogNotificationSender` (`log`, the default): records that a message was
+ *     built and sends nothing. This is the honest state of the shop today - the
+ *     Supabase project has no custom SMTP host configured, so there is no
+ *     account to send from. It is not a silent drop either: the log line names
+ *     the request, and the message itself - the shopper's contact detail and
+ *     free text - is read in the operator queue, which is the durable truth.
+ *     Security review 2 H-1: the line used to carry `to` and the whole body,
+ *     which put a shopper's number and words into an unbounded runtime log.
  *   - `SmtpNotificationSender` (`smtp`): a minimal SMTP submission client on
  *     `node:net` / `node:tls`. Deliberately no new dependency - nodemailer
  *     would be a transitive tree for one plain-text message a day.
@@ -35,6 +37,12 @@ export interface NotificationMessage {
   readonly to: string;
   readonly subject: string;
   readonly text: string;
+  /**
+   * The row this message is about. It is the only field a sender may write to
+   * a log: an id is enough for an operator to find the request in the queue,
+   * and nothing about it identifies a person.
+   */
+  readonly requestId?: string;
 }
 
 export interface NotificationResult {
@@ -68,12 +76,15 @@ function assertAddress(field: string, value: string): string {
 }
 
 /**
- * The default. Records the message where the operator can read it and reports
- * `delivered: false`, so a caller can never mistake a stub for a sent mail.
+ * The default. Records that a message was built and reports `delivered: false`,
+ * so a caller can never mistake a stub for a sent mail.
  *
- * The body carries the shopper's contact detail, which is the same detail the
- * operator queue already shows to the same operator on the same trust boundary.
- * It is never written to a customer-visible surface.
+ * The message body carries the shopper's contact detail and their own words.
+ * A runtime log is not a place for either: DigitalOcean keeps it with no
+ * retention bound and no deletion path, and an error tracker with console
+ * breadcrumbs would ship the same line to a third party. So the line carries
+ * the request id and the transport and nothing else; the operator reads the
+ * message itself in the queue, where the row already lives.
  */
 export class LogNotificationSender implements NotificationSender {
   readonly #write: (line: string, payload: Record<string, unknown>) => void;
@@ -91,9 +102,7 @@ export class LogNotificationSender implements NotificationSender {
     assertAddress("NOTIFICATION_TO", message.to);
     this.#write("notification_logged", {
       transport: "log",
-      to: message.to,
-      subject: message.subject,
-      text: message.text,
+      requestId: message.requestId ?? "unknown",
     });
     return { transport: "log", delivered: false };
   }
@@ -246,6 +255,7 @@ export function previewRequestNotificationMessage(
     to,
     subject: `New request - ${specification.names.join(" + ")} - ${specification.construction}`,
     text: lines.join("\n"),
+    requestId: input.requestId,
   };
 }
 
@@ -396,6 +406,16 @@ async function openSmtpSession(settings: SmtpSettings): Promise<SmtpSession> {
   if (settings.security === "starttls") {
     await command("STARTTLS", [220], "STARTTLS");
     const plain = socket;
+    // Security review 2 L-4. The plain socket keeps carrying the bytes, but the
+    // reader attached to it must stop: its `data` handler would parse TLS
+    // records as SMTP replies, and its `close` and `error` handlers would reject
+    // the next read of the secure session with a failure of the socket it
+    // replaced. The idle timeout goes with them; the new reader sets its own.
+    plain.removeAllListeners("data");
+    plain.removeAllListeners("close");
+    plain.removeAllListeners("error");
+    plain.removeAllListeners("timeout");
+    plain.setTimeout(0);
     socket = await new Promise<Duplex>((resolve, reject) => {
       const secure = tls.connect(
         { socket: plain, servername: settings.host },
@@ -444,12 +464,52 @@ async function openSmtpSession(settings: SmtpSettings): Promise<SmtpSession> {
   };
 }
 
-/** RFC 2047 encoded word, so an Arabic name survives a subject header. */
+/**
+ * The longest subject this app will build, in characters, before encoding.
+ * Two 30-character names and a construction are far inside it; a row carrying
+ * more than this is bounded here rather than at the far end's parser.
+ */
+const SUBJECT_MAX_CHARACTERS = 200;
+
+/**
+ * Bytes per RFC 2047 encoded word. 45 source bytes encode to 60 base64
+ * characters, under the 63 that keeps the whole word - delimiters included -
+ * within the 75-character limit of RFC 2047 section 2.
+ */
+const ENCODED_WORD_SOURCE_BYTES = 45;
+
+/**
+ * RFC 2047 encoded word, so an Arabic name survives a subject header.
+ *
+ * Security review 2 L-3: this used to emit one unbounded encoded word, and two
+ * 30-character Arabic names alone make a 170-character header line that some
+ * receiving hosts reject outright. The subject is bounded first, then split
+ * into encoded words folded with CRLF and a space. Each word is encoded whole
+ * code points, because RFC 2047 requires every encoded word to decode on its
+ * own: chopping the base64 of the whole string would hand the far end a broken
+ * multi-byte character.
+ */
 function encodeHeader(value: string): string {
-  const plain = value.replace(/[\r\n]/gu, " ");
-  return /^[\x20-\x7e]*$/u.test(plain)
-    ? plain
-    : `=?utf-8?B?${Buffer.from(plain, "utf8").toString("base64")}?=`;
+  const characters = Array.from(value.replace(/[\r\n]/gu, " "));
+  const plain = characters.slice(0, SUBJECT_MAX_CHARACTERS).join("");
+  if (/^[\x20-\x7e]*$/u.test(plain)) return plain;
+  const words: string[] = [];
+  let current = "";
+  let bytes = 0;
+  for (const character of Array.from(plain)) {
+    const size = Buffer.byteLength(character, "utf8");
+    if (bytes + size > ENCODED_WORD_SOURCE_BYTES) {
+      words.push(current);
+      current = "";
+      bytes = 0;
+    }
+    current += character;
+    bytes += size;
+  }
+  if (current) words.push(current);
+  return words
+    .map((word) => `=?utf-8?B?${Buffer.from(word, "utf8").toString("base64")}?=`)
+    .join("\r\n ");
 }
 
 /**

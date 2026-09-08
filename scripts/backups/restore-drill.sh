@@ -10,7 +10,9 @@
 # what is missing and exits 2 without pretending the drill passed.
 #
 # Usage: bash scripts/backups/restore-drill.sh [dump-file] [design-id]
-# Env:   JEWELO_BACKUP_DIR, JEWELO_DRILL_KEEP=1 (do not drop the scratch db)
+# Env:   JEWELO_BACKUP_DIR, JEWELO_DRILL_KEEP=1 (do not drop the scratch db),
+#        JEWELO_DRILL_UNMASKED=1 (keep the restored contact detail as it is;
+#        by default `preview_requests.contact` is masked after the restore)
 
 set -euo pipefail
 . "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
@@ -90,7 +92,7 @@ cleanup() {
     fi
     log "scratch removed"
   else
-    log "scratch kept: $SCRATCH"
+    log "scratch kept: $SCRATCH (drop it with: dropdb $SCRATCH)"
   fi
   exit $rc
 }
@@ -190,6 +192,26 @@ log "post-data restored (constraints, indexes, policies, triggers)"
 rm -f "$post_sql" "$backfill"
 elapsed=$(( $(date +%s) - started ))
 log "restore completed in ${elapsed}s"
+
+# ----------------------------------------------------------------- mask -----
+# Security review 2 L-5. The dump carries every shopper's real contact detail,
+# and `JEWELO_DRILL_KEEP=1` leaves this database behind on a laptop with no
+# expiry. A drill proves the dump restores and the rows read back; it does not
+# need the phone numbers. They are replaced in the scratch database as soon as
+# the restore is complete, before anything reads from it, and the row count -
+# which is what the readback checks - is untouched.
+# JEWELO_DRILL_UNMASKED=1 keeps them, for the one case that needs the real
+# values: recovering a customer's request out of a backup.
+if [ "${JEWELO_DRILL_UNMASKED:-0}" = "1" ]; then
+  log "contact detail left unmasked (JEWELO_DRILL_UNMASKED=1) - this database holds real customer contact detail"
+else
+  psql_admin "$SCRATCH" -q -f - <<'MASKSQL' >/dev/null
+update public.preview_requests
+   set contact = '{"channel":"masked","value":""}'::jsonb
+ where contact is distinct from '{"channel":"masked","value":""}'::jsonb;
+MASKSQL
+  log "preview_requests.contact masked in the scratch database"
+fi
 
 # -------------------------------------------------------------- readback ----
 readback="$(dirname "${BASH_SOURCE[0]}")/readback.sql"

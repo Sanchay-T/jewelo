@@ -3,6 +3,7 @@ import "server-only";
 import {
   previewRequestInputSchema,
   previewRequestIssueMessage,
+  previewRequestContactSchema,
   previewRequestSpecificationSchema,
   summarizePreviewSpecification,
   PREVIEW_REQUEST_COMMAND_TRANSITIONS,
@@ -10,7 +11,6 @@ import {
   PREVIEW_REQUEST_STATUSES,
   type OperatorPreviewRequestRecord,
   type PreviewRequestCommand,
-  type PreviewRequestContact,
   type PreviewRequestInput,
   type PreviewRequestRecord,
   type PreviewRequestSampleReference,
@@ -130,9 +130,16 @@ export function operatorPreviewRequest(
   // A row written by an earlier contract version must not break the queue, so
   // the readable summary degrades instead of throwing.
   const parsed = previewRequestSpecificationSchema.safeParse(row.specification);
+  // Security review 2 L-2: the contact used to be cast, not parsed, and the
+  // queue builds `mailto:` and `tel:` hrefs out of it. A row this build cannot
+  // read degrades to the unknown channel, which the queue renders as words
+  // rather than a link.
+  const contact = previewRequestContactSchema.safeParse(row.contact);
   return {
     ...customerPreviewRequest(row),
-    contact: row.contact as PreviewRequestContact,
+    contact: contact.success
+      ? contact.data
+      : { channel: "unknown" as const, value: "" },
     summary: parsed.success
       ? summarizePreviewSpecification(parsed.data)
       : "Specification needs review",

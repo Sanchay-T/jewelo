@@ -76,6 +76,34 @@ function pathOnly(value: unknown): unknown {
   }
 }
 
+/**
+ * Security review 2 M-5. The browser SDK shipped whatever it collected: the
+ * full address bar on `event.request.url`, any query string an integration
+ * attached, and a console breadcrumb for every `console.*` call on the page.
+ * PostHog on the same page was already sanitised, so this is the server's own
+ * `scrub` mirrored here, plus `pathOnly` on the URL: an error report says which
+ * page failed, never what the shopper typed on it.
+ */
+function scrubBrowserEvent<T extends { request?: unknown }>(event: T): T {
+  const request = event.request as
+    | {
+        url?: unknown;
+        query_string?: unknown;
+        cookies?: unknown;
+        data?: unknown;
+        headers?: Record<string, unknown>;
+      }
+    | undefined;
+  if (request) {
+    if (typeof request.url === "string") request.url = pathOnly(request.url);
+    delete request.query_string;
+    delete request.cookies;
+    delete request.data;
+    if (request.headers) delete request.headers.cookie;
+  }
+  return event;
+}
+
 async function sentryClient(): Promise<SentryModule | undefined> {
   if (sentry) return sentry;
   const dsn = browserSentryDsn();
@@ -88,6 +116,9 @@ async function sentryClient(): Promise<SentryModule | undefined> {
     sampleRate: observabilityLimits.errorSampleRate,
     maxBreadcrumbs: observabilityLimits.maxBreadcrumbs,
     sendDefaultPii: false,
+    beforeSend: (event) => scrubBrowserEvent(event),
+    beforeBreadcrumb: (breadcrumb) =>
+      breadcrumb.category === "console" ? null : breadcrumb,
   });
   sentry = module;
   return module;

@@ -112,8 +112,15 @@ const STATUS_WORDS: Readonly<Record<PreviewRequestStatus, string>> = {
   cancelled: "Dropped",
 };
 
-/** `wa.me` wants digits only; `tel:` keeps the number exactly as stored. */
+/**
+ * `wa.me` wants digits only; `tel:` keeps the number exactly as stored.
+ *
+ * Security review 2 L-2: a stored contact the server could not parse arrives as
+ * the `unknown` channel with an empty value, and gets no link at all. An href
+ * is only ever built from a value that passed `previewRequestContactSchema`.
+ */
 function contactLinks(channel: string, value: string) {
+  if (channel === "unknown") return [];
   if (channel === "email")
     return [{ href: `mailto:${value}`, label: "Email" }];
   const digits = value.replaceAll(/[^0-9]/g, "");
@@ -344,10 +351,15 @@ export function PreviewRequestQueue() {
                 </p>
                 <p className={s.contact} dir="ltr">
                   <strong>
-                    {item.contact.name ? `${item.contact.name} · ` : ""}
-                    {item.contact.value}
+                    {item.contact.channel === "unknown"
+                      ? "Contact needs review"
+                      : `${item.contact.name ? `${item.contact.name} · ` : ""}${item.contact.value}`}
                   </strong>
-                  <span className={s.when}>{item.contact.channel}</span>
+                  <span className={s.when}>
+                    {item.contact.channel === "unknown"
+                      ? "open the row in the database"
+                      : item.contact.channel}
+                  </span>
                   {links.map((link) => (
                     <a
                       key={link.label}

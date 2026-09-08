@@ -78,6 +78,20 @@ It restores in three sections - pre-data, data, post-data - because the foreign 
 Note what this does and does not prove: it proves the restored database answers that query with the right rows and columns.
 It does not run the HTTP route - that would need a second Next.js app pointed at the scratch database, which this drill does not stand up.
 
+### The scratch database holds real customer data
+
+The dump is production data, so the restored scratch database is production data too: shopper names on `designs`, and on `preview_requests` the phone number or email a customer left in the shop.
+As soon as the restore completes the drill overwrites `preview_requests.contact` with `{"channel":"masked","value":""}`, before the readback reads anything; the row counts the readback checks are unaffected.
+`JEWELO_DRILL_UNMASKED=1` keeps the real values, for the one case that needs them - pulling a customer's request back out of a backup.
+By default the whole database is dropped at the end of the run.
+`JEWELO_DRILL_KEEP=1` leaves it on the machine with no expiry, so drop it yourself when you are done:
+
+```sh
+dropdb jewelo_drill_<stamp>                 # local Postgres
+docker rm -f jewelo-restore-drill           # Docker engine
+psql -l | grep jewelo_drill                 # what is still lying around
+```
+
 ### Real recovery into a new Supabase project
 
 1. Create the project, set `SUPABASE_DB_POOLER_URL` in `.env` to the new pooler string.
