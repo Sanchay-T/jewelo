@@ -347,10 +347,15 @@ from.
 A still that runs past the edge timeout is killed with the image already paid
 for, so this number is what the executor cap has to be checked against.
 
-measured: pending
+Measured on 8 September 2026 against staging deployment `8b8aa87a-820d-4194-884a-287b7cf4c563` (a throwaway branch with a token-gated hold route, deleted afterwards):
 
-Fill it by timing a request that deliberately holds the connection open on the
-staging app and recording where it is cut, with the deployment id and the date.
+- The app is fronted by Cloudflare (`server: cloudflare`).
+- A request that sends nothing is cut at 600 s with HTTP 524 (`error code: 524`), whatever hold was asked for: 400 s answered 200, 600 s raced the cut, 800 s and 900 s were cut at 600 s.
+- A response that writes one byte every 10 s survived to 900 s, the probe's own cap, so the 600 s is an idle timer that each chunk resets, not a total-request wall.
+- The app spec has no timeout field; the only `timeout_seconds` is the health check's own 5 s. The 600 s is a platform constant that can change without notice, so the executor cap stays well below it rather than tuned to it.
+
+The executor cap of 360 s (`pipelineLimits.executorRequestCapSeconds`) is therefore inside the bound with 240 s to spare, and no worker component or heartbeat is needed before `PROVIDER_MODE=real`.
+If a step ever needs more than 600 s of silence, a streaming heartbeat is the mechanism, and this section must be re-measured first.
 
 ## Inngest component (added 7 September 2026)
 
