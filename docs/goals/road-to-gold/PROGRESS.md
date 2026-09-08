@@ -73,9 +73,9 @@ Done:
 - P2-0 committed: `packages/ai` tests excluded from the typecheck, `apps/jobs/scripts/**/*.mts` typechecked by the build gate (zero errors surfaced), `pnpm build --force` exit 0.
 - P2-1 committed: `merge_verdicts.py` picked up seven unmerged verdicts (six stage-2 plus one stray stage-1 v4.3), ledger now 80 scored, 55 pass, 12 tweak, 13 fail, 11 unscored; `IMAGE-LAB.md` appendix regenerated (all-lab pass rate 54% to 60%); `apps/jobs/scripts/replay-lab.mts` resolves 91/91 stills and 128/128 references with matching sha256 and writes `lab/replay-report.json`; mock baseline: 55/55 passes accepted, 25/25 tagged rows and 13/13 fail rows falsely accepted. The `StudioVerifier` port still takes a stencil URL, so the script passes a `file://` URL and marks gates `projected` until P2-5 adds real gates. Lead reran the script: same census.
 
-Doing:
+- `b2ebea4` deployed to staging as `2334f8a0-b300-4783-8e17-c6a9eeb7b831` (ACTIVE, smoke passed, readiness ready). Re-proof: Noor en run `c4ac9607` and نور ar run `18714ee5` complete on v2, eight tasks ready, zero spend; both stencils downloaded, sha equal to `png_sha256`, deep-equal to `validation_report.measured`, under-metal and punched 0. Lead opened the 3x crop of the Arabic right ring: on the ن stroke, dot separate. Note: this deployment predates fix pass 4, so the "Ali" defect is live on staging until the next deploy.
 
-- Staging deploy of `b2ebea4` and re-proof (platform): Noor en and نور ar runs, stencils re-measured, ring on the ن body.
+Doing:
 - Fix pass 4 (implementer) on adversarial review 3 (`reviews/identity-engine-adversarial-3.md`): three highs. The 10% island rule still anchors a ring on the tittle of i ("Ali" 13.5%, "Niki" 10.5%, lead confirmed by eye); the under-metal count scans only the annulus and exempts 30.8% of it; five combinations (Maji kufi, أمير kufi, قق in three styles) now throw where `6d7382b` rendered. Plus deterministic RPC raises left to the sweeper, and a harness that reads the engine's own claims. P1-5 reopened; Phase 1 is not closed.
 - P2-2 (implementer): edge-based pendant mask with moment-initialised similarity registration, contact sheet under `dogfood-2026-09-08/phase2-mask/`, IoU distribution over the 55 passes; the measured p05 becomes the P2-3 threshold.
 
@@ -91,6 +91,7 @@ Follow-ups found by subagents, not fixed (outside the task rows):
 - `lab/final/reference-studio-prompt.txt` is still the v4.2 compile while `compile.mjs` emits v4.3.
 - `review/sample-images-board` on `home-mini` was refused by `git branch -d` (remote tip diverges); left in place.
 - DigitalOcean token expires 25 November 2026 (Sanchay).
+- `scripts/digitalocean/deploy.sh:63-70` prints no deployment id when run over a non-interactive ssh channel (the `read -r ... < <(...)` yields nothing); the id has to be read from `doctl` afterwards. One-line fix owed.
 
 Open:
 
