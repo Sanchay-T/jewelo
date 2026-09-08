@@ -17,6 +17,7 @@ START = 306862
 rows = [json.loads(l) for l in open(LEDGER) if l.strip()]
 STAGE_LABEL = {
     "stage1": "Stage 1 - Studio, 4 looks x 2 scripts",
+    "stage2": "Stage 2 - holdout names (Noor, Layla, Muhammad), v4.3 framed-minimal",
     "stage3": "Stage 3 - dependent views",
     "stage4": "Stage 4 - metal and stone variants",
     "stage5": "Stage 5 - Kufi lettering",
@@ -26,7 +27,7 @@ out = [MARKER, ""]
 out.append("## Every cell, every attempt\n")
 out.append("`pass` / `tweak` / `fail` are the viewer's verdicts. This lab never scored its own images.\n")
 
-for stage in ("stage1", "stage3", "stage4", "stage5"):
+for stage in ("stage1", "stage2", "stage3", "stage4", "stage5"):
     rs = [r for r in rows if r["stage"] == stage]
     if not rs:
         continue
@@ -50,7 +51,7 @@ for stage in ("stage1", "stage3", "stage4", "stage5"):
 out.append("### Pass rates\n")
 out.append("| Stage | images | pass | tweak | fail | pass rate |")
 out.append("| --- | ---: | ---: | ---: | ---: | ---: |")
-for stage in ("stage1", "stage3", "stage4", "stage5"):
+for stage in ("stage1", "stage2", "stage3", "stage4", "stage5"):
     rs = [r for r in rows if r["stage"] == stage]
     if not rs:
         continue
@@ -104,8 +105,9 @@ out.append("| Checkpoint | images | Runway balance | spent cumulative |")
 out.append("| --- | ---: | ---: | ---: |")
 out.append(f"| lab start | 0 | {START:,} | 0 |")
 seen = 0
-for stage, label in (("stage1", "Stage 1 close"), ("stage3", "Stage 3 close"),
-                     ("stage4", "Stage 4 close"), ("stage5", "Stage 5 close")):
+for stage, label in (("stage1", "Stage 1 close"), ("stage2", "Stage 2 close"),
+                     ("stage3", "Stage 3 close"), ("stage4", "Stage 4 close"),
+                     ("stage5", "Stage 5 close")):
     rs = [r for r in rows if r["stage"] == stage]
     if not rs:
         continue

@@ -63,15 +63,25 @@ non-active staging deployments, and mismatched deployment evidence.
 
 ## Secret and environment model
 
-Environment input is layered in command order. The normal local order is the
-ignored shared `.env` followed by the ignored `.env.local`, so the latter wins:
+The repository-root `.env` is the single source of local environment input, for
+these scripts and for the app: `loadRootEnv()` in `packages/config` loads that
+one file and no other.
+Pass it and nothing else:
 
 ```bash
-pnpm do:check-env -- staging /absolute/path/to/.env /absolute/path/to/.env.local
-pnpm do:bootstrap -- staging /absolute/path/to/.env /absolute/path/to/.env.local
+pnpm do:check-env -- staging /absolute/path/to/.env
+pnpm do:bootstrap -- staging /absolute/path/to/.env
 ```
 
-Both local files must stay ignored and mode `0600`. The checker reports names
+The scripts still accept several files and apply them in command order, with
+later files winning. Do not use that. A second file such as `.env.local` is what
+shipped the retired Supabase project ref and the dead `TRIGGER_*` keys into a
+bootstrap: it overrode correct `.env` values while nothing in the app read it,
+so the mistake was invisible locally and only visible in the deployed app. There
+is no `.env.local` in this repository; if one appears, delete it rather than
+correct it.
+
+That file must stay ignored and mode `0600`. The checker reports names
 and feature status only. The bootstrap process builds the app spec in memory and
 sends allowlisted web values directly to App Platform as encrypted `SECRET`
 environment variables; it does not write a plaintext spec to disk.
@@ -105,9 +115,9 @@ YAML or GitHub output.
 Environment changes are configuration deployments, not ordinary code pushes:
 
 ```bash
-pnpm do:check-env -- production /absolute/path/to/.env /absolute/path/to/.env.local
+pnpm do:check-env -- production /absolute/path/to/.env
 JEWELO_ALLOW_PRODUCTION_BOOTSTRAP=yes \
-  pnpm do:bootstrap -- production /absolute/path/to/.env /absolute/path/to/.env.local
+  pnpm do:bootstrap -- production /absolute/path/to/.env
 ```
 
 Re-running bootstrap updates the encrypted environment and creates a new

@@ -27,7 +27,7 @@ def summary(stage):
     return len(rs), c
 
 if __name__ == "__main__":
-    for stage in ("stage1", "stage3", "stage4"):
+    for stage in ("stage1", "stage2", "stage3", "stage4", "stage5"):
         rs = [r for r in rows if r["stage"] == stage]
         if not rs:
             continue
@@ -39,6 +39,15 @@ if __name__ == "__main__":
     for r in rows:
         if r["verdict"] == "pass":
             print(f"  {r['stage']:7s} {r['cell']:34s} a{r['attempt']}  {r['file']}")
-    print(f"\ncredits: start 306862, balance {min(r['creditsAfter'] for r in rows)}, "
-          f"spent {306862 - min(r['creditsAfter'] for r in rows)}, images {len(rows)}")
+    # Rows whose task response carried no balance are recorded as null, not zero;
+    # they are excluded from the balance rather than crashing or being read as 0 credits.
+    balances = [r["creditsAfter"] for r in rows if r.get("creditsAfter") is not None]
+    unread = len(rows) - len(balances)
+    if balances:
+        low = min(balances)
+        print(f"\ncredits: start 306862, balance {low}, "
+              f"spent {306862 - low}, images {len(rows)}"
+              + (f", {unread} images with no balance read" if unread else ""))
+    else:
+        print(f"\ncredits: start 306862, no balance read on any of {len(rows)} images")
     print(f"pass total {sum(1 for r in rows if r['verdict']=='pass')} of {len(rows)}")

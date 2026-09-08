@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // Fold a generator agent's results file into the ledger, skipping rows already there.
-//   node ingest_results.mjs <results.json|jsonl> <stage4|stage5|stage3>
+//   node ingest_results.mjs <results.json|jsonl> <stage1|stage2|stage3|stage4|stage5> [index.json]
+// The third argument overrides the current per-stage index below; "<stage>" in it is substituted.
 import { readFileSync, existsSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { resolve, dirname, relative } from "node:path";
@@ -25,6 +26,27 @@ const existing = new Set(
 
 const sha = (p) => createHash("sha256").update(readFileSync(p)).digest("hex");
 
+// The current prompt index per stage. A superseded index carries superseded prompt
+// hashes and stencil keys, so a stage with no entry here refuses to ingest rather
+// than falling back to a stale index and writing wrong provenance into the ledger.
+const DEFAULT_INDEX = {
+  stage1: "stage1/prompts/v43/index.json",
+  stage2: "stage2/prompts/v43/index.json",
+  stage3: "stage3/prompts/v42/index.json",
+  stage4: "stage4/prompts/index.json",
+  stage5: "stage5/prompts/index.json",
+};
+
+function defaultIndexFor(stage) {
+  const idx = DEFAULT_INDEX[stage];
+  if (!idx) {
+    throw new Error(
+      `no default prompt index for stage "${stage}"; pass the index path as the third argument`
+    );
+  }
+  return idx;
+}
+
 let n = 0;
 for (const r of results) {
   const stage = r.stage ?? defaultStage;
@@ -34,7 +56,7 @@ for (const r of results) {
 
   const idxPath = indexOverride
     ? resolve(HERE, indexOverride.replace("<stage>", stage))
-    : resolve(HERE, stage === "stage3" ? "stage3/prompts/v42/index.json" : `${stage}/prompts/index.json`);
+    : resolve(HERE, defaultIndexFor(stage));
   const idx = JSON.parse(readFileSync(idxPath, "utf8"));
   const meta = idx.find((x) => x.cell === r.cell);
   if (!meta) throw new Error(`no prompt index entry for ${r.cell} in ${idxPath}`);
