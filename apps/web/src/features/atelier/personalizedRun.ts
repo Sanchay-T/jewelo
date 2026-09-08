@@ -23,19 +23,13 @@ export interface StatePayload {
   design_revisions?: StateRow[];
 }
 
-/** The database task states, plus `absent` for a view this run never created. */
-export type PersonalizedViewState =
-  | "queued"
-  | "generating"
-  | "verifying"
-  | "ready"
-  | "retrying"
-  | "failed"
-  | "blocked"
-  | "cancelled"
-  | "absent";
-
-const VIEW_STATES: readonly PersonalizedViewState[] = [
+/**
+ * The `task_status` values this client understands (`packages/data/src/database.types.ts`,
+ * enum `task_status`). Listed once here because `@jewelo/contracts` publishes no
+ * union for them and this file is the only place the browser reads a raw status
+ * string; nothing else may re-list them.
+ */
+const TASK_STATUSES = [
   "queued",
   "generating",
   "verifying",
@@ -44,8 +38,19 @@ const VIEW_STATES: readonly PersonalizedViewState[] = [
   "failed",
   "blocked",
   "cancelled",
-  "absent",
-];
+] as const;
+
+/**
+ * A task status, plus `absent` for a view this run never created and `unknown`
+ * for a status string this build has no rule for - a newer server writing a
+ * status this page predates. `unknown` is deliberately terminal: a status the
+ * client cannot reason about must not be presented as progress, or the shopper
+ * watches a spinner for the whole reading window on a run nobody is advancing.
+ */
+export type PersonalizedViewState =
+  | (typeof TASK_STATUSES)[number]
+  | "absent"
+  | "unknown";
 /** A view that can still change on its own. Everything else is terminal. */
 const IN_FLIGHT: readonly PersonalizedViewState[] = [
   "queued",
@@ -54,11 +59,23 @@ const IN_FLIGHT: readonly PersonalizedViewState[] = [
   "retrying",
 ];
 /**
- * The `run_status` values a run never leaves (`packages/data/src/database.types.ts`,
- * enum `run_status`: queued, running, partial, complete, cancelled,
- * operator_review). Only the two that mean "no worker will touch this again"
- * are listed: a run in one of them cannot produce another photograph, so its
- * tasks must not be presented as still on their way.
+ * The `run_status` vocabulary this client understands
+ * (`packages/data/src/database.types.ts`, enum `run_status`). A status outside
+ * this list is treated exactly like a stopped run: see `runStopped` below.
+ */
+const RUN_STATUSES = [
+  "queued",
+  "running",
+  "partial",
+  "complete",
+  "cancelled",
+  "operator_review",
+] as const;
+
+/**
+ * The `run_status` values a run never leaves. Only the two that mean "no worker
+ * will touch this again" are listed: a run in one of them cannot produce another
+ * photograph, so its tasks must not be presented as still on their way.
  */
 const TERMINAL_RUN_STATUSES: readonly string[] = ["cancelled", "operator_review"];
 
@@ -122,10 +139,16 @@ function rows(value: unknown): StateRow[] {
   return Array.isArray(value) ? (value as StateRow[]) : [];
 }
 function viewState(value: unknown): PersonalizedViewState {
-  const state = text(value) as PersonalizedViewState;
-  // An unknown state is treated as still queued rather than as a failure: the
-  // customer is never told their piece failed because of a vocabulary gap.
-  return VIEW_STATES.includes(state) ? state : "queued";
+  const state = text(value);
+  // A status outside the vocabulary stops this view instead of parking it in
+  // `queued`. Reading it as queued kept the browser polling for the full window
+  // on a state it could not act on, and told the shopper their piece was on its
+  // way while the client had no idea what was happening to it. `unknown` says
+  // the honest thing instead: this run will not show them this view, and the
+  // shop takes it from here.
+  return (TASK_STATUSES as readonly string[]).includes(state)
+    ? (state as PersonalizedViewState)
+    : "unknown";
 }
 
 export function isInFlight(state: PersonalizedViewState): boolean {
@@ -147,7 +170,7 @@ export function readPersonalizedRun(
   const assetRows = rows(payload.assets).filter(
     (row) => text(row.run_id) === runId,
   );
-  const runStatus = text(run.status, "queued");
+  const runStatus = text(run.status);
   const studioTask = taskRows.find(
     (row) => text(row.presentation_view) === "studio",
   );
@@ -158,11 +181,18 @@ export function readPersonalizedRun(
   // `cancelled` and `operator_review` are unambiguous - no worker will pick a
   // task of theirs up again - so a task still sitting in `queued` under one of
   // them is not in flight, whatever its own row says.
-  const runStopped = TERMINAL_RUN_STATUSES.includes(runStatus);
+  // A run status this client does not recognise joins them: it may well be a
+  // live run on a newer server, but this page has no rule that can turn it into
+  // an honest sentence, so it stops reading rather than spin on it.
+  const runStopped =
+    TERMINAL_RUN_STATUSES.includes(runStatus) ||
+    !(RUN_STATUSES as readonly string[]).includes(runStatus);
   // The three model views depend on the studio still. If studio can no longer
   // become ready, or the whole run was stopped, they will never be dispatched.
   const dependentsStranded =
-    ["failed", "blocked", "cancelled", "absent"].includes(studioState) ||
+    ["failed", "blocked", "cancelled", "absent", "unknown"].includes(
+      studioState,
+    ) ||
     runStopped;
   const slots = views.map((view): PersonalizedViewSlot => {
     const presentation = PRESENTATION_BY_VIEW[view];
@@ -317,8 +347,9 @@ export function customerViewStatus(
     case "queued":
       return "waiting";
     default:
-      // ready-without-a-usable-asset, failed, blocked, cancelled and absent all
-      // mean the same thing to a customer: this view is not coming from this run.
+      // ready-without-a-usable-asset, failed, blocked, cancelled, absent and a
+      // status this build does not know all mean the same thing to a customer:
+      // this view is not coming from this run.
       return "unavailable";
   }
 }
