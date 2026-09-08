@@ -258,6 +258,17 @@
   font-size: 9px;
   color: var(--muted);
 }
+/* An option the shop cannot photograph yet: offered, selectable, and honest
+   about it before the shopper reaches the confirmation. */
+.choice[data-not-photographed] small {
+  color: #8a6a2f;
+}
+.fieldNote {
+  margin: 8px 0 0;
+  font-size: 11px;
+  line-height: 1.5;
+  color: #59564d;
+}
 .selectedTick {
   position: absolute;
   inset-block-start: 6px;
@@ -1406,6 +1417,11 @@
   line-height: 1.5;
   color: #59564d;
   margin: 0 0 10px !important;
+}
+/* Whose piece the photograph is. Two shoppers read the shop's example as their
+   own result, so this one line is darker than the other dock notes. */
+.previewNote[data-sample-note="ownership"] {
+  color: #3c3a33;
 }
 .sampleDetails {
   border-block-end: 1px solid #d8d0c0;

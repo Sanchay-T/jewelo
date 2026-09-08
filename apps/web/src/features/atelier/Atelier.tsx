@@ -145,6 +145,12 @@ const arabic: Record<string, string> = {
   "Your selected design": "تصميمك المحدد",
   "Sample coming": "العينة قريبًا",
   "Sample for this look": "عينة لهذا الأسلوب",
+  "Not yet photographed": "لم تُصوَّر بعد",
+  "Not yet photographed; the shop will confirm this look by hand":
+    "لم تُصوَّر بعد؛ سيؤكد المتجر هذا الشكل يدويًا",
+  "Sample look, not your piece": "قطعة نموذجية، ليست قطعتك",
+  "This is a sample look from the shop, not your piece. Your own piece is photographed after you confirm the spelling of your name.":
+    "هذه قطعة نموذجية من المتجر، وليست قطعتك. تُصوَّر قطعتك بعد أن تؤكد تهجئة اسمك.",
   Size: "المقاس",
   Delicate: "رقيق",
   Statement: "بارز",
@@ -214,7 +220,7 @@ import type { Run } from "./model";
 import { buildPersonalizedPreviewRequest, runMockPersonalizedPreview } from "./previewHandoff";
 import { fixturePipelineDeps } from "./previewPipeline";
 import { usePersonalizedPreview } from "./usePersonalizedPreview";
-import type { CustomerViewStatus } from "./personalizedRun";
+import { preflightRefusal, type CustomerViewStatus } from "./personalizedRun";
 
 /**
  * The longest name the shop can cast, and the sentence that says so. The number
@@ -954,6 +960,33 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
   function comingNote(patch: Partial<Draft>) {
     return hasExactSample({ ...d, ...patch }) ? undefined : t("Sample coming");
   }
+  /**
+   * Whether this option is one the pipeline refuses to photograph, asked of the
+   * same predicate the run itself asks (`preflightRefusal`); the design stage
+   * never keeps its own list of what is renderable.
+   *
+   * The name is deliberately reduced to a single one here: two Arabic names are
+   * refused as well, but that is a fact about the name field, not about this
+   * construction or this lettering, and it would otherwise mark every option.
+   *
+   * `reason` keeps each field to its own refusal. `preflightRefusal` reports the
+   * first thing it finds, so an Origami construction would otherwise mark every
+   * lettering tile too; the shopper is told once, on the control that causes it.
+   */
+  function notPhotographed(
+    patch: Partial<Draft>,
+    reason: "unsupported_construction" | "unsupported_lettering",
+  ) {
+    const next = { ...d, ...patch };
+    return (
+      preflightRefusal({
+        script: next.script,
+        names: [next.name],
+        construction: next.construction,
+        lettering: next.lettering,
+      }) === reason
+    );
+  }
   function choices<T extends string | number>(
     label: string,
     options: readonly T[],
@@ -962,36 +995,57 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
     visual?: (value: T, index: number) => ReactNode,
     disabled?: readonly T[],
     note?: (value: T) => string | undefined,
+    /** Options the shop cannot photograph today. Wins over the sample note. */
+    unphotographed?: (value: T) => boolean,
   ) {
     return (
       <fieldset className={s.field}>
         <legend>{t(label)}</legend>
         <div className={visual ? s.visualChoices : s.choices}>
-          {options.map((option, i) => (
-            <button
-              key={option}
-              type="button"
-              aria-label={t(String(option))}
-              aria-pressed={option === value}
-              disabled={disabled?.includes(option)}
-              data-sample-coming={note?.(option) ? true : undefined}
-              onClick={() => onChange(option)}
-              className={s.choice}
-            >
-              {visual?.(option, i)}
-              <span>{t(String(option))}</span>
-              {option === value && (
-                <Check className={s.selectedTick} size={12} />
-              )}
-              {disabled?.includes(option) && (
-                <small>{locale === "ar" ? "جار التحضير" : "Unavailable"}</small>
-              )}
-              {!disabled?.includes(option) && note?.(option) && (
-                <small>{note(option)}</small>
-              )}
-            </button>
-          ))}
+          {options.map((option, i) => {
+            const refused = !!unphotographed?.(option);
+            // One note per option: a look with no photograph at all does not
+            // also get told that its sample is on its way.
+            const coming = refused ? undefined : note?.(option);
+            return (
+              <button
+                key={option}
+                type="button"
+                aria-label={
+                  refused
+                    ? `${t(String(option))} - ${t("Not yet photographed")}`
+                    : t(String(option))
+                }
+                aria-pressed={option === value}
+                disabled={disabled?.includes(option)}
+                data-not-photographed={refused ? true : undefined}
+                data-sample-coming={coming ? true : undefined}
+                onClick={() => onChange(option)}
+                className={s.choice}
+              >
+                {visual?.(option, i)}
+                <span>{t(String(option))}</span>
+                {option === value && (
+                  <Check className={s.selectedTick} size={12} />
+                )}
+                {disabled?.includes(option) ? (
+                  <small>
+                    {locale === "ar" ? "جار التحضير" : "Unavailable"}
+                  </small>
+                ) : refused ? (
+                  <small>{t("Not yet photographed")}</small>
+                ) : (
+                  coming && <small>{coming}</small>
+                )}
+              </button>
+            );
+          })}
         </div>
+        {unphotographed?.(value) && (
+          <p className={s.fieldNote} data-not-photographed="selected">
+            {t("Not yet photographed; the shop will confirm this look by hand")}
+          </p>
+        )}
       </fieldset>
     );
   }
@@ -1291,6 +1345,11 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                       ),
                       undefined,
                       (x) => comingNote({ construction: x }),
+                      (x) =>
+                        notPhotographed(
+                          { construction: x },
+                          "unsupported_construction",
+                        ),
                     )}
 
                     {choices(
@@ -1311,6 +1370,8 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                       ),
                       undefined,
                       (x) => comingNote({ lettering: x }),
+                      (x) =>
+                        notPhotographed({ lettering: x }, "unsupported_lettering"),
                     )}
 
                     {d.twoNames && (
@@ -1939,9 +2000,29 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                           }`
                         : `${exampleNames(shown.script === "Arabic" ? " و" : " & ")} · ${t("Asma example")}`}
                   </span>
+                  {/* Two shoppers in one day read the shop's example photograph
+                      as their own piece (field test, 8 September). The caption
+                      now says whose piece this is, in the same breath as the
+                      name it shows. */}
+                  {!showingOwnPhoto && sampleVisible && (
+                    <span dir="auto" data-sample-ownership="caption">
+                      {t("Sample look, not your piece")}
+                    </span>
+                  )}
                 </div>
               </div>
               <div className={s.previewDock}>
+                {!showingOwnPhoto && sampleVisible && (
+                  <p
+                    className={s.previewNote}
+                    data-sample-note="ownership"
+                    data-sample-ownership="panel"
+                  >
+                    {t(
+                      "This is a sample look from the shop, not your piece. Your own piece is photographed after you confirm the spelling of your name.",
+                    )}
+                  </p>
+                )}
                 {piece.sampleComing && (
                   <p className={s.previewNote} data-sample-note="look">
                     {sampleNote}
