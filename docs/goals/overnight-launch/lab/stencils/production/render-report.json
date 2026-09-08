@@ -1,7 +1,7 @@
 [
   {
     "file": "asma-en-classic.png",
-    "pngSha256": "1d47c91c351557bf610a6225d371fb4026b34395c2f82bbb83a420c052b1025f",
+    "pngSha256": "5685cc444dc20266f25093f6a7d2e4ed41bb249e46b32e73924eb714c70bfff5",
     "report": {
       "engineRelease": "caleums-identity-v4",
       "pipelineRelease": "caleums-final-media-v2",
@@ -10,25 +10,25 @@
       "fontFile": "PlayfairDisplay-SemiBold.ttf",
       "fontSha256Measured": "c40f2293766a503bc70cce9e512ef844a4ccb7cbcde792fe2ea31d191917d8d6",
       "shaping": {
-        "sharp": "0.34.5",
-        "libvips": "8.17.3",
+        "sharp": "0.35.4",
+        "libvips": "8.18.6",
         "harfbuzzShaper": "14.4.0"
       },
       "exactCharactersPreserved": true,
       "passed": true,
       "measured": {
-        "measuredBy": "decodeMask@sharp0.34.5",
+        "measuredBy": "decodeMask@sharp0.35.4",
         "rule": "luminance",
         "width": 1024,
         "height": 1024,
-        "inkPixels": 78270,
+        "inkPixels": 78198,
         "componentsFinal": 1,
         "holes": 4,
         "holeSizes": [
           4064,
           3602,
-          1420,
-          1417
+          1792,
+          1792
         ],
         "bbox": [
           68,
@@ -39,14 +39,14 @@
         "jumpRingCount": 2,
         "ringHoles": [
           {
-            "size": 1420,
-            "centreX": 149.79507042253522,
-            "centreY": 386.74154929577463
+            "size": 1792,
+            "centreX": 143,
+            "centreY": 390.98660714285717
           },
           {
-            "size": 1417,
-            "centreX": 897.2350035285815,
-            "centreY": 451.70712773465067
+            "size": 1792,
+            "centreX": 905,
+            "centreY": 455.98660714285717
           }
         ]
       },
@@ -58,18 +58,23 @@
         "inkPixelsBeforeBridging": 67361,
         "inkPixelsPreserved": 67361,
         "jumpRings": 2,
+        "ringPlacement": "welded",
         "ringCentres": [
           {
-            "x": 150,
+            "x": 143,
             "y": 400,
             "anchorX": 185,
-            "anchorY": 426
+            "anchorY": 426,
+            "glyphIndex": 0,
+            "contourIndex": 0
           },
           {
-            "x": 897,
+            "x": 905,
             "y": 465,
-            "anchorX": 857,
-            "anchorY": 491
+            "anchorX": 873,
+            "anchorY": 491,
+            "glyphIndex": 3,
+            "contourIndex": 0
           }
         ],
         "glyphBoxBeforeRings": [
@@ -81,6 +86,7 @@
         "glyphPixelsPunchedByRings": 0,
         "glyphPixelsUnderRingMetal": 0,
         "recentreScale": 1,
+        "recentreScaleY": 1,
         "recentreOffsetX": 0,
         "recentreOffsetY": -9,
         "componentsBefore": 4,
@@ -102,7 +108,7 @@
     "measured": {
       "components": 1,
       "holes": 4,
-      "inkPixels": 78270,
+      "inkPixels": 78198,
       "bbox": [
         68,
         349,
@@ -114,17 +120,17 @@
     "rings": {
       "jumpRings": 2,
       "ringHoleSizes": [
-        1420,
-        1417
+        1792,
+        1792
       ],
       "ringHoleCentres": [
         [
-          149.8,
-          386.7
+          143,
+          391
         ],
         [
-          897.2,
-          451.7
+          905,
+          456
         ]
       ],
       "ringHolesFound": 2,
@@ -136,8 +142,8 @@
       "claimedPunchedByRings": 0,
       "claimedWeldedIntoRingMetal": 0,
       "ringHoleBottoms": [
-        407,
-        472
+        414,
+        479
       ]
     },
     "construction": {
@@ -148,13 +154,19 @@
       "inkPixelsBeforeBridging": 67361,
       "inkPixelsPreserved": 67361,
       "recentreScale": 1,
+      "recentreScaleY": 1,
       "recentreOffsetX": 0,
-      "recentreOffsetY": -9
+      "recentreOffsetY": -9,
+      "ringPlacement": "welded",
+      "ringCarriers": [
+        "0:0",
+        "3:0"
+      ]
     }
   },
   {
     "file": "asma-en-kufi.png",
-    "pngSha256": "6f2f32eef04cf226fc17d0ddb7a3d516e184102ea6aa2b997a901f3c9ab566af",
+    "pngSha256": "a69da5dcfac0f87e9720688bfa8c99ab5da3cef1fc034a6b704732f60a156a70",
     "report": {
       "engineRelease": "caleums-identity-v4",
       "pipelineRelease": "caleums-final-media-v2",
@@ -163,28 +175,28 @@
       "fontFile": "cairo.ttf",
       "fontSha256Measured": "667c987182391c91f4e57a2f455b1794fb5e3ee6ca4ef3383e86bb690fa9c964",
       "shaping": {
-        "sharp": "0.34.5",
-        "libvips": "8.17.3",
+        "sharp": "0.35.4",
+        "libvips": "8.18.6",
         "harfbuzzShaper": "14.4.0"
       },
       "exactCharactersPreserved": true,
       "passed": true,
       "measured": {
-        "measuredBy": "decodeMask@sharp0.34.5",
+        "measuredBy": "decodeMask@sharp0.35.4",
         "rule": "luminance",
         "width": 1024,
         "height": 1024,
-        "inkPixels": 87319,
+        "inkPixels": 87110,
         "componentsFinal": 1,
         "holes": 4,
         "holeSizes": [
           7211,
           4639,
-          1423,
-          1410
+          1792,
+          1792
         ],
         "bbox": [
-          69,
+          68,
           347,
           954,
           676
@@ -192,14 +204,14 @@
         "jumpRingCount": 2,
         "ringHoles": [
           {
-            "size": 1423,
-            "centreX": 112.82923401264934,
-            "centreY": 384.7779339423753
+            "size": 1792,
+            "centreX": 112,
+            "centreY": 388.98660714285717
           },
           {
-            "size": 1410,
-            "centreX": 905.3127659574468,
-            "centreY": 452.62624113475175
+            "size": 1792,
+            "centreX": 912,
+            "centreY": 456.98660714285717
           }
         ]
       },
@@ -211,18 +223,23 @@
         "inkPixelsBeforeBridging": 76602,
         "inkPixelsPreserved": 76602,
         "jumpRings": 2,
+        "ringPlacement": "welded",
         "ringCentres": [
           {
             "x": 113,
             "y": 398,
             "anchorX": 145,
-            "anchorY": 424
+            "anchorY": 424,
+            "glyphIndex": 0,
+            "contourIndex": 0
           },
           {
-            "x": 905,
+            "x": 913,
             "y": 466,
-            "anchorX": 855,
-            "anchorY": 492
+            "anchorX": 881,
+            "anchorY": 492,
+            "glyphIndex": 3,
+            "contourIndex": 0
           }
         ],
         "glyphBoxBeforeRings": [
@@ -234,7 +251,8 @@
         "glyphPixelsPunchedByRings": 0,
         "glyphPixelsUnderRingMetal": 0,
         "recentreScale": 1,
-        "recentreOffsetX": 0,
+        "recentreScaleY": 1,
+        "recentreOffsetX": -1,
         "recentreOffsetY": -9,
         "componentsBefore": 4,
         "fontSha256Declared": "667c987182391c91f4e57a2f455b1794fb5e3ee6ca4ef3383e86bb690fa9c964"
@@ -255,9 +273,9 @@
     "measured": {
       "components": 1,
       "holes": 4,
-      "inkPixels": 87319,
+      "inkPixels": 87110,
       "bbox": [
-        69,
+        68,
         347,
         954,
         676
@@ -267,17 +285,17 @@
     "rings": {
       "jumpRings": 2,
       "ringHoleSizes": [
-        1423,
-        1410
+        1792,
+        1792
       ],
       "ringHoleCentres": [
         [
-          112.8,
-          384.8
+          112,
+          389
         ],
         [
-          905.3,
-          452.6
+          912,
+          457
         ]
       ],
       "ringHolesFound": 2,
@@ -289,8 +307,8 @@
       "claimedPunchedByRings": 0,
       "claimedWeldedIntoRingMetal": 0,
       "ringHoleBottoms": [
-        405,
-        473
+        412,
+        480
       ]
     },
     "construction": {
@@ -301,13 +319,19 @@
       "inkPixelsBeforeBridging": 76602,
       "inkPixelsPreserved": 76602,
       "recentreScale": 1,
-      "recentreOffsetX": 0,
-      "recentreOffsetY": -9
+      "recentreScaleY": 1,
+      "recentreOffsetX": -1,
+      "recentreOffsetY": -9,
+      "ringPlacement": "welded",
+      "ringCarriers": [
+        "0:0",
+        "3:0"
+      ]
     }
   },
   {
     "file": "asma-ar-classic.png",
-    "pngSha256": "b20839702e72362424b7a698236639b03eca057eca0527343748091293fa4111",
+    "pngSha256": "24e89ea7ddf5421ee75685c9f72662adb4eedda354870ee9e15c58c4d4e8ba4b",
     "report": {
       "engineRelease": "caleums-identity-v4",
       "pipelineRelease": "caleums-final-media-v2",
@@ -316,28 +340,28 @@
       "fontFile": "NotoNaskhArabic-Regular.ttf",
       "fontSha256Measured": "67b5a525a661b607971fbd3f96a81b89d3a768e74534fca84f18ac97e6fab72f",
       "shaping": {
-        "sharp": "0.34.5",
-        "libvips": "8.17.3",
+        "sharp": "0.35.4",
+        "libvips": "8.18.6",
         "harfbuzzShaper": "14.4.0"
       },
       "exactCharactersPreserved": true,
       "passed": true,
       "measured": {
-        "measuredBy": "decodeMask@sharp0.34.5",
+        "measuredBy": "decodeMask@sharp0.35.4",
         "rule": "luminance",
         "width": 1024,
         "height": 1024,
-        "inkPixels": 80339,
+        "inkPixels": 81147,
         "componentsFinal": 1,
-        "holes": 9,
+        "holes": 8,
         "holeSizes": [
           3212,
-          1312,
-          1271,
-          615,
-          70,
-          13,
+          1631,
+          1628,
+          878,
+          38,
           3,
+          1,
           1
         ],
         "bbox": [
@@ -349,14 +373,14 @@
         "jumpRingCount": 2,
         "ringHoles": [
           {
-            "size": 1271,
-            "centreX": 111.16601101494886,
-            "centreY": 586.720692368214
+            "size": 1631,
+            "centreX": 250.06315144083385,
+            "centreY": 419.8087063151441
           },
           {
-            "size": 1312,
-            "centreX": 926.907012195122,
-            "centreY": 305.3170731707317
+            "size": 1628,
+            "centreX": 926.8771498771499,
+            "centreY": 309.0896805896806
           }
         ]
       },
@@ -368,18 +392,23 @@
         "inkPixelsBeforeBridging": 72722,
         "inkPixelsPreserved": 72722,
         "jumpRings": 2,
+        "ringPlacement": "welded",
         "ringCentres": [
           {
-            "x": 126,
-            "y": 606,
-            "anchorX": 158,
-            "anchorY": 632
+            "x": 271,
+            "y": 427,
+            "anchorX": 312,
+            "anchorY": 453,
+            "glyphIndex": 1,
+            "contourIndex": 0
           },
           {
             "x": 979,
             "y": 311,
-            "anchorX": 921,
-            "anchorY": 446
+            "anchorX": 923,
+            "anchorY": 445,
+            "glyphIndex": 5,
+            "contourIndex": 0
           }
         ],
         "glyphBoxBeforeRings": [
@@ -391,8 +420,9 @@
         "glyphPixelsPunchedByRings": 0,
         "glyphPixelsUnderRingMetal": 0,
         "recentreScale": 0.9559748427672956,
+        "recentreScaleY": 0.9548133595284872,
         "recentreOffsetX": -9.006289308176108,
-        "recentreOffsetY": 11.842767295597469,
+        "recentreOffsetY": 12.155206286836915,
         "componentsBefore": 4,
         "fontSha256Declared": "67b5a525a661b607971fbd3f96a81b89d3a768e74534fca84f18ac97e6fab72f"
       }
@@ -413,8 +443,8 @@
     ],
     "measured": {
       "components": 1,
-      "holes": 9,
-      "inkPixels": 80339,
+      "holes": 8,
+      "inkPixels": 81147,
       "bbox": [
         56,
         269,
@@ -426,30 +456,30 @@
     "rings": {
       "jumpRings": 2,
       "ringHoleSizes": [
-        1271,
-        1312
+        1631,
+        1628
       ],
       "ringHoleCentres": [
         [
-          111.2,
-          586.7
+          250.1,
+          419.8
         ],
         [
           926.9,
-          305.3
+          309.1
         ]
       ],
       "ringHolesFound": 2,
       "ringHolesClearOfAnchor": 2,
       "holesAboveGlyphTop": 1,
-      "glyphTop": 325.4,
+      "glyphTop": 325.3,
       "measuredPunchedByRings": 0,
       "measuredWeldedIntoRingMetal": 0,
       "claimedPunchedByRings": 0,
       "claimedWeldedIntoRingMetal": 0,
       "ringHoleBottoms": [
-        606,
-        324
+        442,
+        331
       ]
     },
     "construction": {
@@ -460,13 +490,19 @@
       "inkPixelsBeforeBridging": 72722,
       "inkPixelsPreserved": 72722,
       "recentreScale": 0.9559748427672956,
+      "recentreScaleY": 0.9548133595284872,
       "recentreOffsetX": -9.006289308176108,
-      "recentreOffsetY": 11.842767295597469
+      "recentreOffsetY": 12.155206286836915,
+      "ringPlacement": "welded",
+      "ringCarriers": [
+        "1:0",
+        "5:0"
+      ]
     }
   },
   {
     "file": "asma-ar-kufi.png",
-    "pngSha256": "97105b04bebb80b243c347b42e20244ab9c9a4b8894e8f52b90237ba0dfa6ee0",
+    "pngSha256": "3badb15993e189a4ee506375d9263db008e2f607b1841424b83369f8616f8558",
     "report": {
       "engineRelease": "caleums-identity-v4",
       "pipelineRelease": "caleums-final-media-v2",
@@ -475,44 +511,45 @@
       "fontFile": "NotoKufiArabic-Regular.ttf",
       "fontSha256Measured": "494f6b61469d7a02a2d63f0fc4930bb007388d8cfe551de5eb98354e100889f3",
       "shaping": {
-        "sharp": "0.34.5",
-        "libvips": "8.17.3",
+        "sharp": "0.35.4",
+        "libvips": "8.18.6",
         "harfbuzzShaper": "14.4.0"
       },
       "exactCharactersPreserved": true,
       "passed": true,
       "measured": {
-        "measuredBy": "decodeMask@sharp0.34.5",
+        "measuredBy": "decodeMask@sharp0.35.4",
         "rule": "luminance",
         "width": 1024,
         "height": 1024,
-        "inkPixels": 82986,
+        "inkPixels": 81541,
         "componentsFinal": 1,
-        "holes": 5,
+        "holes": 6,
         "holeSizes": [
-          7116,
-          1333,
-          1308,
-          448,
+          7137,
+          1630,
+          1628,
+          867,
+          1,
           1
         ],
         "bbox": [
           56,
-          310,
+          312,
           967,
-          713
+          710
         ],
         "jumpRingCount": 2,
         "ringHoles": [
           {
-            "size": 1308,
-            "centreX": 100.96483180428135,
-            "centreY": 542.0114678899082
+            "size": 1628,
+            "centreX": 100.90110565110565,
+            "centreY": 543.8949631449632
           },
           {
-            "size": 1333,
-            "centreX": 926.9047261815454,
-            "centreY": 346.4006001500375
+            "size": 1630,
+            "centreX": 926.8779141104294,
+            "centreY": 352.0803680981595
           }
         ]
       },
@@ -524,18 +561,23 @@
         "inkPixelsBeforeBridging": 75823,
         "inkPixelsPreserved": 75823,
         "jumpRings": 2,
+        "ringPlacement": "welded",
         "ringCentres": [
           {
             "x": 115,
             "y": 553,
             "anchorX": 147,
-            "anchorY": 579
+            "anchorY": 579,
+            "glyphIndex": 0,
+            "contourIndex": 0
           },
           {
-            "x": 975,
-            "y": 349,
-            "anchorX": 903,
-            "anchorY": 470
+            "x": 979,
+            "y": 352,
+            "anchorX": 909,
+            "anchorY": 470,
+            "glyphIndex": 5,
+            "contourIndex": 0
           }
         ],
         "glyphBoxBeforeRings": [
@@ -546,9 +588,10 @@
         ],
         "glyphPixelsPunchedByRings": 0,
         "glyphPixelsUnderRingMetal": 0,
-        "recentreScale": 0.96,
-        "recentreOffsetX": -9.280000000000001,
-        "recentreOffsetY": 15.28000000000003,
+        "recentreScale": 0.9559748427672956,
+        "recentreScaleY": 0.9545454545454546,
+        "recentreOffsetX": -9.006289308176108,
+        "recentreOffsetY": 16.090909090909065,
         "componentsBefore": 4,
         "fontSha256Declared": "494f6b61469d7a02a2d63f0fc4930bb007388d8cfe551de5eb98354e100889f3"
       }
@@ -569,43 +612,43 @@
     ],
     "measured": {
       "components": 1,
-      "holes": 5,
-      "inkPixels": 82986,
+      "holes": 6,
+      "inkPixels": 81541,
       "bbox": [
         56,
-        310,
+        312,
         967,
-        713
+        710
       ],
       "rule": "luminance"
     },
     "rings": {
       "jumpRings": 2,
       "ringHoleSizes": [
-        1308,
-        1333
+        1628,
+        1630
       ],
       "ringHoleCentres": [
         [
-          101,
-          542
+          100.9,
+          543.9
         ],
         [
           926.9,
-          346.4
+          352.1
         ]
       ],
       "ringHolesFound": 2,
       "ringHolesClearOfAnchor": 2,
       "holesAboveGlyphTop": 1,
-      "glyphTop": 377.2,
+      "glyphTop": 376,
       "measuredPunchedByRings": 0,
       "measuredWeldedIntoRingMetal": 0,
       "claimedPunchedByRings": 0,
       "claimedWeldedIntoRingMetal": 0,
       "ringHoleBottoms": [
-        561,
-        366
+        566,
+        374
       ]
     },
     "construction": {
@@ -615,14 +658,20 @@
       "bridgePixelsAdded": 3475,
       "inkPixelsBeforeBridging": 75823,
       "inkPixelsPreserved": 75823,
-      "recentreScale": 0.96,
-      "recentreOffsetX": -9.280000000000001,
-      "recentreOffsetY": 15.28000000000003
+      "recentreScale": 0.9559748427672956,
+      "recentreScaleY": 0.9545454545454546,
+      "recentreOffsetX": -9.006289308176108,
+      "recentreOffsetY": 16.090909090909065,
+      "ringPlacement": "welded",
+      "ringCarriers": [
+        "0:0",
+        "5:0"
+      ]
     }
   },
   {
     "file": "noor-en-classic.png",
-    "pngSha256": "687a288a222cb98dd483d32cbe3a675f0932dc6284a53d0f5b5fad12e1ff246f",
+    "pngSha256": "c309bd402b8146639ef11b958d59368ded030034039f20d6ba5cecbcb8d78cd8",
     "report": {
       "engineRelease": "caleums-identity-v4",
       "pipelineRelease": "caleums-final-media-v2",
@@ -631,43 +680,43 @@
       "fontFile": "PlayfairDisplay-SemiBold.ttf",
       "fontSha256Measured": "c40f2293766a503bc70cce9e512ef844a4ccb7cbcde792fe2ea31d191917d8d6",
       "shaping": {
-        "sharp": "0.34.5",
-        "libvips": "8.17.3",
+        "sharp": "0.35.4",
+        "libvips": "8.18.6",
         "harfbuzzShaper": "14.4.0"
       },
       "exactCharactersPreserved": true,
       "passed": true,
       "measured": {
-        "measuredBy": "decodeMask@sharp0.34.5",
+        "measuredBy": "decodeMask@sharp0.35.4",
         "rule": "luminance",
         "width": 1024,
         "height": 1024,
-        "inkPixels": 73917,
+        "inkPixels": 72679,
         "componentsFinal": 1,
         "holes": 4,
         "holeSizes": [
-          14197,
-          14193,
-          1214,
-          1196
+          13978,
+          13969,
+          1513,
+          1511
         ],
         "bbox": [
           56,
-          344,
+          345,
           967,
-          679
+          678
         ],
         "jumpRingCount": 2,
         "ringHoles": [
           {
-            "size": 1214,
-            "centreX": 94.85914332784185,
-            "centreY": 378.9678747940692
+            "size": 1513,
+            "centreX": 94.61731658955718,
+            "centreY": 383.4857898215466
           },
           {
-            "size": 1196,
-            "centreX": 928.2466555183946,
-            "centreY": 449.29515050167225
+            "size": 1511,
+            "centreX": 928.3818663136996,
+            "centreY": 454.066181336863
           }
         ]
       },
@@ -679,18 +728,23 @@
         "inkPixelsBeforeBridging": 73283,
         "inkPixelsPreserved": 73283,
         "jumpRings": 2,
+        "ringPlacement": "welded",
         "ringCentres": [
           {
             "x": 44,
-            "y": 380,
+            "y": 379,
             "anchorX": 73,
-            "anchorY": 409
+            "anchorY": 409,
+            "glyphIndex": 0,
+            "contourIndex": 0
           },
           {
-            "x": 942,
+            "x": 952,
             "y": 456,
-            "anchorX": 910,
-            "anchorY": 482
+            "anchorX": 920,
+            "anchorY": 482,
+            "glyphIndex": 3,
+            "contourIndex": 0
           }
         ],
         "glyphBoxBeforeRings": [
@@ -701,9 +755,10 @@
         ],
         "glyphPixelsPunchedByRings": 0,
         "glyphPixelsUnderRingMetal": 0,
-        "recentreScale": 0.9277721261444557,
-        "recentreOffsetX": 54.14445574771109,
-        "recentreOffsetY": 30.413021363173982,
+        "recentreScale": 0.918429003021148,
+        "recentreScaleY": 0.9175824175824175,
+        "recentreOffsetX": 54.1631419939577,
+        "recentreOffsetY": 35.77472527472531,
         "componentsBefore": 4,
         "fontSha256Declared": "c40f2293766a503bc70cce9e512ef844a4ccb7cbcde792fe2ea31d191917d8d6"
       }
@@ -723,42 +778,42 @@
     "measured": {
       "components": 1,
       "holes": 4,
-      "inkPixels": 73917,
+      "inkPixels": 72679,
       "bbox": [
         56,
-        344,
+        345,
         967,
-        679
+        678
       ],
       "rule": "luminance"
     },
     "rings": {
       "jumpRings": 2,
       "ringHoleSizes": [
-        1214,
-        1196
+        1513,
+        1511
       ],
       "ringHoleCentres": [
         [
-          94.9,
-          379
+          94.6,
+          383.5
         ],
         [
-          928.2,
-          449.3
+          928.4,
+          454.1
         ]
       ],
       "ringHolesFound": 2,
       "ringHolesClearOfAnchor": 2,
       "holesAboveGlyphTop": 1,
-      "glyphTop": 405.2,
+      "glyphTop": 406.5,
       "measuredPunchedByRings": 0,
       "measuredWeldedIntoRingMetal": 0,
       "claimedPunchedByRings": 0,
       "claimedWeldedIntoRingMetal": 0,
       "ringHoleBottoms": [
-        398,
-        468
+        405,
+        475
       ]
     },
     "construction": {
@@ -768,14 +823,20 @@
       "bridgePixelsAdded": 3532,
       "inkPixelsBeforeBridging": 73283,
       "inkPixelsPreserved": 73283,
-      "recentreScale": 0.9277721261444557,
-      "recentreOffsetX": 54.14445574771109,
-      "recentreOffsetY": 30.413021363173982
+      "recentreScale": 0.918429003021148,
+      "recentreScaleY": 0.9175824175824175,
+      "recentreOffsetX": 54.1631419939577,
+      "recentreOffsetY": 35.77472527472531,
+      "ringPlacement": "welded",
+      "ringCarriers": [
+        "0:0",
+        "3:0"
+      ]
     }
   },
   {
     "file": "noor-en-kufi.png",
-    "pngSha256": "ce1d1b7143227a445ba3f8b5022de13011ecddff2d441ed33a78c0567b948a90",
+    "pngSha256": "6359b72847b6553cdaa312506eee6e36dcc354608c6f1b215644ae86a712db29",
     "report": {
       "engineRelease": "caleums-identity-v4",
       "pipelineRelease": "caleums-final-media-v2",
@@ -784,43 +845,43 @@
       "fontFile": "cairo.ttf",
       "fontSha256Measured": "667c987182391c91f4e57a2f455b1794fb5e3ee6ca4ef3383e86bb690fa9c964",
       "shaping": {
-        "sharp": "0.34.5",
-        "libvips": "8.17.3",
+        "sharp": "0.35.4",
+        "libvips": "8.18.6",
         "harfbuzzShaper": "14.4.0"
       },
       "exactCharactersPreserved": true,
       "passed": true,
       "measured": {
-        "measuredBy": "decodeMask@sharp0.34.5",
+        "measuredBy": "decodeMask@sharp0.35.4",
         "rule": "luminance",
         "width": 1024,
         "height": 1024,
-        "inkPixels": 85988,
+        "inkPixels": 86391,
         "componentsFinal": 1,
         "holes": 4,
         "holeSizes": [
-          13520,
-          13512,
-          1128,
-          1119
+          13521,
+          13514,
+          1410,
+          1408
         ],
         "bbox": [
           56,
-          341,
+          340,
           967,
           682
         ],
         "jumpRingCount": 2,
         "ringHoles": [
           {
-            "size": 1119,
-            "centreX": 93.41465594280608,
-            "centreY": 374.75335120643433
+            "size": 1410,
+            "centreX": 93.5,
+            "centreY": 377.48794326241136
           },
           {
-            "size": 1128,
-            "centreX": 929.6657801418439,
-            "centreY": 450.46897163120565
+            "size": 1408,
+            "centreX": 929.5,
+            "centreY": 444.46022727272725
           }
         ]
       },
@@ -832,18 +893,23 @@
         "inkPixelsBeforeBridging": 94919,
         "inkPixelsPreserved": 94919,
         "jumpRings": 2,
+        "ringPlacement": "welded",
         "ringCentres": [
           {
             "x": 44,
-            "y": 370,
+            "y": 369,
             "anchorX": 73,
-            "anchorY": 399
+            "anchorY": 399,
+            "glyphIndex": 0,
+            "contourIndex": 0
           },
           {
             "x": 979,
-            "y": 455,
-            "anchorX": 947,
-            "anchorY": 481
+            "y": 444,
+            "anchorX": 950,
+            "anchorY": 481,
+            "glyphIndex": 3,
+            "contourIndex": 0
           }
         ],
         "glyphBoxBeforeRings": [
@@ -855,8 +921,9 @@
         "glyphPixelsPunchedByRings": 0,
         "glyphPixelsUnderRingMetal": 0,
         "recentreScale": 0.8941176470588236,
+        "recentreScaleY": 0.8932291666666666,
         "recentreOffsetX": 54.21176470588235,
-        "recentreOffsetY": 47.729411764705844,
+        "recentreOffsetY": 47.9140625,
         "componentsBefore": 4,
         "fontSha256Declared": "667c987182391c91f4e57a2f455b1794fb5e3ee6ca4ef3383e86bb690fa9c964"
       }
@@ -876,10 +943,10 @@
     "measured": {
       "components": 1,
       "holes": 4,
-      "inkPixels": 85988,
+      "inkPixels": 86391,
       "bbox": [
         56,
-        341,
+        340,
         967,
         682
       ],
@@ -888,30 +955,30 @@
     "rings": {
       "jumpRings": 2,
       "ringHoleSizes": [
-        1119,
-        1128
+        1410,
+        1408
       ],
       "ringHoleCentres": [
         [
-          93.4,
-          374.8
+          93.5,
+          377.5
         ],
         [
-          929.7,
-          450.5
+          929.5,
+          444.5
         ]
       ],
       "ringHolesFound": 2,
       "ringHolesClearOfAnchor": 2,
       "holesAboveGlyphTop": 1,
-      "glyphTop": 400,
+      "glyphTop": 399.8,
       "measuredPunchedByRings": 0,
       "measuredWeldedIntoRingMetal": 0,
       "claimedPunchedByRings": 0,
       "claimedWeldedIntoRingMetal": 0,
       "ringHoleBottoms": [
-        393,
-        469
+        398,
+        465
       ]
     },
     "construction": {
@@ -922,13 +989,19 @@
       "inkPixelsBeforeBridging": 94919,
       "inkPixelsPreserved": 94919,
       "recentreScale": 0.8941176470588236,
+      "recentreScaleY": 0.8932291666666666,
       "recentreOffsetX": 54.21176470588235,
-      "recentreOffsetY": 47.729411764705844
+      "recentreOffsetY": 47.9140625,
+      "ringPlacement": "welded",
+      "ringCarriers": [
+        "0:0",
+        "3:0"
+      ]
     }
   },
   {
     "file": "noor-ar-classic.png",
-    "pngSha256": "626bb03fff126e51c2790b72efdaa8bdda039de56e8ec3a36dc2436a457de9a1",
+    "pngSha256": "2beecb2c18a60e9d198aca341bdc01455c0b2f0d874f025edfbc4864ac3ab70d",
     "report": {
       "engineRelease": "caleums-identity-v4",
       "pipelineRelease": "caleums-final-media-v2",
@@ -937,24 +1010,24 @@
       "fontFile": "NotoNaskhArabic-Regular.ttf",
       "fontSha256Measured": "67b5a525a661b607971fbd3f96a81b89d3a768e74534fca84f18ac97e6fab72f",
       "shaping": {
-        "sharp": "0.34.5",
-        "libvips": "8.17.3",
+        "sharp": "0.35.4",
+        "libvips": "8.18.6",
         "harfbuzzShaper": "14.4.0"
       },
       "exactCharactersPreserved": true,
       "passed": true,
       "measured": {
-        "measuredBy": "decodeMask@sharp0.34.5",
+        "measuredBy": "decodeMask@sharp0.35.4",
         "rule": "luminance",
         "width": 1024,
         "height": 1024,
-        "inkPixels": 129223,
+        "inkPixels": 129535,
         "componentsFinal": 1,
         "holes": 5,
         "holeSizes": [
           16420,
-          1345,
-          1324,
+          1702,
+          1697,
           1,
           1
         ],
@@ -967,14 +1040,14 @@
         "jumpRingCount": 2,
         "ringHoles": [
           {
-            "size": 1345,
-            "centreX": 170.28847583643122,
-            "centreY": 713.3204460966542
+            "size": 1702,
+            "centreX": 234.5840188014101,
+            "centreY": 370.7961222091657
           },
           {
-            "size": 1324,
-            "centreX": 926.2326283987916,
-            "centreY": 335.1480362537764
+            "size": 1697,
+            "centreX": 926,
+            "centreY": 339.5515615792575
           }
         ]
       },
@@ -986,18 +1059,23 @@
         "inkPixelsBeforeBridging": 122825,
         "inkPixelsPreserved": 122825,
         "jumpRings": 2,
+        "ringPlacement": "welded",
         "ringCentres": [
           {
-            "x": 185,
-            "y": 763,
-            "anchorX": 227,
-            "anchorY": 793
+            "x": 251,
+            "y": 408,
+            "anchorX": 291,
+            "anchorY": 434,
+            "glyphIndex": 0,
+            "contourIndex": 0
           },
           {
             "x": 959,
             "y": 376,
             "anchorX": 917,
-            "anchorY": 402
+            "anchorY": 402,
+            "glyphIndex": 3,
+            "contourIndex": 0
           }
         ],
         "glyphBoxBeforeRings": [
@@ -1009,8 +1087,9 @@
         "glyphPixelsPunchedByRings": 0,
         "glyphPixelsUnderRingMetal": 0,
         "recentreScale": 0.9764453961456103,
+        "recentreScaleY": 0.976303317535545,
         "recentreOffsetX": -10.398286937901503,
-        "recentreOffsetY": -27.441113490364046,
+        "recentreOffsetY": -27.40758293838863,
         "componentsBefore": 3,
         "fontSha256Declared": "67b5a525a661b607971fbd3f96a81b89d3a768e74534fca84f18ac97e6fab72f"
       }
@@ -1030,7 +1109,7 @@
     "measured": {
       "components": 1,
       "holes": 5,
-      "inkPixels": 129223,
+      "inkPixels": 129535,
       "bbox": [
         56,
         203,
@@ -1042,17 +1121,17 @@
     "rings": {
       "jumpRings": 2,
       "ringHoleSizes": [
-        1345,
-        1324
+        1702,
+        1697
       ],
       "ringHoleCentres": [
         [
-          170.3,
-          713.3
+          234.6,
+          370.8
         ],
         [
-          926.2,
-          335.1
+          926,
+          339.6
         ]
       ],
       "ringHolesFound": 2,
@@ -1064,8 +1143,8 @@
       "claimedPunchedByRings": 0,
       "claimedWeldedIntoRingMetal": 0,
       "ringHoleBottoms": [
-        733,
-        355
+        393,
+        362
       ]
     },
     "construction": {
@@ -1076,13 +1155,19 @@
       "inkPixelsBeforeBridging": 122825,
       "inkPixelsPreserved": 122825,
       "recentreScale": 0.9764453961456103,
+      "recentreScaleY": 0.976303317535545,
       "recentreOffsetX": -10.398286937901503,
-      "recentreOffsetY": -27.441113490364046
+      "recentreOffsetY": -27.40758293838863,
+      "ringPlacement": "welded",
+      "ringCarriers": [
+        "0:0",
+        "3:0"
+      ]
     }
   },
   {
     "file": "noor-ar-kufi.png",
-    "pngSha256": "50a67a406e9d823ef7d6605f372f9bde8965d35983be11f0f39f9dc803771c4c",
+    "pngSha256": "b6aee1f66a2a4b4a68de0a9a43e9e8cf084de86db79705e5c68abfaf817c51fd",
     "report": {
       "engineRelease": "caleums-identity-v4",
       "pipelineRelease": "caleums-final-media-v2",
@@ -1091,43 +1176,42 @@
       "fontFile": "NotoKufiArabic-Regular.ttf",
       "fontSha256Measured": "494f6b61469d7a02a2d63f0fc4930bb007388d8cfe551de5eb98354e100889f3",
       "shaping": {
-        "sharp": "0.34.5",
-        "libvips": "8.17.3",
+        "sharp": "0.35.4",
+        "libvips": "8.18.6",
         "harfbuzzShaper": "14.4.0"
       },
       "exactCharactersPreserved": true,
       "passed": true,
       "measured": {
-        "measuredBy": "decodeMask@sharp0.34.5",
+        "measuredBy": "decodeMask@sharp0.35.4",
         "rule": "luminance",
         "width": 1024,
         "height": 1024,
-        "inkPixels": 196175,
+        "inkPixels": 195906,
         "componentsFinal": 1,
-        "holes": 4,
+        "holes": 3,
         "holeSizes": [
-          38042,
-          1397,
-          1366,
-          24
+          37833,
+          1734,
+          1726
         ],
         "bbox": [
           56,
           151,
           967,
-          872
+          871
         ],
         "jumpRingCount": 2,
         "ringHoles": [
           {
-            "size": 1397,
-            "centreX": 180.85182534001433,
-            "centreY": 284.47530422333574
+            "size": 1734,
+            "centreX": 180.85467128027682,
+            "centreY": 288.48615916955015
           },
           {
-            "size": 1366,
-            "centreX": 925.7642752562225,
-            "centreY": 279.404831625183
+            "size": 1726,
+            "centreX": 925.2838933951333,
+            "centreY": 283.48493626882964
           }
         ]
       },
@@ -1139,18 +1223,23 @@
         "inkPixelsBeforeBridging": 186805,
         "inkPixelsPreserved": 186805,
         "jumpRings": 2,
+        "ringPlacement": "welded",
         "ringCentres": [
           {
             "x": 194,
             "y": 327,
             "anchorX": 226,
-            "anchorY": 353
+            "anchorY": 353,
+            "glyphIndex": 0,
+            "contourIndex": 0
           },
           {
-            "x": 945,
+            "x": 946,
             "y": 322,
-            "anchorX": 885,
-            "anchorY": 348
+            "anchorX": 897,
+            "anchorY": 348,
+            "glyphIndex": 3,
+            "contourIndex": 0
           }
         ],
         "glyphBoxBeforeRings": [
@@ -1161,9 +1250,10 @@
         ],
         "glyphPixelsPunchedByRings": 0,
         "glyphPixelsUnderRingMetal": 0,
-        "recentreScale": 0.991304347826087,
-        "recentreOffsetX": -11.408695652173918,
-        "recentreOffsetY": -35.365217391304355,
+        "recentreScale": 0.990228013029316,
+        "recentreScaleY": 0.9890260631001372,
+        "recentreOffsetX": -11.335504885993487,
+        "recentreOffsetY": -34.93689986282578,
         "componentsBefore": 3,
         "fontSha256Declared": "494f6b61469d7a02a2d63f0fc4930bb007388d8cfe551de5eb98354e100889f3"
       }
@@ -1182,30 +1272,30 @@
     ],
     "measured": {
       "components": 1,
-      "holes": 4,
-      "inkPixels": 196175,
+      "holes": 3,
+      "inkPixels": 195906,
       "bbox": [
         56,
         151,
         967,
-        872
+        871
       ],
       "rule": "luminance"
     },
     "rings": {
       "jumpRings": 2,
       "ringHoleSizes": [
-        1397,
-        1366
+        1734,
+        1726
       ],
       "ringHoleCentres": [
         [
           180.9,
-          284.5
+          288.5
         ],
         [
-          925.8,
-          279.4
+          925.3,
+          283.5
         ]
       ],
       "ringHolesFound": 2,
@@ -1217,8 +1307,8 @@
       "claimedPunchedByRings": 0,
       "claimedWeldedIntoRingMetal": 0,
       "ringHoleBottoms": [
-        304,
-        299
+        311,
+        306
       ]
     },
     "construction": {
@@ -1228,14 +1318,20 @@
       "bridgePixelsAdded": 4583,
       "inkPixelsBeforeBridging": 186805,
       "inkPixelsPreserved": 186805,
-      "recentreScale": 0.991304347826087,
-      "recentreOffsetX": -11.408695652173918,
-      "recentreOffsetY": -35.365217391304355
+      "recentreScale": 0.990228013029316,
+      "recentreScaleY": 0.9890260631001372,
+      "recentreOffsetX": -11.335504885993487,
+      "recentreOffsetY": -34.93689986282578,
+      "ringPlacement": "welded",
+      "ringCarriers": [
+        "0:0",
+        "3:0"
+      ]
     }
   },
   {
     "file": "layla-en-classic.png",
-    "pngSha256": "d7bebfab7b582bcf19e0913c7a9f3152defbec1f0ac7aa5b0176ce862e0cd333",
+    "pngSha256": "0eab4dd653da7c8faa07b143e312122f0814fcdba008908066a56317c9182147",
     "report": {
       "engineRelease": "caleums-identity-v4",
       "pipelineRelease": "caleums-final-media-v2",
@@ -1244,43 +1340,43 @@
       "fontFile": "PlayfairDisplay-SemiBold.ttf",
       "fontSha256Measured": "c40f2293766a503bc70cce9e512ef844a4ccb7cbcde792fe2ea31d191917d8d6",
       "shaping": {
-        "sharp": "0.34.5",
-        "libvips": "8.17.3",
+        "sharp": "0.35.4",
+        "libvips": "8.18.6",
         "harfbuzzShaper": "14.4.0"
       },
       "exactCharactersPreserved": true,
       "passed": true,
       "measured": {
-        "measuredBy": "decodeMask@sharp0.34.5",
+        "measuredBy": "decodeMask@sharp0.35.4",
         "rule": "luminance",
         "width": 1024,
         "height": 1024,
-        "inkPixels": 81471,
+        "inkPixels": 81089,
         "componentsFinal": 1,
         "holes": 4,
         "holeSizes": [
-          4336,
+          4337,
           4272,
-          1308,
-          1292
+          1632,
+          1631
         ],
         "bbox": [
           56,
-          314,
+          313,
           967,
           709
         ],
         "jumpRingCount": 2,
         "ringHoles": [
           {
-            "size": 1308,
-            "centreX": 96.01758409785933,
-            "centreY": 350.2094801223242
+            "size": 1631,
+            "centreX": 96.12691600245249,
+            "centreY": 353.0735744941754
           },
           {
-            "size": 1292,
-            "centreX": 908.0386996904025,
-            "centreY": 418.88157894736844
+            "size": 1632,
+            "centreX": 913.3253676470588,
+            "centreY": 422.9852941176471
           }
         ]
       },
@@ -1292,18 +1388,23 @@
         "inkPixelsBeforeBridging": 76283,
         "inkPixelsPreserved": 76283,
         "jumpRings": 2,
+        "ringPlacement": "welded",
         "ringCentres": [
           {
             "x": 44,
-            "y": 369,
+            "y": 368,
             "anchorX": 73,
-            "anchorY": 398
+            "anchorY": 398,
+            "glyphIndex": 0,
+            "contourIndex": 0
           },
           {
-            "x": 892,
+            "x": 898,
             "y": 441,
-            "anchorX": 850,
-            "anchorY": 467
+            "anchorX": 866,
+            "anchorY": 467,
+            "glyphIndex": 4,
+            "contourIndex": 0
           }
         ],
         "glyphBoxBeforeRings": [
@@ -1315,8 +1416,9 @@
         "glyphPixelsPunchedByRings": 0,
         "glyphPixelsUnderRingMetal": 0,
         "recentreScale": 0.9569779643231899,
+        "recentreScaleY": 0.9566265060240964,
         "recentreOffsetX": 54.08604407135362,
-        "recentreOffsetY": 1.068205666316885,
+        "recentreOffsetY": 1.1397590361445964,
         "componentsBefore": 5,
         "fontSha256Declared": "c40f2293766a503bc70cce9e512ef844a4ccb7cbcde792fe2ea31d191917d8d6"
       }
@@ -1337,10 +1439,10 @@
     "measured": {
       "components": 1,
       "holes": 4,
-      "inkPixels": 81471,
+      "inkPixels": 81089,
       "bbox": [
         56,
-        314,
+        313,
         967,
         709
       ],
@@ -1349,17 +1451,17 @@
     "rings": {
       "jumpRings": 2,
       "ringHoleSizes": [
-        1308,
-        1292
+        1631,
+        1632
       ],
       "ringHoleCentres": [
         [
-          96,
-          350.2
+          96.1,
+          353.1
         ],
         [
-          908,
-          418.9
+          913.3,
+          423
         ]
       ],
       "ringHolesFound": 2,
@@ -1371,8 +1473,8 @@
       "claimedPunchedByRings": 0,
       "claimedWeldedIntoRingMetal": 0,
       "ringHoleBottoms": [
-        369,
-        438
+        375,
+        445
       ]
     },
     "construction": {
@@ -1383,13 +1485,19 @@
       "inkPixelsBeforeBridging": 76283,
       "inkPixelsPreserved": 76283,
       "recentreScale": 0.9569779643231899,
+      "recentreScaleY": 0.9566265060240964,
       "recentreOffsetX": 54.08604407135362,
-      "recentreOffsetY": 1.068205666316885
+      "recentreOffsetY": 1.1397590361445964,
+      "ringPlacement": "welded",
+      "ringCarriers": [
+        "0:0",
+        "4:0"
+      ]
     }
   },
   {
     "file": "layla-en-kufi.png",
-    "pngSha256": "95a3ac9c532465a035b330e86c726b8d2b95aba20922b247aba99e7b12d38a3e",
+    "pngSha256": "d2edfbdb7f45bcb2ff79e488f2bf9f9b261456739151e4d339bf496ef637ad11",
     "report": {
       "engineRelease": "caleums-identity-v4",
       "pipelineRelease": "caleums-final-media-v2",
@@ -1398,43 +1506,43 @@
       "fontFile": "cairo.ttf",
       "fontSha256Measured": "667c987182391c91f4e57a2f455b1794fb5e3ee6ca4ef3383e86bb690fa9c964",
       "shaping": {
-        "sharp": "0.34.5",
-        "libvips": "8.17.3",
+        "sharp": "0.35.4",
+        "libvips": "8.18.6",
         "harfbuzzShaper": "14.4.0"
       },
       "exactCharactersPreserved": true,
       "passed": true,
       "measured": {
-        "measuredBy": "decodeMask@sharp0.34.5",
+        "measuredBy": "decodeMask@sharp0.35.4",
         "rule": "luminance",
         "width": 1024,
         "height": 1024,
-        "inkPixels": 93745,
+        "inkPixels": 93536,
         "componentsFinal": 1,
         "holes": 4,
         "holeSizes": [
-          5569,
-          5545,
-          1307,
-          1270
+          5572,
+          5550,
+          1634,
+          1631
         ],
         "bbox": [
           56,
           293,
           967,
-          729
+          730
         ],
         "jumpRingCount": 2,
         "ringHoles": [
           {
-            "size": 1307,
-            "centreX": 96.00688599846978,
-            "centreY": 329.1966335118592
+            "size": 1631,
+            "centreX": 96.12691600245249,
+            "centreY": 333.0735744941754
           },
           {
-            "size": 1270,
-            "centreX": 914.455905511811,
-            "centreY": 405.47874015748033
+            "size": 1634,
+            "centreX": 917.0177478580172,
+            "centreY": 410.7533659730722
           }
         ]
       },
@@ -1446,18 +1554,23 @@
         "inkPixelsBeforeBridging": 90316,
         "inkPixelsPreserved": 90316,
         "jumpRings": 2,
+        "ringPlacement": "welded",
         "ringCentres": [
           {
             "x": 44,
-            "y": 339,
+            "y": 338,
             "anchorX": 73,
-            "anchorY": 368
+            "anchorY": 368,
+            "glyphIndex": 0,
+            "contourIndex": 0
           },
           {
-            "x": 899,
+            "x": 902,
             "y": 419,
-            "anchorX": 844,
-            "anchorY": 445
+            "anchorX": 870,
+            "anchorY": 445,
+            "glyphIndex": 4,
+            "contourIndex": 0
           }
         ],
         "glyphBoxBeforeRings": [
@@ -1469,8 +1582,9 @@
         "glyphPixelsPunchedByRings": 0,
         "glyphPixelsUnderRingMetal": 0,
         "recentreScale": 0.9569779643231899,
+        "recentreScaleY": 0.9563318777292577,
         "recentreOffsetX": 54.08604407135362,
-        "recentreOffsetY": 8.777544596012604,
+        "recentreOffsetY": 9.925764192139752,
         "componentsBefore": 5,
         "fontSha256Declared": "667c987182391c91f4e57a2f455b1794fb5e3ee6ca4ef3383e86bb690fa9c964"
       }
@@ -1491,42 +1605,42 @@
     "measured": {
       "components": 1,
       "holes": 4,
-      "inkPixels": 93745,
+      "inkPixels": 93536,
       "bbox": [
         56,
         293,
         967,
-        729
+        730
       ],
       "rule": "luminance"
     },
     "rings": {
       "jumpRings": 2,
       "ringHoleSizes": [
-        1307,
-        1270
+        1631,
+        1634
       ],
       "ringHoleCentres": [
         [
-          96,
-          329.2
+          96.1,
+          333.1
         ],
         [
-          914.5,
-          405.5
+          917,
+          410.8
         ]
       ],
       "ringHolesFound": 2,
       "ringHolesClearOfAnchor": 2,
       "holesAboveGlyphTop": 1,
-      "glyphTop": 345.6,
+      "glyphTop": 346.6,
       "measuredPunchedByRings": 0,
       "measuredWeldedIntoRingMetal": 0,
       "claimedPunchedByRings": 0,
       "claimedWeldedIntoRingMetal": 0,
       "ringHoleBottoms": [
-        348,
-        425
+        355,
+        433
       ]
     },
     "construction": {
@@ -1537,13 +1651,19 @@
       "inkPixelsBeforeBridging": 90316,
       "inkPixelsPreserved": 90316,
       "recentreScale": 0.9569779643231899,
+      "recentreScaleY": 0.9563318777292577,
       "recentreOffsetX": 54.08604407135362,
-      "recentreOffsetY": 8.777544596012604
+      "recentreOffsetY": 9.925764192139752,
+      "ringPlacement": "welded",
+      "ringCarriers": [
+        "0:0",
+        "4:0"
+      ]
     }
   },
   {
     "file": "layla-ar-classic.png",
-    "pngSha256": "846405ec6a9cb59b3a9bcbc8ed30a88417fa98ba19ad78746167372f573b552d",
+    "pngSha256": "bf8aac91410eb2734e92a514cc63adcb6f9279ec7b7db6c26bcedeaf07a3a8b8",
     "report": {
       "engineRelease": "caleums-identity-v4",
       "pipelineRelease": "caleums-final-media-v2",
@@ -1552,41 +1672,41 @@
       "fontFile": "NotoNaskhArabic-Regular.ttf",
       "fontSha256Measured": "67b5a525a661b607971fbd3f96a81b89d3a768e74534fca84f18ac97e6fab72f",
       "shaping": {
-        "sharp": "0.34.5",
-        "libvips": "8.17.3",
+        "sharp": "0.35.4",
+        "libvips": "8.18.6",
         "harfbuzzShaper": "14.4.0"
       },
       "exactCharactersPreserved": true,
       "passed": true,
       "measured": {
-        "measuredBy": "decodeMask@sharp0.34.5",
+        "measuredBy": "decodeMask@sharp0.35.4",
         "rule": "luminance",
         "width": 1024,
         "height": 1024,
-        "inkPixels": 92243,
+        "inkPixels": 103724,
         "componentsFinal": 1,
         "holes": 2,
         "holeSizes": [
-          1170,
-          1160
+          1647,
+          1642
         ],
         "bbox": [
           56,
-          213,
+          195,
           967,
-          810
+          828
         ],
         "jumpRingCount": 2,
         "ringHoles": [
           {
-            "size": 1160,
-            "centreX": 93.90948275862068,
-            "centreY": 601.403448275862
+            "size": 1642,
+            "centreX": 277,
+            "centreY": 587.8252131546894
           },
           {
-            "size": 1170,
-            "centreX": 929.2273504273504,
-            "centreY": 247.04871794871795
+            "size": 1647,
+            "centreX": 926.8639951426836,
+            "centreY": 235.12264723740134
           }
         ]
       },
@@ -1598,18 +1718,23 @@
         "inkPixelsBeforeBridging": 101330,
         "inkPixelsPreserved": 101330,
         "jumpRings": 2,
+        "ringPlacement": "welded",
         "ringCentres": [
           {
-            "x": 53,
-            "y": 626,
-            "anchorX": 85,
-            "anchorY": 652
+            "x": 298,
+            "y": 602,
+            "anchorX": 330,
+            "anchorY": 628,
+            "glyphIndex": 0,
+            "contourIndex": 0
           },
           {
             "x": 974,
             "y": 235,
             "anchorX": 932,
-            "anchorY": 261
+            "anchorY": 261,
+            "glyphIndex": 4,
+            "contourIndex": 0
           }
         ],
         "glyphBoxBeforeRings": [
@@ -1620,9 +1745,10 @@
         ],
         "glyphPixelsPunchedByRings": 0,
         "glyphPixelsUnderRingMetal": 0,
-        "recentreScale": 0.9065606361829026,
-        "recentreOffsetX": 46.02783300198807,
-        "recentreOffsetY": 38.03379721669978,
+        "recentreScale": 0.9610115911485775,
+        "recentreScaleY": 0.9606060606060606,
+        "recentreOffsetX": -9.348788198103264,
+        "recentreOffsetY": 9.603030303030323,
         "componentsBefore": 3,
         "fontSha256Declared": "67b5a525a661b607971fbd3f96a81b89d3a768e74534fca84f18ac97e6fab72f"
       }
@@ -1643,42 +1769,42 @@
     "measured": {
       "components": 1,
       "holes": 2,
-      "inkPixels": 92243,
+      "inkPixels": 103724,
       "bbox": [
         56,
-        213,
+        195,
         967,
-        810
+        828
       ],
       "rule": "luminance"
     },
     "rings": {
       "jumpRings": 2,
       "ringHoleSizes": [
-        1160,
-        1170
+        1642,
+        1647
       ],
       "ringHoleCentres": [
         [
-          93.9,
-          601.4
+          277,
+          587.8
         ],
         [
-          929.2,
-          247
+          926.9,
+          235.1
         ]
       ],
       "ringHolesFound": 2,
       "ringHolesClearOfAnchor": 2,
       "holesAboveGlyphTop": 1,
-      "glyphTop": 267.4,
+      "glyphTop": 252.6,
       "measuredPunchedByRings": 0,
       "measuredWeldedIntoRingMetal": 0,
       "claimedPunchedByRings": 0,
       "claimedWeldedIntoRingMetal": 0,
       "ringHoleBottoms": [
-        620,
-        265
+        610,
+        257
       ]
     },
     "construction": {
@@ -1688,14 +1814,20 @@
       "bridgePixelsAdded": 1496,
       "inkPixelsBeforeBridging": 101330,
       "inkPixelsPreserved": 101330,
-      "recentreScale": 0.9065606361829026,
-      "recentreOffsetX": 46.02783300198807,
-      "recentreOffsetY": 38.03379721669978
+      "recentreScale": 0.9610115911485775,
+      "recentreScaleY": 0.9606060606060606,
+      "recentreOffsetX": -9.348788198103264,
+      "recentreOffsetY": 9.603030303030323,
+      "ringPlacement": "welded",
+      "ringCarriers": [
+        "0:0",
+        "4:0"
+      ]
     }
   },
   {
     "file": "layla-ar-kufi.png",
-    "pngSha256": "ff3f60d494b0e6c4f6ed61ba063c47d324e885b424de4924cd16aa539f3b4706",
+    "pngSha256": "f51c597f3675527daaf3f7c50e3eb268354235028b2bdbf299a11ebdc29fe17c",
     "report": {
       "engineRelease": "caleums-identity-v4",
       "pipelineRelease": "caleums-final-media-v2",
@@ -1704,41 +1836,41 @@
       "fontFile": "NotoKufiArabic-Regular.ttf",
       "fontSha256Measured": "494f6b61469d7a02a2d63f0fc4930bb007388d8cfe551de5eb98354e100889f3",
       "shaping": {
-        "sharp": "0.34.5",
-        "libvips": "8.17.3",
+        "sharp": "0.35.4",
+        "libvips": "8.18.6",
         "harfbuzzShaper": "14.4.0"
       },
       "exactCharactersPreserved": true,
       "passed": true,
       "measured": {
-        "measuredBy": "decodeMask@sharp0.34.5",
+        "measuredBy": "decodeMask@sharp0.35.4",
         "rule": "luminance",
         "width": 1024,
         "height": 1024,
-        "inkPixels": 100949,
+        "inkPixels": 107931,
         "componentsFinal": 1,
         "holes": 2,
         "holeSizes": [
-          1194,
-          1187
+          1634,
+          1630
         ],
         "bbox": [
           56,
-          262,
+          250,
           967,
-          761
+          772
         ],
         "jumpRingCount": 2,
         "ringHoles": [
           {
-            "size": 1194,
-            "centreX": 94.29229480737018,
-            "centreY": 550.857621440536
+            "size": 1634,
+            "centreX": 277.7796817625459,
+            "centreY": 477.9963280293758
           },
           {
-            "size": 1187,
-            "centreX": 928.8609941027801,
-            "centreY": 296.45408593091827
+            "size": 1630,
+            "centreX": 926.8779141104294,
+            "centreY": 290.0803680981595
           }
         ]
       },
@@ -1750,18 +1882,23 @@
         "inkPixelsBeforeBridging": 108848,
         "inkPixelsPreserved": 108848,
         "jumpRings": 2,
+        "ringPlacement": "welded",
         "ringCentres": [
           {
-            "x": 57,
-            "y": 568,
-            "anchorX": 89,
-            "anchorY": 594
+            "x": 300,
+            "y": 485,
+            "anchorX": 332,
+            "anchorY": 511,
+            "glyphIndex": 0,
+            "contourIndex": 0
           },
           {
-            "x": 966,
-            "y": 291,
-            "anchorX": 913,
-            "anchorY": 317
+            "x": 979,
+            "y": 288,
+            "anchorX": 949,
+            "anchorY": 317,
+            "glyphIndex": 4,
+            "contourIndex": 0
           }
         ],
         "glyphBoxBeforeRings": [
@@ -1772,9 +1909,10 @@
         ],
         "glyphPixelsPunchedByRings": 0,
         "glyphPixelsUnderRingMetal": 0,
-        "recentreScale": 0.9175050301810865,
-        "recentreOffsetX": 42.2374245472837,
-        "recentreOffsetY": 33.54124748490946,
+        "recentreScale": 0.9559748427672956,
+        "recentreScaleY": 0.9543795620437956,
+        "recentreOffsetX": -9.006289308176108,
+        "recentreOffsetY": 15.222627737226276,
         "componentsBefore": 3,
         "fontSha256Declared": "494f6b61469d7a02a2d63f0fc4930bb007388d8cfe551de5eb98354e100889f3"
       }
@@ -1795,42 +1933,42 @@
     "measured": {
       "components": 1,
       "holes": 2,
-      "inkPixels": 100949,
+      "inkPixels": 107931,
       "bbox": [
         56,
-        262,
+        250,
         967,
-        761
+        772
       ],
       "rule": "luminance"
     },
     "rings": {
       "jumpRings": 2,
       "ringHoleSizes": [
-        1194,
-        1187
+        1634,
+        1630
       ],
       "ringHoleCentres": [
         [
-          94.3,
-          550.9
+          277.8,
+          478
         ],
         [
-          928.9,
-          296.5
+          926.9,
+          290.1
         ]
       ],
       "ringHolesFound": 2,
       "ringHolesClearOfAnchor": 2,
       "holesAboveGlyphTop": 1,
-      "glyphTop": 319.8,
+      "glyphTop": 313,
       "measuredPunchedByRings": 0,
       "measuredWeldedIntoRingMetal": 0,
       "claimedPunchedByRings": 0,
       "claimedWeldedIntoRingMetal": 0,
       "ringHoleBottoms": [
-        569,
-        315
+        500,
+        312
       ]
     },
     "construction": {
@@ -1840,14 +1978,20 @@
       "bridgePixelsAdded": 1580,
       "inkPixelsBeforeBridging": 108848,
       "inkPixelsPreserved": 108848,
-      "recentreScale": 0.9175050301810865,
-      "recentreOffsetX": 42.2374245472837,
-      "recentreOffsetY": 33.54124748490946
+      "recentreScale": 0.9559748427672956,
+      "recentreScaleY": 0.9543795620437956,
+      "recentreOffsetX": -9.006289308176108,
+      "recentreOffsetY": 15.222627737226276,
+      "ringPlacement": "welded",
+      "ringCarriers": [
+        "0:0",
+        "4:0"
+      ]
     }
   },
   {
     "file": "muhammad-en-classic.png",
-    "pngSha256": "0355c2c846ba08f6eb2fc57c5998b7b5f9b5153c3ac237704220dae24cdf2e34",
+    "pngSha256": "0db25d892ac4f354ba764f1987b5829a28044020770ea56e12f7e9483142a10b",
     "report": {
       "engineRelease": "caleums-identity-v4",
       "pipelineRelease": "caleums-final-media-v2",
@@ -1856,44 +2000,45 @@
       "fontFile": "PlayfairDisplay-SemiBold.ttf",
       "fontSha256Measured": "c40f2293766a503bc70cce9e512ef844a4ccb7cbcde792fe2ea31d191917d8d6",
       "shaping": {
-        "sharp": "0.34.5",
-        "libvips": "8.17.3",
+        "sharp": "0.35.4",
+        "libvips": "8.18.6",
         "harfbuzzShaper": "14.4.0"
       },
       "exactCharactersPreserved": true,
       "passed": true,
       "measured": {
-        "measuredBy": "decodeMask@sharp0.34.5",
+        "measuredBy": "decodeMask@sharp0.35.4",
         "rule": "luminance",
         "width": 1024,
         "height": 1024,
-        "inkPixels": 46045,
+        "inkPixels": 44859,
         "componentsFinal": 1,
-        "holes": 5,
+        "holes": 6,
         "holeSizes": [
-          2018,
-          1199,
-          1193,
-          611,
-          578
+          1961,
+          1474,
+          1456,
+          578,
+          576,
+          1
         ],
         "bbox": [
           56,
-          419,
+          421,
           967,
-          603
+          601
         ],
         "jumpRingCount": 2,
         "ringHoles": [
           {
-            "size": 1193,
-            "centreX": 94.65549036043588,
-            "centreY": 463.91450125733445
+            "size": 1474,
+            "centreX": 93.90637720488466,
+            "centreY": 465.95793758480323
           },
           {
-            "size": 1199,
-            "centreX": 928.3836530442035,
-            "centreY": 453.7923269391159
+            "size": 1456,
+            "centreX": 929.0721153846154,
+            "centreY": 458.6524725274725
           }
         ]
       },
@@ -1905,18 +2050,23 @@
         "inkPixelsBeforeBridging": 42205,
         "inkPixelsPreserved": 42205,
         "jumpRings": 2,
+        "ringPlacement": "welded",
         "ringCentres": [
           {
-            "x": 53,
-            "y": 476,
+            "x": 54,
+            "y": 473,
             "anchorX": 85,
-            "anchorY": 502
+            "anchorY": 502,
+            "glyphIndex": 0,
+            "contourIndex": 0
           },
           {
-            "x": 957,
+            "x": 979,
             "y": 465,
-            "anchorX": 925,
-            "anchorY": 491
+            "anchorX": 936,
+            "anchorY": 491,
+            "glyphIndex": 7,
+            "contourIndex": 0
           }
         ],
         "glyphBoxBeforeRings": [
@@ -1927,9 +2077,10 @@
         ],
         "glyphPixelsPunchedByRings": 0,
         "glyphPixelsUnderRingMetal": 0,
-        "recentreScale": 0.9221435793731041,
-        "recentreOffsetX": 45.856420626895854,
-        "recentreOffsetY": 28.933265925176954,
+        "recentreScale": 0.902970297029703,
+        "recentreScaleY": 0.900497512437811,
+        "recentreOffsetX": 45.16435643564356,
+        "recentreOffsetY": 40.08955223880599,
         "componentsBefore": 8,
         "fontSha256Declared": "c40f2293766a503bc70cce9e512ef844a4ccb7cbcde792fe2ea31d191917d8d6"
       }
@@ -1952,43 +2103,43 @@
     ],
     "measured": {
       "components": 1,
-      "holes": 5,
-      "inkPixels": 46045,
+      "holes": 6,
+      "inkPixels": 44859,
       "bbox": [
         56,
-        419,
+        421,
         967,
-        603
+        601
       ],
       "rule": "luminance"
     },
     "rings": {
       "jumpRings": 2,
       "ringHoleSizes": [
-        1193,
-        1199
+        1474,
+        1456
       ],
       "ringHoleCentres": [
         [
-          94.7,
-          463.9
+          93.9,
+          466
         ],
         [
-          928.4,
-          453.8
+          929.1,
+          458.7
         ]
       ],
       "ringHolesFound": 2,
       "ringHolesClearOfAnchor": 2,
       "holesAboveGlyphTop": 2,
-      "glyphTop": 475.3,
+      "glyphTop": 475.9,
       "measuredPunchedByRings": 0,
       "measuredWeldedIntoRingMetal": 0,
       "claimedPunchedByRings": 0,
       "claimedWeldedIntoRingMetal": 0,
       "ringHoleBottoms": [
-        482,
-        472
+        487,
+        479
       ]
     },
     "construction": {
@@ -1998,14 +2149,20 @@
       "bridgePixelsAdded": 2658,
       "inkPixelsBeforeBridging": 42205,
       "inkPixelsPreserved": 42205,
-      "recentreScale": 0.9221435793731041,
-      "recentreOffsetX": 45.856420626895854,
-      "recentreOffsetY": 28.933265925176954
+      "recentreScale": 0.902970297029703,
+      "recentreScaleY": 0.900497512437811,
+      "recentreOffsetX": 45.16435643564356,
+      "recentreOffsetY": 40.08955223880599,
+      "ringPlacement": "welded",
+      "ringCarriers": [
+        "0:0",
+        "7:0"
+      ]
     }
   },
   {
     "file": "muhammad-en-kufi.png",
-    "pngSha256": "c78be64202744b926f79ffa9399b93241e23827562b287b2f3bad40a3b73b02c",
+    "pngSha256": "baaa9565719b62e50c9d1c3d12ffbe7295c3bb8fff1a3ce7f2dc1ec73ed5a550",
     "report": {
       "engineRelease": "caleums-identity-v4",
       "pipelineRelease": "caleums-final-media-v2",
@@ -2014,44 +2171,45 @@
       "fontFile": "cairo.ttf",
       "fontSha256Measured": "667c987182391c91f4e57a2f455b1794fb5e3ee6ca4ef3383e86bb690fa9c964",
       "shaping": {
-        "sharp": "0.34.5",
-        "libvips": "8.17.3",
+        "sharp": "0.35.4",
+        "libvips": "8.18.6",
         "harfbuzzShaper": "14.4.0"
       },
       "exactCharactersPreserved": true,
       "passed": true,
       "measured": {
-        "measuredBy": "decodeMask@sharp0.34.5",
+        "measuredBy": "decodeMask@sharp0.35.4",
         "rule": "luminance",
         "width": 1024,
         "height": 1024,
-        "inkPixels": 45585,
+        "inkPixels": 45354,
         "componentsFinal": 1,
-        "holes": 5,
+        "holes": 6,
         "holeSizes": [
-          1850,
-          1142,
-          1140,
-          740,
-          728
+          1821,
+          1424,
+          1416,
+          715,
+          713,
+          1
         ],
         "bbox": [
           56,
-          424,
+          423,
           967,
           599
         ],
         "jumpRingCount": 2,
         "ringHoles": [
           {
-            "size": 1142,
-            "centreX": 93.64098073555166,
-            "centreY": 459.78196147110333
+            "size": 1416,
+            "centreX": 93.5,
+            "centreY": 463.88700564971754
           },
           {
-            "size": 1140,
-            "centreX": 929.5061403508772,
-            "centreY": 457.8280701754386
+            "size": 1424,
+            "centreX": 929.5,
+            "centreY": 460.30477528089887
           }
         ]
       },
@@ -2063,18 +2221,23 @@
         "inkPixelsBeforeBridging": 43821,
         "inkPixelsPreserved": 43821,
         "jumpRings": 2,
+        "ringPlacement": "welded",
         "ringCentres": [
           {
             "x": 44,
-            "y": 467,
+            "y": 466,
             "anchorX": 73,
-            "anchorY": 496
+            "anchorY": 496,
+            "glyphIndex": 0,
+            "contourIndex": 0
           },
           {
-            "x": 974,
-            "y": 465,
-            "anchorX": 942,
-            "anchorY": 491
+            "x": 979,
+            "y": 462,
+            "anchorX": 949,
+            "anchorY": 491,
+            "glyphIndex": 7,
+            "contourIndex": 0
           }
         ],
         "glyphBoxBeforeRings": [
@@ -2085,9 +2248,10 @@
         ],
         "glyphPixelsPunchedByRings": 0,
         "glyphPixelsUnderRingMetal": 0,
-        "recentreScale": 0.8985221674876848,
-        "recentreOffsetX": 54.20295566502463,
-        "recentreOffsetY": 43.92512315270932,
+        "recentreScale": 0.8941176470588236,
+        "recentreScaleY": 0.8894472361809045,
+        "recentreOffsetX": 54.21176470588235,
+        "recentreOffsetY": 49.4321608040201,
         "componentsBefore": 8,
         "fontSha256Declared": "667c987182391c91f4e57a2f455b1794fb5e3ee6ca4ef3383e86bb690fa9c964"
       }
@@ -2110,11 +2274,11 @@
     ],
     "measured": {
       "components": 1,
-      "holes": 5,
-      "inkPixels": 45585,
+      "holes": 6,
+      "inkPixels": 45354,
       "bbox": [
         56,
-        424,
+        423,
         967,
         599
       ],
@@ -2123,30 +2287,30 @@
     "rings": {
       "jumpRings": 2,
       "ringHoleSizes": [
-        1142,
-        1140
+        1416,
+        1424
       ],
       "ringHoleCentres": [
         [
-          93.6,
-          459.8
+          93.5,
+          463.9
         ],
         [
           929.5,
-          457.8
+          460.3
         ]
       ],
       "ringHolesFound": 2,
       "ringHolesClearOfAnchor": 2,
       "holesAboveGlyphTop": 2,
-      "glyphTop": 480.6,
+      "glyphTop": 481.7,
       "measuredPunchedByRings": 0,
       "measuredWeldedIntoRingMetal": 0,
       "claimedPunchedByRings": 0,
       "claimedWeldedIntoRingMetal": 0,
       "ringHoleBottoms": [
-        478,
-        476
+        484,
+        481
       ]
     },
     "construction": {
@@ -2156,14 +2320,20 @@
       "bridgePixelsAdded": 3443,
       "inkPixelsBeforeBridging": 43821,
       "inkPixelsPreserved": 43821,
-      "recentreScale": 0.8985221674876848,
-      "recentreOffsetX": 54.20295566502463,
-      "recentreOffsetY": 43.92512315270932
+      "recentreScale": 0.8941176470588236,
+      "recentreScaleY": 0.8894472361809045,
+      "recentreOffsetX": 54.21176470588235,
+      "recentreOffsetY": 49.4321608040201,
+      "ringPlacement": "welded",
+      "ringCarriers": [
+        "0:0",
+        "7:0"
+      ]
     }
   },
   {
     "file": "muhammad-ar-classic.png",
-    "pngSha256": "14f9bad35d958e57cbb9c72059446702447073e492c6b8370bc7a76573b27a40",
+    "pngSha256": "e11ad536a83fd8d0bffb15b8fbbb81cec91a6bf1c67c8e07bc287e21459090bc",
     "report": {
       "engineRelease": "caleums-identity-v4",
       "pipelineRelease": "caleums-final-media-v2",
@@ -2172,44 +2342,44 @@
       "fontFile": "NotoNaskhArabic-Regular.ttf",
       "fontSha256Measured": "67b5a525a661b607971fbd3f96a81b89d3a768e74534fca84f18ac97e6fab72f",
       "shaping": {
-        "sharp": "0.34.5",
-        "libvips": "8.17.3",
+        "sharp": "0.35.4",
+        "libvips": "8.18.6",
         "harfbuzzShaper": "14.4.0"
       },
       "exactCharactersPreserved": true,
       "passed": true,
       "measured": {
-        "measuredBy": "decodeMask@sharp0.34.5",
+        "measuredBy": "decodeMask@sharp0.35.4",
         "rule": "luminance",
         "width": 1024,
         "height": 1024,
-        "inkPixels": 74829,
+        "inkPixels": 75040,
         "componentsFinal": 1,
         "holes": 5,
         "holeSizes": [
           3613,
           3382,
-          1423,
-          1418,
+          1792,
+          1792,
           1
         ],
         "bbox": [
-          63,
+          59,
           388,
-          959,
+          964,
           634
         ],
         "jumpRingCount": 2,
         "ringHoles": [
           {
-            "size": 1418,
-            "centreX": 139.77291960507756,
-            "centreY": 425.7179125528914
+            "size": 1792,
+            "centreX": 135,
+            "centreY": 429.98660714285717
           },
           {
-            "size": 1423,
-            "centreX": 917.1707659873507,
-            "centreY": 450.7779339423753
+            "size": 1792,
+            "centreX": 922,
+            "centreY": 454.98660714285717
           }
         ]
       },
@@ -2221,18 +2391,23 @@
         "inkPixelsBeforeBridging": 66781,
         "inkPixelsPreserved": 66781,
         "jumpRings": 2,
+        "ringPlacement": "welded",
         "ringCentres": [
           {
-            "x": 145,
+            "x": 144,
             "y": 440,
             "anchorX": 183,
-            "anchorY": 466
+            "anchorY": 466,
+            "glyphIndex": 0,
+            "contourIndex": 0
           },
           {
-            "x": 922,
+            "x": 931,
             "y": 465,
-            "anchorX": 890,
-            "anchorY": 491
+            "anchorX": 899,
+            "anchorY": 491,
+            "glyphIndex": 3,
+            "contourIndex": 0
           }
         ],
         "glyphBoxBeforeRings": [
@@ -2244,7 +2419,8 @@
         "glyphPixelsPunchedByRings": 0,
         "glyphPixelsUnderRingMetal": 0,
         "recentreScale": 1,
-        "recentreOffsetX": -5,
+        "recentreScaleY": 1,
+        "recentreOffsetX": -9,
         "recentreOffsetY": -10,
         "componentsBefore": 1,
         "fontSha256Declared": "67b5a525a661b607971fbd3f96a81b89d3a768e74534fca84f18ac97e6fab72f"
@@ -2265,11 +2441,11 @@
     "measured": {
       "components": 1,
       "holes": 5,
-      "inkPixels": 74829,
+      "inkPixels": 75040,
       "bbox": [
-        63,
+        59,
         388,
-        959,
+        964,
         634
       ],
       "rule": "luminance"
@@ -2277,17 +2453,17 @@
     "rings": {
       "jumpRings": 2,
       "ringHoleSizes": [
-        1418,
-        1423
+        1792,
+        1792
       ],
       "ringHoleCentres": [
         [
-          139.8,
-          425.7
+          135,
+          430
         ],
         [
-          917.2,
-          450.8
+          922,
+          455
         ]
       ],
       "ringHolesFound": 2,
@@ -2299,8 +2475,8 @@
       "claimedPunchedByRings": 0,
       "claimedWeldedIntoRingMetal": 0,
       "ringHoleBottoms": [
-        446,
-        471
+        453,
+        478
       ]
     },
     "construction": {
@@ -2311,13 +2487,19 @@
       "inkPixelsBeforeBridging": 66781,
       "inkPixelsPreserved": 66781,
       "recentreScale": 1,
-      "recentreOffsetX": -5,
-      "recentreOffsetY": -10
+      "recentreScaleY": 1,
+      "recentreOffsetX": -9,
+      "recentreOffsetY": -10,
+      "ringPlacement": "welded",
+      "ringCarriers": [
+        "0:0",
+        "3:0"
+      ]
     }
   },
   {
     "file": "muhammad-ar-kufi.png",
-    "pngSha256": "587054e447aa7dd453a0c4e6dd5ac5766f64f55f2372016315ca7a701ac24fb7",
+    "pngSha256": "ca7c01a7a6777ff9ea310440df76f2e432a88aa32a041f5317a15c0c30bbed08",
     "report": {
       "engineRelease": "caleums-identity-v4",
       "pipelineRelease": "caleums-final-media-v2",
@@ -2326,25 +2508,27 @@
       "fontFile": "NotoKufiArabic-Regular.ttf",
       "fontSha256Measured": "494f6b61469d7a02a2d63f0fc4930bb007388d8cfe551de5eb98354e100889f3",
       "shaping": {
-        "sharp": "0.34.5",
-        "libvips": "8.17.3",
+        "sharp": "0.35.4",
+        "libvips": "8.18.6",
         "harfbuzzShaper": "14.4.0"
       },
       "exactCharactersPreserved": true,
       "passed": true,
       "measured": {
-        "measuredBy": "decodeMask@sharp0.34.5",
+        "measuredBy": "decodeMask@sharp0.35.4",
         "rule": "luminance",
         "width": 1024,
         "height": 1024,
-        "inkPixels": 84045,
+        "inkPixels": 83737,
         "componentsFinal": 1,
-        "holes": 4,
+        "holes": 6,
         "holeSizes": [
-          9637,
-          9578,
-          1416,
-          1416
+          9627,
+          9562,
+          1792,
+          1792,
+          1,
+          1
         ],
         "bbox": [
           56,
@@ -2355,14 +2539,14 @@
         "jumpRingCount": 2,
         "ringHoles": [
           {
-            "size": 1416,
-            "centreX": 97.75211864406779,
-            "centreY": 408.6949152542373
+            "size": 1792,
+            "centreX": 98,
+            "centreY": 412.98660714285717
           },
           {
-            "size": 1416,
-            "centreX": 921.2478813559322,
-            "centreY": 433.6949152542373
+            "size": 1792,
+            "centreX": 918,
+            "centreY": 437.98660714285717
           }
         ]
       },
@@ -2374,18 +2558,23 @@
         "inkPixelsBeforeBridging": 76191,
         "inkPixelsPreserved": 76191,
         "jumpRings": 2,
+        "ringPlacement": "welded",
         "ringCentres": [
           {
-            "x": 83,
+            "x": 82,
             "y": 424,
             "anchorX": 125,
-            "anchorY": 450
+            "anchorY": 450,
+            "glyphIndex": 0,
+            "contourIndex": 0
           },
           {
-            "x": 908,
+            "x": 905,
             "y": 449,
-            "anchorX": 867,
-            "anchorY": 475
+            "anchorX": 872,
+            "anchorY": 475,
+            "glyphIndex": 3,
+            "contourIndex": 0
           }
         ],
         "glyphBoxBeforeRings": [
@@ -2396,9 +2585,10 @@
         ],
         "glyphPixelsPunchedByRings": 0,
         "glyphPixelsUnderRingMetal": 0,
-        "recentreScale": 0.9978118161925602,
-        "recentreOffsetX": 15.089715536105032,
-        "recentreOffsetY": -10.164113785558015,
+        "recentreScale": 0.9967213114754099,
+        "recentreScaleY": 0.9964539007092199,
+        "recentreOffsetX": 16.131147540983605,
+        "recentreOffsetY": -9.64539007092202,
         "componentsBefore": 1,
         "fontSha256Declared": "494f6b61469d7a02a2d63f0fc4930bb007388d8cfe551de5eb98354e100889f3"
       }
@@ -2417,8 +2607,8 @@
     ],
     "measured": {
       "components": 1,
-      "holes": 4,
-      "inkPixels": 84045,
+      "holes": 6,
+      "inkPixels": 83737,
       "bbox": [
         56,
         371,
@@ -2430,30 +2620,30 @@
     "rings": {
       "jumpRings": 2,
       "ringHoleSizes": [
-        1416,
-        1416
+        1792,
+        1792
       ],
       "ringHoleCentres": [
         [
-          97.8,
-          408.7
+          98,
+          413
         ],
         [
-          921.2,
-          433.7
+          918,
+          438
         ]
       ],
       "ringHolesFound": 2,
       "ringHolesClearOfAnchor": 2,
       "holesAboveGlyphTop": 1,
-      "glyphTop": 430.9,
+      "glyphTop": 430.8,
       "measuredPunchedByRings": 0,
       "measuredWeldedIntoRingMetal": 0,
       "claimedPunchedByRings": 0,
       "claimedWeldedIntoRingMetal": 0,
       "ringHoleBottoms": [
-        429,
-        454
+        436,
+        461
       ]
     },
     "construction": {
@@ -2463,9 +2653,15 @@
       "bridgePixelsAdded": 0,
       "inkPixelsBeforeBridging": 76191,
       "inkPixelsPreserved": 76191,
-      "recentreScale": 0.9978118161925602,
-      "recentreOffsetX": 15.089715536105032,
-      "recentreOffsetY": -10.164113785558015
+      "recentreScale": 0.9967213114754099,
+      "recentreScaleY": 0.9964539007092199,
+      "recentreOffsetX": 16.131147540983605,
+      "recentreOffsetY": -9.64539007092202,
+      "ringPlacement": "welded",
+      "ringCarriers": [
+        "0:0",
+        "3:0"
+      ]
     }
   }
 ]

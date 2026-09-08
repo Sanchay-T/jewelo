@@ -154,7 +154,7 @@ class SharpIdentityRasterizer implements IdentityRasterizer {
       text: input.approvedText,
       script: input.script,
     });
-    const { svg } = identityStencilSvg(shaped);
+    const { svg, glyphs } = identityStencilSvg(shaped);
     const { data, info } = await sharp(Buffer.from(svg))
       .flatten({ background: "#ffffff" })
       .toColourspace("b-w")
@@ -173,6 +173,11 @@ class SharpIdentityRasterizer implements IdentityRasterizer {
     return {
       mask: { width: info.width, height: info.height, ink },
       shaping: shaped,
+      // D-020: the same outlines that produced this raster, on the same canvas.
+      // The solver picks the jump-ring carrier from them, so the choice is made
+      // on the font's own contours and GDEF classes rather than on a blob in
+      // the painted mask.
+      outlines: glyphs,
     };
   }
 

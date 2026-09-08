@@ -99,6 +99,15 @@ export function label4(
   pixels: Uint8Array,
   wanted: (value: number) => boolean,
 ): Label4Result {
+  // Review finding 9: the labeller read `pixels[index]` for every pixel of the
+  // declared canvas without ever checking that the buffer is that long. A short
+  // buffer returns `undefined`, `wanted(undefined as unknown as number)` is
+  // `undefined !== 0`, which is true, so the missing tail of the image counted
+  // as solid ink and the piece measured as one component when it was not.
+  if (pixels.length !== width * height)
+    throw new Error(
+      `identity_label4_size:pixels=${pixels.length},canvas=${width}x${height}`,
+    );
   const labels = new Int32Array(width * height);
   const stack = new Int32Array(width * height);
   let count = 0;
@@ -202,9 +211,15 @@ export function findMaskHoles(input: MaskGeometryInput): MaskHoleGeometry {
   return {
     holes,
     regionAt: (x, y) => {
+      // Review finding 8: a non-integer coordinate indexed the label image at a
+      // fractional offset, which is always `undefined`, and the function's
+      // return type said `number`. Every caller maps a ring centre through the
+      // recentre transform, which produces fractions, so the guard is the
+      // difference between "no hole here" and a silent `undefined` compared
+      // against `-1`.
       if (
-        !Number.isFinite(x) ||
-        !Number.isFinite(y) ||
+        !Number.isInteger(x) ||
+        !Number.isInteger(y) ||
         x < 0 ||
         y < 0 ||
         x >= width ||
@@ -419,7 +434,15 @@ export function maskMoments(input: MaskGeometryInput): MaskMoments {
     sumY += (index - x) / width;
   }
   if (area === 0)
-    return { area: 0, centreX: 0, centreY: 0, mu20: 0, mu11: 0, mu02: 0, angle: 0 };
+    return {
+      area: 0,
+      centreX: 0,
+      centreY: 0,
+      mu20: 0,
+      mu11: 0,
+      mu02: 0,
+      angle: 0,
+    };
   const centreX = sumX / area;
   const centreY = sumY / area;
   let mu20 = 0;

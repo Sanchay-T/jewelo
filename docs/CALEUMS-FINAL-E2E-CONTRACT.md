@@ -52,12 +52,43 @@ the measurement "no glyph id 0 in the shaped buffer and every NFC code point
 covered by a cluster", not an assertion. It stores an immutable PNG, checksum,
 solver/font/runtime report, and fingerprint before provider-attempt reservation.
 
-Only one-name Arabic `classic`/Amiri and `minimal`/Scheherazade New are live.
-Signature, Kufi, Contemporary, Diwani, Thuluth-inspired, every unapproved font,
-and all two-name Arabic layouts enter explicit operator review before spend.
-The customer-facing Contemporary selection is the UI alias for certified
-`classic`; all other unsupported selections are visibly review-only. English
-retains the existing deterministic renderer.
+Jump-ring anchors are chosen at the outline level, before rasterisation (D-020).
+For each end of the name the engine takes the outermost base glyph on the canvas
+and the largest contour of that glyph's outline; a glyph the font's GDEF table
+classes as a mark, and any contour too small or too short against its own glyph
+and against the whole run, is never a carrier. That contour is rasterised on its
+own to find the anchor - the outer top corner of the carrier stroke - and the
+ring is seated above it, lifting and shifting until its hole punches no name ink
+out and no name ink lies under its metal outside the weld. When no clean seat
+exists on any carrier at either end, the piece is built with a bar suspension
+instead: a thin rail across the top of the lettering with a ring at each of its
+ends. The construction reports `ringPlacement` as `welded`, `bar` or `none`, and
+a `bar` piece routes to operator review before it is photographed. The engine
+never refuses a customer's name because a ring would not seat; the measured ring
+gates (`identity_ring_punched_ink`, `identity_ring_welded_to_glyph`,
+`identity_ring_hole_too_small`) stay as post-draw measurements that must be zero
+for whichever construction was drawn.
+
+The ring rule is not a fingerprint input. The fingerprint hashes the engine
+release, the pipeline release, the script, the approved text, the style, the
+layout, the connector, the measured font sha and the sha of the encoded PNG, so
+any change to how a ring is seated already moves the fingerprint through the PNG
+sha, and `caleums-identity-v4` continues to name this engine.
+
+All six styles are live in both scripts since 2026-08-27: `classic` and
+`diwani` and `signature` on Noto Naskh Arabic, `minimal` on Scheherazade New,
+`kufi` on Noto Kufi Arabic with Cairo for its Latin column, and
+`thuluth-inspired` on Rakkas, with Playfair Display SemiBold as the Latin face
+for everything but Kufi. `LIVE_IDENTITY_STYLES` in
+`packages/identity/src/caleums-arabic-v3.ts` is the source of truth and
+`engines/caleums-arabic-v3/manifest.json` mirrors it. Amiri was retired for
+`classic` on 2026-08-27 because it stacks lam-ya under HarfBuzz while the
+approved renders were flat. `classic`, `diwani` and `signature` pin one face, so
+their stencils are byte-identical and no verifier can tell a delivered Naskh
+from a delivered diwani; DS-4 limits what the shop sells to what phase 3 proves.
+Two-name Arabic layouts still enter explicit operator review before spend. The
+customer-facing Contemporary selection is the UI alias for certified `classic`.
+English goes through the same solver, not a separate renderer.
 
 ## Independent still graph
 

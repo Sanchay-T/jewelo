@@ -109,6 +109,7 @@ interface StencilCrossCheck {
     readonly glyphPixelsPunchedByRings: number;
     readonly glyphPixelsUnderRingMetal: number;
     readonly recentreScale: number;
+    readonly recentreScaleY: number;
     readonly recentreOffsetX: number;
     readonly recentreOffsetY: number;
   };
@@ -136,7 +137,7 @@ function crossCheckClaim(
       return;
     }
     const x = centre.x * claimed.recentreScale + claimed.recentreOffsetX;
-    const y = centre.y * claimed.recentreScale + claimed.recentreOffsetY;
+    const y = centre.y * claimed.recentreScaleY + claimed.recentreOffsetY;
     const dx = Math.abs(x - hole.centreX);
     const dy = Math.abs(y - hole.centreY);
     if (dx > RING_CENTRE_TOLERANCE_PX || dy > RING_CENTRE_TOLERANCE_PX)
@@ -160,7 +161,7 @@ function crossCheckClaim(
   const floor =
     claimed.inkPixelsPreserved *
     claimed.recentreScale *
-    claimed.recentreScale *
+    claimed.recentreScaleY *
     INK_SCALE_TOLERANCE;
   if (measured.inkPixels < floor)
     failures.push(
@@ -235,8 +236,9 @@ function readClaims(manifestPath: string): StencilClaim[] {
         // judged against is measured off the bytes in the loop below.
         crossCheck:
           claimed !== undefined
-            ? ({ claimed: claimed as StencilCrossCheck["claimed"] } satisfies
-                StencilCrossCheck)
+            ? ({
+                claimed: claimed as StencilCrossCheck["claimed"],
+              } satisfies StencilCrossCheck)
             : null,
       };
     });
@@ -330,7 +332,7 @@ for (const claim of claims) {
     // moved is a claim that no longer lands in its hole.
     const claimedHoles = claimed.ringCentres.map((centre) => {
       const x = centre.x * claimed.recentreScale + claimed.recentreOffsetX;
-      const y = centre.y * claimed.recentreScale + claimed.recentreOffsetY;
+      const y = centre.y * claimed.recentreScaleY + claimed.recentreOffsetY;
       const region = geometry.regionAt(Math.round(x), Math.round(y));
       return region >= 0 ? (geometry.holes[region] ?? null) : null;
     });
@@ -345,7 +347,7 @@ for (const claim of claims) {
                 centre.x * claimed.recentreScale + claimed.recentreOffsetX,
               ),
               Math.round(
-                centre.y * claimed.recentreScale + claimed.recentreOffsetY,
+                centre.y * claimed.recentreScaleY + claimed.recentreOffsetY,
               ),
             ),
           )
@@ -360,7 +362,7 @@ for (const claim of claims) {
       const hole = measuredStencil.ringHoles[index];
       if (!hole) return "MISSING";
       const x = centre.x * claimed.recentreScale + claimed.recentreOffsetX;
-      const y = centre.y * claimed.recentreScale + claimed.recentreOffsetY;
+      const y = centre.y * claimed.recentreScaleY + claimed.recentreOffsetY;
       return `${(x - hole.centreX).toFixed(1)},${(y - hole.centreY).toFixed(1)}`;
     });
     console.log(
@@ -413,9 +415,7 @@ if (crossCheckable === 0)
 else if (claimFailures.length === 0)
   console.log(`CLAIM ${crossChecked}/${crossCheckable}`);
 else {
-  console.log(
-    `CLAIM FAILED ${claimFailures.length}/${crossCheckable}`,
-  );
+  console.log(`CLAIM FAILED ${claimFailures.length}/${crossCheckable}`);
   for (const line of claimFailures) console.log(`  ${line}`);
   process.exitCode = 1;
 }

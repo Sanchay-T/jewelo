@@ -1,10 +1,13 @@
 {
-  "engineRelease": "caleums-arabic-v3",
+  "engineRelease": "caleums-identity-v4",
   "sourceBundle": "caleums_pipeline_final.zip",
   "sourceBundleReviewedAt": "2026-08-27",
   "runtime": {
     "language": "typescript",
-    "shapingRequirement": "Pango/FreeType/Fribidi/HarfBuzz through sharp/libvips",
+    "shapingRequirement": "HarfBuzz WASM (harfbuzzjs) over the pinned font bytes, opened by file name from import.meta.url and hashed into fontSha256Measured",
+    "shapingRequirementNote": "D-019 removed Pango, FreeType, Fribidi and fontconfig from the path. sharp paints a path-only SVG that carries no <text> element and no family name, so no renderer can substitute a face.",
+    "rasterRequirement": "sharp 0.34.5 for painting the path-only SVG and encoding the PNG",
+    "ringCarrierRule": "D-020: the jump-ring carrier is the largest contour of the outermost non-mark base glyph at each end, read from the font outlines and GDEF classes before rasterisation; a name with no clean seat gets the bar suspension and is reported as ringPlacement=bar, never refused.",
     "pythonReferenceOnly": true,
     "lockedSharpVersion": "0.34.5"
   },
@@ -50,7 +53,11 @@
     {
       "file": "fonts/cairo.ttf",
       "sha256": "667c987182391c91f4e57a2f455b1794fb5e3ee6ca4ef3383e86bb690fa9c964",
-      "approval": "unapproved"
+      "approval": "live",
+      "family": "Cairo",
+      "spdxLicense": "OFL-1.1",
+      "style": "kufi (Latin column)",
+      "note": "Live since P1-3: Noto Kufi Arabic has no Latin coverage at all, so the English side of the kufi family renders on Cairo, the geometric sans from the same licensed pack. LIVE_STYLES in caleums-arabic-v3.ts pins this sha."
     },
     {
       "file": "fonts/rakkas.ttf",
@@ -95,8 +102,14 @@
     "arabicNameCount": 1,
     "liveStyles": [
       "classic",
-      "minimal"
+      "minimal",
+      "diwani",
+      "signature",
+      "kufi",
+      "thuluth-inspired"
     ],
-    "unsupportedDisposition": "operator_review_before_provider_reservation"
-  }
+    "unsupportedDisposition": "operator_review_before_provider_reservation",
+    "liveStylesNote": "All six ship since 2026-08-27; LIVE_IDENTITY_STYLES in caleums-arabic-v3.ts is the source of truth and this list mirrors it. classic, diwani and signature share the Naskh face by design (identity package review finding 4, accepted risk); DS-4 limits what the shop sells to what phase 3 proves."
+  },
+  "engineReleaseNote": "D-019 renamed the release from caleums-arabic-v3 because one solver now serves both scripts. The directory keeps the old name so no font file has to move; CALEUMS_IDENTITY_FONT_DIRECTORY in shaping.ts repeats it as a literal."
 }

@@ -22,6 +22,8 @@
 import { createHash } from "node:crypto";
 import type * as HarfBuzzModule from "harfbuzzjs";
 
+import { IdentitySolverError } from "./errors";
+
 /**
  * Directory that holds the pinned font files, under `packages/identity/engines`.
  * The release identifier moved to `caleums-identity-v4` (D-019); the on-disk
@@ -132,6 +134,14 @@ export interface ShapedGlyph {
   readonly gid: number;
   /** Index of the first NFC code point this glyph belongs to. */
   readonly cluster: number;
+  /**
+   * The font's own GDEF glyph class: 1 base, 2 ligature, 3 mark, 4 component,
+   * 0 unclassified. D-020 chooses ring carriers from this rather than from the
+   * shape of a blob in the raster: a dot, a tittle, a hamza, a tanwin or a
+   * shadda is a mark because the font says so, and no pixel heuristic has to
+   * guess it.
+   */
+  readonly glyphClass: number;
   readonly xAdvance: number;
   readonly yAdvance: number;
   readonly xOffset: number;
@@ -204,6 +214,8 @@ async function loadHarfBuzz(): Promise<HarfBuzz> {
 
 interface LoadedFace {
   readonly font: InstanceType<HarfBuzz["Font"]>;
+  /** Kept because GDEF glyph classes are a face property, not a font one. */
+  readonly face: InstanceType<HarfBuzz["Face"]>;
   readonly upem: number;
   readonly sha256: string;
 }
@@ -220,7 +232,7 @@ async function loadFace(fontBytes: Uint8Array): Promise<LoadedFace> {
   const font = new hb.Font(face);
   // hb_font_create leaves the scale at the face upem, so advances, offsets and
   // outlines all come back in font units and the caller owns the scaling.
-  const loaded: LoadedFace = { font, upem: face.upem, sha256 };
+  const loaded: LoadedFace = { font, face, upem: face.upem, sha256 };
   faceCache.set(sha256, loaded);
   return loaded;
 }
@@ -286,7 +298,7 @@ function contributesToShaping(
  */
 export async function shapeText(input: ShapeTextInput): Promise<ShapedText> {
   const hb = await loadHarfBuzz();
-  const { font, upem, sha256 } = await loadFace(input.fontBytes);
+  const { font, face, upem, sha256 } = await loadFace(input.fontBytes);
   const properties = SCRIPT_PROPERTIES[input.script];
   const text = input.text.normalize("NFC");
   const codePoints = [...text].map(
@@ -302,6 +314,12 @@ export async function shapeText(input: ShapeTextInput): Promise<ShapedText> {
     yAdvance: glyph.yAdvance ?? 0,
     xOffset: glyph.xOffset ?? 0,
     yOffset: glyph.yOffset ?? 0,
+    // A face with no GDEF table classifies nothing, which HarfBuzz reports as
+    // UNCLASSIFIED (0). That is not "this is a mark", so the carrier rule below
+    // treats only class 3 as a mark and falls back on contour geometry for the
+    // rest - which is the case Amiri and the Noto faces never hit, because all
+    // of them carry GDEF.
+    glyphClass: face.getGlyphClass(glyph.codepoint) as number,
     path: font.glyphToPath(glyph.codepoint),
   }));
 
@@ -435,18 +453,12 @@ export const IDENTITY_RING_COUNT = 2;
  * This answers one question only: is the metal thick enough to hold a chain.
  * The lab's comment claimed it also removed dots and hamzas, and adversarial
  * review 2 showed that is false - a Kufi dot is a solid square that survives it
- * with room to spare. `IDENTITY_RING_MARK_MAX_COMPACTNESS` below is what keeps
- * a mark from carrying the chain.
+ * with room to spare. Since D-020 nothing in the raster answers "is this a
+ * mark": the carrier is a contour of a base glyph, chosen from the font's own
+ * outlines and GDEF classes before this raster exists, and the erosion only
+ * narrows that contour's pixels down to the part thick enough to weld to.
  */
 export const IDENTITY_RING_ANCHOR_EROSION = 11;
-
-/**
- * Fractions of the name's width searched for the anchor, widening until the
- * eroded body has a pixel in the band (`for frac in (0.18, 0.32, 0.50)`).
- */
-export const IDENTITY_RING_ANCHOR_SPANS: readonly number[] = Object.freeze([
-  0.18, 0.32, 0.5,
-]);
 
 /**
  * How far outward of the anchor the ring centre sits, as a fraction of the
@@ -459,9 +471,6 @@ export const IDENTITY_RING_OUTWARD_FRACTION = 0.75;
 /** Smallest gap kept between the ring's top edge and the canvas top edge. */
 export const IDENTITY_RING_TOP_CLEARANCE = 2;
 
-/** Where the weld fillet starts below the ring hole (`cy + RING_INNER + 4`). */
-export const IDENTITY_RING_WELD_START_GAP = 4;
-
 /** How far into the stroke the weld fillet ends (`ay + 14`). */
 export const IDENTITY_RING_WELD_ANCHOR_DEPTH = 14;
 
@@ -471,76 +480,20 @@ export const IDENTITY_RING_WELD_ANCHOR_DEPTH = 14;
  *
  * The lab stops at one position, so on a name whose hairline rises above the
  * load-bearing anchor the hole clips a few dozen pixels off that hairline. The
- * fit already reserves `IDENTITY_RING_BAND` of empty canvas above the lettering
- * for exactly this, so the solver spends it: it lifts the ring, one pixel at a
- * time, until nothing of the name lies inside the hole.
+ * solver spends the room above instead: it lifts the ring one pixel at a time
+ * until nothing of the name lies inside the hole.
+ *
+ * Package review finding 1: this used to be `IDENTITY_RING_BAND` (110), on the
+ * reasoning that the fit reserves exactly that much empty canvas above the
+ * lettering. It does, but the lift is measured from the *anchor pixel*, which
+ * sits inside the letter, not from the letter top - so `Zoe` with a diaeresis
+ * needed 123 px of lift, the cap refused at 110, and all six styles died with
+ * `identity_ring_welded_to_glyph`. The real bound is the canvas: a ring lifted
+ * past the top edge would have a clipped annulus and no enclosed hole, and the
+ * `lowest` clamp in the search already refuses that, so this cap only has to be
+ * large enough never to bind before the clamp does.
  */
-export const IDENTITY_RING_MAX_LIFT = IDENTITY_RING_BAND;
-
-/**
- * Smallest pre-bridge island a jump ring may be anchored to, as a fraction of
- * the largest pre-bridge island of the same piece: one of the two tests that
- * separate a mark from a letter.
- *
- * Adversarial review 2, finding 1 introduced it, and adversarial review 3
- * falsified it as a rule on its own: in Latin every letter is its own island,
- * so the ratio is taken against whatever the biggest letter happens to be, and
- * the tittle of the i clears 10% at 13.5% in "Ali", 10.5% in "Niki", 14.5% in
- * "Li". `IDENTITY_RING_MARK_MAX_COMPACTNESS` below is the test that catches
- * those. This one is kept because it catches what compactness cannot: two
- * nuqtas fused into one slab, 7.4% of the piece in `تسنيم` at `minimal`, which
- * measures 3.53 and would otherwise pass as a stroke. An island has to clear
- * both tests to carry a chain.
- *
- * Measured over the 232-cell sweep of fix pass 3: the largest island that ever
- * carried a mark-anchored ring was 9.9% of its piece's largest island
- * (`aya-ar-thuluth-inspired`), and the smallest island that carried a ring
- * under this rule was 11.3%. Ten per cent sits in that gap. It is a ratio and
- * not a pixel count, so it holds at every fitted size.
- */
-export const IDENTITY_RING_ANCHOR_MIN_ISLAND_FRACTION = 0.1;
-
-/**
- * Largest compactness a pre-bridge island may have and still be refused as a
- * jump ring anchor: the line between a mark and a letter stroke.
- *
- * Compactness is `area / thickness^2`, where `thickness` is `2 * r - 1` and `r`
- * is the island's largest Chebyshev inradius - the half-side of the biggest
- * square of its own ink that fits inside it. It is the number of stroke-widths
- * of metal the island is made of, so it is scale-free, face-free and script-
- * free: a dot, a tittle, a nuqta pair fused into one slab and a madda are all
- * blobs about as wide as they are thick and land near 1 to 3, while a letter is
- * a stroke run around a shape and lands above 3.4 however large or small the
- * name was fitted.
- *
- * Adversarial review 2, finding 1 replaced "eroded ink" with "at least 10% of
- * the largest island", and adversarial review 3 falsified that in turn: in
- * Latin every letter is its own island, so the ratio is taken against whatever
- * the biggest letter happens to be, and the tittle of the i is 13.5% of the A
- * in "Ali", 10.5% in "Niki", 14.5% in "Li" - all of them admitted as carriers,
- * and "Ali" in Playfair welded its right ring onto that tittle. Compactness
- * does not have that failure mode, because it never compares one island with
- * another.
- *
- * Measured over the union corpus of fix pass 4 - the 448-cell `render-stencils`
- * matrix, the 210-solve adversarial-3 sweep and the mandated stress list, 552
- * solves and 2698 islands in all. The largest island compactness alone calls a
- * mark is 3.288 (the madda of آية in thuluth-inspired) and the smallest it
- * keeps as a carrier is 3.433 (the ى of رؤى in thuluth-inspired); both were
- * confirmed by eye on a painted raster. The threshold sits in that gap. The gap
- * is 4.4%, which is narrow, and it is the number a newly pinned face has to
- * re-measure.
- *
- * It is narrow because compactness cannot see one shape: two nuqtas fused into
- * one slab, which in the `minimal` face measures 3.5 to 4.0 and would pass. So
- * this is not the only test. An island is a mark when compactness calls it one
- * *or* when it is smaller than `IDENTITY_RING_ANCHOR_MIN_ISLAND_FRACTION` of
- * the largest island, which is the fix-pass-3 rule kept as the second half of
- * the pair; the two fail in opposite directions and neither is dropped. The
- * largest island of a piece is a carrier whatever it measures, so the carrier
- * can never be empty.
- */
-export const IDENTITY_RING_MARK_MAX_COMPACTNESS = 3.35;
+export const IDENTITY_RING_MAX_LIFT = IDENTITY_CANVAS;
 
 /**
  * How far outward of its computed centre a ring may be pushed, in pixels, when
@@ -568,29 +521,14 @@ export const IDENTITY_RING_MAX_INWARD_SHIFT = Math.trunc(
 );
 
 /**
- * Narrower end bands searched for a fallback anchor, after the spans above.
+ * How many carrier glyphs the placement search may try on one side before it
+ * gives up and the whole piece falls back to the bar construction.
  *
- * `IDENTITY_RING_ANCHOR_SPANS` widens *inward* until it finds metal, so on a
- * piece that is one connected island it always returns the same pixel however
- * far it widens. `قق` is that piece: both ق join into one body, the topmost
- * carrier pixel is the shoulder directly under the four dots, and no lift and
- * no sideways travel gets the annulus off them. These bands go the other way,
- * toward the end of the name, where the same body has a lower shoulder with
- * clear air above it.
- */
-export const IDENTITY_RING_ANCHOR_OUTER_SPANS: readonly number[] = Object.freeze(
-  [0.1, 0.05, 0.02],
-);
-
-/**
- * How many anchors the placement search may try on one side before it gives up.
- *
- * The first anchor is the topmost carrier pixel in the end band, which is what
- * the lab picked and what a jeweller would pick. When no seat above it is clean
- * the search moves on rather than refusing the name: to the next distinct
- * carrier island in the band, and then to the outer bands above. Six covers
- * every anchor the union corpus needs; the bound exists so a pathological piece
- * cannot turn the search into a scan of every pixel.
+ * The first candidate is the outermost base glyph on that side, which is what
+ * the lab picked and what a jeweller would pick. When no seat above its carrier
+ * contour is clean the search steps one glyph inward rather than refusing the
+ * name. Six is longer than any name in the union corpus needs; the bound exists
+ * so a pathological piece cannot turn the search into a scan of every glyph.
  */
 export const IDENTITY_RING_ANCHOR_CANDIDATES = 6;
 
@@ -598,6 +536,121 @@ export const IDENTITY_RING_ANCHOR_CANDIDATES = 6;
 export const IDENTITY_RING_WELD_WIDTH = Math.trunc(
   IDENTITY_RING_STEM_WIDTH * 1.3,
 );
+
+/**
+ * Where the weld fillet starts below the ring hole.
+ *
+ * The lab wrote `cy + RING_INNER + 4`, and the fillet is a capsule of radius
+ * `IDENTITY_RING_WELD_WIDTH / 2` (19.5 px) around a segment that starts there,
+ * so its top cap reached 15.5 px *inside* the hole. Package review finding 5
+ * measured the result: ring holes came out at 1186 to 1424 px against an ideal
+ * `pi * 24^2 = 1810`, up to 34% of the hole filled with metal, and nothing
+ * gated it - a chain has to pass through that hole. Starting the segment a full
+ * capsule radius below the hole puts the cap exactly on the hole boundary, so
+ * the fillet can touch the hole and never enter it.
+ */
+export const IDENTITY_RING_WELD_START_GAP = IDENTITY_RING_WELD_WIDTH / 2;
+
+/**
+ * GDEF glyph class 3, `HB_OT_LAYOUT_GLYPH_CLASS_MARK`.
+ *
+ * D-020: a mark glyph never carries a jump ring. This is the font's own answer
+ * to "is this a dot, a tittle, a hamza, a tanwin, a shadda", read out of the
+ * GDEF table by HarfBuzz, and it replaces three passes of raster heuristics
+ * (erosion size, island-area ratio, blob compactness) each of which was
+ * falsified by a name outside its tuning corpus.
+ */
+export const IDENTITY_GLYPH_CLASS_MARK = 3;
+
+/**
+ * Smallest area a contour may have and still carry a jump ring, as a fraction
+ * of the largest contour of the same glyph.
+ *
+ * The carrier is the largest contour of a base glyph, so this test only ever
+ * refuses a glyph whose largest contour is not meaningfully larger than its
+ * others - which is the shape of a glyph that is all marks. It is a ratio
+ * inside one glyph, never between glyphs: adversarial review 3 falsified the
+ * between-glyph version, because in Latin every letter is its own island and
+ * the tittle of the i was measured against whatever the biggest letter of the
+ * name happened to be.
+ */
+export const IDENTITY_RING_CARRIER_MIN_CONTOUR_AREA_FRACTION = 0.5;
+
+/**
+ * Smallest height a carrier contour may have, as a fraction of the bounding box
+ * of the glyph it belongs to.
+ *
+ * This is what separates the stroke of an `i` from its tittle inside one glyph
+ * outline, and the bowl of a Kufi `n` from the nuqta above it: both are one
+ * glyph with two contours, and only one of them is metal a chain can hang from.
+ */
+export const IDENTITY_RING_CARRIER_MIN_CONTOUR_GLYPH_HEIGHT_FRACTION = 0.4;
+
+/**
+ * Smallest height a carrier contour may have, as a fraction of the whole
+ * shaped run's ink box.
+ *
+ * The test above is inside one glyph, so it cannot see a glyph that is a lump
+ * all by itself - a standalone hamza at the end of `dua`, a Latin full stop.
+ * This one measures the candidate against the name it belongs to. Failing it is
+ * not a refusal: the search simply steps one glyph inward, so the cost of the
+ * threshold being slightly high is a ring one letter further in, never a
+ * customer's name refused.
+ */
+export const IDENTITY_RING_CARRIER_MIN_RUN_HEIGHT_FRACTION = 0.34;
+
+/**
+ * How many straight segments each Bezier of a carrier contour is flattened
+ * into before it is filled.
+ *
+ * The contour is rasterised on its own only to find one pixel - the outer top
+ * corner of the carrier stroke - and the result is intersected with the mask
+ * the SVG rasteriser actually painted, so the flattening only has to be fine
+ * enough that the polygon does not cut a corner the painter kept. Sixteen
+ * segments on a 1024 px canvas puts the worst chord error well under a pixel
+ * for a glyph that fills the canvas, and it is a fixed number so two machines
+ * flatten identically.
+ */
+export const IDENTITY_CONTOUR_FLATTEN_SEGMENTS = 16;
+
+/**
+ * Width of the fallback top bar, in pixels.
+ *
+ * Same as `IDENTITY_BRIDGE_WIDTH`, which is about 1.0 mm of metal at a 32 mm
+ * pendant: thin enough to read as a bail rail rather than a second name, thick
+ * enough to cast and to carry the piece.
+ */
+export const IDENTITY_RING_BAR_WIDTH = IDENTITY_BRIDGE_WIDTH;
+
+/**
+ * How far below the name's topmost ink row the fallback bar's centre line sits.
+ *
+ * It has to be less than half the bar width, or the capsule would float clear
+ * of the letter it is meant to be part of and the piece would measure as two
+ * components. At 8 px against a 12 px half-width the bar overlaps the topmost
+ * ink row by 4 px along the whole span, so whichever letter reaches highest is
+ * the one the bar is welded to.
+ */
+export const IDENTITY_RING_BAR_DEPTH = 8;
+
+/**
+ * Smallest ring hole area the gate accepts, as a fraction of the ideal
+ * `pi * IDENTITY_RING_INNER^2` after the recentre scale on each axis.
+ *
+ * A hole is what the chain goes through, so a hole half filled by the weld is a
+ * pendant that cannot be worn. Package review finding 5: the fillet used to
+ * start `IDENTITY_RING_WELD_START_GAP` at 4 px below the hole and reach 15.5 px
+ * into it, measured holes came out at 1186 to 1424 px against an ideal 1810 -
+ * 66% to 79% of the hole - and nothing gated it.
+ *
+ * With the fillet started a full capsule radius below the hole the only loss
+ * left is the rasterised circle's own quantisation and the Lanczos downscale.
+ * Measured over the 576-cell union corpus of this pass, 1152 holes: the
+ * smallest is 96.4% of its cell's ideal (`iman-ar-kufi`) and the largest is
+ * 101.0%. Ninety per cent sits below that with 6.4 points of margin and far
+ * above the case the finding found.
+ */
+export const IDENTITY_RING_HOLE_MIN_AREA_FRACTION = 0.9;
 
 /** Font size the fit probe is measured at (`make_stencil.py:211`). */
 export const IDENTITY_PROBE_FONT_SIZE = 200;
@@ -639,6 +692,44 @@ export interface StencilSvg {
   readonly inkBox: StencilBox;
   /** Per-glyph x advances at `fontSize`, in pixels, in visual order. */
   readonly advances: readonly number[];
+  /**
+   * Every glyph of the run as closed polygons on the stencil canvas, in the
+   * same pixel coordinates the painted mask uses.
+   *
+   * D-020: this is what the jump-ring carrier is chosen from. The old rule
+   * looked at the finished raster and tried to tell a dot from a letter by how
+   * big or how round its blob was, and three fix passes each found a name where
+   * that guessed wrong. A contour of a base glyph is a fact of the font, known
+   * before anything is painted.
+   */
+  readonly glyphs: readonly StencilGlyphOutline[];
+}
+
+/**
+ * One closed contour of one glyph, flattened onto the stencil canvas.
+ *
+ * `points` is x, y pairs in canvas pixels, y down, in path order, without a
+ * repeated closing point. `area` is the absolute polygon area in square pixels:
+ * a counter (the hole of an `o`, the eye of an `e`) is wound the other way, and
+ * only the magnitude matters when asking which contour is the stroke.
+ */
+export interface StencilContour {
+  readonly points: readonly number[];
+  readonly area: number;
+  readonly box: StencilBox;
+}
+
+/** One shaped glyph, placed, with its contours in canvas pixels. */
+export interface StencilGlyphOutline {
+  /** Position in the shaped buffer, which HarfBuzz returns in visual order. */
+  readonly index: number;
+  readonly gid: number;
+  readonly cluster: number;
+  /** GDEF class; `IDENTITY_GLYPH_CLASS_MARK` is never a ring carrier. */
+  readonly glyphClass: number;
+  /** Union of the contour boxes. Empty glyphs (a space) have no contours. */
+  readonly box: StencilBox;
+  readonly contours: readonly StencilContour[];
 }
 
 interface Extents {
@@ -826,8 +917,22 @@ function runExtents(shaped: ShapedText): Extents {
   return box;
 }
 
-function round3(value: number): number {
-  return Math.round(value * 1000) / 1000;
+/**
+ * Decimal places every coordinate the SVG carries is rounded to.
+ *
+ * Review finding 6: this was three, and three is lossless only because every
+ * pinned face happens to be 1000 units per em, so `fontSize / upem` lands on a
+ * short decimal. A face at 2048 upem - the normal value for a TrueType font -
+ * would have the group scale rounded away and the fit slack, measured at 0.1 px
+ * on classic `Asma`, would grow with the name. Six places is below a
+ * ten-thousandth of a pixel at this canvas for any upem a font can declare.
+ */
+const IDENTITY_SVG_PRECISION = 6;
+
+const PRECISION_FACTOR = 10 ** IDENTITY_SVG_PRECISION;
+
+function rounded(value: number): number {
+  return Math.round(value * PRECISION_FACTOR) / PRECISION_FACTOR;
 }
 
 /**
@@ -844,7 +949,8 @@ export function identityStencilSvg(shaped: ShapedText): StencilSvg {
   // category columns (`p_error_class`, `terminal_error_code`, `p_reason`), and
   // a customer's name has no business in one.
   if (!Number.isFinite(extents.minX) || !Number.isFinite(extents.minY))
-    throw new Error(
+    throw new IdentitySolverError(
+      "identity_stencil_empty_outline",
       `identity_stencil_empty_outline:glyphs=${shaped.glyphs.length}`,
     );
 
@@ -877,11 +983,12 @@ export function identityStencilSvg(shaped: ShapedText): StencilSvg {
   // pendant; the fit refuses instead, and the caller's gate turns that into
   // operator review.
   if (
-    round3(width) > IDENTITY_BODY_WIDTH ||
-    round3(height) > IDENTITY_BODY_HEIGHT
+    rounded(width) > IDENTITY_BODY_WIDTH ||
+    rounded(height) > IDENTITY_BODY_HEIGHT
   )
-    throw new Error(
-      `identity_fit_overflow:width=${round3(width)},height=${round3(height)},box=${IDENTITY_BODY_WIDTH}x${IDENTITY_BODY_HEIGHT},size=${fontSize}`,
+    throw new IdentitySolverError(
+      "identity_fit_overflow",
+      `identity_fit_overflow:width=${rounded(width)},height=${rounded(height)},box=${IDENTITY_BODY_WIDTH}x${IDENTITY_BODY_HEIGHT},size=${fontSize}`,
     );
   const left = Math.floor((IDENTITY_CANVAS - width) / 2);
   const top =
@@ -898,14 +1005,14 @@ export function identityStencilSvg(shaped: ShapedText): StencilSvg {
     .filter((placed) => placed.glyph.path)
     .map(
       (placed) =>
-        `<path transform="translate(${round3(placed.x)} ${round3(placed.y)})" d="${placed.glyph.path}"/>`,
+        `<path transform="translate(${rounded(placed.x)} ${rounded(placed.y)})" d="${placed.glyph.path}"/>`,
     )
     .join("");
 
   const svg =
     `<svg xmlns="http://www.w3.org/2000/svg" width="${IDENTITY_CANVAS}" height="${IDENTITY_CANVAS}" viewBox="0 0 ${IDENTITY_CANVAS} ${IDENTITY_CANVAS}">` +
     `<rect width="${IDENTITY_CANVAS}" height="${IDENTITY_CANVAS}" fill="#ffffff"/>` +
-    `<g transform="translate(${round3(translateX)} ${round3(translateY)}) scale(${round3(scale)} ${round3(-scale)})" fill="#000000" fill-rule="nonzero">` +
+    `<g transform="translate(${rounded(translateX)} ${rounded(translateY)}) scale(${rounded(scale)} ${rounded(-scale)})" fill="#000000" fill-rule="nonzero">` +
     paths +
     `</g></svg>`;
 
@@ -915,9 +1022,214 @@ export function identityStencilSvg(shaped: ShapedText): StencilSvg {
     inkBox: {
       x: left,
       y: top,
-      width: round3(width),
-      height: round3(height),
+      width: rounded(width),
+      height: rounded(height),
     },
-    advances: shaped.glyphs.map((glyph) => round3(glyph.xAdvance * scale)),
+    advances: shaped.glyphs.map((glyph) => rounded(glyph.xAdvance * scale)),
+    glyphs: stencilOutlines(shaped, scale, translateX, translateY),
   };
+}
+
+/* -------------------------------------------------------------------------
+ * D-020: the outlines, flattened onto the stencil canvas.
+ *
+ * Everything below turns the same glyph paths the SVG carries into closed
+ * polygons in canvas pixels. It exists so the solver can pick the metal a jump
+ * ring hangs from before anything is painted: the largest contour of a base
+ * glyph is a stroke, and a mark is a mark because the font's GDEF table says
+ * so. Nothing here rasterises; the solver does that for the one contour it
+ * chose.
+ * ---------------------------------------------------------------------- */
+
+/** One flattened contour while it is still being collected. */
+interface ContourPoints {
+  readonly points: number[];
+}
+
+/**
+ * Flattens one glyph path into closed contours, in canvas pixels.
+ *
+ * The path is HarfBuzz's own `glyphToPath` output - absolute `M`, `L`, `Q`, `C`
+ * and `Z` and nothing else - in font units with y up. `toCanvas` applies the
+ * pen position, the fitted scale and the y flip, exactly the transform the SVG
+ * group applies, so a point here is the pixel the painter paints.
+ */
+function flattenGlyphPath(
+  path: string,
+  toCanvasX: (value: number) => number,
+  toCanvasY: (value: number) => number,
+): ContourPoints[] {
+  const tokens = path.match(/[MLQCZmlqcz]|-?\d*\.?\d+(?:e[-+]?\d+)?/g);
+  if (!tokens) return [];
+  let index = 0;
+  const number = () => Number(tokens[index++] ?? 0);
+  const contours: ContourPoints[] = [];
+  let current: ContourPoints | undefined;
+  let currentX = 0;
+  let currentY = 0;
+  const emit = (x: number, y: number) => {
+    if (!current) return;
+    const px = toCanvasX(x);
+    const py = toCanvasY(y);
+    const length = current.points.length;
+    // A flattened curve can land on the pixel it started from; a repeated
+    // vertex is harmless to the fill but noise in the polygon, so it is dropped
+    // here rather than in every consumer.
+    if (
+      length >= 2 &&
+      current.points[length - 2] === px &&
+      current.points[length - 1] === py
+    )
+      return;
+    current.points.push(px, py);
+  };
+  while (index < tokens.length) {
+    const command = tokens[index++];
+    switch (command) {
+      case "M": {
+        currentX = number();
+        currentY = number();
+        current = { points: [] };
+        contours.push(current);
+        emit(currentX, currentY);
+        break;
+      }
+      case "L": {
+        currentX = number();
+        currentY = number();
+        emit(currentX, currentY);
+        break;
+      }
+      case "Q": {
+        const cx = number();
+        const cy = number();
+        const x = number();
+        const y = number();
+        for (
+          let step = 1;
+          step <= IDENTITY_CONTOUR_FLATTEN_SEGMENTS;
+          step += 1
+        ) {
+          const t = step / IDENTITY_CONTOUR_FLATTEN_SEGMENTS;
+          emit(
+            quadraticAt(currentX, cx, x, t),
+            quadraticAt(currentY, cy, y, t),
+          );
+        }
+        currentX = x;
+        currentY = y;
+        break;
+      }
+      case "C": {
+        const c1x = number();
+        const c1y = number();
+        const c2x = number();
+        const c2y = number();
+        const x = number();
+        const y = number();
+        for (
+          let step = 1;
+          step <= IDENTITY_CONTOUR_FLATTEN_SEGMENTS;
+          step += 1
+        ) {
+          const t = step / IDENTITY_CONTOUR_FLATTEN_SEGMENTS;
+          emit(
+            cubicAt(currentX, c1x, c2x, x, t),
+            cubicAt(currentY, c1y, c2y, y, t),
+          );
+        }
+        currentX = x;
+        currentY = y;
+        break;
+      }
+      case "Z":
+      case "z": {
+        current = undefined;
+        break;
+      }
+      default:
+        break;
+    }
+  }
+  return contours.filter((contour) => contour.points.length >= 6);
+}
+
+/** Absolute polygon area, by the shoelace sum. */
+function polygonArea(points: readonly number[]): number {
+  let twice = 0;
+  for (let index = 0; index < points.length; index += 2) {
+    const nextIndex = (index + 2) % points.length;
+    twice +=
+      (points[index] as number) * (points[nextIndex + 1] as number) -
+      (points[nextIndex] as number) * (points[index + 1] as number);
+  }
+  return Math.abs(twice) / 2;
+}
+
+function polygonBox(points: readonly number[]): StencilBox {
+  let minX = Number.POSITIVE_INFINITY;
+  let minY = Number.POSITIVE_INFINITY;
+  let maxX = Number.NEGATIVE_INFINITY;
+  let maxY = Number.NEGATIVE_INFINITY;
+  for (let index = 0; index < points.length; index += 2) {
+    const x = points[index] as number;
+    const y = points[index + 1] as number;
+    if (x < minX) minX = x;
+    if (x > maxX) maxX = x;
+    if (y < minY) minY = y;
+    if (y > maxY) maxY = y;
+  }
+  return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
+}
+
+function unionBox(boxes: readonly StencilBox[]): StencilBox {
+  let minX = Number.POSITIVE_INFINITY;
+  let minY = Number.POSITIVE_INFINITY;
+  let maxX = Number.NEGATIVE_INFINITY;
+  let maxY = Number.NEGATIVE_INFINITY;
+  for (const box of boxes) {
+    if (box.x < minX) minX = box.x;
+    if (box.y < minY) minY = box.y;
+    if (box.x + box.width > maxX) maxX = box.x + box.width;
+    if (box.y + box.height > maxY) maxY = box.y + box.height;
+  }
+  if (!Number.isFinite(minX)) return { x: 0, y: 0, width: 0, height: 0 };
+  return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
+}
+
+/**
+ * Every glyph of the run, placed, with its contours on the canvas. Glyph order
+ * is the shaped buffer's, which HarfBuzz returns in visual order for both
+ * directions, so index 0 is the leftmost glyph in Arabic as well as in Latin.
+ * The solver does not rely on that: it sorts by the measured box.
+ */
+function stencilOutlines(
+  shaped: ShapedText,
+  scale: number,
+  translateX: number,
+  translateY: number,
+): StencilGlyphOutline[] {
+  return penPositions(shaped).map((placed, index) => {
+    const toCanvasX = (value: number) =>
+      translateX + scale * (value + placed.x);
+    const toCanvasY = (value: number) =>
+      translateY - scale * (value + placed.y);
+    const contours: StencilContour[] = flattenGlyphPath(
+      placed.glyph.path,
+      toCanvasX,
+      toCanvasY,
+    ).map((contour) => ({
+      points: contour.points,
+      area: polygonArea(contour.points),
+      box: polygonBox(contour.points),
+    }));
+    return {
+      index,
+      gid: placed.glyph.gid,
+      cluster: placed.glyph.cluster,
+      glyphClass: placed.glyph.glyphClass,
+      box: unionBox(contours.map((contour) => contour.box)),
+      contours,
+    };
+  });
 }

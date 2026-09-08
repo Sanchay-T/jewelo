@@ -775,3 +775,160 @@ The task is at attempt 2 and the stubbed `mark_task_pre_spend_blocked` answers
 with the error the live RPC raises for a task whose attempt is not 0, so every
 terminal case has to fall through to the `fail` path. No request leaves the
 machine.
+
+## D-020: outline-level ring anchors with a no-refusal fallback
+
+Fix passes 2, 3 and 4 each answered "is this metal a letter or a mark" on the
+finished raster, and each answer was falsified by a name outside the corpus it
+was tuned on: an eroded-ink rule swallowed the nuqta of `Noor`, an island-area
+ratio admitted the tittle of the i in `Ali` at 13.5%, and the compactness
+classifier that replaced it left a 4.4% gap between the largest mark (3.288) and
+the smallest carrier (3.433) with a fused nuqta pair sitting inside it.
+
+The question has an exact answer one step earlier. HarfBuzz already returns each
+glyph's contours and each glyph's GDEF class, so the carrier is chosen from the
+font, before anything is painted:
+
+- for each end of the name, the outermost base glyph on the canvas, ordered by
+  the measured glyph box rather than by buffer position, so Latin and Arabic ask
+  the same question without either knowing which way the script runs;
+- of that glyph, the largest contour by area, among contours that clear
+  `IDENTITY_RING_CARRIER_MIN_CONTOUR_AREA_FRACTION` of the glyph's own largest
+  contour, `IDENTITY_RING_CARRIER_MIN_CONTOUR_GLYPH_HEIGHT_FRACTION` of the
+  glyph's box height and `IDENTITY_RING_CARRIER_MIN_RUN_HEIGHT_FRACTION` of the
+  whole run's ink box height;
+- never a glyph whose GDEF class is `IDENTITY_GLYPH_CLASS_MARK` (3): a dot, a
+  tittle, a hamza carried as a mark, a tanwin, a shadda.
+
+That contour is rasterised on its own, grown by the same two thickening passes
+the piece got, intersected with the painted mask and with the eroded body, and
+the anchor is the outer top corner of what is left. `IDENTITY_RING_ANCHOR_SPANS`,
+`IDENTITY_RING_ANCHOR_OUTER_SPANS`, `IDENTITY_RING_ANCHOR_MIN_ISLAND_FRACTION`,
+`IDENTITY_RING_MARK_MAX_COMPACTNESS`, `ringAnchorCarrier` and the Chebyshev
+distance transform they needed are deleted; there is one anchor rule, not two.
+
+`Ali` in Playfair is the rule in one line. Glyph 2 is the `i`: two contours,
+`[0 area 7027 height 95]` is the tittle and `[1 area 29026 height 389]` is the
+stem. The carrier is contour 1, the anchor is `898,451` on the stem, and the
+tittle is left whole beside the ring instead of under it.
+
+`نور` in Kufi is the other half. Glyph 2 is GDEF class 3, the nuqta of the ن,
+`87x93` at 12.9% of the run height; it is excluded before any pixel is counted,
+and the right ring seats on glyph 3, the ن body, at `897,348`.
+
+### Never a refusal
+
+The seat search keeps the lift and the outward and inward shifts, and two things
+change. `IDENTITY_RING_MAX_LIFT` is the canvas rather than `IDENTITY_RING_BAND`
+(package review finding 1: the lift is measured from the anchor pixel inside the
+letter, not from the letter top, so `Zoë` needed 123 px and the 110 cap refused
+it in all six styles). And when nothing above a carrier is clean the search
+returns nothing instead of keeping the least-bad seat: the solver steps one glyph
+inward, up to `IDENTITY_RING_ANCHOR_CANDIDATES`, and when no carrier on either
+end works the piece is built with a bar suspension - a thin rail
+`IDENTITY_RING_BAR_DEPTH` below the topmost ink, spanning the lettering, with a
+ring above each of its ends whose whole annulus clears the name. The construction
+reports `ringPlacement` as `welded`, `bar` or `none`, and a `bar` piece routes to
+operator review (pipeline fix 1 owns that routing).
+
+`identity_ring_punched_ink` and `identity_ring_welded_to_glyph` are unchanged and
+still gate every piece; what changed is that placement no longer walks into them.
+
+### The exemption is gone
+
+`countGlyphPixelsUnderRingMetal` exempts exactly the pixels `drawBar` writes and
+nothing else (adversarial review 3, finding 2; package review finding 2). The
+second capsule, the one running from the ring centre into the anchor, was metal
+the solver never lays and it covered the corridor between the hole and the
+stroke - 30.8% of every annulus, unmeasurable.
+
+### The hole is gated
+
+`IDENTITY_RING_WELD_START_GAP` is `IDENTITY_RING_WELD_WIDTH / 2` (19.5 px)
+instead of 4, so the fillet's top cap lands exactly on the hole boundary and
+cannot enter it. Package review finding 5 measured the old behaviour: holes of
+1186 to 1424 px against an ideal `pi * 24^2 = 1810`, 66% to 79%, and no gate.
+`measureRingHoles` now compares each hole against
+`IDENTITY_RING_HOLE_MIN_AREA_FRACTION` of `pi * INNER^2` scaled by both recentre
+axes and throws `identity_ring_hole_too_small:hole=N,size=S,min=M`.
+
+Measured over the union corpus below, 1152 holes: the smallest is 96.4% of its
+cell's ideal (`iman-ar-kufi`, 1660 against 1722) and the largest is 101.0%. The
+floor is 90%.
+
+### The small ones
+
+- `round3` on the SVG became six decimal places (`IDENTITY_SVG_PRECISION`), which
+  is lossless for any upem a font can declare rather than only for the 1000-upem
+  faces that happen to be pinned (finding 6).
+- `bridgeAll` re-labels after its last bar and returns when the piece converged
+  on it, instead of throwing at exactly 64 bars (finding 7).
+- `regionAt` refuses a non-integer coordinate instead of indexing at a fractional
+  offset and returning `undefined` typed as `number` (finding 8).
+- `label4` throws when the pixel buffer is not `width * height` long, instead of
+  reading `undefined` and counting the missing tail as ink (finding 9).
+- `recentre` reports the scale it applied, `output / input` per axis, because the
+  resample truncates each axis independently; `recentreScaleY` is the new field
+  and every consumer maps y through it (finding 10).
+- `identity_stencil_empty_outline` and `identity_fit_overflow` are
+  `IdentitySolverError` codes, so the caller classifies them like every other
+  identity refusal. `IdentitySolverError` moved to `packages/identity/src/errors.ts`
+  because `shaping.ts` raises two of them and the solver imports `shaping.ts`
+  (finding 11).
+
+### The union corpus
+
+48 names x 2 scripts x 6 live styles = 576 cells, each rendered twice (rings on,
+and again ring-free so the harness has an independent pre-ring mask). The list is
+the 17 ZIP regression names, the 4 lab names, the 18 stress names adversarial
+review 3 named, and 12 added here: `Zoë`, `Bartholomewsonlongest`, and ten common
+Gulf given names in both scripts (Fatima, Mariam, Salem, Rashid, Hamdan, Shaikha,
+Moza, Saeed, Latifa, Jassim).
+
+```
+corepack pnpm --filter @jewelo/jobs render-stencils \
+  /Users/sanchay/hq/projects/devonel/jewelo/docs/goals/overnight-launch/lab/stencils/production
+```
+
+```
+WELDED-GLYPH 0/16 lab cells have ink welded into ring metal
+LUMINANCE 16/16
+SINGLE-PIECE 16/16
+MATRIX SINGLE-PIECE 576/576
+MATRIX MOVED-INK 0/576
+MATRIX RECENTRE-DOWNSCALED 375/576
+MATRIX WELDED-GLYPH 0/576 cells have ink welded into ring metal
+MATRIX BAR-FALLBACK 0/576 cells needed the bar suspension
+MATRIX RING HOLE FLOOR 576/576 cells have every ring hole at or above 90% of the ideal area
+MATRIX RINGS 576/576 cells have exactly 2 ring holes, each clear of the stroke it is welded to, with no punched-out and no welded-in ink
+MATRIX RING HOLE SIZE min 1408 max 1792 mean 1686
+```
+
+Exit code 0. Every cell prints its own `CELL` line with the carrier it chose as
+`glyphIndex:contourIndex`, the anchor, the ring centres, the placement, the
+measured punched and welded counts and the measured hole sizes against that
+cell's floor. No cell needed the bar: the fallback is proved by construction and
+by the probe below, not by a name in this corpus, and that is the honest claim -
+it exists so that the first name that needs it gets a pendant instead of a
+refusal.
+
+### The adversarial-3 probe
+
+```
+corepack pnpm --filter @jewelo/jobs exec tsx <scratchpad>/d020/adv3-probe.mts
+```
+
+```
+(a) body only            place welded rings [[121,457,153,483],[898,457,866,483]] welded 0 punched 0 passed true holes [1792,1792]
+(b) corridor mark        place welded rings [[121,457,153,483],[919,452,863,478]] welded 0 punched 0 passed true holes [1792,1792] markPixelsUnderMetalAtThePass3Seat {"annulus":231}
+(c) wall to the canvas   THREW identity_ring_punched_ink:pixels=98
+(d) wall at the shoulder THREW identity_ring_welded_to_glyph:pixels=196
+```
+
+(b) is finding 2. The mark is the 18x14 detached blob parked in the corridor
+between the right ring hole and the stroke. Fix pass 3 exempted that corridor,
+kept the seat at `898,457` and reported `welded 0`; the scan now counts those 231
+pixels, so the seat moves to `919,452` and the mark stays a mark. (c) and (d) are
+synthetic pieces that fill the canvas so no seat and no rail can clear the ink:
+both gates still fire and the engine still fails closed rather than shipping a
+ring welded across the lettering.
