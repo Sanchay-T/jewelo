@@ -12,7 +12,7 @@ Every section below is rewritten, not appended, so it always describes the curre
 | Deployed commit | `594d378` (DigitalOcean deployment `77c680bb`) |
 | Branch head | `codex/overnight-launch-2026-09-08` |
 | Provider mode | mock. Every shopper ends at "your preview is being prepared" with a contact form. Honest, not the product yet. |
-| Phase | 0 of 7 closed. Next task: `P0-1` in `docs/TASKS.md`. |
+| Phase | 0 of 7 closed. `P0-1` done. Next task: `P0-2` in `docs/TASKS.md`. |
 | Sessions | 1 (7 September 2026) |
 
 ## What a shopper gets today
@@ -32,6 +32,7 @@ Then a request the shop can act on from a phone.
 - `pnpm lint` was red at handoff; fixed. Staging redeployed to a green-gate commit.
 - The six style anchor images were found outside git and mirrored; phase 4 is now a publication job.
 - Mission, mindset, task list, goal prompt and a 62-line `CLAUDE.md` written; tests and CI suspended on Sanchay's instruction; Playwright and agent-browser removed.
+- Delegation model set: the Fable lead verifies and assigns, Opus 5 medium-effort subagents (`implementer`, `platform`, `image-lab`, `viewer`, `reviewer`, `adversarial-reviewer`, `plan-reviewer`) do the grind. Agent definitions rewritten (P0-1); proof: an `image-lab` dispatch returned `MODEL: claude-opus-5`, Runway authenticated, `gpt-image-2` available, 305,042 credits.
 - Live audit: the backend pipeline completes end to end in mock; the layout defect at short desktop heights was measured (preview panel 295 px under the action bar at 1280x720 at rest).
 
 ## Evidence

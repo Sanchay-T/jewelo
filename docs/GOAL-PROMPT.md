@@ -30,27 +30,25 @@ production calls, with ~300k credits: all prompt and stencil iteration happens
 there. OpenAI is the socket: wired, fail-closed, flipped once at the end.
 
 READ, IN ORDER, BEFORE ANY EDIT:
-  1. CLAUDE.md                             (locked stack, commands, rules)
-  2. docs/ROAD-TO-GOLD.md                  (defects with evidence, seven
-                                            phases, the gate ending each)
-  3. docs/TASKS.md                         (the ordered task list and the
-                                            decision defaults)
-  4. docs/goals/road-to-gold/PROGRESS.md   (what the last session did)
-  5. docs/goals/road-to-gold/HANDOVER.md   (what Sanchay last received)
+  1. CLAUDE.md                            (stack, commands, rules)
+  2. docs/ROAD-TO-GOLD.md                 (defects, phases, gates)
+  3. docs/TASKS.md                        (ordered tasks, decision defaults)
+  4. docs/goals/road-to-gold/PROGRESS.md  (last session)
+  5. docs/goals/road-to-gold/HANDOVER.md  (what Sanchay last received)
 
 YOUR SCOPE: [task ids from docs/TASKS.md, or "next open tasks in order"]
 YOUR WALL CLOCK: [when to stop and hand off]
 
-THE DELIVERABLE IS THE LINK. Pull request #12 on Sanchay-T/jewelo is the
-handover. Sanchay reads its description and nothing else. Run /handover
-before you stop for any reason: it rewrites HANDOVER.md from the real state,
-mirrors it into the PR, pushes, and prints the link. Your last message is
-that link, the Status table, and the Needs-Sanchay list.
+THE DELIVERABLE IS THE LINK. Pull request #12 is the handover; Sanchay reads
+its description and nothing else. Run /handover before you stop for any
+reason: it rewrites HANDOVER.md from real state, mirrors it into the PR,
+pushes, prints the link. Your last message: the link, the Status table, the
+Needs-Sanchay list.
 
 NOBODY IS WATCHING. Do not ask questions. Every decision has a default in
-docs/TASKS.md: take it, record it in the handover, keep going. What only
-Sanchay can do (billing, accounts, repo visibility, a domain) goes under
-Needs Sanchay; work around it, never block on it.
+docs/TASKS.md: take it, record it, keep going. What only Sanchay can do
+(billing, accounts, repo visibility, a domain) goes under Needs Sanchay;
+work around it, never block on it.
 
 YOU VERIFY AND ASSIGN; SUBAGENTS GRIND. Your tokens are for choosing the
 next task, writing its brief, checking the result in your own browser, and
