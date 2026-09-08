@@ -9,6 +9,7 @@
  * resolved font path is the one `identityFontUrl` produced in that build, not a
  * path this file reconstructs. No environment value is ever returned.
  */
+import { existsSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import {
@@ -25,6 +26,11 @@ interface FontProbe {
   readonly script: IdentityScript;
   readonly text: string;
   readonly resolvedPath: string;
+  /**
+   * Whether the file is on disk, asked of the filesystem and nothing else. It
+   * used to be `false` whenever shaping threw, which reported a missing font
+   * for a font that was there; the two questions now have one field each.
+   */
   readonly pathExists: boolean;
   readonly byteLength?: number;
   readonly fontSha256Measured?: string;
@@ -33,7 +39,10 @@ interface FontProbe {
   readonly exactCharactersPreserved?: boolean;
   readonly upem?: number;
   readonly harfbuzzVersion?: string;
-  readonly error?: string;
+  /** The bytes could not be read, with the reason. */
+  readonly readError?: string;
+  /** The bytes were read and HarfBuzz refused them, with the reason. */
+  readonly shapingError?: string;
 }
 
 const PROBES: ReadonlyArray<{
@@ -47,7 +56,9 @@ const PROBES: ReadonlyArray<{
 ];
 
 function describe(error: unknown) {
-  return error instanceof Error ? `${error.name}: ${error.message}` : "Unknown error";
+  return error instanceof Error
+    ? `${error.name}: ${error.message}`
+    : "Unknown error";
 }
 
 function resolvedWasmSpecifier() {
@@ -75,19 +86,29 @@ async function probeFont(probe: (typeof PROBES)[number]): Promise<FontProbe> {
   } catch {
     resolvedPath = url.href;
   }
+  const identity = {
+    file: probe.file,
+    script: probe.script,
+    text: probe.text,
+    resolvedPath,
+    // Measured before anything is read or shaped, so a shaping failure can
+    // never be reported as a missing file.
+    pathExists: existsSync(resolvedPath),
+  };
+  let bytes: Buffer;
   try {
-    const bytes = await readFile(resolvedPath);
+    bytes = await readFile(resolvedPath);
+  } catch (error) {
+    return { ...identity, readError: describe(error) };
+  }
+  try {
     const shaped = await shapeText({
       fontBytes: new Uint8Array(bytes),
       text: probe.text,
       script: probe.script,
     });
     return {
-      file: probe.file,
-      script: probe.script,
-      text: probe.text,
-      resolvedPath,
-      pathExists: true,
+      ...identity,
       byteLength: bytes.byteLength,
       fontSha256Measured: shaped.fontSha256Measured,
       glyphCount: shaped.glyphCount,
@@ -98,12 +119,9 @@ async function probeFont(probe: (typeof PROBES)[number]): Promise<FontProbe> {
     };
   } catch (error) {
     return {
-      file: probe.file,
-      script: probe.script,
-      text: probe.text,
-      resolvedPath,
-      pathExists: false,
-      error: describe(error),
+      ...identity,
+      byteLength: bytes.byteLength,
+      shapingError: describe(error),
     };
   }
 }
@@ -114,7 +132,10 @@ export async function GET(request: Request) {
   } catch (error) {
     if (error instanceof Response)
       return Response.json(
-        { error: error.statusText || "Request rejected", code: "unauthenticated" },
+        {
+          error: error.statusText || "Request rejected",
+          code: "unauthenticated",
+        },
         { status: error.status, headers: { "cache-control": "no-store" } },
       );
     throw error;

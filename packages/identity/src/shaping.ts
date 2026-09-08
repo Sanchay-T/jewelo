@@ -156,6 +156,12 @@ export interface ShapingMeasurement {
   /** NFC code points the font has no glyph for, or no cluster covered. */
   readonly uncoveredCodePoints: readonly number[];
   /**
+   * Index into the NFC code points of every uncovered one, in input order.
+   * Positions only, never characters: this number rides in reports and error
+   * detail, and the customer's name never may.
+   */
+  readonly uncoveredIndices: readonly number[];
+  /**
    * No glyph id 0 in the shaped buffer and every NFC code point is covered by
    * a cluster. This is the measurement the report used to assert as a literal.
    */
@@ -220,6 +226,61 @@ async function loadFace(fontBytes: Uint8Array): Promise<LoadedFace> {
 }
 
 /**
+ * HarfBuzz cluster level CHARACTERS (`hb_buffer_cluster_level_t` value 2): no
+ * cluster merging at all, so every glyph reports the index of the character it
+ * came from and a character that lost its glyph leaves a hole in the cluster
+ * set. The default level merges clusters, which is what made the old coverage
+ * check unable to see a mark dropped in the middle of a name.
+ */
+const CLUSTER_LEVEL_CHARACTERS = 2 as const;
+
+/** One shaping pass at the fixed cluster level; the buffer never escapes. */
+function shapeBuffer(
+  hb: HarfBuzz,
+  font: InstanceType<HarfBuzz["Font"]>,
+  properties: ScriptProperties,
+  codePoints: number[],
+): ReturnType<InstanceType<HarfBuzz["Buffer"]>["getGlyphInfosAndPositions"]> {
+  const buffer = new hb.Buffer();
+  buffer.addCodePoints(codePoints);
+  buffer.setDirection(properties.direction);
+  buffer.setScript(properties.script);
+  buffer.setLanguage(properties.language);
+  buffer.setClusterLevel(CLUSTER_LEVEL_CHARACTERS);
+  hb.shape(font, buffer);
+  return buffer.getGlyphInfosAndPositions();
+}
+
+/**
+ * Whether the code point at `index` changed the glyphs the font produced.
+ *
+ * Only asked about an index no glyph claims. A ligature component or a
+ * combining accent that composed into a precomposed glyph still changes the
+ * glyph ids when it is taken away, so it is present in the metal; a character
+ * the font deleted changes nothing, so the piece would be missing it.
+ */
+function contributesToShaping(
+  hb: HarfBuzz,
+  font: InstanceType<HarfBuzz["Font"]>,
+  properties: ScriptProperties,
+  codePoints: number[],
+  index: number,
+): boolean {
+  const withCharacter = shapeBuffer(hb, font, properties, codePoints)
+    .map((glyph) => glyph.codepoint)
+    .join(",");
+  const withoutCharacter = shapeBuffer(
+    hb,
+    font,
+    properties,
+    codePoints.filter((_, position) => position !== index),
+  )
+    .map((glyph) => glyph.codepoint)
+    .join(",");
+  return withCharacter !== withoutCharacter;
+}
+
+/**
  * Shapes `text` with the given font bytes and returns per-glyph outlines and
  * the measurement of whether the spelling survived.
  */
@@ -232,13 +293,7 @@ export async function shapeText(input: ShapeTextInput): Promise<ShapedText> {
     (character) => character.codePointAt(0) ?? 0,
   );
 
-  const buffer = new hb.Buffer();
-  buffer.addCodePoints(codePoints);
-  buffer.setDirection(properties.direction);
-  buffer.setScript(properties.script);
-  buffer.setLanguage(properties.language);
-  hb.shape(font, buffer);
-  const shaped = buffer.getGlyphInfosAndPositions();
+  const shaped = shapeBuffer(hb, font, properties, codePoints);
 
   const glyphs: ShapedGlyph[] = shaped.map((glyph) => ({
     gid: glyph.codepoint,
@@ -250,24 +305,35 @@ export async function shapeText(input: ShapeTextInput): Promise<ShapedText> {
     path: font.glyphToPath(glyph.codepoint),
   }));
 
-  // A code point is covered when some cluster claims its index and the font has
-  // a real glyph for it. The cluster check catches a code point HarfBuzz
-  // dropped; the nominal-glyph check catches one the font never had, which is
-  // the tofu case that used to reach a customer as a wrong pendant.
-  const clusters = glyphs.map((glyph) => glyph.cluster);
-  // Cluster values partition the input: the run starts at the smallest cluster
-  // and every later index falls inside the range opened by some cluster, so an
-  // index is claimed when a cluster starts at or before it and no cluster
-  // points past the end of the text.
-  const firstCluster = clusters.length ? Math.min(...clusters) : 1;
-  const lastCluster = clusters.length ? Math.max(...clusters) : -1;
-  const clustersInRange = lastCluster < codePoints.length;
+  // A code point is covered when the shaped buffer really carries it and the
+  // font has a real glyph for it. The old check compared the first and last
+  // cluster to the ends of the text, which any run passes, so a code point lost
+  // in the middle of a name went unnoticed; the buffer is now shaped at cluster
+  // level CHARACTERS, where HarfBuzz merges nothing, and every index is asked
+  // for its own glyph.
+  const claimedByGlyph = new Set(glyphs.map((glyph) => glyph.cluster));
+  const claimedByRealGlyph = new Set(
+    glyphs.filter((glyph) => glyph.gid !== 0).map((glyph) => glyph.cluster),
+  );
   const uncoveredCodePoints: number[] = [];
+  const uncoveredIndices: number[] = [];
   for (let index = 0; index < codePoints.length; index += 1) {
     const codePoint = codePoints[index] ?? 0;
-    const claimed = clustersInRange && index >= firstCluster;
-    if (!claimed || font.nominalGlyph(codePoint) === undefined)
+    const covered =
+      claimedByRealGlyph.has(index) ||
+      // No glyph claims this index at all. Under CHARACTERS clustering that is
+      // either a ligature or composition that swallowed the character (لا, the
+      // Allah ligature, a Latin base plus a combining accent) or a character
+      // the font's GSUB deleted. The two are told apart by measurement, not by
+      // assumption: shape the run again without this code point, and if the
+      // glyph ids come back identical the character contributed nothing to the
+      // piece, which is the dropped-mark case that must fail the gate.
+      (!claimedByGlyph.has(index) &&
+        contributesToShaping(hb, font, properties, codePoints, index));
+    if (!covered || font.nominalGlyph(codePoint) === undefined) {
       uncoveredCodePoints.push(codePoint);
+      uncoveredIndices.push(index);
+    }
   }
   const notdefGlyphs = glyphs.filter((glyph) => glyph.gid === 0).length;
 
@@ -281,6 +347,7 @@ export async function shapeText(input: ShapeTextInput): Promise<ShapedText> {
     glyphCount: glyphs.length,
     notdefGlyphs,
     uncoveredCodePoints,
+    uncoveredIndices,
     exactCharactersPreserved:
       glyphs.length > 0 &&
       notdefGlyphs === 0 &&
@@ -651,8 +718,13 @@ function round3(value: number): number {
  */
 export function identityStencilSvg(shaped: ShapedText): StencilSvg {
   const extents = runExtents(shaped);
+  // The text itself is never in an error message: these messages are stored in
+  // category columns (`p_error_class`, `terminal_error_code`, `p_reason`), and
+  // a customer's name has no business in one.
   if (!Number.isFinite(extents.minX) || !Number.isFinite(extents.minY))
-    throw new Error(`identity_stencil_empty_outline:${shaped.text}`);
+    throw new Error(
+      `identity_stencil_empty_outline:glyphs=${shaped.glyphs.length}`,
+    );
 
   const unitWidth = extents.maxX - extents.minX;
   const unitHeight = extents.maxY - extents.minY;
@@ -677,6 +749,18 @@ export function identityStencilSvg(shaped: ShapedText): StencilSvg {
   const scale = fontSize / shaped.upem;
   const width = unitWidth * scale;
   const height = unitHeight * scale;
+  // `clamp` stops at `IDENTITY_MIN_FONT_SIZE`, so a run long enough to need a
+  // smaller size than that does not fit the body box at all. Drawing it anyway
+  // pushed the ends of the name off the canvas and the customer got a clipped
+  // pendant; the fit refuses instead, and the caller's gate turns that into
+  // operator review.
+  if (
+    round3(width) > IDENTITY_BODY_WIDTH ||
+    round3(height) > IDENTITY_BODY_HEIGHT
+  )
+    throw new Error(
+      `identity_fit_overflow:width=${round3(width)},height=${round3(height)},box=${IDENTITY_BODY_WIDTH}x${IDENTITY_BODY_HEIGHT},size=${fontSize}`,
+    );
   const left = Math.floor((IDENTITY_CANVAS - width) / 2);
   const top =
     IDENTITY_MARGIN +

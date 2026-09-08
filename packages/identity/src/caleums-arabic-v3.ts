@@ -175,10 +175,12 @@ export interface IdentityConstructionMeasurement {
    */
   readonly glyphBoxBeforeRings: readonly [number, number, number, number];
   /**
-   * Pre-ring ink pixels that a ring hole punched out. Zero on every stencil, or
-   * the ring ate part of the name.
+   * Glyph ink pixels the rings cleared: pixels that were ink after bridging and
+   * are background once both rings, their holes and their weld fillets have
+   * been drawn. Rings may add metal anywhere; they may not take the name away,
+   * so the solver refuses any piece where this is not zero.
    */
-  readonly glyphPixelsInsideRingHoles: number;
+  readonly glyphPixelsPunchedByRings: number;
   /** Scale `recentre` applied; 1 unless the piece overflowed the body box. */
   readonly recentreScale: number;
   readonly recentreOffsetX: number;
@@ -206,6 +208,7 @@ export class IdentitySolverError extends Error {
       | "identity_recentre_too_large"
       | "identity_component_gate_failed"
       | "identity_ring_anchor_missing"
+      | "identity_ring_punched_ink"
       | "identity_font_bytes_mismatch"
       | "identity_shaping_gate_failed",
     message: string = code,
@@ -329,13 +332,13 @@ export async function solveIdentity(
   if (!shaping.exactCharactersPreserved)
     throw new IdentitySolverError(
       "identity_shaping_gate_failed",
-      `${approvedText}: ${shaping.notdefGlyphs} notdef glyphs, ${shaping.uncoveredCodePoints.length} uncovered code points`,
+      `identity_shaping_gate_failed:notdef=${shaping.notdefGlyphs},uncovered=${shaping.uncoveredCodePoints.length}`,
     );
   const componentsBefore = countComponents(mask);
   if (componentsBefore === 0)
     throw new IdentitySolverError(
       "identity_mask_empty",
-      `${approvedText}: rasterizer produced no ink`,
+      "identity_mask_empty:rasterizer produced no ink",
     );
 
   // The lab's order (`make_stencil.py:227-232`): thicken, bridge, ring, centre.
@@ -346,7 +349,7 @@ export async function solveIdentity(
   const beforeBridging = mask.ink.slice();
   const inkPixelsBeforeBridging = countInk(beforeBridging);
   const islandsBeforeBridging = countComponents(mask);
-  const bridged = bridgeAll(mask, IDENTITY_BRIDGE_WIDTH, approvedText);
+  const bridged = bridgeAll(mask, IDENTITY_BRIDGE_WIDTH);
   // The invariant this task exists for, checked in pre-recentre coordinates:
   // a bar may only add metal, never move a dot, a hamza or a serif.
   let inkPixelsPreserved = 0;
@@ -355,23 +358,33 @@ export async function solveIdentity(
   if (inkPixelsPreserved !== inkPixelsBeforeBridging)
     throw new IdentitySolverError(
       "identity_bridge_moved_ink",
-      `${approvedText}: ${inkPixelsBeforeBridging - inkPixelsPreserved} of ${inkPixelsBeforeBridging} ink pixels moved while bridging`,
+      `identity_bridge_moved_ink:moved=${inkPixelsBeforeBridging - inkPixelsPreserved},of=${inkPixelsBeforeBridging}`,
     );
 
   const rings =
     input.rings === false
       ? {
           centres: [] as readonly IdentityRingCentre[],
-          glyphBox: inkBox(mask, approvedText),
-          glyphPixelsInsideHoles: 0,
+          glyphBox: inkBox(mask),
+          glyphPixelsPunchedByRings: 0,
         }
-      : addRings(mask, approvedText);
-  const placement = recentre(mask, approvedText);
+      : addRings(mask);
+  // The second half of the ink-preservation invariant, and the reason it is not
+  // vacuous: `drawBar` only ever adds metal, but `drawDisk(..., 0)` clears it,
+  // so the rings are the one step that can take a piece of the name away. The
+  // lift in `addRings` is what keeps this at zero; this is the check that says
+  // so instead of assuming it.
+  if (rings.glyphPixelsPunchedByRings > 0)
+    throw new IdentitySolverError(
+      "identity_ring_punched_ink",
+      `identity_ring_punched_ink:pixels=${rings.glyphPixelsPunchedByRings}`,
+    );
+  const placement = recentre(mask);
   const componentsFinal = countComponents(mask);
   if (componentsFinal !== 1)
     throw new IdentitySolverError(
       "identity_component_gate_failed",
-      `${approvedText}: ${componentsFinal} components after solving`,
+      `identity_component_gate_failed:components=${componentsFinal}`,
     );
   const construction: IdentityConstructionMeasurement = {
     thickenPasses: IDENTITY_THICKEN_PASSES,
@@ -383,7 +396,7 @@ export async function solveIdentity(
     jumpRings: rings.centres.length,
     ringCentres: rings.centres,
     glyphBoxBeforeRings: rings.glyphBox,
-    glyphPixelsInsideRingHoles: rings.glyphPixelsInsideHoles,
+    glyphPixelsPunchedByRings: rings.glyphPixelsPunchedByRings,
     recentreScale: placement.scale,
     recentreOffsetX: placement.offsetX,
     recentreOffsetY: placement.offsetY,
@@ -505,6 +518,16 @@ interface NearestSourceField {
 /** Stands in for infinity without producing NaN in the envelope arithmetic. */
 const FAR_AWAY = 1e15;
 
+/**
+ * The sentinel that closes the parabola envelope at both ends. It must be
+ * strictly larger than any crossing the envelope can compute, or the leading
+ * boundary could compare equal to a crossing and pop `top` below zero, which
+ * reads `vertices[-1]` as undefined. A crossing is bounded by the column
+ * distances (at most `FAR_AWAY`) plus the squared column index, so three orders
+ * of magnitude above `FAR_AWAY` is a margin, not a coincidence.
+ */
+const ENVELOPE_BOUNDARY = FAR_AWAY * 1e3;
+
 function sinc(value: number): number {
   if (value === 0) return 1;
   const scaled = value * Math.PI;
@@ -566,8 +589,8 @@ function nearestSourceTransform(
     const row = y * width;
     let top = 0;
     vertices[0] = 0;
-    boundaries[0] = -FAR_AWAY;
-    boundaries[1] = FAR_AWAY;
+    boundaries[0] = -ENVELOPE_BOUNDARY;
+    boundaries[1] = ENVELOPE_BOUNDARY;
     for (let q = 1; q < width; q += 1) {
       const fq = (columnDistance[row + q] as number) + q * q;
       let previous = vertices[top] as number;
@@ -587,7 +610,7 @@ function nearestSourceTransform(
       top += 1;
       vertices[top] = q;
       boundaries[top] = crossing;
-      boundaries[top + 1] = FAR_AWAY;
+      boundaries[top + 1] = ENVELOPE_BOUNDARY;
     }
     top = 0;
     for (let q = 0; q < width; q += 1) {
@@ -619,7 +642,6 @@ function nearestSourceTransform(
 function bridgeAll(
   mask: RasterMask,
   width: number,
-  label: string,
 ): { bridges: number; pixelsAdded: number } {
   let bridges = 0;
   let pixelsAdded = 0;
@@ -655,7 +677,7 @@ function bridgeAll(
     if (islandPixel < 0 || bodyPixel < 0)
       throw new IdentitySolverError(
         "identity_bridge_failed",
-        `${label}: no island pair to bridge among ${labelled.count} components`,
+        `identity_bridge_failed:components=${labelled.count},pair=none`,
       );
     pixelsAdded += drawBar(
       mask,
@@ -669,7 +691,7 @@ function bridgeAll(
   }
   throw new IdentitySolverError(
     "identity_bridge_failed",
-    `${label}: bridging did not converge within ${IDENTITY_MAX_BRIDGES} bars`,
+    `identity_bridge_failed:bars=${IDENTITY_MAX_BRIDGES},converged=false`,
   );
 }
 
@@ -776,7 +798,7 @@ function round3(value: number): number {
  * The mask is rewritten in place and the transform is returned, because every
  * measurement the solver reports is taken before this runs.
  */
-function recentre(mask: RasterMask, label: string): RecentrePlacement {
+function recentre(mask: RasterMask): RecentrePlacement {
   let minX = mask.width;
   let minY = mask.height;
   let maxX = -1;
@@ -793,7 +815,7 @@ function recentre(mask: RasterMask, label: string): RecentrePlacement {
   if (maxX < 0)
     throw new IdentitySolverError(
       "identity_mask_empty",
-      `${label}: nothing to centre`,
+      "identity_mask_empty:nothing to centre",
     );
 
   let width = maxX - minX + 1;
@@ -814,7 +836,7 @@ function recentre(mask: RasterMask, label: string): RecentrePlacement {
     if (scale < IDENTITY_MIN_RECENTRE_SCALE)
       throw new IdentitySolverError(
         "identity_recentre_too_large",
-        `${label}: assembly ${width}x${height} is far too large for the canvas`,
+        `identity_recentre_too_large:assembly=${width}x${height},box=${IDENTITY_RECENTRE_BOX}`,
       );
     const outWidth = Math.max(1, Math.trunc(width * scale));
     const outHeight = Math.max(1, Math.trunc(height * scale));
@@ -864,12 +886,13 @@ interface RingPlacement {
   /** The name's ink box before any ring was drawn, `[minX, minY, maxX, maxY]`. */
   readonly glyphBox: readonly [number, number, number, number];
   /**
-   * Pre-ring ink pixels that fall inside a ring hole. Every one of them is a
-   * piece of the name the ring punched out, which is the Asma defect: the old
-   * `addJumpRings` centred the ring on the topmost ink pixel, so the hole sat
-   * inside a letter. It must be zero.
+   * Glyph ink pixels the rings cleared, counted against the post-bridge mask
+   * after every ring, hole and weld fillet has been drawn. Every one of them is
+   * a piece of the name a ring hole punched out, which is the Asma defect: the
+   * old `addJumpRings` centred the ring on the topmost ink pixel, so the hole
+   * sat inside a letter. It must be zero.
    */
-  readonly glyphPixelsInsideHoles: number;
+  readonly glyphPixelsPunchedByRings: number;
 }
 
 /**
@@ -930,8 +953,8 @@ function erodeSquare(
  * sinks into the stroke it sits on - integral metal, not a floating circle - and
  * the hole itself clears the lettering into the reserved ring band.
  */
-function addRings(mask: RasterMask, label: string): RingPlacement {
-  const glyphBox = inkBox(mask, label);
+function addRings(mask: RasterMask): RingPlacement {
+  const glyphBox = inkBox(mask);
   const [minX, , maxX] = glyphBox;
   const span = Math.max(1, maxX - minX);
 
@@ -945,7 +968,6 @@ function addRings(mask: RasterMask, label: string): RingPlacement {
 
   const beforeRings = mask.ink.slice();
   const centres: IdentityRingCentre[] = [];
-  let glyphPixelsInsideHoles = 0;
   const outwardStep = Math.trunc(
     IDENTITY_RING_OUTER * IDENTITY_RING_OUTWARD_FRACTION,
   );
@@ -972,7 +994,7 @@ function addRings(mask: RasterMask, label: string): RingPlacement {
     if (anchorY < 0)
       throw new IdentitySolverError(
         "identity_ring_anchor_missing",
-        `${label}: no load-bearing metal on the ${side} of the name to weld a ring onto`,
+        `identity_ring_anchor_missing:side=${side}`,
       );
 
     const cx = anchorX + outward * outwardStep;
@@ -1008,7 +1030,6 @@ function addRings(mask: RasterMask, label: string): RingPlacement {
       }
       if (candidate === lowest) break;
     }
-    glyphPixelsInsideHoles += punched;
     drawDisk(mask, cx, cy, IDENTITY_RING_OUTER, 1);
     drawDisk(mask, cx, cy, IDENTITY_RING_INNER, 0);
     // The weld fillet: metal continuity from under the ring into the stroke.
@@ -1023,7 +1044,15 @@ function addRings(mask: RasterMask, label: string): RingPlacement {
     centres.push({ x: cx, y: cy, anchorX, anchorY });
   }
 
-  return { centres, glyphBox, glyphPixelsInsideHoles };
+  // Measured, not predicted: `punched` above is what the seat search expected
+  // before the hole was cut, while this compares the finished mask against the
+  // name as it stood before any ring, so a hole that ate a stroke the search
+  // never considered - or a fillet that filled one back in - is counted here.
+  let glyphPixelsPunchedByRings = 0;
+  for (let index = 0; index < beforeRings.length; index += 1)
+    if (beforeRings[index] && !mask.ink[index]) glyphPixelsPunchedByRings += 1;
+
+  return { centres, glyphBox, glyphPixelsPunchedByRings };
 }
 
 /**
@@ -1031,10 +1060,7 @@ function addRings(mask: RasterMask, label: string): RingPlacement {
  * ring placement and by the ring-free path, which still has to report the box
  * the rings would have sat above.
  */
-function inkBox(
-  mask: RasterMask,
-  label: string,
-): readonly [number, number, number, number] {
+function inkBox(mask: RasterMask): readonly [number, number, number, number] {
   let minX = mask.width;
   let minY = mask.height;
   let maxX = -1;
@@ -1051,7 +1077,7 @@ function inkBox(
   if (maxX < 0)
     throw new IdentitySolverError(
       "identity_mask_empty",
-      `${label}: the mask has no ink to measure`,
+      "identity_mask_empty:no ink to measure",
     );
   return [minX, minY, maxX, maxY];
 }

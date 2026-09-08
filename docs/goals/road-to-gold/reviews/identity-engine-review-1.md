@@ -1,6 +1,8 @@
 # Identity engine review 1 (P1-2 to P1-4, range 79592b7..af13e2b)
 
 Reviewer: fresh-context `reviewer` subagent, 8 September 2026.
+Close-out (session 2, commit after `998ca82`): findings 1, 2, 4, 7, 9, 11 fixed by a separate implementer and reproved by the lead (`identity_ring_punched_ink` fires on an injected block; per-codepoint coverage with a reshape probe for ligature-swallowed indices; no customer text in any error message; `identity_fit_overflow` at 45 characters; `ENVELOPE_BOUNDARY`; `pathExists` from `existsSync`). Findings 5, 6, 10, 13 go to P1-6; 3 closed by P1-5; 8, 12, 14 recorded.
+
 Verdict: the HarfBuzz port is sound (direction constants, path grammar, Bezier extremes, distance transform, Pillow LANCZOS, fit math, lab constants all verified against the sources); two gates are weaker than they claim.
 
 ## Major

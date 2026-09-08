@@ -178,7 +178,7 @@ interface Row {
   readonly recentreOffsetY: number;
   /** P1-5: rings the solver welded on, and where it says it put them. */
   readonly jumpRings: number;
-  readonly glyphPixelsInsideRingHoles: number;
+  readonly glyphPixelsPunchedByRings: number;
   /** The pre-ring glyph box top, mapped into final image coordinates. */
   readonly glyphTop: number;
   /** The measured hole at each predicted ring centre. */
@@ -415,8 +415,8 @@ for (const name of NAMES) {
         recentreOffsetX: rendered.construction.recentreOffsetX,
         recentreOffsetY: rendered.construction.recentreOffsetY,
         jumpRings: rendered.construction.jumpRings,
-        glyphPixelsInsideRingHoles:
-          rendered.construction.glyphPixelsInsideRingHoles,
+        glyphPixelsPunchedByRings:
+          rendered.construction.glyphPixelsPunchedByRings,
         glyphTop: ring.glyphTop,
         ringHoles: ring.ringHoles,
         holesAboveGlyphTop: ring.holesAboveGlyphTop,
@@ -525,7 +525,7 @@ for (const row of rows)
       String(row.holes).padStart(6) +
       String(row.holesAboveGlyphTop).padStart(9) +
       row.glyphTop.toFixed(1).padStart(9) +
-      String(row.glyphPixelsInsideRingHoles).padStart(7) +
+      String(row.glyphPixelsPunchedByRings).padStart(7) +
       "  " +
       (row.ringHoles.length === 0
         ? "-"
@@ -557,9 +557,9 @@ for (const row of rows) {
     );
     process.exitCode = 1;
   }
-  if (row.glyphPixelsInsideRingHoles !== 0) {
+  if (row.glyphPixelsPunchedByRings !== 0) {
     console.log(
-      `GATE FAILED: ${row.file} punched ${row.glyphPixelsInsideRingHoles} ink pixels of the name out with a ring hole`,
+      `GATE FAILED: ${row.file} punched ${row.glyphPixelsPunchedByRings} ink pixels of the name out with a ring hole`,
     );
     process.exitCode = 1;
   }
@@ -671,7 +671,7 @@ writeFileSync(
           .length,
         holesAboveGlyphTop: row.holesAboveGlyphTop,
         glyphTop: Number(row.glyphTop.toFixed(1)),
-        glyphPixelsInsideRingHoles: row.glyphPixelsInsideRingHoles,
+        glyphPixelsPunchedByRings: row.glyphPixelsPunchedByRings,
       },
       construction: {
         componentsBefore: row.componentsBefore,
@@ -743,7 +743,7 @@ interface MatrixCell {
   readonly ringHolesAbove: number;
   readonly ringHoleSizes: readonly number[];
   readonly holesAboveGlyphTop: number;
-  readonly glyphPixelsInsideRingHoles: number;
+  readonly glyphPixelsPunchedByRings: number;
 }
 
 const matrix = new Map<string, MatrixCell>();
@@ -788,8 +788,8 @@ for (const name of MATRIX_NAMES) {
         ).length,
         ringHoleSizes: ring.ringHoles.map((hole) => hole.size),
         holesAboveGlyphTop: ring.holesAboveGlyphTop,
-        glyphPixelsInsideRingHoles:
-          rendered.construction.glyphPixelsInsideRingHoles,
+        glyphPixelsPunchedByRings:
+          rendered.construction.glyphPixelsPunchedByRings,
         islandsBeforeBridging: rendered.construction.islandsBeforeBridging,
         bridges: rendered.construction.bridges,
         moved:
@@ -866,7 +866,7 @@ const ringOk = matrixCells.filter(
     cell.jumpRings === expectedRings &&
     cell.ringHolesFound === expectedRings &&
     cell.ringHolesAbove === expectedRings &&
-    cell.glyphPixelsInsideRingHoles === 0,
+    cell.glyphPixelsPunchedByRings === 0,
 ).length;
 const sizes = matrixCells.flatMap((cell) => cell.ringHoleSizes);
 console.log(
@@ -881,11 +881,11 @@ for (const cell of matrixCells) {
     cell.jumpRings === expectedRings &&
     cell.ringHolesFound === expectedRings &&
     cell.ringHolesAbove === expectedRings &&
-    cell.glyphPixelsInsideRingHoles === 0
+    cell.glyphPixelsPunchedByRings === 0
   )
     continue;
   console.log(
-    `GATE FAILED: matrix/${cell.file} rings=${cell.jumpRings} holesFound=${cell.ringHolesFound} above=${cell.ringHolesAbove} holesAboveGlyphTop=${cell.holesAboveGlyphTop} punched=${cell.glyphPixelsInsideRingHoles}`,
+    `GATE FAILED: matrix/${cell.file} rings=${cell.jumpRings} holesFound=${cell.ringHolesFound} above=${cell.ringHolesAbove} holesAboveGlyphTop=${cell.holesAboveGlyphTop} punched=${cell.glyphPixelsPunchedByRings}`,
   );
   process.exitCode = 1;
 }
