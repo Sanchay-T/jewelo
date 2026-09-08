@@ -76,7 +76,7 @@ Done:
 Doing:
 
 - Staging deploy of `b2ebea4` and re-proof (platform): Noor en and نور ar runs, stencils re-measured, ring on the ن body.
-- Adversarial pass 3 on `b2ebea4` (adversarial-reviewer). Phase 1 closes when this pass and the next find nothing above minor.
+- Fix pass 4 (implementer) on adversarial review 3 (`reviews/identity-engine-adversarial-3.md`): three highs. The 10% island rule still anchors a ring on the tittle of i ("Ali" 13.5%, "Niki" 10.5%, lead confirmed by eye); the under-metal count scans only the annulus and exempts 30.8% of it; five combinations (Maji kufi, أمير kufi, قق in three styles) now throw where `6d7382b` rendered. Plus deterministic RPC raises left to the sweeper, and a harness that reads the engine's own claims. P1-5 reopened; Phase 1 is not closed.
 - P2-2 (implementer): edge-based pendant mask with moment-initialised similarity registration, contact sheet under `dogfood-2026-09-08/phase2-mask/`, IoU distribution over the 55 passes; the measured p05 becomes the P2-3 threshold.
 
 Follow-ups found by subagents, not fixed (outside the task rows):
