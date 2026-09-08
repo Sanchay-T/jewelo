@@ -1908,3 +1908,28 @@
     opacity: 0.3;
   }
 }
+
+/* The Arabic journey's web face. "Playfair Display" and "Instrument Sans" have
+   no Arabic glyphs, so before this rule every Arabic word on the page fell
+   through to whatever Naskh the device shipped and the shop looked different on
+   every tablet. `--font-arabic` is set by `next/font` in the `[locale]` layout
+   and only exists on the `ar` tree, so the Latin pages are untouched: the
+   serif variable and the body stack are re-pointed here, not replaced. */
+:global([dir="rtl"]) .app {
+  --serif: var(--font-arabic), Georgia, serif;
+  font-family: var(--font-arabic), "Instrument Sans", Arial, sans-serif;
+}
+:global([dir="rtl"]) .app input,
+:global([dir="rtl"]) .app select,
+:global([dir="rtl"]) .app textarea {
+  font-family: inherit;
+}
+/* Three micro-labels are tracked out for Latin small caps. Arabic is cursive:
+   the same tracking pulls the joined letters apart. Only the three that this
+   change turned from Latin into Arabic are named here; the Latin journey keeps
+   its spacing exactly as it was. */
+:global([dir="rtl"]) .headerNote,
+:global([dir="rtl"]) .photoCaption,
+:global([dir="rtl"]) .footer {
+  letter-spacing: normal;
+}

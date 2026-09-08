@@ -211,6 +211,27 @@ const arabic: Record<string, string> = {
   "Not photographed for this look": "لم تُصوَّر لهذا الأسلوب",
   "This angle was not photographed for this look. Your own preview still covers it.":
     "لم تُصوَّر هذه الزاوية لهذا الأسلوب. معاينتك الشخصية تغطيها.",
+  "Other successful views are still available.":
+    "الزوايا الأخرى الناجحة لا تزال متاحة.",
+  // A look the shop cannot cast at all. The label used to be written inline at
+  // the choice tile, which is how the Arabic journey kept two spellings of the
+  // same word; it is one key now.
+  Unavailable: "جار التحضير",
+  // The lettering the page carries outside a sentence: the house line beside
+  // the wordmark, the caption over the photograph, the footer. CALEUMS is the
+  // brand and stays Latin in both journeys.
+  "THE NAME ATELIER": "مشغل الأسماء",
+  "CALEUMS — THE NAME COLLECTION": "CALEUMS — مجموعة الأسماء",
+  "◇ 18K GOLD": "◇ ذهب عيار ١٨",
+  "✧ PERSONAL BY DESIGN": "✧ قطعة شخصية بتصميمك",
+  "CALEUMS · DUBAI": "CALEUMS · دبي",
+  "e.g. Fatima": "مثال: فاطمة",
+  // The millimetre unit and the carousel's role, both read aloud in English
+  // until now.
+  mm: "مم",
+  carousel: "دوّار",
+  "Image storage is unavailable. Saved photos are available only while this tab stays open.":
+    "تخزين الصور غير متاح. الصور المحفوظة تبقى متاحة ما دامت هذه الصفحة مفتوحة.",
 };
 import { hasExactSample, samples, visualFields, type VisualField } from "./catalogue";
 import { SnapshotImage } from "./SnapshotImage";
@@ -249,6 +270,13 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
     if (!parts.length) return t("Your name");
     return parts.join(draft.script === "Arabic" ? " و" : " & ");
   };
+  /**
+   * The gold, said the way each language says it: "18K yellow gold" in English,
+   * "ذهب أصفر عيار ١٨" in Arabic. Written inline in three places before, which
+   * left a Latin "18K" standing in the middle of every Arabic summary.
+   */
+  const goldLabel = (metal: string) =>
+    locale === "ar" ? `${t(metal)} عيار ١٨` : `18K ${t(metal)}`;
   const [state, setState] = useState<State>(initialState);
   const [desktop, setDesktop] = useState(false);
   const [editingText, setEditingText] = useState(false);
@@ -1029,9 +1057,7 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                   <Check className={s.selectedTick} size={12} />
                 )}
                 {disabled?.includes(option) ? (
-                  <small>
-                    {locale === "ar" ? "جار التحضير" : "Unavailable"}
-                  </small>
+                  <small>{t("Unavailable")}</small>
                 ) : refused ? (
                   <small>{t("Not yet photographed")}</small>
                 ) : (
@@ -1059,7 +1085,7 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
     {
       id: "gold",
       label: "Gold & Stones",
-      value: `18K ${t(d.metal)} · ${t(d.coverage)}${d.coverage !== "No stones" ? " · " + t(d.gem) : ""}`,
+      value: `${goldLabel(d.metal)} · ${t(d.coverage)}${d.coverage !== "No stones" ? " · " + t(d.gem) : ""}`,
     },
     {
       id: "size",
@@ -1115,7 +1141,7 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
         >
           CALEUMS
         </a>
-        <span className={s.headerNote}>THE NAME ATELIER</span>
+        <span className={s.headerNote}>{t("THE NAME ATELIER")}</span>
         <div className={s.headerActions}>
           <a
             href={`/${locale === "ar" ? "en" : "ar"}/design/new`}
@@ -1273,7 +1299,7 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                             value={d.secondName}
                             dir={d.script === "Arabic" ? "rtl" : "auto"}
                             placeholder={
-                              d.script === "Arabic" ? "فاطمة" : "e.g. Fatima"
+                              d.script === "Arabic" ? "فاطمة" : t("e.g. Fatima")
                             }
                             maxLength={NAME_MAX}
                             onChange={(e) =>
@@ -1457,7 +1483,7 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                       (x) => (
                         <span className={s.measure}>
                           {t(x === 22 ? "Delicate" : "Statement")}
-                          <small>mm</small>
+                          <small>{t("mm")}</small>
                         </span>
                       ),
                     )}
@@ -1836,7 +1862,7 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
           <aside
             className={s.preview}
             aria-label={t("Jewelry preview")}
-            aria-roledescription="carousel"
+            aria-roledescription={t("carousel")}
             onMouseEnter={() => {
               setHovering(true);
               setPlayRequested(false);
@@ -1956,7 +1982,7 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                       <>
                         <Diamond size={36} />
                         <h2>{t("Preview failed")}</h2>
-                        <p>Other successful views are still available.</p>
+                        <p>{t("Other successful views are still available.")}</p>
                         <button onClick={() => retry(view)}>
                           {t("Retry")} {t(view)}
                         </button>
@@ -1984,7 +2010,7 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                     </button>
                   )}
                 <div className={s.photoCaption}>
-                  <span>CALEUMS — THE NAME COLLECTION</span>
+                  <span>{t("CALEUMS — THE NAME COLLECTION")}</span>
                   <span dir="auto">
                     {showingOwnPhoto
                       ? `${pendantName(d)} · ${ownPhotoLabel}`
@@ -2268,7 +2294,7 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                       : "Engraving and special requests are saved in your design summary; they do not alter this front view."}
                   </p>
                 </details>
-                {piece.warning && <p role="status">{piece.warning}</p>}
+                {piece.warning && <p role="status">{t(piece.warning)}</p>}
                 <div
                   className={s.selectionSummary}
                   aria-label={locale === "ar" ? "اختياراتك" : "Your selections"}
@@ -2295,14 +2321,14 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                                 : "#b59b5b",
                         }}
                       />
-                      18K {t(d.metal)}
+                      {goldLabel(d.metal)}
                     </span>
                     <span>
                       {t(d.coverage)}
                       {d.coverage !== "No stones" ? " · " + t(d.gem) : ""}
                     </span>
                     <span>
-                      {d.size} mm · {t(d.chain)}
+                      {d.size} {t("mm")} · {t(d.chain)}
                     </span>
                   </div>
                 </div>
@@ -2351,9 +2377,9 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
         )}
       </div>
       <footer className={s.footer}>
-        <span>◇ 18K GOLD</span>
-        <span>✧ PERSONAL BY DESIGN</span>
-        <span>CALEUMS · DUBAI</span>
+        <span>{t("◇ 18K GOLD")}</span>
+        <span>{t("✧ PERSONAL BY DESIGN")}</span>
+        <span>{t("CALEUMS · DUBAI")}</span>
       </footer>
       <dialog
         ref={bag}
@@ -2422,7 +2448,7 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                   <small>{t("NAME PENDANT · YOUR DESIGN")}</small>
                   <h3 dir="auto">{pendantName(item.draft)}</h3>
                   <p>
-                    18K {t(item.draft.metal)} · {item.draft.size} mm
+                    {goldLabel(item.draft.metal)} · {item.draft.size} {t("mm")}
                     <br />
                     {t(item.draft.chain)}
                     <br />
