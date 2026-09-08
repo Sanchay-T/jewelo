@@ -42,11 +42,14 @@ Done:
 - P1-1 ruler: `measureMask` (pure, `packages/identity/src/geometry.ts`) and `decodeMask` (sharp, `apps/jobs/src/decode-mask.ts`) reproduce `verify_stencil.py` exactly on 16 lab and 16 production stencils. The ruler already shows the production renderer lying: English names measure 4 to 7 components while `render-report.json` says 1 and `passed: true`.
 - DS-3 default B taken for Phase 1; D-019 and the `caleums-identity-v4` release bump are part of P1-2.
 
+- P1-2 in `a54b1d3`: `packages/identity/src/shaping.ts` shapes with harfbuzzjs 1.6.1 over the pinned font bytes resolved from `import.meta.url`; `fontSha256Measured` and `exactCharactersPreserved` are measured; a name with an uncovered codepoint now throws `identity_shaping_gate_failed`; engine release `caleums-identity-v4`, D-019. Lead reran the proofs: Kufi and Naskh gids differ for four names, Latin advances equal `hb-shape` at 0% drift. The rendered PNGs are still byte-identical across styles because the raster still goes through Pango `<text>`; P1-3 replaces that.
+- P1-1 proof is durable: `corepack pnpm --filter @jewelo/jobs measure-stencils [dir] [manifest]` (tsx 4.23.13 dev dependency). Production stencils measure 4 to 7 components for every English name with no claim in `render-report.json`.
+- plan-reviewer challenged P1-3 to P1-7 and found four blockers (test import breaks the build gate on export removal; solver has no PNG decoder; ring-free contradicts the frozen prompts; canvas and ink rule unspecified) and six majors (style-to-font map, pipeline release pin, silent identity failures, Next asset tracing, WASM deployability found last). Rows amended in `9f6f160`: P1-2b deploy probe and P1-5a prompt dependency added, rings default on with `IDENTITY_RINGLESS_CONSTRUCTIONS` behind config.
+
 Doing:
 
-- P1-2 (implementer): HarfBuzz shaping on the pinned font bytes, measured `fontSha256Measured` and `exactCharactersPreserved`, D-019.
-- P1-1 proof durability (implementer): `apps/jobs/scripts/measure-stencils.mts` plus a runnable package script.
-- plan-reviewer over P1-3 to P1-7 before those briefs are written.
+- P1-2b (platform): operator diagnostics route, deploy to staging, prove harfbuzz WASM and fonts survive the buildpack.
+- P1-3 (implementer): path-only 1024x1024 rasteriser from the HarfBuzz outlines, one `IdentityRasterizer` for both scripts, test files excluded from the build tsconfig.
 
 Follow-ups found by subagents, not fixed (outside the task rows):
 
