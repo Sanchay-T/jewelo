@@ -13,6 +13,7 @@
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {
+    "@jewelo/config": "workspace:*",
     "@jewelo/contracts": "workspace:*"
   }
 }

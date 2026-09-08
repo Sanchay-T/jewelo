@@ -43,7 +43,12 @@ const photoMaskFields = {
   // the close radius is sized against; halving the working width halves that
   // and the close can then no longer be smaller than the feature it must not
   // swallow.
-  PHOTO_MASK_WORK_WIDTH: z.coerce.number().int().min(192).max(1536).default(384),
+  PHOTO_MASK_WORK_WIDTH: z.coerce
+    .number()
+    .int()
+    .min(192)
+    .max(1536)
+    .default(384),
   // The gradient magnitude percentile that seeds the hysteresis, taken over
   // the gradient's own distribution rather than an absolute number. Measured,
   // not Otsu: a single Otsu cut on this corpus shatters the gradient into 84
@@ -130,7 +135,11 @@ const photoMaskFields = {
   // Registration bounds. A similarity transform outside any of these is
   // reported as `registration_failed`, never as a low IoU: the two mean
   // different things and only one of them is evidence about the pendant.
-  PHOTO_REGISTRATION_SCALE_MIN: z.coerce.number().min(0.05).max(1).default(0.25),
+  PHOTO_REGISTRATION_SCALE_MIN: z.coerce
+    .number()
+    .min(0.05)
+    .max(1)
+    .default(0.25),
   PHOTO_REGISTRATION_SCALE_MAX: z.coerce.number().min(1).max(20).default(4),
   PHOTO_REGISTRATION_ROTATION_MAX_DEGREES: z.coerce
     .number()
@@ -166,11 +175,7 @@ const photoMaskFields = {
     .min(1)
     .max(15)
     .default(5),
-  PHOTO_REGISTRATION_SCALE_SPAN: z.coerce
-    .number()
-    .min(1)
-    .max(4)
-    .default(1.6),
+  PHOTO_REGISTRATION_SCALE_SPAN: z.coerce.number().min(1).max(4).default(1.6),
   // Coordinate-descent rounds; each round halves the step in all four
   // parameters. Eight rounds take the scale step from 12% to 0.09%.
   PHOTO_REGISTRATION_REFINE_ROUNDS: z.coerce
@@ -443,4 +448,68 @@ export const webGuardEnvSchema = z.object({
   /** Presented as `x-readiness-token` by a deploy probe to read the readiness
    * dependency detail without an operator session. */
   READINESS_PROBE_TOKEN: optionalNonEmpty,
+});
+
+/* ------------------------------------------------------------------------- */
+/* Generation pipeline timing and budgets.                                    */
+/*                                                                            */
+/* Pipeline review 1, findings 2 and 10. Every one of these numbers used to be */
+/* a literal in business code: the 180 s provider timeout in                   */
+/* `packages/ai/src/studio.ts`, the two-minute stale window and the sweeper    */
+/* limit in `apps/web/src/inngest/functions.ts`, the poll count and interval   */
+/* in the same file, `expiresIn: 300` in four storage-signing call sites, and  */
+/* the attempt budget 3 in `apps/jobs/src/presentation.ts` and in three SQL    */
+/* functions. Two of them contradicted each other in production: the sweeper   */
+/* declared a task stale after two minutes while the provider call was still   */
+/* allowed to run for three, so a slow but successful generation was charged,  */
+/* recovered, blocked and then could not transition back.                      */
+/*                                                                            */
+/* The stale window is therefore not a number anyone can set: it is derived as */
+/* the provider timeout plus a validated margin, so the sweeper can never fire */
+/* while a provider call this process started is still legally running.        */
+/* ------------------------------------------------------------------------- */
+
+export const pipelineLimitsSchema = z
+  .object({
+    /** Hard ceiling on one provider image request, aborted by the adapter. */
+    providerRequestTimeoutMs: positiveInt.min(30_000).max(600_000),
+    /**
+     * Grace added to the provider timeout to get the stale window. It covers
+     * the work either side of the provider call inside one dispatch - the
+     * identity render, the storage upload, the verification read - so a task
+     * is only stale once no live dispatch could still be working on it.
+     */
+    staleRecoveryMarginMs: positiveInt.min(30_000).max(600_000),
+    /** `p_limit` for `recover_stale_generation_tasks`; the RPC caps it at 500. */
+    staleRecoveryLimit: positiveInt.max(500),
+    /** Poll attempts before a submitted video is declared timed out. */
+    videoPollMaxAttempts: positiveInt.max(600),
+    /** Sleep between two video polls, in whole seconds. */
+    videoPollIntervalSeconds: positiveInt.max(300),
+    /** Lifetime of a signed Supabase Storage URL handed to a provider. */
+    signedUrlExpirySeconds: positiveInt.min(60).max(3_600),
+    /**
+     * Paid attempts one task may make. The database is the authority - the
+     * `runtime_policy.provider_attempt_budget` column, which every SQL gate
+     * reads - and this is the value that column defaults to, used by the job
+     * only when the policy row cannot be read.
+     */
+    providerAttemptBudget: positiveInt.max(10),
+  })
+  .transform((value) => ({
+    ...value,
+    /** Derived, never configured: see the note above. */
+    staleRecoveryWindowMs:
+      value.providerRequestTimeoutMs + value.staleRecoveryMarginMs,
+  }));
+export type PipelineLimits = z.infer<typeof pipelineLimitsSchema>;
+
+export const pipelineLimits: PipelineLimits = pipelineLimitsSchema.parse({
+  providerRequestTimeoutMs: 180_000,
+  staleRecoveryMarginMs: 120_000,
+  staleRecoveryLimit: 100,
+  videoPollMaxAttempts: 60,
+  videoPollIntervalSeconds: 10,
+  signedUrlExpirySeconds: 300,
+  providerAttemptBudget: 3,
 });

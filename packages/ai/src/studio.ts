@@ -1,3 +1,5 @@
+import { pipelineLimits } from "@jewelo/config";
+
 export interface StudioGenerationInput {
   idempotencyKey: string;
   prompt: string;
@@ -136,7 +138,7 @@ export class OpenAIStillAdapter implements StudioGenerator {
           "Idempotency-Key": input.idempotencyKey,
         },
         body: form,
-        signal: AbortSignal.timeout(180_000),
+        signal: AbortSignal.timeout(pipelineLimits.providerRequestTimeoutMs),
       },
     );
     if (!response.ok)

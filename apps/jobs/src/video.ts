@@ -6,7 +6,7 @@ import {
   type MotionSubmission,
   type PromptProfile,
 } from "@jewelo/ai";
-import { parseJobsEnv } from "@jewelo/config";
+import { parseJobsEnv, pipelineLimits } from "@jewelo/config";
 import { isDuplicateObject } from "@jewelo/media";
 import { isTaskCancelled } from "./presentation";
 
@@ -150,7 +150,8 @@ export async function pollVideoTask(
       pollKeyPrefix: pollKeyPrefix(context.task, Number(context.task.attempt)),
     };
   if (result.state === "failed") {
-    const terminal = Number(context.task.attempt) >= 3;
+    const terminal =
+      Number(context.task.attempt) >= (await api.attemptBudget());
     await api.rpc("reconcile_provider_attempt", {
       p_task_id: taskId,
       p_attempt: context.task.attempt,
@@ -291,6 +292,22 @@ function supabase(url: string, key: string, fetcher: typeof fetch) {
         throw error;
       }
     },
+    /**
+     * Paid attempts this task may make, from the same `runtime_policy` row
+     * every SQL gate reads. The validated default in `packages/config` is the
+     * fallback and the same number the column defaults to.
+     */
+    async attemptBudget(): Promise<number> {
+      const rows = await request<
+        Array<{ provider_attempt_budget: number | null }>
+      >("runtime_policy?id=eq.true&select=provider_attempt_budget");
+      const budget = rows[0]?.provider_attempt_budget;
+      return typeof budget === "number" &&
+        Number.isInteger(budget) &&
+        budget > 0
+        ? budget
+        : pipelineLimits.providerAttemptBudget;
+    },
     rpc: <T = unknown>(name: string, body: Record<string, unknown>) =>
       request<T>(`rpc/${name}`, { method: "POST", body: JSON.stringify(body) }),
     patch: (table: string, filter: string, body: Record<string, unknown>) =>
@@ -305,8 +322,14 @@ function supabase(url: string, key: string, fetcher: typeof fetch) {
         body: JSON.stringify(body),
       }),
     async sign(bucket: string, path: string) {
+      // Segment by segment, so nothing in an object name can change which
+      // object is signed.
+      const encodedPath = path
+        .split("/")
+        .map((segment) => encodeURIComponent(segment))
+        .join("/");
       const response = await fetcher(
-        `${url}/storage/v1/object/sign/${bucket}/${path}`,
+        `${url}/storage/v1/object/sign/${encodeURIComponent(bucket)}/${encodedPath}`,
         {
           method: "POST",
           headers: {
@@ -314,7 +337,9 @@ function supabase(url: string, key: string, fetcher: typeof fetch) {
             authorization: `Bearer ${key}`,
             "content-type": "application/json",
           },
-          body: JSON.stringify({ expiresIn: 300 }),
+          body: JSON.stringify({
+            expiresIn: pipelineLimits.signedUrlExpirySeconds,
+          }),
         },
       );
       if (!response.ok)

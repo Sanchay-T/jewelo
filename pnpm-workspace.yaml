@@ -1,6 +1,13 @@
 packages:
   - "apps/*"
   - "packages/*"
+overrides:
+  # Security review 1 finding 12: transitive advisories with no direct dependency.
+  postcss: 8.5.28
+  qs: 6.16.0
+  # next 16.2.12 pulls sharp 0.34.5 for image optimisation; 0.35 patches the libvips CVEs.
+  sharp: 0.35.4
+  "@opentelemetry/core": 2.11.0
 allowBuilds:
   "@depot/cli": true
   esbuild: true

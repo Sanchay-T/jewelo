@@ -15,7 +15,7 @@ import {
   type StudioNameReader,
   type StudioVerifier,
 } from "@jewelo/ai";
-import { parseJobsEnv } from "@jewelo/config";
+import { parseJobsEnv, pipelineLimits } from "@jewelo/config";
 import { isDuplicateObject } from "@jewelo/media";
 import sharp from "sharp";
 import { renderIdentityAnchor } from "./identity-anchor";
@@ -174,6 +174,13 @@ export interface PresentationRepository {
     run: RunRow;
     error: unknown;
   }): Promise<void>;
+  /**
+   * Paid attempts this task may make, read from the same row the SQL gates
+   * read (`runtime_policy.provider_attempt_budget`). Optional so a repository
+   * that cannot reach the policy falls back to the validated default in
+   * `packages/config`; the database stays the authority whenever it answers.
+   */
+  providerAttemptBudget?(): Promise<number>;
 }
 
 /**
@@ -242,6 +249,22 @@ export function promptSnapshotRejectionClass(
   return sqlState === "22023" ? "invalid_argument" : undefined;
 }
 
+/**
+ * The leading category token of an error message, and nothing else.
+ *
+ * Used where a second failure has to be recorded next to the first one. An
+ * error raised inside this job is already a category string; an error raised by
+ * PostgREST is `Supabase job request <status>: <body>`, whose body can carry
+ * row values. Cutting at the first colon or newline keeps the class and drops
+ * the detail, so a customer's name can never reach `terminal_error_code`.
+ */
+function errorClass(error: unknown): string {
+  const message = error instanceof Error ? error.message : String(error);
+  const head = message.split(/[:\n]/, 1)[0] ?? "";
+  const token = head.trim().replaceAll(/[^A-Za-z0-9 ._-]/g, "");
+  return token.slice(0, 60) || "unknown";
+}
+
 export async function executePresentationTask(
   taskId: string,
   repository: PresentationRepository,
@@ -277,12 +300,18 @@ export async function executePresentationTask(
   const blockPreSpendTerminally = async (error: unknown) => {
     try {
       await repository.blockPreSpend({ task, run, error });
-    } catch {
+    } catch (blockError) {
+      // Pipeline review 1 finding 8: the bare catch discarded why the RPC
+      // refused, so an operator saw the gate's reason and no trace of the
+      // second failure. The cause is recorded as its class only.
+      const reason = error instanceof Error ? error.message : String(error);
       await repository.fail({
         task,
         run,
         attempt: task.attempt,
-        error,
+        error: new Error(
+          `${reason}|pre_spend_block_failed:${errorClass(blockError)}`,
+        ),
         terminal: true,
         actualCostCents: 0,
       });
@@ -404,6 +433,14 @@ export async function executePresentationTask(
   } catch (error) {
     return blockPreSpendTerminally(error);
   }
+  // The attempt budget is the database's, not this file's: `reserve_provider_attempt`,
+  // `retry_generation_task` and `operator_retry_generation_task` all refuse past
+  // the same `runtime_policy.provider_attempt_budget`, so a job that stopped one
+  // attempt earlier or later than the RPC would either waste a paid attempt or
+  // leave a task the RPC will never serve again looking retryable.
+  const attemptBudget =
+    (await repository.providerAttemptBudget?.()) ??
+    pipelineLimits.providerAttemptBudget;
   const checkpoint = await repository.loadStoredOutput(task);
   const provider = generator instanceof MockStudioGenerator ? "mock" : "openai";
   const model =
@@ -506,16 +543,34 @@ export async function executePresentationTask(
         const expected = revision.identity_anchor.approvedText;
         const reading = await nameReader.read(media, expected);
         const readText = reading.text;
-        const latinExpected = /^[\p{Script=Latin}\s'-]+$/u.test(expected);
+        // Pipeline review 1 finding 1. The script of a name is decided by its
+        // letters. The old class required the whole approved text to be Latin
+        // letters, spaces, `'` and `-`, so the two-name join
+        // `canonical_identity_anchor` writes ("SARA & OMAR"), a typographic
+        // apostrophe ("O’Neill") and any combining mark made the name
+        // "not Latin" - and the still was then required to contain Arabic,
+        // which it never did. Every attempt failed, three paid stills per view
+        // were spent, and the shopper was told the piece was unavailable.
+        const expectedLetters = expected.replaceAll(/\P{L}/gu, "");
+        const latinExpected = !/\p{Script=Arabic}/u.test(expectedLetters);
         const scriptOk = latinExpected
           ? !/\p{Script=Arabic}/u.test(readText)
           : /\p{Script=Arabic}/u.test(readText);
-        const passed =
-          scriptOk &&
-          (reading.matches || identityTextMatches(readText, expected));
-        record.nameCheck = { passed, readText, expected };
+        // Pipeline review 1 finding 3. The deterministic comparison is the only
+        // thing that can pass a still. The model's own `matches` is kept in the
+        // decision as evidence of what it claimed, and is never sufficient: a
+        // self-report was exactly what let wrong names through in August.
+        const passed = scriptOk && identityTextMatches(readText, expected);
+        record.nameCheck = {
+          passed,
+          readText,
+          expected,
+          scriptOk,
+          modelReportedMatch: reading.matches,
+        };
         if (!passed) {
-          const terminal = regeneration >= 2 || reservation.attempt >= 3;
+          const terminal =
+            regeneration >= 2 || reservation.attempt >= attemptBudget;
           if (repository.storeRejectedOutput)
             rejectedObjectPaths.push(
               await repository.storeRejectedOutput({
@@ -576,7 +631,7 @@ export async function executePresentationTask(
     }
   } catch (error) {
     if (isTaskCancelled(error)) return { status: "cancelled" as const };
-    const terminal = reservation.attempt >= 3;
+    const terminal = reservation.attempt >= attemptBudget;
     await repository.fail({
       task,
       run,
@@ -590,6 +645,12 @@ export async function executePresentationTask(
     return { status: "operator_review" as const, attempt: reservation.attempt };
   }
 }
+
+/**
+ * The shape of a reference-asset id in the specification: the opaque
+ * identifier the upload route mints, and nothing that can traverse a path.
+ */
+const REFERENCE_ASSET_ID = /^[a-zA-Z0-9_-]{1,128}$/;
 
 export class SupabasePresentationRepository implements PresentationRepository {
   constructor(
@@ -814,32 +875,30 @@ export class SupabasePresentationRepository implements PresentationRepository {
         `identity_pipeline_release_mismatch:task=${task.pipeline_release},report=${rendered.report.pipelineRelease}`,
       );
     const basePath = `principal/${ownerId}/revision/${revision.id}/identity-${rendered.fingerprint}`;
-    const bodies: Array<[string, Buffer, string]> = [
-      ["png", rendered.png, "image/png"],
-    ];
-    if (rendered.svg) bodies.unshift(["svg", rendered.svg, "image/svg+xml"]);
-    for (const [extension, body, contentType] of bodies) {
-      const uploadBody = body.buffer.slice(
-        body.byteOffset,
-        body.byteOffset + body.byteLength,
-      ) as ArrayBuffer;
-      const upload = await fetch(
-        `${this.url}/storage/v1/object/identity-anchors/${basePath}.${extension}`,
-        {
-          method: "POST",
-          headers: {
-            apikey: this.key,
-            authorization: `Bearer ${this.key}`,
-            "content-type": contentType,
-            "x-upsert": "false",
-          },
-          body: uploadBody,
+    // The engine renders a PNG and only a PNG: the stencil is rasterised from
+    // its own path data and the SVG never leaves `identityStencilSvg`. The
+    // upload loop used to branch on an `svg` field the renderer never sets, so
+    // it promised a second artifact that no run has ever written.
+    const uploadBody = rendered.png.buffer.slice(
+      rendered.png.byteOffset,
+      rendered.png.byteOffset + rendered.png.byteLength,
+    ) as ArrayBuffer;
+    const upload = await fetch(
+      `${this.url}/storage/v1/object/identity-anchors/${basePath}.png`,
+      {
+        method: "POST",
+        headers: {
+          apikey: this.key,
+          authorization: `Bearer ${this.key}`,
+          "content-type": "image/png",
+          "x-upsert": "false",
         },
-      );
-      const uploadDetail = await upload.text();
-      if (!upload.ok && !isDuplicateObject(upload, uploadDetail))
-        throw new Error(`identity anchor upload failed:${upload.status}`);
-    }
+        body: uploadBody,
+      },
+    );
+    const uploadDetail = await upload.text();
+    if (!upload.ok && !isDuplicateObject(upload, uploadDetail))
+      throw new Error(`identity anchor upload failed:${upload.status}`);
     // Four sibling tasks race to insert the same artifact; a loser can hit the
     // (bucket_id, object_path) unique key instead of the on_conflict target.
     try {
@@ -878,19 +937,12 @@ export class SupabasePresentationRepository implements PresentationRepository {
       method: "PATCH",
       body: JSON.stringify({ identity_artifact_id: artifactId }),
     });
-    const path = `${basePath}.png`;
-    const result = await this.#request<{
-      signedURL?: string;
-      signedUrl?: string;
-    }>(`/storage/v1/object/sign/identity-anchors/${path}`, {
-      method: "POST",
-      body: JSON.stringify({ expiresIn: 300 }),
-    });
-    const signed = result.signedURL ?? result.signedUrl;
-    if (!signed) throw new Error("identity_anchor_missing");
-    const url = signed.startsWith("http")
-      ? signed
-      : `${this.url}/storage/v1${signed}`;
+    // Through the shared signer so this path is percent-encoded segment by
+    // segment like every other one.
+    const url = await this.signedStorageUrl(
+      "identity-anchors",
+      `${basePath}.png`,
+    );
     return { url, fingerprint: rendered.fingerprint, artifactId };
   }
   async signedStyleAnchorUrl(task: TaskRow) {
@@ -967,6 +1019,14 @@ export class SupabasePresentationRepository implements PresentationRepository {
       (reference as Record<string, unknown>).fileName ?? "reference",
     ).replaceAll(/[^a-zA-Z0-9._-]/g, "_");
     if (!id) throw new Error("inspiration_reference_missing");
+    // Pipeline review 1 finding 5 / security review 1 finding 3. The
+    // specification is customer-supplied and, until the draft schema lands,
+    // unvalidated: this id was interpolated straight into a service-role
+    // storage path, where `..` segments normalise before the request and can
+    // read another principal's object. The id is an opaque identifier, so it
+    // is matched against its own shape rather than escaped.
+    if (!REFERENCE_ASSET_ID.test(id))
+      throw new Error("inspiration_reference_invalid");
     return this.signedStorageUrl(
       "references",
       `principal/${ownerId}/${id}/${fileName}`,
@@ -975,18 +1035,35 @@ export class SupabasePresentationRepository implements PresentationRepository {
     });
   }
   async signedStorageUrl(bucket: string, path: string) {
+    // Each segment is encoded on its own so a `/` inside a name stays a name
+    // and `.`, `..` or a space can never change which object is signed.
+    const encodedPath = path
+      .split("/")
+      .map((segment) => encodeURIComponent(segment))
+      .join("/");
     const result = await this.#request<{
       signedURL?: string;
       signedUrl?: string;
-    }>(`/storage/v1/object/sign/${bucket}/${path}`, {
+    }>(`/storage/v1/object/sign/${encodeURIComponent(bucket)}/${encodedPath}`, {
       method: "POST",
-      body: JSON.stringify({ expiresIn: 300 }),
+      body: JSON.stringify({
+        expiresIn: pipelineLimits.signedUrlExpirySeconds,
+      }),
     });
     const signed = result.signedURL ?? result.signedUrl;
     if (!signed) throw new Error("signed_storage_url_missing");
     return signed.startsWith("http")
       ? signed
       : `${this.url}/storage/v1${signed}`;
+  }
+  async providerAttemptBudget() {
+    const rows = await this.#request<
+      Array<{ provider_attempt_budget: number | null }>
+    >("/rest/v1/runtime_policy?id=eq.true&select=provider_attempt_budget");
+    const budget = rows[0]?.provider_attempt_budget;
+    return typeof budget === "number" && Number.isInteger(budget) && budget > 0
+      ? budget
+      : pipelineLimits.providerAttemptBudget;
   }
   async blockPreSpend(input: { task: TaskRow; run: RunRow; error: unknown }) {
     const message =

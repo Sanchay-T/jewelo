@@ -2,7 +2,6 @@ import "server-only";
 
 import { Inngest } from "inngest";
 
-import { concurrencyLimitSchema } from "@jewelo/config";
 import type { DispatchOperation } from "@jewelo/data/outbox-dispatch";
 
 /**
@@ -87,19 +86,4 @@ export const inngest = new Inngest({
  */
 export function cronFunctionsEnabled(): boolean {
   return process.env.INNGEST_CRON_ENABLED === "1";
-}
-
-/**
- * A provider concurrency limit, validated by `packages/config` instead of
- * clamped here: integer, 1..32, default 2. The previous local parser accepted
- * anything and defaulted `OPENAI_STILL_CONCURRENCY_LIMIT` to 4, so real mode
- * ran four paid generations at once while the validated configuration said two
- * and the deploy tooling had no way to lower it.
- *
- * `fallback` is accepted and ignored: the default belongs to the schema. It
- * stays in the signature only because `functions.ts` still passes one and that
- * file belongs to another task; drop the parameter with its last caller.
- */
-export function integerFromEnv(name: string, _fallback?: number): number {
-  return concurrencyLimitSchema.parse(process.env[name]) as number;
 }

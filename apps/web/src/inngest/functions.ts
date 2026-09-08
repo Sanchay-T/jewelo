@@ -11,27 +11,30 @@ import {
   submitVideoTask,
 } from "@jewelo/jobs/video";
 
+import { concurrencyLimitSchema, pipelineLimits } from "@jewelo/config";
+
 import { sendJobEvent } from "../lib/backend/job-dispatch";
-import {
-  cronFunctionsEnabled,
-  inngest,
-  integerFromEnv,
-  JOB_EVENTS,
-} from "./client";
+import { cronFunctionsEnabled, inngest, JOB_EVENTS } from "./client";
+
+/**
+ * A provider concurrency limit, validated by `packages/config` rather than
+ * clamped here: integer, 1..32, default 2.
+ */
+function concurrencyLimit(name: string): number {
+  return concurrencyLimitSchema.parse(process.env[name]) as number;
+}
 
 /** Mirrors the old `openai-image` Trigger queue: one shared, keyed sub-queue. */
 const openAIImageConcurrency = {
   key: '"openai-image"',
-  limit: integerFromEnv("OPENAI_STILL_CONCURRENCY_LIMIT", 4),
+  limit: concurrencyLimit("OPENAI_STILL_CONCURRENCY_LIMIT"),
 } as const;
 
 /** Mirrors the old `fal-video` Trigger queue. */
 const falVideoConcurrency = {
   key: '"fal-video"',
-  limit: integerFromEnv("FAL_VIDEO_CONCURRENCY_LIMIT", 2),
+  limit: concurrencyLimit("FAL_VIDEO_CONCURRENCY_LIMIT"),
 } as const;
-
-const MAX_VIDEO_POLLS = 60;
 
 /**
  * Next narrows `process.env`, so the service-role pair is read explicitly.
@@ -49,12 +52,13 @@ function jobEnvironment(): Record<string, string | undefined> {
  *
  * `retries: 0` on purpose: a process-level retry cannot prove whether OpenAI
  * accepted and charged for the interrupted attempt. Paid retries are owned by
- * durable attempt state in Postgres (`reserveAttempt`, attempt budget 3) and
+ * durable attempt state in Postgres (`reserveAttempt`, whose budget is
+ * `runtime_policy.provider_attempt_budget`) and
  * re-dispatched by `stale-media-recovery`.
  *
  * There is deliberately NO function-level `idempotency` key. The outbox
  * re-dispatches the same `taskId` legitimately - an operator retry and the
- * two-minute stale sweeper both write a fresh `dispatch_idempotency_key` - and
+ * stale sweeper both write a fresh `dispatch_idempotency_key` - and
  * a function-level key on `event.data.taskId` would silently swallow those for
  * 24 hours. Exactly-once is carried by the event `id`, which is that durable
  * dispatch key (see `sendJobEvent`).
@@ -184,7 +188,9 @@ export const videoSubmit = inngest.createFunction(
   },
   async ({ event, step }) => {
     const taskId = String(event.data.taskId);
-    const result = await step.run("submit-video", () => submitVideoTask(taskId));
+    const result = await step.run("submit-video", () =>
+      submitVideoTask(taskId),
+    );
     if (result.status === "submitted")
       await step.sendEvent("start-video-poll", {
         name: JOB_EVENTS.video_poll,
@@ -212,12 +218,19 @@ export const videoPoll = inngest.createFunction(
   async ({ event, step }) => {
     const taskId = String(event.data.taskId);
     const start = Number(event.data.pollCount ?? 0);
-    for (let pollCount = start; pollCount < MAX_VIDEO_POLLS; pollCount += 1) {
+    for (
+      let pollCount = start;
+      pollCount < pipelineLimits.videoPollMaxAttempts;
+      pollCount += 1
+    ) {
       const result = await step.run(`poll-video-${pollCount}`, () =>
         pollVideoTask(taskId),
       );
       if (result.status !== "pending") return result;
-      await step.sleep(`wait-${pollCount}`, "10s");
+      await step.sleep(
+        `wait-${pollCount}`,
+        `${pipelineLimits.videoPollIntervalSeconds}s`,
+      );
     }
     return step.run("mark-video-poll-timeout", () =>
       markVideoPollTimeout(taskId),
@@ -244,7 +257,12 @@ async function recoverStaleTasks(
   const url = environment.SUPABASE_URL;
   const key = environment.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !key) throw new Error("Supabase jobs configuration missing");
-  const staleBefore = new Date(Date.now() - 2 * 60 * 1_000).toISOString();
+  // Derived from the provider timeout, never a standalone number: a task is
+  // stale only once no dispatch that started a provider call could still be
+  // inside one (pipeline review 1 finding 2).
+  const staleBefore = new Date(
+    Date.now() - pipelineLimits.staleRecoveryWindowMs,
+  ).toISOString();
   const response = await fetch(
     `${url}/rest/v1/rpc/recover_stale_generation_tasks`,
     {
@@ -254,7 +272,10 @@ async function recoverStaleTasks(
         authorization: `Bearer ${key}`,
         "content-type": "application/json",
       },
-      body: JSON.stringify({ p_stale_before: staleBefore, p_limit: 100 }),
+      body: JSON.stringify({
+        p_stale_before: staleBefore,
+        p_limit: pipelineLimits.staleRecoveryLimit,
+      }),
     },
   );
   if (!response.ok)
