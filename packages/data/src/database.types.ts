@@ -1403,6 +1403,7 @@ export type Database = {
           id: boolean
           max_reserved_spend_cents: number
           provider_attempt_budget: number
+          studio_only: boolean
           studio_reservation_cents: number
           supabase_region: string
           updated_at: string
@@ -1416,6 +1417,7 @@ export type Database = {
           id?: boolean
           max_reserved_spend_cents?: number
           provider_attempt_budget?: number
+          studio_only?: boolean
           studio_reservation_cents?: number
           supabase_region?: string
           updated_at?: string
@@ -1429,6 +1431,7 @@ export type Database = {
           id?: boolean
           max_reserved_spend_cents?: number
           provider_attempt_budget?: number
+          studio_only?: boolean
           studio_reservation_cents?: number
           supabase_region?: string
           updated_at?: string

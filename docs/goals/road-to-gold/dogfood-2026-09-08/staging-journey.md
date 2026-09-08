@@ -168,6 +168,43 @@ Taking the default therefore needs a change, which P5-1 does not make: the three
 The smallest honest shape is one additive migration: a `runtime_policy.studio_only boolean not null default false` column plus a `create or replace` of `expand_final_media_run` that, when the flag is on, skips the 300-cent booking and inserts the three dependents as `cancelled` with `reservation_cents = 0`, then `corepack pnpm db:types`. Roughly 60 SQL lines, no TypeScript: the atelier already maps `cancelled` tasks to an honest end state (P6-3, P6-6).
 The zero-code alternative, if the lead prefers not to add a column before the first paid call, is `provider_attempt_budget = 1` in the same policy row: it does not stop the fan-out, but it caps the day at 2 runs x 4 views = 8 stills instead of 24.
 
+### DS-6 done: the studio-only switch (2026-09-09, migration `20260909010000_runtime_policy_studio_only.sql`)
+
+The column and the branch in `expand_final_media_run` described above exist now, pushed to staging and proved at zero spend in mock mode.
+`public.runtime_policy.studio_only boolean not null default false`: with it false the function is what it was, statement for statement; with it true the three dependent views are inserted `cancelled`, `reservation_cents = 0`, `reservation_usage_date null`, `terminal_error_code 'studio_only_policy'`, no 300-cent booking, and the `pipeline.final_media_pinned` audit event records `taskCount 1, studioOnly true` instead of a flat 4.
+
+The P5-2 recipe, in order:
+
+```sql
+-- 1. the launch caps from the P5-1 section above
+update public.runtime_policy
+set global_max_reserved_spend_cents = 800,
+    global_daily_generation_limit = 2,
+    daily_generation_limit = 2,
+    updated_at = now()
+where id = true;
+
+-- 2. one image per run, before PROVIDER_MODE=real is shipped
+update public.runtime_policy set studio_only = true, updated_at = now() where id = true;
+select id, studio_only, global_max_reserved_spend_cents, global_daily_generation_limit, daily_generation_limit
+from public.runtime_policy;
+
+-- 3. ship PROVIDER_MODE=real, deploy, smoke.
+
+-- 4. once DS-6 is satisfied, the other three views come back
+update public.runtime_policy set studio_only = false, updated_at = now() where id = true;
+-- then the P5-3 cap restore recorded in the P5-1 section.
+```
+
+Both branches driven end to end over HTTPS against `https://jewelo-staging-gqumd.ondigitalocean.app` in `PROVIDER_MODE=mock`, zero spend:
+
+- `studio_only = false`, run `9f5991c0-6f1a-4e2a-ba35-0ed6a7a3cfc3`: four tasks `ready` at attempt 1, four `provider_attempts`, run `complete`, `reserved_spend_cents 0` after reconcile, audit `taskCount 4, studioOnly false`. Unchanged from the two baseline runs above.
+- `studio_only = true`, run `d6f03864-1ed3-4483-8aa3-800fa283e84a`: `studio ready` at attempt 1; `on_skin`, `close_up`, `dark` all `cancelled` with `studio_only_policy`, attempt 0, 0 cents, no usage date. Exactly one `provider_attempts` row (`b9ad69f4`, `succeeded`, 0 cents) and exactly one `outbox_events` row for the run, so exactly one image would have been billed. Immediately after approve, `principal_daily_usage` showed `runs_started 1, reserved_spend_cents 100` - the studio reservation alone, not 400. Run reached `complete`, not `partial`: `refresh_run_status` already counts a still view that is `ready` or `cancelled` as settled.
+
+`/api/state` for the studio-only run returns the same four rows the database holds (`studio ready`, three `cancelled` carrying `studio_only_policy`), and `apps/web/src/features/atelier/personalizedRun.ts` reads a `cancelled` task as `reachable: false`, so `customerViewStatus` returns `unavailable` for those three views - the shop photographs them by hand. No TypeScript change was needed.
+
+`studio_only` was set back to `false` and read back in the same statement; the caps were already at the restored values and were not touched.
+
 ### P5-1 caps restored by the lead (2026-09-08 22:30 UTC)
 
 The launch caps were proved binding above and then set back to the previous values (`daily_generation_limit 30`, `global_max_reserved_spend_cents 6000`, `global_daily_generation_limit 100`), read back in the same statement.

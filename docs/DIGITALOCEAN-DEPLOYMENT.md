@@ -326,6 +326,36 @@ the checks it refuses on, and the SQL readback.
 It is idempotent, so rerunning it on a project that already has them re-hashes the
 stored bytes and creates no new version.
 
+### Studio-only switch for the first real-provider run (added 9 September 2026, P5-2 / DS-6)
+
+`public.runtime_policy.studio_only` decides how many images a run can bill.
+It is false everywhere by default, and with it false nothing about a run changes:
+`expand_final_media_run` creates the studio still plus the three dependent views,
+books 100 cents for each and lets the dependents run once the studio still is ready.
+Set it true and the same run is created with one dispatchable task: the three
+dependents are written `cancelled` with `reservation_cents = 0` and
+`terminal_error_code = 'studio_only_policy'`, no reservation is booked for them,
+`release_dependent_tasks` never picks them up, and the atelier shows those three
+views as unavailable, which is the shop's own honest sentence about them.
+One run then bills one image instead of four, or three instead of twelve once
+`provider_attempt_budget = 3` retries are counted.
+
+The order for P5-2, first real-provider smoke on staging:
+
+1. Apply the launch caps recorded in
+   `docs/goals/road-to-gold/dogfood-2026-09-08/staging-journey.md` (`P5-1 caps`):
+   `global_max_reserved_spend_cents 800`, `global_daily_generation_limit 2`,
+   `daily_generation_limit 2`.
+2. `update public.runtime_policy set studio_only = true, updated_at = now() where id = true;`
+   and read the row back.
+3. Ship `PROVIDER_MODE=real` (spec update plus deploy) and smoke it.
+4. Once DS-6 is satisfied - a real studio still has been produced, inspected and
+   accepted - `update public.runtime_policy set studio_only = false, updated_at = now() where id = true;`
+   to re-enable the other three views, then restore the caps per P5-3.
+
+The flag is read once, at expansion time, so flipping it never leaves a run half
+booked: every run keeps the shape of the policy it was created under.
+
 ## Production cutover
 
 Production cutover is a controlled transition, not another preview push:
