@@ -54,10 +54,12 @@ Done:
 - P1-5 and P1-5a in `c68fdc7`: `addRings` ported from `make_stencil.py` (11x11 erosion, corner anchors, weld fillet) plus one deliberate improvement, the ring lifts until its hole holds no name ink (the lab punches 7 to 55 pixels out of a hairline on 6 of its own 16 stencils; this engine punches 0 on 464 renders). 232/232 rings-on cells have exactly two ring holes, sizes within 1.7% of the lab's; rings-off gives 0 ring holes and one piece. `IDENTITY_RINGLESS_CONSTRUCTIONS` is validated config (normalises case, spaces, trailing comma; rejects non-hyphen ids) and is absent from the staging spec. Lead compared `asma-en-classic` against the committed lab stencil: same rings, same holes.
 - Review 1 of the engine (P1-2 to P1-4) recorded in `docs/goals/road-to-gold/reviews/identity-engine-review-1.md`: the port's maths verified against the sources; four majors (ink assertion checked before rings, endpoint-only cluster coverage, ring literal 560, customer name in error-class columns) and ten minors, each with an owner.
 
+- Review 1 fixes in `12087fa`, reproved by the lead: `identity_ring_punched_ink` fires on an injected block (642 pixels); character coverage is per codepoint with `setClusterLevel(2)` plus a reshape probe so ligature-swallowed indices (آلاء, عبدالله on rakkas) pass while a private-use or unsupported combining mark mid-name fails with the index; no customer text in any solver error message (four persistence paths in `presentation.ts` listed); `identity_fit_overflow` at 45 Latin characters while `Abdulrahman Nooralhuda` still fits; `ENVELOPE_BOUNDARY`; diagnostics `pathExists` from `existsSync`. New follow-up: the minimum font size now sets a hard name-length ceiling (about 40 Latin characters) and the customer form does not say so.
+
 Doing:
 
-- Review 1 fix pass (implementer): findings 1, 2, 4, 7, 9, 11.
-- P1-6 next, then P1-7.
+- P1-6 (implementer): report equals measurement, `decodePng` on the rasterizer port, `passed` from the decoded PNG only, `caleums-final-media-v2` migration, `PIPELINE_RELEASE_ID` config.
+- P1-7 next (platform): db push, next.config tracing, staging mock runs, production stencils regenerated.
 
 Follow-ups found by subagents, not fixed (outside the task rows):
 
