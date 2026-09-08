@@ -141,7 +141,6 @@ const arabic: Record<string, string> = {
   "Keep this bag": "احتفظ بالحقيبة",
   "Cancel editing": "إلغاء التعديل",
   "Continue designing": "متابعة التصميم",
-  "Checkout unavailable": "الدفع غير متاح",
   "Local sample preview": "معاينة تجريبية محلية",
   "Sample image · Asma": "صورة تجريبية · أسماء",
   "Saved on this device": "محفوظ على هذا الجهاز",
@@ -2574,9 +2573,6 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
           ) : (
             <p>{t("Saved locally on this device. Prices are unconfirmed; no order has been placed.")}</p>
           )}
-          <button className={s.primary} disabled>
-            {t("Checkout unavailable")}
-          </button>
         </div>
       </dialog>
       <dialog

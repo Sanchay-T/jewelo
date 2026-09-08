@@ -489,26 +489,16 @@ export class SupabaseJeweloClient implements LegacyJeweloClient {
     return structuredClone(this.#requireDesign(designId));
   }
 
-  async issueQuote(designId: string) {
-    const design = this.#requireDesign(designId);
-    const quote = design.quote;
-    if (!quote || quote.status !== "requested")
-      throw new Error("Quote request required");
-    await this.#request("/api/operator/commands", {
-      method: "POST",
-      body: JSON.stringify({
-        command: "issue_quote",
-        designId,
-        targetId: quote.id,
-        idempotencyKey: this.#idempotency("issue-quote", quote.id),
-        payload: {
-          total: quote.total || 2290,
-          expiresAt: new Date(Date.now() + 7 * 86400_000).toISOString(),
-        },
-      }),
-    });
-    await this.#loadState(designId);
-    return structuredClone(this.#requireDesign(designId));
+  /**
+   * Pricing is not part of the request-only launch. There is no operator
+   * surface that issues a price, and there is no agreed price list to send,
+   * so this fails closed instead of inventing a total. It stays on the client
+   * because the port declares it; it becomes real when Omran gives us a price
+   * list and a checkout.
+   */
+  async issueQuote(designId: string): Promise<never> {
+    this.#requireDesign(designId);
+    throw new Error("Pricing is handled in the shop, not in this app");
   }
 
   async acceptQuote(designId: string) {
