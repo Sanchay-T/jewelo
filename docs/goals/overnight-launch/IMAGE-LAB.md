@@ -520,7 +520,7 @@ Exact spelling and glyph order from Image 1. One connected piece. Exactly two ju
 
 `pass` / `tweak` / `fail` are the viewer's verdicts. This lab never scored its own images.
 
-### Stage 1 - Studio, 4 looks x 2 scripts - 16 of 38 passed
+### Stage 1 - Studio, 4 looks x 2 scripts - 17 of 38 passed
 
 | Cell | attempts | pass | defects seen |
 | --- | --- | :--: | --- |
@@ -528,21 +528,21 @@ Exact spelling and glyph order from Image 1. One connected piece. Exactly two ju
 | `classical-en` | a1:pass a2:pass a3:pass a4:fail | 3/4 | `disconnected-component` |
 | `diamond-rails-ar` | a1:tweak a2:pass a3:fail a4:fail | 1/4 | `chain-not-through-ring`, `missing-glyph`, `missing-ring`, `wrong-look` |
 | `diamond-rails-en` | a1:pass a2:pass a3:pass a4:pass | 4/4 | - |
-| `framed-minimal-ar` | a1:fail a2:pass a3:pass a4:tweak a5:unscored a6:unscored a7:unscored | 2/7 | `extra-ring`, `unsupported-geometry` |
+| `framed-minimal-ar` | a1:fail a2:pass a3:pass a4:tweak a5:pass a6:unscored a7:unscored | 3/7 | `extra-ring`, `unsupported-geometry` |
 | `framed-minimal-en` | a1:fail a2:pass a3:pass a4:pass a5:unscored a6:unscored a7:unscored | 3/7 | `extra-ring` |
 | `origami-ribbon-ar` | a1:tweak a2:pass a3:fail a4:tweak | 1/4 | `cgi-look`, `chain-not-through-ring`, `wrong-look` |
 | `origami-ribbon-en` | a1:tweak a2:tweak a3:pass a4:fail | 1/4 | `cgi-look`, `disconnected-component`, `floating-mark`, `wrong-look` |
 
-### Stage 2 - holdout names (Noor, Layla, Muhammad), v4.3 framed-minimal - 0 of 12 passed
+### Stage 2 - holdout names (Noor, Layla, Muhammad), v4.3 framed-minimal - 5 of 12 passed
 
 | Cell | attempts | pass | defects seen |
 | --- | --- | :--: | --- |
-| `framed-minimal-layla-ar` | a1:unscored a2:unscored | 0/2 | - |
-| `framed-minimal-layla-en` | a1:unscored a2:unscored | 0/2 | - |
+| `framed-minimal-layla-ar` | a1:pass a2:unscored | 1/2 | - |
+| `framed-minimal-layla-en` | a1:tweak a2:unscored | 0/2 | `unsupported-geometry` |
 | `framed-minimal-muhammad-ar` | a1:unscored a2:unscored | 0/2 | - |
 | `framed-minimal-muhammad-en` | a1:unscored a2:unscored | 0/2 | - |
-| `framed-minimal-noor-ar` | a1:unscored a2:unscored | 0/2 | - |
-| `framed-minimal-noor-en` | a1:unscored a2:unscored | 0/2 | - |
+| `framed-minimal-noor-ar` | a1:pass a2:pass | 2/2 | - |
+| `framed-minimal-noor-en` | a1:pass a2:pass | 2/2 | - |
 
 ### Stage 3 - dependent views - 24 of 25 passed
 
@@ -603,12 +603,12 @@ Exact spelling and glyph order from Image 1. One connected piece. Exactly two ju
 
 | Stage | images | pass | tweak | fail | pass rate |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| stage1 | 38 | 16 | 6 | 10 | 42% |
-| stage2 | 12 | 0 | 0 | 0 | 0% |
+| stage1 | 38 | 17 | 6 | 10 | 45% |
+| stage2 | 12 | 5 | 1 | 0 | 42% |
 | stage3 | 25 | 24 | 1 | 0 | 96% |
 | stage4 | 12 | 6 | 3 | 3 | 50% |
 | stage5 | 4 | 3 | 1 | 0 | 75% |
-| **all** | **91** | **49** | **11** | **13** | **54%** |
+| **all** | **91** | **55** | **12** | **13** | **60%** |
 
 ### Defect frequency across the whole lab
 
@@ -621,15 +621,15 @@ Exact spelling and glyph order from Image 1. One connected piece. Exactly two ju
 | `wrong-display` | 3 | photography |
 | `cgi-look` | 2 | photography |
 | `disconnected-component` | 2 | geometry |
+| `unsupported-geometry` | 2 | geometry |
 | `missing-ring` | 1 | attachment |
 | `floating-mark` | 1 | identity |
-| `unsupported-geometry` | 1 | geometry |
 | `missing-glyph` | 1 | identity |
 | `floating-stone` | 1 | geometry |
 
-By class: attachment 9, brief 8, photography 5, geometry 4, identity 2.
+By class: attachment 9, brief 8, photography 5, geometry 5, identity 2.
 
-## Every passed file (49)
+## Every passed file (55)
 
 | Stage | Cell | Attempt | File |
 | --- | --- | :--: | --- |
@@ -644,11 +644,17 @@ By class: attachment 9, brief 8, photography 5, geometry 4, identity 2.
 | stage1 | `diamond-rails-en` | a4 | `docs/goals/overnight-launch/lab/stage1/diamond-rails-en-a4.png` |
 | stage1 | `framed-minimal-ar` | a2 | `docs/goals/overnight-launch/lab/stage1/framed-minimal-ar-a2.png` |
 | stage1 | `framed-minimal-ar` | a3 | `docs/goals/overnight-launch/lab/stage1/framed-minimal-ar-a3.png` |
+| stage1 | `framed-minimal-ar` | a5 | `docs/goals/overnight-launch/lab/stage1/framed-minimal-ar-a5.png` |
 | stage1 | `framed-minimal-en` | a2 | `docs/goals/overnight-launch/lab/stage1/framed-minimal-en-a2.png` |
 | stage1 | `framed-minimal-en` | a3 | `docs/goals/overnight-launch/lab/stage1/framed-minimal-en-a3.png` |
 | stage1 | `framed-minimal-en` | a4 | `docs/goals/overnight-launch/lab/stage1/framed-minimal-en-a4.png` |
 | stage1 | `origami-ribbon-ar` | a2 | `docs/goals/overnight-launch/lab/stage1/origami-ribbon-ar-a2.png` |
 | stage1 | `origami-ribbon-en` | a3 | `docs/goals/overnight-launch/lab/stage1/origami-ribbon-en-a3.png` |
+| stage2 | `framed-minimal-layla-ar` | a1 | `docs/goals/overnight-launch/lab/stage2/framed-minimal-layla-ar-a1.png` |
+| stage2 | `framed-minimal-noor-ar` | a1 | `docs/goals/overnight-launch/lab/stage2/framed-minimal-noor-ar-a1.png` |
+| stage2 | `framed-minimal-noor-ar` | a2 | `docs/goals/overnight-launch/lab/stage2/framed-minimal-noor-ar-a2.png` |
+| stage2 | `framed-minimal-noor-en` | a1 | `docs/goals/overnight-launch/lab/stage2/framed-minimal-noor-en-a1.png` |
+| stage2 | `framed-minimal-noor-en` | a2 | `docs/goals/overnight-launch/lab/stage2/framed-minimal-noor-en-a2.png` |
 | stage3 | `classical-ar-close-up` | a1 | `docs/goals/overnight-launch/lab/stage3/classical-ar-close-up-a1.png` |
 | stage3 | `classical-ar-dark` | a1 | `docs/goals/overnight-launch/lab/stage3/classical-ar-dark-a1.png` |
 | stage3 | `classical-ar-on-skin` | a1 | `docs/goals/overnight-launch/lab/stage3/classical-ar-on-skin-a1.png` |

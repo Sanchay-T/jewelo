@@ -13,6 +13,7 @@
     "lint": "eslint src",
     "measure-stencils": "tsx scripts/measure-stencils.mts",
     "render-stencils": "tsx scripts/render-stencils.mts",
+    "replay-lab": "tsx scripts/replay-lab.mts",
     "test": "vitest run",
     "typecheck": "tsc -p tsconfig.json"
   },
