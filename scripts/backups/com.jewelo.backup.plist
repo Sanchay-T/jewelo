@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Nightly Jewelo database backup on home-mini, 03:30 local time (home-mini runs
+  IST, so this is 03:30 IST / 22:00 UTC the previous day).
+
+  Install:
+    cp scripts/backups/com.jewelo.backup.plist ~/Library/LaunchAgents/
+    launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.jewelo.backup.plist
+    launchctl enable gui/$(id -u)/com.jewelo.backup
+  Run once by hand:
+    launchctl kickstart -k gui/$(id -u)/com.jewelo.backup
+  Remove:
+    launchctl bootout gui/$(id -u)/com.jewelo.backup
+
+  Paths are absolute on purpose: launchd gives a job almost no environment.
+-->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.jewelo.backup</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string>
+    <string>/Users/sanchay/hq/projects/devonel/jewelo/scripts/backups/dump.sh</string>
+  </array>
+
+  <key>WorkingDirectory</key>
+  <string>/Users/sanchay/hq/projects/devonel/jewelo</string>
+
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PATH</key>
+    <string>/opt/homebrew/bin:/opt/homebrew/opt/postgresql@17/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+    <key>HOME</key>
+    <string>/Users/sanchay</string>
+  </dict>
+
+  <key>StartCalendarInterval</key>
+  <dict>
+    <key>Hour</key><integer>3</integer>
+    <key>Minute</key><integer>30</integer>
+  </dict>
+
+  <!-- The Mac sleeps; a missed 03:30 runs as soon as it is awake again. -->
+  <key>RunAtLoad</key>
+  <false/>
+
+  <key>StandardOutPath</key>
+  <string>/Users/sanchay/backups/jewelo/backup.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/sanchay/backups/jewelo/backup.log</string>
+</dict>
+</plist>
