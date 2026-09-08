@@ -87,9 +87,11 @@ Done:
 
 - P3-1 committed: viewer scored the 11 unscored images (10 pass, 1 tweak: `framed-minimal-layla-en` a2 floats its letters inside the frame, second time for that cell); lead opened the three flagged images and accepted the ring-looped-around-the-bar attachment as a pass (chain through the ring, manufacturable). Ledger 91/91 scored: 65 pass, 13 tweak, 13 fail. v4.3 studio 3/3 on both scripts, holdout 10/12. `finalise.py` run with the real Runway balance from `whoami` (305,042), budget paragraph restored in `IMAGE-LAB.md`.
 
+- P3-2 and P3-4 committed (lead verified: frozen hash compiles, unfrozen refuses with the hash named; planner plans, replans as a no-op, refuses a holdout leak, reserves and unreserves; ingest now skips planned rows). Review of the security and tooling commits recorded in `reviews/security-tooling-fix-review-1.md`: no blocker, four majors (transliteration limiter widened by the composite key, letterless names accepted, some real Latin names rejected, anonymous cap on a route the site never calls); security fix 2 in flight for all but the last, which is a Supabase dashboard setting under Needs Sanchay.
+
 Doing:
 
-- P3-2 (implementer): `holdout.json` keyed by prompt hash, `compile.mjs` refuses unfrozen holdout names.
+- Security fix 2 (implementer): two limiters on transliteration, letter requirement and wider Latin set in the name schema, trusted-header config, env sync in `deploy.sh`, readiness never 500, one `mockMode`, dead export removed.
 - Pipeline fix 1 deploy and re-proof (platform), reviewer on `b7590a4`, reviewer on the security and tooling commits.
 - D-020 redesign (implementer): outline-level ring anchors from glyph contours and GDEF classes, bar fallback instead of refusal, ring-hole area gate, lift cap removed, the small package-review items, manifest and README brought in line.
 
