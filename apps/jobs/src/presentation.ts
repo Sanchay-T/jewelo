@@ -454,7 +454,11 @@ export async function executePresentationTask(
     return blockPreSpendTerminally(error);
   }
   // D-020, fix pass 6: there is no bar rail any more and no flag that lets one
-  // through. `ringPlacement` is `welded` or `none`, and a name whose lettering
+  // through. `ringPlacement` is `welded`, `frame` (P2-2b: the construction the
+  // shopper chose carries the rings on its own frame or rails, and the solver
+  // gates that piece exactly as it gates a welded one) or `none`, and this file
+  // branches on none of them: every refusal is an `IdentitySolverError` raised
+  // inside the render. A name whose lettering
   // offers no ring seat makes the solver throw `identity_no_ring_seat` inside
   // the identity render above - which is inside this same try, so it lands in
   // `blockPreSpendTerminally` before the attempt budget is read, before any

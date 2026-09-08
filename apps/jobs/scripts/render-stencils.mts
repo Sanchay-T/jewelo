@@ -90,6 +90,104 @@ const HARNESS_OWNERSHIP_GROWTH = 2;
 /** Smallest ring hole area accepted, as a fraction of the ideal disc. */
 const HARNESS_RING_HOLE_MIN_AREA_FRACTION = 0.9;
 
+/* -------------------------------------------------------------------------
+ * P2-2b construction geometry, restated from the drawing spec for the same
+ * reason the ring geometry above is: so a frame the engine drew wrongly is
+ * caught by a disagreement rather than agreed with. The harness rebuilds, from
+ * the letters-only render alone, where the name has to sit and where each rail
+ * centreline has to run, and prints the worst disagreement with the engine's
+ * claim as `CARRIER-DELTA`.
+ * ---------------------------------------------------------------------- */
+
+/** Canvas and the box a finished piece is centred inside, px. */
+const HARNESS_CANVAS = 1024;
+const HARNESS_RECENTRE_BOX = HARNESS_CANVAS - 2 * 56;
+/** Rail thickness of a frame or a rail, px. */
+const HARNESS_RAIL_WIDTH = 26;
+/** Clear gap between the name's ink box and the inner edge of a frame rail, px. */
+const HARNESS_FRAME_INSET = 34;
+/** Corner radius of the frame centreline, px, clamped to half the shorter side. */
+const HARNESS_FRAME_CORNER_RADIUS = 44;
+/** Clear gap between the name's ink box and a `diamond-rails` rail, px. */
+const HARNESS_RAIL_GAP = 34;
+/** How far each `diamond-rails` rail runs past the name, per side, px. */
+const HARNESS_RAIL_OVERHANG = 48;
+/** How far in from a rail end or a frame corner a ring centre sits, px. */
+const HARNESS_RING_END_INSET = 48;
+/** Metal a carrier ring reaches above the outer edge of its rail, px. */
+const HARNESS_CARRIER_RING_HEADROOM =
+  HARNESS_RING_OUTER - 16 + HARNESS_RING_OUTER - HARNESS_RAIL_WIDTH / 2;
+
+/** Which constructions carry structure, and which structure each one carries. */
+const HARNESS_CARRIER_KINDS: Readonly<Record<string, "frame" | "rails">> = {
+  "framed-minimal": "frame",
+  "diamond-rails": "rails",
+};
+
+interface HarnessPadding {
+  readonly left: number;
+  readonly right: number;
+  readonly top: number;
+  readonly bottom: number;
+}
+
+function harnessPadding(kind: "frame" | "rails"): HarnessPadding {
+  if (kind === "frame") {
+    const side = HARNESS_FRAME_INSET + HARNESS_RAIL_WIDTH;
+    return {
+      left: side,
+      right: side,
+      bottom: side,
+      top: side + HARNESS_CARRIER_RING_HEADROOM,
+    };
+  }
+  const rail = HARNESS_RAIL_GAP + HARNESS_RAIL_WIDTH;
+  const end = HARNESS_RAIL_OVERHANG + HARNESS_RAIL_WIDTH / 2;
+  return {
+    left: end,
+    right: end,
+    bottom: rail,
+    top: rail + HARNESS_CARRIER_RING_HEADROOM,
+  };
+}
+
+/**
+ * Where the name lands once room has been made for its structure, computed from
+ * the letters-only render's own ink box and this file's own padding rule.
+ */
+function harnessPlacement(
+  kind: "frame" | "rails",
+  nameWidth: number,
+  nameHeight: number,
+): {
+  readonly scale: number;
+  readonly width: number;
+  readonly height: number;
+  readonly left: number;
+  readonly top: number;
+} {
+  const padding = harnessPadding(kind);
+  const scale = Math.min(
+    1,
+    (HARNESS_RECENTRE_BOX - padding.left - padding.right) / nameWidth,
+    (HARNESS_RECENTRE_BOX - padding.top - padding.bottom) / nameHeight,
+  );
+  const width = scale < 1 ? Math.max(1, Math.trunc(nameWidth * scale)) : nameWidth;
+  const height =
+    scale < 1 ? Math.max(1, Math.trunc(nameHeight * scale)) : nameHeight;
+  return {
+    scale,
+    width,
+    height,
+    left:
+      Math.floor((HARNESS_CANVAS - (width + padding.left + padding.right)) / 2) +
+      padding.left,
+    top:
+      Math.floor((HARNESS_CANVAS - (height + padding.top + padding.bottom)) / 2) +
+      padding.top,
+  };
+}
+
 /** The four names the image lab measures, in both scripts. */
 const NAMES: readonly {
   readonly label: string;
@@ -262,16 +360,38 @@ const SCRIPTS: readonly IdentityScript[] = ["en", "ar"];
  * deployment.
  */
 const RINGLESS_CONSTRUCTION = "framed-minimal";
+/**
+ * P2-2b. `--construction=<id>` renders the whole sweep for one pendant
+ * construction. `framed-minimal` and `diamond-rails` draw a frame and a pair of
+ * rails into the stencil and hang the rings from that structure, so every cell
+ * of those two sweeps is a different piece from the `classical` sweep and has
+ * to be measured on its own.
+ */
 const flags = process.argv.slice(2).filter((value) => value.startsWith("--"));
 const ringsOff = flags.includes("--rings=off");
-if (flags.some((flag) => flag !== "--rings=off" && flag !== "--rings=on"))
+const constructionFlag = flags.find((flag) =>
+  flag.startsWith("--construction="),
+);
+if (
+  flags.some(
+    (flag) =>
+      flag !== "--rings=off" &&
+      flag !== "--rings=on" &&
+      !flag.startsWith("--construction="),
+  )
+)
   throw new Error(`unknown flag among ${JSON.stringify(flags)}`);
+const requestedConstruction = constructionFlag?.slice(
+  "--construction=".length,
+);
 const ringlessConstructions: ReadonlySet<string> = ringsOff
   ? new Set([RINGLESS_CONSTRUCTION])
   : new Set<string>();
 const specificationConstruction = ringsOff
   ? RINGLESS_CONSTRUCTION
-  : "classical";
+  : (requestedConstruction ?? "classical");
+/** The structure this sweep's construction carries, if it carries any. */
+const sweepCarrier = HARNESS_CARRIER_KINDS[specificationConstruction];
 
 const positional = process.argv
   .slice(2)
@@ -314,8 +434,14 @@ interface Row {
   readonly recentreOffsetY: number;
   /** P1-5: rings the solver welded on, and where it says it put them. */
   readonly jumpRings: number;
-  /** D-020: `welded` on letter strokes, `bar` on the fallback rail, `none`. */
+  /** D-020 and P2-2b: `welded` on letter strokes, `frame` on the structure, `none`. */
   readonly ringPlacement: string;
+  /**
+   * P2-2b: the worst disagreement in pixels between the structure the engine
+   * claims and the structure this file computes from the letters alone; -1 on a
+   * construction that carries none.
+   */
+  readonly carrierDelta: number;
   /** D-020: the carrier the solver chose per ring, `glyph:contour`. */
   readonly ringCarriers: readonly string[];
   /** The smallest hole area this cell's rings may have, after the downscale. */
@@ -415,6 +541,98 @@ function ringHoleFloor(construction: {
 const mapForward = (value: number, scale: number, offset: number): number =>
   value * scale + offset;
 
+/**
+ * The worst disagreement, in pixels, between the structure the engine says it
+ * drew and the structure this file computes from the letters alone.
+ *
+ * The letters-only render gives the name's box in the rasteriser's own
+ * coordinates; the padding rule and the fit arithmetic above then say where the
+ * name has to land and where each rail centreline has to run. Nothing here
+ * reads the engine's numbers except to subtract them, so a frame drawn at the
+ * wrong inset or a ring anchored off the rail prints as a delta instead of
+ * being agreed with. `-1` means the engine claimed no structure at all.
+ */
+function carrierDelta(
+  pre: PreRingMask,
+  kind: "frame" | "rails",
+  claimed: {
+    readonly nameBox: readonly [number, number, number, number];
+    readonly segments: readonly {
+      readonly rail: string;
+      readonly x0: number;
+      readonly y0: number;
+      readonly x1: number;
+      readonly y1: number;
+    }[];
+    readonly ringAnchors: readonly { readonly x: number; readonly y: number }[];
+  } | null,
+): number {
+  if (!claimed) return -1;
+  const placement = harnessPlacement(
+    kind,
+    pre.nameBox[2] - pre.nameBox[0] + 1,
+    pre.nameBox[3] - pre.nameBox[1] + 1,
+  );
+  const nx0 = placement.left;
+  const ny0 = placement.top;
+  const nx1 = placement.left + placement.width - 1;
+  const ny1 = placement.top + placement.height - 1;
+  const half = HARNESS_RAIL_WIDTH / 2;
+  let topY: number;
+  let bottomY: number;
+  let anchors: readonly { x: number; y: number }[];
+  if (kind === "frame") {
+    const cx0 = nx0 - HARNESS_FRAME_INSET - half;
+    const cx1 = nx1 + HARNESS_FRAME_INSET + half;
+    const cy0 = ny0 - HARNESS_FRAME_INSET - half;
+    const cy1 = ny1 + HARNESS_FRAME_INSET + half;
+    const radius = Math.min(
+      HARNESS_FRAME_CORNER_RADIUS,
+      Math.floor((cx1 - cx0) / 2),
+      Math.floor((cy1 - cy0) / 2),
+    );
+    const inset = Math.max(HARNESS_RING_END_INSET, radius);
+    topY = cy0;
+    bottomY = cy1;
+    anchors = [
+      { x: Math.round(cx0 + inset), y: Math.round(cy0) },
+      { x: Math.round(cx1 - inset), y: Math.round(cy0) },
+    ];
+  } else {
+    topY = ny0 - HARNESS_RAIL_GAP - half;
+    bottomY = ny1 + HARNESS_RAIL_GAP + half;
+    anchors = [
+      {
+        x: Math.round(nx0 - HARNESS_RAIL_OVERHANG + HARNESS_RING_END_INSET),
+        y: Math.round(topY),
+      },
+      {
+        x: Math.round(nx1 + HARNESS_RAIL_OVERHANG - HARNESS_RING_END_INSET),
+        y: Math.round(topY),
+      },
+    ];
+  }
+  const claimedTop = claimed.segments.find((segment) => segment.rail === "top");
+  const claimedBottom = claimed.segments.find(
+    (segment) => segment.rail === "bottom",
+  );
+  const deltas = [
+    Math.abs(claimed.nameBox[0] - nx0),
+    Math.abs(claimed.nameBox[1] - ny0),
+    Math.abs(claimed.nameBox[2] - nx1),
+    Math.abs(claimed.nameBox[3] - ny1),
+    Math.abs((claimedTop?.y0 ?? Number.NaN) - topY),
+    Math.abs((claimedBottom?.y0 ?? Number.NaN) - bottomY),
+    ...claimed.ringAnchors.map((anchor, index) =>
+      Math.max(
+        Math.abs(anchor.x - (anchors[index]?.x ?? Number.NaN)),
+        Math.abs(anchor.y - (anchors[index]?.y ?? Number.NaN)),
+      ),
+    ),
+  ];
+  return Math.max(...deltas);
+}
+
 interface RingMeasurement {
   readonly glyphTop: number;
   readonly ringHoles: readonly RingHole[];
@@ -437,42 +655,99 @@ interface RingMeasurement {
  * pre-recentre point forward through the *rings-off* transform and reading that
  * pixel of the rings-off decode. Nothing in it comes from the engine's
  * in-memory mask.
+ *
+ * P2-2b. The plane is the *letters*, so the ring-free render is always the
+ * letters-only construction, never the construction under test: on a framed or
+ * railed piece the ring is meant to grip the rail, and a plane that carried the
+ * rail would report the weld as swallowed metal. The gate is what it always
+ * was, "no letter under a ring", and this is the plane that says it.
+ *
+ * On a carrier construction the letters have been moved and resampled to make
+ * room for the structure, so the two renders no longer share a frame.
+ * `toTypeset` is this file's own restatement of that placement - the padding
+ * rule and the fit arithmetic, from the drawing spec, not from the report - and
+ * it takes a point of the piece under test back to the letters-only raster.
  */
 interface PreRingMask {
   readonly width: number;
   readonly height: number;
   readonly at: (x: number, y: number) => boolean;
+  /** The same point in the letters-only raster's coordinates. */
+  readonly toTypeset: (x: number, y: number) => { x: number; y: number };
+  /** The letters' ink box in that raster, `[minX, minY, maxX, maxY]`. */
+  readonly nameBox: readonly [number, number, number, number];
 }
+
+/** The letters-only construction: no structure and no rings, just the name. */
+const PRE_RING_CONSTRUCTION = "classical";
 
 async function renderPreRingMask(
   text: string,
   script: IdentityScript,
   style: string,
   fingerprint: string,
+  carrier?: "frame" | "rails",
 ): Promise<PreRingMask> {
   const off = await renderIdentityAnchor(
     { approvedText: text, language: script, typography: style, fingerprint },
     {
       arabicStyle: style,
       lettering: style,
-      construction: RINGLESS_CONSTRUCTION,
+      construction: PRE_RING_CONSTRUCTION,
       layout: "single-name",
       connector: "none",
       names: [{ approvedArabicText: script === "ar" ? text : null }],
       dimensions: { widthMm: 32, heightMm: 12, thicknessMm: 1.2 },
     },
     "caleums-final-media-v2",
-    new Set([RINGLESS_CONSTRUCTION]),
+    new Set([PRE_RING_CONSTRUCTION]),
   );
   const decoded = await decodeMask(off.png);
   const { recentreScale, recentreScaleY, recentreOffsetX, recentreOffsetY } =
     off.construction;
+  // The letters' box in the rasteriser's own coordinates: the box measured on
+  // this file's decode, taken back through the transform that render reported.
+  const measuredOff = measureMask(decoded);
+  const offBox = measuredOff.bbox ?? [0, 0, 0, 0];
+  const nameBox: readonly [number, number, number, number] = [
+    Math.round((offBox[0] - recentreOffsetX) / recentreScale),
+    Math.round((offBox[1] - recentreOffsetY) / recentreScaleY),
+    Math.round((offBox[2] - recentreOffsetX) / recentreScale),
+    Math.round((offBox[3] - recentreOffsetY) / recentreScaleY),
+  ];
+  const placement = carrier
+    ? harnessPlacement(
+        carrier,
+        nameBox[2] - nameBox[0] + 1,
+        nameBox[3] - nameBox[1] + 1,
+      )
+    : undefined;
+  const toTypeset = (x: number, y: number): { x: number; y: number } =>
+    placement
+      ? {
+          x:
+            nameBox[0] +
+            ((x - placement.left) * (nameBox[2] - nameBox[0] + 1)) /
+              placement.width,
+          y:
+            nameBox[1] +
+            ((y - placement.top) * (nameBox[3] - nameBox[1] + 1)) /
+              placement.height,
+        }
+      : { x, y };
   return {
     width: decoded.width,
     height: decoded.height,
+    nameBox,
+    toTypeset,
     at: (x, y) => {
-      const fx = Math.round(mapForward(x, recentreScale, recentreOffsetX));
-      const fy = Math.round(mapForward(y, recentreScaleY, recentreOffsetY));
+      const source = toTypeset(x, y);
+      const fx = Math.round(
+        mapForward(source.x, recentreScale, recentreOffsetX),
+      );
+      const fy = Math.round(
+        mapForward(source.y, recentreScaleY, recentreOffsetY),
+      );
       if (fx < 0 || fy < 0 || fx >= decoded.width || fy >= decoded.height)
         return false;
       return decoded.ink[fy * decoded.width + fx] !== 0;
@@ -688,6 +963,11 @@ function measureRingMetal(
           const carrier = glyphs
             .find((glyph) => glyph.index === centre.glyphIndex)
             ?.contours[centre.contourIndex];
+          // P2-2b: the outlines are in the rasteriser's coordinates, and on a
+          // carrier construction the letters have been moved out of them, so
+          // the point is taken back there first. On every other construction
+          // this is the identity.
+          const source = pre.toTypeset(x + 0.5, y + 0.5);
           let onCarrier = false;
           if (carrier)
             for (
@@ -700,7 +980,7 @@ function measureRingMetal(
                 dy <= HARNESS_OWNERSHIP_GROWTH;
                 dy += 1
               )
-                if (inPolygon(x + 0.5 + dx, y + 0.5 + dy, carrier.points))
+                if (inPolygon(source.x + dx, source.y + dy, carrier.points))
                   onCarrier = true;
           if (onCarrier) continue;
           let foreign = false;
@@ -717,7 +997,7 @@ function measureRingMetal(
                 continue;
               const outline = glyph.contours[contour];
               if (!outline) continue;
-              if (inPolygon(x + 0.5, y + 0.5, outline.points)) foreign = true;
+              if (inPolygon(source.x, source.y, outline.points)) foreign = true;
             }
           if (foreign) {
             foreignUnderFillet += 1;
@@ -862,18 +1142,23 @@ for (const name of NAMES) {
       // The independent welded and punched counts: the same name rendered
       // again with no rings, decoded, and compared with the ring geometry the
       // engine claims. Two files and a claim, not a number the engine restates.
+      const pre = await renderPreRingMask(
+        text,
+        script,
+        lettering,
+        `p1-3-off-${name.label}-${script}-${lettering}`,
+        sweepCarrier,
+      );
       const metal = ringsOff
         ? { welded: 0, punched: 0, foreignUnderFillet: 0 }
         : measureRingMetal(
-            await renderPreRingMask(
-              text,
-              script,
-              lettering,
-              `p1-3-off-${name.label}-${script}-${lettering}`,
-            ),
+            pre,
             rendered.construction.ringCentres,
             layout.glyphs,
           );
+      const carrierPixelDelta = sweepCarrier
+        ? carrierDelta(pre, sweepCarrier, rendered.construction.carrier)
+        : -1;
 
       rows.push({
         report: rendered.report,
@@ -913,6 +1198,7 @@ for (const name of NAMES) {
             `${centre.glyphIndex}:${centre.contourIndex}@${centre.candidateIndex}`,
         ),
         ringHoleFloor: ringHoleFloor(rendered.construction),
+        carrierDelta: carrierPixelDelta,
         measuredPunchedByRings: metal.punched,
         measuredWeldedIntoRingMetal: metal.welded,
         claimedPunchedByRings: rendered.construction.glyphPixelsPunchedByRings,
@@ -1004,6 +1290,11 @@ console.log(
   ringsOff
     ? `P1-5 rings OFF (construction "${RINGLESS_CONSTRUCTION}" is in the ring-free set).`
     : `P1-5 rings ON (the default). Ring radii: outer ${HARNESS_RING_OUTER}px, inner ${HARNESS_RING_INNER}px.`,
+);
+console.log(
+  sweepCarrier
+    ? `P2-2b construction "${specificationConstruction}": the stencil carries a ${sweepCarrier === "frame" ? "rectangular frame" : "pair of rails"} and the rings hang from it.`
+    : `P2-2b construction "${specificationConstruction}": the piece is the lettering alone.`,
 );
 console.log(
   "glyphTop is the pre-ring ink box top, mapped through the recentre transform.",
@@ -1255,6 +1546,10 @@ writeFileSync(
         recentreOffsetY: row.recentreOffsetY,
         ringPlacement: row.ringPlacement,
         ringCarriers: row.ringCarriers,
+        // P2-2b: what this sweep asked for, and how far the structure the
+        // engine drew is from the one this file computed from the letters.
+        constructionId: specificationConstruction,
+        carrierDelta: row.carrierDelta,
         ringTilt: row.ringTilt,
         ringOverhang: row.ringOverhang,
         seatSearchSteps: row.seatSearchSteps,
@@ -1308,6 +1603,17 @@ mkdirSync(matrixDirectory, { recursive: true });
 
 interface MatrixCell {
   readonly file: string;
+  /**
+   * P2-2b. The worst disagreement in pixels between the structure the engine
+   * claims and the one this file computes from the letters alone (-1 when the
+   * construction carries none), the welds the name was held into it by, the
+   * bars the general connector still had to draw afterwards, and the scale the
+   * name was resampled by to make room.
+   */
+  readonly carrierDelta: number;
+  readonly carrierWelds: number;
+  readonly carrierBridges: number;
+  readonly carrierNameScale: number;
   readonly components: number;
   readonly islandsBeforeBridging: number;
   readonly bridges: number;
@@ -1409,6 +1715,10 @@ for (const name of MATRIX_NAMES) {
         matrix.set(cellKey(name.label, script, style), {
           file,
           refused,
+          carrierDelta: -1,
+          carrierWelds: 0,
+          carrierBridges: 0,
+          carrierNameScale: 1,
           components: 0,
           jumpRings: 0,
           ringPlacement: "-",
@@ -1454,20 +1764,29 @@ for (const name of MATRIX_NAMES) {
           script,
         }),
       );
+      const pre = await renderPreRingMask(
+        text,
+        script,
+        style,
+        `p1-4-off-${name.label}-${script}-${style}`,
+        sweepCarrier,
+      );
       const metal = ringsOff
         ? { welded: 0, punched: 0, foreignUnderFillet: 0 }
         : measureRingMetal(
-            await renderPreRingMask(
-              text,
-              script,
-              style,
-              `p1-4-off-${name.label}-${script}-${style}`,
-            ),
+            pre,
             rendered.construction.ringCentres,
             cellLayout.glyphs,
           );
+      const carrierPixelDelta = sweepCarrier
+        ? carrierDelta(pre, sweepCarrier, rendered.construction.carrier)
+        : -1;
       matrix.set(cellKey(name.label, script, style), {
         file,
+        carrierDelta: carrierPixelDelta,
+        carrierWelds: rendered.construction.carrier?.welds ?? 0,
+        carrierBridges: rendered.construction.carrier?.bridges ?? 0,
+        carrierNameScale: rendered.construction.carrier?.nameScale ?? 1,
         components: measured.components,
         jumpRings: rendered.construction.jumpRings,
         ringPlacement: rendered.construction.ringPlacement,
@@ -1763,6 +2082,43 @@ console.log(
           .join(" ")}`
       : ""),
 );
+// P2-2b. The same shape of statement about the structure: this file computed
+// where the frame or the rails had to be from the letters alone, and prints
+// every cell where the engine put them somewhere else.
+if (sweepCarrier) {
+  const carrierCells = matrixCells.filter((cell) => cell.carrierDelta >= 0);
+  const carrierOff = carrierCells.filter((cell) => cell.carrierDelta !== 0);
+  console.log(
+    `MATRIX CARRIER-DELTA ${carrierOff.length}/${carrierCells.length} ${specificationConstruction} cells where this harness and the engine disagree on the structure` +
+      (carrierOff.length
+        ? `: ${carrierOff
+            .slice(0, 12)
+            .map((cell) => `${cell.file}:${cell.carrierDelta}px`)
+            .join(" ")}`
+        : ""),
+  );
+  const unheld = carrierCells.filter(
+    (cell) => cell.carrierWelds < 2 || cell.carrierBridges > 0,
+  );
+  console.log(
+    `MATRIX CARRIER-WELDS ${carrierCells.length - unheld.length}/${carrierCells.length} cells hold the name into the structure with at least two welds and no connector bar after them` +
+      (unheld.length
+        ? `: ${unheld
+            .slice(0, 12)
+            .map(
+              (cell) =>
+                `${cell.file}:welds=${cell.carrierWelds},bars=${cell.carrierBridges}`,
+            )
+            .join(" ")}`
+        : ""),
+  );
+  const scales = carrierCells
+    .map((cell) => cell.carrierNameScale)
+    .sort((left, right) => left - right);
+  console.log(
+    `MATRIX CARRIER-NAME-SCALE min ${(scales[0] ?? 1).toFixed(3)} max ${(scales[scales.length - 1] ?? 1).toFixed(3)} over ${scales.length} cells`,
+  );
+}
 const undersized = matrixCells.filter((cell) =>
   cell.ringHoleSizes.some((size) => size < cell.ringHoleFloor),
 );

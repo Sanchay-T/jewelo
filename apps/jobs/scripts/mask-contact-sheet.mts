@@ -33,6 +33,7 @@ import { parsePhotoMaskEnv, type PhotoMaskConfig } from "@jewelo/config";
 import sharp from "sharp";
 
 import { decodeMask } from "../src/decode-mask";
+import { renderIdentityAnchor } from "../src/identity-anchor";
 import {
   buildPhotoPendantMask,
   projectStencil,
@@ -72,7 +73,24 @@ interface ReplayRow {
   readonly file: string;
   readonly fileResolved: boolean;
   readonly stencil: string | null;
+  /** P2-2b: what a construction stencil for this row would have to say. */
+  readonly approvedText: string | null;
+  readonly script: string | null;
 }
+
+/**
+ * P2-2b. `--construction-stencils` renders the stencil for a row whose look
+ * carries structure through the production engine, instead of reading the
+ * ledger's bare-name PNG.
+ *
+ * P2-2 measured the corpus and found no separation, and the reason was not the
+ * mask: the ledger stencil for a `framed-minimal` still is the name alone while
+ * the photograph is a name inside a frame, so the registration was comparing
+ * two different objects. D-021 made the stencil carry the construction, and
+ * this is the flag that measures whether that closed the gap. It is opt-in so
+ * the P2-2 numbers stay reproducible line for line.
+ */
+const CONSTRUCTION_STENCIL_LOOKS = new Set(["framed-minimal", "diamond-rails"]);
 
 interface SheetRow {
   readonly id: string;
@@ -142,7 +160,58 @@ function asRow(value: unknown): ReplayRow | null {
     file,
     fileResolved: record["fileResolved"] === true,
     stencil: typeof stencil === "string" ? stencil : null,
+    approvedText:
+      typeof record["approvedText"] === "string"
+        ? (record["approvedText"] as string)
+        : null,
+    script: typeof record["script"] === "string" ? (record["script"] as string) : null,
   };
+}
+
+/**
+ * The stencil bytes this row is registered against: the ledger's file, or the
+ * piece the production engine draws for this row's construction.
+ *
+ * The lettering comes from the ledger stencil's own name (`asma-en-classic`),
+ * because that is what the lab rendered the still from; only the construction
+ * changes, so a difference in the numbers is the construction and nothing else.
+ */
+async function stencilBytesFor(
+  row: ReplayRow,
+  stencilPath: string,
+  useConstruction: boolean,
+): Promise<Buffer> {
+  const look = row.look;
+  if (
+    !useConstruction ||
+    look === null ||
+    !CONSTRUCTION_STENCIL_LOOKS.has(look) ||
+    row.approvedText === null ||
+    row.script === null
+  )
+    return readFileSync(stencilPath);
+  const lettering = /-(classic|kufi)\.png$/.exec(stencilPath)?.[1] ?? "classic";
+  const script = row.script === "ar" ? "ar" : "en";
+  const rendered = await renderIdentityAnchor(
+    {
+      approvedText: row.approvedText,
+      language: script,
+      typography: lettering,
+      fingerprint: `p2-2b-${row.id}`,
+    },
+    {
+      arabicStyle: lettering,
+      lettering,
+      construction: look,
+      layout: "single-name",
+      connector: "none",
+      names: [{ approvedArabicText: script === "ar" ? row.approvedText : null }],
+      dimensions: { widthMm: 32, heightMm: 12, thicknessMm: 1.2 },
+    },
+    "caleums-final-media-v2",
+    new Set<string>(),
+  );
+  return rendered.png;
 }
 
 /**
@@ -332,6 +401,11 @@ async function main(): Promise<void> {
   const reportPath = resolveArgumentPath(argumentValue("report") ?? DEFAULT_REPORT);
   const outDirectory = resolveArgumentPath(argumentValue("out") ?? DEFAULT_OUT);
   const dumpId = argumentValue("dump");
+  // P2-2b: register the two structural looks against the piece the production
+  // engine draws for them, not against the ledger's bare name.
+  const useConstructionStencils = process.argv
+    .slice(2)
+    .includes("--construction-stencils");
   const limitArgument = argumentValue("limit");
   const limit =
     limitArgument === null ? Number.POSITIVE_INFINITY : Number(limitArgument);
@@ -370,7 +444,9 @@ async function main(): Promise<void> {
     const mask = await buildPhotoPendantMask(readFileSync(stillPath), config, {
       trace,
     });
-    const stencil = await decodeMask(readFileSync(stencilPath));
+    const stencil = await decodeMask(
+      await stencilBytesFor(row, stencilPath, useConstructionStencils),
+    );
     const registration: RegistrationResult = registerStencilToPhoto(
       stencil,
       mask,
@@ -464,10 +540,14 @@ async function main(): Promise<void> {
   }
   say("");
   say(
-    "studio human passes by look - the stencil is the whole piece only for `classical`;",
+    useConstructionStencils
+      ? "studio human passes by look - `framed-minimal` and `diamond-rails` are registered against"
+      : "studio human passes by look - the stencil is the whole piece only for `classical`;",
   );
   say(
-    "  every other look adds a frame, a rail or a ribbon that no stencil in this corpus carries:",
+    useConstructionStencils
+      ? "  the construction stencil the production engine draws (D-021); `origami-ribbon` is still a bare name:"
+      : "  every other look adds a frame, a rail or a ribbon that no stencil in this corpus carries:",
   );
   for (const look of [...new Set(sheetRows.map((row) => row.look))].sort()) {
     const passes = studioPasses.filter((row) => row.look === look);

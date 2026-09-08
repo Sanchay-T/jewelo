@@ -120,6 +120,15 @@ interface StencilCrossCheck {
     readonly recentreScaleY: number;
     readonly recentreOffsetX: number;
     readonly recentreOffsetY: number;
+    /**
+     * P2-2b: the structure the construction added, when it added one. Only
+     * `nameScale` is read: a framed or railed piece resamples the name to make
+     * room for its frame before anything is drawn, so the ink floor below is a
+     * floor on the *scaled* name, not on the name the bridging pass counted.
+     * Without it the check compares two different pieces and passes only
+     * because the frame's own metal happens to make up the difference.
+     */
+    readonly carrier?: { readonly nameScale: number } | null;
   };
 }
 
@@ -166,8 +175,11 @@ function crossCheckClaim(
     failures.push(
       `claimed ink ${claimed.inkPixelsPreserved} of ${claimed.inkPixelsBeforeBridging} preserved`,
     );
+  const nameScale = claimed.carrier?.nameScale ?? 1;
   const floor =
     claimed.inkPixelsPreserved *
+    nameScale *
+    nameScale *
     claimed.recentreScale *
     claimed.recentreScaleY *
     INK_SCALE_TOLERANCE;

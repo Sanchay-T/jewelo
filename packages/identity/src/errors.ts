@@ -25,6 +25,8 @@ export class IdentitySolverError extends Error {
       | "identity_fit_overflow"
       | "identity_bridge_failed"
       | "identity_bridge_moved_ink"
+      | "identity_carrier_no_room"
+      | "identity_carrier_moved_ink"
       | "identity_recentre_too_large"
       | "identity_component_gate_failed"
       | "identity_ring_gate_failed"

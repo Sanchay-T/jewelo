@@ -458,6 +458,81 @@ export const IDENTITY_RING_WELD_OVERLAP = 16;
  */
 export const IDENTITY_RING_COUNT = 2;
 
+/* -------------------------------------------------------------------------
+ * P2-2b. Construction geometry: the stencil is the whole physical piece.
+ *
+ * `framed-minimal` and `diamond-rails` are not lettering variants, they are
+ * different pendants: the lab's own look briefs
+ * (`docs/goals/overnight-launch/lab/compile.mjs:57-84`) put the name inside a
+ * rectangular frame with the rings in its two top corners, and between two
+ * straight rails with the rings at their two outer ends. Until this pass the
+ * stencil was the bare name for all four constructions, so the P2-2 contact
+ * sheet registered a name against a photograph of a framed pendant and the IoU
+ * could not separate a correct piece from a wrong one.
+ *
+ * These are drawing numbers, not deployment numbers: they take part in the
+ * fingerprint, they belong to the engine release the same way
+ * `IDENTITY_RING_OUTER` does, and a pendant whose frame thickness can be
+ * changed from a deployment console is a pendant nobody verified. They sit here
+ * with the rest of the drawing spec rather than in `@jewelo/config`, which
+ * carries what an operator may set.
+ * ---------------------------------------------------------------------- */
+
+/**
+ * Rail thickness of a frame or a rail, in pixels: about 1.1 mm of metal on a
+ * 32 mm pendant, the same order as `IDENTITY_BRIDGE_WIDTH` so the frame reads
+ * as the same cast metal as the letters rather than as a drawn outline.
+ */
+export const IDENTITY_CARRIER_RAIL_WIDTH = 26;
+
+/** Clear gap between the name's ink box and the inner edge of a frame rail. */
+export const IDENTITY_CARRIER_FRAME_INSET = 34;
+
+/**
+ * Corner radius of the frame's centreline, in pixels ("softly rounded corners"
+ * in the look brief). Clamped per piece to half the frame's shorter side, so a
+ * short name cannot ask for a corner larger than the frame it belongs to.
+ */
+export const IDENTITY_CARRIER_FRAME_CORNER_RADIUS = 44;
+
+/**
+ * Straight capsules per quarter turn of a corner. The corner is drawn with the
+ * same `drawBar` primitive as every bridge, so there is one rasteriser in the
+ * engine and the Python reference can reproduce it.
+ */
+export const IDENTITY_CARRIER_CORNER_SEGMENTS = 8;
+
+/** Clear gap between the name's ink box and the inner edge of a `diamond-rails` rail. */
+export const IDENTITY_CARRIER_RAIL_GAP = 34;
+
+/** How far each `diamond-rails` rail runs past the name's ink, per side. */
+export const IDENTITY_CARRIER_RAIL_OVERHANG = 48;
+
+/**
+ * How far a carrier ring's centre sits inward from the corner of the frame, or
+ * from the end of the top rail, measured along the rail centreline. Far enough
+ * in that the ring stands on straight rail rather than on the corner arc, near
+ * enough out that the two rings hold the piece from its ends: the overhang gate
+ * measures the result on the decoded PNG either way.
+ */
+export const IDENTITY_CARRIER_RING_END_INSET = 48;
+
+/** Welds per rail: the look brief's "no fewer than two separate places". */
+export const IDENTITY_CARRIER_WELDS_PER_RAIL = 2;
+
+/**
+ * Smallest the name may be scaled to make room for its construction.
+ *
+ * The name is fitted to the canvas before the construction exists, so a frame
+ * or a pair of rails needs room the layout did not leave. The name is scaled
+ * down about the assembly's centre, exactly the way `recentre` scales a piece
+ * that overflows its box, and below this floor the piece is refused with
+ * `identity_carrier_no_room` rather than shipped as lettering too small to
+ * read. Measured over the 576-cell matrix the deepest scale any cell needed is
+ * printed by the render harness.
+ */
+export const IDENTITY_CARRIER_MIN_NAME_SCALE = 0.6;
+
 /**
  * Side of the square erosion window that decides what counts as load-bearing
  * metal before a ring is anchored (`np.ones((11, 11), bool)`).

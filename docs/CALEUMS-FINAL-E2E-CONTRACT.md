@@ -89,11 +89,30 @@ width, so no end of the piece is cantilevered.
 When no pair of carriers meets those gates the engine raises
 `identity_no_ring_seat`. That is a terminal pre-spend block with a code and no
 customer text, and the run goes to the shop rather than to a provider.
-`ringPlacement` has two values, `welded` and `none`, and `none` means a
-construction that carries its own suspension. The rail that used to catch this
-case is gone: measured, it touched `قق` along 11% of its span and the pendant
-hung from two nuqta through a 24 px bridge, so it was a picture of a suspension
-rather than one.
+`ringPlacement` has three values, `welded`, `frame` and `none`; `none` means a
+construction that carries its own suspension and the caller asked for no rings.
+The rail that used to catch this case is gone: measured, it touched `قق` along
+11% of its span and the pendant hung from two nuqta through a 24 px bridge, so
+it was a picture of a suspension rather than one.
+
+The stencil is the whole physical piece, not only the name (D-021, P2-2b). The
+construction the shopper chose is a shape input to the engine and part of the
+fingerprint. `classical` and `origami-ribbon` are the lettering alone - the
+ribbon's folded facets are a finish, so the stencil says nothing about them and
+no gate claims them. `framed-minimal` draws a rectangular frame with softly
+rounded corners around the name, welded at the baseline in two places, with the
+two rings in its top corners; `diamond-rails` draws a straight rail above and
+below the name, welded to each in two places, with the two rings at the outer
+ends of the top rail. Both are drawn from validated engine constants with the
+same capsule primitive as the bridges, the name is resampled to make room for
+its structure and refused with `identity_carrier_no_room` if the structure
+cannot fit, and the structure may only add metal
+(`identity_carrier_moved_ink`). `ringPlacement` is then `frame` and
+`carrier.kind` says which structure; the report carries the rail centrelines,
+the outer box, the name box, the welds and the ring anchors in pixels, so a
+verifier registers the pendant the shopper chose rather than a bare name against
+a photograph of a framed piece. Every ring gate above still runs on the encoded
+bytes: the two rings are level by construction and the tilt is measured anyway.
 
 The measured ring gates (`identity_ring_punched_ink`,
 `identity_ring_welded_to_glyph`, `identity_ring_hole_too_small`,
@@ -185,6 +204,14 @@ Managed immutable profiles are `image.packshot`, `image.worn`,
 `verification.image`. `image.studio` remains readable only for legacy seeded
 tasks. Draft/validate/publish/rollback/history reject unknown, malformed, or
 missing `{{variables}}`; publication affects only new tasks.
+
+The four customer-facing still profiles are published at `@v2` (P3-7): the image
+lab's measured prompt family `caleums-universal-v4.3`, one release per view,
+with the shot brief baked in and the pendant construction carried by the
+`construction` variable. `construction` is the sixteenth prompt variable and is
+allowed but never required, so every earlier release still validates.
+`image.studio_hero`, `image.billboard`, `video.preview`, `video.final` and
+`verification.image` stay on their earlier releases.
 
 Every run pins the pipeline, identity engine/font, provider model, prompt and
 style releases. Every task pins its ratio, dependency/input asset IDs, compiled

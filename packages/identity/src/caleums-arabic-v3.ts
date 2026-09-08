@@ -10,6 +10,15 @@ import {
 import { IdentitySolverError } from "./errors";
 import {
   IDENTITY_BRIDGE_WIDTH,
+  IDENTITY_CARRIER_CORNER_SEGMENTS,
+  IDENTITY_CARRIER_FRAME_CORNER_RADIUS,
+  IDENTITY_CARRIER_FRAME_INSET,
+  IDENTITY_CARRIER_MIN_NAME_SCALE,
+  IDENTITY_CARRIER_RAIL_GAP,
+  IDENTITY_CARRIER_RAIL_OVERHANG,
+  IDENTITY_CARRIER_RAIL_WIDTH,
+  IDENTITY_CARRIER_RING_END_INSET,
+  IDENTITY_CARRIER_WELDS_PER_RAIL,
   IDENTITY_GLYPH_CLASS_MARK,
   IDENTITY_LANCZOS_SUPPORT,
   IDENTITY_MAX_BRIDGES,
@@ -63,6 +72,19 @@ export interface IdentitySolverInput {
   /** One solver serves both scripts since P1-3; the script picks the font. */
   language: IdentityScript;
   style: string;
+  /**
+   * The pendant construction the customer approved (`PendantConstruction`):
+   * `classical`, `origami-ribbon`, `framed-minimal` or `diamond-rails`.
+   *
+   * P2-2b: this is a shape input, not a label. `framed-minimal` and
+   * `diamond-rails` are pendants with a frame and with two rails, so the
+   * stencil draws them; the id is part of the fingerprint, so two pendants that
+   * differ only by construction are two different artifacts. A revision
+   * approved before constructions existed carries none, and an id this engine
+   * does not draw structure for renders as the lettering alone, which is what
+   * `classical` and `origami-ribbon` are.
+   */
+  construction?: string;
   layout: string;
   connector: string;
   dimensions: Readonly<{
@@ -263,10 +285,11 @@ export interface IdentityRingCentre {
   readonly anchorY: number;
   /**
    * Which glyph of the shaped run carries this ring, as an index into the
-   * buffer HarfBuzz returned, and which contour of that glyph (D-020). Every
-   * ring hangs from a letter stroke, so both are always a real index; the
-   * placeholder -1 the seat search uses while probing never reaches a drawn
-   * ring.
+   * buffer HarfBuzz returned, and which contour of that glyph (D-020). A ring
+   * that hangs from a letter stroke carries a real index for both; a ring
+   * welded onto the construction's own frame or rail (P2-2b) hangs from no
+   * glyph at all and carries -1, which `carrier.ringAnchors` and
+   * `ringPlacement: "frame"` say positively.
    */
   readonly glyphIndex: number;
   readonly contourIndex: number;
@@ -305,8 +328,90 @@ export interface IdentityRingCentre {
  * seat two rings under the gates raises `identity_no_ring_seat`, which is a
  * terminal pre-spend block with a code and no customer text, the same routing
  * the bar path reached through `identity_bar_fallback` with its default on.
+ *
+ * P2-2b adds `frame`: the construction the customer chose carries its own
+ * structure, and the rings are welded onto that structure rather than onto a
+ * letter. Which structure it is - a rectangular frame or a pair of rails - is
+ * `carrier.kind`, so there is one placement value and one detail rather than
+ * two values a caller has to keep in step. This is not the deleted `bar`: that
+ * rail was a fallback drawn over a name that offered no seat, this is the
+ * pendant the shopper picked, and the piece is one component because the name
+ * is welded into it, not because a bar was laid across it.
  */
-export type IdentityRingPlacement = "welded" | "none";
+export type IdentityRingPlacement = "welded" | "frame" | "none";
+
+/** Which structure a construction adds around the name. */
+export type IdentityCarrierKind = "frame" | "rails";
+
+/** One straight or curved run of rail, as a capsule centreline in pixels. */
+export interface IdentityCarrierSegment {
+  readonly rail: "top" | "bottom" | "left" | "right" | "corner";
+  readonly x0: number;
+  readonly y0: number;
+  readonly x1: number;
+  readonly y1: number;
+}
+
+/**
+ * The structure the construction added around the name, in pre-recentre canvas
+ * pixels (P2-2b), measured while it was drawn.
+ *
+ * Everything here is a statement about metal that exists in the encoded PNG:
+ * the centrelines the capsules were laid along, the rail width they were laid
+ * at, the outer box the finished structure occupies, where the name was welded
+ * into it and where the rings were anchored on it. A verifier registers the
+ * stencil against a photograph, so it needs the frame in pixels, not the fact
+ * that a frame was requested.
+ */
+export interface IdentityCarrierMeasurement {
+  readonly kind: IdentityCarrierKind;
+  /** Capsule width every segment was drawn at (`IDENTITY_CARRIER_RAIL_WIDTH`). */
+  readonly railWidth: number;
+  /** The centrelines, in the order they were drawn. */
+  readonly segments: readonly IdentityCarrierSegment[];
+  /**
+   * `[minX, minY, maxX, maxY]` of the assembly once the structure and its welds
+   * are drawn and before any ring, inclusive. On both constructions the
+   * structure encloses or overhangs the name, so this is the structure's own
+   * outer edge; it is measured rather than derived so it stays true if that
+   * ever stops being so.
+   */
+  readonly outerBox: readonly [number, number, number, number];
+  /** The name's ink box after it was placed and before the structure was drawn. */
+  readonly nameBox: readonly [number, number, number, number];
+  /**
+   * The scale the name was resampled by to leave room for the structure; 1 when
+   * the layout already left enough. The name is fitted to the canvas before the
+   * construction exists, so a frame needs room from somewhere, and taking it
+   * from the name is the same operation `recentre` performs on an overflowing
+   * piece.
+   */
+  readonly nameScale: number;
+  /**
+   * The name's ink before and after that resample, in pixels.
+   *
+   * `identity_bridge_moved_ink` is measured before the structure exists, and a
+   * resample afterwards is exactly the step that could quietly thin a name, so
+   * the cost is reported rather than left to be inferred from the scale. The
+   * ratio tracks `nameScale` squared; the component, counter and pinhole gates
+   * on the encoded bytes are what refuse a name the resample actually broke.
+   */
+  readonly nameInkBefore: number;
+  readonly nameInkAfter: number;
+  /** Welds drawn from the name to a rail, and the ink they added. */
+  readonly welds: number;
+  readonly weldPixelsAdded: number;
+  /** Ink the rails themselves added. */
+  readonly railPixelsAdded: number;
+  /**
+   * Bars the general connector still had to draw after the welds, to make the
+   * name and its structure one component. Zero on every cell of the matrix; it
+   * is reported because "the welds were enough" is a measurement, not a hope.
+   */
+  readonly bridges: number;
+  /** Where each ring was anchored on the structure, left then right. */
+  readonly ringAnchors: readonly { readonly x: number; readonly y: number }[];
+}
 
 /**
  * How the raster was turned into one castable piece (P1-4), measured while it
@@ -320,6 +425,20 @@ export type IdentityRingPlacement = "welded" | "none";
  * `(x * recentreScale + recentreOffsetX, y * recentreScale + recentreOffsetY)`.
  */
 export interface IdentityConstructionMeasurement {
+  /**
+   * The construction id the piece was built for, normalised, or the empty
+   * string when the caller named none (P2-2b). It is part of the fingerprint
+   * input, so a name reordered from `classical` to `framed-minimal` is a
+   * different artifact rather than the same one relabelled.
+   */
+  readonly constructionId: string;
+  /**
+   * The structure that construction added around the name, or `null` for a
+   * construction whose piece is the lettering alone (`classical`, and
+   * `origami-ribbon`, whose folded facets are a finish the stencil reports
+   * nothing about and never claims).
+   */
+  readonly carrier: IdentityCarrierMeasurement | null;
   /** Dilation passes applied before bridging (`make_stencil.py` THICKEN). */
   readonly thickenPasses: number;
   /** 4-connected islands after thickening, before any bridge was drawn. */
@@ -347,7 +466,11 @@ export interface IdentityConstructionMeasurement {
   readonly pinholesFilled: number;
   /** Jump rings welded on (P1-5): two by default, zero when rings are off. */
   readonly jumpRings: number;
-  /** How those rings are attached (D-020): on letter strokes, or on a bar. */
+  /**
+   * How those rings are attached: `welded` on letter strokes (D-020), `frame`
+   * on the construction's own structure (P2-2b), `none` when the caller asked
+   * for no rings at all.
+   */
   readonly ringPlacement: IdentityRingPlacement;
   /**
    * Ring centres in pre-recentre coordinates, left then right, each with the
@@ -564,6 +687,47 @@ export async function solveIdentity(
       `identity_bridge_moved_ink:moved=${inkPixelsBeforeBridging - inkPixelsPreserved},of=${inkPixelsBeforeBridging}`,
     );
 
+  // P2-2b. The construction the shopper chose is part of the piece, so it is
+  // drawn before the rings: the frame or the rails are what the rings hang
+  // from. The name plane is kept as it stood here, because that is what "no
+  // letter under ring metal" is a statement about - rail metal under a ring is
+  // the weld, letter metal under a ring is a swallowed stroke.
+  const constructionId = (input.construction ?? "")
+    .normalize("NFC")
+    .trim()
+    .toLowerCase();
+  const carrierKind = carrierKindFor(constructionId);
+  const namePlane = mask.ink.slice();
+  const inkPixelsBeforeCarrier = countInk(namePlane);
+  let carrier: IdentityCarrierMeasurement | null = null;
+  let carrierTransform: RecentrePlacement | undefined;
+  if (carrierKind) {
+    const placed = placeNameForCarrier(mask, carrierPadding(carrierKind));
+    carrierTransform = placed.transform;
+    // The placement resamples the name, so the plane the ring gates measure
+    // against is the name where it now stands, not where it was typeset.
+    namePlane.set(mask.ink);
+    carrier = drawCarrier(
+      mask,
+      carrierKind,
+      placed.nameBox,
+      placed.scale,
+      inkPixelsBeforeCarrier,
+    );
+    // The structure may only add metal. `drawBar` never clears a pixel, and
+    // this is the measurement that says so rather than the comment that assumes
+    // it: the same statement `identity_bridge_moved_ink` makes about the bars.
+    let carrierPreserved = 0;
+    for (let index = 0; index < namePlane.length; index += 1)
+      if (namePlane[index] && mask.ink[index]) carrierPreserved += 1;
+    const nameInk = countInk(namePlane);
+    if (carrierPreserved !== nameInk)
+      throw new IdentitySolverError(
+        "identity_carrier_moved_ink",
+        `identity_carrier_moved_ink:moved=${nameInk - carrierPreserved},of=${nameInk}`,
+      );
+  }
+
   const rings =
     input.rings === false
       ? {
@@ -574,7 +738,9 @@ export async function solveIdentity(
           glyphPixelsUnderRingMetal: 0,
           seatSearchSteps: 0,
         }
-      : addRings(mask, outlines);
+      : carrier
+        ? addCarrierRings(mask, carrier, namePlane)
+        : addRings(mask, outlines);
   // The second half of the ink-preservation invariant, and the reason it is not
   // vacuous: `drawBar` only ever adds metal, but `drawDisk(..., 0)` clears it,
   // so the rings are the one step that can take a piece of the name away. The
@@ -598,8 +764,25 @@ export async function solveIdentity(
   // one place every pass that can make one has already run. Adversarial review
   // 5, minor 1: the raster as the rasteriser painted it says which enclosed
   // regions are the name's own counters, and those are never filled.
-  const pinholesFilled = fillPinholes(mask, enclosedBeforeThickening, placement);
+  // P2-2b: a construction that carries structure moved the name before the
+  // rails were drawn, so the route back to the rasteriser's own raster is the
+  // two transforms composed. Passing the recentre alone would look up the wrong
+  // pixel and could take a real counter for a casting pinhole and fill it.
+  const pinholesFilled = fillPinholes(
+    mask,
+    enclosedBeforeThickening,
+    carrierTransform
+      ? {
+          scaleX: carrierTransform.scaleX * placement.scaleX,
+          scaleY: carrierTransform.scaleY * placement.scaleY,
+          offsetX: carrierTransform.offsetX * placement.scaleX + placement.offsetX,
+          offsetY: carrierTransform.offsetY * placement.scaleY + placement.offsetY,
+        }
+      : placement,
+  );
   const construction: IdentityConstructionMeasurement = {
+    constructionId,
+    carrier,
     thickenPasses: IDENTITY_THICKEN_PASSES,
     islandsBeforeBridging,
     bridges: bridged.bridges,
@@ -686,7 +869,13 @@ export async function solveIdentity(
     const inkWidth = measured.bbox[2] - measured.bbox[0] + 1;
     const first = ringHoles[0] as MeasuredRingHole;
     const second = ringHoles[1] as MeasuredRingHole;
+    // The one-letter floor is for two rings that had to share a letter. Two
+    // rings on a frame share no glyph at all (both carry -1), which would read
+    // as one shared carrier and put a framed piece under a floor measured on
+    // one-letter names. P2-2b makes the placement part of the question; a frame
+    // is held to the general floor, on the same decoded bytes.
     const shared =
+      construction.ringPlacement === "welded" &&
       construction.ringCentres.length === 2 &&
       (construction.ringCentres[0] as IdentityRingCentre).glyphIndex ===
         (construction.ringCentres[1] as IdentityRingCentre).glyphIndex;
@@ -752,6 +941,10 @@ export async function solveIdentity(
       input.language,
       approvedText,
       support.style,
+      // P2-2b: the construction is a shape, so it is a fingerprint input. Two
+      // pendants that differ only by construction are two artifacts, and a
+      // cached `classical` stencil can never be served for a framed piece.
+      constructionId,
       input.layout,
       input.connector,
       shaping.fontSha256Measured,
@@ -1026,6 +1219,427 @@ function drawBar(
       added += 1;
     }
   return added;
+}
+
+/* -------------------------------------------------------------------------
+ * P2-2b. The construction the shopper chose, drawn on the same raster.
+ *
+ * The stencil is the truth for the whole physical piece, not only for the name.
+ * `framed-minimal` is a name inside a rectangular frame with the rings in its
+ * two top corners, `diamond-rails` is a name held between two straight rails
+ * with the rings at the outer ends of the top one, and both are what the look
+ * briefs ask the model for (`lab/compile.mjs:57-84`). Drawing them here means
+ * the verifier registers the stencil against the photograph of the pendant the
+ * shopper actually chose, and it means the rings hang from structure that is
+ * level by construction instead of from whichever letter offered a seat.
+ *
+ * Everything below uses `drawBar` and `drawDisk`, the same two primitives the
+ * bridges and the rings use, so the Python reference can reproduce a frame the
+ * same way it reproduces a bridge, and every number comes from `shaping.ts`.
+ * ---------------------------------------------------------------------- */
+
+/** Which constructions carry structure, and which structure each one carries. */
+const CARRIER_CONSTRUCTIONS: Readonly<Record<string, IdentityCarrierKind>> = {
+  "framed-minimal": "frame",
+  "diamond-rails": "rails",
+};
+
+/**
+ * The structure a construction id asks for, or `undefined` for a construction
+ * whose piece is the lettering alone.
+ *
+ * `classical` is the letters and nothing else, and `origami-ribbon` is the same
+ * outline with a folded-facet finish: a finish is a surface, not geometry, so
+ * the stencil says nothing about it and the verifier claims nothing about it.
+ */
+function carrierKindFor(
+  constructionId: string,
+): IdentityCarrierKind | undefined {
+  return CARRIER_CONSTRUCTIONS[constructionId];
+}
+
+/** How far a carrier ring's centre sits above the rail centreline it grips. */
+const CARRIER_RING_LIFT = IDENTITY_RING_OUTER - IDENTITY_RING_WELD_OVERLAP;
+
+/** How far a carrier ring's metal reaches above the rail's outer edge. */
+const CARRIER_RING_HEADROOM =
+  CARRIER_RING_LIFT + IDENTITY_RING_OUTER - IDENTITY_CARRIER_RAIL_WIDTH / 2;
+
+/** Room the structure needs around the name's ink box, per side, in pixels. */
+interface CarrierPadding {
+  readonly left: number;
+  readonly right: number;
+  readonly top: number;
+  readonly bottom: number;
+}
+
+function carrierPadding(kind: IdentityCarrierKind): CarrierPadding {
+  if (kind === "frame") {
+    const side = IDENTITY_CARRIER_FRAME_INSET + IDENTITY_CARRIER_RAIL_WIDTH;
+    return {
+      left: side,
+      right: side,
+      bottom: side,
+      top: side + CARRIER_RING_HEADROOM,
+    };
+  }
+  const rail = IDENTITY_CARRIER_RAIL_GAP + IDENTITY_CARRIER_RAIL_WIDTH;
+  const end = IDENTITY_CARRIER_RAIL_OVERHANG + IDENTITY_CARRIER_RAIL_WIDTH / 2;
+  return {
+    left: end,
+    right: end,
+    bottom: rail,
+    top: rail + CARRIER_RING_HEADROOM,
+  };
+}
+
+/**
+ * Makes room for the structure and puts the name where it will sit inside it.
+ *
+ * The name was fitted to the canvas before the construction existed, so a frame
+ * or a pair of rails has to take its room from somewhere. It is taken from the
+ * name, by the same operation `recentre` performs on a piece that overflows its
+ * box - crop, Lanczos, threshold - and only when the name is actually too big
+ * for its structure; the scale is reported, never assumed. The assembly is then
+ * centred on the canvas so the final `recentre` has nothing left to scale.
+ */
+function placeNameForCarrier(
+  mask: RasterMask,
+  padding: CarrierPadding,
+): {
+  nameBox: readonly [number, number, number, number];
+  scale: number;
+  /**
+   * The transform the name's pixels took, in the same form `recentre` reports:
+   * a typeset pixel `(x, y)` is now at `(x * scaleX + offsetX, ...)`. The
+   * pinhole pass reads the raster as the rasteriser painted it through this and
+   * the recentre transform composed, so a letter counter is still recognised as
+   * a counter after the name has been moved to make room.
+   */
+  transform: RecentrePlacement;
+} {
+  const [minX, minY, maxX, maxY] = inkBox(mask);
+  const sourceWidth = maxX - minX + 1;
+  const sourceHeight = maxY - minY + 1;
+  const scale = Math.min(
+    1,
+    (IDENTITY_RECENTRE_BOX - padding.left - padding.right) / sourceWidth,
+    (IDENTITY_RECENTRE_BOX - padding.top - padding.bottom) / sourceHeight,
+  );
+  if (scale < IDENTITY_CARRIER_MIN_NAME_SCALE)
+    throw new IdentitySolverError(
+      "identity_carrier_no_room",
+      `identity_carrier_no_room:name=${sourceWidth}x${sourceHeight},scale=${scale.toFixed(3)},min=${IDENTITY_CARRIER_MIN_NAME_SCALE}`,
+    );
+
+  let art = new Uint8Array(sourceWidth * sourceHeight);
+  for (let y = 0; y < sourceHeight; y += 1)
+    for (let x = 0; x < sourceWidth; x += 1)
+      art[y * sourceWidth + x] = mask.ink[
+        (minY + y) * mask.width + minX + x
+      ] as number;
+  let width = sourceWidth;
+  let height = sourceHeight;
+  if (scale < 1) {
+    width = Math.max(1, Math.trunc(sourceWidth * scale));
+    height = Math.max(1, Math.trunc(sourceHeight * scale));
+    const grey = Uint8Array.from(art, (value) => (value ? 255 : 0));
+    const resized = lanczosResize(grey, sourceWidth, sourceHeight, width, height);
+    art = Uint8Array.from(resized, (value) =>
+      value > IDENTITY_RESAMPLE_INK_THRESHOLD ? 1 : 0,
+    );
+  }
+
+  const left =
+    Math.floor((mask.width - (width + padding.left + padding.right)) / 2) +
+    padding.left;
+  const top =
+    Math.floor((mask.height - (height + padding.top + padding.bottom)) / 2) +
+    padding.top;
+  mask.ink.fill(0);
+  for (let y = 0; y < height; y += 1)
+    for (let x = 0; x < width; x += 1)
+      if (art[y * width + x]) mask.ink[(top + y) * mask.width + left + x] = 1;
+  const scaleX = width / sourceWidth;
+  const scaleY = height / sourceHeight;
+  return {
+    nameBox: [left, top, left + width - 1, top + height - 1],
+    scale: scaleX,
+    transform: {
+      scaleX,
+      scaleY,
+      offsetX: left - minX * scaleX,
+      offsetY: top - minY * scaleY,
+    },
+  };
+}
+
+/**
+ * The points the name is welded to a rail from: the lowest (or highest) ink
+ * inside each of `IDENTITY_CARRIER_WELDS_PER_RAIL` windows spaced from one end
+ * of the name to the other.
+ *
+ * Two contact points rather than one is the look brief's own rule - "the word
+ * is never held by a single contact point, a name cantilevered from one corner
+ * is wrong" - and taking the extreme ink of each window is what makes the weld
+ * short and vertical, so it reads as the baseline merging into the bar rather
+ * than as a post.
+ *
+ * The windows are the ends of the name, not halves of it. Halves put both welds
+ * on the same stroke whenever one descender is the lowest ink of the whole run:
+ * the `y` of `Layla` straddles the midpoint, so each half chose it and the two
+ * welds landed one pixel apart - the single contact point the brief refuses,
+ * drawn twice.
+ */
+function carrierWeldPoints(
+  mask: RasterMask,
+  nameBox: readonly [number, number, number, number],
+  edge: "top" | "bottom",
+): { x: number; y: number }[] {
+  const [nx0, , nx1] = nameBox;
+  const span = nx1 - nx0 + 1;
+  const count = IDENTITY_CARRIER_WELDS_PER_RAIL;
+  const window = Math.max(1, Math.floor(span / (2 * count)));
+  const points: { x: number; y: number }[] = [];
+  for (let index = 0; index < count; index += 1) {
+    const from =
+      nx0 +
+      (count > 1
+        ? Math.round((index * (span - window)) / (count - 1))
+        : Math.floor((span - window) / 2));
+    const to = Math.min(nx1, from + window - 1);
+    let best: { x: number; y: number } | undefined;
+    for (let x = from; x <= to; x += 1)
+      for (let y = 0; y < mask.height; y += 1) {
+        if (!mask.ink[y * mask.width + x]) continue;
+        if (!best || (edge === "bottom" ? y > best.y : y < best.y))
+          best = { x, y };
+      }
+    if (best) points.push(best);
+  }
+  return points;
+}
+
+/** The rail the rings are welded to, as a centreline. */
+interface CarrierTopRail {
+  readonly y: number;
+  readonly x0: number;
+  readonly x1: number;
+  /** How far in from each end the ring centres sit. */
+  readonly ringInset: number;
+}
+
+/**
+ * Draws the structure around the placed name and welds the name into it.
+ *
+ * Only metal is added: `drawBar` never clears a pixel, and the caller checks
+ * that statement against the name plane rather than trusting it.
+ */
+function drawCarrier(
+  mask: RasterMask,
+  kind: IdentityCarrierKind,
+  nameBox: readonly [number, number, number, number],
+  nameScale: number,
+  nameInkBefore: number,
+): IdentityCarrierMeasurement {
+  const nameInkAfter = countInk(mask.ink);
+  const [nx0, ny0, nx1, ny1] = nameBox;
+  const half = IDENTITY_CARRIER_RAIL_WIDTH / 2;
+  const segments: IdentityCarrierSegment[] = [];
+  let railPixelsAdded = 0;
+  const lay = (
+    rail: IdentityCarrierSegment["rail"],
+    x0: number,
+    y0: number,
+    x1: number,
+    y1: number,
+  ): void => {
+    railPixelsAdded += drawBar(
+      mask,
+      y0,
+      x0,
+      y1,
+      x1,
+      IDENTITY_CARRIER_RAIL_WIDTH,
+    );
+    segments.push({ rail, x0, y0, x1, y1 });
+  };
+
+  // Where the name will be welded to its structure, read off the name alone.
+  // Taken after the rails were drawn this would find the rail itself - it is
+  // the lowest ink in the band by then - and weld the bar to nothing.
+  const bottomPoints = carrierWeldPoints(mask, nameBox, "bottom");
+  const topPoints =
+    kind === "rails" ? carrierWeldPoints(mask, nameBox, "top") : [];
+
+  let topRail: CarrierTopRail;
+  let bottomRailY: number;
+  if (kind === "frame") {
+    const cx0 = nx0 - IDENTITY_CARRIER_FRAME_INSET - half;
+    const cx1 = nx1 + IDENTITY_CARRIER_FRAME_INSET + half;
+    const cy0 = ny0 - IDENTITY_CARRIER_FRAME_INSET - half;
+    const cy1 = ny1 + IDENTITY_CARRIER_FRAME_INSET + half;
+    // A corner can never be larger than the frame it belongs to; a short name
+    // would otherwise ask for an arc that crosses the opposite rail.
+    const radius = Math.min(
+      IDENTITY_CARRIER_FRAME_CORNER_RADIUS,
+      Math.floor((cx1 - cx0) / 2),
+      Math.floor((cy1 - cy0) / 2),
+    );
+    lay("top", cx0 + radius, cy0, cx1 - radius, cy0);
+    lay("bottom", cx0 + radius, cy1, cx1 - radius, cy1);
+    lay("left", cx0, cy0 + radius, cx0, cy1 - radius);
+    lay("right", cx1, cy0 + radius, cx1, cy1 - radius);
+    // Each corner is a quarter turn of capsules laid along the centreline arc,
+    // clockwise on a canvas whose y grows downward.
+    for (const corner of [
+      { x: cx0 + radius, y: cy0 + radius, from: 180 },
+      { x: cx1 - radius, y: cy0 + radius, from: 270 },
+      { x: cx1 - radius, y: cy1 - radius, from: 0 },
+      { x: cx0 + radius, y: cy1 - radius, from: 90 },
+    ]) {
+      for (let step = 0; step < IDENTITY_CARRIER_CORNER_SEGMENTS; step += 1) {
+        const a0 =
+          ((corner.from + (90 * step) / IDENTITY_CARRIER_CORNER_SEGMENTS) *
+            Math.PI) /
+          180;
+        const a1 =
+          ((corner.from + (90 * (step + 1)) / IDENTITY_CARRIER_CORNER_SEGMENTS) *
+            Math.PI) /
+          180;
+        lay(
+          "corner",
+          corner.x + radius * Math.cos(a0),
+          corner.y + radius * Math.sin(a0),
+          corner.x + radius * Math.cos(a1),
+          corner.y + radius * Math.sin(a1),
+        );
+      }
+    }
+    topRail = {
+      y: cy0,
+      x0: cx0,
+      x1: cx1,
+      ringInset: Math.max(IDENTITY_CARRIER_RING_END_INSET, radius),
+    };
+    bottomRailY = cy1;
+  } else {
+    const ty = ny0 - IDENTITY_CARRIER_RAIL_GAP - half;
+    const by = ny1 + IDENTITY_CARRIER_RAIL_GAP + half;
+    const rx0 = nx0 - IDENTITY_CARRIER_RAIL_OVERHANG;
+    const rx1 = nx1 + IDENTITY_CARRIER_RAIL_OVERHANG;
+    lay("top", rx0, ty, rx1, ty);
+    lay("bottom", rx0, by, rx1, by);
+    topRail = {
+      y: ty,
+      x0: rx0,
+      x1: rx1,
+      ringInset: IDENTITY_CARRIER_RING_END_INSET,
+    };
+    bottomRailY = by;
+  }
+
+  // The welds. A frame is welded at the baseline, which is what the v4.3 look
+  // brief asks the model for and what the passing lab stills show; a pair of
+  // rails is welded to both, because a name that only touched the top one would
+  // be hanging in front of the bottom rail rather than held between them.
+  let weldPixelsAdded = 0;
+  let welds = 0;
+  const weld = (points: { x: number; y: number }[], railY: number): void => {
+    for (const point of points) {
+      weldPixelsAdded += drawBar(
+        mask,
+        point.y,
+        point.x,
+        railY,
+        point.x,
+        IDENTITY_BRIDGE_WIDTH,
+      );
+      welds += 1;
+    }
+  };
+  weld(bottomPoints, bottomRailY);
+  weld(topPoints, topRail.y);
+
+  // The welds should be enough, and this is what says so: whatever the general
+  // connector still has to draw is counted and reported, never silent.
+  const joined = bridgeAll(mask, IDENTITY_BRIDGE_WIDTH);
+
+  const outer = inkBox(mask);
+  return {
+    kind,
+    railWidth: IDENTITY_CARRIER_RAIL_WIDTH,
+    segments,
+    outerBox: outer,
+    nameBox,
+    nameScale,
+    nameInkBefore,
+    nameInkAfter,
+    welds,
+    weldPixelsAdded,
+    railPixelsAdded,
+    bridges: joined.bridges,
+    ringAnchors: [
+      { x: Math.round(topRail.x0 + topRail.ringInset), y: Math.round(topRail.y) },
+      { x: Math.round(topRail.x1 - topRail.ringInset), y: Math.round(topRail.y) },
+    ],
+  };
+}
+
+/**
+ * The two jump rings of a construction that carries its own structure.
+ *
+ * There is no seat search here and there is nothing to search: the rail is
+ * straight, both anchors sit on its centreline, so the line through the two
+ * holes is horizontal by construction. That is a reason to measure the tilt on
+ * the encoded bytes, not a reason to stop measuring it - the gates in
+ * `solveIdentity` run exactly as they do for a welded piece.
+ *
+ * The plane the ring gates are measured against is the *name*, not the piece:
+ * the ring is meant to sit on the rail and swallow rail metal, and the thing
+ * that must never happen is a ring hole cut through a letter or ring metal laid
+ * over one. `namePlane` is the raster as it stood after bridging and before any
+ * rail was drawn, so "zero name pixels punched or under ring metal" means the
+ * same thing here as it does under D-020.
+ */
+function addCarrierRings(
+  mask: RasterMask,
+  carrier: IdentityCarrierMeasurement,
+  namePlane: Uint8Array,
+): RingPlacement {
+  const centres: IdentityRingCentre[] = carrier.ringAnchors.map((anchor) => ({
+    x: anchor.x,
+    y: anchor.y - CARRIER_RING_LIFT,
+    anchorX: anchor.x,
+    anchorY: anchor.y,
+    glyphIndex: -1,
+    contourIndex: -1,
+    candidateIndex: -1,
+  }));
+  for (const ring of centres) drawRing(mask, ring);
+
+  let glyphPixelsPunchedByRings = 0;
+  for (let index = 0; index < namePlane.length; index += 1)
+    if (namePlane[index] && !mask.ink[index]) glyphPixelsPunchedByRings += 1;
+  let glyphPixelsUnderRingMetal = 0;
+  for (const ring of centres)
+    glyphPixelsUnderRingMetal += countGlyphPixelsUnderRingMetal(
+      mask,
+      namePlane,
+      ring,
+      // Every pixel of the name is foreign to a rail: the weld exemption exists
+      // for the stroke a ring is welded to, and no ring here is welded to a
+      // stroke, so nothing about the name is excused.
+      namePlane,
+    );
+  return {
+    centres,
+    placement: "frame",
+    glyphBox: carrier.nameBox,
+    glyphPixelsPunchedByRings,
+    glyphPixelsUnderRingMetal,
+    seatSearchSteps: 0,
+  };
 }
 
 /** A nearest-source field: squared distance, and the index of that source. */

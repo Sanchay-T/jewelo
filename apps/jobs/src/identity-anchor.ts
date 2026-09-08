@@ -59,6 +59,10 @@ export async function renderIdentityAnchor(
       approvedNames: approvedNames(anchor, specification),
       language: anchor.language,
       style: styleFor(anchor, specification),
+      // P2-2b: the construction is geometry, not a label. `framed-minimal` and
+      // `diamond-rails` draw their frame and their rails into the stencil, so
+      // the piece the verifier registers is the piece the shopper chose.
+      construction: constructionOf(specification),
       layout: String(specification.layout ?? "single-name"),
       connector: String(specification.connector ?? "none"),
       dimensions: dimensions(specification.dimensions),
@@ -87,10 +91,22 @@ function ringsFor(
   specification: Readonly<Record<string, unknown>>,
   ringlessConstructions: ReadonlySet<string>,
 ): boolean {
-  const construction = String(specification.construction ?? "")
+  const construction = constructionOf(specification);
+  return !(construction.length > 0 && ringlessConstructions.has(construction));
+}
+
+/**
+ * The construction id on the approved specification, normalised once so the
+ * ring-free set and the solver read the same string. A revision approved before
+ * constructions existed carries none, and the empty string is the answer both
+ * of them already handle.
+ */
+function constructionOf(
+  specification: Readonly<Record<string, unknown>>,
+): string {
+  return String(specification.construction ?? "")
     .trim()
     .toLowerCase();
-  return !(construction.length > 0 && ringlessConstructions.has(construction));
 }
 
 /**

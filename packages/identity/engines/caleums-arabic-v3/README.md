@@ -34,6 +34,29 @@ When no pair meets the level, overhang and span gates, the piece raises `identit
 The top rail that used to catch this case is gone: measured, it touched `قق` along 11% of its span and the pendant hung from two nuqta (adversarial review 5, major 3).
 That path is reached, not hypothetical: `آية` in `classic`, `diwani` and `signature` is built that way, because the madda covers the whole top of the alef at one end.
 
+## The construction is part of the piece (P2-2b, D-021)
+
+The stencil is the truth for the whole physical pendant, not only for the name.
+`solveIdentity` takes the construction the shopper approved, and two of the four constructions are pendants with structure rather than lettering variants.
+
+`framed-minimal` draws a thin rectangular frame with softly rounded corners around the name: rail thickness, the clear inset from the name's ink box and the corner radius are engine constants in `shaping.ts`, the corner is a quarter turn of the same capsules every bridge is drawn with, the name is welded into the bottom rail at two points near its two ends, and the two jump rings are welded onto the top rail near its corners.
+`diamond-rails` draws one straight rail above the name and one below it, each running past the name by a constant overhang, welded to the name at two points each, with the two rings at the outer ends of the top rail.
+Both come straight from the look briefs the image lab proved (`docs/goals/overnight-launch/lab/compile.mjs:57-84`): a frame "cast as a single piece with the letters", welded "at no fewer than two separate places" with "the baseline of the word merged into the bottom bar" and the rings "cast into the two top corners of the frame"; two rails with the letters "held between" them and the rings "cast into the two outer ends of the rails".
+
+`classical` and `origami-ribbon` are unchanged and are the lettering alone.
+The ribbon is a folded-facet *finish*, not geometry: the stencil says nothing about it, so no gate claims it.
+
+Two welds are the whole of what the engine claims about how the name meets its frame.
+The brief's further wish - that no letter, foot, tail or terminal ends in mid-air inside the frame - would need a bridge from every glyph to the rail, which is the machinery adversarial review 5 rejected for the deleted top rail, so it is left to the prompt and is not a gate.
+
+The name is fitted to the canvas before the construction exists, so the frame takes its room from the name: the name is cropped, Lanczos-resampled and re-centred exactly the way `recentre` treats an overflowing piece, the applied scale is reported as `carrier.nameScale`, and a name that would have to go below `IDENTITY_CARRIER_MIN_NAME_SCALE` is refused with `identity_carrier_no_room`.
+The structure may only add metal, and `identity_carrier_moved_ink` is that measurement rather than a comment.
+
+Every ring gate stays exactly as it was, measured on the encoded bytes.
+Rings on a rail are level by construction and the tilt is still measured; the plane the punch and swallow gates are taken against is the *name* before any rail was drawn, so "zero name pixels under ring metal" means what it always meant while the ring is free to grip the rail it is welded to.
+`ringPlacement` is `welded`, `frame` or `none`, and `carrier.kind` (`frame` or `rails`) is the detail; a ring welded to a rail hangs from no glyph and carries `glyphIndex -1`, which `carrier.ringAnchors` states positively.
+The report carries the construction id, the rail centrelines, the outer box, the name box, the welds and the ring anchors in pixels, and the construction id is a fingerprint input, so the same name in two constructions is two artifacts.
+
 ## What is live
 
 All six styles ship: `classic`, `minimal`, `diwani`, `signature`, `kufi` and `thuluth-inspired`, in both scripts.
