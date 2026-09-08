@@ -251,17 +251,44 @@ export async function loadRun(
     ? `?designId=${encodeURIComponent(handles.designId)}`
     : "";
   const payload = await request<StatePayload>(deps, `/api/state${query}`);
+  rememberSignedUrlRefreshWindow(payload);
   return readPersonalizedRun(payload, handles.runId);
 }
 
 /**
- * `/api/state` mints a fresh five-minute signed URL for every asset on every
- * call, so handing the browser a new `src` on each poll restarts the download
- * and, on iOS Safari, images that are not `priority` never finish decoding.
- * Keep one URL per asset and rotate it a minute before the signature expires.
+ * How long a signed asset URL may be held before it is replaced, as the server
+ * that signed it says.
+ *
+ * Fix-2 review minor 11: this used to be a literal 240 000 here while the
+ * server signed for `pipelineLimits.signedUrlExpirySeconds`, so lowering the
+ * configured expiry would have left the browser serving URLs that had already
+ * expired. `@jewelo/config` cannot be imported from a client module - it
+ * re-exports `load-env`, which imports `node:fs` - so the number travels the
+ * other way the boundary allows: `/api/state` publishes it as
+ * `signedUrlRefreshAfterMs`, derived there from the same validated expiry and
+ * refresh margin the signing call uses, and this module only reads it. There is
+ * no fallback literal: a payload that does not carry the number leaves the
+ * cache off, so every poll hands out the freshest URL, which is slower on iOS
+ * but never expired.
  */
-const SIGNED_URL_TTL_MS = 240_000;
+let signedUrlRefreshAfterMs: number | undefined;
 
+function rememberSignedUrlRefreshWindow(payload: StatePayload): void {
+  const published = (payload as { signedUrlRefreshAfterMs?: unknown })
+    .signedUrlRefreshAfterMs;
+  signedUrlRefreshAfterMs =
+    typeof published === "number" && Number.isFinite(published) && published > 0
+      ? published
+      : undefined;
+}
+
+/**
+ * `/api/state` mints a fresh signed URL for every asset on every call, so
+ * handing the browser a new `src` on each poll restarts the download and, on
+ * iOS Safari, images that are not `priority` never finish decoding. Keep one
+ * URL per asset and rotate it before the signature expires, on the window the
+ * server publishes (see `signedUrlRefreshAfterMs` above).
+ */
 export function createSignedUrlCache() {
   const cache = new Map<string, { url: string; issuedAt: number }>();
   return function stabilise(
@@ -272,7 +299,8 @@ export function createSignedUrlCache() {
     const slots = run.slots.map((slot): PersonalizedViewSlot => {
       if (!slot.assetId || !slot.imageUrl) return slot;
       const held = cache.get(slot.assetId);
-      if (held && now - held.issuedAt < SIGNED_URL_TTL_MS)
+      const window = signedUrlRefreshAfterMs;
+      if (window !== undefined && held && now - held.issuedAt < window)
         return { ...slot, imageUrl: held.url };
       cache.set(slot.assetId, { url: slot.imageUrl, issuedAt: now });
       return slot;

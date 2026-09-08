@@ -22,11 +22,56 @@ env_sync=1
   env_sync=0
 }
 
+# Fix-2 review M3: which app this file is allowed to configure.
+#
+# One `.env` served both environments and nothing compared it with the app being
+# deployed, so `deploy.sh production main` from a laptop would have overwritten
+# production's PROVIDER_MODE, SUPABASE_URL, OPENAI_API_KEY and
+# OPERATOR_PASSPHRASE with staging values. The file must now declare
+# `JEWELO_DEPLOY_TARGET=<environment>` and it must equal the environment
+# argument; otherwise this refuses with exit 2 rather than shipping the wrong
+# values. Deploying a branch into an environment whose file you do not have is
+# still possible with DEPLOY_ENV_SYNC=0, which leaves the app's environment
+# exactly as the platform has it, or by pointing JEWELO_ENV_FILE at that
+# environment's own file. Only environment names are printed here, never a
+# value from the file.
+if [[ "${DEPLOY_ENV_SYNC:-1}" == "0" ]]; then
+  echo "DEPLOY_ENV_SYNC=0: deploying the branch only; the app's environment is left as the platform has it" >&2
+  env_sync=0
+elif (( env_sync )); then
+  declared_target="$(
+    CONTRACT="$contract" ENV_FILE="$env_file" node -e '
+      (async () => {
+        const contract = await import(process.env.CONTRACT);
+        const values = contract.readEnvFiles([process.env.ENV_FILE]);
+        process.stdout.write(contract.deployTarget(values));
+      })().catch((error) => {
+        process.stderr.write(`${error.message}\n`);
+        process.exit(1);
+      });
+    '
+  )"
+  if [[ -z "$declared_target" ]]; then
+    echo "refusing to sync $env_file into $environment: it does not declare JEWELO_DEPLOY_TARGET" >&2
+    echo "add JEWELO_DEPLOY_TARGET=$environment to that file, point JEWELO_ENV_FILE at the file that belongs to $environment, or set DEPLOY_ENV_SYNC=0 to deploy the branch only" >&2
+    exit 2
+  fi
+  if [[ "$declared_target" != "$environment" ]]; then
+    echo "refusing to sync $env_file into $environment: JEWELO_DEPLOY_TARGET is $declared_target" >&2
+    echo "point JEWELO_ENV_FILE at the file that belongs to $environment, or set DEPLOY_ENV_SYNC=0 to deploy the branch only" >&2
+    exit 2
+  fi
+fi
+
 # The env sync, printed and nothing else. This is how a new or rotated variable
 # is proved before it is shipped: names and scopes only, never a value, and no
 # DigitalOcean call at all, so it runs on any machine.
 if [[ "${DEPLOY_DRY_RUN:-0}" == "1" ]]; then
   (( env_sync )) || {
+    if [[ "${DEPLOY_ENV_SYNC:-1}" == "0" ]]; then
+      echo "DEPLOY_DRY_RUN=1: branch only, no environment would be merged"
+      exit 0
+    fi
     echo "DEPLOY_DRY_RUN: no environment file, nothing to merge" >&2
     exit 1
   }
@@ -36,7 +81,12 @@ if [[ "${DEPLOY_DRY_RUN:-0}" == "1" ]]; then
       const values = contract.readEnvFiles([process.env.ENV_FILE]);
       const envs = contract.appSecretEnvs(values);
       process.stdout.write(`merged env keys (${envs.length}), values never printed:\n`);
-      for (const env of envs) process.stdout.write(`  ${env.key} ${env.scope} ${env.type}\n`);
+      // An empty value is a decision (TRUSTED_CLIENT_IP_HEADER= means trust no
+      // header), so the dry run has to tell "set (empty)" apart from absent.
+      for (const env of envs)
+        process.stdout.write(
+          `  ${env.key} ${env.scope} ${env.type} ${env.value === "" ? "set (empty)" : "set"}\n`,
+        );
       const absent = contract.knownWebConfig.filter((key) => !envs.some((env) => env.key === key));
       if (absent.length) process.stdout.write(`absent from the environment file: ${absent.join(", ")}\n`);
     })().catch((error) => {

@@ -71,17 +71,24 @@ function project(
 
 /**
  * The verifier fields the atelier actually reads. `VerificationResult` in
- * `@jewelo/contracts` is what `supabase-jewelo-client.ts` casts this object to
- * (`status`, `exactText`, `identityScore`, `notes`), `mock-client.ts` reads
- * `exactText`, and `passed` is the flag the SQL gates and the operator console
- * key on. Nothing else in the browser touches this record.
+ * `@jewelo/contracts` is what `supabase-jewelo-client.ts` casts this object to,
+ * `mock-client.ts` reads `exactText`, and `passed` is the flag the SQL gates
+ * and the operator console key on. Nothing else in the browser touches this
+ * record.
+ *
+ * Fix-2 review M5: `notes` was on this list and is unbounded model prose. The
+ * verifier writes it after being shown the approved name and asked to explain a
+ * failure, so it can carry a misread spelling and the model's own vocabulary
+ * back to the shopper's browser. Nothing in `apps/web` reads it from the
+ * payload - `supabase-jewelo-client.ts:119` supplies its own line - so it is
+ * off the list; an operator still reads the whole record on the asset row,
+ * server-side.
  */
 const VERIFICATION_FIELDS = [
   "status",
   "passed",
   "exactText",
   "identityScore",
-  "notes",
 ] as const;
 
 /**
@@ -178,15 +185,28 @@ export async function GET(request: Request) {
     const assets = await Promise.all(
       (rows.assets as Array<Record<string, unknown>>).map(async (asset) => {
         const path = String(asset.object_path);
+        // Fix-2 review minor 10. Per-segment encoding keeps a `/` inside a name
+        // part of that name, and nothing more: `encodeURIComponent` leaves `.`
+        // untouched, so `..` survived it and was resolved by whatever
+        // normalises the path, and an empty segment collapses. Both are refused
+        // here, before anything is signed, exactly as the job-side signer
+        // refuses them (`apps/jobs/src/presentation.ts:signedStorageUrl`). The
+        // bucket is a path segment too and is encoded rather than interpolated.
+        const segments = path.split("/");
+        if (
+          segments.some(
+            (segment) => !segment || segment === "." || segment === "..",
+          )
+        )
+          throw new Error("signed_storage_path_invalid");
         const signed = await supabaseRequest<{
           signedURL?: string;
           signedUrl?: string;
         }>(
           config,
-          `/storage/v1/object/sign/${String(asset.bucket_id)}/${path
-            .split("/")
-            .map(encodeURIComponent)
-            .join("/")}`,
+          `/storage/v1/object/sign/${encodeURIComponent(
+            String(asset.bucket_id),
+          )}/${segments.map(encodeURIComponent).join("/")}`,
           {
             method: "POST",
             // Pipeline fix review 1 finding 6: the customer-facing signer kept
@@ -217,6 +237,11 @@ export async function GET(request: Request) {
       {
         role: operator ? "operator" : "customer",
         principalId: customer ? customer.user.id : "operator-session",
+        // Fix-2 review minor 11: how long the browser may hold one of the
+        // signed URLs above, derived from the same validated expiry this route
+        // signs with. The atelier used to carry its own literal, which a lower
+        // configured expiry would have silently turned into expired URLs.
+        signedUrlRefreshAfterMs: pipelineLimits.signedUrlRefreshAfterMs,
         ...rest,
         estimates,
         assets,

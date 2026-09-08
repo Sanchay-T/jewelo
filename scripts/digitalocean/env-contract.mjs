@@ -48,6 +48,26 @@ export const optionalRuntimeConfig = [
   "IDENTITY_BAR_FALLBACK_REVIEW",
 ];
 
+// Read from the environment file, never shipped to the app.
+//
+// Fix-2 review M3: one `.env` served both environments, so `deploy.sh
+// production main` from a laptop would have overwritten production's provider
+// mode, database and operator passphrase with staging values. The file now has
+// to say which environment it belongs to, and `deploy.sh` refuses to sync a
+// file that names a different one. It is deliberately outside `knownWebConfig`:
+// the app has no use for it and it must never appear in an app spec.
+export const localOnlyConfig = ["JEWELO_DEPLOY_TARGET"];
+
+// Keys whose empty value is a decision rather than an absence.
+//
+// Fix-2 review M4: `TRUSTED_CLIENT_IP_HEADER=` means "trust no header", which
+// is the only safe setting on a host that does not overwrite the header it
+// forwards. Skipping it, as an empty value used to be skipped, left the app on
+// its `do-connecting-ip` default, so every per-source guard could be reset by
+// rotating one request header - the exact failure the setting was added to
+// close. These keys ship as an explicit empty string instead.
+export const emptyAllowed = new Set(["TRUSTED_CLIENT_IP_HEADER"]);
+
 export const requiredWebConfig = [...new Set([...buildConfig, ...runtimeConfig])];
 
 export const knownWebConfig = [...new Set([...requiredWebConfig, ...optionalRuntimeConfig])];
@@ -99,13 +119,35 @@ export function appSecretEnvs(values) {
   const envs = [];
   for (const name of knownWebConfig) {
     const value = values.get(name);
-    if (!value) continue;
+    if (value === undefined) continue;
+    if (value === "" && !emptyAllowed.has(name)) continue;
     envs.push({
       key: name,
       scope: buildConfig.includes(name) ? "RUN_AND_BUILD_TIME" : "RUN_TIME",
-      type: "SECRET",
+      // An empty string holds no secret, and App Platform will not accept an
+      // encrypted variable with nothing to encrypt, so the deliberate empty
+      // value ships as a plain one.
+      type: value === "" ? "GENERAL" : "SECRET",
       value,
     });
   }
   return envs;
+}
+
+/**
+ * Which environment this file may be synced into, or "" when it does not say.
+ *
+ * `deploy.sh` compares this with its own argument and refuses on a mismatch, so
+ * a laptop file that says `staging` cannot be pushed into the production app.
+ */
+export function deployTarget(values) {
+  return values.get("JEWELO_DEPLOY_TARGET") ?? "";
+}
+
+// A local-only key that reached `knownWebConfig` would be shipped as an app
+// secret by `appSecretEnvs`. Fail at import instead of at deploy time.
+for (const key of localOnlyConfig) {
+  if (knownWebConfig.includes(key)) {
+    throw new Error(`local-only key ${key} must not appear in the web config contract`);
+  }
 }

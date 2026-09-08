@@ -308,6 +308,14 @@ export function promptSnapshotRejectionClass(
  * in; any word from a customer's name that reaches here arrives as an
  * unreadable run of letters at most 60 characters long, and no caller appends
  * the original message next to it.
+ *
+ * Fix-2 review M1: this is now the only door into `terminal_error_code` and
+ * `mark_task_pre_spend_blocked(p_reason)`. Both write sites call it, so no
+ * caller can hand a raw message to a column the browser polls. `|` is the
+ * job's own composition delimiter (`blockPreSpendTerminally` records two
+ * classes at once) and is the single character kept beyond `[a-z0-9_]`. Each
+ * part is still capped at 60 characters on its own, so composing does not
+ * widen how much of any one message can survive.
  */
 function errorClass(error: unknown): string {
   const message = error instanceof Error ? error.message : String(error);
@@ -315,8 +323,12 @@ function errorClass(error: unknown): string {
   const token = head
     .trim()
     .toLowerCase()
-    .replaceAll(/[^a-z0-9_]/g, "");
-  return token.slice(0, 60) || "unknown";
+    .replaceAll(/[^a-z0-9_|]/g, "")
+    .split("|")
+    .map((part) => part.slice(0, 60))
+    .filter((part) => part.length > 0)
+    .join("|");
+  return token || "unknown";
 }
 
 /**
@@ -395,7 +407,7 @@ export async function executePresentationTask(
         run,
         attempt: task.attempt,
         error: new Error(
-          `${errorClass(error)}|pre_spend_block_failed:${errorClass(blockError)}`,
+          `${errorClass(error)}|pre_spend_block_failed|${errorClass(blockError)}`,
         ),
         terminal: true,
         actualCostCents: 0,
@@ -1202,16 +1214,38 @@ export class SupabasePresentationRepository implements PresentationRepository {
       ? budget
       : pipelineLimits.providerAttemptBudget;
   }
+  /**
+   * Fix-2 review M1: `mark_task_pre_spend_blocked` writes `p_reason` straight
+   * into `terminal_error_code`, which `/api/state` selects on every poll, and
+   * the reason here can be whatever `signedIdentityUrl`, the anchor read or
+   * the inspiration read threw - including a PostgREST body carrying row
+   * values. Only the class goes to the RPC; the full message is recorded once
+   * in an audit event, which no customer-facing route reads.
+   */
   async blockPreSpend(input: { task: TaskRow; run: RunRow; error: unknown }) {
     const message =
       input.error instanceof Error
         ? input.error.message
         : "pre_spend_gate_failed";
+    await this.#request("/rest/v1/audit_events", {
+      method: "POST",
+      body: JSON.stringify({
+        design_id: input.run.design_id,
+        principal_id: input.task.owner_principal_id,
+        actor_type: "job",
+        action: "task.pre_spend_block_detail",
+        detail: {
+          taskId: input.task.id,
+          errorClass: errorClass(input.error),
+          error: message.slice(0, 300),
+        },
+      }),
+    });
     await this.#request("/rest/v1/rpc/mark_task_pre_spend_blocked", {
       method: "POST",
       body: JSON.stringify({
         p_task_id: input.task.id,
-        p_reason: message.slice(0, 300),
+        p_reason: errorClass(input.error),
       }),
     });
   }
@@ -1438,6 +1472,13 @@ export class SupabasePresentationRepository implements PresentationRepository {
   }) {
     const message =
       input.error instanceof Error ? input.error.message : "unknown";
+    // Fix-2 review M1: the outer catch of `runPresentationTask` reaches here
+    // with whatever the run threw, and `#request` folds a PostgREST status and
+    // body into its message, so row values used to land in the
+    // customer-visible `terminal_error_code`. The class is what both the
+    // ledger row and the task column get; the full message is kept only in the
+    // audit event below, which no customer-facing route reads.
+    const errorCode = errorClass(input.error);
     await this.#request("/rest/v1/rpc/reconcile_provider_attempt", {
       method: "POST",
       body: JSON.stringify({
@@ -1445,7 +1486,7 @@ export class SupabasePresentationRepository implements PresentationRepository {
         p_attempt: input.attempt,
         p_status: "failed",
         p_actual_cost_cents: input.actualCostCents,
-        p_error_class: message.slice(0, 120),
+        p_error_class: errorCode,
         p_terminal: input.terminal,
       }),
     });
@@ -1453,7 +1494,7 @@ export class SupabasePresentationRepository implements PresentationRepository {
       input.task.id,
       ["queued", "generating", "verifying", "retrying"],
       input.terminal ? "blocked" : "retrying",
-      input.terminal ? { terminal_error_code: message.slice(0, 120) } : {},
+      input.terminal ? { terminal_error_code: errorCode } : {},
     );
     await this.#request("/rest/v1/audit_events", {
       method: "POST",
@@ -1465,7 +1506,8 @@ export class SupabasePresentationRepository implements PresentationRepository {
         detail: {
           taskId: input.task.id,
           attempt: input.attempt,
-          error: message.slice(0, 120),
+          errorClass: errorCode,
+          error: message.slice(0, 300),
           ...(input.rejectedObjectPaths?.length
             ? { rejectedObjectPaths: input.rejectedObjectPaths }
             : {}),

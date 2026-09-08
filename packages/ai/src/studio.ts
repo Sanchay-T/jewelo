@@ -292,21 +292,28 @@ export function normalizeIdentityText(value: string): string {
 }
 
 /**
- * The comparison form of what the reader said it saw.
+ * The comparison form of a name: `normalizeIdentityText` after an NFKC fold.
  *
  * NFKC folds the Arabic presentation forms (U+FB50-U+FDFF, U+FE70-U+FEFF) back
  * onto the letters they render: a reader that answers with U+FEE7 U+FEEC U+FEAE
  * is describing the same three letters as U+0646 U+0648 U+0631, and refusing it
  * would burn three paid stills on a pendant that is actually correct.
  *
- * It is applied to the read side and never to the approved side. The approved
- * text is the customer's name as they typed and confirmed it: it is what the
- * stencil was shaped from and what the identity fingerprint hashes, so folding
- * it would compare against a name nobody approved and would widen the target
- * the still has to hit. Folding the reader's answer only interprets a report;
- * folding the approval would move the truth.
+ * Fix-2 review minor 7: both sides are folded, but only here, and only to
+ * compare. `nameSchema` in `@jewelo/contracts` accepts Arabic presentation
+ * forms as approved text, so a customer whose name arrived as U+FEE7 U+FEEC
+ * U+FEAE had every reading of it - including a perfectly correct one in the
+ * ordinary letters - refused, three paid stills spent and the piece stuck in
+ * "preparing" for ever. Folding is what makes the two spellings of one name
+ * comparable.
+ *
+ * It is never applied where the approved text is used as the truth: the stencil
+ * is still shaped from the confirmed string and the identity fingerprint still
+ * hashes it, so the shopper's own spelling is what the pendant is cut from and
+ * what the anchor is pinned to. This function only interprets two strings for a
+ * verdict; nothing it returns is stored, shaped or hashed.
  */
-function normalizeReadText(value: string): string {
+function normalizeComparisonText(value: string): string {
   return normalizeIdentityText(value.normalize("NFKC"));
 }
 
@@ -324,8 +331,8 @@ export function identityTextMatches(
   readText: string,
   approvedText: string,
 ): boolean {
-  const read = normalizeReadText(readText);
-  const approved = normalizeIdentityText(approvedText);
+  const read = normalizeComparisonText(readText);
+  const approved = normalizeComparisonText(approvedText);
   if (!read || !approved) return false;
   if (read === approved) return true;
   if (approved.length < 5 || !/^[a-z]+$/.test(approved)) return false;

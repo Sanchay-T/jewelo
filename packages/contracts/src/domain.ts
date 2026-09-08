@@ -67,6 +67,12 @@ export interface VerificationResult {
   status: "passed" | "failed" | "pending";
   exactText: boolean;
   identityScore: number | null;
+  /**
+   * A line for the shopper, written by this application. It is never the
+   * verifier's own prose: `/api/state` stops `notes` at its allowlist
+   * (fix-2 review M5), because the verifier writes that field after being shown
+   * the approved name and can repeat a misreading of it.
+   */
   notes: string;
 }
 export interface AssetLineage {

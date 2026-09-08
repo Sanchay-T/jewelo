@@ -257,9 +257,11 @@ async function recoverStaleTasks(
   const url = environment.SUPABASE_URL;
   const key = environment.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !key) throw new Error("Supabase jobs configuration missing");
-  // Derived from the provider timeout, never a standalone number: a task is
-  // stale only once no dispatch that started a provider call could still be
-  // inside one (pipeline review 1 finding 2).
+  // Derived from the executor's request cap, never a standalone number: a task
+  // is stale only once no dispatch could still hold its request, which is that
+  // cap plus the margin (pipeline review 1 finding 2, fix-2 review M6). The cap
+  // itself is asserted against the route's `maxDuration` literal at boot in
+  // `apps/web/src/app/api/inngest/route.ts`, so the two cannot drift.
   const staleBefore = new Date(
     Date.now() - pipelineLimits.staleRecoveryWindowMs,
   ).toISOString();

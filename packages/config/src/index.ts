@@ -466,9 +466,10 @@ export const webGuardEnvSchema = z.object({
 /* recovered, blocked and then could not transition back.                      */
 /*                                                                            */
 /* The stale window is therefore not a number anyone can set: it is derived as */
-/* the image timeout plus the two vision timeouts plus a validated margin, so  */
-/* the sweeper can never fire while a provider call this process started is    */
-/* still legally running.                                                      */
+/* the executor's request cap plus a validated margin, and the cap is itself   */
+/* derived as the image timeout plus the two vision timeouts plus the validated */
+/* allowance for the local work around them, so the sweeper can never fire     */
+/* while a dispatch this process started is still legally running.             */
 /* ------------------------------------------------------------------------- */
 
 export const pipelineLimitsSchema = z
@@ -491,6 +492,22 @@ export const pipelineLimitsSchema = z
      * could still be working on it.
      */
     staleRecoveryMarginMs: positiveInt.min(30_000).max(600_000),
+    /**
+     * The unbounded local work one dispatch of a still does around its three
+     * provider calls: the identity render, the reference, anchor and dependency
+     * downloads, the upload of the finished still and the database writes.
+     *
+     * Fix-2 review M6. It used to be hidden inside `staleRecoveryMarginMs`,
+     * which meant the executor's own request cap (`maxDuration` in
+     * `apps/web/src/app/api/inngest/route.ts`) was set from nothing: at 300 s
+     * the three provider timeouts alone filled the request, so on a host that
+     * honours the cap the request was killed after the image had been paid for
+     * and the task then sat in `verifying` for the whole margin. It is its own
+     * number now, the cap is derived from it, and the stale window is derived
+     * from the cap, so the sweeper still cannot fire while a dispatch this
+     * process started is legally running.
+     */
+    localWorkAllowanceMs: positiveInt.min(10_000).max(600_000),
     /** `p_limit` for `recover_stale_generation_tasks`; the RPC caps it at 500. */
     staleRecoveryLimit: positiveInt.max(500),
     /** Poll attempts before a submitted video is declared timed out. */
@@ -499,6 +516,16 @@ export const pipelineLimitsSchema = z
     videoPollIntervalSeconds: positiveInt.max(300),
     /** Lifetime of a signed Supabase Storage URL handed to a provider. */
     signedUrlExpirySeconds: positiveInt.min(60).max(3_600),
+    /**
+     * How long before a signed URL expires the browser must ask for a new one.
+     *
+     * Fix-2 review minor 11: the atelier held every signed URL for a hard-coded
+     * 240 000 ms while the server signed for `signedUrlExpirySeconds`, so
+     * lowering the expiry would have left the browser showing URLs that had
+     * already expired. The margin is validated here and `/api/state` publishes
+     * the difference, so one number governs both sides.
+     */
+    signedUrlRefreshMarginSeconds: positiveInt.min(10).max(600),
     /**
      * Paid attempts one task may make. The database is the authority - the
      * `runtime_policy.provider_attempt_budget` column, which every SQL gate
@@ -510,21 +537,48 @@ export const pipelineLimitsSchema = z
   .transform((value) => ({
     ...value,
     /**
+     * Derived, never configured: the longest one dispatch of a still may hold
+     * its HTTP request, in whole seconds, and the value the executor route's
+     * `maxDuration` must carry.
+     *
+     * A still makes three provider calls in sequence - the image edit
+     * (`OpenAIStillAdapter.generate`), the still verification
+     * (`OpenAIStudioVerifier.verify`) and the engraved-name read
+     * (`OpenAINameReader.read`) - each aborted by its own timeout, plus the
+     * local work `localWorkAllowanceMs` covers. Anything less is a cap that
+     * kills a request the pipeline is still legally inside.
+     */
+    executorRequestCapSeconds: Math.ceil(
+      (value.providerRequestTimeoutMs +
+        2 * value.visionRequestTimeoutMs +
+        value.localWorkAllowanceMs) /
+        1_000,
+    ),
+  }))
+  .transform((value) => ({
+    ...value,
+    /** The same cap in milliseconds; the route's literal is checked against it. */
+    executorRequestCapMs: value.executorRequestCapSeconds * 1_000,
+    /**
+     * How long the browser may keep one signed asset URL: the lifetime the
+     * signing call asks for, less the refresh margin. Published by
+     * `/api/state`; the client never carries a number of its own.
+     */
+    signedUrlRefreshAfterMs:
+      (value.signedUrlExpirySeconds - value.signedUrlRefreshMarginSeconds) *
+      1_000,
+    /**
      * Derived, never configured: see the note above.
      *
-     * Pipeline fix review 1 finding 2. The window has to bound every provider
-     * call one dispatch of a still can still be inside, and a still makes
-     * three: the image edit (`OpenAIStillAdapter.generate`), the still
-     * verification (`OpenAIStudioVerifier.verify`) and the engraved-name read
-     * (`OpenAINameReader.read`). They run in sequence, each aborted by its own
-     * timeout, so the longest a live dispatch can legally be working is the
-     * image timeout plus the two vision timeouts, plus the margin for the
-     * unbounded local work around them.
+     * Fix-2 review M6. The window and the request cap are now one invariant:
+     * the sweeper may only reclaim a task once no dispatch could still hold its
+     * request, which is the cap plus the margin. Deriving it from the same
+     * number the route is asserted against is what makes "the sweeper can never
+     * fire while a provider call is still legally running" a proved property
+     * rather than a coincidence of two independently written numbers.
      */
     staleRecoveryWindowMs:
-      value.providerRequestTimeoutMs +
-      2 * value.visionRequestTimeoutMs +
-      value.staleRecoveryMarginMs,
+      value.executorRequestCapSeconds * 1_000 + value.staleRecoveryMarginMs,
   }));
 export type PipelineLimits = z.infer<typeof pipelineLimitsSchema>;
 
@@ -532,10 +586,12 @@ export const pipelineLimits: PipelineLimits = pipelineLimitsSchema.parse({
   providerRequestTimeoutMs: 180_000,
   visionRequestTimeoutMs: 60_000,
   staleRecoveryMarginMs: 120_000,
+  localWorkAllowanceMs: 60_000,
   staleRecoveryLimit: 100,
   videoPollMaxAttempts: 60,
   videoPollIntervalSeconds: 10,
   signedUrlExpirySeconds: 300,
+  signedUrlRefreshMarginSeconds: 60,
   providerAttemptBudget: 3,
 });
 

@@ -173,16 +173,41 @@ merge first without touching DigitalOcean:
 DEPLOY_DRY_RUN=1 bash scripts/digitalocean/deploy.sh staging <branch>
 ```
 
-That prints the merged key names and their scopes, never a value, calls no
-DigitalOcean API and exits 0. A key the contract does not name is never removed
-from the live app, and a key absent from `.env` is left exactly as the platform
-holds it, so a partial local environment cannot wipe a deployed secret.
+That prints the merged key names, their scopes and whether each is set or set
+empty, never a value, calls no DigitalOcean API and exits 0. A key the contract
+does not name is never removed from the live app, and a key absent from `.env`
+is left exactly as the platform holds it, so a partial local environment cannot
+wipe a deployed secret.
+
+The environment file must say which app it may configure.
+Every file used for a sync declares `JEWELO_DEPLOY_TARGET=<environment>` -
+`staging` in the laptop and `home-mini` `.env`, `production` in the production
+file - and `deploy.sh` refuses with exit 2 when the key is missing or names a
+different environment than the one on the command line.
+Without that check one `.env` served both apps, and `deploy.sh production main`
+run from a laptop would have overwritten production's `PROVIDER_MODE`,
+`SUPABASE_URL`, `OPENAI_API_KEY` and `OPERATOR_PASSPHRASE` with staging values.
+`JEWELO_DEPLOY_TARGET` is read from the file and never shipped to the app.
+
+To deploy production, point `JEWELO_ENV_FILE` at the production file, which is
+the only file that may carry `JEWELO_DEPLOY_TARGET=production`:
+
+```bash
+JEWELO_ENV_FILE=/absolute/path/to/production.env \
+  bash scripts/digitalocean/deploy.sh production main
+```
+
+To deploy a branch into an environment whose file you do not have, set
+`DEPLOY_ENV_SYNC=0`: the script ships the branch and leaves the app's
+environment exactly as the platform has it, and says so on stderr.
 
 `TRUSTED_CLIENT_IP_HEADER` is one of those optional keys: it names the header
 the request guards believe as the client address, defaulting to
 `do-connecting-ip`, which App Platform sets and overwrites, and set to the empty
 string on any host that does not, where the last `x-forwarded-for` hop is used
 instead.
+An empty value is a decision, not an absence: it is shipped explicitly as an
+empty variable and the dry run reports it as `set (empty)`.
 
 `IDENTITY_BAR_FALLBACK_REVIEW` is another of them: `1`, the default, sends any
 run whose stencil fell back to the D-020 bar construction to operator review

@@ -75,8 +75,33 @@ export class BoundedTtlMap<V> {
  * which App Platform sets and overwrites, and is set empty on a host that does
  * not, where the same header would be nothing but caller-supplied text.
  * Read once per process, because a header name is not a per-request decision.
+ *
+ * Fix-2 review minor 14: the parse stayed at module scope - the earliest point
+ * a misconfigured deployment can be caught, which is what "fails at boot"
+ * means here - but the bare Zod error it threw named neither the variable nor
+ * what a valid value looks like, so an operator saw a 500 on every guarded
+ * route and a message about a string pattern. The failure is now a named error
+ * that says which environment variable is wrong and what it accepts. The value
+ * itself is never included: it is host configuration, and an error message is
+ * not the place for any of it.
  */
-const trustedHeader = trustedClientIpHeader();
+class TrustedClientIpHeaderError extends Error {
+  constructor(cause: unknown) {
+    super(
+      "TRUSTED_CLIENT_IP_HEADER is not a valid header name: it must be at most 64 characters of a-z, 0-9, underscore or hyphen, or empty to trust no header",
+      { cause },
+    );
+    this.name = "TrustedClientIpHeaderError";
+  }
+}
+
+const trustedHeader = ((): string => {
+  try {
+    return trustedClientIpHeader();
+  } catch (error) {
+    throw new TrustedClientIpHeaderError(error);
+  }
+})();
 
 export function clientIp(request: Request): string {
   const connecting = trustedHeader
