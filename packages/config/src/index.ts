@@ -12,6 +12,15 @@ const blankToUndefined = (value: unknown) =>
 const optionalOf = <T extends z.ZodTypeAny>(schema: T) =>
   z.preprocess(blankToUndefined, schema.optional());
 
+/**
+ * The shape of a pendant construction id as the specification records it
+ * (`PendantConstruction` in `@jewelo/contracts`): lower-case words joined by
+ * hyphens, such as `framed-minimal`. Matched rather than listed, because the
+ * construction list is the contracts package's to own and a second copy here
+ * would drift the day a construction is added.
+ */
+const IDENTITY_CONSTRUCTION_ID = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+
 const url = z.url();
 const nonEmpty = z.string().min(1);
 const optionalUrl = optionalOf(url);
@@ -96,6 +105,26 @@ export const jobsEnvSchema = trustedWebEnvSchema
     VIDEO_ENABLED: z
       .preprocess(blankToUndefined, z.enum(["0", "1"]).default("0"))
       .transform((value) => value === "1"),
+    // P1-5. Jump rings are on for every pendant; a construction that carries
+    // its own suspension (a frame, a rail) can opt out by naming itself here.
+    // Comma separated construction ids, empty by default, so the shipped
+    // behaviour is rings on everywhere. Ring-free stays empty on staging until
+    // P3-7 stops the prompts promising exactly two rings (P1-5a).
+    IDENTITY_RINGLESS_CONSTRUCTIONS: z
+      .preprocess(blankToUndefined, z.string().default(""))
+      .transform((value, context) => {
+        const ids = value
+          .split(",")
+          .map((entry) => entry.trim().toLowerCase())
+          .filter((entry) => entry.length > 0);
+        for (const id of ids)
+          if (!IDENTITY_CONSTRUCTION_ID.test(id))
+            context.addIssue({
+              code: "custom",
+              message: `IDENTITY_RINGLESS_CONSTRUCTIONS: "${id}" is not a construction id (lower-case words joined by hyphens, for example framed-minimal)`,
+            });
+        return new Set(ids) as ReadonlySet<string>;
+      }),
   })
   .superRefine((value, context) => {
     if (value.PROVIDER_MODE !== "real") return;

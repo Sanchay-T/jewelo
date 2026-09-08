@@ -7,6 +7,17 @@ import {
   IDENTITY_MIN_RECENTRE_SCALE,
   IDENTITY_RECENTRE_BOX,
   IDENTITY_RESAMPLE_INK_THRESHOLD,
+  IDENTITY_RING_ANCHOR_EROSION,
+  IDENTITY_RING_ANCHOR_SPANS,
+  IDENTITY_RING_INNER,
+  IDENTITY_RING_MAX_LIFT,
+  IDENTITY_RING_OUTER,
+  IDENTITY_RING_OUTWARD_FRACTION,
+  IDENTITY_RING_TOP_CLEARANCE,
+  IDENTITY_RING_WELD_ANCHOR_DEPTH,
+  IDENTITY_RING_WELD_OVERLAP,
+  IDENTITY_RING_WELD_START_GAP,
+  IDENTITY_RING_WELD_WIDTH,
   IDENTITY_THICKEN_PASSES,
   type IdentityScript,
   type ShapingMeasurement,
@@ -35,6 +46,14 @@ export interface IdentitySolverInput {
     thicknessMm: number;
   }>;
   pipelineRelease: string;
+  /**
+   * Whether to weld the two jump rings on. Rings are the default: a pendant
+   * with no ring cannot hang on a chain. A construction that carries its own
+   * suspension opts out, and that decision belongs to the caller
+   * (`IDENTITY_RINGLESS_CONSTRUCTIONS` in `@jewelo/config`), never to this
+   * package, which reads no environment.
+   */
+  rings?: boolean;
 }
 
 export interface RasterMask {
@@ -92,11 +111,21 @@ export interface IdentityValidationReport {
   bridges: number;
   /** Dilation passes applied before bridging. */
   dilationPixels: number;
-  jumpRingCount: 2;
+  /** Rings welded on: two by default, zero for a ring-free construction. */
+  jumpRingCount: number;
   componentsFinal: 1;
   /** Measured by HarfBuzz: no glyph id 0 and every NFC code point covered. */
   exactCharactersPreserved: boolean;
   passed: true;
+}
+
+/** One welded ring: where its centre is, and the metal it grips. */
+export interface IdentityRingCentre {
+  readonly x: number;
+  readonly y: number;
+  /** The eroded-body pixel the ring was seated on, in the same coordinates. */
+  readonly anchorX: number;
+  readonly anchorY: number;
 }
 
 /**
@@ -127,6 +156,29 @@ export interface IdentityConstructionMeasurement {
    * `inkPixelsBeforeBridging`: a moved dot or hamza is a misspelled pendant.
    */
   readonly inkPixelsPreserved: number;
+  /** Jump rings welded on (P1-5): two by default, zero when rings are off. */
+  readonly jumpRings: number;
+  /**
+   * Ring centres in pre-recentre coordinates, left then right, each with the
+   * anchor it was seated on. The hole always clears that anchor
+   * (`y + IDENTITY_RING_INNER <= anchorY`), which is the per-side statement of
+   * "the ring sits on top of the stroke rather than in it": the two ends of a
+   * name are rarely the same height, so a ring welded to the short end is
+   * correctly lower than the tall end's ascender. Empty when the construction
+   * carries its own suspension.
+   */
+  readonly ringCentres: readonly IdentityRingCentre[];
+  /**
+   * The name's ink box `[minX, minY, maxX, maxY]` measured after bridging and
+   * before the first ring, so a caller can check that each ring hole sits above
+   * the lettering rather than inside it.
+   */
+  readonly glyphBoxBeforeRings: readonly [number, number, number, number];
+  /**
+   * Pre-ring ink pixels that a ring hole punched out. Zero on every stencil, or
+   * the ring ate part of the name.
+   */
+  readonly glyphPixelsInsideRingHoles: number;
   /** Scale `recentre` applied; 1 unless the piece overflowed the body box. */
   readonly recentreScale: number;
   readonly recentreOffsetX: number;
@@ -153,6 +205,7 @@ export class IdentitySolverError extends Error {
       | "identity_bridge_moved_ink"
       | "identity_recentre_too_large"
       | "identity_component_gate_failed"
+      | "identity_ring_anchor_missing"
       | "identity_font_bytes_mismatch"
       | "identity_shaping_gate_failed",
     message: string = code,
@@ -305,7 +358,14 @@ export async function solveIdentity(
       `${approvedText}: ${inkPixelsBeforeBridging - inkPixelsPreserved} of ${inkPixelsBeforeBridging} ink pixels moved while bridging`,
     );
 
-  addJumpRings(mask, 560);
+  const rings =
+    input.rings === false
+      ? {
+          centres: [] as readonly IdentityRingCentre[],
+          glyphBox: inkBox(mask, approvedText),
+          glyphPixelsInsideHoles: 0,
+        }
+      : addRings(mask, approvedText);
   const placement = recentre(mask, approvedText);
   const componentsFinal = countComponents(mask);
   if (componentsFinal !== 1)
@@ -320,6 +380,10 @@ export async function solveIdentity(
     bridgePixelsAdded: bridged.pixelsAdded,
     inkPixelsBeforeBridging,
     inkPixelsPreserved,
+    jumpRings: rings.centres.length,
+    ringCentres: rings.centres,
+    glyphBoxBeforeRings: rings.glyphBox,
+    glyphPixelsInsideRingHoles: rings.glyphPixelsInsideHoles,
     recentreScale: placement.scale,
     recentreOffsetX: placement.offsetX,
     recentreOffsetY: placement.offsetY,
@@ -358,7 +422,7 @@ export async function solveIdentity(
       componentsBefore,
       bridges: bridged.bridges,
       dilationPixels: IDENTITY_THICKEN_PASSES,
-      jumpRingCount: 2,
+      jumpRingCount: rings.centres.length,
       componentsFinal: 1,
       exactCharactersPreserved: shaping.exactCharactersPreserved,
       passed: true,
@@ -793,37 +857,233 @@ function dilate(mask: RasterMask): void {
   }
 }
 
-function addJumpRings(mask: RasterMask, nominalSize: number): void {
-  const points: Array<{ x: number; y: number }> = [];
-  for (let index = 0; index < mask.ink.length; index += 1)
-    if (mask.ink[index])
-      points.push({ x: index % mask.width, y: Math.floor(index / mask.width) });
-  if (!points.length) throw new IdentitySolverError("approved_text_missing");
-  let minX = Number.POSITIVE_INFINITY;
-  let maxX = Number.NEGATIVE_INFINITY;
-  for (const point of points) {
-    minX = Math.min(minX, point.x);
-    maxX = Math.max(maxX, point.x);
-  }
-  const range = Math.max(1, maxX - minX);
-  const outer = Math.floor(nominalSize / 15);
-  const inner = Math.floor(nominalSize / 28);
-  for (const side of ["left", "right"] as const) {
-    const candidates = points.filter((point) =>
-      side === "left"
-        ? point.x < minX + range * 0.2
-        : point.x > maxX - range * 0.2,
-    );
-    const anchor = candidates.reduce((top, point) =>
-      point.y < top.y ? point : top,
-    );
-    const cx = anchor.x;
-    const cy = anchor.y - outer + Math.max(2, Math.floor(nominalSize / 80));
-    drawDisk(mask, cx, cy, outer, 1);
-    drawDisk(mask, cx, cy, inner, 0);
-  }
+/** Where the two rings landed, and what the placement had to prove. */
+interface RingPlacement {
+  /** Ring centres in pre-recentre canvas coordinates, left then right. */
+  readonly centres: readonly IdentityRingCentre[];
+  /** The name's ink box before any ring was drawn, `[minX, minY, maxX, maxY]`. */
+  readonly glyphBox: readonly [number, number, number, number];
+  /**
+   * Pre-ring ink pixels that fall inside a ring hole. Every one of them is a
+   * piece of the name the ring punched out, which is the Asma defect: the old
+   * `addJumpRings` centred the ring on the topmost ink pixel, so the hole sat
+   * inside a letter. It must be zero.
+   */
+  readonly glyphPixelsInsideHoles: number;
 }
 
+/**
+ * Erosion by a square of ones, `IDENTITY_RING_ANCHOR_EROSION` on a side, with
+ * the outside of the canvas treated as background - `binary_erosion` with
+ * scipy's default `border_value=0`. The square is separable, so this runs as a
+ * horizontal pass and then a vertical pass over sliding windows instead of one
+ * pass per window pixel.
+ */
+function erodeSquare(
+  width: number,
+  height: number,
+  ink: Uint8Array,
+  side: number,
+): Uint8Array {
+  const radius = Math.floor(side / 2);
+  const horizontal = new Uint8Array(ink.length);
+  for (let y = 0; y < height; y += 1) {
+    const row = y * width;
+    let zeros = 0;
+    for (let x = 0; x < radius && x < width; x += 1)
+      if (!ink[row + x]) zeros += 1;
+    for (let x = 0; x < width; x += 1) {
+      const entering = x + radius;
+      if (entering < width && !ink[row + entering]) zeros += 1;
+      const leaving = x - radius - 1;
+      if (leaving >= 0 && !ink[row + leaving]) zeros -= 1;
+      const clipped = x - radius < 0 || x + radius > width - 1;
+      horizontal[row + x] = zeros === 0 && !clipped ? 1 : 0;
+    }
+  }
+  const eroded = new Uint8Array(ink.length);
+  for (let x = 0; x < width; x += 1) {
+    let zeros = 0;
+    for (let y = 0; y < radius && y < height; y += 1)
+      if (!horizontal[y * width + x]) zeros += 1;
+    for (let y = 0; y < height; y += 1) {
+      const entering = y + radius;
+      if (entering < height && !horizontal[entering * width + x]) zeros += 1;
+      const leaving = y - radius - 1;
+      if (leaving >= 0 && !horizontal[leaving * width + x]) zeros -= 1;
+      const clipped = y - radius < 0 || y + radius > height - 1;
+      eroded[y * width + x] = zeros === 0 && !clipped ? 1 : 0;
+    }
+  }
+  return eroded;
+}
+
+/**
+ * Two jump rings welded onto the top edge, one over each end of the name. A
+ * port of `add_rings` (`make_stencil.py:143-178`).
+ *
+ * The anchor is chosen on eroded ink, so only metal that is at least
+ * `IDENTITY_RING_ANCHOR_EROSION` pixels thick in both axes can carry a chain: a
+ * dot, a hamza or a hairline serif is gone before the search starts. The ring
+ * centre then steps outward from that anchor, away from the middle of the name,
+ * and up by `IDENTITY_RING_OUTER - IDENTITY_RING_WELD_OVERLAP`, so the ring body
+ * sinks into the stroke it sits on - integral metal, not a floating circle - and
+ * the hole itself clears the lettering into the reserved ring band.
+ */
+function addRings(mask: RasterMask, label: string): RingPlacement {
+  const glyphBox = inkBox(mask, label);
+  const [minX, , maxX] = glyphBox;
+  const span = Math.max(1, maxX - minX);
+
+  let solid = erodeSquare(
+    mask.width,
+    mask.height,
+    mask.ink,
+    IDENTITY_RING_ANCHOR_EROSION,
+  );
+  if (!solid.some((value) => value === 1)) solid = mask.ink;
+
+  const beforeRings = mask.ink.slice();
+  const centres: IdentityRingCentre[] = [];
+  let glyphPixelsInsideHoles = 0;
+  const outwardStep = Math.trunc(
+    IDENTITY_RING_OUTER * IDENTITY_RING_OUTWARD_FRACTION,
+  );
+
+  for (const side of ["left", "right"] as const) {
+    const outward = side === "left" ? -1 : 1;
+    let anchorX = -1;
+    let anchorY = -1;
+    for (const fraction of IDENTITY_RING_ANCHOR_SPANS) {
+      const boundary =
+        side === "left" ? minX + span * fraction : maxX - span * fraction;
+      // Row-major scan: the first hit is the topmost row of the band, and its
+      // leftmost pixel, exactly what `np.argmin` picks out of `np.nonzero`.
+      for (let y = 0; y < mask.height && anchorY < 0; y += 1)
+        for (let x = 0; x < mask.width; x += 1) {
+          if (!solid[y * mask.width + x]) continue;
+          if (side === "left" ? x >= boundary : x <= boundary) continue;
+          anchorX = x;
+          anchorY = y;
+          break;
+        }
+      if (anchorY >= 0) break;
+    }
+    if (anchorY < 0)
+      throw new IdentitySolverError(
+        "identity_ring_anchor_missing",
+        `${label}: no load-bearing metal on the ${side} of the name to weld a ring onto`,
+      );
+
+    const cx = anchorX + outward * outwardStep;
+    const lowest = IDENTITY_RING_OUTER + IDENTITY_RING_TOP_CLEARANCE;
+    const seat = Math.max(
+      lowest,
+      anchorY - IDENTITY_RING_OUTER + IDENTITY_RING_WELD_OVERLAP,
+    );
+    // The lab seats the ring here and stops. A name whose hairline rises above
+    // the load-bearing anchor then loses a few pixels of that hairline to the
+    // hole, so the solver spends the reserved ring band: it lifts the ring
+    // until the hole is clear of the name, and keeps the seat with the least
+    // ink inside if no lift within the band clears it.
+    let cy = seat;
+    let punched = countDisk(mask, beforeRings, cx, seat, IDENTITY_RING_INNER);
+    for (
+      let lift = 1;
+      punched > 0 && lift <= IDENTITY_RING_MAX_LIFT;
+      lift += 1
+    ) {
+      const candidate = Math.max(lowest, seat - lift);
+      if (candidate === cy) break;
+      const inside = countDisk(
+        mask,
+        beforeRings,
+        cx,
+        candidate,
+        IDENTITY_RING_INNER,
+      );
+      if (inside < punched) {
+        punched = inside;
+        cy = candidate;
+      }
+      if (candidate === lowest) break;
+    }
+    glyphPixelsInsideHoles += punched;
+    drawDisk(mask, cx, cy, IDENTITY_RING_OUTER, 1);
+    drawDisk(mask, cx, cy, IDENTITY_RING_INNER, 0);
+    // The weld fillet: metal continuity from under the ring into the stroke.
+    drawBar(
+      mask,
+      cy + IDENTITY_RING_INNER + IDENTITY_RING_WELD_START_GAP,
+      cx,
+      anchorY + IDENTITY_RING_WELD_ANCHOR_DEPTH,
+      anchorX,
+      IDENTITY_RING_WELD_WIDTH,
+    );
+    centres.push({ x: cx, y: cy, anchorX, anchorY });
+  }
+
+  return { centres, glyphBox, glyphPixelsInsideHoles };
+}
+
+/**
+ * The ink bounding box `[minX, minY, maxX, maxY]`, inclusive. Shared by the
+ * ring placement and by the ring-free path, which still has to report the box
+ * the rings would have sat above.
+ */
+function inkBox(
+  mask: RasterMask,
+  label: string,
+): readonly [number, number, number, number] {
+  let minX = mask.width;
+  let minY = mask.height;
+  let maxX = -1;
+  let maxY = -1;
+  for (let index = 0; index < mask.ink.length; index += 1) {
+    if (!mask.ink[index]) continue;
+    const x = index % mask.width;
+    const y = (index - x) / mask.width;
+    if (x < minX) minX = x;
+    if (x > maxX) maxX = x;
+    if (y < minY) minY = y;
+    if (y > maxY) maxY = y;
+  }
+  if (maxX < 0)
+    throw new IdentitySolverError(
+      "identity_mask_empty",
+      `${label}: the mask has no ink to measure`,
+    );
+  return [minX, minY, maxX, maxY];
+}
+
+/** Ink pixels of `source` that lie inside a disk on the mask's grid. */
+function countDisk(
+  mask: RasterMask,
+  source: Uint8Array,
+  cx: number,
+  cy: number,
+  radius: number,
+): number {
+  let inside = 0;
+  for (
+    let y = Math.max(0, cy - radius);
+    y <= Math.min(mask.height - 1, cy + radius);
+    y += 1
+  )
+    for (
+      let x = Math.max(0, cx - radius);
+      x <= Math.min(mask.width - 1, cx + radius);
+      x += 1
+    )
+      if (
+        (x - cx) ** 2 + (y - cy) ** 2 <= radius ** 2 &&
+        source[y * mask.width + x]
+      )
+        inside += 1;
+  return inside;
+}
+
+/** A filled disk, set or cleared - the ring body and then the ring hole. */
 function drawDisk(
   mask: RasterMask,
   cx: number,

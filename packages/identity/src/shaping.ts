@@ -355,6 +355,61 @@ export const IDENTITY_RING_STEM_WIDTH = 30;
 /** How far the ring body sinks into the stroke it sits on (WELD_OVERLAP). */
 export const IDENTITY_RING_WELD_OVERLAP = 16;
 
+/**
+ * The rings the solver welds on: one over each end of the name
+ * (`add_rings`, `make_stencil.py:143-178`).
+ */
+export const IDENTITY_RING_COUNT = 2;
+
+/**
+ * Side of the square erosion window that decides what counts as load-bearing
+ * metal before a ring is anchored (`np.ones((11, 11), bool)`). A dot, a hamza
+ * or a hairline serif does not survive it, so it can never carry the chain.
+ */
+export const IDENTITY_RING_ANCHOR_EROSION = 11;
+
+/**
+ * Fractions of the name's width searched for the anchor, widening until the
+ * eroded body has a pixel in the band (`for frac in (0.18, 0.32, 0.50)`).
+ */
+export const IDENTITY_RING_ANCHOR_SPANS: readonly number[] = Object.freeze([
+  0.18, 0.32, 0.5,
+]);
+
+/**
+ * How far outward of the anchor the ring centre sits, as a fraction of the
+ * outer radius (`int(RING_OUTER * 0.75)`). Outward means away from the middle
+ * of the name, so the ring never buries the dot or serif that carries the
+ * spelling.
+ */
+export const IDENTITY_RING_OUTWARD_FRACTION = 0.75;
+
+/** Smallest gap kept between the ring's top edge and the canvas top edge. */
+export const IDENTITY_RING_TOP_CLEARANCE = 2;
+
+/** Where the weld fillet starts below the ring hole (`cy + RING_INNER + 4`). */
+export const IDENTITY_RING_WELD_START_GAP = 4;
+
+/** How far into the stroke the weld fillet ends (`ay + 14`). */
+export const IDENTITY_RING_WELD_ANCHOR_DEPTH = 14;
+
+/**
+ * How far the ring may be lifted above the position `add_rings` computes, in
+ * pixels, to keep the ring hole clear of the name's own ink.
+ *
+ * The lab stops at one position, so on a name whose hairline rises above the
+ * load-bearing anchor the hole clips a few dozen pixels off that hairline. The
+ * fit already reserves `IDENTITY_RING_BAND` of empty canvas above the lettering
+ * for exactly this, so the solver spends it: it lifts the ring, one pixel at a
+ * time, until nothing of the name lies inside the hole.
+ */
+export const IDENTITY_RING_MAX_LIFT = IDENTITY_RING_BAND;
+
+/** Weld fillet width in pixels (`int(STEM_W * 1.3)`). */
+export const IDENTITY_RING_WELD_WIDTH = Math.trunc(
+  IDENTITY_RING_STEM_WIDTH * 1.3,
+);
+
 /** Font size the fit probe is measured at (`make_stencil.py:211`). */
 export const IDENTITY_PROBE_FONT_SIZE = 200;
 

@@ -49,6 +49,7 @@ export async function renderIdentityAnchor(
   anchor: IdentityAnchor,
   specification: Readonly<Record<string, unknown>>,
   pipelineRelease = "caleums-final-media-v1",
+  ringlessConstructions: ReadonlySet<string> = new Set<string>(),
 ): Promise<RenderedIdentityAnchor> {
   const artifact = await solveIdentity(
     {
@@ -59,6 +60,7 @@ export async function renderIdentityAnchor(
       connector: String(specification.connector ?? "none"),
       dimensions: dimensions(specification.dimensions),
       pipelineRelease,
+      rings: ringsFor(specification, ringlessConstructions),
     },
     new SharpIdentityRasterizer(),
   );
@@ -69,6 +71,23 @@ export async function renderIdentityAnchor(
     report: artifact.report,
     construction: artifact.construction,
   };
+}
+
+/**
+ * Whether this pendant gets jump rings. Rings are on unless the construction
+ * the customer approved is named in `IDENTITY_RINGLESS_CONSTRUCTIONS`, which
+ * `@jewelo/config` validates and `productionPresentationDependencies` reads
+ * once. A revision approved before constructions existed has no construction at
+ * all, and a missing construction can never match the set, so it keeps rings.
+ */
+function ringsFor(
+  specification: Readonly<Record<string, unknown>>,
+  ringlessConstructions: ReadonlySet<string>,
+): boolean {
+  const construction = String(specification.construction ?? "")
+    .trim()
+    .toLowerCase();
+  return !(construction.length > 0 && ringlessConstructions.has(construction));
 }
 
 /**

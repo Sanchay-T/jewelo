@@ -491,6 +491,10 @@ export class SupabasePresentationRepository implements PresentationRepository {
     // Motion is opt-in (VIDEO_ENABLED). Off means a ready studio still never
     // asks fal for a preview, so no run spends video cents.
     private readonly videoEnabled = false,
+    // P1-5. Constructions that carry their own suspension and so want no jump
+    // rings welded on. Read once from the validated environment; the identity
+    // package never reads an environment variable itself.
+    private readonly ringlessConstructions: ReadonlySet<string> = new Set<string>(),
   ) {}
   async #request<T>(path: string, init: RequestInit = {}): Promise<T> {
     const response = await fetch(`${this.url}${path}`, {
@@ -675,6 +679,7 @@ export class SupabasePresentationRepository implements PresentationRepository {
       },
       revision.specification,
       "caleums-final-media-v1",
+      this.ringlessConstructions,
     );
     const basePath = `principal/${ownerId}/revision/${revision.id}/identity-${rendered.fingerprint}`;
     const bodies: Array<[string, Buffer, string]> = [
@@ -1132,6 +1137,7 @@ export function productionPresentationDependencies(
     config.SUPABASE_SERVICE_ROLE_KEY,
     config.PROVIDER_MODE === "mock",
     config.VIDEO_ENABLED,
+    config.IDENTITY_RINGLESS_CONSTRUCTIONS,
   );
   if (config.PROVIDER_MODE === "mock")
     return {

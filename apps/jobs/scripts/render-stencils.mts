@@ -28,8 +28,11 @@ import { tmpdir } from "node:os";
 import { isAbsolute, join, resolve } from "node:path";
 
 import {
+  IDENTITY_RING_INNER,
+  IDENTITY_RING_OUTER,
   identityFontUrl,
   identityStencilSvg,
+  label4,
   LIVE_IDENTITY_STYLES,
   measureMask,
   shapeText,
@@ -115,8 +118,31 @@ const LETTERINGS = ["classic", "kufi"] as const;
 
 const SCRIPTS: readonly IdentityScript[] = ["en", "ar"];
 
+/*
+ * P1-5. Rings are on by default. `--rings=off` renders the same sweep for a
+ * construction that is named in the ring-free set, which is the flag
+ * `IDENTITY_RINGLESS_CONSTRUCTIONS` carries in production: the set is built
+ * here rather than read from the environment so the script proves the
+ * plumbing (specification.construction -> set membership -> solver) without a
+ * deployment.
+ */
+const RINGLESS_CONSTRUCTION = "framed-minimal";
+const flags = process.argv.slice(2).filter((value) => value.startsWith("--"));
+const ringsOff = flags.includes("--rings=off");
+if (flags.some((flag) => flag !== "--rings=off" && flag !== "--rings=on"))
+  throw new Error(`unknown flag among ${JSON.stringify(flags)}`);
+const ringlessConstructions: ReadonlySet<string> = ringsOff
+  ? new Set([RINGLESS_CONSTRUCTION])
+  : new Set<string>();
+const specificationConstruction = ringsOff
+  ? RINGLESS_CONSTRUCTION
+  : "classical";
+
+const positional = process.argv
+  .slice(2)
+  .filter((value) => !value.startsWith("--"));
 const directoryArgument =
-  process.argv[2] ?? join(tmpdir(), "jewelo-identity-stencils");
+  positional[0] ?? join(tmpdir(), "jewelo-identity-stencils");
 const directory = isAbsolute(directoryArgument)
   ? directoryArgument
   : resolve(process.cwd(), directoryArgument);
@@ -150,6 +176,168 @@ interface Row {
   readonly recentreScale: number;
   readonly recentreOffsetX: number;
   readonly recentreOffsetY: number;
+  /** P1-5: rings the solver welded on, and where it says it put them. */
+  readonly jumpRings: number;
+  readonly glyphPixelsInsideRingHoles: number;
+  /** The pre-ring glyph box top, mapped into final image coordinates. */
+  readonly glyphTop: number;
+  /** The measured hole at each predicted ring centre. */
+  readonly ringHoles: readonly RingHole[];
+  /** Every enclosed hole whose centroid sits above the glyph box top. */
+  readonly holesAboveGlyphTop: number;
+}
+
+/* -------------------------------------------------------------------------
+ * P1-5 ring measurement, taken from the written PNG only.
+ *
+ * The solver reports where it put the ring centres in pre-recentre
+ * coordinates; `recentre` then moved and possibly scaled the whole piece, and
+ * the construction record carries exactly that transform. So the script maps
+ * each predicted centre forward, looks up the enclosed background region that
+ * contains that pixel in the decoded image, and reports its measured size and
+ * centroid. A ring hole that is not there, or that reaches the border, or that
+ * is not the region at the predicted point, fails the lookup.
+ * ---------------------------------------------------------------------- */
+
+interface RingHole {
+  readonly found: boolean;
+  readonly size: number;
+  readonly centreX: number;
+  readonly centreY: number;
+  /** Hole centroid above the top of the whole name; reported, not gated. */
+  readonly aboveGlyphTop: boolean;
+  /**
+   * The hole clears the stroke the ring is welded to: its lowest row is above
+   * the anchor pixel. This is the gated statement, because a name's two ends
+   * are rarely the same height and a ring welded to the short end is correctly
+   * lower than the tall end's ascender.
+   */
+  readonly aboveAnchor: boolean;
+}
+
+interface HoleGeometry {
+  /** One entry per enclosed hole: size and centroid. */
+  readonly holes: readonly {
+    readonly size: number;
+    readonly centreX: number;
+    readonly centreY: number;
+  }[];
+  /** Region index per pixel, or -1 when the pixel is ink or an open region. */
+  readonly regionAt: (x: number, y: number) => number;
+}
+
+function holeGeometry(mask: {
+  width: number;
+  height: number;
+  ink: Uint8Array;
+}): HoleGeometry {
+  const { width, height, ink } = mask;
+  const background = label4(width, height, ink, (value) => value === 0);
+  const touchesBorder = new Uint8Array(background.count + 1);
+  for (let x = 0; x < width; x += 1) {
+    touchesBorder[background.labels[x] as number] = 1;
+    touchesBorder[background.labels[(height - 1) * width + x] as number] = 1;
+  }
+  for (let y = 0; y < height; y += 1) {
+    touchesBorder[background.labels[y * width] as number] = 1;
+    touchesBorder[background.labels[y * width + width - 1] as number] = 1;
+  }
+  const sizes = new Float64Array(background.count + 1);
+  const sumX = new Float64Array(background.count + 1);
+  const sumY = new Float64Array(background.count + 1);
+  for (let index = 0; index < background.labels.length; index += 1) {
+    const region = background.labels[index] as number;
+    if (region === 0 || touchesBorder[region] === 1) continue;
+    const x = index % width;
+    sizes[region] = (sizes[region] as number) + 1;
+    sumX[region] = (sumX[region] as number) + x;
+    sumY[region] = (sumY[region] as number) + (index - x) / width;
+  }
+  const order = new Int32Array(background.count + 1).fill(-1);
+  const holes: { size: number; centreX: number; centreY: number }[] = [];
+  for (let region = 1; region <= background.count; region += 1) {
+    if (touchesBorder[region] === 1) continue;
+    order[region] = holes.length;
+    holes.push({
+      size: sizes[region] as number,
+      centreX: (sumX[region] as number) / (sizes[region] as number),
+      centreY: (sumY[region] as number) / (sizes[region] as number),
+    });
+  }
+  return {
+    holes,
+    regionAt: (x, y) => {
+      if (x < 0 || y < 0 || x >= width || y >= height) return -1;
+      const region = background.labels[y * width + x] as number;
+      if (region === 0 || touchesBorder[region] === 1) return -1;
+      return order[region] as number;
+    },
+  };
+}
+
+/** Maps a pre-recentre point through the transform `recentre` applied. */
+const mapForward = (value: number, scale: number, offset: number): number =>
+  value * scale + offset;
+
+interface RingMeasurement {
+  readonly glyphTop: number;
+  readonly ringHoles: readonly RingHole[];
+  readonly holesAboveGlyphTop: number;
+}
+
+function measureRings(
+  decoded: { width: number; height: number; ink: Uint8Array },
+  construction: {
+    readonly ringCentres: readonly {
+      readonly x: number;
+      readonly y: number;
+      readonly anchorX: number;
+      readonly anchorY: number;
+    }[];
+    readonly glyphBoxBeforeRings: readonly [number, number, number, number];
+    readonly recentreScale: number;
+    readonly recentreOffsetX: number;
+    readonly recentreOffsetY: number;
+  },
+): RingMeasurement {
+  const geometry = holeGeometry(decoded);
+  const glyphTop = mapForward(
+    construction.glyphBoxBeforeRings[1],
+    construction.recentreScale,
+    construction.recentreOffsetY,
+  );
+  const ringHoles = construction.ringCentres.map((centre) => {
+    const x = Math.round(
+      mapForward(
+        centre.x,
+        construction.recentreScale,
+        construction.recentreOffsetX,
+      ),
+    );
+    const y = Math.round(
+      mapForward(
+        centre.y,
+        construction.recentreScale,
+        construction.recentreOffsetY,
+      ),
+    );
+    const index = geometry.regionAt(x, y);
+    const hole = index >= 0 ? geometry.holes[index] : undefined;
+    return {
+      found: hole !== undefined,
+      size: hole ? hole.size : 0,
+      centreX: hole ? hole.centreX : x,
+      centreY: hole ? hole.centreY : y,
+      aboveGlyphTop: hole ? hole.centreY < glyphTop : false,
+      aboveAnchor: centre.y + IDENTITY_RING_INNER <= centre.anchorY,
+    };
+  });
+  return {
+    glyphTop,
+    ringHoles,
+    holesAboveGlyphTop: geometry.holes.filter((hole) => hole.centreY < glyphTop)
+      .length,
+  };
 }
 
 const rows: Row[] = [];
@@ -171,11 +359,14 @@ for (const name of NAMES) {
           // resolves both to the same style row and picks the face by script.
           arabicStyle: lettering,
           lettering,
+          construction: specificationConstruction,
           layout: "single-name",
           connector: "none",
           names: [{ approvedArabicText: script === "ar" ? text : null }],
           dimensions: { widthMm: 32, heightMm: 12, thicknessMm: 1.2 },
         },
+        "caleums-final-media-v1",
+        ringlessConstructions,
       );
       writeFileSync(join(directory, file), rendered.png);
 
@@ -192,6 +383,7 @@ for (const name of NAMES) {
       const layout = identityStencilSvg(shaped);
       const decoded = await decodeMask(rendered.png);
       const measured = measureMask(decoded);
+      const ring = measureRings(decoded, rendered.construction);
 
       rows.push({
         file,
@@ -222,6 +414,12 @@ for (const name of NAMES) {
         recentreScale: rendered.construction.recentreScale,
         recentreOffsetX: rendered.construction.recentreOffsetX,
         recentreOffsetY: rendered.construction.recentreOffsetY,
+        jumpRings: rendered.construction.jumpRings,
+        glyphPixelsInsideRingHoles:
+          rendered.construction.glyphPixelsInsideRingHoles,
+        glyphTop: ring.glyphTop,
+        ringHoles: ring.ringHoles,
+        holesAboveGlyphTop: ring.holesAboveGlyphTop,
       });
     }
   }
@@ -291,6 +489,80 @@ for (const row of rows) {
       row.recentreScale.toFixed(3).padEnd(7) +
       `(${row.recentreOffsetX}, ${row.recentreOffsetY})`,
   );
+}
+
+console.log("");
+console.log(
+  ringsOff
+    ? `P1-5 rings OFF (construction "${RINGLESS_CONSTRUCTION}" is in the ring-free set).`
+    : `P1-5 rings ON (the default). Ring radii: outer ${IDENTITY_RING_OUTER}px, inner ${IDENTITY_RING_INNER}px.`,
+);
+console.log(
+  "glyphTop is the pre-ring ink box top, mapped through the recentre transform.",
+);
+console.log(
+  "Each ring hole is the enclosed background region found at the solver's own",
+);
+console.log(
+  "ring centre after the same mapping; size and centre below are measured on",
+);
+console.log(
+  "the written PNG. inHole counts pre-ring ink pixels a ring hole punched out.",
+);
+console.log(
+  "file".padEnd(26) +
+    "rings".padStart(6) +
+    "holes".padStart(6) +
+    "aboveTop".padStart(9) +
+    "glyphTop".padStart(9) +
+    "inHole".padStart(7) +
+    "  ring holes (size @ x,y, above?)",
+);
+for (const row of rows)
+  console.log(
+    row.file.padEnd(26) +
+      String(row.jumpRings).padStart(6) +
+      String(row.holes).padStart(6) +
+      String(row.holesAboveGlyphTop).padStart(9) +
+      row.glyphTop.toFixed(1).padStart(9) +
+      String(row.glyphPixelsInsideRingHoles).padStart(7) +
+      "  " +
+      (row.ringHoles.length === 0
+        ? "-"
+        : row.ringHoles
+            .map(
+              (hole) =>
+                `${hole.found ? hole.size : "MISSING"} @ ${hole.centreX.toFixed(1)},${hole.centreY.toFixed(1)} anchor:${hole.aboveAnchor ? "clear" : "IN-STROKE"} name:${hole.aboveGlyphTop ? "above" : "below"}`,
+            )
+            .join("   ")),
+  );
+
+for (const row of rows) {
+  if (ringsOff) {
+    if (row.jumpRings !== 0 || row.holesAboveGlyphTop !== 0) {
+      console.log(
+        `GATE FAILED: ${row.file} has ${row.jumpRings} rings and ${row.holesAboveGlyphTop} holes above the glyph box with rings off`,
+      );
+      process.exitCode = 1;
+    }
+    continue;
+  }
+  if (row.jumpRings !== 2 || row.ringHoles.length !== 2) {
+    console.log(`GATE FAILED: ${row.file} welded ${row.jumpRings} rings`);
+    process.exitCode = 1;
+  }
+  if (row.ringHoles.some((hole) => !hole.found || !hole.aboveAnchor)) {
+    console.log(
+      `GATE FAILED: ${row.file} has a ring hole that is missing or sits inside the stroke it is welded to`,
+    );
+    process.exitCode = 1;
+  }
+  if (row.glyphPixelsInsideRingHoles !== 0) {
+    console.log(
+      `GATE FAILED: ${row.file} punched ${row.glyphPixelsInsideRingHoles} ink pixels of the name out with a ring hole`,
+    );
+    process.exitCode = 1;
+  }
 }
 
 console.log("");
@@ -372,7 +644,7 @@ writeFileSync(
     rows.map((row) => ({
       file: row.file,
       pngSha256: row.sha256,
-      report: { componentsFinal: row.components, jumpRingCount: 2 },
+      report: { componentsFinal: row.components, jumpRingCount: row.jumpRings },
       text: row.text,
       script: row.script,
       lettering: row.lettering,
@@ -386,6 +658,20 @@ writeFileSync(
         inkPixels: row.inkPixels,
         bbox: row.bbox,
         rule: row.rule,
+      },
+      rings: {
+        jumpRings: row.jumpRings,
+        ringHoleSizes: row.ringHoles.map((hole) => hole.size),
+        ringHoleCentres: row.ringHoles.map((hole) => [
+          Number(hole.centreX.toFixed(1)),
+          Number(hole.centreY.toFixed(1)),
+        ]),
+        ringHolesFound: row.ringHoles.filter((hole) => hole.found).length,
+        ringHolesClearOfAnchor: row.ringHoles.filter((hole) => hole.aboveAnchor)
+          .length,
+        holesAboveGlyphTop: row.holesAboveGlyphTop,
+        glyphTop: Number(row.glyphTop.toFixed(1)),
+        glyphPixelsInsideRingHoles: row.glyphPixelsInsideRingHoles,
       },
       construction: {
         componentsBefore: row.componentsBefore,
@@ -452,6 +738,12 @@ interface MatrixCell {
   readonly bridges: number;
   readonly moved: number;
   readonly recentreScale: number;
+  readonly jumpRings: number;
+  readonly ringHolesFound: number;
+  readonly ringHolesAbove: number;
+  readonly ringHoleSizes: readonly number[];
+  readonly holesAboveGlyphTop: number;
+  readonly glyphPixelsInsideRingHoles: number;
 }
 
 const matrix = new Map<string, MatrixCell>();
@@ -473,17 +765,31 @@ for (const name of MATRIX_NAMES) {
         {
           arabicStyle: style,
           lettering: style,
+          construction: specificationConstruction,
           layout: "single-name",
           connector: "none",
           names: [{ approvedArabicText: script === "ar" ? text : null }],
           dimensions: { widthMm: 32, heightMm: 12, thicknessMm: 1.2 },
         },
+        "caleums-final-media-v1",
+        ringlessConstructions,
       );
       writeFileSync(join(matrixDirectory, file), rendered.png);
-      const measured = measureMask(await decodeMask(rendered.png));
+      const decodedCell = await decodeMask(rendered.png);
+      const measured = measureMask(decodedCell);
+      const ring = measureRings(decodedCell, rendered.construction);
       matrix.set(cellKey(name.label, script, style), {
         file,
         components: measured.components,
+        jumpRings: rendered.construction.jumpRings,
+        ringHolesFound: ring.ringHoles.filter((hole) => hole.found).length,
+        ringHolesAbove: ring.ringHoles.filter(
+          (hole) => hole.found && hole.aboveAnchor,
+        ).length,
+        ringHoleSizes: ring.ringHoles.map((hole) => hole.size),
+        holesAboveGlyphTop: ring.holesAboveGlyphTop,
+        glyphPixelsInsideRingHoles:
+          rendered.construction.glyphPixelsInsideRingHoles,
         islandsBeforeBridging: rendered.construction.islandsBeforeBridging,
         bridges: rendered.construction.bridges,
         moved:
@@ -553,6 +859,36 @@ for (const cell of matrixCells)
     );
     process.exitCode = 1;
   }
+
+const expectedRings = ringsOff ? 0 : 2;
+const ringOk = matrixCells.filter(
+  (cell) =>
+    cell.jumpRings === expectedRings &&
+    cell.ringHolesFound === expectedRings &&
+    cell.ringHolesAbove === expectedRings &&
+    cell.glyphPixelsInsideRingHoles === 0,
+).length;
+const sizes = matrixCells.flatMap((cell) => cell.ringHoleSizes);
+console.log(
+  `MATRIX RINGS ${ringOk}/${matrixCells.length} cells have exactly ${expectedRings} ring holes, each clear of the stroke it is welded to, with no punched-out ink`,
+);
+if (sizes.length)
+  console.log(
+    `MATRIX RING HOLE SIZE min ${Math.min(...sizes)} max ${Math.max(...sizes)} mean ${Math.round(sizes.reduce((total, value) => total + value, 0) / sizes.length)}`,
+  );
+for (const cell of matrixCells) {
+  if (
+    cell.jumpRings === expectedRings &&
+    cell.ringHolesFound === expectedRings &&
+    cell.ringHolesAbove === expectedRings &&
+    cell.glyphPixelsInsideRingHoles === 0
+  )
+    continue;
+  console.log(
+    `GATE FAILED: matrix/${cell.file} rings=${cell.jumpRings} holesFound=${cell.ringHolesFound} above=${cell.ringHolesAbove} holesAboveGlyphTop=${cell.holesAboveGlyphTop} punched=${cell.glyphPixelsInsideRingHoles}`,
+  );
+  process.exitCode = 1;
+}
 
 writeFileSync(
   join(matrixDirectory, "matrix-report.json"),
