@@ -459,6 +459,20 @@ The template hash is unchanged from v4.1 through v4.3 because each release chang
 That is the point of the split: an iteration is visible as a changed compiled-prompt hash against an unchanged template hash, which is exactly what "change one axis" should look like in the record.
 The stored file `lab/final/reference-studio-prompt.txt` was written at v4.2 and has not been re-emitted; the command below reproduces the current v4.3 bytes.
 
+### Promoted to production as `@v2` (P3-7)
+
+v4.3 is now the production prompt.
+`packages/ai/src/prompt-registry.ts` expresses it once per still profile - `image.packshot` Studio, `image.worn` On skin, `image.macro_gift` Close up, `image.dark_editorial` Dark - with the shot brief baked in per profile and the look brief moved into a new `construction` variable (`PENDANT_CONSTRUCTION_PROSE`).
+The four releases were created and published through `POST /api/operator/prompts` against the staging Supabase project on 2026-09-09, with a change note naming this release and the ledger it was proved on (91 rows, 65 pass, 13 tweak, 13 fail).
+
+Three deliberate differences from the lab bytes, all forced by production and all outside the geometry claim:
+
+- production always passes the published style anchor, so `IMAGE ROLES` names `Image 2, tagged @style` where the lab said there was no other reference image;
+- P2-2b makes the stencil the whole physical piece, so the per-look "Image 1 is the lettering only and deliberately carries no rings" rule is replaced by one rule for every construction: the rings are wherever Image 1 puts them, and the construction brief tells the model to reproduce the frame or rails Image 1 already draws;
+- `PHOTOGRAPHY` says "true mid tones in the metal's own colour" where the lab said "warm mid tones", because every lab image was yellow gold and metal colour is a customer choice.
+
+Everything else the lab measured transfers byte for byte: the tagged image roles, the geometry claim stated twice, the casting paragraph, the ring-threading test, the four shot briefs, the rest of the photography block and the preserve list.
+
 ### Holdout names are frozen per prompt hash
 
 A name that has ever been used as a holdout is frozen in `lab/holdout.json` against the exact prompt sha256 it was held out for, and `compile.mjs` refuses with a non-zero exit to compile that name against any other hash.
