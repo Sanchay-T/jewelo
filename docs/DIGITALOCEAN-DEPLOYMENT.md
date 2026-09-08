@@ -61,14 +61,18 @@ validate the environment name and the source ref characters
   -> resolve the app id by app name (jewelo-staging / jewelo-production)
   -> doctl apps get, then select the service named "web", never services[0],
      because the image-based inngest component has no git source
-  -> rewrite only web.git.branch to the requested source ref
+  -> rewrite web.git.branch to the requested source ref
+  -> merge appSecretEnvs from env-contract.mjs into that service's envs:
+     add a key the app never had, overwrite a rotated one, keep every key the
+     contract does not know, print the merged key names and no value
   -> doctl apps update --spec <mode 0600 temp file> --update-sources --wait
   -> print service_url and deployment_id
 ```
 
-Because the script edits the live spec in place and changes only the branch, the
-app's encrypted environment, the `inngest` component, the ingress rule, and the
-instance sizes are all carried through untouched.
+Because the script edits the live spec in place and changes only the branch and
+the contract's own environment keys, the `inngest` component, the ingress rule,
+the instance sizes and every environment key outside the contract are all
+carried through untouched.
 The temp spec file is created mode `0600` and deleted on exit; never print,
 diff, or keep it, because it contains secret material.
 The deployment id it prints is the evidence to record before any later change.
@@ -158,6 +162,27 @@ new revision with `pnpm do:deploy` (`scripts/digitalocean/deploy.sh`), which
 edits the existing spec, and restore with `rollback.sh` if a deployment goes
 wrong. Never print, diff, or capture the resulting app spec because it may
 contain secret material.
+
+`deploy.sh` is therefore also the way to add or rotate an app environment
+variable. Write the value into the ignored `.env` on `home-mini`, add its name
+to `env-contract.mjs` if it is new, then deploy: the script merges the contract
+into the live spec, so the variable ships with the next revision. Prove the
+merge first without touching DigitalOcean:
+
+```bash
+DEPLOY_DRY_RUN=1 bash scripts/digitalocean/deploy.sh staging <branch>
+```
+
+That prints the merged key names and their scopes, never a value, calls no
+DigitalOcean API and exits 0. A key the contract does not name is never removed
+from the live app, and a key absent from `.env` is left exactly as the platform
+holds it, so a partial local environment cannot wipe a deployed secret.
+
+`TRUSTED_CLIENT_IP_HEADER` is one of those optional keys: it names the header
+the request guards believe as the client address, defaulting to
+`do-connecting-ip`, which App Platform sets and overwrites, and set to the empty
+string on any host that does not, where the last `x-forwarded-for` hop is used
+instead.
 
 ## First-time workstation check
 

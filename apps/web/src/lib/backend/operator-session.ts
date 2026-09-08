@@ -12,7 +12,7 @@ const MOCK_SESSION = "mock-development-session";
  * well as the environment being non-production and non-remote, so a build that
  * merely forgets `NODE_ENV=production` cannot open the operator console.
  */
-function mockMode() {
+export function operatorMockMode() {
   return (
     process.env.OPERATOR_MOCK_AUTH === "1" &&
     process.env.NODE_ENV !== "production" &&
@@ -43,7 +43,7 @@ function signature(expiresAt: string) {
 }
 
 export function authenticateOperator(email: string, passphrase: string) {
-  if (mockMode()) return email.includes("@") && passphrase.length >= 4;
+  if (operatorMockMode()) return email.includes("@") && passphrase.length >= 4;
   return (
     equal(
       email.trim().toLowerCase(),
@@ -53,7 +53,7 @@ export function authenticateOperator(email: string, passphrase: string) {
 }
 
 export function operatorSessionCookie() {
-  if (mockMode())
+  if (operatorMockMode())
     return `${COOKIE_NAME}=${MOCK_SESSION}.${crypto.randomUUID()}; Path=/; HttpOnly; SameSite=Strict; Max-Age=${SESSION_SECONDS}`;
   const expiresAt = String(Math.floor(Date.now() / 1000) + SESSION_SECONDS);
   return `${COOKIE_NAME}=${expiresAt}.${signature(expiresAt)}; Path=/; HttpOnly; SameSite=Strict; Max-Age=${SESSION_SECONDS}${process.env.NODE_ENV === "production" ? "; Secure" : ""}`;
@@ -71,7 +71,7 @@ export function hasOperatorSession(request: Request) {
     .find((part) => part.startsWith(`${COOKIE_NAME}=`))
     ?.slice(COOKIE_NAME.length + 1);
   if (!raw) return false;
-  if (mockMode() && raw.startsWith(`${MOCK_SESSION}.`)) return true;
+  if (operatorMockMode() && raw.startsWith(`${MOCK_SESSION}.`)) return true;
   const [expiresAt, provided] = raw.split(".");
   if (!expiresAt || !provided || Number(expiresAt) <= Date.now() / 1000)
     return false;

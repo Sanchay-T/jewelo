@@ -23,7 +23,8 @@ const REQUESTS_PER_WINDOW = webGuardLimits.transliterateRequestsPerWindow;
 // Both maps are bounded by age and by entry count: this route is reachable by
 // any authenticated anonymous principal and spends real provider budget, so an
 // unbounded key space here is both a memory leak and a spend hole.
-const requestWindows = createRateLimitStore();
+const ipWindows = createRateLimitStore();
+const principalWindows = createRateLimitStore();
 const resultCache = new BoundedTtlMap<ArabicTransliterationResult>(
   webGuardLimits.transliterateCacheMaxEntries,
   webGuardLimits.transliterateCacheTtlMs,
@@ -46,18 +47,30 @@ function sameOrigin(request: Request) {
 }
 
 /**
- * The limiter key is the last proxy hop - the only one the caller cannot forge -
- * combined with the authenticated principal, so neither rotating a header nor
- * minting a new anonymous principal alone resets the window.
+ * Two limiters in conjunction, and both have to pass.
+ *
+ * A single `ip|principal` key was not a ceiling at all: anonymous principals are
+ * free to mint, so every new one was a fresh window and one host could spend the
+ * provider budget without limit. The source key is the last proxy hop, the only
+ * hop a caller cannot forge, and it is checked before authentication so a caller
+ * who never presents a valid session is bounded too. The principal key then
+ * bounds one account across however many addresses it reaches us from.
  */
-function clientKey(request: Request, principalId: string) {
-  return `${clientIp(request)}|${principalId}`;
+function assertSourceRateLimit(request: Request) {
+  const verdict = checkRateLimit(
+    ipWindows,
+    clientIp(request),
+    REQUESTS_PER_WINDOW,
+    WINDOW_MS,
+  );
+  if (!verdict.allowed)
+    throw new Response("Too many transliteration requests", { status: 429 });
 }
 
-function assertRateLimit(request: Request, principalId: string) {
+function assertPrincipalRateLimit(principalId: string) {
   const verdict = checkRateLimit(
-    requestWindows,
-    clientKey(request, principalId),
+    principalWindows,
+    principalId,
     REQUESTS_PER_WINDOW,
     WINDOW_MS,
   );
@@ -110,10 +123,11 @@ export async function handleTransliteration(
 ) {
   try {
     sameOrigin(request);
+    assertSourceRateLimit(request);
     const principal = (await authenticate(request)) as
       | { user?: { id?: string } }
       | undefined;
-    assertRateLimit(request, String(principal?.user?.id ?? "anonymous"));
+    assertPrincipalRateLimit(String(principal?.user?.id ?? "anonymous"));
     const declared = Number(request.headers.get("content-length") ?? 0);
     if (declared > MAX_BODY_BYTES)
       throw new Response("Request body is too large", { status: 413 });

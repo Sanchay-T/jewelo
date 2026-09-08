@@ -38,6 +38,10 @@ export const optionalRuntimeConfig = [
   // without it; shipped when present so `smoke.sh` can read the dependency
   // block and assert the deploy is bound to a prod Inngest signing key.
   "READINESS_PROBE_TOKEN",
+  // Defaults to "do-connecting-ip" in the config schema, which is what App
+  // Platform sets and overwrites. Shipped when present so a move to another
+  // host can name its own header, or empty it, without a code change.
+  "TRUSTED_CLIENT_IP_HEADER",
 ];
 
 export const requiredWebConfig = [...new Set([...buildConfig, ...runtimeConfig])];

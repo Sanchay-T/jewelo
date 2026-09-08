@@ -1,5 +1,6 @@
 import { isPromptProfile, validatePromptTemplate } from "@jewelo/ai";
 import {
+  operatorMockMode,
   operatorSessionScope,
   requireOperatorSession,
 } from "../../../../lib/backend/operator-session";
@@ -16,9 +17,13 @@ import {
 } from "../../../../lib/backend/operator-prompt-store";
 
 const MAX_BODY_BYTES = 32 * 1024;
-const mockMode = () =>
-  process.env.NODE_ENV !== "production" &&
-  process.env.NEXT_PUBLIC_JEWELO_DATA_MODE !== "remote";
+/**
+ * One definition of "this deployment is a mock", shared with the operator
+ * session it is gated by. Its own looser copy meant a non-production build
+ * without `OPERATOR_MOCK_AUTH` served prompt releases from an in-memory store
+ * while the session helper considered the same deployment real.
+ */
+const mockMode = operatorMockMode;
 
 function requestId(request: Request) {
   return (

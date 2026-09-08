@@ -352,15 +352,48 @@ const NAME_MAX = 30;
  * shop, meaningful to a shaper and to anything that later renders the name. */
 const INVISIBLE =
   /[\u00AD\u061C\u180E\u200B-\u200F\u202A-\u202E\u2060-\u2064\u2066-\u206F\uFEFF]/u;
-const LATIN_NAME = /^[\p{Script=Latin}'’\- ]+$/u;
-const ARABIC_NAME = /^[\p{Script=Arabic}\p{Mn}\p{Mc} ]+$/u;
+/**
+ * The allowed alphabets.
+ *
+ * A name is written, not typed into a database key, so the Latin form carries
+ * the marks real names carry: combining marks (`\p{M}`, Yoruba `ẹ́mọ` after NFC
+ * still ends in a combining acute) and modifier letters (`\p{Lm}`, the Hawaiian
+ * ʻokina in `Hoʻoku`). The atelier accepts both, and the server refusing them
+ * with a 422 while the shop's own screen accepted them is the worse failure.
+ * Digits are in neither form: Arabic-Indic digits are `Script=Arabic`, so they
+ * are excluded by a separate rule rather than by the alphabet.
+ */
+const LATIN_NAME = /^[\p{Script=Latin}\p{M}\p{Lm}'’\- ]+$/u;
+const ARABIC_NAME = /^[\p{Script=Arabic}\p{M}\p{Lm} ]+$/u;
+/** Any Unicode space separator, plus the ASCII control whitespace. */
+const WHITESPACE = /[\p{Zs}\t\n\r\f\v]+/gu;
+const DIGIT = /\p{Nd}/u;
 export const REFERENCE_ASSET_ID = /^[a-zA-Z0-9_-]{1,128}$/;
+
+/**
+ * At least one real letter of the expected script.
+ *
+ * `'''`, `- - -`, a bare string of harakat and `٠١` are all letterless: the
+ * atelier refuses them, and before this the server did not, so the shaper and a
+ * paid still were handed punctuation to render as gold. Modifier letters are
+ * `\p{L}` but are not a name on their own, so the test is per character and
+ * demands the script as well.
+ */
+const hasScriptLetter = (value: string, script: RegExp) =>
+  Array.from(value).some(
+    (character) => /\p{L}/u.test(character) && script.test(character),
+  );
 
 const nameText = (script: "latin" | "arabic") =>
   z
     .string()
     .max(NAME_MAX * 4)
-    .transform((value) => value.normalize("NFC").trim())
+    // Collapse first, then measure: a pasted non-breaking space or a run of
+    // spaces is one space, so the length cap and the alphabet both see the
+    // name the customer meant to write.
+    .transform((value) =>
+      value.normalize("NFC").replace(WHITESPACE, " ").trim(),
+    )
     .refine((value) => value.length > 0, "Enter a name.")
     .refine(
       (value) => value.length <= NAME_MAX,
@@ -375,6 +408,20 @@ const nameText = (script: "latin" | "arabic") =>
       script === "latin"
         ? "Use Latin letters, spaces, apostrophes or hyphens."
         : "Use Arabic letters and spaces.",
+    )
+    .refine(
+      (value) => script === "latin" || !DIGIT.test(value),
+      "Use Arabic letters and spaces.",
+    )
+    .refine(
+      (value) =>
+        hasScriptLetter(
+          value,
+          script === "latin" ? /\p{Script=Latin}/u : /\p{Script=Arabic}/u,
+        ),
+      script === "latin"
+        ? "Enter a name containing Latin letters."
+        : "Enter a name containing Arabic letters.",
     );
 
 export const approvedNameSchema = z

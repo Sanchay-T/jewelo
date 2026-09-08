@@ -513,3 +513,31 @@ export const pipelineLimits: PipelineLimits = pipelineLimitsSchema.parse({
   signedUrlExpirySeconds: 300,
   providerAttemptBudget: 3,
 });
+
+/* ------------------------------------------------------------------------- */
+/* The header that carries the real client address.                           */
+/*                                                                            */
+/* Which header can be believed is a property of the host in front of the app, */
+/* not of the code. DigitalOcean App Platform sets `do-connecting-ip` itself   */
+/* and overwrites whatever a caller sent, so it is the default and the         */
+/* deployed truth; behind any other proxy that header is caller-supplied text  */
+/* and trusting it hands an attacker a free reset of every per-source guard.   */
+/* Setting `TRUSTED_CLIENT_IP_HEADER` to the empty string means "no header is  */
+/* trusted": fall back to the last `x-forwarded-for` hop, the one the proxy    */
+/* itself appended.                                                           */
+/* ------------------------------------------------------------------------- */
+
+export const trustedClientIpHeaderSchema = z.preprocess(
+  (value) => (typeof value === "string" ? value.trim().toLowerCase() : value),
+  z
+    .string()
+    .max(64)
+    .regex(/^[a-z0-9_-]*$/u, "must be a header name, or empty to trust none")
+    .default("do-connecting-ip"),
+);
+
+export function trustedClientIpHeader(
+  env: NodeJS.ProcessEnv = process.env,
+): string {
+  return trustedClientIpHeaderSchema.parse(env.TRUSTED_CLIENT_IP_HEADER);
+}

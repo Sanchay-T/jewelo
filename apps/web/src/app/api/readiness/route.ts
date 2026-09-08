@@ -51,7 +51,18 @@ export function GET(request: Request) {
   const configured = Boolean(eventKey && signingKey);
   const ready = supabaseConfigured && configured;
 
-  const detailed = hasOperatorSession(request) || probeAuthorized(request);
+  // A readiness probe must answer, always. Both checks read configuration that
+  // can be absent - `hasOperatorSession` throws when `OPERATOR_SESSION_SECRET`
+  // is missing and a stale cookie is presented - and a load balancer asking
+  // whether the app is up must never be told 500 by the authorization step.
+  // Failing to prove the caller is an operator degrades to the public answer.
+  const detailed = (() => {
+    try {
+      return hasOperatorSession(request) || probeAuthorized(request);
+    } catch {
+      return false;
+    }
+  })();
   if (!detailed)
     return Response.json(
       { status: ready ? "ready" : "not_ready" },

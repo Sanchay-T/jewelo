@@ -1,6 +1,6 @@
 import "server-only";
 
-import { webGuardLimits } from "@jewelo/config";
+import { trustedClientIpHeader, webGuardLimits } from "@jewelo/config";
 
 /**
  * Per-source request guards for the routes an anonymous caller can reach.
@@ -68,11 +68,20 @@ export class BoundedTtlMap<V> {
  *
  * DigitalOcean App Platform terminates TLS and appends the real peer as the
  * last `x-forwarded-for` hop, so the last hop is the only one a caller cannot
- * forge; the left-most entry is client-supplied text. `do-connecting-ip` is the
- * platform's own header and is preferred when present.
+ * forge; the left-most entry is client-supplied text.
+ *
+ * Which header above that can be believed is a property of the host, so it is
+ * configuration: `TRUSTED_CLIENT_IP_HEADER` defaults to `do-connecting-ip`,
+ * which App Platform sets and overwrites, and is set empty on a host that does
+ * not, where the same header would be nothing but caller-supplied text.
+ * Read once per process, because a header name is not a per-request decision.
  */
+const trustedHeader = trustedClientIpHeader();
+
 export function clientIp(request: Request): string {
-  const connecting = request.headers.get("do-connecting-ip")?.trim();
+  const connecting = trustedHeader
+    ? request.headers.get(trustedHeader)?.trim()
+    : undefined;
   if (connecting) return connecting.slice(0, 64);
   const forwarded = request.headers.get("x-forwarded-for");
   const last = forwarded?.split(",").at(-1)?.trim();
