@@ -184,6 +184,13 @@ the request guards believe as the client address, defaulting to
 string on any host that does not, where the last `x-forwarded-for` hop is used
 instead.
 
+`IDENTITY_BAR_FALLBACK_REVIEW` is another of them: `1`, the default, sends any
+run whose stencil fell back to the D-020 bar construction to operator review
+before a paid still is made, because rings on a top rail are a different
+physical piece from the rings on the letters the shopper approved.
+Set it to `0` only once the shop has agreed that bar pieces are sellable; the
+placement is recorded on the identity artifact either way.
+
 ## First-time workstation check
 
 Use the repository wrapper so `doctl` reads only the ignored token rather than

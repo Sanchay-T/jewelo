@@ -566,3 +566,29 @@ export function trustedClientIpHeader(
 ): string {
   return trustedClientIpHeaderSchema.parse(env.TRUSTED_CLIENT_IP_HEADER);
 }
+
+/* ------------------------------------------------------------------------- */
+/* Whether a bar-fallback identity construction goes to operator review.      */
+/*                                                                            */
+/* D-020 lets the engine fall back to a top rail with a ring at each of its    */
+/* ends when no clean seat exists on any letter stroke, instead of refusing a  */
+/* customer's name. That fallback is a different physical piece from the one   */
+/* the shopper approved - the rings hang from a bar across the top of the      */
+/* lettering rather than from the letters themselves - so the shop has to see  */
+/* it before any paid still is made of it. On, the default, the run stops      */
+/* pre-spend and lands in operator review. Off, the construction proceeds and  */
+/* the placement is still recorded on the identity artifact, so a deployment   */
+/* that has decided bar pieces are sellable loses no evidence.                 */
+/* ------------------------------------------------------------------------- */
+
+export const identityBarFallbackReviewSchema = z
+  .preprocess(blankToUndefined, z.enum(["0", "1"]).default("1"))
+  .transform((value) => value === "1");
+
+export function identityBarFallbackReview(
+  env: Record<string, string | undefined> = process.env,
+): boolean {
+  return identityBarFallbackReviewSchema.parse(
+    env.IDENTITY_BAR_FALLBACK_REVIEW,
+  );
+}

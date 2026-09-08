@@ -16,7 +16,11 @@ import {
   type StudioNameReader,
   type StudioVerifier,
 } from "@jewelo/ai";
-import { parseJobsEnv, pipelineLimits } from "@jewelo/config";
+import {
+  identityBarFallbackReview,
+  parseJobsEnv,
+  pipelineLimits,
+} from "@jewelo/config";
 // Pipeline fix review 1 finding 5. The one definition of a reference-asset id -
 // the opaque identifier the upload route mints, and nothing that can traverse a
 // path - is the one the upload route validates against, so this job cannot
@@ -159,7 +163,28 @@ export interface PresentationRepository {
     revision: RevisionRow,
     ownerId: string,
     task: TaskRow,
-  ): Promise<{ url: string; fingerprint: string; artifactId: string }>;
+  ): Promise<{
+    url: string;
+    fingerprint: string;
+    artifactId: string;
+    /**
+     * How the engine attached the jump rings to this stencil (D-020):
+     * `welded` on letter strokes, `bar` on a top rail, `none` for a
+     * construction that carries its own suspension. Optional so a repository
+     * that renders nothing - the in-memory one in a harness - can leave it
+     * out; a missing value is treated as "not a bar" by the review gate.
+     */
+    ringPlacement?: string;
+  }>;
+  /**
+   * Whether a `bar` construction must be seen by the shop before a paid still
+   * is made of it (`IDENTITY_BAR_FALLBACK_REVIEW`, validated in
+   * `@jewelo/config` and read once when the dependencies are built, never per
+   * task). Undefined means on, so a repository that never set it cannot spend
+   * on a piece nobody approved; only an explicit `false` lets the bar
+   * construction proceed.
+   */
+  readonly barFallbackReviewEnabled?: boolean;
   signedStyleAnchorUrl(task: TaskRow): Promise<string>;
   /** Ready still of `dependency_task_id`; undefined while it is not ready yet. */
   signedDependencyStillUrl?(
@@ -455,7 +480,9 @@ export async function executePresentationTask(
     return blockPreSpendTerminally(
       new Error("prompt_snapshot_lineage_mismatch"),
     );
-  let identity: { url: string; fingerprint: string; artifactId: string };
+  let identity: Awaited<
+    ReturnType<PresentationRepository["signedIdentityUrl"]>
+  >;
   let styleAnchorUrl: string | undefined;
   let inspirationImageUrl: string | undefined;
   let reference: { url: string; assetId: string } | undefined;
@@ -493,6 +520,21 @@ export async function executePresentationTask(
   } catch (error) {
     return blockPreSpendTerminally(error);
   }
+  // D-020 bar fallback. The engine never refuses a name for want of a ring
+  // seat: where no letter stroke can carry a ring it welds a rail across the
+  // top of the lettering and hangs both rings from that. That is a different
+  // physical piece from the one the shopper approved, so unless the deployment
+  // has said bar pieces are sellable
+  // (`IDENTITY_BAR_FALLBACK_REVIEW=0`), the run stops here - before the
+  // attempt budget is read, before any reservation and before any provider
+  // call - and waits for the shop. The placement is a property of the name and
+  // the style, so a redispatch would decide the same thing: it is a pre-spend
+  // block like the others, terminal, with a code and no customer text.
+  if (
+    identity.ringPlacement === "bar" &&
+    repository.barFallbackReviewEnabled !== false
+  )
+    return blockPreSpendTerminally(new Error("identity_bar_fallback"));
   // The attempt budget is the database's, not this file's: `reserve_provider_attempt`,
   // `retry_generation_task` and `operator_retry_generation_task` all refuse past
   // the same `runtime_policy.provider_attempt_budget`, so a job that stopped one
@@ -738,6 +780,11 @@ export class SupabasePresentationRepository implements PresentationRepository {
     // validated in `@jewelo/config` (PIPELINE_RELEASE_ID) rather than written
     // here as a literal, so a release bump is a configuration change.
     private readonly pipelineReleaseId = "caleums-final-media-v2",
+    // Pipeline fix 1 item 11. Whether a D-020 bar construction goes to
+    // operator review before any spend. Read once from the validated
+    // environment in `productionPresentationDependencies`, like the ringless
+    // set above, so no task reads an environment variable.
+    readonly barFallbackReviewEnabled = true,
   ) {}
   async #request<T>(path: string, init: RequestInit = {}): Promise<T> {
     const response = await fetch(`${this.url}${path}`, {
@@ -1013,7 +1060,17 @@ export class SupabasePresentationRepository implements PresentationRepository {
       "identity-anchors",
       `${basePath}.png`,
     );
-    return { url, fingerprint: rendered.fingerprint, artifactId };
+    return {
+      url,
+      fingerprint: rendered.fingerprint,
+      artifactId,
+      // Already stored on the artifact row: `validation_report` is
+      // `rendered.report`, whose `claimed` block spreads the construction
+      // measurement and so carries `claimed.ringPlacement`. Nothing new is
+      // written and no migration is needed; the value is handed back so the
+      // pre-spend gate can read it without a second query.
+      ringPlacement: rendered.construction.ringPlacement,
+    };
   }
   async signedStyleAnchorUrl(task: TaskRow) {
     if (!task.style_anchor_release_id)
@@ -1429,6 +1486,7 @@ export function productionPresentationDependencies(
     config.VIDEO_ENABLED,
     config.IDENTITY_RINGLESS_CONSTRUCTIONS,
     config.PIPELINE_RELEASE_ID,
+    identityBarFallbackReview(environment),
   );
   if (config.PROVIDER_MODE === "mock")
     return {
