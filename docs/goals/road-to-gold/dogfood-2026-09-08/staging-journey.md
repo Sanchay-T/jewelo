@@ -28,3 +28,14 @@ The pane was hidden for part of the run; visual layout at 390x844 is therefore n
 - run `b06061ca-ae95-41d7-9a0e-44c5f10c3bd1`: `status complete`, `pipeline_release_id caleums-final-media-v2`, `actual_spend_cents 0`, no operator review reason.
 - four tasks (`studio`, `on_skin`, `close_up`, `dark`): `ready`, attempt 1, `terminal_error_code null`, `pipeline_release caleums-final-media-v2`.
 - So the "Being prepared" tiles are the UI refusing the mock 1x1 assets of a completed run, which is the honest degrade documented for `PROVIDER_MODE=mock`.
+
+## Deploy `f617a568` (branch tip `503e252`, code `f3f8775`), lead browser pass
+
+In-app browser, `https://jewelo-staging-gqumd.ondigitalocean.app/en/design/new`, 1440x900 then 390x844.
+Typed `Ali`, chose Classical, "Preview my piece", ticked the confirmation.
+Network: `POST /api/designs/drafts` 201, `POST /api/revisions/approve` 201, `GET /api/state?designId=6d7574c4-…` 200 polling.
+Console: no errors at either viewport.
+Tiles went "Waiting to start" then "Being prepared"; after about 35 s the honest-degrade contact card appeared ("We could not photograph your piece here. Leave one way to reach you and we will send it.") with WhatsApp, Phone, Email, which is the mock-mode outcome: the run completes with fake assets the UI refuses to show.
+At 390x844: `scrollWidth 390 == innerWidth`, no horizontal overflow, four view tiles at 76 px, contact card present.
+Observation: at 1440x900 the review step scrolled so that a large empty band sat above the design summary (screenshot showed the summary starting mid-viewport). Pre-existing, related to the UX review B1/B2 rows; not a regression of this deploy.
+The platform agent's API re-proof (runs `5d873850` Ali and `0975a48c` أمير complete, `verification_result` keys `passed, exactText, identityScore, notes` only, readiness 200 with a forged cookie, transliterate 429 on the 21st call with 21 distinct principals, `'''` and `محمد٠١` refused 422, `O’Neill` 201) is recorded in `PROGRESS.md`.
