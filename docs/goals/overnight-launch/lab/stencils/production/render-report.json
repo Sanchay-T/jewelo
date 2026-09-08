@@ -1,418 +1,2339 @@
 [
   {
     "file": "asma-en-classic.png",
-    "slug": "asma",
-    "role": "lab",
-    "language": "en",
-    "lettering": "classic",
-    "approvedText": "Asma",
-    "ok": true,
-    "pngSha256": "4dc7897f135643ccde1ab74482dc233b248bab796efc3e2cc1d55a127b96849c",
+    "pngSha256": "91f82d41b4971366848759634b6e5dea94227a947391e81054d667c8033c5c91",
     "report": {
-      "engineRelease": "caleums-latin-existing-v1",
-      "pipelineRelease": "caleums-final-media-v1",
+      "engineRelease": "caleums-identity-v4",
+      "pipelineRelease": "caleums-final-media-v2",
       "approvedCharacters": "Asma",
-      "language": "en",
-      "jumpRingCount": 2,
-      "exactCharactersPreserved": true,
-      "passed": true
-    }
-  },
-  {
-    "file": "asma-ar-classic.png",
-    "slug": "asma",
-    "role": "lab",
-    "language": "ar",
-    "lettering": "classic",
-    "approvedText": "أسماء",
-    "ok": true,
-    "pngSha256": "dbb5dccfe0f497efb7de773f2d477778081bc6cfff64f7ebebc44d880c623ba1",
-    "report": {
-      "engineRelease": "caleums-arabic-v3",
-      "pipelineRelease": "caleums-final-media-v1",
-      "approvedCharacters": "أسماء",
       "style": "classic",
-      "fontFile": "NotoNaskhArabic-Regular.ttf",
-      "fontSha256": "67b5a525a661b607971fbd3f96a81b89d3a768e74534fca84f18ac97e6fab72f",
+      "fontFile": "PlayfairDisplay-SemiBold.ttf",
+      "fontSha256": "c40f2293766a503bc70cce9e512ef844a4ccb7cbcde792fe2ea31d191917d8d6",
+      "fontSha256Measured": "c40f2293766a503bc70cce9e512ef844a4ccb7cbcde792fe2ea31d191917d8d6",
       "shaping": {
         "sharp": "0.34.5",
         "libvips": "8.17.3",
-        "pango": "1.57.0",
-        "fribidi": "1.0.16",
-        "harfbuzz": "12.1.0",
-        "freetype": "2.14.1"
+        "harfbuzzShaper": "14.4.0"
       },
       "componentsBefore": 4,
-      "fuseMoves": 3,
-      "dilationPixels": 1,
-      "jumpRingCount": 2,
+      "bridges": 3,
+      "dilationPixels": 2,
+      "measuredBy": "measureMask@caleums-identity-v4",
+      "rule": "luminance",
+      "width": 1024,
+      "height": 1024,
+      "inkPixels": 78056,
       "componentsFinal": 1,
+      "holes": 4,
+      "holeSizes": [
+        4064,
+        3602,
+        1428,
+        1424
+      ],
+      "bbox": [
+        68,
+        349,
+        955,
+        674
+      ],
+      "jumpRingCount": 2,
+      "ringHoles": [
+        {
+          "size": 1424,
+          "centreX": 153.84199438202248,
+          "centreY": 386.7907303370786
+        },
+        {
+          "size": 1428,
+          "centreX": 888.1197478991596,
+          "centreY": 449.8375350140056
+        }
+      ],
       "exactCharactersPreserved": true,
-      "passed": true
+      "passed": true,
+      "construction": {
+        "thickenPasses": 2,
+        "islandsBeforeBridging": 4,
+        "bridges": 3,
+        "bridgePixelsAdded": 1946,
+        "inkPixelsBeforeBridging": 67361,
+        "inkPixelsPreserved": 67361,
+        "jumpRings": 2,
+        "ringCentres": [
+          {
+            "x": 154,
+            "y": 400,
+            "anchorX": 185,
+            "anchorY": 426
+          },
+          {
+            "x": 888,
+            "y": 463,
+            "anchorX": 857,
+            "anchorY": 491
+          }
+        ],
+        "glyphBoxBeforeRings": [
+          68,
+          420,
+          955,
+          683
+        ],
+        "glyphPixelsPunchedByRings": 0,
+        "recentreScale": 1,
+        "recentreOffsetX": 0,
+        "recentreOffsetY": -9
+      }
+    },
+    "text": "Asma",
+    "script": "en",
+    "lettering": "classic",
+    "fontFile": "PlayfairDisplay-SemiBold.ttf",
+    "fontSha256": "c40f2293766a503bc70cce9e512ef844a4ccb7cbcde792fe2ea31d191917d8d6",
+    "fontSize": 358,
+    "advances": [
+      225.54,
+      160.026,
+      317.904,
+      178.284
+    ],
+    "measured": {
+      "components": 1,
+      "holes": 4,
+      "inkPixels": 78056,
+      "bbox": [
+        68,
+        349,
+        955,
+        674
+      ],
+      "rule": "luminance"
+    },
+    "rings": {
+      "jumpRings": 2,
+      "ringHoleSizes": [
+        1424,
+        1428
+      ],
+      "ringHoleCentres": [
+        [
+          153.8,
+          386.8
+        ],
+        [
+          888.1,
+          449.8
+        ]
+      ],
+      "ringHolesFound": 2,
+      "ringHolesClearOfAnchor": 2,
+      "holesAboveGlyphTop": 1,
+      "glyphTop": 411,
+      "glyphPixelsPunchedByRings": 0
+    },
+    "construction": {
+      "componentsBefore": 4,
+      "islandsBeforeBridging": 4,
+      "bridges": 3,
+      "bridgePixelsAdded": 1946,
+      "inkPixelsBeforeBridging": 67361,
+      "inkPixelsPreserved": 67361,
+      "recentreScale": 1,
+      "recentreOffsetX": 0,
+      "recentreOffsetY": -9
     }
   },
   {
     "file": "asma-en-kufi.png",
-    "slug": "asma",
-    "role": "lab",
-    "language": "en",
-    "lettering": "kufi",
-    "approvedText": "Asma",
-    "ok": true,
-    "pngSha256": "4dc7897f135643ccde1ab74482dc233b248bab796efc3e2cc1d55a127b96849c",
+    "pngSha256": "ec0d60fcb30e4208fbd2821cce9b6769ae073bce8fea30a9b61c0fcc7635260f",
     "report": {
-      "engineRelease": "caleums-latin-existing-v1",
-      "pipelineRelease": "caleums-final-media-v1",
+      "engineRelease": "caleums-identity-v4",
+      "pipelineRelease": "caleums-final-media-v2",
       "approvedCharacters": "Asma",
-      "language": "en",
+      "style": "kufi",
+      "fontFile": "cairo.ttf",
+      "fontSha256": "667c987182391c91f4e57a2f455b1794fb5e3ee6ca4ef3383e86bb690fa9c964",
+      "fontSha256Measured": "667c987182391c91f4e57a2f455b1794fb5e3ee6ca4ef3383e86bb690fa9c964",
+      "shaping": {
+        "sharp": "0.34.5",
+        "libvips": "8.17.3",
+        "harfbuzzShaper": "14.4.0"
+      },
+      "componentsBefore": 4,
+      "bridges": 3,
+      "dilationPixels": 2,
+      "measuredBy": "measureMask@caleums-identity-v4",
+      "rule": "luminance",
+      "width": 1024,
+      "height": 1024,
+      "inkPixels": 87166,
+      "componentsFinal": 1,
+      "holes": 4,
+      "holeSizes": [
+        7211,
+        4639,
+        1431,
+        1424
+      ],
+      "bbox": [
+        69,
+        347,
+        954,
+        676
+      ],
       "jumpRingCount": 2,
+      "ringHoles": [
+        {
+          "size": 1424,
+          "centreX": 113.84199438202248,
+          "centreY": 384.7907303370786
+        },
+        {
+          "size": 1431,
+          "centreX": 886.0859538784067,
+          "centreY": 448.8756114605171
+        }
+      ],
       "exactCharactersPreserved": true,
-      "passed": true
+      "passed": true,
+      "construction": {
+        "thickenPasses": 2,
+        "islandsBeforeBridging": 4,
+        "bridges": 3,
+        "bridgePixelsAdded": 2655,
+        "inkPixelsBeforeBridging": 76602,
+        "inkPixelsPreserved": 76602,
+        "jumpRings": 2,
+        "ringCentres": [
+          {
+            "x": 114,
+            "y": 398,
+            "anchorX": 145,
+            "anchorY": 424
+          },
+          {
+            "x": 886,
+            "y": 462,
+            "anchorX": 855,
+            "anchorY": 492
+          }
+        ],
+        "glyphBoxBeforeRings": [
+          69,
+          419,
+          954,
+          685
+        ],
+        "glyphPixelsPunchedByRings": 0,
+        "recentreScale": 1,
+        "recentreOffsetX": 0,
+        "recentreOffsetY": -9
+      }
+    },
+    "text": "Asma",
+    "script": "en",
+    "lettering": "kufi",
+    "fontFile": "cairo.ttf",
+    "fontSha256": "667c987182391c91f4e57a2f455b1794fb5e3ee6ca4ef3383e86bb690fa9c964",
+    "fontSize": 374,
+    "advances": [
+      222.904,
+      174.284,
+      312.664,
+      187.748
+    ],
+    "measured": {
+      "components": 1,
+      "holes": 4,
+      "inkPixels": 87166,
+      "bbox": [
+        69,
+        347,
+        954,
+        676
+      ],
+      "rule": "luminance"
+    },
+    "rings": {
+      "jumpRings": 2,
+      "ringHoleSizes": [
+        1424,
+        1431
+      ],
+      "ringHoleCentres": [
+        [
+          113.8,
+          384.8
+        ],
+        [
+          886.1,
+          448.9
+        ]
+      ],
+      "ringHolesFound": 2,
+      "ringHolesClearOfAnchor": 2,
+      "holesAboveGlyphTop": 1,
+      "glyphTop": 410,
+      "glyphPixelsPunchedByRings": 0
+    },
+    "construction": {
+      "componentsBefore": 4,
+      "islandsBeforeBridging": 4,
+      "bridges": 3,
+      "bridgePixelsAdded": 2655,
+      "inkPixelsBeforeBridging": 76602,
+      "inkPixelsPreserved": 76602,
+      "recentreScale": 1,
+      "recentreOffsetX": 0,
+      "recentreOffsetY": -9
+    }
+  },
+  {
+    "file": "asma-ar-classic.png",
+    "pngSha256": "6b18662f35efd2032643a70d24173b46a573c64b42babc564456aaed985bfc13",
+    "report": {
+      "engineRelease": "caleums-identity-v4",
+      "pipelineRelease": "caleums-final-media-v2",
+      "approvedCharacters": "أسماء",
+      "style": "classic",
+      "fontFile": "NotoNaskhArabic-Regular.ttf",
+      "fontSha256": "67b5a525a661b607971fbd3f96a81b89d3a768e74534fca84f18ac97e6fab72f",
+      "fontSha256Measured": "67b5a525a661b607971fbd3f96a81b89d3a768e74534fca84f18ac97e6fab72f",
+      "shaping": {
+        "sharp": "0.34.5",
+        "libvips": "8.17.3",
+        "harfbuzzShaper": "14.4.0"
+      },
+      "componentsBefore": 4,
+      "bridges": 3,
+      "dilationPixels": 2,
+      "measuredBy": "measureMask@caleums-identity-v4",
+      "rule": "luminance",
+      "width": 1024,
+      "height": 1024,
+      "inkPixels": 81234,
+      "componentsFinal": 1,
+      "holes": 3,
+      "holeSizes": [
+        3371,
+        1358,
+        1353
+      ],
+      "bbox": [
+        56,
+        260,
+        967,
+        762
+      ],
+      "jumpRingCount": 2,
+      "ringHoles": [
+        {
+          "size": 1358,
+          "centreX": 113.5559646539028,
+          "centreY": 590.2157584683358
+        },
+        {
+          "size": 1353,
+          "centreX": 925.7161862527716,
+          "centreY": 297.1411677753141
+        }
+      ],
+      "exactCharactersPreserved": true,
+      "passed": true,
+      "construction": {
+        "thickenPasses": 2,
+        "islandsBeforeBridging": 4,
+        "bridges": 3,
+        "bridgePixelsAdded": 3951,
+        "inkPixelsBeforeBridging": 72722,
+        "inkPixelsPreserved": 72722,
+        "jumpRings": 2,
+        "ringCentres": [
+          {
+            "x": 127,
+            "y": 606,
+            "anchorX": 158,
+            "anchorY": 632
+          },
+          {
+            "x": 954,
+            "y": 307,
+            "anchorX": 923,
+            "anchorY": 333
+          }
+        ],
+        "glyphBoxBeforeRings": [
+          68,
+          328,
+          954,
+          777
+        ],
+        "glyphPixelsPunchedByRings": 0,
+        "recentreScale": 0.9817007534983854,
+        "recentreOffsetX": -10.755651237890206,
+        "recentreOffsetY": -0.15069967707211163
+      }
+    },
+    "text": "أسماء",
+    "script": "ar",
+    "lettering": "classic",
+    "fontFile": "NotoNaskhArabic-Regular.ttf",
+    "fontSha256": "67b5a525a661b607971fbd3f96a81b89d3a768e74534fca84f18ac97e6fab72f",
+    "fontSize": 467,
+    "advances": [
+      204.079,
+      118.151,
+      192.871,
+      307.286,
+      0,
+      111.146
+    ],
+    "measured": {
+      "components": 1,
+      "holes": 3,
+      "inkPixels": 81234,
+      "bbox": [
+        56,
+        260,
+        967,
+        762
+      ],
+      "rule": "luminance"
+    },
+    "rings": {
+      "jumpRings": 2,
+      "ringHoleSizes": [
+        1358,
+        1353
+      ],
+      "ringHoleCentres": [
+        [
+          113.6,
+          590.2
+        ],
+        [
+          925.7,
+          297.1
+        ]
+      ],
+      "ringHolesFound": 2,
+      "ringHolesClearOfAnchor": 2,
+      "holesAboveGlyphTop": 1,
+      "glyphTop": 321.8,
+      "glyphPixelsPunchedByRings": 0
+    },
+    "construction": {
+      "componentsBefore": 4,
+      "islandsBeforeBridging": 4,
+      "bridges": 3,
+      "bridgePixelsAdded": 3951,
+      "inkPixelsBeforeBridging": 72722,
+      "inkPixelsPreserved": 72722,
+      "recentreScale": 0.9817007534983854,
+      "recentreOffsetX": -10.755651237890206,
+      "recentreOffsetY": -0.15069967707211163
     }
   },
   {
     "file": "asma-ar-kufi.png",
-    "slug": "asma",
-    "role": "lab",
-    "language": "ar",
-    "lettering": "kufi",
-    "approvedText": "أسماء",
-    "ok": true,
-    "pngSha256": "dbb5dccfe0f497efb7de773f2d477778081bc6cfff64f7ebebc44d880c623ba1",
+    "pngSha256": "c20e8ddc60adbed90dfb3989b882150d9779f649084cf4465214dbc22337b0f0",
     "report": {
-      "engineRelease": "caleums-arabic-v3",
-      "pipelineRelease": "caleums-final-media-v1",
+      "engineRelease": "caleums-identity-v4",
+      "pipelineRelease": "caleums-final-media-v2",
       "approvedCharacters": "أسماء",
       "style": "kufi",
       "fontFile": "NotoKufiArabic-Regular.ttf",
       "fontSha256": "494f6b61469d7a02a2d63f0fc4930bb007388d8cfe551de5eb98354e100889f3",
+      "fontSha256Measured": "494f6b61469d7a02a2d63f0fc4930bb007388d8cfe551de5eb98354e100889f3",
       "shaping": {
         "sharp": "0.34.5",
         "libvips": "8.17.3",
-        "pango": "1.57.0",
-        "fribidi": "1.0.16",
-        "harfbuzz": "12.1.0",
-        "freetype": "2.14.1"
+        "harfbuzzShaper": "14.4.0"
       },
       "componentsBefore": 4,
-      "fuseMoves": 3,
-      "dilationPixels": 1,
-      "jumpRingCount": 2,
+      "bridges": 3,
+      "dilationPixels": 2,
+      "measuredBy": "measureMask@caleums-identity-v4",
+      "rule": "luminance",
+      "width": 1024,
+      "height": 1024,
+      "inkPixels": 84349,
       "componentsFinal": 1,
+      "holes": 3,
+      "holeSizes": [
+        7576,
+        1383,
+        1359
+      ],
+      "bbox": [
+        56,
+        308,
+        967,
+        714
+      ],
+      "jumpRingCount": 2,
+      "ringHoles": [
+        {
+          "size": 1383,
+          "centreX": 103.40708604483008,
+          "centreY": 538.7845263919016
+        },
+        {
+          "size": 1359,
+          "centreX": 925.7645327446652,
+          "centreY": 345.1927888153054
+        }
+      ],
       "exactCharactersPreserved": true,
-      "passed": true
+      "passed": true,
+      "construction": {
+        "thickenPasses": 2,
+        "islandsBeforeBridging": 4,
+        "bridges": 3,
+        "bridgePixelsAdded": 3475,
+        "inkPixelsBeforeBridging": 75823,
+        "inkPixelsPreserved": 75823,
+        "jumpRings": 2,
+        "ringCentres": [
+          {
+            "x": 116,
+            "y": 553,
+            "anchorX": 147,
+            "anchorY": 579
+          },
+          {
+            "x": 951,
+            "y": 356,
+            "anchorX": 920,
+            "anchorY": 382
+          }
+        ],
+        "glyphBoxBeforeRings": [
+          68,
+          377,
+          954,
+          727
+        ],
+        "glyphPixelsPunchedByRings": 0,
+        "recentreScale": 0.9848812095032398,
+        "recentreOffsetX": -10.971922246220302,
+        "recentreOffsetY": -1.2526997840172953
+      }
+    },
+    "text": "أسماء",
+    "script": "ar",
+    "lettering": "kufi",
+    "fontFile": "NotoKufiArabic-Regular.ttf",
+    "fontSha256": "494f6b61469d7a02a2d63f0fc4930bb007388d8cfe551de5eb98354e100889f3",
+    "fontSize": 359,
+    "advances": [
+      175.91,
+      113.444,
+      217.554,
+      315.202,
+      0,
+      103.751
+    ],
+    "measured": {
+      "components": 1,
+      "holes": 3,
+      "inkPixels": 84349,
+      "bbox": [
+        56,
+        308,
+        967,
+        714
+      ],
+      "rule": "luminance"
+    },
+    "rings": {
+      "jumpRings": 2,
+      "ringHoleSizes": [
+        1383,
+        1359
+      ],
+      "ringHoleCentres": [
+        [
+          103.4,
+          538.8
+        ],
+        [
+          925.8,
+          345.2
+        ]
+      ],
+      "ringHolesFound": 2,
+      "ringHolesClearOfAnchor": 2,
+      "holesAboveGlyphTop": 1,
+      "glyphTop": 370,
+      "glyphPixelsPunchedByRings": 0
+    },
+    "construction": {
+      "componentsBefore": 4,
+      "islandsBeforeBridging": 4,
+      "bridges": 3,
+      "bridgePixelsAdded": 3475,
+      "inkPixelsBeforeBridging": 75823,
+      "inkPixelsPreserved": 75823,
+      "recentreScale": 0.9848812095032398,
+      "recentreOffsetX": -10.971922246220302,
+      "recentreOffsetY": -1.2526997840172953
     }
   },
   {
     "file": "noor-en-classic.png",
-    "slug": "noor",
-    "role": "holdout",
-    "language": "en",
-    "lettering": "classic",
-    "approvedText": "Noor",
-    "ok": true,
-    "pngSha256": "aba0a6640a0c1cc18b411bf0724bfe9c79775a29be6e7ba6c2812931fef774c4",
+    "pngSha256": "050111bdba8b07f7d3bd7a9592b95eb9c955f1167f835d5d6d633056293a21b2",
     "report": {
-      "engineRelease": "caleums-latin-existing-v1",
-      "pipelineRelease": "caleums-final-media-v1",
+      "engineRelease": "caleums-identity-v4",
+      "pipelineRelease": "caleums-final-media-v2",
       "approvedCharacters": "Noor",
-      "language": "en",
-      "jumpRingCount": 2,
-      "exactCharactersPreserved": true,
-      "passed": true
-    }
-  },
-  {
-    "file": "noor-ar-classic.png",
-    "slug": "noor",
-    "role": "holdout",
-    "language": "ar",
-    "lettering": "classic",
-    "approvedText": "نور",
-    "ok": true,
-    "pngSha256": "268f77d4de827b026720585845997b78e372c23fe4285ae53e1e4d6753bf94f1",
-    "report": {
-      "engineRelease": "caleums-arabic-v3",
-      "pipelineRelease": "caleums-final-media-v1",
-      "approvedCharacters": "نور",
       "style": "classic",
-      "fontFile": "NotoNaskhArabic-Regular.ttf",
-      "fontSha256": "67b5a525a661b607971fbd3f96a81b89d3a768e74534fca84f18ac97e6fab72f",
+      "fontFile": "PlayfairDisplay-SemiBold.ttf",
+      "fontSha256": "c40f2293766a503bc70cce9e512ef844a4ccb7cbcde792fe2ea31d191917d8d6",
+      "fontSha256Measured": "c40f2293766a503bc70cce9e512ef844a4ccb7cbcde792fe2ea31d191917d8d6",
       "shaping": {
         "sharp": "0.34.5",
         "libvips": "8.17.3",
-        "pango": "1.57.0",
-        "fribidi": "1.0.16",
-        "harfbuzz": "12.1.0",
-        "freetype": "2.14.1"
+        "harfbuzzShaper": "14.4.0"
       },
-      "componentsBefore": 3,
-      "fuseMoves": 2,
-      "dilationPixels": 1,
-      "jumpRingCount": 2,
+      "componentsBefore": 4,
+      "bridges": 3,
+      "dilationPixels": 2,
+      "measuredBy": "measureMask@caleums-identity-v4",
+      "rule": "luminance",
+      "width": 1024,
+      "height": 1024,
+      "inkPixels": 73933,
       "componentsFinal": 1,
+      "holes": 4,
+      "holeSizes": [
+        14216,
+        14214,
+        1206,
+        1205
+      ],
+      "bbox": [
+        56,
+        345,
+        967,
+        677
+      ],
+      "jumpRingCount": 2,
+      "ringHoles": [
+        {
+          "size": 1206,
+          "centreX": 94.76285240464345,
+          "centreY": 379.9021558872305
+        },
+        {
+          "size": 1205,
+          "centreX": 928.2224066390041,
+          "centreY": 447.40746887966804
+        }
+      ],
       "exactCharactersPreserved": true,
-      "passed": true
+      "passed": true,
+      "construction": {
+        "thickenPasses": 2,
+        "islandsBeforeBridging": 4,
+        "bridges": 3,
+        "bridgePixelsAdded": 3532,
+        "inkPixelsBeforeBridging": 73283,
+        "inkPixelsPreserved": 73283,
+        "jumpRings": 2,
+        "ringCentres": [
+          {
+            "x": 42,
+            "y": 383,
+            "anchorX": 73,
+            "anchorY": 409
+          },
+          {
+            "x": 941,
+            "y": 456,
+            "anchorX": 910,
+            "anchorY": 482
+          }
+        ],
+        "glyphBoxBeforeRings": [
+          68,
+          404,
+          953,
+          700
+        ],
+        "glyphPixelsPunchedByRings": 0,
+        "recentreScale": 0.926829268292683,
+        "recentreOffsetX": 56,
+        "recentreOffsetY": 28.95121951219511
+      }
+    },
+    "text": "Noor",
+    "script": "en",
+    "lettering": "classic",
+    "fontFile": "PlayfairDisplay-SemiBold.ttf",
+    "fontSha256": "c40f2293766a503bc70cce9e512ef844a4ccb7cbcde792fe2ea31d191917d8d6",
+    "fontSize": 406,
+    "advances": [
+      279.328,
+      222.488,
+      222.488,
+      180.67
+    ],
+    "measured": {
+      "components": 1,
+      "holes": 4,
+      "inkPixels": 73933,
+      "bbox": [
+        56,
+        345,
+        967,
+        677
+      ],
+      "rule": "luminance"
+    },
+    "rings": {
+      "jumpRings": 2,
+      "ringHoleSizes": [
+        1206,
+        1205
+      ],
+      "ringHoleCentres": [
+        [
+          94.8,
+          379.9
+        ],
+        [
+          928.2,
+          447.4
+        ]
+      ],
+      "ringHolesFound": 2,
+      "ringHolesClearOfAnchor": 2,
+      "holesAboveGlyphTop": 1,
+      "glyphTop": 403.4,
+      "glyphPixelsPunchedByRings": 0
+    },
+    "construction": {
+      "componentsBefore": 4,
+      "islandsBeforeBridging": 4,
+      "bridges": 3,
+      "bridgePixelsAdded": 3532,
+      "inkPixelsBeforeBridging": 73283,
+      "inkPixelsPreserved": 73283,
+      "recentreScale": 0.926829268292683,
+      "recentreOffsetX": 56,
+      "recentreOffsetY": 28.95121951219511
     }
   },
   {
     "file": "noor-en-kufi.png",
-    "slug": "noor",
-    "role": "holdout",
-    "language": "en",
-    "lettering": "kufi",
-    "approvedText": "Noor",
-    "ok": true,
-    "pngSha256": "aba0a6640a0c1cc18b411bf0724bfe9c79775a29be6e7ba6c2812931fef774c4",
+    "pngSha256": "a9ff3a05219470af60b80d9f67f58c14030e28d18c205ca1e1432a1e0d96958a",
     "report": {
-      "engineRelease": "caleums-latin-existing-v1",
-      "pipelineRelease": "caleums-final-media-v1",
+      "engineRelease": "caleums-identity-v4",
+      "pipelineRelease": "caleums-final-media-v2",
       "approvedCharacters": "Noor",
-      "language": "en",
+      "style": "kufi",
+      "fontFile": "cairo.ttf",
+      "fontSha256": "667c987182391c91f4e57a2f455b1794fb5e3ee6ca4ef3383e86bb690fa9c964",
+      "fontSha256Measured": "667c987182391c91f4e57a2f455b1794fb5e3ee6ca4ef3383e86bb690fa9c964",
+      "shaping": {
+        "sharp": "0.34.5",
+        "libvips": "8.17.3",
+        "harfbuzzShaper": "14.4.0"
+      },
+      "componentsBefore": 4,
+      "bridges": 3,
+      "dilationPixels": 2,
+      "measuredBy": "measureMask@caleums-identity-v4",
+      "rule": "luminance",
+      "width": 1024,
+      "height": 1024,
+      "inkPixels": 85885,
+      "componentsFinal": 1,
+      "holes": 4,
+      "holeSizes": [
+        13529,
+        13505,
+        1120,
+        1114
+      ],
+      "bbox": [
+        56,
+        342,
+        967,
+        680
+      ],
       "jumpRingCount": 2,
+      "ringHoles": [
+        {
+          "size": 1114,
+          "centreX": 93.3330341113106,
+          "centreY": 375.64811490125675
+        },
+        {
+          "size": 1120,
+          "centreX": 929.6714285714286,
+          "centreY": 448.8151785714286
+        }
+      ],
       "exactCharactersPreserved": true,
-      "passed": true
+      "passed": true,
+      "construction": {
+        "thickenPasses": 2,
+        "islandsBeforeBridging": 4,
+        "bridges": 3,
+        "bridgePixelsAdded": 3668,
+        "inkPixelsBeforeBridging": 94919,
+        "inkPixelsPreserved": 94919,
+        "jumpRings": 2,
+        "ringCentres": [
+          {
+            "x": 42,
+            "y": 373,
+            "anchorX": 73,
+            "anchorY": 399
+          },
+          {
+            "x": 978,
+            "y": 455,
+            "anchorX": 947,
+            "anchorY": 481
+          }
+        ],
+        "glyphBoxBeforeRings": [
+          68,
+          394,
+          955,
+          710
+        ],
+        "glyphPixelsPunchedByRings": 0,
+        "recentreScale": 0.8932419196865817,
+        "recentreOffsetX": 56,
+        "recentreOffsetY": 46.33692458374145
+      }
+    },
+    "text": "Noor",
+    "script": "en",
+    "lettering": "kufi",
+    "fontFile": "cairo.ttf",
+    "fontSha256": "667c987182391c91f4e57a2f455b1794fb5e3ee6ca4ef3383e86bb690fa9c964",
+    "fontSize": 447,
+    "advances": [
+      300.384,
+      236.463,
+      236.463,
+      155.109
+    ],
+    "measured": {
+      "components": 1,
+      "holes": 4,
+      "inkPixels": 85885,
+      "bbox": [
+        56,
+        342,
+        967,
+        680
+      ],
+      "rule": "luminance"
+    },
+    "rings": {
+      "jumpRings": 2,
+      "ringHoleSizes": [
+        1114,
+        1120
+      ],
+      "ringHoleCentres": [
+        [
+          93.3,
+          375.6
+        ],
+        [
+          929.7,
+          448.8
+        ]
+      ],
+      "ringHolesFound": 2,
+      "ringHolesClearOfAnchor": 2,
+      "holesAboveGlyphTop": 1,
+      "glyphTop": 398.3,
+      "glyphPixelsPunchedByRings": 0
+    },
+    "construction": {
+      "componentsBefore": 4,
+      "islandsBeforeBridging": 4,
+      "bridges": 3,
+      "bridgePixelsAdded": 3668,
+      "inkPixelsBeforeBridging": 94919,
+      "inkPixelsPreserved": 94919,
+      "recentreScale": 0.8932419196865817,
+      "recentreOffsetX": 56,
+      "recentreOffsetY": 46.33692458374145
+    }
+  },
+  {
+    "file": "noor-ar-classic.png",
+    "pngSha256": "b9aabd5741bdd6a221d9ddc792720ec48984e969502a3b8b5c1e1bdfdb794474",
+    "report": {
+      "engineRelease": "caleums-identity-v4",
+      "pipelineRelease": "caleums-final-media-v2",
+      "approvedCharacters": "نور",
+      "style": "classic",
+      "fontFile": "NotoNaskhArabic-Regular.ttf",
+      "fontSha256": "67b5a525a661b607971fbd3f96a81b89d3a768e74534fca84f18ac97e6fab72f",
+      "fontSha256Measured": "67b5a525a661b607971fbd3f96a81b89d3a768e74534fca84f18ac97e6fab72f",
+      "shaping": {
+        "sharp": "0.34.5",
+        "libvips": "8.17.3",
+        "harfbuzzShaper": "14.4.0"
+      },
+      "componentsBefore": 3,
+      "bridges": 2,
+      "dilationPixels": 2,
+      "measuredBy": "measureMask@caleums-identity-v4",
+      "rule": "luminance",
+      "width": 1024,
+      "height": 1024,
+      "inkPixels": 134305,
+      "componentsFinal": 1,
+      "holes": 4,
+      "holeSizes": [
+        17278,
+        1424,
+        1424,
+        1
+      ],
+      "bbox": [
+        68,
+        165,
+        955,
+        857
+      ],
+      "jumpRingCount": 2,
+      "ringHoles": [
+        {
+          "size": 1424,
+          "centreX": 195.84199438202248,
+          "centreY": 751.7907303370787
+        },
+        {
+          "size": 1424,
+          "centreX": 912.1580056179776,
+          "centreY": 202.79073033707866
+        }
+      ],
+      "exactCharactersPreserved": true,
+      "passed": true,
+      "construction": {
+        "thickenPasses": 2,
+        "islandsBeforeBridging": 3,
+        "bridges": 2,
+        "bridgePixelsAdded": 4029,
+        "inkPixelsBeforeBridging": 122825,
+        "inkPixelsPreserved": 122825,
+        "jumpRings": 2,
+        "ringCentres": [
+          {
+            "x": 196,
+            "y": 767,
+            "anchorX": 227,
+            "anchorY": 793
+          },
+          {
+            "x": 912,
+            "y": 218,
+            "anchorX": 881,
+            "anchorY": 244
+          }
+        ],
+        "glyphBoxBeforeRings": [
+          68,
+          236,
+          955,
+          868
+        ],
+        "glyphPixelsPunchedByRings": 0,
+        "recentreScale": 1,
+        "recentreOffsetX": 0,
+        "recentreOffsetY": -11
+      }
+    },
+    "text": "نور",
+    "script": "ar",
+    "lettering": "classic",
+    "fontFile": "NotoNaskhArabic-Regular.ttf",
+    "fontSha256": "67b5a525a661b607971fbd3f96a81b89d3a768e74534fca84f18ac97e6fab72f",
+    "fontSize": 804,
+    "advances": [
+      310.344,
+      376.272,
+      0,
+      221.1
+    ],
+    "measured": {
+      "components": 1,
+      "holes": 4,
+      "inkPixels": 134305,
+      "bbox": [
+        68,
+        165,
+        955,
+        857
+      ],
+      "rule": "luminance"
+    },
+    "rings": {
+      "jumpRings": 2,
+      "ringHoleSizes": [
+        1424,
+        1424
+      ],
+      "ringHoleCentres": [
+        [
+          195.8,
+          751.8
+        ],
+        [
+          912.2,
+          202.8
+        ]
+      ],
+      "ringHolesFound": 2,
+      "ringHolesClearOfAnchor": 2,
+      "holesAboveGlyphTop": 1,
+      "glyphTop": 225,
+      "glyphPixelsPunchedByRings": 0
+    },
+    "construction": {
+      "componentsBefore": 3,
+      "islandsBeforeBridging": 3,
+      "bridges": 2,
+      "bridgePixelsAdded": 4029,
+      "inkPixelsBeforeBridging": 122825,
+      "inkPixelsPreserved": 122825,
+      "recentreScale": 1,
+      "recentreOffsetX": 0,
+      "recentreOffsetY": -11
     }
   },
   {
     "file": "noor-ar-kufi.png",
-    "slug": "noor",
-    "role": "holdout",
-    "language": "ar",
-    "lettering": "kufi",
-    "approvedText": "نور",
-    "ok": true,
-    "pngSha256": "268f77d4de827b026720585845997b78e372c23fe4285ae53e1e4d6753bf94f1",
+    "pngSha256": "0e68f589aa63eb18eaef12b1e045978888d23e57dca84f30d084436e42222e93",
     "report": {
-      "engineRelease": "caleums-arabic-v3",
-      "pipelineRelease": "caleums-final-media-v1",
+      "engineRelease": "caleums-identity-v4",
+      "pipelineRelease": "caleums-final-media-v2",
       "approvedCharacters": "نور",
       "style": "kufi",
       "fontFile": "NotoKufiArabic-Regular.ttf",
       "fontSha256": "494f6b61469d7a02a2d63f0fc4930bb007388d8cfe551de5eb98354e100889f3",
+      "fontSha256Measured": "494f6b61469d7a02a2d63f0fc4930bb007388d8cfe551de5eb98354e100889f3",
       "shaping": {
         "sharp": "0.34.5",
         "libvips": "8.17.3",
-        "pango": "1.57.0",
-        "fribidi": "1.0.16",
-        "harfbuzz": "12.1.0",
-        "freetype": "2.14.1"
+        "harfbuzzShaper": "14.4.0"
       },
       "componentsBefore": 3,
-      "fuseMoves": 2,
-      "dilationPixels": 1,
-      "jumpRingCount": 2,
+      "bridges": 2,
+      "dilationPixels": 2,
+      "measuredBy": "measureMask@caleums-identity-v4",
+      "rule": "luminance",
+      "width": 1024,
+      "height": 1024,
+      "inkPixels": 199338,
       "componentsFinal": 1,
+      "holes": 3,
+      "holeSizes": [
+        38744,
+        1424,
+        1424
+      ],
+      "bbox": [
+        60,
+        116,
+        963,
+        907
+      ],
+      "jumpRingCount": 2,
+      "ringHoles": [
+        {
+          "size": 1424,
+          "centreX": 186.84199438202248,
+          "centreY": 313.7907303370786
+        },
+        {
+          "size": 1424,
+          "centreX": 921.1580056179776,
+          "centreY": 153.79073033707866
+        }
+      ],
       "exactCharactersPreserved": true,
-      "passed": true
+      "passed": true,
+      "construction": {
+        "thickenPasses": 2,
+        "islandsBeforeBridging": 3,
+        "bridges": 2,
+        "bridgePixelsAdded": 4583,
+        "inkPixelsBeforeBridging": 186805,
+        "inkPixelsPreserved": 186805,
+        "jumpRings": 2,
+        "ringCentres": [
+          {
+            "x": 195,
+            "y": 327,
+            "anchorX": 226,
+            "anchorY": 353
+          },
+          {
+            "x": 929,
+            "y": 167,
+            "anchorX": 898,
+            "anchorY": 193
+          }
+        ],
+        "glyphBoxBeforeRings": [
+          68,
+          188,
+          954,
+          916
+        ],
+        "glyphPixelsPunchedByRings": 0,
+        "recentreScale": 1,
+        "recentreOffsetX": -8,
+        "recentreOffsetY": -9
+      }
+    },
+    "text": "نور",
+    "script": "ar",
+    "lettering": "kufi",
+    "fontFile": "NotoKufiArabic-Regular.ttf",
+    "fontSha256": "494f6b61469d7a02a2d63f0fc4930bb007388d8cfe551de5eb98354e100889f3",
+    "fontSize": 779,
+    "advances": [
+      253.175,
+      430.787,
+      0,
+      234.479
+    ],
+    "measured": {
+      "components": 1,
+      "holes": 3,
+      "inkPixels": 199338,
+      "bbox": [
+        60,
+        116,
+        963,
+        907
+      ],
+      "rule": "luminance"
+    },
+    "rings": {
+      "jumpRings": 2,
+      "ringHoleSizes": [
+        1424,
+        1424
+      ],
+      "ringHoleCentres": [
+        [
+          186.8,
+          313.8
+        ],
+        [
+          921.2,
+          153.8
+        ]
+      ],
+      "ringHolesFound": 2,
+      "ringHolesClearOfAnchor": 2,
+      "holesAboveGlyphTop": 1,
+      "glyphTop": 179,
+      "glyphPixelsPunchedByRings": 0
+    },
+    "construction": {
+      "componentsBefore": 3,
+      "islandsBeforeBridging": 3,
+      "bridges": 2,
+      "bridgePixelsAdded": 4583,
+      "inkPixelsBeforeBridging": 186805,
+      "inkPixelsPreserved": 186805,
+      "recentreScale": 1,
+      "recentreOffsetX": -8,
+      "recentreOffsetY": -9
     }
   },
   {
     "file": "layla-en-classic.png",
-    "slug": "layla",
-    "role": "holdout",
-    "language": "en",
-    "lettering": "classic",
-    "approvedText": "Layla",
-    "ok": true,
-    "pngSha256": "7b4feef2e62ff6c89495bbe1434cfbc6aff3541709fe965814f02793f3e31ec8",
+    "pngSha256": "d23c77437f90744466d13c476d699a603696c0e74f7725b6d11be4f2eed81bdd",
     "report": {
-      "engineRelease": "caleums-latin-existing-v1",
-      "pipelineRelease": "caleums-final-media-v1",
+      "engineRelease": "caleums-identity-v4",
+      "pipelineRelease": "caleums-final-media-v2",
       "approvedCharacters": "Layla",
-      "language": "en",
-      "jumpRingCount": 2,
-      "exactCharactersPreserved": true,
-      "passed": true
-    }
-  },
-  {
-    "file": "layla-ar-classic.png",
-    "slug": "layla",
-    "role": "holdout",
-    "language": "ar",
-    "lettering": "classic",
-    "approvedText": "ليلى",
-    "ok": true,
-    "pngSha256": "64130ad6121e170ec8b00909b7f8f23fcdebd09aae42144c65b22ea2063865f4",
-    "report": {
-      "engineRelease": "caleums-arabic-v3",
-      "pipelineRelease": "caleums-final-media-v1",
-      "approvedCharacters": "ليلى",
       "style": "classic",
-      "fontFile": "NotoNaskhArabic-Regular.ttf",
-      "fontSha256": "67b5a525a661b607971fbd3f96a81b89d3a768e74534fca84f18ac97e6fab72f",
+      "fontFile": "PlayfairDisplay-SemiBold.ttf",
+      "fontSha256": "c40f2293766a503bc70cce9e512ef844a4ccb7cbcde792fe2ea31d191917d8d6",
+      "fontSha256Measured": "c40f2293766a503bc70cce9e512ef844a4ccb7cbcde792fe2ea31d191917d8d6",
       "shaping": {
         "sharp": "0.34.5",
         "libvips": "8.17.3",
-        "pango": "1.57.0",
-        "fribidi": "1.0.16",
-        "harfbuzz": "12.1.0",
-        "freetype": "2.14.1"
+        "harfbuzzShaper": "14.4.0"
       },
-      "componentsBefore": 2,
-      "fuseMoves": 1,
-      "dilationPixels": 1,
-      "jumpRingCount": 2,
+      "componentsBefore": 5,
+      "bridges": 4,
+      "dilationPixels": 2,
+      "measuredBy": "measureMask@caleums-identity-v4",
+      "rule": "luminance",
+      "width": 1024,
+      "height": 1024,
+      "inkPixels": 81036,
       "componentsFinal": 1,
+      "holes": 4,
+      "holeSizes": [
+        4293,
+        4239,
+        1292,
+        1285
+      ],
+      "bbox": [
+        56,
+        316,
+        967,
+        707
+      ],
+      "jumpRingCount": 2,
+      "ringHoles": [
+        {
+          "size": 1292,
+          "centreX": 95.89164086687306,
+          "centreY": 352.0077399380805
+        },
+        {
+          "size": 1285,
+          "centreX": 897.3058365758754,
+          "centreY": 415.83346303501946
+        }
+      ],
       "exactCharactersPreserved": true,
-      "passed": true
+      "passed": true,
+      "construction": {
+        "thickenPasses": 2,
+        "islandsBeforeBridging": 5,
+        "bridges": 4,
+        "bridgePixelsAdded": 3110,
+        "inkPixelsBeforeBridging": 76283,
+        "inkPixelsPreserved": 76283,
+        "jumpRings": 2,
+        "ringCentres": [
+          {
+            "x": 42,
+            "y": 372,
+            "anchorX": 73,
+            "anchorY": 398
+          },
+          {
+            "x": 881,
+            "y": 439,
+            "anchorX": 850,
+            "anchorY": 467
+          }
+        ],
+        "glyphBoxBeforeRings": [
+          68,
+          364,
+          954,
+          740
+        ],
+        "glyphPixelsPunchedByRings": 0,
+        "recentreScale": 0.9549738219895288,
+        "recentreOffsetX": 56,
+        "recentreOffsetY": 0.8586387434554581
+      }
+    },
+    "text": "Layla",
+    "script": "en",
+    "lettering": "classic",
+    "fontFile": "PlayfairDisplay-SemiBold.ttf",
+    "fontSha256": "c40f2293766a503bc70cce9e512ef844a4ccb7cbcde792fe2ea31d191917d8d6",
+    "fontSize": 384,
+    "advances": [
+      225.792,
+      188.928,
+      183.936,
+      109.824,
+      191.232
+    ],
+    "measured": {
+      "components": 1,
+      "holes": 4,
+      "inkPixels": 81036,
+      "bbox": [
+        56,
+        316,
+        967,
+        707
+      ],
+      "rule": "luminance"
+    },
+    "rings": {
+      "jumpRings": 2,
+      "ringHoleSizes": [
+        1292,
+        1285
+      ],
+      "ringHoleCentres": [
+        [
+          95.9,
+          352
+        ],
+        [
+          897.3,
+          415.8
+        ]
+      ],
+      "ringHolesFound": 2,
+      "ringHolesClearOfAnchor": 2,
+      "holesAboveGlyphTop": 0,
+      "glyphTop": 348.5,
+      "glyphPixelsPunchedByRings": 0
+    },
+    "construction": {
+      "componentsBefore": 5,
+      "islandsBeforeBridging": 5,
+      "bridges": 4,
+      "bridgePixelsAdded": 3110,
+      "inkPixelsBeforeBridging": 76283,
+      "inkPixelsPreserved": 76283,
+      "recentreScale": 0.9549738219895288,
+      "recentreOffsetX": 56,
+      "recentreOffsetY": 0.8586387434554581
     }
   },
   {
     "file": "layla-en-kufi.png",
-    "slug": "layla",
-    "role": "holdout",
-    "language": "en",
-    "lettering": "kufi",
-    "approvedText": "Layla",
-    "ok": true,
-    "pngSha256": "7b4feef2e62ff6c89495bbe1434cfbc6aff3541709fe965814f02793f3e31ec8",
+    "pngSha256": "7a72f066cd9f7e802288d424a8a44e7e59ca9994a2ea94df9f27a21c49541e65",
     "report": {
-      "engineRelease": "caleums-latin-existing-v1",
-      "pipelineRelease": "caleums-final-media-v1",
+      "engineRelease": "caleums-identity-v4",
+      "pipelineRelease": "caleums-final-media-v2",
       "approvedCharacters": "Layla",
-      "language": "en",
+      "style": "kufi",
+      "fontFile": "cairo.ttf",
+      "fontSha256": "667c987182391c91f4e57a2f455b1794fb5e3ee6ca4ef3383e86bb690fa9c964",
+      "fontSha256Measured": "667c987182391c91f4e57a2f455b1794fb5e3ee6ca4ef3383e86bb690fa9c964",
+      "shaping": {
+        "sharp": "0.34.5",
+        "libvips": "8.17.3",
+        "harfbuzzShaper": "14.4.0"
+      },
+      "componentsBefore": 5,
+      "bridges": 4,
+      "dilationPixels": 2,
+      "measuredBy": "measureMask@caleums-identity-v4",
+      "rule": "luminance",
+      "width": 1024,
+      "height": 1024,
+      "inkPixels": 93337,
+      "componentsFinal": 1,
+      "holes": 5,
+      "holeSizes": [
+        5581,
+        5556,
+        1291,
+        1277,
+        1
+      ],
+      "bbox": [
+        56,
+        295,
+        967,
+        727
+      ],
       "jumpRingCount": 2,
+      "ringHoles": [
+        {
+          "size": 1291,
+          "centreX": 95.8853601859024,
+          "centreY": 330.99690162664604
+        },
+        {
+          "size": 1277,
+          "centreX": 891.7697729052467,
+          "centreY": 400.79091620986685
+        }
+      ],
       "exactCharactersPreserved": true,
-      "passed": true
+      "passed": true,
+      "construction": {
+        "thickenPasses": 2,
+        "islandsBeforeBridging": 5,
+        "bridges": 4,
+        "bridgePixelsAdded": 3959,
+        "inkPixelsBeforeBridging": 90316,
+        "inkPixelsPreserved": 90316,
+        "jumpRings": 2,
+        "ringCentres": [
+          {
+            "x": 42,
+            "y": 342,
+            "anchorX": 73,
+            "anchorY": 368
+          },
+          {
+            "x": 875,
+            "y": 415,
+            "anchorX": 844,
+            "anchorY": 445
+          }
+        ],
+        "glyphBoxBeforeRings": [
+          68,
+          352,
+          954,
+          753
+        ],
+        "glyphPixelsPunchedByRings": 0,
+        "recentreScale": 0.9549738219895288,
+        "recentreOffsetX": 56,
+        "recentreOffsetY": 8.507853403141326
+      }
+    },
+    "text": "Layla",
+    "script": "en",
+    "lettering": "kufi",
+    "fontFile": "cairo.ttf",
+    "fontSha256": "667c987182391c91f4e57a2f455b1794fb5e3ee6ca4ef3383e86bb690fa9c964",
+    "fontSize": 424,
+    "advances": [
+      202.672,
+      207.336,
+      205.216,
+      98.792,
+      212.848
+    ],
+    "measured": {
+      "components": 1,
+      "holes": 5,
+      "inkPixels": 93337,
+      "bbox": [
+        56,
+        295,
+        967,
+        727
+      ],
+      "rule": "luminance"
+    },
+    "rings": {
+      "jumpRings": 2,
+      "ringHoleSizes": [
+        1291,
+        1277
+      ],
+      "ringHoleCentres": [
+        [
+          95.9,
+          331
+        ],
+        [
+          891.8,
+          400.8
+        ]
+      ],
+      "ringHolesFound": 2,
+      "ringHolesClearOfAnchor": 2,
+      "holesAboveGlyphTop": 1,
+      "glyphTop": 344.7,
+      "glyphPixelsPunchedByRings": 0
+    },
+    "construction": {
+      "componentsBefore": 5,
+      "islandsBeforeBridging": 5,
+      "bridges": 4,
+      "bridgePixelsAdded": 3959,
+      "inkPixelsBeforeBridging": 90316,
+      "inkPixelsPreserved": 90316,
+      "recentreScale": 0.9549738219895288,
+      "recentreOffsetX": 56,
+      "recentreOffsetY": 8.507853403141326
+    }
+  },
+  {
+    "file": "layla-ar-classic.png",
+    "pngSha256": "546a742c519683448be265fca46f788f09a1addcbfeb21eda74aa4f8f93c17fd",
+    "report": {
+      "engineRelease": "caleums-identity-v4",
+      "pipelineRelease": "caleums-final-media-v2",
+      "approvedCharacters": "ليلى",
+      "style": "classic",
+      "fontFile": "NotoNaskhArabic-Regular.ttf",
+      "fontSha256": "67b5a525a661b607971fbd3f96a81b89d3a768e74534fca84f18ac97e6fab72f",
+      "fontSha256Measured": "67b5a525a661b607971fbd3f96a81b89d3a768e74534fca84f18ac97e6fab72f",
+      "shaping": {
+        "sharp": "0.34.5",
+        "libvips": "8.17.3",
+        "harfbuzzShaper": "14.4.0"
+      },
+      "componentsBefore": 3,
+      "bridges": 2,
+      "dilationPixels": 2,
+      "measuredBy": "measureMask@caleums-identity-v4",
+      "rule": "luminance",
+      "width": 1024,
+      "height": 1024,
+      "inkPixels": 94102,
+      "componentsFinal": 1,
+      "holes": 3,
+      "holeSizes": [
+        1203,
+        1198,
+        1
+      ],
+      "bbox": [
+        56,
+        209,
+        967,
+        813
+      ],
+      "jumpRingCount": 2,
+      "ringHoles": [
+        {
+          "size": 1198,
+          "centreX": 94.34974958263773,
+          "centreY": 602.050083472454
+        },
+        {
+          "size": 1203,
+          "centreX": 928.7148794679966,
+          "centreY": 243.5876974231089
+        }
+      ],
+      "exactCharactersPreserved": true,
+      "passed": true,
+      "construction": {
+        "thickenPasses": 2,
+        "islandsBeforeBridging": 3,
+        "bridges": 2,
+        "bridgePixelsAdded": 1496,
+        "inkPixelsBeforeBridging": 101330,
+        "inkPixelsPreserved": 101330,
+        "jumpRings": 2,
+        "ringCentres": [
+          {
+            "x": 54,
+            "y": 626,
+            "anchorX": 85,
+            "anchorY": 652
+          },
+          {
+            "x": 963,
+            "y": 235,
+            "anchorX": 932,
+            "anchorY": 261
+          }
+        ],
+        "glyphBoxBeforeRings": [
+          68,
+          253,
+          954,
+          852
+        ],
+        "glyphPixelsPunchedByRings": 0,
+        "recentreScale": 0.9175050301810865,
+        "recentreOffsetX": 44.989939637826964,
+        "recentreOffsetY": 31.921529175050296
+      }
+    },
+    "text": "ليلى",
+    "script": "ar",
+    "lettering": "classic",
+    "fontFile": "NotoNaskhArabic-Regular.ttf",
+    "fontSha256": "67b5a525a661b607971fbd3f96a81b89d3a768e74534fca84f18ac97e6fab72f",
+    "fontSize": 641,
+    "advances": [
+      440.367,
+      157.045,
+      0,
+      230.76,
+      135.892
+    ],
+    "measured": {
+      "components": 1,
+      "holes": 3,
+      "inkPixels": 94102,
+      "bbox": [
+        56,
+        209,
+        967,
+        813
+      ],
+      "rule": "luminance"
+    },
+    "rings": {
+      "jumpRings": 2,
+      "ringHoleSizes": [
+        1198,
+        1203
+      ],
+      "ringHoleCentres": [
+        [
+          94.3,
+          602.1
+        ],
+        [
+          928.7,
+          243.6
+        ]
+      ],
+      "ringHolesFound": 2,
+      "ringHolesClearOfAnchor": 2,
+      "holesAboveGlyphTop": 1,
+      "glyphTop": 264.1,
+      "glyphPixelsPunchedByRings": 0
+    },
+    "construction": {
+      "componentsBefore": 3,
+      "islandsBeforeBridging": 3,
+      "bridges": 2,
+      "bridgePixelsAdded": 1496,
+      "inkPixelsBeforeBridging": 101330,
+      "inkPixelsPreserved": 101330,
+      "recentreScale": 0.9175050301810865,
+      "recentreOffsetX": 44.989939637826964,
+      "recentreOffsetY": 31.921529175050296
     }
   },
   {
     "file": "layla-ar-kufi.png",
-    "slug": "layla",
-    "role": "holdout",
-    "language": "ar",
-    "lettering": "kufi",
-    "approvedText": "ليلى",
-    "ok": true,
-    "pngSha256": "64130ad6121e170ec8b00909b7f8f23fcdebd09aae42144c65b22ea2063865f4",
+    "pngSha256": "93bcc01607c9b7cb307f731b2b310c7ee02178cc7aacb3759f6d000ea7ee3755",
     "report": {
-      "engineRelease": "caleums-arabic-v3",
-      "pipelineRelease": "caleums-final-media-v1",
+      "engineRelease": "caleums-identity-v4",
+      "pipelineRelease": "caleums-final-media-v2",
       "approvedCharacters": "ليلى",
       "style": "kufi",
       "fontFile": "NotoKufiArabic-Regular.ttf",
       "fontSha256": "494f6b61469d7a02a2d63f0fc4930bb007388d8cfe551de5eb98354e100889f3",
+      "fontSha256Measured": "494f6b61469d7a02a2d63f0fc4930bb007388d8cfe551de5eb98354e100889f3",
       "shaping": {
         "sharp": "0.34.5",
         "libvips": "8.17.3",
-        "pango": "1.57.0",
-        "fribidi": "1.0.16",
-        "harfbuzz": "12.1.0",
-        "freetype": "2.14.1"
+        "harfbuzzShaper": "14.4.0"
       },
-      "componentsBefore": 2,
-      "fuseMoves": 1,
-      "dilationPixels": 1,
-      "jumpRingCount": 2,
+      "componentsBefore": 3,
+      "bridges": 2,
+      "dilationPixels": 2,
+      "measuredBy": "measureMask@caleums-identity-v4",
+      "rule": "luminance",
+      "width": 1024,
+      "height": 1024,
+      "inkPixels": 104503,
       "componentsFinal": 1,
+      "holes": 2,
+      "holeSizes": [
+        1255,
+        1240
+      ],
+      "bbox": [
+        56,
+        254,
+        967,
+        768
+      ],
+      "jumpRingCount": 2,
+      "ringHoles": [
+        {
+          "size": 1240,
+          "centreX": 95.3,
+          "centreY": 552.7895161290322
+        },
+        {
+          "size": 1255,
+          "centreX": 927.588844621514,
+          "centreY": 289.61035856573704
+        }
+      ],
       "exactCharactersPreserved": true,
-      "passed": true
+      "passed": true,
+      "construction": {
+        "thickenPasses": 2,
+        "islandsBeforeBridging": 3,
+        "bridges": 2,
+        "bridgePixelsAdded": 1580,
+        "inkPixelsBeforeBridging": 108848,
+        "inkPixelsPreserved": 108848,
+        "jumpRings": 2,
+        "ringCentres": [
+          {
+            "x": 58,
+            "y": 568,
+            "anchorX": 89,
+            "anchorY": 594
+          },
+          {
+            "x": 944,
+            "y": 287,
+            "anchorX": 913,
+            "anchorY": 317
+          }
+        ],
+        "glyphBoxBeforeRings": [
+          68,
+          312,
+          954,
+          793
+        ],
+        "glyphPixelsPunchedByRings": 0,
+        "recentreScale": 0.9392378990731205,
+        "recentreOffsetX": 40.972193614830076,
+        "recentreOffsetY": 23.88671472708549
+      }
+    },
+    "text": "ليلى",
+    "script": "ar",
+    "lettering": "kufi",
+    "fontFile": "NotoKufiArabic-Regular.ttf",
+    "fontSha256": "494f6b61469d7a02a2d63f0fc4930bb007388d8cfe551de5eb98354e100889f3",
+    "fontSize": 478,
+    "advances": [
+      460.792,
+      162.998,
+      0,
+      186.898,
+      151.048
+    ],
+    "measured": {
+      "components": 1,
+      "holes": 2,
+      "inkPixels": 104503,
+      "bbox": [
+        56,
+        254,
+        967,
+        768
+      ],
+      "rule": "luminance"
+    },
+    "rings": {
+      "jumpRings": 2,
+      "ringHoleSizes": [
+        1240,
+        1255
+      ],
+      "ringHoleCentres": [
+        [
+          95.3,
+          552.8
+        ],
+        [
+          927.6,
+          289.6
+        ]
+      ],
+      "ringHolesFound": 2,
+      "ringHolesClearOfAnchor": 2,
+      "holesAboveGlyphTop": 1,
+      "glyphTop": 316.9,
+      "glyphPixelsPunchedByRings": 0
+    },
+    "construction": {
+      "componentsBefore": 3,
+      "islandsBeforeBridging": 3,
+      "bridges": 2,
+      "bridgePixelsAdded": 1580,
+      "inkPixelsBeforeBridging": 108848,
+      "inkPixelsPreserved": 108848,
+      "recentreScale": 0.9392378990731205,
+      "recentreOffsetX": 40.972193614830076,
+      "recentreOffsetY": 23.88671472708549
     }
   },
   {
     "file": "muhammad-en-classic.png",
-    "slug": "muhammad",
-    "role": "holdout",
-    "language": "en",
-    "lettering": "classic",
-    "approvedText": "Muhammad",
-    "ok": true,
-    "pngSha256": "ecddf9b47c51c3639272620f747cda9c12c40f60befeca65912c05b8cd714ccf",
+    "pngSha256": "b6115f7215596b7ca3532afd56fe2016b7475897557f695dee10672dec700ba0",
     "report": {
-      "engineRelease": "caleums-latin-existing-v1",
-      "pipelineRelease": "caleums-final-media-v1",
+      "engineRelease": "caleums-identity-v4",
+      "pipelineRelease": "caleums-final-media-v2",
       "approvedCharacters": "Muhammad",
-      "language": "en",
-      "jumpRingCount": 2,
-      "exactCharactersPreserved": true,
-      "passed": true
-    }
-  },
-  {
-    "file": "muhammad-ar-classic.png",
-    "slug": "muhammad",
-    "role": "holdout",
-    "language": "ar",
-    "lettering": "classic",
-    "approvedText": "محمد",
-    "ok": true,
-    "pngSha256": "62c80f1f0a86b9639a3bdbf292686d91107a02b33e6363a79a0a4030b2381b6d",
-    "report": {
-      "engineRelease": "caleums-arabic-v3",
-      "pipelineRelease": "caleums-final-media-v1",
-      "approvedCharacters": "محمد",
       "style": "classic",
-      "fontFile": "NotoNaskhArabic-Regular.ttf",
-      "fontSha256": "67b5a525a661b607971fbd3f96a81b89d3a768e74534fca84f18ac97e6fab72f",
+      "fontFile": "PlayfairDisplay-SemiBold.ttf",
+      "fontSha256": "c40f2293766a503bc70cce9e512ef844a4ccb7cbcde792fe2ea31d191917d8d6",
+      "fontSha256Measured": "c40f2293766a503bc70cce9e512ef844a4ccb7cbcde792fe2ea31d191917d8d6",
       "shaping": {
         "sharp": "0.34.5",
         "libvips": "8.17.3",
-        "pango": "1.57.0",
-        "fribidi": "1.0.16",
-        "harfbuzz": "12.1.0",
-        "freetype": "2.14.1"
+        "harfbuzzShaper": "14.4.0"
       },
-      "componentsBefore": 1,
-      "fuseMoves": 0,
-      "dilationPixels": 1,
-      "jumpRingCount": 2,
+      "componentsBefore": 8,
+      "bridges": 7,
+      "dilationPixels": 2,
+      "measuredBy": "measureMask@caleums-identity-v4",
+      "rule": "luminance",
+      "width": 1024,
+      "height": 1024,
+      "inkPixels": 46253,
       "componentsFinal": 1,
+      "holes": 8,
+      "holeSizes": [
+        2042,
+        1201,
+        1195,
+        613,
+        595,
+        2,
+        1,
+        1
+      ],
+      "bbox": [
+        56,
+        419,
+        967,
+        603
+      ],
+      "jumpRingCount": 2,
+      "ringHoles": [
+        {
+          "size": 1195,
+          "centreX": 94.6836820083682,
+          "centreY": 463.9163179916318
+        },
+        {
+          "size": 1201,
+          "centreX": 928.2905911740216,
+          "centreY": 453.744379683597
+        }
+      ],
       "exactCharactersPreserved": true,
-      "passed": true
+      "passed": true,
+      "construction": {
+        "thickenPasses": 2,
+        "islandsBeforeBridging": 8,
+        "bridges": 7,
+        "bridgePixelsAdded": 2658,
+        "inkPixelsBeforeBridging": 42205,
+        "inkPixelsPreserved": 42205,
+        "jumpRings": 2,
+        "ringCentres": [
+          {
+            "x": 54,
+            "y": 476,
+            "anchorX": 85,
+            "anchorY": 502
+          },
+          {
+            "x": 956,
+            "y": 465,
+            "anchorX": 925,
+            "anchorY": 491
+          }
+        ],
+        "glyphBoxBeforeRings": [
+          68,
+          484,
+          954,
+          623
+        ],
+        "glyphPixelsPunchedByRings": 0,
+        "recentreScale": 0.9240121580547113,
+        "recentreOffsetX": 44.911854103343465,
+        "recentreOffsetY": 28.14285714285711
+      }
+    },
+    "text": "Muhammad",
+    "script": "en",
+    "lettering": "classic",
+    "fontFile": "PlayfairDisplay-SemiBold.ttf",
+    "fontSha256": "c40f2293766a503bc70cce9e512ef844a4ccb7cbcde792fe2ea31d191917d8d6",
+    "fontSize": 166,
+    "advances": [
+      142.76,
+      96.446,
+      97.608,
+      82.668,
+      147.408,
+      147.408,
+      82.668,
+      96.446
+    ],
+    "measured": {
+      "components": 1,
+      "holes": 8,
+      "inkPixels": 46253,
+      "bbox": [
+        56,
+        419,
+        967,
+        603
+      ],
+      "rule": "luminance"
+    },
+    "rings": {
+      "jumpRings": 2,
+      "ringHoleSizes": [
+        1195,
+        1201
+      ],
+      "ringHoleCentres": [
+        [
+          94.7,
+          463.9
+        ],
+        [
+          928.3,
+          453.7
+        ]
+      ],
+      "ringHolesFound": 2,
+      "ringHolesClearOfAnchor": 2,
+      "holesAboveGlyphTop": 2,
+      "glyphTop": 475.4,
+      "glyphPixelsPunchedByRings": 0
+    },
+    "construction": {
+      "componentsBefore": 8,
+      "islandsBeforeBridging": 8,
+      "bridges": 7,
+      "bridgePixelsAdded": 2658,
+      "inkPixelsBeforeBridging": 42205,
+      "inkPixelsPreserved": 42205,
+      "recentreScale": 0.9240121580547113,
+      "recentreOffsetX": 44.911854103343465,
+      "recentreOffsetY": 28.14285714285711
     }
   },
   {
     "file": "muhammad-en-kufi.png",
-    "slug": "muhammad",
-    "role": "holdout",
-    "language": "en",
-    "lettering": "kufi",
-    "approvedText": "Muhammad",
-    "ok": true,
-    "pngSha256": "ecddf9b47c51c3639272620f747cda9c12c40f60befeca65912c05b8cd714ccf",
+    "pngSha256": "3756ad61631caa47dc393cc9c891d2fab4eab12bd8288148caa30ce795bc802a",
     "report": {
-      "engineRelease": "caleums-latin-existing-v1",
-      "pipelineRelease": "caleums-final-media-v1",
+      "engineRelease": "caleums-identity-v4",
+      "pipelineRelease": "caleums-final-media-v2",
       "approvedCharacters": "Muhammad",
-      "language": "en",
+      "style": "kufi",
+      "fontFile": "cairo.ttf",
+      "fontSha256": "667c987182391c91f4e57a2f455b1794fb5e3ee6ca4ef3383e86bb690fa9c964",
+      "fontSha256Measured": "667c987182391c91f4e57a2f455b1794fb5e3ee6ca4ef3383e86bb690fa9c964",
+      "shaping": {
+        "sharp": "0.34.5",
+        "libvips": "8.17.3",
+        "harfbuzzShaper": "14.4.0"
+      },
+      "componentsBefore": 8,
+      "bridges": 7,
+      "dilationPixels": 2,
+      "measuredBy": "measureMask@caleums-identity-v4",
+      "rule": "luminance",
+      "width": 1024,
+      "height": 1024,
+      "inkPixels": 45389,
+      "componentsFinal": 1,
+      "holes": 5,
+      "holeSizes": [
+        1832,
+        1137,
+        1126,
+        726,
+        711
+      ],
+      "bbox": [
+        56,
+        424,
+        967,
+        598
+      ],
       "jumpRingCount": 2,
+      "ringHoles": [
+        {
+          "size": 1137,
+          "centreX": 93.40369393139842,
+          "centreY": 462.0712401055409
+        },
+        {
+          "size": 1126,
+          "centreX": 929.4591474245116,
+          "centreY": 457.6358792184725
+        }
+      ],
       "exactCharactersPreserved": true,
-      "passed": true
+      "passed": true,
+      "construction": {
+        "thickenPasses": 2,
+        "islandsBeforeBridging": 8,
+        "bridges": 7,
+        "bridgePixelsAdded": 3443,
+        "inkPixelsBeforeBridging": 43821,
+        "inkPixelsPreserved": 43821,
+        "jumpRings": 2,
+        "ringCentres": [
+          {
+            "x": 42,
+            "y": 470,
+            "anchorX": 73,
+            "anchorY": 496
+          },
+          {
+            "x": 973,
+            "y": 465,
+            "anchorX": 942,
+            "anchorY": 491
+          }
+        ],
+        "glyphBoxBeforeRings": [
+          68,
+          486,
+          954,
+          618
+        ],
+        "glyphPixelsPunchedByRings": 0,
+        "recentreScale": 0.8976377952755905,
+        "recentreOffsetX": 56,
+        "recentreOffsetY": 44.299212598425186
+      }
+    },
+    "text": "Muhammad",
+    "script": "en",
+    "lettering": "kufi",
+    "fontFile": "cairo.ttf",
+    "fontSha256": "667c987182391c91f4e57a2f455b1794fb5e3ee6ca4ef3383e86bb690fa9c964",
+    "fontSize": 178,
+    "advances": [
+      149.698,
+      94.696,
+      95.764,
+      89.356,
+      148.808,
+      148.808,
+      89.356,
+      94.34
+    ],
+    "measured": {
+      "components": 1,
+      "holes": 5,
+      "inkPixels": 45389,
+      "bbox": [
+        56,
+        424,
+        967,
+        598
+      ],
+      "rule": "luminance"
+    },
+    "rings": {
+      "jumpRings": 2,
+      "ringHoleSizes": [
+        1137,
+        1126
+      ],
+      "ringHoleCentres": [
+        [
+          93.4,
+          462.1
+        ],
+        [
+          929.5,
+          457.6
+        ]
+      ],
+      "ringHolesFound": 2,
+      "ringHolesClearOfAnchor": 2,
+      "holesAboveGlyphTop": 2,
+      "glyphTop": 480.6,
+      "glyphPixelsPunchedByRings": 0
+    },
+    "construction": {
+      "componentsBefore": 8,
+      "islandsBeforeBridging": 8,
+      "bridges": 7,
+      "bridgePixelsAdded": 3443,
+      "inkPixelsBeforeBridging": 43821,
+      "inkPixelsPreserved": 43821,
+      "recentreScale": 0.8976377952755905,
+      "recentreOffsetX": 56,
+      "recentreOffsetY": 44.299212598425186
+    }
+  },
+  {
+    "file": "muhammad-ar-classic.png",
+    "pngSha256": "711cbd29c7c9c724acf12b333d4ed0fe140dd54472dc519b51edb1c98f305837",
+    "report": {
+      "engineRelease": "caleums-identity-v4",
+      "pipelineRelease": "caleums-final-media-v2",
+      "approvedCharacters": "محمد",
+      "style": "classic",
+      "fontFile": "NotoNaskhArabic-Regular.ttf",
+      "fontSha256": "67b5a525a661b607971fbd3f96a81b89d3a768e74534fca84f18ac97e6fab72f",
+      "fontSha256Measured": "67b5a525a661b607971fbd3f96a81b89d3a768e74534fca84f18ac97e6fab72f",
+      "shaping": {
+        "sharp": "0.34.5",
+        "libvips": "8.17.3",
+        "harfbuzzShaper": "14.4.0"
+      },
+      "componentsBefore": 1,
+      "bridges": 0,
+      "dilationPixels": 2,
+      "measuredBy": "measureMask@caleums-identity-v4",
+      "rule": "luminance",
+      "width": 1024,
+      "height": 1024,
+      "inkPixels": 74570,
+      "componentsFinal": 1,
+      "holes": 5,
+      "holeSizes": [
+        3613,
+        3382,
+        1424,
+        1424,
+        1
+      ],
+      "bbox": [
+        64,
+        388,
+        959,
+        634
+      ],
+      "jumpRingCount": 2,
+      "ringHoles": [
+        {
+          "size": 1424,
+          "centreX": 147.84199438202248,
+          "centreY": 425.7907303370786
+        },
+        {
+          "size": 1424,
+          "centreX": 917.1580056179776,
+          "centreY": 450.7907303370786
+        }
+      ],
+      "exactCharactersPreserved": true,
+      "passed": true,
+      "construction": {
+        "thickenPasses": 2,
+        "islandsBeforeBridging": 1,
+        "bridges": 0,
+        "bridgePixelsAdded": 0,
+        "inkPixelsBeforeBridging": 66781,
+        "inkPixelsPreserved": 66781,
+        "jumpRings": 2,
+        "ringCentres": [
+          {
+            "x": 152,
+            "y": 440,
+            "anchorX": 183,
+            "anchorY": 466
+          },
+          {
+            "x": 921,
+            "y": 465,
+            "anchorX": 890,
+            "anchorY": 491
+          }
+        ],
+        "glyphBoxBeforeRings": [
+          68,
+          459,
+          954,
+          644
+        ],
+        "glyphPixelsPunchedByRings": 0,
+        "recentreScale": 1,
+        "recentreOffsetX": -4,
+        "recentreOffsetY": -10
+      }
+    },
+    "text": "محمد",
+    "script": "ar",
+    "lettering": "classic",
+    "fontFile": "NotoNaskhArabic-Regular.ttf",
+    "fontSha256": "67b5a525a661b607971fbd3f96a81b89d3a768e74534fca84f18ac97e6fab72f",
+    "fontSize": 458,
+    "advances": [
+      217.092,
+      189.154,
+      305.028,
+      208.848
+    ],
+    "measured": {
+      "components": 1,
+      "holes": 5,
+      "inkPixels": 74570,
+      "bbox": [
+        64,
+        388,
+        959,
+        634
+      ],
+      "rule": "luminance"
+    },
+    "rings": {
+      "jumpRings": 2,
+      "ringHoleSizes": [
+        1424,
+        1424
+      ],
+      "ringHoleCentres": [
+        [
+          147.8,
+          425.8
+        ],
+        [
+          917.2,
+          450.8
+        ]
+      ],
+      "ringHolesFound": 2,
+      "ringHolesClearOfAnchor": 2,
+      "holesAboveGlyphTop": 1,
+      "glyphTop": 449,
+      "glyphPixelsPunchedByRings": 0
+    },
+    "construction": {
+      "componentsBefore": 1,
+      "islandsBeforeBridging": 1,
+      "bridges": 0,
+      "bridgePixelsAdded": 0,
+      "inkPixelsBeforeBridging": 66781,
+      "inkPixelsPreserved": 66781,
+      "recentreScale": 1,
+      "recentreOffsetX": -4,
+      "recentreOffsetY": -10
     }
   },
   {
     "file": "muhammad-ar-kufi.png",
-    "slug": "muhammad",
-    "role": "holdout",
-    "language": "ar",
-    "lettering": "kufi",
-    "approvedText": "محمد",
-    "ok": true,
-    "pngSha256": "62c80f1f0a86b9639a3bdbf292686d91107a02b33e6363a79a0a4030b2381b6d",
+    "pngSha256": "ebf3e69a2e07ebb5176e30d8f54d7818a6946c1158fdb18588860b50b68ee1c6",
     "report": {
-      "engineRelease": "caleums-arabic-v3",
-      "pipelineRelease": "caleums-final-media-v1",
+      "engineRelease": "caleums-identity-v4",
+      "pipelineRelease": "caleums-final-media-v2",
       "approvedCharacters": "محمد",
       "style": "kufi",
       "fontFile": "NotoKufiArabic-Regular.ttf",
       "fontSha256": "494f6b61469d7a02a2d63f0fc4930bb007388d8cfe551de5eb98354e100889f3",
+      "fontSha256Measured": "494f6b61469d7a02a2d63f0fc4930bb007388d8cfe551de5eb98354e100889f3",
       "shaping": {
         "sharp": "0.34.5",
         "libvips": "8.17.3",
-        "pango": "1.57.0",
-        "fribidi": "1.0.16",
-        "harfbuzz": "12.1.0",
-        "freetype": "2.14.1"
+        "harfbuzzShaper": "14.4.0"
       },
       "componentsBefore": 1,
-      "fuseMoves": 0,
-      "dilationPixels": 1,
-      "jumpRingCount": 2,
+      "bridges": 0,
+      "dilationPixels": 2,
+      "measuredBy": "measureMask@caleums-identity-v4",
+      "rule": "luminance",
+      "width": 1024,
+      "height": 1024,
+      "inkPixels": 83821,
       "componentsFinal": 1,
+      "holes": 4,
+      "holeSizes": [
+        9720,
+        9666,
+        1426,
+        1424
+      ],
+      "bbox": [
+        60,
+        371,
+        962,
+        652
+      ],
+      "jumpRingCount": 2,
+      "ringHoles": [
+        {
+          "size": 1424,
+          "centreX": 101.84199438202248,
+          "centreY": 408.7907303370786
+        },
+        {
+          "size": 1426,
+          "centreX": 906.1402524544179,
+          "centreY": 432.8134642356241
+        }
+      ],
       "exactCharactersPreserved": true,
-      "passed": true
+      "passed": true,
+      "construction": {
+        "thickenPasses": 2,
+        "islandsBeforeBridging": 1,
+        "bridges": 0,
+        "bridgePixelsAdded": 0,
+        "inkPixelsBeforeBridging": 76191,
+        "inkPixelsPreserved": 76191,
+        "jumpRings": 2,
+        "ringCentres": [
+          {
+            "x": 94,
+            "y": 424,
+            "anchorX": 125,
+            "anchorY": 450
+          },
+          {
+            "x": 898,
+            "y": 448,
+            "anchorX": 867,
+            "anchorY": 475
+          }
+        ],
+        "glyphBoxBeforeRings": [
+          68,
+          442,
+          954,
+          663
+        ],
+        "glyphPixelsPunchedByRings": 0,
+        "recentreScale": 1,
+        "recentreOffsetX": 8,
+        "recentreOffsetY": -11
+      }
+    },
+    "text": "محمد",
+    "script": "ar",
+    "lettering": "kufi",
+    "fontFile": "NotoKufiArabic-Regular.ttf",
+    "fontSha256": "494f6b61469d7a02a2d63f0fc4930bb007388d8cfe551de5eb98354e100889f3",
+    "fontSize": 399,
+    "advances": [
+      227.031,
+      241.794,
+      229.026,
+      229.026
+    ],
+    "measured": {
+      "components": 1,
+      "holes": 4,
+      "inkPixels": 83821,
+      "bbox": [
+        60,
+        371,
+        962,
+        652
+      ],
+      "rule": "luminance"
+    },
+    "rings": {
+      "jumpRings": 2,
+      "ringHoleSizes": [
+        1424,
+        1426
+      ],
+      "ringHoleCentres": [
+        [
+          101.8,
+          408.8
+        ],
+        [
+          906.1,
+          432.8
+        ]
+      ],
+      "ringHolesFound": 2,
+      "ringHolesClearOfAnchor": 2,
+      "holesAboveGlyphTop": 1,
+      "glyphTop": 431,
+      "glyphPixelsPunchedByRings": 0
+    },
+    "construction": {
+      "componentsBefore": 1,
+      "islandsBeforeBridging": 1,
+      "bridges": 0,
+      "bridgePixelsAdded": 0,
+      "inkPixelsBeforeBridging": 76191,
+      "inkPixelsPreserved": 76191,
+      "recentreScale": 1,
+      "recentreOffsetX": 8,
+      "recentreOffsetY": -11
     }
   }
 ]
