@@ -56,10 +56,11 @@ Done:
 
 - Review 1 fixes in `12087fa`, reproved by the lead: `identity_ring_punched_ink` fires on an injected block (642 pixels); character coverage is per codepoint with `setClusterLevel(2)` plus a reshape probe so ligature-swallowed indices (آلاء, عبدالله on rakkas) pass while a private-use or unsupported combining mark mid-name fails with the index; no customer text in any solver error message (four persistence paths in `presentation.ts` listed); `identity_fit_overflow` at 45 Latin characters while `Abdulrahman Nooralhuda` still fits; `ENVELOPE_BOUNDARY`; diagnostics `pathExists` from `existsSync`. New follow-up: the minimum font size now sets a hard name-length ceiling (about 40 Latin characters) and the customer form does not say so.
 
+- P1-6 in `5fbbb07`: `IdentityValidationReport` widened to measured numbers and booleans plus `measuredBy`, `rule`, `bbox`, `holes`, `ringHoles` and the construction block; the solver encodes, then decodes its own PNG through the rasterizer port's `decodePng` and measures it with `measureMask`; `passed` is a conjunction of those measurements and disagreement throws by name. Lead reran: `MATCH 16/16` with exact ring counts (Asma has four holes, two of them letter counters, which the old `>=` check could never tell apart), and the tampered decodes throw `identity_ring_gate_failed:holes=1,expected=2` and `identity_component_gate_failed:components=2`. `PIPELINE_RELEASE_ID` config, default `caleums-final-media-v2`; migration `20260908120000_pipeline_release_v2.sql` written, functions `expand_final_media_run` and `request_video_task` read the active release instead of a literal; not yet pushed.
+
 Doing:
 
-- P1-6 (implementer): report equals measurement, `decodePng` on the rasterizer port, `passed` from the decoded PNG only, `caleums-final-media-v2` migration, `PIPELINE_RELEASE_ID` config.
-- P1-7 next (platform): db push, next.config tracing, staging mock runs, production stencils regenerated.
+- P1-7 (platform): db push and types, production stencils regenerated, deploy, two staging mock runs, stencils pulled from the bucket and re-measured, dependency dump.
 
 Follow-ups found by subagents, not fixed (outside the task rows):
 
