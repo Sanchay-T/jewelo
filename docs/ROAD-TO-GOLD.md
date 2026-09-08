@@ -140,7 +140,7 @@ Phases 1 to 4 spend nothing.
 
 | # | Phase | Tool | Gate that ends it |
 | --- | --- | --- | --- |
-| 1 | Fix the identity engine | code only | Latin renders in real Playfair and fuses to exactly one 4-connected component for all test names; Kufi output differs from Naskh; rings are attached, name-aware and opt-out; every reported field is measured, no literals; the geometry report is produced by code that did not render the image |
+| 1 | Fix the identity engine | code only | Latin renders in real Playfair and fuses to exactly one 4-connected component for all test names; Kufi output differs from Naskh; rings are attached and name-aware and default to on, with ring-free proven by script behind a validated config flag that stays empty on staging until the prompts stop promising two rings; every reported field is measured, no literals; the geometry report is produced by code that did not render the image |
 | 2 | Build the real verifier | code, replayed on lab images | deterministic gates (component count, ring count and connection, frame containment, zero-coverage, stone-in-counter, exact NFC characters) plus the name reader; replayed against the 91 existing lab images it reproduces the human verdicts with no false passes |
 | 3 | Prove the prompts | **Runway MCP, unlimited** | one look reaches 3/3 on both scripts, then **10 of 12 on holdout names never used during tuning**; generation and scoring done by different agents |
 | 4 | Publish the anchors | code | four immutable `style_anchor_releases` with checksum, source task id and publication history; real mode stops failing closed |
