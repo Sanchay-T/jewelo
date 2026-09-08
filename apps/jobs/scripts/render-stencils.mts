@@ -1,4 +1,4 @@
-// P1-3 proof, kept in the repository so P1-4, P1-5 and P1-6 can rerun it.
+// P1-3 and P1-4 proof, kept in the repository so P1-5 and P1-6 can rerun it.
 //
 // Renders the four lab names in both scripts and both letterings through the
 // production path (`renderIdentityAnchor` -> one solver -> the path-only SVG
@@ -6,6 +6,14 @@
 // decodes the bytes that were written and `measureMask` reports the geometry.
 // Nothing here reads the renderer's in-memory mask, so the table below can
 // disagree with the engine, which is the point.
+//
+// P1-4 adds two things. The bridging table prints, per file, the islands the
+// solver found after thickening and before any bar was drawn (the "before"
+// picture, next to the measured "after" component count), the bars it drew,
+// the pre-bridge ink pixels and how many of them are still ink at the same
+// pre-recentre coordinate, and the transform `recentre` then applied. And the
+// wide sweep renders the ZIP's 17 regression names plus the four lab names in
+// both scripts and every live style, printing one component count per cell.
 //
 // Run it (Node is pinned to 24.18.1):
 //   corepack pnpm --filter @jewelo/jobs render-stencils
@@ -22,6 +30,7 @@ import { isAbsolute, join, resolve } from "node:path";
 import {
   identityFontUrl,
   identityStencilSvg,
+  LIVE_IDENTITY_STYLES,
   measureMask,
   shapeText,
   type IdentityScript,
@@ -39,6 +48,66 @@ const NAMES: readonly {
   { label: "noor", text: { en: "Noor", ar: "نور" } },
   { label: "layla", text: { en: "Layla", ar: "ليلى" } },
   { label: "muhammad", text: { en: "Muhammad", ar: "محمد" } },
+];
+
+/**
+ * The ZIP's 17-name Arabic regression suite (the list in
+ * `apps/jobs/src/identity-anchor.test.ts`, which is never run here), plus a
+ * Latin transliteration per name so the same suite can be swept in both
+ * scripts. The transliterations are this script's own: the ZIP carries Arabic
+ * only, and P1-4's gate is geometry, not romanisation.
+ */
+const ZIP_NAMES: readonly {
+  readonly label: string;
+  readonly text: Record<IdentityScript, string>;
+}[] = [
+  {
+    label: "muhammad",
+    text: { ar: "\u0645\u062d\u0645\u062f", en: "Muhammad" },
+  },
+  { label: "omar", text: { ar: "\u0639\u0645\u0631", en: "Omar" } },
+  { label: "hasan", text: { ar: "\u062d\u0633\u0646", en: "Hasan" } },
+  { label: "sara", text: { ar: "\u0633\u0627\u0631\u0629", en: "Sara" } },
+  { label: "khalid", text: { ar: "\u062e\u0627\u0644\u062f", en: "Khalid" } },
+  { label: "layla", text: { ar: "\u0644\u064a\u0644\u0649", en: "Layla" } },
+  { label: "noor", text: { ar: "\u0646\u0648\u0631", en: "Noor" } },
+  { label: "warda", text: { ar: "\u0648\u0631\u062f\u0629", en: "Warda" } },
+  { label: "rua", text: { ar: "\u0631\u0624\u0649", en: "Rua" } },
+  { label: "aya", text: { ar: "\u0622\u064a\u0629", en: "Aya" } },
+  { label: "duaa", text: { ar: "\u062f\u0639\u0627\u0621", en: "Duaa" } },
+  { label: "alaa", text: { ar: "\u0622\u0644\u0627\u0621", en: "Alaa" } },
+  {
+    label: "tasneem",
+    text: { ar: "\u062a\u0633\u0646\u064a\u0645", en: "Tasneem" },
+  },
+  {
+    label: "shahrazad",
+    text: { ar: "\u0634\u0647\u0631\u0632\u0627\u062f", en: "Shahrazad" },
+  },
+  {
+    label: "abdullah",
+    text: { ar: "\u0639\u0628\u062f\u0627\u0644\u0644\u0647", en: "Abdullah" },
+  },
+  {
+    label: "nooralhuda",
+    text: {
+      ar: "\u0646\u0648\u0631\u0627\u0644\u0647\u062f\u0649",
+      en: "Nooralhuda",
+    },
+  },
+  {
+    label: "abdulrahman",
+    text: {
+      ar: "\u0639\u0628\u062f\u0627\u0644\u0631\u062d\u0645\u0646",
+      en: "Abdulrahman",
+    },
+  },
+];
+
+/** The 17 ZIP names plus the four lab names, deduplicated by label. */
+const MATRIX_NAMES = [
+  ...ZIP_NAMES,
+  ...NAMES.filter((name) => !ZIP_NAMES.some((zip) => zip.label === name.label)),
 ];
 
 /** The two letterings `make_stencil.py` renders: classic and kufi. */
@@ -71,6 +140,16 @@ interface Row {
   readonly inkPixels: number;
   readonly bbox: readonly number[] | null;
   readonly inkBoxWidth: number;
+  /** P1-4: islands before thickening, as the solver counted them. */
+  readonly componentsBefore: number;
+  readonly islandsBeforeBridging: number;
+  readonly bridges: number;
+  readonly bridgePixelsAdded: number;
+  readonly inkPixelsBeforeBridging: number;
+  readonly inkPixelsPreserved: number;
+  readonly recentreScale: number;
+  readonly recentreOffsetX: number;
+  readonly recentreOffsetY: number;
 }
 
 const rows: Row[] = [];
@@ -134,6 +213,15 @@ for (const name of NAMES) {
         inkBoxWidth: measured.bbox
           ? measured.bbox[2] - measured.bbox[0] + 1
           : 0,
+        componentsBefore: Number(report.componentsBefore ?? -1),
+        islandsBeforeBridging: rendered.construction.islandsBeforeBridging,
+        bridges: rendered.construction.bridges,
+        bridgePixelsAdded: rendered.construction.bridgePixelsAdded,
+        inkPixelsBeforeBridging: rendered.construction.inkPixelsBeforeBridging,
+        inkPixelsPreserved: rendered.construction.inkPixelsPreserved,
+        recentreScale: rendered.construction.recentreScale,
+        recentreOffsetX: rendered.construction.recentreOffsetX,
+        recentreOffsetY: rendered.construction.recentreOffsetY,
       });
     }
   }
@@ -163,6 +251,45 @@ for (const row of rows) {
       String(row.inkPixels).padStart(9) +
       "  " +
       JSON.stringify(row.bbox),
+  );
+}
+
+console.log("");
+console.log(
+  "P1-4 bridging. islands is the 4-connected count after thickening and before",
+);
+console.log(
+  "any bar, so it is the before picture; comp above is the after picture. ink",
+);
+console.log(
+  "before and kept are pre-recentre coordinates: they must be equal, which is",
+);
+console.log("the invariant that a bar adds metal and never moves a glyph.");
+console.log(
+  "file".padEnd(26) +
+    "raw".padStart(4) +
+    "islands".padStart(8) +
+    "bars".padStart(5) +
+    "barPx".padStart(7) +
+    "inkBefore".padStart(11) +
+    "kept".padStart(11) +
+    "moved".padStart(7) +
+    "  scale".padEnd(9) +
+    "offset",
+);
+for (const row of rows) {
+  console.log(
+    row.file.padEnd(26) +
+      String(row.componentsBefore).padStart(4) +
+      String(row.islandsBeforeBridging).padStart(8) +
+      String(row.bridges).padStart(5) +
+      String(row.bridgePixelsAdded).padStart(7) +
+      String(row.inkPixelsBeforeBridging).padStart(11) +
+      String(row.inkPixelsPreserved).padStart(11) +
+      String(row.inkPixelsBeforeBridging - row.inkPixelsPreserved).padStart(7) +
+      "  " +
+      row.recentreScale.toFixed(3).padEnd(7) +
+      `(${row.recentreOffsetX}, ${row.recentreOffsetY})`,
   );
 }
 
@@ -236,7 +363,7 @@ const luminance = rows.filter((row) => row.rule === "luminance").length;
 const singlePiece = rows.filter((row) => row.components === 1).length;
 console.log("");
 console.log(`LUMINANCE ${luminance}/${rows.length}`);
-console.log(`SINGLE-PIECE ${singlePiece}/${rows.length} (bridging is P1-4)`);
+console.log(`SINGLE-PIECE ${singlePiece}/${rows.length}`);
 
 const manifest = join(directory, "render-report.json");
 writeFileSync(
@@ -259,6 +386,17 @@ writeFileSync(
         inkPixels: row.inkPixels,
         bbox: row.bbox,
         rule: row.rule,
+      },
+      construction: {
+        componentsBefore: row.componentsBefore,
+        islandsBeforeBridging: row.islandsBeforeBridging,
+        bridges: row.bridges,
+        bridgePixelsAdded: row.bridgePixelsAdded,
+        inkPixelsBeforeBridging: row.inkPixelsBeforeBridging,
+        inkPixelsPreserved: row.inkPixelsPreserved,
+        recentreScale: row.recentreScale,
+        recentreOffsetX: row.recentreOffsetX,
+        recentreOffsetY: row.recentreOffsetY,
       },
     })),
     null,
@@ -283,3 +421,140 @@ for (const row of rows)
     );
     process.exitCode = 1;
   }
+
+for (const row of rows) {
+  if (row.components !== 1) {
+    console.log(`GATE FAILED: ${row.file} is ${row.components} components`);
+    process.exitCode = 1;
+  }
+  if (row.inkPixelsPreserved !== row.inkPixelsBeforeBridging) {
+    console.log(
+      `GATE FAILED: ${row.file} lost ${row.inkPixelsBeforeBridging - row.inkPixelsPreserved} pre-bridge ink pixels`,
+    );
+    process.exitCode = 1;
+  }
+}
+
+/* -------------------------------------------------------------------------
+ * P1-4 wide sweep: the 17 ZIP regression names plus Asma, Noor, Layla and
+ * Muhammad, in both scripts and every live style. Only the component count is
+ * printed here; every cell must be 1, and the ruler measures the written bytes,
+ * not the engine's mask.
+ * ---------------------------------------------------------------------- */
+
+const matrixDirectory = join(directory, "matrix");
+mkdirSync(matrixDirectory, { recursive: true });
+
+interface MatrixCell {
+  readonly file: string;
+  readonly components: number;
+  readonly islandsBeforeBridging: number;
+  readonly bridges: number;
+  readonly moved: number;
+  readonly recentreScale: number;
+}
+
+const matrix = new Map<string, MatrixCell>();
+const cellKey = (label: string, script: string, style: string) =>
+  `${label}|${script}|${style}`;
+
+for (const name of MATRIX_NAMES) {
+  for (const script of SCRIPTS) {
+    for (const style of LIVE_IDENTITY_STYLES) {
+      const text = name.text[script];
+      const file = `${name.label}-${script}-${style}.png`;
+      const rendered = await renderIdentityAnchor(
+        {
+          approvedText: text,
+          language: script,
+          typography: style,
+          fingerprint: `p1-4-${name.label}-${script}-${style}`,
+        },
+        {
+          arabicStyle: style,
+          lettering: style,
+          layout: "single-name",
+          connector: "none",
+          names: [{ approvedArabicText: script === "ar" ? text : null }],
+          dimensions: { widthMm: 32, heightMm: 12, thicknessMm: 1.2 },
+        },
+      );
+      writeFileSync(join(matrixDirectory, file), rendered.png);
+      const measured = measureMask(await decodeMask(rendered.png));
+      matrix.set(cellKey(name.label, script, style), {
+        file,
+        components: measured.components,
+        islandsBeforeBridging: rendered.construction.islandsBeforeBridging,
+        bridges: rendered.construction.bridges,
+        moved:
+          rendered.construction.inkPixelsBeforeBridging -
+          rendered.construction.inkPixelsPreserved,
+        recentreScale: rendered.construction.recentreScale,
+      });
+    }
+  }
+}
+
+console.log("");
+console.log(
+  `components per cell, ${MATRIX_NAMES.length} names x ${SCRIPTS.length} scripts x ${LIVE_IDENTITY_STYLES.length} styles = ${matrix.size} stencils`,
+);
+console.log(`matrix stencils: ${matrixDirectory}`);
+console.log(
+  "name".padEnd(14) +
+    "script".padEnd(8) +
+    LIVE_IDENTITY_STYLES.map((style) => style.padStart(18)).join(""),
+);
+for (const name of MATRIX_NAMES)
+  for (const script of SCRIPTS)
+    console.log(
+      name.label.padEnd(14) +
+        script.padEnd(8) +
+        LIVE_IDENTITY_STYLES.map((style) => {
+          const cell = matrix.get(cellKey(name.label, script, style));
+          return String(cell ? cell.components : "-").padStart(18);
+        }).join(""),
+    );
+
+console.log("");
+console.log("islands before bridging -> bars drawn, same matrix");
+console.log(
+  "name".padEnd(14) +
+    "script".padEnd(8) +
+    LIVE_IDENTITY_STYLES.map((style) => style.padStart(18)).join(""),
+);
+for (const name of MATRIX_NAMES)
+  for (const script of SCRIPTS)
+    console.log(
+      name.label.padEnd(14) +
+        script.padEnd(8) +
+        LIVE_IDENTITY_STYLES.map((style) => {
+          const cell = matrix.get(cellKey(name.label, script, style));
+          return (
+            cell ? `${cell.islandsBeforeBridging}->${cell.bridges}` : "-"
+          ).padStart(18);
+        }).join(""),
+    );
+
+const matrixCells = [...matrix.values()];
+const joined = matrixCells.filter((cell) => cell.components === 1).length;
+const movedInk = matrixCells.filter((cell) => cell.moved !== 0);
+const downscaled = matrixCells.filter((cell) => cell.recentreScale !== 1);
+console.log("");
+console.log(`MATRIX SINGLE-PIECE ${joined}/${matrixCells.length}`);
+console.log(`MATRIX MOVED-INK ${movedInk.length}/${matrixCells.length}`);
+console.log(
+  `MATRIX RECENTRE-DOWNSCALED ${downscaled.length}/${matrixCells.length}`,
+);
+for (const cell of matrixCells)
+  if (cell.components !== 1) {
+    console.log(
+      `GATE FAILED: matrix/${cell.file} is ${cell.components} components`,
+    );
+    process.exitCode = 1;
+  }
+
+writeFileSync(
+  join(matrixDirectory, "matrix-report.json"),
+  `${JSON.stringify(matrixCells, null, 2)}\n`,
+);

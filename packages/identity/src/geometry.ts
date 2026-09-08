@@ -46,16 +46,28 @@ export interface MaskGeometryReport {
   readonly bbox: MaskBoundingBox | null;
 }
 
+/** The result of `label4`: a label per pixel, and how many labels there are. */
+export interface Label4Result {
+  /** One label per pixel; 0 means the pixel is not part of any region. */
+  readonly labels: Int32Array;
+  /** Number of regions found; labels run from 1 to this value. */
+  readonly count: number;
+}
+
 /**
  * Labels 4-connected regions of `pixels` where `predicate(value)` holds.
  * Returns the label image (0 means "not part of a region") and the label count.
+ *
+ * Exported because the solver's island detection (P1-4) must use the same
+ * labeller the ruler uses: two implementations of "one piece" would eventually
+ * disagree, and the disagreement would ship as a broken pendant.
  */
-function label4(
+export function label4(
   width: number,
   height: number,
   pixels: Uint8Array,
   wanted: (value: number) => boolean,
-): { labels: Int32Array; count: number } {
+): Label4Result {
   const labels = new Int32Array(width * height);
   const stack = new Int32Array(width * height);
   let count = 0;

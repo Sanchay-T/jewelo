@@ -5,6 +5,7 @@ import {
   INK_LUMINANCE_THRESHOLD,
   shapeText,
   solveIdentity,
+  type IdentityConstructionMeasurement,
   type IdentityFontFile,
   type IdentityRasterizer,
   type IdentityScript,
@@ -27,6 +28,12 @@ export interface RenderedIdentityAnchor {
   pngSha256: string;
   fingerprint: string;
   report: IdentityValidationReport | Readonly<Record<string, unknown>>;
+  /**
+   * What the solver measured while it built the piece (P1-4): islands, bridges,
+   * the ink-preservation counts and the re-centring transform. It rides beside
+   * the report until P1-6 folds it in.
+   */
+  construction: IdentityConstructionMeasurement;
 }
 
 /**
@@ -60,6 +67,7 @@ export async function renderIdentityAnchor(
     pngSha256: artifact.pngSha256,
     fingerprint: artifact.fingerprint,
     report: artifact.report,
+    construction: artifact.construction,
   };
 }
 

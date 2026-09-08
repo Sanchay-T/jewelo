@@ -314,6 +314,35 @@ export const IDENTITY_BRIDGE_WIDTH = 24;
 /** Dilation passes that kill hairlines without closing counters (THICKEN). */
 export const IDENTITY_THICKEN_PASSES = 2;
 
+/**
+ * How many bridges the connector may draw before it gives up
+ * (`make_stencil.py:121`, `for _ in range(64)`). One bridge removes at least
+ * one island, so a run that needs more than this is not converging.
+ */
+export const IDENTITY_MAX_BRIDGES = 64;
+
+/**
+ * The square box the finished piece is centred inside (`make_stencil.py:186`,
+ * `box = CANVAS - 2 * MARGIN`). Only a piece larger than this is downscaled.
+ */
+export const IDENTITY_RECENTRE_BOX = IDENTITY_CANVAS - 2 * IDENTITY_MARGIN;
+
+/**
+ * Smallest downscale `recentre` accepts (`make_stencil.py:189`). Below this the
+ * assembly is so far outside the canvas that shrinking it would thin the metal,
+ * so the solver fails instead of quietly shipping a hairline.
+ */
+export const IDENTITY_MIN_RECENTRE_SCALE = 0.8;
+
+/**
+ * Luminance above which a downscaled pixel counts as ink again
+ * (`make_stencil.py:193`, `np.array(img) > 110` on a 0/255 mask).
+ */
+export const IDENTITY_RESAMPLE_INK_THRESHOLD = 110;
+
+/** Lanczos window, in output pixels (`Image.LANCZOS` is a=3 in Pillow). */
+export const IDENTITY_LANCZOS_SUPPORT = 3;
+
 /** Jump ring outer radius in pixels (RING_OUTER). */
 export const IDENTITY_RING_OUTER = 42;
 

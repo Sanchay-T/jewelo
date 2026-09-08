@@ -1,5 +1,16 @@
 import { createHash } from "node:crypto";
-import type { IdentityScript, ShapingMeasurement } from "./shaping";
+import { label4 } from "./geometry";
+import {
+  IDENTITY_BRIDGE_WIDTH,
+  IDENTITY_LANCZOS_SUPPORT,
+  IDENTITY_MAX_BRIDGES,
+  IDENTITY_MIN_RECENTRE_SCALE,
+  IDENTITY_RECENTRE_BOX,
+  IDENTITY_RESAMPLE_INK_THRESHOLD,
+  IDENTITY_THICKEN_PASSES,
+  type IdentityScript,
+  type ShapingMeasurement,
+} from "./shaping";
 
 // D-019: the engine opens the pinned font bytes and shapes them with HarfBuzz
 // instead of asking a rendering library for a family name, and it now serves
@@ -77,7 +88,9 @@ export interface IdentityValidationReport {
   fontSha256Measured: string;
   shaping: Readonly<Record<string, string>>;
   componentsBefore: number;
-  fuseMoves: number;
+  /** Capsule bars drawn to join the islands (P1-4; was `fuseMoves`). */
+  bridges: number;
+  /** Dilation passes applied before bridging. */
   dilationPixels: number;
   jumpRingCount: 2;
   componentsFinal: 1;
@@ -86,11 +99,47 @@ export interface IdentityValidationReport {
   passed: true;
 }
 
+/**
+ * How the raster was turned into one castable piece (P1-4), measured while it
+ * happened rather than asserted afterwards.
+ *
+ * Every count below is stated in *pre-recentre* canvas coordinates, because
+ * that is the only frame in which "the ink did not move" is a meaningful claim:
+ * `recentre` then crops, optionally downscales and re-centres the whole piece,
+ * and `recentreOffsetX/Y` plus `recentreScale` are exactly the transform it
+ * applied, so a pre-recentre pixel `(x, y)` lands at
+ * `(x * recentreScale + recentreOffsetX, y * recentreScale + recentreOffsetY)`.
+ */
+export interface IdentityConstructionMeasurement {
+  /** Dilation passes applied before bridging (`make_stencil.py` THICKEN). */
+  readonly thickenPasses: number;
+  /** 4-connected islands after thickening, before any bridge was drawn. */
+  readonly islandsBeforeBridging: number;
+  /** Capsule bars drawn to join the islands. */
+  readonly bridges: number;
+  /** Ink pixels the bars added; nothing else changes ink before the rings. */
+  readonly bridgePixelsAdded: number;
+  /** Ink pixels present after thickening and before the first bar. */
+  readonly inkPixelsBeforeBridging: number;
+  /**
+   * How many of those pixels are still ink at the same coordinate after
+   * bridging. The solver refuses to continue unless this equals
+   * `inkPixelsBeforeBridging`: a moved dot or hamza is a misspelled pendant.
+   */
+  readonly inkPixelsPreserved: number;
+  /** Scale `recentre` applied; 1 unless the piece overflowed the body box. */
+  readonly recentreScale: number;
+  readonly recentreOffsetX: number;
+  readonly recentreOffsetY: number;
+}
+
 export interface IdentityArtifact {
   png: Uint8Array;
   pngSha256: string;
   fingerprint: string;
   report: IdentityValidationReport;
+  /** P1-6 folds this into the report; until then it rides alongside it. */
+  construction: IdentityConstructionMeasurement;
 }
 
 export class IdentitySolverError extends Error {
@@ -100,7 +149,9 @@ export class IdentitySolverError extends Error {
       | "unsupported_arabic_two_name"
       | "approved_text_missing"
       | "identity_mask_empty"
-      | "identity_fuse_failed"
+      | "identity_bridge_failed"
+      | "identity_bridge_moved_ink"
+      | "identity_recentre_too_large"
       | "identity_component_gate_failed"
       | "identity_font_bytes_mismatch"
       | "identity_shaping_gate_failed",
@@ -137,7 +188,6 @@ const LIVE_STYLES = {
     // approved renders used.
     ar: { fontFile: NASKH, fontSha256: NASKH_SHA },
     en: { fontFile: PLAYFAIR, fontSha256: PLAYFAIR_SHA },
-    dilationPixels: 1,
   },
   minimal: {
     ar: {
@@ -146,7 +196,6 @@ const LIVE_STYLES = {
         "794bac8dc9e83d1d620bc471ea694f5f31d0965ce8006490a79dfc51a2d283b3",
     },
     en: { fontFile: PLAYFAIR, fontSha256: PLAYFAIR_SHA },
-    dilationPixels: 2,
   },
   // Opened to all customers on 2026-08-27: no atelier gate on style.
   // Aref Ruqaa slopes the baseline, so the stencil stopped reading as one
@@ -155,12 +204,10 @@ const LIVE_STYLES = {
   diwani: {
     ar: { fontFile: NASKH, fontSha256: NASKH_SHA },
     en: { fontFile: PLAYFAIR, fontSha256: PLAYFAIR_SHA },
-    dilationPixels: 1,
   },
   signature: {
     ar: { fontFile: NASKH, fontSha256: NASKH_SHA },
     en: { fontFile: PLAYFAIR, fontSha256: PLAYFAIR_SHA },
-    dilationPixels: 1,
   },
   kufi: {
     ar: {
@@ -173,7 +220,6 @@ const LIVE_STYLES = {
       fontSha256:
         "667c987182391c91f4e57a2f455b1794fb5e3ee6ca4ef3383e86bb690fa9c964",
     },
-    dilationPixels: 1,
   },
   "thuluth-inspired": {
     ar: {
@@ -182,12 +228,16 @@ const LIVE_STYLES = {
         "54278882e4774c14d50c3b555f127d0fe586366d5b787316ebbcbd8108829e60",
     },
     en: { fontFile: PLAYFAIR, fontSha256: PLAYFAIR_SHA },
-    dilationPixels: 1,
   },
-} as const satisfies Record<
-  string,
-  Record<IdentityScript, PinnedFace> & { dilationPixels: number }
->;
+} as const satisfies Record<string, Record<IdentityScript, PinnedFace>>;
+
+/**
+ * Every style the solver serves, in table order. Exported so a proof script can
+ * sweep the whole live matrix instead of repeating the list and drifting from
+ * it.
+ */
+export const LIVE_IDENTITY_STYLES: readonly CaleumsArabicStyle[] =
+  Object.freeze(Object.keys(LIVE_STYLES) as CaleumsArabicStyle[]);
 
 export function classifyArabicIdentityInput(
   input: IdentitySolverInput,
@@ -228,23 +278,53 @@ export async function solveIdentity(
       "identity_shaping_gate_failed",
       `${approvedText}: ${shaping.notdefGlyphs} notdef glyphs, ${shaping.uncoveredCodePoints.length} uncovered code points`,
     );
-  const componentsBefore = components(mask).length;
+  const componentsBefore = countComponents(mask);
   if (componentsBefore === 0)
     throw new IdentitySolverError(
       "identity_mask_empty",
       `${approvedText}: rasterizer produced no ink`,
     );
-  const fused = fuse(mask, Math.max(3, Math.floor(560 / 45)));
-  for (let index = 0; index < style.dilationPixels; index += 1)
-    dilate(fused.mask);
-  addJumpRings(fused.mask, 560);
-  const componentsFinal = components(fused.mask).length;
+
+  // The lab's order (`make_stencil.py:227-232`): thicken, bridge, ring, centre.
+  // Bridging before the rings means the rings are welded onto a body that is
+  // already one piece, and re-centring last means every measurement above is
+  // taken in one stable frame.
+  for (let pass = 0; pass < IDENTITY_THICKEN_PASSES; pass += 1) dilate(mask);
+  const beforeBridging = mask.ink.slice();
+  const inkPixelsBeforeBridging = countInk(beforeBridging);
+  const islandsBeforeBridging = countComponents(mask);
+  const bridged = bridgeAll(mask, IDENTITY_BRIDGE_WIDTH, approvedText);
+  // The invariant this task exists for, checked in pre-recentre coordinates:
+  // a bar may only add metal, never move a dot, a hamza or a serif.
+  let inkPixelsPreserved = 0;
+  for (let index = 0; index < beforeBridging.length; index += 1)
+    if (beforeBridging[index] && mask.ink[index]) inkPixelsPreserved += 1;
+  if (inkPixelsPreserved !== inkPixelsBeforeBridging)
+    throw new IdentitySolverError(
+      "identity_bridge_moved_ink",
+      `${approvedText}: ${inkPixelsBeforeBridging - inkPixelsPreserved} of ${inkPixelsBeforeBridging} ink pixels moved while bridging`,
+    );
+
+  addJumpRings(mask, 560);
+  const placement = recentre(mask, approvedText);
+  const componentsFinal = countComponents(mask);
   if (componentsFinal !== 1)
     throw new IdentitySolverError(
       "identity_component_gate_failed",
       `${approvedText}: ${componentsFinal} components after solving`,
     );
-  const png = await rasterizer.encodePng(fused.mask);
+  const construction: IdentityConstructionMeasurement = {
+    thickenPasses: IDENTITY_THICKEN_PASSES,
+    islandsBeforeBridging,
+    bridges: bridged.bridges,
+    bridgePixelsAdded: bridged.pixelsAdded,
+    inkPixelsBeforeBridging,
+    inkPixelsPreserved,
+    recentreScale: placement.scale,
+    recentreOffsetX: placement.offsetX,
+    recentreOffsetY: placement.offsetY,
+  };
+  const png = await rasterizer.encodePng(mask);
   const pngSha256 = sha256(png);
   const fingerprint = sha256(
     [
@@ -276,125 +356,425 @@ export async function solveIdentity(
         harfbuzzShaper: shaping.harfbuzzVersion,
       },
       componentsBefore,
-      fuseMoves: fused.moves,
-      dilationPixels: style.dilationPixels,
+      bridges: bridged.bridges,
+      dilationPixels: IDENTITY_THICKEN_PASSES,
       jumpRingCount: 2,
       componentsFinal: 1,
       exactCharactersPreserved: shaping.exactCharactersPreserved,
       passed: true,
     },
+    construction,
   };
 }
 
 export function countConnectedComponents(mask: RasterMask): number {
-  return components(mask).length;
+  return countComponents(mask);
 }
 
-function fuse(mask: RasterMask, overlap: number) {
-  let moves = 0;
-  while (true) {
-    const found = components(mask);
-    if (found.length === 1) return { mask, moves };
-    const smallest = found.reduce((left, right) =>
-      left.length <= right.length ? left : right,
-    );
-    const selected = new Set(smallest);
-    const others: number[] = [];
-    for (let index = 0; index < mask.ink.length; index += 1)
-      if (mask.ink[index] && !selected.has(index)) others.push(index);
-    const source = sample(smallest, 600);
-    const target = sample(others, 6000);
-    let bestSource = source[0]!;
-    let bestTarget = target[0]!;
-    let bestDistance = Number.POSITIVE_INFINITY;
-    for (const sourceIndex of source) {
-      const sy = Math.floor(sourceIndex / mask.width);
-      const sx = sourceIndex % mask.width;
-      for (const targetIndex of target) {
-        const ty = Math.floor(targetIndex / mask.width);
-        const tx = targetIndex % mask.width;
-        const distance = (ty - sy) ** 2 + (tx - sx) ** 2;
-        if (distance < bestDistance) {
-          bestDistance = distance;
-          bestSource = sourceIndex;
-          bestTarget = targetIndex;
-        }
+const isInkValue = (value: number) => value !== 0;
+
+/** 4-connected ink islands, counted with the geometry ruler's own labeller. */
+function countComponents(mask: RasterMask): number {
+  return label4(mask.width, mask.height, mask.ink, isInkValue).count;
+}
+
+function countInk(ink: Uint8Array): number {
+  let total = 0;
+  for (let index = 0; index < ink.length; index += 1)
+    if (ink[index]) total += 1;
+  return total;
+}
+
+/**
+ * One filled capsule between two pixel centres - a cast metal bridge. A port of
+ * `draw_bar` (`make_stencil.py:90-107`): every pixel whose distance to the
+ * segment is at most half the bar width becomes ink, and no pixel is ever
+ * cleared. Returns how many pixels the bar added.
+ */
+function drawBar(
+  mask: RasterMask,
+  y0: number,
+  x0: number,
+  y1: number,
+  x1: number,
+  width: number,
+): number {
+  const radius = width / 2;
+  const yMin = Math.max(0, Math.trunc(Math.min(y0, y1) - radius) - 1);
+  const yMax = Math.min(
+    mask.height - 1,
+    Math.trunc(Math.max(y0, y1) + radius) + 1,
+  );
+  const xMin = Math.max(0, Math.trunc(Math.min(x0, x1) - radius) - 1);
+  const xMax = Math.min(
+    mask.width - 1,
+    Math.trunc(Math.max(x0, x1) + radius) + 1,
+  );
+  const dy = y1 - y0;
+  const dx = x1 - x0;
+  const segment = dy * dy + dx * dx;
+  let added = 0;
+  for (let y = yMin; y <= yMax; y += 1)
+    for (let x = xMin; x <= xMax; x += 1) {
+      const t =
+        segment === 0
+          ? 0
+          : Math.min(1, Math.max(0, ((y - y0) * dy + (x - x0) * dx) / segment));
+      const py = y0 + t * dy;
+      const px = x0 + t * dx;
+      if ((y - py) ** 2 + (x - px) ** 2 > radius * radius) continue;
+      const index = y * mask.width + x;
+      if (mask.ink[index]) continue;
+      mask.ink[index] = 1;
+      added += 1;
+    }
+  return added;
+}
+
+/** A nearest-source field: squared distance, and the index of that source. */
+interface NearestSourceField {
+  readonly distanceSquared: Float64Array;
+  /** Pixel index of the nearest source, or -1 when there is no source at all. */
+  readonly source: Int32Array;
+}
+
+/** Stands in for infinity without producing NaN in the envelope arithmetic. */
+const FAR_AWAY = 1e15;
+
+function sinc(value: number): number {
+  if (value === 0) return 1;
+  const scaled = value * Math.PI;
+  return Math.sin(scaled) / scaled;
+}
+
+/** Pillow's `LANCZOS` kernel, a = 3 (`_imaging` `lanczos_filter`). */
+function lanczos(value: number): number {
+  if (value < -IDENTITY_LANCZOS_SUPPORT || value >= IDENTITY_LANCZOS_SUPPORT)
+    return 0;
+  return sinc(value) * sinc(value / IDENTITY_LANCZOS_SUPPORT);
+}
+
+/**
+ * Exact squared Euclidean distance transform with the nearest source carried
+ * along, after Felzenszwalb and Huttenlocher: one linear sweep per column, then
+ * the lower envelope of parabolas per row. It is O(width * height) and exact,
+ * which is why the solver uses it instead of comparing every pair of pixels.
+ */
+function nearestSourceTransform(
+  width: number,
+  height: number,
+  source: Uint8Array,
+): NearestSourceField {
+  const size = width * height;
+  const columnDistance = new Float64Array(size);
+  const columnSource = new Int32Array(size);
+  for (let x = 0; x < width; x += 1) {
+    let seen = -1;
+    for (let y = 0; y < height; y += 1) {
+      const index = y * width + x;
+      if (source[index]) seen = y;
+      if (seen < 0) {
+        columnDistance[index] = FAR_AWAY;
+        columnSource[index] = -1;
+      } else {
+        columnDistance[index] = (y - seen) ** 2;
+        columnSource[index] = seen;
       }
     }
-    const sy = Math.floor(bestSource / mask.width);
-    const sx = bestSource % mask.width;
-    const ty = Math.floor(bestTarget / mask.width);
-    const tx = bestTarget % mask.width;
-    const length = Math.hypot(ty - sy, tx - sx) || 1;
-    const dy = Math.round(
-      ((ty - sy) / length) * (Math.sqrt(bestDistance) + overlap),
-    );
-    const dx = Math.round(
-      ((tx - sx) / length) * (Math.sqrt(bestDistance) + overlap),
-    );
-    for (const index of smallest) mask.ink[index] = 0;
-    for (const index of smallest) {
-      const y = Math.max(
-        0,
-        Math.min(mask.height - 1, Math.floor(index / mask.width) + dy),
-      );
-      const x = Math.max(
-        0,
-        Math.min(mask.width - 1, (index % mask.width) + dx),
-      );
-      mask.ink[y * mask.width + x] = 1;
+    seen = -1;
+    for (let y = height - 1; y >= 0; y -= 1) {
+      const index = y * width + x;
+      if (source[index]) seen = y;
+      if (seen < 0) continue;
+      const candidate = (seen - y) ** 2;
+      if (candidate < (columnDistance[index] as number)) {
+        columnDistance[index] = candidate;
+        columnSource[index] = seen;
+      }
     }
-    moves += 1;
-    if (moves > 60)
-      throw new IdentitySolverError(
-        "identity_fuse_failed",
-        "fuse did not converge after 60 moves",
-      );
   }
+
+  const distanceSquared = new Float64Array(size);
+  const nearest = new Int32Array(size);
+  const vertices = new Int32Array(width);
+  const boundaries = new Float64Array(width + 1);
+  for (let y = 0; y < height; y += 1) {
+    const row = y * width;
+    let top = 0;
+    vertices[0] = 0;
+    boundaries[0] = -FAR_AWAY;
+    boundaries[1] = FAR_AWAY;
+    for (let q = 1; q < width; q += 1) {
+      const fq = (columnDistance[row + q] as number) + q * q;
+      let previous = vertices[top] as number;
+      let crossing =
+        (fq -
+          ((columnDistance[row + previous] as number) + previous * previous)) /
+        (2 * q - 2 * previous);
+      while (crossing <= (boundaries[top] as number)) {
+        top -= 1;
+        previous = vertices[top] as number;
+        crossing =
+          (fq -
+            ((columnDistance[row + previous] as number) +
+              previous * previous)) /
+          (2 * q - 2 * previous);
+      }
+      top += 1;
+      vertices[top] = q;
+      boundaries[top] = crossing;
+      boundaries[top + 1] = FAR_AWAY;
+    }
+    top = 0;
+    for (let q = 0; q < width; q += 1) {
+      while ((boundaries[top + 1] as number) < q) top += 1;
+      const best = vertices[top] as number;
+      distanceSquared[row + q] =
+        (q - best) ** 2 + (columnDistance[row + best] as number);
+      const sourceY = columnSource[row + best] as number;
+      nearest[row + q] = sourceY < 0 ? -1 : sourceY * width + best;
+    }
+  }
+  return { distanceSquared, source: nearest };
 }
 
-function components(mask: RasterMask): number[][] {
-  const visited = new Uint8Array(mask.ink.length);
-  const result: number[][] = [];
-  const neighbors = [-mask.width, mask.width, -1, 1];
-  for (let start = 0; start < mask.ink.length; start += 1) {
-    if (!mask.ink[start] || visited[start]) continue;
-    const component: number[] = [];
-    const queue = [start];
-    visited[start] = 1;
-    for (let cursor = 0; cursor < queue.length; cursor += 1) {
-      const current = queue[cursor]!;
-      component.push(current);
-      const x = current % mask.width;
-      for (const offset of neighbors) {
-        if (
-          (offset === -1 && x === 0) ||
-          (offset === 1 && x === mask.width - 1)
-        )
-          continue;
-        const next = current + offset;
-        if (
-          next >= 0 &&
-          next < mask.ink.length &&
-          mask.ink[next] &&
-          !visited[next]
-        ) {
-          visited[next] = 1;
-          queue.push(next);
-        }
+/**
+ * Connects every island to the growing main body with capsule bars. A port of
+ * `bridge_all` (`make_stencil.py:118-140`), and the reason this task exists:
+ * the old `fuse()` translated the smallest island towards the body, so a dot or
+ * a hamza silently changed its typographic place while the report still called
+ * the spelling exact. Nothing here moves a pixel; bars only add metal.
+ *
+ * Each round labels the mask, takes the largest island as the body, computes
+ * the exact nearest body pixel for every pixel with one distance transform, and
+ * draws one bar to the closest island. That is O(width * height) per bar and at
+ * most `IDENTITY_MAX_BRIDGES` bars, so a 1024 canvas costs a handful of linear
+ * passes - milliseconds, not the quadratic pixel-pair scan `fuse()` sampled its
+ * way around.
+ */
+function bridgeAll(
+  mask: RasterMask,
+  width: number,
+  label: string,
+): { bridges: number; pixelsAdded: number } {
+  let bridges = 0;
+  let pixelsAdded = 0;
+  for (let attempt = 0; attempt < IDENTITY_MAX_BRIDGES; attempt += 1) {
+    const labelled = label4(mask.width, mask.height, mask.ink, isInkValue);
+    if (labelled.count <= 1) return { bridges, pixelsAdded };
+    const sizes = new Int32Array(labelled.count + 1);
+    for (let index = 0; index < labelled.labels.length; index += 1) {
+      const region = labelled.labels[index] as number;
+      if (region !== 0) sizes[region] = (sizes[region] as number) + 1;
+    }
+    let main = 1;
+    for (let region = 2; region <= labelled.count; region += 1)
+      if ((sizes[region] as number) > (sizes[main] as number)) main = region;
+    const body = new Uint8Array(labelled.labels.length);
+    for (let index = 0; index < body.length; index += 1)
+      body[index] = labelled.labels[index] === main ? 1 : 0;
+    const field = nearestSourceTransform(mask.width, mask.height, body);
+
+    let islandPixel = -1;
+    let bestDistance = Number.POSITIVE_INFINITY;
+    for (let index = 0; index < labelled.labels.length; index += 1) {
+      const region = labelled.labels[index] as number;
+      if (region === 0 || region === main) continue;
+      const distance = field.distanceSquared[index] as number;
+      if (distance < bestDistance) {
+        bestDistance = distance;
+        islandPixel = index;
       }
     }
-    result.push(component);
+    const bodyPixel =
+      islandPixel < 0 ? -1 : (field.source[islandPixel] as number);
+    if (islandPixel < 0 || bodyPixel < 0)
+      throw new IdentitySolverError(
+        "identity_bridge_failed",
+        `${label}: no island pair to bridge among ${labelled.count} components`,
+      );
+    pixelsAdded += drawBar(
+      mask,
+      Math.floor(islandPixel / mask.width),
+      islandPixel % mask.width,
+      Math.floor(bodyPixel / mask.width),
+      bodyPixel % mask.width,
+      width,
+    );
+    bridges += 1;
+  }
+  throw new IdentitySolverError(
+    "identity_bridge_failed",
+    `${label}: bridging did not converge within ${IDENTITY_MAX_BRIDGES} bars`,
+  );
+}
+
+/** One resampling axis: which input pixels feed an output pixel, and how much. */
+interface AxisCoefficients {
+  readonly starts: Int32Array;
+  readonly lengths: Int32Array;
+  readonly weights: Float64Array[];
+}
+
+/** Pillow's `precompute_coeffs`, so the downscale matches the lab's LANCZOS. */
+function axisCoefficients(inSize: number, outSize: number): AxisCoefficients {
+  const scale = inSize / outSize;
+  const filterScale = Math.max(1, scale);
+  const support = IDENTITY_LANCZOS_SUPPORT * filterScale;
+  const starts = new Int32Array(outSize);
+  const lengths = new Int32Array(outSize);
+  const weights: Float64Array[] = [];
+  for (let out = 0; out < outSize; out += 1) {
+    const centre = (out + 0.5) * scale;
+    const start = Math.max(0, Math.trunc(centre - support + 0.5));
+    const end = Math.min(inSize, Math.trunc(centre + support + 0.5));
+    const length = Math.max(0, end - start);
+    const row = new Float64Array(length);
+    let total = 0;
+    for (let index = 0; index < length; index += 1) {
+      const value = lanczos((index + start - centre + 0.5) / filterScale);
+      row[index] = value;
+      total += value;
+    }
+    if (total !== 0)
+      for (let index = 0; index < length; index += 1)
+        row[index] = (row[index] as number) / total;
+    starts[out] = start;
+    lengths[out] = length;
+    weights.push(row);
+  }
+  return { starts, lengths, weights };
+}
+
+function clip8(value: number): number {
+  const rounded = Math.round(value);
+  return rounded < 0 ? 0 : rounded > 255 ? 255 : rounded;
+}
+
+/**
+ * Downscales a 0/255 image with the separable LANCZOS kernel, horizontally then
+ * vertically with an 8-bit intermediate, exactly as Pillow's `Image.resize`
+ * does in `make_stencil.py:192`.
+ */
+function lanczosResize(
+  source: Uint8Array,
+  inWidth: number,
+  inHeight: number,
+  outWidth: number,
+  outHeight: number,
+): Uint8Array {
+  const horizontalCoefficients = axisCoefficients(inWidth, outWidth);
+  const horizontal = new Uint8Array(outWidth * inHeight);
+  for (let y = 0; y < inHeight; y += 1)
+    for (let x = 0; x < outWidth; x += 1) {
+      const start = horizontalCoefficients.starts[x] as number;
+      const length = horizontalCoefficients.lengths[x] as number;
+      const weights = horizontalCoefficients.weights[x] as Float64Array;
+      let total = 0;
+      for (let index = 0; index < length; index += 1)
+        total +=
+          (weights[index] as number) *
+          (source[y * inWidth + start + index] as number);
+      horizontal[y * outWidth + x] = clip8(total);
+    }
+  const verticalCoefficients = axisCoefficients(inHeight, outHeight);
+  const result = new Uint8Array(outWidth * outHeight);
+  for (let y = 0; y < outHeight; y += 1) {
+    const start = verticalCoefficients.starts[y] as number;
+    const length = verticalCoefficients.lengths[y] as number;
+    const weights = verticalCoefficients.weights[y] as Float64Array;
+    for (let x = 0; x < outWidth; x += 1) {
+      let total = 0;
+      for (let index = 0; index < length; index += 1)
+        total +=
+          (weights[index] as number) *
+          (horizontal[(start + index) * outWidth + x] as number);
+      result[y * outWidth + x] = clip8(total);
+    }
   }
   return result;
 }
 
-function sample(values: number[], maximum: number): number[] {
-  if (values.length <= maximum) return values;
-  const stride = Math.max(1, Math.floor(values.length / maximum));
-  return values
-    .filter((_value, index) => index % stride === 0)
-    .slice(0, maximum);
+/** What `recentre` did, so the caller can map a pre-recentre pixel forwards. */
+interface RecentrePlacement {
+  readonly scale: number;
+  readonly offsetX: number;
+  readonly offsetY: number;
+}
+
+function round3(value: number): number {
+  return Math.round(value * 1000) / 1000;
+}
+
+/**
+ * Crops the finished piece and centres it on the canvas, downscaling only when
+ * it overflows the body box. A port of `recentre` (`make_stencil.py:181-198`).
+ * The mask is rewritten in place and the transform is returned, because every
+ * measurement the solver reports is taken before this runs.
+ */
+function recentre(mask: RasterMask, label: string): RecentrePlacement {
+  let minX = mask.width;
+  let minY = mask.height;
+  let maxX = -1;
+  let maxY = -1;
+  for (let index = 0; index < mask.ink.length; index += 1) {
+    if (!mask.ink[index]) continue;
+    const x = index % mask.width;
+    const y = (index - x) / mask.width;
+    if (x < minX) minX = x;
+    if (x > maxX) maxX = x;
+    if (y < minY) minY = y;
+    if (y > maxY) maxY = y;
+  }
+  if (maxX < 0)
+    throw new IdentitySolverError(
+      "identity_mask_empty",
+      `${label}: nothing to centre`,
+    );
+
+  let width = maxX - minX + 1;
+  let height = maxY - minY + 1;
+  let art = new Uint8Array(width * height);
+  for (let y = 0; y < height; y += 1)
+    for (let x = 0; x < width; x += 1)
+      art[y * width + x] = mask.ink[
+        (minY + y) * mask.width + minX + x
+      ] as number;
+
+  let scale = 1;
+  if (height > IDENTITY_RECENTRE_BOX || width > IDENTITY_RECENTRE_BOX) {
+    scale = Math.min(
+      IDENTITY_RECENTRE_BOX / width,
+      IDENTITY_RECENTRE_BOX / height,
+    );
+    if (scale < IDENTITY_MIN_RECENTRE_SCALE)
+      throw new IdentitySolverError(
+        "identity_recentre_too_large",
+        `${label}: assembly ${width}x${height} is far too large for the canvas`,
+      );
+    const outWidth = Math.max(1, Math.trunc(width * scale));
+    const outHeight = Math.max(1, Math.trunc(height * scale));
+    const grey = Uint8Array.from(art, (value) => (value ? 255 : 0));
+    const resized = lanczosResize(grey, width, height, outWidth, outHeight);
+    art = Uint8Array.from(resized, (value) =>
+      value > IDENTITY_RESAMPLE_INK_THRESHOLD ? 1 : 0,
+    );
+    width = outWidth;
+    height = outHeight;
+  }
+
+  const left = Math.floor((mask.width - width) / 2);
+  const top = Math.floor((mask.height - height) / 2);
+  mask.ink.fill(0);
+  for (let y = 0; y < height; y += 1)
+    for (let x = 0; x < width; x += 1)
+      if (art[y * width + x]) mask.ink[(top + y) * mask.width + left + x] = 1;
+
+  return {
+    scale: round3(scale),
+    offsetX: round3(left - minX * scale),
+    offsetY: round3(top - minY * scale),
+  };
 }
 
 function dilate(mask: RasterMask): void {
