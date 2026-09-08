@@ -117,11 +117,13 @@ Done:
 
 - Edge timeout measured (platform, probe deployment `8b8aa87a`, restore `d87b715c` at `3916d2b`, smoke passed, probe branch and route gone from every machine): Cloudflare fronts the app and cuts a silent request at 600 s with HTTP 524 (400 s answered, 800 and 900 s cut at 600); a response writing a byte every 10 s survived 900 s, so it is an idle timer; the app spec has no timeout field. The 360 s executor cap is inside the bound, fix-3 review major 4 closed by measurement; recorded by the lead in `docs/DIGITALOCEAN-DEPLOYMENT.md` "Request timeout at the edge".
 
+- P6-1 committed in `4c08b35` (CSS only; agent proof: web build and lint exit 0, compiled CSS read back; the lead has not yet measured it in the browser). `--action-bar-block 86px` subtracted from the sticky panel budget and added to `.main` padding; panel scrolls inside its own box; a max-height 820 block compacts the dock; mobile photo is 4:5 contain (B2); dead `data-fit` rules removed; RTL arrows mirrored; reduced-motion spinner fades. Follow-ups from the agent: three contradictory unconditional `.photo > img` object-position rules; a 9:16 dark still now letterboxes on cream and a `[data-carousel-view="Dark"]` background would need a visual decision; `.previousPhoto` keeps cover on mobile; `.app` padding-bottom 100 duplicates the token.
+
 Doing:
 
 - Adversarial pass 5 on the identity engine (adversarial-reviewer) against `2ad683c`; the lead records the report to `reviews/identity-engine-adversarial-5.md`. P1-5 closes only after two consecutive passes find nothing above minor.
 - Deploy `2ad683c` (fix 3, fix 4, fix pass 5) to staging and re-prove, once the edge timeout probe has restored the branch.
-- P6-1 (implementer, CSS only): preview panel under the action bar per the row, plus UX review B2 mobile crop; the lead measures in the browser.
+- P6-1 browser measurement by the lead on the local app at 1440x900, 1280x720, 1024x768 (`previewSticky` bottom against `actionBar` top), dark still at 390x844, RTL arrows, reduced motion; waits for P6-4 to stop editing the atelier files.
 - P6-4 (implementer): UX review B1 crash path with an `error.tsx`, B3 false photographing state, checkbox `id` and `aria-describedby`, no silent truncation, two-name fit ceiling in contracts, client validator mirrors the server schema.
 
 Follow-ups found by subagents, not fixed (outside the task rows):
