@@ -18,3 +18,8 @@ Code-derived, no browser (the lead drives the browser). Fold into Phase 6 (P6-1 
 | 8 to 19 | minor | `aria-live` over the whole section; "Sample coming" hidden from AT; zoom dialog label; two unmirrored arrows in RTL; no Arabic webfont; mixed numerals; mobile action bar hides its label; "Add to bag" drops the confirmation; strict-mode double mount unwatched (dev); full-size PNGs as 52 px thumbnails; reduced motion kills the spinner; weak selected-state affordance. | P6-1 to P6-3 |
 
 Clean: no banned vocabulary in either language; price honesty; mock assets never presented; provenance labelling; one run per specification across reloads; capture requests persisted; timers and listeners cleaned up; signed-URL cache; keyboard and focus; tap targets; RTL plumbing; reduced motion in CSS and JS; contrast.
+
+## Lead finding on the live URL (deployment `2e58159e`, 2026-09-08)
+
+- `/` redirects to `/en`, and `apps/web/src/app/[locale]/page.tsx` renders an empty `<main>` (unchanged since `e8d3dc0`). A shopper who types the bare domain sees a blank cream page with no way into the atelier, which lives at `/en/design/new`. Owner: P6-4 (either redirect the locale root to `design/new` or give it a landing).
+- CSP verified in the lead's browser on `/en/design/new`: no violations, fonts loaded, six example images, `/api/state` 200. The `/en/design` and `/ar/design` paths are 404 (no such route), not regressions.
