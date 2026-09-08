@@ -116,6 +116,8 @@ The PNGs and `manifest.json` are at `~/hq/projects/devonel/caleums-private/style
 
 ## Phase 6 - make the interface honest (needs DS-4, DS-5 for P6-2, P6-3)
 
+Code review of the surface on 8 September 2026: `docs/goals/road-to-gold/reviews/ux-review-1.md`. Its four blocking findings (crash on confirm with an invalid draft, mobile photo cropped to half, false per-view failures with a dead Retry, English errors in the Arabic journey) are part of these rows; B1 and B3 land with defect 6.
+
 | Id | Task | Files | Change | Proof | Size |
 | --- | --- | --- | --- | --- | --- |
 | P6-1 | Preview panel under the action bar | `apps/web/src/features/atelier/atelier.module.css:129-133,1468-1478,1560,1703-1705` | Do not move `.intro` (at 767 px and below `.preview { order: -1 }` puts the photo first and the h1 would fall below it; at 768 to 1099 the h1 would wrap in a half column). Add `--action-bar-block: 86px`; subtract it in `.previewSticky` max-height and add it to `.main` padding-bottom; then lower the 280 px photo floor or compact `.previewDock` at short heights: at 1024x768 the dock alone is 396 px against a 558 px budget, and at 1280x720 the overlap at rest is 295 px | measured in the browser at 1440x900, 1280x720, 1024x768: `previewSticky` bottom at or above `actionBar` top after scroll, and no control hidden at rest; screenshots under `docs/goals/road-to-gold/dogfood-<date>/` | M |
