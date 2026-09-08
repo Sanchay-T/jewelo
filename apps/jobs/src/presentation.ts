@@ -152,7 +152,7 @@ export interface PresentationRepository {
   signedIdentityUrl(
     revision: RevisionRow,
     ownerId: string,
-    taskId: string,
+    task: TaskRow,
   ): Promise<{ url: string; fingerprint: string; artifactId: string }>;
   signedStyleAnchorUrl(task: TaskRow): Promise<string>;
   /** Ready still of `dependency_task_id`; undefined while it is not ready yet. */
@@ -280,7 +280,7 @@ export async function executePresentationTask(
     identity = await repository.signedIdentityUrl(
       revision,
       task.owner_principal_id,
-      task.id,
+      task,
     );
     // The studio still gets NO style photo: every wrong name today was copied
     // from the anchor. Dependent views inherit the studio still as reference.
@@ -293,7 +293,24 @@ export async function executePresentationTask(
       task.owner_principal_id,
     );
   } catch (error) {
-    await repository.blockPreSpend({ task, run, error });
+    try {
+      await repository.blockPreSpend({ task, run, error });
+    } catch {
+      // Adversarial finding 3: `mark_task_pre_spend_blocked` raises for a task
+      // whose attempt is not 0, because the pre-spend gate cannot follow a
+      // provider reservation. A pre-spend throw on a retry would then escape
+      // this catch and leave the task `retrying` for ever with no
+      // `terminal_error_code`, so the reason the pendant never arrived would
+      // be nowhere in the record. The terminal path writes the same message.
+      await repository.fail({
+        task,
+        run,
+        attempt: task.attempt,
+        error,
+        terminal: true,
+        actualCostCents: 0,
+      });
+    }
     return { status: "operator_review" as const, attempt: task.attempt };
   }
   const checkpoint = await repository.loadStoredOutput(task);
@@ -672,7 +689,7 @@ export class SupabasePresentationRepository implements PresentationRepository {
   async signedIdentityUrl(
     revision: RevisionRow,
     ownerId: string,
-    taskId: string,
+    task: TaskRow,
   ) {
     const rendered = await renderIdentityAnchor(
       {
@@ -685,6 +702,15 @@ export class SupabasePresentationRepository implements PresentationRepository {
       this.pipelineReleaseId,
       this.ringlessConstructions,
     );
+    // Adversarial finding 1: the release the engine stamped into the artifact
+    // has to be the release the task is pinned to. Two releases in one run mean
+    // media from two different identity engines under one order, and nothing
+    // downstream would say which pendant the customer is looking at. Both
+    // values are release ids from the registry, never customer text.
+    if (rendered.report.pipelineRelease !== task.pipeline_release)
+      throw new Error(
+        `identity_pipeline_release_mismatch:task=${task.pipeline_release},report=${rendered.report.pipelineRelease}`,
+      );
     const basePath = `principal/${ownerId}/revision/${revision.id}/identity-${rendered.fingerprint}`;
     const bodies: Array<[string, Buffer, string]> = [
       ["png", rendered.png, "image/png"],
@@ -746,7 +772,7 @@ export class SupabasePresentationRepository implements PresentationRepository {
     );
     const artifactId = artifacts[0]?.id;
     if (!artifactId) throw new Error("identity_artifact_lineage_missing");
-    await this.#request(`/rest/v1/generation_tasks?id=eq.${taskId}`, {
+    await this.#request(`/rest/v1/generation_tasks?id=eq.${task.id}`, {
       method: "PATCH",
       body: JSON.stringify({ identity_artifact_id: artifactId }),
     });

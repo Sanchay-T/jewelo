@@ -18,6 +18,7 @@ import {
   IDENTITY_RING_ANCHOR_SPANS,
   IDENTITY_RING_INNER,
   IDENTITY_RING_MAX_LIFT,
+  IDENTITY_RING_MAX_OUTWARD_SHIFT,
   IDENTITY_RING_OUTER,
   IDENTITY_RING_OUTWARD_FRACTION,
   IDENTITY_RING_TOP_CLEARANCE,
@@ -25,6 +26,7 @@ import {
   IDENTITY_RING_WELD_OVERLAP,
   IDENTITY_RING_WELD_START_GAP,
   IDENTITY_RING_WELD_WIDTH,
+  IDENTITY_RING_WELD_ZONE,
   IDENTITY_THICKEN_PASSES,
   type IdentityScript,
   type ShapingMeasurement,
@@ -104,9 +106,19 @@ export interface IdentityRasterizer {
    * used. P1-6: the solver measures its own encoded bytes through this port and
    * reports only what came back, so the report can disagree with the renderer.
    * `apps/jobs` injects `decodeMask`, the same decoder the P1-1 ruler uses.
+   * The decoder names itself in `rulerId`, and that name is what the report's
+   * `measured.measuredBy` carries: the engine never writes it (finding 5).
    */
-  decodePng(bytes: Uint8Array): Promise<DecodedMaskGeometryInput>;
+  decodePng(bytes: Uint8Array): Promise<DecodedIdentityMask>;
   shapingVersions(): Readonly<Record<string, string>>;
+}
+
+/**
+ * A decoded mask that says who decoded it. The string travels into the report
+ * unchanged, so swapping the decoder swaps the name the stored report carries.
+ */
+export interface DecodedIdentityMask extends DecodedMaskGeometryInput {
+  readonly rulerId: string;
 }
 
 /** One measured ring hole, in the coordinates of the encoded PNG. */
@@ -116,63 +128,81 @@ export interface MeasuredRingHole {
   readonly centreY: number;
 }
 
+/**
+ * Everything that came out of the decoded PNG, and nothing else.
+ *
+ * Adversarial finding 5: the report used to mix the ruler's readings with the
+ * renderer's own account in one flat object, so `dilationPixels` (a constant)
+ * sat beside `inkPixels` (a measurement) and a reader had to know the engine to
+ * tell them apart. They are two blocks now, and `passed` is computed from this
+ * one only.
+ */
+export interface IdentityMeasuredReport {
+  /**
+   * Which ruler produced every field in this block, derived from the decoder
+   * the caller injected rather than written by the engine: the port names
+   * itself and the solver copies that name.
+   */
+  readonly measuredBy: string;
+  /** The decoder's ink branch on the encoded bytes; the stencil is luminance. */
+  readonly rule: MaskInkRule;
+  /** Canvas of the encoded PNG, as decoded. */
+  readonly width: number;
+  readonly height: number;
+  /** Ink pixels in the decoded PNG. */
+  readonly inkPixels: number;
+  /** 4-connected ink components in the decoded PNG. One means one piece. */
+  readonly componentsFinal: number;
+  /** Every enclosed hole in the decoded PNG: ring holes plus letter counters. */
+  readonly holes: number;
+  /** The largest hole sizes, descending, as `measureMask` caps them. */
+  readonly holeSizes: readonly number[];
+  /** Ink bounding box of the decoded PNG, or null when it carries no ink. */
+  readonly bbox: MaskBoundingBox | null;
+  /**
+   * Ring holes still open in the decoded PNG: the holes the welded ring centres
+   * actually land in, not the rings the solver intended to draw.
+   */
+  readonly jumpRingCount: number;
+  readonly ringHoles: readonly MeasuredRingHole[];
+}
+
+/**
+ * The renderer's own account of how it built the piece. Nothing here was read
+ * back off the encoded bytes, so nothing here may decide `passed`; it is what a
+ * reader compares the measurement against when the two disagree.
+ */
+export interface IdentityClaimedReport extends IdentityConstructionMeasurement {
+  /** Islands the rasteriser produced, counted on the in-memory mask. */
+  readonly componentsBefore: number;
+  /** The sha the pinned style table declares for the face. */
+  readonly fontSha256Declared: string;
+}
+
 export interface IdentityValidationReport {
   engineRelease: typeof CALEUMS_ARABIC_ENGINE_RELEASE;
   pipelineRelease: string;
   approvedCharacters: string;
   style: CaleumsArabicStyle;
   fontFile: string;
-  /** The sha declared by the pinned style table. */
-  fontSha256: string;
   /** The sha of the bytes HarfBuzz actually shaped with. */
   fontSha256Measured: string;
   shaping: Readonly<Record<string, string>>;
-  componentsBefore: number;
-  /** Capsule bars drawn to join the islands (P1-4; was `fuseMoves`). */
-  bridges: number;
-  /** Dilation passes applied before bridging. */
-  dilationPixels: number;
-  /**
-   * Which ruler produced every measured field below, so a stored report says
-   * who measured it rather than leaving the reader to assume.
-   */
-  measuredBy: typeof IDENTITY_REPORT_MEASURED_BY;
-  /** The decoder's ink branch on the encoded bytes; the stencil is luminance. */
-  rule: MaskInkRule;
-  /** Canvas of the encoded PNG, as decoded. */
-  width: number;
-  height: number;
-  /** Ink pixels in the decoded PNG. */
-  inkPixels: number;
-  /** 4-connected ink components in the decoded PNG. One means one piece. */
-  componentsFinal: number;
-  /** Every enclosed hole in the decoded PNG: ring holes plus letter counters. */
-  holes: number;
-  /** The largest hole sizes, descending, as `measureMask` caps them. */
-  holeSizes: readonly number[];
-  /** Ink bounding box of the decoded PNG, or null when it carries no ink. */
-  bbox: MaskBoundingBox | null;
-  /**
-   * Ring holes still open in the decoded PNG: the holes the welded ring centres
-   * actually land in, not the rings the solver intended to draw.
-   */
-  jumpRingCount: number;
-  ringHoles: readonly MeasuredRingHole[];
   /** Measured by HarfBuzz: no glyph id 0 and every NFC code point covered. */
   exactCharactersPreserved: boolean;
   /**
-   * Every gate above agreed with the decoded measurement. It is computed, never
-   * asserted: a disagreement throws before this object exists, and the database
-   * check on `identity_artifacts.validation_report` rejects anything else.
+   * Every gate above agreed with the decoded measurement. It is computed from
+   * `measured` alone, never asserted: a disagreement throws before this object
+   * exists, and the database check on `identity_artifacts.validation_report`
+   * rejects anything else. It stays top level because that check reads
+   * `validation_report->>'passed'`.
    */
   passed: boolean;
-  /** How the piece was built (P1-4/P1-5), folded in by P1-6. */
-  construction: IdentityConstructionMeasurement;
+  /** What the ruler read off the encoded PNG. */
+  measured: IdentityMeasuredReport;
+  /** What the engine says it drew (P1-4/P1-5), never a measurement. */
+  claimed: IdentityClaimedReport;
 }
-
-/** The ruler that produced the measured half of the report. */
-export const IDENTITY_REPORT_MEASURED_BY =
-  `measureMask@${CALEUMS_ARABIC_ENGINE_RELEASE}` as const;
 
 /** One welded ring: where its centre is, and the metal it grips. */
 export interface IdentityRingCentre {
@@ -236,6 +266,15 @@ export interface IdentityConstructionMeasurement {
    * so the solver refuses any piece where this is not zero.
    */
   readonly glyphPixelsPunchedByRings: number;
+  /**
+   * Glyph ink pixels the rings swallowed: pixels that were ink after bridging
+   * and lie under the ring annulus or its weld fillet further from the anchor
+   * than `IDENTITY_RING_WELD_ZONE`. The punch count above cannot see these,
+   * because adding metal over ink changes no pixel; a floating dot absorbed
+   * into a ring is a different letter, so the solver refuses any piece where
+   * this is not zero (adversarial finding 2).
+   */
+  readonly glyphPixelsUnderRingMetal: number;
   /** Scale `recentre` applied; 1 unless the piece overflowed the body box. */
   readonly recentreScale: number;
   readonly recentreOffsetX: number;
@@ -266,6 +305,7 @@ export class IdentitySolverError extends Error {
       | "identity_gate_failed"
       | "identity_ring_anchor_missing"
       | "identity_ring_punched_ink"
+      | "identity_ring_welded_to_glyph"
       | "identity_font_bytes_mismatch"
       | "identity_shaping_gate_failed",
     message: string = code,
@@ -424,6 +464,7 @@ export async function solveIdentity(
           centres: [] as readonly IdentityRingCentre[],
           glyphBox: inkBox(mask),
           glyphPixelsPunchedByRings: 0,
+          glyphPixelsUnderRingMetal: 0,
         }
       : addRings(mask);
   // The second half of the ink-preservation invariant, and the reason it is not
@@ -435,6 +476,14 @@ export async function solveIdentity(
     throw new IdentitySolverError(
       "identity_ring_punched_ink",
       `identity_ring_punched_ink:pixels=${rings.glyphPixelsPunchedByRings}`,
+    );
+  // Adversarial finding 2: adding metal over a floating dot changes no pixel,
+  // so the punch count above cannot see it. This is the same statement for the
+  // half of the ring that only ever adds ink.
+  if (rings.glyphPixelsUnderRingMetal > 0)
+    throw new IdentitySolverError(
+      "identity_ring_welded_to_glyph",
+      `identity_ring_welded_to_glyph:pixels=${rings.glyphPixelsUnderRingMetal}`,
     );
   const placement = recentre(mask);
   const construction: IdentityConstructionMeasurement = {
@@ -448,6 +497,7 @@ export async function solveIdentity(
     ringCentres: rings.centres,
     glyphBoxBeforeRings: rings.glyphBox,
     glyphPixelsPunchedByRings: rings.glyphPixelsPunchedByRings,
+    glyphPixelsUnderRingMetal: rings.glyphPixelsUnderRingMetal,
     recentreScale: placement.scale,
     recentreOffsetX: placement.offsetX,
     recentreOffsetY: placement.offsetY,
@@ -477,15 +527,19 @@ export async function solveIdentity(
 
   const disagreements: string[] = [];
   if (decoded.rule !== "luminance") disagreements.push("rule");
-  if (
-    measured.width !== intended.width ||
-    measured.height !== intended.height
-  )
+  if (measured.width !== intended.width || measured.height !== intended.height)
     disagreements.push("canvas");
   if (measured.inkPixels !== intended.inkPixels) disagreements.push("ink");
   if (JSON.stringify(measured.bbox) !== JSON.stringify(intended.bbox))
     disagreements.push("bbox");
   if (measured.holes !== intended.holes) disagreements.push("holes");
+  // Finding 8: the count of pieces and the sizes of the holes are exactly what
+  // a lossy encode or a decoder on a different ink rule would move, so they
+  // belong in the general comparison and not only in the ring gate above.
+  if (measured.components !== intended.components)
+    disagreements.push("components");
+  if (JSON.stringify(measured.holeSizes) !== JSON.stringify(intended.holeSizes))
+    disagreements.push("holeSizes");
   if (disagreements.length > 0)
     throw new IdentitySolverError(
       "identity_gate_failed",
@@ -516,35 +570,41 @@ export async function solveIdentity(
       approvedCharacters: approvedText,
       style: support.style,
       fontFile: face.fontFile,
-      fontSha256: face.fontSha256,
       fontSha256Measured: shaping.fontSha256Measured,
       shaping: {
         ...rasterizer.shapingVersions(),
         harfbuzzShaper: shaping.harfbuzzVersion,
       },
-      componentsBefore,
-      bridges: bridged.bridges,
-      dilationPixels: IDENTITY_THICKEN_PASSES,
-      measuredBy: IDENTITY_REPORT_MEASURED_BY,
-      rule: decoded.rule,
-      width: measured.width,
-      height: measured.height,
-      inkPixels: measured.inkPixels,
-      componentsFinal: measured.components,
-      holes: measured.holes,
-      holeSizes: measured.holeSizes,
-      bbox: measured.bbox,
-      jumpRingCount: ringHoles.length,
-      ringHoles,
       exactCharactersPreserved: shaping.exactCharactersPreserved,
       // Every gate above threw on disagreement, so this is the conjunction of
-      // measurements rather than a promise.
+      // measurements rather than a promise. Only `measured` and the shaping
+      // measurement take part; `construction.jumpRings` appears as the ring
+      // count the caller asked for (rings on or off), never as a claim about
+      // what the raster contains, and the gate above already threw if the
+      // decoded holes disagreed with it.
       passed:
         measured.components === 1 &&
         ringHoles.length === construction.jumpRings &&
         shaping.exactCharactersPreserved &&
         decoded.rule === "luminance",
-      construction,
+      measured: {
+        measuredBy: decoded.rulerId,
+        rule: decoded.rule,
+        width: measured.width,
+        height: measured.height,
+        inkPixels: measured.inkPixels,
+        componentsFinal: measured.components,
+        holes: measured.holes,
+        holeSizes: measured.holeSizes,
+        bbox: measured.bbox,
+        jumpRingCount: ringHoles.length,
+        ringHoles,
+      },
+      claimed: {
+        ...construction,
+        componentsBefore,
+        fontSha256Declared: face.fontSha256,
+      },
     },
     construction,
   };
@@ -1031,6 +1091,12 @@ interface RingPlacement {
    * sat inside a letter. It must be zero.
    */
   readonly glyphPixelsPunchedByRings: number;
+  /**
+   * Pre-ring ink pixels lying under ring metal outside the weld zone, summed
+   * over both rings. Also zero on a sound piece: a dot fused into the ring is a
+   * different letter even though no ink was cleared.
+   */
+  readonly glyphPixelsUnderRingMetal: number;
 }
 
 /**
@@ -1135,38 +1201,70 @@ function addRings(mask: RasterMask): RingPlacement {
         `identity_ring_anchor_missing:side=${side}`,
       );
 
-    const cx = anchorX + outward * outwardStep;
+    const seatX = anchorX + outward * outwardStep;
     const lowest = IDENTITY_RING_OUTER + IDENTITY_RING_TOP_CLEARANCE;
     const seat = Math.max(
       lowest,
       anchorY - IDENTITY_RING_OUTER + IDENTITY_RING_WELD_OVERLAP,
     );
-    // The lab seats the ring here and stops. A name whose hairline rises above
-    // the load-bearing anchor then loses a few pixels of that hairline to the
-    // hole, so the solver spends the reserved ring band: it lifts the ring
-    // until the hole is clear of the name, and keeps the seat with the least
-    // ink inside if no lift within the band clears it.
+    // The lab seats the ring here and stops. Two things go wrong at that one
+    // seat, and both cost a customer the right name. A hairline that rises
+    // above the load-bearing anchor loses a few pixels to the hole, and a
+    // floating dot outside the weld joint disappears into the ring metal
+    // (adversarial finding 2), which reads as a different letter while every
+    // other gate stays green. So the solver spends the reserved ring band and,
+    // if that is not enough, the outward room: it lifts the ring one pixel at a
+    // time and then pushes it away from the name, and takes the first seat
+    // where the hole punches nothing out and no ink outside the weld zone lies
+    // under the ring metal. Failing that it keeps the least-bad seat and lets
+    // the measured gates below refuse the piece.
     let cy = seat;
-    let punched = countDisk(mask, beforeRings, cx, seat, IDENTITY_RING_INNER);
-    for (
-      let lift = 1;
-      punched > 0 && lift <= IDENTITY_RING_MAX_LIFT;
-      lift += 1
-    ) {
-      const candidate = Math.max(lowest, seat - lift);
-      if (candidate === cy) break;
-      const inside = countDisk(
-        mask,
-        beforeRings,
-        cx,
-        candidate,
-        IDENTITY_RING_INNER,
-      );
-      if (inside < punched) {
-        punched = inside;
-        cy = candidate;
+    let cx = seatX;
+    let cost = Number.POSITIVE_INFINITY;
+    search: for (let lift = 0; lift <= IDENTITY_RING_MAX_LIFT; lift += 1) {
+      const candidateY = Math.max(lowest, seat - lift);
+      if (lift > 0 && candidateY === Math.max(lowest, seat - (lift - 1)))
+        break search;
+      for (
+        let shift = 0;
+        shift <= IDENTITY_RING_MAX_OUTWARD_SHIFT;
+        shift += 1
+      ) {
+        const candidateX = seatX + outward * shift;
+        // A ring pushed off the canvas would have its annulus clipped, so its
+        // hole would no longer be enclosed: stop travelling at the edge.
+        if (
+          candidateX - IDENTITY_RING_OUTER < IDENTITY_RING_TOP_CLEARANCE ||
+          candidateX + IDENTITY_RING_OUTER >
+            mask.width - 1 - IDENTITY_RING_TOP_CLEARANCE
+        )
+          break;
+        const ring = {
+          x: candidateX,
+          y: candidateY,
+          anchorX,
+          anchorY,
+        } satisfies IdentityRingCentre;
+        const punched = countDisk(
+          mask,
+          beforeRings,
+          candidateX,
+          candidateY,
+          IDENTITY_RING_INNER,
+        );
+        const welded = countGlyphPixelsUnderRingMetal(mask, beforeRings, ring);
+        if (punched === 0 && welded === 0) {
+          cx = candidateX;
+          cy = candidateY;
+          cost = 0;
+          break search;
+        }
+        if (punched + welded < cost) {
+          cost = punched + welded;
+          cx = candidateX;
+          cy = candidateY;
+        }
       }
-      if (candidate === lowest) break;
     }
     drawDisk(mask, cx, cy, IDENTITY_RING_OUTER, 1);
     drawDisk(mask, cx, cy, IDENTITY_RING_INNER, 0);
@@ -1190,7 +1288,107 @@ function addRings(mask: RasterMask): RingPlacement {
   for (let index = 0; index < beforeRings.length; index += 1)
     if (beforeRings[index] && !mask.ink[index]) glyphPixelsPunchedByRings += 1;
 
-  return { centres, glyphBox, glyphPixelsPunchedByRings };
+  // The other half of that statement, and the one the punch count cannot see:
+  // ink the ring metal swallowed rather than cleared. Counted against the ring
+  // geometry that was actually drawn, on the name as it stood before any ring.
+  let glyphPixelsUnderRingMetal = 0;
+  for (const centre of centres)
+    glyphPixelsUnderRingMetal += countGlyphPixelsUnderRingMetal(
+      mask,
+      beforeRings,
+      centre,
+    );
+
+  return {
+    centres,
+    glyphBox,
+    glyphPixelsPunchedByRings,
+    glyphPixelsUnderRingMetal,
+  };
+}
+
+/**
+ * Pre-ring ink pixels that lie under one ring's metal outside its weld zone.
+ *
+ * "Under the metal" is the ring annulus (between the hole and the outer edge)
+ * plus the weld fillet capsule, measured geometrically rather than as a change
+ * of state, because `drawDisk(..., 1)` writes 1 over a pixel that was already
+ * 1 and leaves no trace. The weld zone is the disk of radius
+ * `IDENTITY_RING_WELD_ZONE` around the anchor: that is where the ring is meant
+ * to grip the stroke, so ink there is the joint. Ink anywhere else under the
+ * metal is a piece of the name the ring absorbed.
+ */
+function countGlyphPixelsUnderRingMetal(
+  mask: RasterMask,
+  source: Uint8Array,
+  ring: IdentityRingCentre,
+): number {
+  const barY0 = ring.y + IDENTITY_RING_INNER + IDENTITY_RING_WELD_START_GAP;
+  const barX0 = ring.x;
+  const barY1 = ring.anchorY + IDENTITY_RING_WELD_ANCHOR_DEPTH;
+  const barX1 = ring.anchorX;
+  const barRadius = IDENTITY_RING_WELD_WIDTH / 2;
+  const yMin = Math.max(
+    0,
+    Math.min(
+      ring.y - IDENTITY_RING_OUTER,
+      Math.trunc(Math.min(barY0, barY1) - barRadius) - 1,
+    ),
+  );
+  const yMax = Math.min(
+    mask.height - 1,
+    Math.max(
+      ring.y + IDENTITY_RING_OUTER,
+      Math.trunc(Math.max(barY0, barY1) + barRadius) + 1,
+    ),
+  );
+  const xMin = Math.max(
+    0,
+    Math.min(
+      ring.x - IDENTITY_RING_OUTER,
+      Math.trunc(Math.min(barX0, barX1) - barRadius) - 1,
+    ),
+  );
+  const xMax = Math.min(
+    mask.width - 1,
+    Math.max(
+      ring.x + IDENTITY_RING_OUTER,
+      Math.trunc(Math.max(barX0, barX1) + barRadius) + 1,
+    ),
+  );
+  const dy = barY1 - barY0;
+  const dx = barX1 - barX0;
+  const segment = dy * dy + dx * dx;
+  let welded = 0;
+  for (let y = yMin; y <= yMax; y += 1)
+    for (let x = xMin; x <= xMax; x += 1) {
+      if (!source[y * mask.width + x]) continue;
+      if (
+        (x - ring.anchorX) ** 2 + (y - ring.anchorY) ** 2 <=
+        IDENTITY_RING_WELD_ZONE ** 2
+      )
+        continue;
+      const radial = (x - ring.x) ** 2 + (y - ring.y) ** 2;
+      if (
+        radial <= IDENTITY_RING_OUTER ** 2 &&
+        radial > IDENTITY_RING_INNER ** 2
+      ) {
+        welded += 1;
+        continue;
+      }
+      // The same capsule `drawBar` fills, evaluated as a predicate.
+      const t =
+        segment === 0
+          ? 0
+          : Math.min(
+              1,
+              Math.max(0, ((y - barY0) * dy + (x - barX0) * dx) / segment),
+            );
+      const py = barY0 + t * dy;
+      const px = barX0 + t * dx;
+      if ((y - py) ** 2 + (x - px) ** 2 <= barRadius * barRadius) welded += 1;
+    }
+  return welded;
 }
 
 /**

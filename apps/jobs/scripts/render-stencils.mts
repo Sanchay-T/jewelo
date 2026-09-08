@@ -181,6 +181,8 @@ interface Row {
   /** P1-5: rings the solver welded on, and where it says it put them. */
   readonly jumpRings: number;
   readonly glyphPixelsPunchedByRings: number;
+  /** Pre-ring ink under ring metal outside the weld zone (finding 2). */
+  readonly glyphPixelsUnderRingMetal: number;
   /** The pre-ring glyph box top, mapped into final image coordinates. */
   readonly glyphTop: number;
   /** The measured hole at each predicted ring centre. */
@@ -353,7 +355,7 @@ for (const name of NAMES) {
         inkBoxWidth: measured.bbox
           ? measured.bbox[2] - measured.bbox[0] + 1
           : 0,
-        componentsBefore: rendered.report.componentsBefore,
+        componentsBefore: rendered.report.claimed.componentsBefore,
         islandsBeforeBridging: rendered.construction.islandsBeforeBridging,
         bridges: rendered.construction.bridges,
         bridgePixelsAdded: rendered.construction.bridgePixelsAdded,
@@ -365,6 +367,8 @@ for (const name of NAMES) {
         jumpRings: rendered.construction.jumpRings,
         glyphPixelsPunchedByRings:
           rendered.construction.glyphPixelsPunchedByRings,
+        glyphPixelsUnderRingMetal:
+          rendered.construction.glyphPixelsUnderRingMetal,
         glyphTop: ring.glyphTop,
         ringHoles: ring.ringHoles,
         holesAboveGlyphTop: ring.holesAboveGlyphTop,
@@ -455,8 +459,12 @@ console.log(
   "ring centre after the same mapping; size and centre below are measured on",
 );
 console.log(
-  "the written PNG. inHole counts pre-ring ink pixels a ring hole punched out.",
+  "the written PNG. inHole counts pre-ring ink pixels a ring hole punched out,",
 );
+console.log(
+  "welded counts pre-ring ink pixels lying under ring metal outside the weld",
+);
+console.log("zone around the anchor (adversarial finding 2). Both must be 0.");
 console.log(
   "file".padEnd(26) +
     "rings".padStart(6) +
@@ -464,6 +472,7 @@ console.log(
     "aboveTop".padStart(9) +
     "glyphTop".padStart(9) +
     "inHole".padStart(7) +
+    "welded".padStart(7) +
     "  ring holes (size @ x,y, above?)",
 );
 for (const row of rows)
@@ -474,6 +483,7 @@ for (const row of rows)
       String(row.holesAboveGlyphTop).padStart(9) +
       row.glyphTop.toFixed(1).padStart(9) +
       String(row.glyphPixelsPunchedByRings).padStart(7) +
+      String(row.glyphPixelsUnderRingMetal).padStart(7) +
       "  " +
       (row.ringHoles.length === 0
         ? "-"
@@ -508,6 +518,12 @@ for (const row of rows) {
   if (row.glyphPixelsPunchedByRings !== 0) {
     console.log(
       `GATE FAILED: ${row.file} punched ${row.glyphPixelsPunchedByRings} ink pixels of the name out with a ring hole`,
+    );
+    process.exitCode = 1;
+  }
+  if (row.glyphPixelsUnderRingMetal !== 0) {
+    console.log(
+      `GATE FAILED: ${row.file} welded ${row.glyphPixelsUnderRingMetal} ink pixels of the name into the ring metal`,
     );
     process.exitCode = 1;
   }
@@ -579,6 +595,11 @@ for (const name of NAMES) {
   }
 }
 
+console.log("");
+console.log(
+  `WELDED-GLYPH ${rows.filter((row) => row.glyphPixelsUnderRingMetal > 0).length}/${rows.length} lab cells have ink welded into ring metal`,
+);
+
 const luminance = rows.filter((row) => row.rule === "luminance").length;
 const singlePiece = rows.filter((row) => row.components === 1).length;
 console.log("");
@@ -623,6 +644,7 @@ writeFileSync(
         holesAboveGlyphTop: row.holesAboveGlyphTop,
         glyphTop: Number(row.glyphTop.toFixed(1)),
         glyphPixelsPunchedByRings: row.glyphPixelsPunchedByRings,
+        glyphPixelsUnderRingMetal: row.glyphPixelsUnderRingMetal,
       },
       construction: {
         componentsBefore: row.componentsBefore,
@@ -695,6 +717,7 @@ interface MatrixCell {
   readonly ringHoleSizes: readonly number[];
   readonly holesAboveGlyphTop: number;
   readonly glyphPixelsPunchedByRings: number;
+  readonly glyphPixelsUnderRingMetal: number;
 }
 
 const matrix = new Map<string, MatrixCell>();
@@ -741,6 +764,8 @@ for (const name of MATRIX_NAMES) {
         holesAboveGlyphTop: ring.holesAboveGlyphTop,
         glyphPixelsPunchedByRings:
           rendered.construction.glyphPixelsPunchedByRings,
+        glyphPixelsUnderRingMetal:
+          rendered.construction.glyphPixelsUnderRingMetal,
         islandsBeforeBridging: rendered.construction.islandsBeforeBridging,
         bridges: rendered.construction.bridges,
         moved:
@@ -817,11 +842,27 @@ const ringOk = matrixCells.filter(
     cell.jumpRings === expectedRings &&
     cell.ringHolesFound === expectedRings &&
     cell.ringHolesAbove === expectedRings &&
-    cell.glyphPixelsPunchedByRings === 0,
+    cell.glyphPixelsPunchedByRings === 0 &&
+    cell.glyphPixelsUnderRingMetal === 0,
 ).length;
+const welded = matrixCells.filter((cell) => cell.glyphPixelsUnderRingMetal > 0);
+console.log(
+  `MATRIX WELDED-GLYPH ${welded.length}/${matrixCells.length} cells have ink welded into ring metal` +
+    (welded.length
+      ? `, worst ${welded
+          .slice()
+          .sort(
+            (left, right) =>
+              right.glyphPixelsUnderRingMetal - left.glyphPixelsUnderRingMetal,
+          )
+          .slice(0, 5)
+          .map((cell) => `${cell.file}:${cell.glyphPixelsUnderRingMetal}`)
+          .join(" ")}`
+      : ""),
+);
 const sizes = matrixCells.flatMap((cell) => cell.ringHoleSizes);
 console.log(
-  `MATRIX RINGS ${ringOk}/${matrixCells.length} cells have exactly ${expectedRings} ring holes, each clear of the stroke it is welded to, with no punched-out ink`,
+  `MATRIX RINGS ${ringOk}/${matrixCells.length} cells have exactly ${expectedRings} ring holes, each clear of the stroke it is welded to, with no punched-out and no welded-in ink`,
 );
 if (sizes.length)
   console.log(
@@ -832,11 +873,12 @@ for (const cell of matrixCells) {
     cell.jumpRings === expectedRings &&
     cell.ringHolesFound === expectedRings &&
     cell.ringHolesAbove === expectedRings &&
-    cell.glyphPixelsPunchedByRings === 0
+    cell.glyphPixelsPunchedByRings === 0 &&
+    cell.glyphPixelsUnderRingMetal === 0
   )
     continue;
   console.log(
-    `GATE FAILED: matrix/${cell.file} rings=${cell.jumpRings} holesFound=${cell.ringHolesFound} above=${cell.ringHolesAbove} holesAboveGlyphTop=${cell.holesAboveGlyphTop} punched=${cell.glyphPixelsPunchedByRings}`,
+    `GATE FAILED: matrix/${cell.file} rings=${cell.jumpRings} holesFound=${cell.ringHolesFound} above=${cell.ringHolesAbove} holesAboveGlyphTop=${cell.holesAboveGlyphTop} punched=${cell.glyphPixelsPunchedByRings} welded=${cell.glyphPixelsUnderRingMetal}`,
   );
   process.exitCode = 1;
 }

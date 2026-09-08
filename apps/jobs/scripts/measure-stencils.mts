@@ -60,12 +60,20 @@ type RenderReport = readonly {
   readonly file: string;
   readonly pngSha256?: string;
   readonly report?: {
-    readonly componentsFinal?: number;
-    readonly jumpRingCount?: number;
-    readonly ringHoles?: readonly {
-      readonly centreX: number;
-      readonly centreY: number;
-    }[];
+    /**
+     * Adversarial finding 5: the solver report is two blocks now, and only
+     * `measured` came off the decoded PNG. The claim under test is read from
+     * there and nowhere else, so a renderer that flattered itself in `claimed`
+     * could not move this comparison.
+     */
+    readonly measured?: {
+      readonly componentsFinal?: number;
+      readonly jumpRingCount?: number;
+      readonly ringHoles?: readonly {
+        readonly centreX: number;
+        readonly centreY: number;
+      }[];
+    };
   };
 }[];
 
@@ -82,10 +90,10 @@ function readClaims(manifestPath: string): StencilClaim[] {
   if (Array.isArray(parsed)) {
     return (parsed as RenderReport).map((entry) => ({
       file: entry.file,
-      componentsFinal: entry.report?.componentsFinal ?? null,
-      jumpRings: entry.report?.jumpRingCount ?? null,
+      componentsFinal: entry.report?.measured?.componentsFinal ?? null,
+      jumpRings: entry.report?.measured?.jumpRingCount ?? null,
       ringHoleCentres:
-        entry.report?.ringHoles?.map(
+        entry.report?.measured?.ringHoles?.map(
           (hole) => [hole.centreX, hole.centreY] as const,
         ) ?? null,
       sha256: entry.pngSha256 ?? null,
@@ -134,7 +142,8 @@ for (const claim of claims) {
 
   const shaOk = claim.sha256 === null || sha === claim.sha256;
   const componentsOk =
-    claim.componentsFinal === null || report.components === claim.componentsFinal;
+    claim.componentsFinal === null ||
+    report.components === claim.componentsFinal;
   // The ring count is measured, not inferred from the total: the ruler finds
   // the enclosed hole at each claimed ring centre in the decoded PNG and counts
   // the distinct ones. A filled ring is a point that lands in no hole, so the
@@ -151,7 +160,9 @@ for (const claim of claims) {
     : report.holes;
   const holesOk =
     claim.jumpRings === null ||
-    (exactRings ? measuredRings === claim.jumpRings : report.holes >= claim.jumpRings);
+    (exactRings
+      ? measuredRings === claim.jumpRings
+      : report.holes >= claim.jumpRings);
 
   if (claim.componentsFinal === null) unclaimed += 1;
   if (report.components === 1) singlePiece += 1;
@@ -169,7 +180,9 @@ for (const claim of claims) {
       `${report.width}x${report.height}`.padEnd(12) +
       String(report.inkPixels).padStart(8) +
       `  ${report.components}/${claim.componentsFinal ?? "-"}`.padEnd(18) +
-      `${report.holes}/${measuredRings}${exactRings ? "=" : ">"}${claim.jumpRings ?? "-"}`.padEnd(19) +
+      `${report.holes}/${measuredRings}${exactRings ? "=" : ">"}${claim.jumpRings ?? "-"}`.padEnd(
+        19,
+      ) +
       decoded.rule.padEnd(11) +
       (shaOk ? "ok " : "DIFF") +
       "  " +

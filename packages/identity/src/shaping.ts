@@ -472,6 +472,29 @@ export const IDENTITY_RING_WELD_ANCHOR_DEPTH = 14;
  */
 export const IDENTITY_RING_MAX_LIFT = IDENTITY_RING_BAND;
 
+/**
+ * Radius of the weld zone around a ring's anchor pixel, in pixels.
+ *
+ * Adversarial finding 2: `drawDisk(..., IDENTITY_RING_OUTER, 1)` only adds ink,
+ * so a ring that lands on top of a floating dot or a hairline fuses it into the
+ * ring metal - a different letter, with every other gate still green. The weld
+ * is the one place the ring is *meant* to touch the name: the body sinks
+ * `IDENTITY_RING_WELD_OVERLAP` into the stroke and the fillet is
+ * `IDENTITY_RING_STEM_WIDTH` wide, so metal within that reach of the anchor is
+ * the joint. Anything the ring covers further out than this is a letter under
+ * the metal, and `identity_ring_welded_to_glyph` refuses it.
+ */
+export const IDENTITY_RING_WELD_ZONE =
+  IDENTITY_RING_STEM_WIDTH + IDENTITY_RING_WELD_OVERLAP;
+
+/**
+ * How far outward of its computed centre a ring may be pushed, in pixels, when
+ * lifting alone cannot get the annulus off the lettering. Outward is away from
+ * the middle of the name, and the ring still has to stay inside the canvas, so
+ * this is capped at one ring diameter's worth of travel.
+ */
+export const IDENTITY_RING_MAX_OUTWARD_SHIFT = IDENTITY_RING_OUTER;
+
 /** Weld fillet width in pixels (`int(STEM_W * 1.3)`). */
 export const IDENTITY_RING_WELD_WIDTH = Math.trunc(
   IDENTITY_RING_STEM_WIDTH * 1.3,

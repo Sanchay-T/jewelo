@@ -12,7 +12,7 @@
 import {
   INK_ALPHA_THRESHOLD,
   INK_LUMINANCE_THRESHOLD,
-  type DecodedMaskGeometryInput,
+  type DecodedIdentityMask,
   type MaskInkRule,
 } from "@jewelo/identity";
 import sharp from "sharp";
@@ -24,7 +24,16 @@ import sharp from "sharp";
  * here so the decoder still names its own result type.
  */
 export type { MaskInkRule };
-export type DecodedMask = DecodedMaskGeometryInput;
+export type DecodedMask = DecodedIdentityMask;
+
+/**
+ * Who measured it. The solver copies this string into
+ * `validation_report.measured.measuredBy` (adversarial finding 5), so the
+ * stored report names the decoder that actually read the bytes - and the sharp
+ * version it read them with - rather than a constant the engine wrote about
+ * itself.
+ */
+const RULER_ID = `decodeMask@sharp${sharp.versions.sharp ?? "unknown"}`;
 
 /**
  * PIL's `convert("L")` uses the ITU-R 601-2 luma transform with the integer
@@ -71,5 +80,11 @@ export async function decodeMask(
     ink[pixel] = luminance < INK_LUMINANCE_THRESHOLD ? 1 : 0;
   }
 
-  return { width, height, ink, rule: hasAlpha ? "alpha" : "luminance" };
+  return {
+    width,
+    height,
+    ink,
+    rule: hasAlpha ? "alpha" : "luminance",
+    rulerId: RULER_ID,
+  };
 }

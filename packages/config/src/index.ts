@@ -108,9 +108,12 @@ export const jobsEnvSchema = trustedWebEnvSchema
     // P1-6. Which pipeline release a run pins its identity artifacts and tasks
     // to. It used to be a literal in `presentation.ts`, so bumping the release
     // meant editing business code. The default is the release the migration in
-    // `supabase/migrations/20260908_pipeline_release_v2.sql` marks active.
-    PIPELINE_RELEASE_ID: z
-      .preprocess(blankToUndefined, nonEmpty.default("caleums-final-media-v2")),
+    // `supabase/migrations/20260908120000_pipeline_release_v2.sql` marks
+    // active.
+    PIPELINE_RELEASE_ID: z.preprocess(
+      blankToUndefined,
+      nonEmpty.default("caleums-final-media-v2"),
+    ),
     // P1-5. Jump rings are on for every pendant; a construction that carries
     // its own suspension (a frame, a rail) can opt out by naming itself here.
     // Comma separated construction ids, empty by default, so the shipped
@@ -131,8 +134,25 @@ export const jobsEnvSchema = trustedWebEnvSchema
             });
         return new Set(ids) as ReadonlySet<string>;
       }),
+    // P1-5a / adversarial finding 6. The published prompts still promise the
+    // model exactly two jump rings, so a ring-free construction would ship a
+    // stencil the prompt contradicts. The set may only be non-empty once P3-7
+    // has rewritten those prompts and the deployment says so with this flag.
+    IDENTITY_RINGLESS_PROMPTS_READY: z
+      .preprocess(blankToUndefined, z.enum(["0", "1"]).default("0"))
+      .transform((value) => value === "1"),
   })
   .superRefine((value, context) => {
+    if (
+      value.IDENTITY_RINGLESS_CONSTRUCTIONS.size > 0 &&
+      !value.IDENTITY_RINGLESS_PROMPTS_READY
+    )
+      context.addIssue({
+        code: "custom",
+        path: ["IDENTITY_RINGLESS_CONSTRUCTIONS"],
+        message:
+          "IDENTITY_RINGLESS_CONSTRUCTIONS must stay empty until the prompts stop promising two jump rings (P3-7); set IDENTITY_RINGLESS_PROMPTS_READY=1 once P3-7 has shipped",
+      });
     if (value.PROVIDER_MODE !== "real") return;
     if (!value.OPENAI_API_KEY)
       context.addIssue({

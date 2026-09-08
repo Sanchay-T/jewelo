@@ -5,7 +5,7 @@ import {
   INK_LUMINANCE_THRESHOLD,
   shapeText,
   solveIdentity,
-  type DecodedMaskGeometryInput,
+  type DecodedIdentityMask,
   type IdentityConstructionMeasurement,
   type IdentityFontFile,
   type IdentityRasterizer,
@@ -192,7 +192,7 @@ class SharpIdentityRasterizer implements IdentityRasterizer {
    * back through the same decoder the independent ruler uses, so the report is
    * a measurement of the file rather than a restatement of the mask.
    */
-  async decodePng(bytes: Uint8Array): Promise<DecodedMaskGeometryInput> {
+  async decodePng(bytes: Uint8Array): Promise<DecodedIdentityMask> {
     return decodeMask(bytes);
   }
 

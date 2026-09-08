@@ -1,7 +1,9 @@
 # Identity engine adversarial review 1 (range 79592b7..5fbbb07)
 
 Reviewer: fresh-context `adversarial-reviewer` subagent, 8 September 2026, committed range only.
-Verdict: Phase 1 not proved by this range. The engine is sound; the gate around it is weaker than the rows say. Owners assigned by the lead.
+Close-out (session 2, fix pass 2): findings 1, 2, 3, 5, 6, 7, 8 fixed and reproved by the lead; finding 2 measured 130 of 232 cells with letter ink under ring metal before the placement change and 0 after, gated by `identity_ring_welded_to_glyph`. Evidence: `docs/goals/road-to-gold/dogfood-2026-09-08/identity-gates.md`. Findings 4 (Python oracle) and 11 (staging bytes) closed by P1-7; 9, 10, 12 recorded.
+
+Verdict at review time: Phase 1 not proved by this range. The engine is sound; the gate around it is weaker than the rows say. Owners assigned by the lead.
 
 1. HIGH. Pipeline release lineage: code stamps `caleums-final-media-v2` while the database (until P1-7 pushes the migration) and `docs/CALEUMS-FINAL-E2E-CONTRACT.md:9` say v1, and nothing compares `report.pipelineRelease` with `task.pipeline_release`. Owner: fix pass 2. Fix: throw `identity_pipeline_release_mismatch` in `signedIdentityUrl` when they differ; contract doc to v2.
 2. HIGH. A ring can be welded onto a letter: `drawDisk(..., IDENTITY_RING_OUTER, 1)` only adds ink, the punch check counts cleared pixels only, and the outer disk reaches 11 px past the anchor into the name. A floating Arabic dot fused into ring metal is a different letter and every gate passes. Owner: fix pass 2. Fix: the ring annulus and weld may touch pre-ring ink only inside the weld zone around the anchor; throw `identity_ring_welded_to_glyph` otherwise; measure how many of the 232 cells hit it and lift or shift the ring accordingly.

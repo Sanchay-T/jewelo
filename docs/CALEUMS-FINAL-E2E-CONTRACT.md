@@ -6,7 +6,7 @@
 
 **Pipeline brief:** final v5, 27 August 2026
 
-**Pipeline release:** `caleums-final-media-v1`
+**Pipeline release:** `caleums-final-media-v2`
 
 **Applies to:** final Caleums implementation, verification, and release work
 
