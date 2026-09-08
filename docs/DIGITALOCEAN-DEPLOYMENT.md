@@ -15,17 +15,18 @@ a customer request handler: it runs in an Inngest function served at
 | Region | Bangalore (`blr`) |
 | Live staging app | `jewelo-staging` (`ec09c9fd-84e4-45c5-b60a-fd62277af322`) |
 | Live staging URL | <https://jewelo-staging-gqumd.ondigitalocean.app> |
-| Authoritative deployment source | `rebuild/v2-first-principles` after reviewed integration |
+| Authoritative deployment source | `codex/overnight-launch-2026-09-08`, the branch on the live `web` service's `git.branch` |
 | Production app | `jewelo-production` (created only at approved cutover) |
-| Production deployment configuration | Repository workflows, scripts, and `infra/digitalocean/spec-contract.json`; not yet production-accepted |
+| Production deployment configuration | `scripts/digitalocean/*` and `infra/digitalocean/spec-contract.json`; no workflows, and not yet production-accepted |
 | Runtime | Node.js 24, pnpm 11.23.0, DigitalOcean Node buildpack |
 | Compute | One fixed shared 1-vCPU/1-GiB instance per component |
-| Components | `web` (git, Node buildpack, public `/`) and `inngest` (Docker Hub `inngest/inngest:v1.44.0-amd64`, `internal_ports: [8288]`, no public route) |
+| Components | `web` (git `https://github.com/Sanchay-T/jewelo.git`, no `deploy_on_push`, Node buildpack, public `/`) and `inngest` (Docker Hub `inngest/inngest:v1.44.0-amd64`, `internal_ports: [8288]`, no public route) |
 | Job engine | Self-hosted Inngest. `web` reaches it at `${inngest.PRIVATE_URL}`; it reaches `web` at `${web.PRIVATE_URL}/api/inngest` |
 
-The staging URL and `/api/health` have returned HTTP 200 for deployed commit
-`a842443`. This is staging evidence, not production acceptance. A production URL
-does not exist until the manual promotion succeeds.
+The active staging deployment is `77c680bb-b6ee-46db-bcf8-dc8d774711bf`, phase
+`ACTIVE`, built from commit `594d378` of that branch.
+This is staging evidence, not production acceptance. A production URL does not
+exist until the manual promotion succeeds.
 
 Inactivity sleep is unavailable for this DigitalOcean account, so staging is a
 fixed instance rather than scale-to-zero. The predictable base compute price is
@@ -34,32 +35,59 @@ evidence and approval for the higher possible spend.
 
 ## What happens from push to URL
 
-```text
-developer branch
-  -> reviewed merge into rebuild/v2-first-principles
-  -> GitHub staging workflow verifies a clean checkout
-  -> immutable jewelo-staging-<full SHA> Git tag
-  -> App Platform builds that tag with Node 24 + pnpm
-  -> existing encrypted app environment is retained
-  -> /api/health smoke test
-  -> workflow summary publishes URL + deployment ID + SHA
+There is no CI workflow and no GitHub Actions in this repository.
+`.github/workflows` does not exist, and nothing may be added there: tests and CI
+are suspended by Sanchay's instruction of 7 September 2026.
+Every deployment is a deliberate, operator-run command.
+`deploy_on_push` is not set on the live app spec, so a push to the branch does
+nothing on its own.
 
-tested staging SHA + deployment ID + human production dispatch
-  -> GitHub verifies both refer to an ACTIVE staging deployment
-  -> immutable jewelo-production-<full SHA> Git tag
-  -> production deploy + /api/health smoke test
-  -> workflow summary publishes production URL and rollback command
+Deployment runs from `home-mini`, the only machine where `doctl` is
+authenticated:
+
+```bash
+ssh home-mini
+export PATH=/opt/homebrew/bin:$PATH
+cd ~/hq/projects/devonel/jewelo
+bash scripts/digitalocean/deploy.sh staging codex/overnight-launch-2026-09-08
+bash scripts/digitalocean/smoke.sh https://jewelo-staging-gqumd.ondigitalocean.app
 ```
 
-The staging workflow runs on pushes to `rebuild/v2-first-principles` only when
-the GitHub `Preview` environment variable `DIGITALOCEAN_DEPLOY_ENABLED` is
-`true`; it can also be dispatched manually. Code-only deployments change the
-Git source ref and preserve the app's encrypted environment.
+`deploy.sh <environment> <source ref>` does exactly this, per its source:
 
-Production never follows a branch automatically. The production workflow
-requires an exact 40-character commit SHA and the successful staging deployment
-ID for that same SHA. It rejects commits outside the integration branch,
-non-active staging deployments, and mismatched deployment evidence.
+```text
+validate the environment name and the source ref characters
+  -> load the scoped DigitalOcean token from the ignored .env
+  -> resolve the app id by app name (jewelo-staging / jewelo-production)
+  -> doctl apps get, then select the service named "web", never services[0],
+     because the image-based inngest component has no git source
+  -> rewrite only web.git.branch to the requested source ref
+  -> doctl apps update --spec <mode 0600 temp file> --update-sources --wait
+  -> print service_url and deployment_id
+```
+
+Because the script edits the live spec in place and changes only the branch, the
+app's encrypted environment, the `inngest` component, the ingress rule, and the
+instance sizes are all carried through untouched.
+The temp spec file is created mode `0600` and deleted on exit; never print,
+diff, or keep it, because it contains secret material.
+The deployment id it prints is the evidence to record before any later change.
+
+`smoke.sh <https URL>` is the acceptance check that follows a deploy.
+It requires HTTP 200 and a JSON body from `/api/health`, then HTTP 200 from
+`/api/readiness` with `"keyEnvironment":"prod"`, and it retries transient
+connection failures on the health call only.
+
+`rollback.sh <environment> <deployment id>` reverses a bad deploy: it reads the
+complete spec back out of that historical deployment with
+`doctl apps get-deployment` and applies it with `--update-sources --wait`.
+That restores the source ref and the environment configuration of that
+deployment, so a rollback caused by a credential incident must be followed by a
+deliberate rotation.
+
+Production is not automated either, and no `jewelo-production` app exists yet.
+It is the same three scripts pointed at the production environment name, run
+only under the cutover procedure below.
 
 ## Secret and environment model
 
@@ -108,9 +136,10 @@ The upload allowlist covers the web component's own configuration, including
 `INNGEST_EVENT_KEY` and `INNGEST_SIGNING_KEY`, because the Inngest functions run
 inside this component. `INNGEST_BASE_URL` and `INNGEST_CRON_ENABLED` are shipped
 only when present. The Inngest server component's own configuration
-(`INNGEST_POSTGRES_URI`) is set on that component, never on `web`. The GitHub `Preview` and `Production` environments contain the scoped
-`DIGITALOCEAN_ACCESS_TOKEN`; do not put application configuration in workflow
-YAML or GitHub output.
+(`INNGEST_POSTGRES_URI`) is set on that component, never on `web`.
+The scoped `DIGITALOCEAN_ACCESS_TOKEN` lives only in the ignored `.env` on
+`home-mini`; there is no workflow and no GitHub environment in the deploy path
+that could hold it.
 
 Environment changes are configuration deployments, not ordinary code pushes:
 
@@ -122,7 +151,11 @@ JEWELO_ALLOW_PRODUCTION_BOOTSTRAP=yes \
 
 Re-running bootstrap updates the encrypted environment and creates a new
 deployment. Record the previous deployment ID first so the change is
-reversible. Never print, diff, or capture the resulting app spec because it may
+reversible.
+Know before running it that `bootstrap-app.mjs` builds `services: [web]` from
+the contract alone, so a bootstrap against the live staging app would drop the
+`inngest` component; prefer `deploy.sh` for anything that is not an environment
+change, and restore with `rollback.sh` if a bootstrap removes the component. Never print, diff, or capture the resulting app spec because it may
 contain secret material.
 
 ## First-time workstation check
@@ -138,26 +171,24 @@ pnpm doctl -- apps list
 The token has create/read/update access for the relevant DigitalOcean resources
 but no delete scope. Rotate it before its current 25 November 2026 expiry.
 
-With explicit authorization to update the repository environments, run:
-
-```bash
-pnpm do:github
-```
-
-That command configures environment-scoped GitHub deployment secrets and
-non-secret project/app variables. Token rotation must replace both GitHub
-environment secrets without printing the value.
+`scripts/digitalocean/configure-github.sh` (`pnpm do:github`) is left over from
+the retired workflow era.
+It writes the token into GitHub `Preview` and `Production` environment secrets
+that nothing now reads, so do not run it; rotate the token in `.env` on
+`home-mini` instead, without printing the value.
 
 ## Staging operation
 
-Staging follows the reviewed `rebuild/v2-first-principles` integration branch
-after its deployment gate is enabled. Verify and smoke it with:
+Staging tracks whatever branch the last `deploy.sh` run wrote to
+`web.git.branch`, today `codex/overnight-launch-2026-09-08`.
+Nothing follows a branch on its own, so staging is only as new as the last
+deliberate deploy.
+The local gate before deploying is `corepack pnpm build`; there is no test or
+verify step. Then:
 
 ```bash
-pnpm install --frozen-lockfile
-pnpm verify
-pnpm do:build
-pnpm do:smoke -- https://jewelo-staging-gqumd.ondigitalocean.app
+bash scripts/digitalocean/deploy.sh staging <branch>
+bash scripts/digitalocean/smoke.sh https://jewelo-staging-gqumd.ondigitalocean.app
 ```
 
 The Node buildpack does not always expose the same version behavior as a local
@@ -165,11 +196,10 @@ shell. Bootstrap injects `JEWELO_CLOUD_BUILD=1` at build time, and foundation
 verification uses that compatibility marker to require Node 24 without
 misclassifying unrelated local negative-proof checks.
 
-For a manual staging deployment, use GitHub Actions' `digitalocean-staging`
-workflow. Prefer it over a local deploy because it proves a fresh checkout and
-records the source tag, deployment ID, commit, health result, and URL together.
-Dispatch it only when the user has authorized a staging update in the current
-request.
+A deploy is an external mutation.
+Run it only when the current task authorizes a staging update, record the
+printed deployment id as the rollback target, and stop after one failed retry
+rather than redeploying blindly.
 
 ## Production cutover
 
@@ -177,20 +207,19 @@ Production cutover is a controlled transition, not another preview push:
 
 1. Complete and review the final E2E application on its integration seed and
    feature branches; do not merge them automatically.
-2. After human-approved integration into `rebuild/v2-first-principles`, confirm
-   `infra/digitalocean/spec-contract.json` and both workflows target that exact
-   integration branch.
+2. After human-approved integration, confirm
+   `infra/digitalocean/spec-contract.json` names that exact integration branch,
+   since it is the only place the branch is declared.
 3. Update staging with `pnpm do:bootstrap` only with explicit authorization.
 4. Confirm the staging app still has the expected encrypted configuration; run
-   `pnpm verify`, `pnpm do:build`, health smoke, browser smoke, and the app's
+   `corepack pnpm build`, health smoke, browser smoke, and the app's
    customer/operator acceptance flow.
-5. Set the GitHub `Preview` variable `DIGITALOCEAN_DEPLOY_ENABLED=true` only
-   after the integrated branch is the authoritative deploy source.
-6. Record the full tested commit SHA and its ACTIVE staging deployment ID.
-7. With explicit production approval, bootstrap `jewelo-production` using the
-   production environment files.
-8. Dispatch `digitalocean-production` with that SHA and staging deployment ID.
-9. Verify the published production URL, `/api/health`, browser flows,
+5. Record the full tested commit SHA and its ACTIVE staging deployment ID.
+6. With explicit production approval, bootstrap `jewelo-production` using the
+   root `.env`.
+7. Run `bash scripts/digitalocean/deploy.sh production <that ref>` and
+   `bash scripts/digitalocean/smoke.sh <production URL>` from `home-mini`.
+8. Verify the published production URL, `/api/health`, browser flows,
    monitoring, and the recorded rollback deployment before any DNS change.
 
 Custom domain attachment and DNS cutover remain separate human-approved launch
@@ -235,8 +264,8 @@ credential incident.
 | Spec validation rejects staging sleep | Inactivity sleep is not enabled for this account | Keep one fixed `apps-s-1vcpu-1gb` instance; do not claim scale-to-zero |
 | Cloud build reports the wrong Node version | Buildpack version behavior differed from local verification | Preserve the Node 24 pins and `JEWELO_CLOUD_BUILD=1` compatibility marker; inspect deployment build logs |
 | Bootstrap exits after creating/updating an app | The deployment did not become ACTIVE | Inspect the latest App Platform build/deploy logs; do not keep retrying blindly or report a URL as healthy |
-| Push does not deploy staging | Deployment gate is off or push was not to the integration branch | Check `DIGITALOCEAN_DEPLOY_ENABLED` and branch routing; use manual dispatch only for an intentional test |
-| Production dispatch rejects a SHA | SHA is not full length, is not in the integration branch, or does not match the ACTIVE staging deployment | Use the exact SHA and deployment ID from the successful staging workflow summary |
+| Push does not deploy staging | Expected: no workflow and no `deploy_on_push` exist, so a push never deploys | Run `deploy.sh` from `home-mini` when a staging update is authorized |
+| Staging serves an old commit | The last `deploy.sh` predates the pushed commit | Redeploy the branch; `--update-sources` re-resolves the ref to its current head |
 | App starts but health smoke fails | Build/start command, `PORT`, health route, or required environment is wrong | Inspect runtime logs, verify `pnpm start` honors injected `PORT`, validate environment names, then redeploy |
 | `doctl` wrapper cannot authenticate | Token is missing, expired, or absent from the current worktree's ignored `.env` | Restore/rotate the scoped token without printing it; update Preview and Production GitHub secrets |
 
