@@ -353,7 +353,48 @@ export interface JeweloClient {
 /* degrade to being dropped rather than to a 4xx on a returning customer.      */
 /* ------------------------------------------------------------------------- */
 
-const NAME_MAX = 30;
+export const NAME_MAX = 30;
+/**
+ * How many Latin characters the identity engine can actually cast as one
+ * pendant, measured rather than guessed.
+ *
+ * Measured on 2026-09-08 by shaping candidate strings with
+ * `shapeText` + `identityStencilSvg` (`packages/identity/src/shaping.ts`)
+ * against the pinned Latin face `PlayfairDisplay-SemiBold.ttf` and reading
+ * where the fit throws `identity_fit_overflow`. The fit scales the run down to
+ * `IDENTITY_MIN_FONT_SIZE` (40 px) inside the body box `IDENTITY_BODY_WIDTH` x
+ * `IDENTITY_BODY_HEIGHT` (884 x 774 px) and refuses anything still wider:
+ *
+ * - `"n"` repeated: 37 fit, 38 overflow (width 905.68 > 884).
+ * - `"Mohammed Abdulrahman & Fatima Alzahra"` (37): fits.
+ * - a mixed-case realistic run reaches 48 before it overflows.
+ * - `"W"` repeated: 24 fit, 25 overflow, so a wide 30-character name can still
+ *   overflow below this cap; the engine's own fit refuses those and the run
+ *   fails closed into operator review rather than casting a clipped pendant.
+ *
+ * 37 is therefore the honest preflight ceiling: it is the point below which a
+ * name of ordinary letterforms fits, and it is what lets the shop refuse two
+ * 30-character names (63 characters joined) in words, before any spend.
+ */
+export const NAME_FIT_MAX_LATIN_CHARACTERS = 37;
+/**
+ * How the approved Latin text for a two-name pendant is assembled. This is the
+ * same joiner the database uses when it builds the anchor text
+ * (`string_agg(..., ' & ' order by ordinal)` in `create_prompt_release`), and
+ * `apps/jobs/src/identity-anchor.ts` shapes that whole string as one run.
+ */
+export const LATIN_NAME_JOINER = " & ";
+/**
+ * True when the Latin names, joined the way the pendant is actually cast, are
+ * longer than the identity engine can fit. Arabic is solved one name at a time,
+ * so it is never joined and never measured here.
+ */
+export function exceedsLatinNameFit(names: readonly string[]): boolean {
+  return (
+    names.filter(Boolean).join(LATIN_NAME_JOINER).length >
+    NAME_FIT_MAX_LATIN_CHARACTERS
+  );
+}
 /** Zero-width joiners, bidi overrides, soft hyphen and BOM: invisible in the
  * shop, meaningful to a shaper and to anything that later renders the name. */
 const INVISIBLE =
@@ -390,45 +431,90 @@ const hasScriptLetter = (value: string, script: RegExp) =>
     (character) => /\p{L}/u.test(character) && script.test(character),
   );
 
-const nameText = (script: "latin" | "arabic") =>
+export type NameScript = "latin" | "arabic";
+/** What is wrong with one name, in the order the shopper should hear it. */
+export type NameProblem =
+  | "empty"
+  | "too_long"
+  | "invisible"
+  | "alphabet"
+  | "digits"
+  | "no_letter";
+
+/**
+ * The name exactly as this schema stores it: NFC, every run of whitespace
+ * collapsed to one space, trimmed. Measure the length of this, never of the raw
+ * field, or a pasted non-breaking space counts against the cap.
+ */
+export function normalizeName(value: string): string {
+  return value.normalize("NFC").replace(WHITESPACE, " ").trim();
+}
+
+/**
+ * The one implementation of the name rules. The schema below and the atelier's
+ * own client-side check both call it, so the shop's screen and the server can
+ * never disagree about whether a name is acceptable.
+ *
+ * `value` must already be normalised with `normalizeName`.
+ */
+export function nameProblem(
+  value: string,
+  script: NameScript,
+): NameProblem | undefined {
+  if (!value.length) return "empty";
+  if (value.length > NAME_MAX) return "too_long";
+  if (INVISIBLE.test(value)) return "invisible";
+  if (!(script === "latin" ? LATIN_NAME : ARABIC_NAME).test(value))
+    return "alphabet";
+  if (script !== "latin" && DIGIT.test(value)) return "digits";
+  if (
+    !hasScriptLetter(
+      value,
+      script === "latin" ? /\p{Script=Latin}/u : /\p{Script=Arabic}/u,
+    )
+  )
+    return "no_letter";
+  return undefined;
+}
+
+/** One sentence per problem, saying what to do rather than what failed. */
+export function nameProblemMessage(
+  problem: NameProblem,
+  script: NameScript,
+): string {
+  const alphabet =
+    script === "latin"
+      ? "Use Latin letters, spaces, apostrophes or hyphens."
+      : "Use Arabic letters and spaces.";
+  return {
+    empty: "Enter a name.",
+    too_long: `Use at most ${NAME_MAX} characters.`,
+    invisible: "Remove invisible formatting characters.",
+    alphabet,
+    digits: alphabet,
+    no_letter:
+      script === "latin"
+        ? "Enter a name containing Latin letters."
+        : "Enter a name containing Arabic letters.",
+  }[problem];
+}
+
+const nameText = (script: NameScript) =>
   z
     .string()
     .max(NAME_MAX * 4)
     // Collapse first, then measure: a pasted non-breaking space or a run of
     // spaces is one space, so the length cap and the alphabet both see the
     // name the customer meant to write.
-    .transform((value) =>
-      value.normalize("NFC").replace(WHITESPACE, " ").trim(),
-    )
-    .refine((value) => value.length > 0, "Enter a name.")
-    .refine(
-      (value) => value.length <= NAME_MAX,
-      `Use at most ${NAME_MAX} characters.`,
-    )
-    .refine(
-      (value) => !INVISIBLE.test(value),
-      "Remove invisible formatting characters.",
-    )
-    .refine(
-      (value) => (script === "latin" ? LATIN_NAME : ARABIC_NAME).test(value),
-      script === "latin"
-        ? "Use Latin letters, spaces, apostrophes or hyphens."
-        : "Use Arabic letters and spaces.",
-    )
-    .refine(
-      (value) => script === "latin" || !DIGIT.test(value),
-      "Use Arabic letters and spaces.",
-    )
-    .refine(
-      (value) =>
-        hasScriptLetter(
-          value,
-          script === "latin" ? /\p{Script=Latin}/u : /\p{Script=Arabic}/u,
-        ),
-      script === "latin"
-        ? "Enter a name containing Latin letters."
-        : "Enter a name containing Arabic letters.",
-    );
+    .transform(normalizeName)
+    .superRefine((value, ctx) => {
+      const problem = nameProblem(value, script);
+      if (problem)
+        ctx.addIssue({
+          code: "custom",
+          message: nameProblemMessage(problem, script),
+        });
+    });
 
 export const approvedNameSchema = z
   .strictObject({

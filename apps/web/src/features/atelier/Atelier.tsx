@@ -43,6 +43,7 @@ import {
   type State,
   type View,
 } from "./model";
+import { NAME_MAX } from "@jewelo/contracts";
 import s from "./atelier.module.css";
 
 const arabic: Record<string, string> = {
@@ -156,6 +157,25 @@ const arabic: Record<string, string> = {
   Reset: "إعادة الضبط",
   "Saved locally on this device. Prices are unconfirmed; no order has been placed.":
     "محفوظ محليًا على هذا الجهاز. الأسعار غير مؤكدة ولم يتم تنفيذ أي طلب.",
+  // The name rules, worded exactly as `packages/contracts/src/domain.ts`
+  // returns them, so the Arabic journey never falls back to an English
+  // sentence at the one field the whole piece depends on.
+  "Enter a name.": "اكتب الاسم.",
+  "Use at most 30 characters.": "استخدم ٣٠ حرفًا كحد أقصى.",
+  "Remove invisible formatting characters.": "احذف رموز التنسيق غير المرئية.",
+  "Use Latin letters, spaces, apostrophes or hyphens.":
+    "استخدم حروفًا لاتينية ومسافات وفواصل عليا أو شرطات.",
+  "Use Arabic letters and spaces.": "استخدم حروفًا عربية ومسافات.",
+  "Enter a name containing Latin letters.": "اكتب اسمًا بحروف لاتينية.",
+  "Enter a name containing Arabic letters.": "اكتب اسمًا بحروف عربية.",
+  "Together these two names are longer than we can make as one pendant. Shorten one of them.":
+    "الاسمان معًا أطول مما يمكننا صنعه في قلادة واحدة. اختصر أحدهما.",
+  "This is the longest name we can make: 30 characters.":
+    "هذا أطول اسم يمكننا صنعه: ٣٠ حرفًا.",
+  "Edit the name": "تعديل الاسم",
+  "Not photographed for this look": "لم تُصوَّر لهذا الأسلوب",
+  "This angle was not photographed for this look. Your own preview still covers it.":
+    "لم تُصوَّر هذه الزاوية لهذا الأسلوب. معاينتك الشخصية تغطيها.",
 };
 import { hasExactSample, samples, visualFields, type VisualField } from "./catalogue";
 import { SnapshotImage } from "./SnapshotImage";
@@ -165,6 +185,15 @@ import type { Run } from "./model";
 import { buildPersonalizedPreviewRequest, runMockPersonalizedPreview } from "./previewHandoff";
 import { usePersonalizedPreview } from "./usePersonalizedPreview";
 import type { CustomerViewStatus } from "./personalizedRun";
+
+/**
+ * The longest name the shop can cast, and the sentence that says so. The number
+ * is the server's own cap (`NAME_MAX` in `packages/contracts/src/domain.ts`);
+ * the input stops there, so the shopper is told rather than quietly trimmed.
+ */
+const NAME_LIMIT_NOTICE = `This is the longest name we can make: ${NAME_MAX} characters.`;
+/** True once the field is holding all the characters it will accept. */
+const atLimit = (value: string) => value.length >= NAME_MAX;
 
 const icons = ["Aa", "◇", "▱", "≋"];
 const gemColors = [
@@ -217,6 +246,17 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
   const zoom = useRef<HTMLDialogElement>(null);
   const title = useRef<HTMLHeadingElement>(null);
   const d = state.draft;
+  /**
+   * The draft checked on every render, not only when "Preview my piece" was
+   * pressed. Step 02 stays reachable - a shopper can switch to two names from
+   * the review stage and leave the second one empty - so the confirmation must
+   * read the draft as it is now, or it hands an unmakeable specification to the
+   * run and the page dies on the throw.
+   */
+  const draftErrors = validate(d);
+  /** The one sentence that says why the confirmation cannot be ticked yet. */
+  const confirmBlockedBy =
+    draftErrors.name ?? draftErrors.secondName ?? draftErrors.fit;
   const latestRun = state.runs.at(-1);
   const stale = !!latestRun && latestRun.signature !== signature(d);
   const run = stale ? undefined : latestRun;
@@ -231,7 +271,10 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
     locale,
     loaded,
     stage: state.stage,
-    confirmed,
+    // A confirmation left over from a valid draft never survives an edit that
+    // breaks it: the run may only be started for a specification the shop can
+    // actually make.
+    confirmed: confirmed && !confirmBlockedBy,
     sample: piece.family.anchor.asset,
   });
   /** Kept out of the shared dictionary so two workstreams do not collide on it. */
@@ -526,7 +569,11 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
       setExpanded((old) => Array.from(new Set([...old, "name"])));
       requestAnimationFrame(() =>
         document
-          .getElementById(nextErrors.name ? "pendant-name" : "second-name")
+          .getElementById(
+            nextErrors.secondName && !nextErrors.name
+              ? "second-name"
+              : "pendant-name",
+          )
           ?.focus(),
       );
       return;
@@ -536,6 +583,11 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
     setImageErrors([]);
     const capturedDraft = structuredClone(d);
     const id = crypto.randomUUID();
+    // Only the cameras this look was actually photographed in are started. The
+    // review used to mark all four and then capture the family's views alone,
+    // so a camera the sample lacks reported "Photographing" and "Preview
+    // failed / Retry" at the same time, and the retry could only fail again.
+    const photographed = piece.availableViews;
     const nextRun: Run = {
       version: 1,
       id,
@@ -543,7 +595,7 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
       draft: capturedDraft,
       slots: views.map((v) => ({
         view: v,
-        status: "pending",
+        status: photographed.includes(v) ? "pending" : "unavailable",
         due: 0,
         attempt: 1,
         fail: false,
@@ -582,13 +634,17 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
             ? r
             : {
                 ...r,
-                slots: r.slots.map((slot) => ({
-                  ...slot,
-                  status:
-                    !result.errors[slot.view] && result.views[slot.view]
-                      ? "ready"
-                      : "failed",
-                })),
+                slots: r.slots.map((slot) =>
+                  slot.status === "unavailable"
+                    ? slot
+                    : {
+                        ...slot,
+                        status:
+                          !result.errors[slot.view] && result.views[slot.view]
+                            ? "ready"
+                            : "failed",
+                      },
+                ),
               },
         ),
       }));
@@ -600,13 +656,21 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
             ? r
             : {
                 ...r,
-                slots: r.slots.map((slot) => ({ ...slot, status: "failed" })),
+                slots: r.slots.map((slot) =>
+                  slot.status === "unavailable"
+                    ? slot
+                    : { ...slot, status: "failed" },
+                ),
               },
         ),
       }));
     }
   }
   async function retry(v: View) {
+    // Nothing was ever photographed for this camera in this look, so there is
+    // nothing to retry. The button that used to offer it is gone; this refuses
+    // the call as well.
+    if (!piece.availableViews.includes(v)) return;
     const runId = run?.id;
     const targetSignature = signature(d);
     setState((old) => ({
@@ -1057,18 +1121,31 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                         placeholder={
                           d.script === "Arabic" ? "أسماء" : t("e.g. Asma")
                         }
-                        maxLength={30}
+                        maxLength={NAME_MAX}
                         onChange={(e) => change("name", e.target.value)}
                         aria-invalid={!!errors.name}
                         aria-describedby={
-                          errors.name ? "name-error" : "spelling-help"
+                          [
+                            errors.name ? "name-error" : "spelling-help",
+                            atLimit(d.name) ? "name-limit" : "",
+                          ]
+                            .filter(Boolean)
+                            .join(" ") || undefined
                         }
                         autoComplete="off"
                       />
                     </label>
                     {errors.name && (
                       <p id="name-error" role="alert" className={s.error}>
-                        {errors.name}
+                        {t(errors.name)}
+                      </p>
+                    )}
+                    {/* The field stops accepting characters at the cap. Saying
+                        so is the difference between a shopper who shortened
+                        their own name and one whose name was quietly cut. */}
+                    {atLimit(d.name) && (
+                      <p id="name-limit" role="status" className={s.help}>
+                        {t(NAME_LIMIT_NOTICE)}
                       </p>
                     )}
                     {d.twoNames && (
@@ -1082,24 +1159,42 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                             placeholder={
                               d.script === "Arabic" ? "فاطمة" : "e.g. Fatima"
                             }
-                            maxLength={30}
+                            maxLength={NAME_MAX}
                             onChange={(e) =>
                               change("secondName", e.target.value)
                             }
                             aria-invalid={!!errors.secondName}
                             aria-describedby={
-                              errors.secondName
-                                ? "second-error"
-                                : "spelling-help"
+                              [
+                                errors.secondName
+                                  ? "second-error"
+                                  : "spelling-help",
+                                atLimit(d.secondName) ? "second-limit" : "",
+                              ]
+                                .filter(Boolean)
+                                .join(" ") || undefined
                             }
                           />
                         </label>
                         {errors.secondName && (
                           <p role="alert" id="second-error" className={s.error}>
-                            {errors.secondName}
+                            {t(errors.secondName)}
+                          </p>
+                        )}
+                        {atLimit(d.secondName) && (
+                          <p id="second-limit" role="status" className={s.help}>
+                            {t(NAME_LIMIT_NOTICE)}
                           </p>
                         )}
                       </>
+                    )}
+                    {/* Two names that each fit can still be too long joined:
+                        the pendant is cast as one connected piece. Refused
+                        here, in words, before anything is confirmed. */}
+                    {draftErrors.fit && (
+                      <p id="fit-error" role="alert" className={s.error}>
+                        {t(draftErrors.fit)}
+                      </p>
                     )}
                     <p className={s.help} id="spelling-help">
                       {locale === "ar"
@@ -1319,13 +1414,18 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                   </span>
                 </div>
 
-                <label className={s.confirm}>
+                <label className={s.confirm} htmlFor="confirm-spelling">
                   <input
+                    id="confirm-spelling"
                     type="checkbox"
-                    checked={confirmed}
+                    checked={confirmed && !confirmBlockedBy}
+                    disabled={!!confirmBlockedBy}
+                    aria-describedby={
+                      confirmBlockedBy ? "confirm-blocked" : undefined
+                    }
                     onChange={(e) => confirmSpelling(e.target.checked)}
                   />
-                  <span>
+                  <span id="confirm-spelling-label">
                     {locale === "ar"
                       ? own.enabled
                         ? "أؤكد صحة كتابة الاسم والتفاصيل المحددة، وابدأوا معاينتي الشخصية."
@@ -1336,6 +1436,20 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                     <b dir="auto">{pendantName(d)}</b>
                   </span>
                 </label>
+                {/* The reason is visible text, not a disabled control with no
+                    explanation, and it names the step that fixes it. */}
+                {confirmBlockedBy && (
+                  <p id="confirm-blocked" role="alert" className={s.error}>
+                    {t(confirmBlockedBy)}{" "}
+                    <button
+                      type="button"
+                      className={s.textButton}
+                      onClick={() => go("design", "name")}
+                    >
+                      {t("Edit the name")}
+                    </button>
+                  </p>
+                )}
                 {own.enabled && (
                   <section
                     className={s.ownPreview}
@@ -1657,6 +1771,25 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                         <p>This example photo could not load.</p>
                         <button onClick={retryImage}>{t("Retry")}</button>
                       </>
+                    ) : slot?.status === "unavailable" ? (
+                      /* This look was never photographed in this camera. It is
+                         not failing and it is not on its way, so it says so and
+                         offers no retry. The shopper's own piece is a separate
+                         run and covers every camera; when it is working on this
+                         one, that is what the line says. */
+                      <>
+                        <Diamond size={36} />
+                        <h2>
+                          {own.statusFor(view)
+                            ? ownStatusText(own.statusFor(view)!)
+                            : t("Not photographed for this look")}
+                        </h2>
+                        <p>
+                          {t(
+                            "This angle was not photographed for this look. Your own preview still covers it.",
+                          )}
+                        </p>
+                      </>
                     ) : slot?.status === "failed" ? (
                       <>
                         <Diamond size={36} />
@@ -1782,12 +1915,18 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                       never a grey placeholder. Studio is always photographed. */}
                   {railViews.map((v) => {
                     const index = views.indexOf(v);
-                    const status = piece.errors[v]
-                      ? "failed"
-                      : piece.status === "pending" || !piece.views[v]
-                        ? "pending"
-                        : (run?.slots.find((x) => x.view === v)?.status ??
-                          "ready");
+                    /* A camera this look was never photographed in is not
+                       pending: nothing is on its way for it. Saying "Preparing"
+                       there was the false half of the contradiction. */
+                    const notPhotographed = !piece.availableViews.includes(v);
+                    const status = notPhotographed
+                      ? "unavailable"
+                      : piece.errors[v]
+                        ? "failed"
+                        : piece.status === "pending" || !piece.views[v]
+                          ? "pending"
+                          : (run?.slots.find((x) => x.view === v)?.status ??
+                            "ready");
                     const photo = { asset: { src: piece.views[v] ?? "" } };
                     // The customer's own photograph of this camera, when it exists.
                     const ownView = own.imageFor(v);
@@ -1821,7 +1960,9 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                             : ""}
                           {ownStatus
                             ? ownStatusText(ownStatus)
-                            : missing
+                            : status === "unavailable"
+                              ? t("Not photographed for this look")
+                              : missing
                             ? locale === "ar"
                               ? "جار التحضير"
                               : "Preparing preview"
@@ -1860,7 +2001,11 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                             ? locale === "ar"
                               ? "عينة"
                               : "Sample"
-                            : missing
+                            : status === "unavailable" && !ownStatus
+                              ? locale === "ar"
+                                ? "غير مصوَّرة"
+                                : "Not photographed"
+                              : missing
                             ? locale === "ar"
                               ? "جار التحضير"
                               : "Preparing"
@@ -1875,17 +2020,18 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                                   "After hours",
                                 ][index]}
                         </em>
-                        {(v === view ||
-                          status === "pending" ||
-                          status === "failed") && (
-                          <small aria-hidden="true">
-                            {status === "pending"
-                              ? "◌"
-                              : status === "failed"
-                                ? "!"
-                                : "✓"}
-                          </small>
-                        )}
+                        {status !== "unavailable" &&
+                          (v === view ||
+                            status === "pending" ||
+                            status === "failed") && (
+                            <small aria-hidden="true">
+                              {status === "pending"
+                                ? "◌"
+                                : status === "failed"
+                                  ? "!"
+                                  : "✓"}
+                            </small>
+                          )}
                       </button>
                     );
                   })}

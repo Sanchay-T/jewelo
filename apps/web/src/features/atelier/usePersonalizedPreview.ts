@@ -268,7 +268,23 @@ export function usePersonalizedPreview(input: {
       crypto.randomUUID(),
     );
     const startedAt = Date.now();
-    const preview = buildRequest(crypto.randomUUID());
+    // `buildPersonalizedPreviewRequest` throws on a specification it refuses to
+    // hand on - an unspelled name, a reference that is not a local catalogue
+    // asset. Outside a guard that throw happened during render and took the
+    // whole page down with it. It is caught here and degrades to the honest
+    // capture path; the atelier also disables the confirmation itself while the
+    // draft is not makeable, so this is the second line, not the first.
+    let preview: ReturnType<typeof buildRequest>;
+    try {
+      preview = buildRequest(crypto.randomUUID());
+    } catch {
+      setSubmission({ signature: currentSignature, requestKey, startedAt });
+      remember({ signature: currentSignature, requestKey, startedAt });
+      setReason("invalid");
+      setPhase("degraded");
+      startedFor.current = undefined;
+      return;
+    }
     const refusal = preflightRefusal(preview.specification);
     if (refusal) {
       // Proved unmakeable before a single cent is reserved: this goes straight

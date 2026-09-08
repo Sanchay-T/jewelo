@@ -1,3 +1,10 @@
+import {
+  exceedsLatinNameFit,
+  nameProblem,
+  nameProblemMessage,
+  normalizeName,
+} from "@jewelo/contracts";
+
 /** Customer prototype state only. Never sent to backend or manufacturing. */
 export const STORAGE_KEY = "caleums.atelier.v1";
 export const constructions = [
@@ -90,7 +97,13 @@ export const views = ["Studio", "On skin", "Close-up", "Dark"] as const;
 export type View = (typeof views)[number];
 export type Slot = {
   view: View;
-  status: "pending" | "ready" | "failed";
+  /**
+   * `unavailable` is a camera this look was never photographed in. It is not a
+   * failure and it is not in progress: nothing was ever going to arrive, so it
+   * must never show a spinner, and it must never offer a retry that can only
+   * fail again.
+   */
+  status: "pending" | "ready" | "failed" | "unavailable";
   due: number;
   attempt: number;
   fail: boolean;
@@ -172,22 +185,41 @@ export function specification(d: Draft): Draft {
   };
 }
 export const signature = (d: Draft) => JSON.stringify(specification(d));
+/**
+ * The customer's names, checked on the shop's own screen by exactly the rules
+ * the server applies.
+ *
+ * `nameProblem`, `nameProblemMessage` and `exceedsLatinNameFit` all come from
+ * `packages/contracts/src/domain.ts`, which is the reference: the same
+ * functions back `jewelrySpecificationSchema`, so a name this screen accepts
+ * cannot be refused by the approve route, and a name this screen refuses was
+ * never going to be cast. The atelier's older, looser check accepted Arabic
+ * letters as an English name and let two 30-character names through.
+ *
+ * `fit` is not a field: it is the pair of names together being longer than the
+ * identity engine can cast as one pendant.
+ */
 export function validate(
   d: Draft,
-): Partial<Record<"name" | "secondName", string>> {
-  const errors: Partial<Record<"name" | "secondName", string>> = {};
+): Partial<Record<"name" | "secondName" | "fit", string>> {
+  const errors: Partial<Record<"name" | "secondName" | "fit", string>> = {};
+  const script = d.script === "Arabic" ? "arabic" : "latin";
   for (const field of [
     "name",
     ...(d.twoNames ? ["secondName" as const] : []),
   ] as const) {
-    const text = d[field].trim();
-    if (!text || !/\p{L}/u.test(text))
-      errors[field] = "Enter a name containing letters.";
-    else if (text.length > 30 || !/^[\p{L}\p{M}\s'’-]+$/u.test(text))
-      errors[field] = "Use up to 30 letters, spaces, apostrophes or hyphens.";
-    else if (d.script === "Arabic" && !/\p{Script=Arabic}/u.test(text))
-      errors[field] = "Enter the exact Arabic spelling, or choose English.";
+    const problem = nameProblem(normalizeName(d[field]), script);
+    if (problem) errors[field] = nameProblemMessage(problem, script);
   }
+  if (
+    !errors.name &&
+    !errors.secondName &&
+    d.twoNames &&
+    script === "latin" &&
+    exceedsLatinNameFit([normalizeName(d.name), normalizeName(d.secondName)])
+  )
+    errors.fit =
+      "Together these two names are longer than we can make as one pendant. Shorten one of them.";
   return errors;
 }
 /** Replace this port with real generation only in a separately authorized integration. */
@@ -357,7 +389,9 @@ function runValid(x: unknown): x is Run {
       (s, i) =>
         record(s) &&
         s.view === views[i] &&
-        ["pending", "ready", "failed"].includes(s.status as string) &&
+        ["pending", "ready", "failed", "unavailable"].includes(
+          s.status as string,
+        ) &&
         typeof s.due === "number" &&
         Number.isFinite(s.due) &&
         typeof s.attempt === "number" &&
