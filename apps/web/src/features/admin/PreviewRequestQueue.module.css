@@ -1,0 +1,230 @@
+/* The shop queue. Same palette as the operator console around it. */
+.queue {
+  --ink: #26221d;
+  --muted: #746c61;
+  --line: #ddd4c6;
+  --gold: #8a6128;
+  --paper: #fffdf8;
+  display: grid;
+  gap: 14px;
+  margin-bottom: 22px;
+  padding: 18px;
+  border: 1px solid #c7ab7b;
+  background: #fbf5ea;
+  color: var(--ink);
+}
+
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+.head h2 {
+  margin: 0;
+  font:
+    400 1.4rem Georgia,
+    serif;
+}
+.head p {
+  margin: 0;
+}
+
+.filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.filter button {
+  padding: 5px 11px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--paper);
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.filter button[aria-pressed="true"] {
+  border-color: var(--gold);
+  background: var(--gold);
+  color: #fff;
+}
+
+.list {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.card {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  background: var(--paper);
+}
+.card > header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+.summary {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+.when {
+  color: var(--muted);
+  font-size: 0.72rem;
+}
+.status {
+  align-self: start;
+  padding: 3px 9px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.status[data-status="new"] {
+  border-color: var(--gold);
+  color: var(--gold);
+}
+
+.contact {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.85rem;
+}
+.contact a {
+  color: var(--gold);
+}
+.code {
+  color: var(--muted);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.68rem;
+  overflow-wrap: anywhere;
+}
+
+.stills {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.still {
+  display: grid;
+  gap: 4px;
+  font-size: 0.72rem;
+}
+.still img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  border: 1px solid var(--line);
+  object-fit: cover;
+  background: #efe9df;
+}
+.sample {
+  color: #983e39;
+}
+.empty {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 4 / 5;
+  border: 1px dashed var(--line);
+  color: var(--muted);
+  text-align: center;
+  padding: 6px;
+}
+
+.note {
+  display: grid;
+  gap: 6px;
+}
+.note label {
+  color: var(--muted);
+  font-size: 0.72rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.note textarea {
+  min-height: 3.6rem;
+  padding: 8px;
+  border: 1px solid var(--line);
+  background: var(--paper);
+  color: inherit;
+  font: inherit;
+  font-size: 0.85rem;
+  resize: vertical;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.actions button {
+  padding: 7px 14px;
+  border: 1px solid var(--gold);
+  background: var(--paper);
+  color: var(--gold);
+  font: inherit;
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+.actions button:disabled {
+  border-color: var(--line);
+  color: var(--muted);
+  cursor: not-allowed;
+}
+
+.review {
+  display: grid;
+  gap: 8px;
+  padding-top: 4px;
+  border-top: 1px solid var(--line);
+}
+.reasonPlain {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+.task {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+  border-top: 1px dotted var(--line);
+  font-size: 0.82rem;
+}
+
+.message {
+  margin: 0;
+  color: #983e39;
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
+@media (width <= 640px) {
+  .queue {
+    padding: 14px;
+  }
+  .stills {
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  }
+}

@@ -1,9 +1,16 @@
 import {
+  isPreviewRequestCommand,
+  previewRequestCommandSchema,
+  previewRequestIssueMessage,
+} from "@jewelo/contracts";
+import {
   adminConfig,
+  ApiError,
   jsonError,
   readJson,
   supabaseRequest,
 } from "../../../../lib/backend/supabase-rest";
+import { previewRequestCommandWrite } from "../../../../lib/backend/preview-requests";
 import { requireOperatorSession } from "../../../../lib/backend/operator-session";
 import { attemptImmediateDispatch } from "../../../../lib/backend/job-dispatch";
 
@@ -43,7 +50,7 @@ export async function POST(request: Request) {
     }>(request, ["command", "targetId", "idempotencyKey"]);
     // An honest-degrade capture can exist without a design, so `designId` is
     // required per command instead of for the whole envelope.
-    if (input.command !== "preview_request.mark_contacted" && !input.designId)
+    if (!isPreviewRequestCommand(input.command) && !input.designId)
       throw new Error("designId required");
     // Every design-scoped command has already been rejected above without one.
     const designId = input.designId ?? "";
@@ -112,29 +119,41 @@ export async function POST(request: Request) {
           body: JSON.stringify({ status: input.payload?.status }),
         },
       );
-    } else if (input.command === "preview_request.mark_contacted") {
-      // Only a `new` capture transitions, so a repeated click is a no-op and
-      // never rewrites contacted_at. The current row is still returned.
-      const note = input.payload?.note;
-      const patched = await supabaseRequest<Array<Record<string, unknown>>>(
-        admin,
-        `/rest/v1/preview_requests?id=eq.${encodeURIComponent(input.targetId)}&status=eq.new`,
-        {
-          method: "PATCH",
-          headers: { prefer: "return=representation" },
-          body: JSON.stringify({
-            status: "contacted",
-            contacted_at: new Date().toISOString(),
-            operator_note:
-              typeof note === "string" ? note.slice(0, 2000) : undefined,
-          }),
-        },
+    } else if (isPreviewRequestCommand(input.command)) {
+      // The queue writes a customer's contact history, so the envelope is
+      // validated against the contract rather than handed to PostgREST as it
+      // arrived. A note longer than the column, or a target that is not an id,
+      // is a 422 with the offending path and nothing of the body echoed back.
+      const parsed = previewRequestCommandSchema.safeParse(input);
+      if (!parsed.success)
+        throw new ApiError(
+          previewRequestIssueMessage(parsed.error),
+          422,
+          "invalid_input",
+        );
+      const write = previewRequestCommandWrite(
+        parsed.data.command,
+        parsed.data.payload?.note,
       );
+      // Only a row in one of the command's `from` statuses transitions, so a
+      // repeated click is a no-op and never rewrites `contacted_at`. The
+      // current row is still returned.
+      const patched = Object.keys(write.patch).length
+        ? await supabaseRequest<Array<Record<string, unknown>>>(
+            admin,
+            `/rest/v1/preview_requests?id=eq.${encodeURIComponent(parsed.data.targetId)}&${write.statusFilter}`,
+            {
+              method: "PATCH",
+              headers: { prefer: "return=representation" },
+              body: JSON.stringify(write.patch),
+            },
+          )
+        : [];
       result = patched.length
         ? patched
         : await supabaseRequest<Array<Record<string, unknown>>>(
             admin,
-            `/rest/v1/preview_requests?id=eq.${encodeURIComponent(input.targetId)}&select=id,status,contacted_at&limit=1`,
+            `/rest/v1/preview_requests?id=eq.${encodeURIComponent(parsed.data.targetId)}&select=id,status,contacted_at,operator_note&limit=1`,
           );
     } else if (input.command === "request_video") {
       result = await supabaseRequest(admin, "/rest/v1/rpc/request_video_task", {

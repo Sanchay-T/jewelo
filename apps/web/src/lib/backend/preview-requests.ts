@@ -5,8 +5,11 @@ import {
   previewRequestIssueMessage,
   previewRequestSpecificationSchema,
   summarizePreviewSpecification,
+  PREVIEW_REQUEST_COMMAND_TRANSITIONS,
+  PREVIEW_REQUEST_NOTE_MAX,
   PREVIEW_REQUEST_STATUSES,
   type OperatorPreviewRequestRecord,
+  type PreviewRequestCommand,
   type PreviewRequestContact,
   type PreviewRequestInput,
   type PreviewRequestRecord,
@@ -134,5 +137,32 @@ export function operatorPreviewRequest(
       ? summarizePreviewSpecification(parsed.data)
       : "Specification needs review",
     operatorNote: optional(row.operator_note),
+  };
+}
+
+/**
+ * The PostgREST filter and column patch one operator command writes.
+ *
+ * The status list comes from the contract's transition table, so the route
+ * never carries its own copy of the state machine, and a command whose stored
+ * status is not in that list matches no row and writes nothing.
+ */
+export function previewRequestCommandWrite(
+  command: PreviewRequestCommand,
+  note: string | undefined,
+): { statusFilter: string; patch: Record<string, unknown> } {
+  const transition = PREVIEW_REQUEST_COMMAND_TRANSITIONS[command];
+  const patch: Record<string, unknown> = {};
+  if (transition.to) {
+    patch.status = transition.to;
+    // Only the first contact is timestamped; the later statuses keep it.
+    if (transition.to === "contacted")
+      patch.contacted_at = new Date().toISOString();
+  }
+  if (typeof note === "string")
+    patch.operator_note = note.slice(0, PREVIEW_REQUEST_NOTE_MAX);
+  return {
+    statusFilter: `status=in.(${transition.from.join(",")})`,
+    patch,
   };
 }

@@ -337,3 +337,69 @@ export function previewRequestIssueMessage(error: z.ZodError): string {
   const path = issue.path.join(".");
   return path ? `${path}: ${issue.message}` : issue.message;
 }
+
+/**
+ * The operator commands the queue may send for one captured request.
+ *
+ * `preview_requests` accepts four statuses, but the command route only ever
+ * knew how to write `contacted`, so a request the shop had actually made or
+ * dropped stayed in the queue for ever. The three status commands and the note
+ * command are listed here, once, with the stored statuses each may act on: the
+ * route builds its PostgREST filter from this table instead of carrying its own
+ * copy of the state machine.
+ *
+ * A command whose `from` list does not contain the stored status writes
+ * nothing; the route answers with the current row, so a repeated click is a
+ * no-op rather than a rewrite of `contacted_at`.
+ */
+export const PREVIEW_REQUEST_COMMANDS = [
+  "preview_request.mark_contacted",
+  "preview_request.mark_fulfilled",
+  "preview_request.mark_cancelled",
+  "preview_request.note",
+] as const;
+export type PreviewRequestCommand = (typeof PREVIEW_REQUEST_COMMANDS)[number];
+
+/** The database check constraint on `preview_requests.operator_note`. */
+export const PREVIEW_REQUEST_NOTE_MAX = 2000;
+
+export const PREVIEW_REQUEST_COMMAND_TRANSITIONS: Readonly<
+  Record<
+    PreviewRequestCommand,
+    { readonly from: readonly PreviewRequestStatus[]; readonly to?: PreviewRequestStatus }
+  >
+> = {
+  "preview_request.mark_contacted": { from: ["new"], to: "contacted" },
+  "preview_request.mark_fulfilled": {
+    from: ["new", "contacted"],
+    to: "fulfilled",
+  },
+  "preview_request.mark_cancelled": {
+    from: ["new", "contacted"],
+    to: "cancelled",
+  },
+  // A note is a note whatever the request's status is; it never moves the row.
+  "preview_request.note": { from: PREVIEW_REQUEST_STATUSES },
+};
+
+export function isPreviewRequestCommand(
+  value: string,
+): value is PreviewRequestCommand {
+  return (PREVIEW_REQUEST_COMMANDS as readonly string[]).includes(value);
+}
+
+/**
+ * The envelope the operator command route validates a preview-request command
+ * against, so a malformed body is a 422 with a path, not a PostgREST error.
+ */
+export const previewRequestCommandSchema = z.object({
+  command: z.enum(PREVIEW_REQUEST_COMMANDS),
+  targetId: z.uuid(),
+  idempotencyKey: z.string().min(1).max(200),
+  payload: z
+    .object({ note: z.string().max(PREVIEW_REQUEST_NOTE_MAX).optional() })
+    .optional(),
+});
+export type PreviewRequestCommandInput = z.infer<
+  typeof previewRequestCommandSchema
+>;
