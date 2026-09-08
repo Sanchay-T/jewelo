@@ -83,10 +83,11 @@ Done:
 - All five reviews recorded (`reviews/identity-package-review-1.md`, `pipeline-review-1.md`, `security-review-1.md`, `tooling-review-1.md`, `ux-review-1.md`). Security fix 1 committed in `61df414` (board deleted, specification schema with NFC and script rules at three routes, operator backoff, anonymous and transliteration limits, headers, readiness token, magic-byte sniff, same-origin on operator commands; lead verified the web build and the 404s). Tooling fix 1 committed (turbo cache now hashes `.env` and restores `.next`; Inngest refuses unsigned; concurrency 2; bootstrap refuses; deploy.sh fixed; replay-lab exit codes; lab tools atomic). Note: the six sample-images deletions were staged by the security agent and swept into the earlier "UX review 1 recorded" commit `8c2b2bb`; intended, wrong message.
 - P2-2 committed in `09de943`; lead opened the contact sheet at 1440x900 and the overlays: `classical` registration exact, `framed-minimal` meaningless without the frame. Decision by default: P2-2b (stencil carries the construction geometry) added; G6 per construction inside the dilated stencil bbox.
 
+- Pipeline fix 1 committed (lead: build `--force` exit 0, `pnpm audit --prod` clean, four migrations applied to staging): two-name English and `O’Neill` pass the script test; `reading.matches` no longer sufficient; provider timeout, stale window (derived: timeout plus margin, 300 s over 180 s), poll and sweeper limits, signed URL expiry in `packages/config`; attempt budget in `runtime_policy.provider_attempt_budget`; usage rows keyed on the attempt date with upsert (midnight test rolled back on staging); `referenceAsset.id` validated and storage paths encoded; explicit-null patches; sweeper indexes; sharp 0.35.4 with overrides in `pnpm-workspace.yaml`. Bar-fallback routing skipped until D-020 lands `ringPlacement`.
+
 Doing:
 
 - D-020 redesign (implementer): outline-level ring anchors from glyph contours and GDEF classes, bar fallback instead of refusal, ring-hole area gate, lift cap removed, the small package-review items, manifest and README brought in line.
-- Pipeline fix 1 (implementer): two-name English name gate, timing constants into config with the stale window derived from the provider timeout, model boolean no longer sufficient, usage-date migration, reference id validation and path encoding, null-clearing patches, sweeper indexes, sharp 0.35 and overrides, dead SVG branch.
 
 Follow-ups found by subagents, not fixed (outside the task rows):
 
