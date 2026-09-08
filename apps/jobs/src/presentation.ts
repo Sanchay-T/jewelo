@@ -488,6 +488,9 @@ export class SupabasePresentationRepository implements PresentationRepository {
     private readonly url: string,
     private readonly key: string,
     private readonly allowMockAnchors = false,
+    // Motion is opt-in (VIDEO_ENABLED). Off means a ready studio still never
+    // asks fal for a preview, so no run spends video cents.
+    private readonly videoEnabled = false,
   ) {}
   async #request<T>(path: string, init: RequestInit = {}): Promise<T> {
     const response = await fetch(`${this.url}${path}`, {
@@ -1011,42 +1014,49 @@ export class SupabasePresentationRepository implements PresentationRepository {
         method: "POST",
         body: JSON.stringify({ p_source_task_id: input.task.id }),
       });
-      try {
-        await this.#request("/rest/v1/rpc/request_video_task", {
-          method: "POST",
-          body: JSON.stringify({
-            p_run_id: input.run.id,
-            p_kind: "preview",
-            p_source_task_id: input.task.id,
-            p_request_key: `auto-preview:${input.run.id}:${input.task.id}`,
-          }),
-        });
-        motionPreview = "requested";
-      } catch (error) {
-        motionPreview = "operator_review";
-        const reason = String(
-          error instanceof Error ? error.message : "unknown",
-        ).slice(0, 120);
-        await this.#request("/rest/v1/audit_events", {
-          method: "POST",
-          body: JSON.stringify({
-            design_id: input.run.design_id,
-            principal_id: input.task.owner_principal_id,
-            actor_type: "job",
-            action: "video.auto_request_failed",
-            detail: { sourceTaskId: input.task.id, reason },
-          }),
-        });
-        // The still stays ready; only the run carries the visible motion failure.
-        await this.#request(`/rest/v1/generation_runs?id=eq.${input.run.id}`, {
-          method: "PATCH",
-          body: JSON.stringify({
-            operator_review_reason: `video_request_failed:${reason}`.slice(
-              0,
-              300,
-            ),
-          }),
-        });
+      // Motion is opt-in; with video off no fal preview is requested.
+      if (!this.videoEnabled) motionPreview = "disabled";
+      else {
+        try {
+          await this.#request("/rest/v1/rpc/request_video_task", {
+            method: "POST",
+            body: JSON.stringify({
+              p_run_id: input.run.id,
+              p_kind: "preview",
+              p_source_task_id: input.task.id,
+              p_request_key: `auto-preview:${input.run.id}:${input.task.id}`,
+            }),
+          });
+          motionPreview = "requested";
+        } catch (error) {
+          motionPreview = "operator_review";
+          const reason = String(
+            error instanceof Error ? error.message : "unknown",
+          ).slice(0, 120);
+          await this.#request("/rest/v1/audit_events", {
+            method: "POST",
+            body: JSON.stringify({
+              design_id: input.run.design_id,
+              principal_id: input.task.owner_principal_id,
+              actor_type: "job",
+              action: "video.auto_request_failed",
+              detail: { sourceTaskId: input.task.id, reason },
+            }),
+          });
+          // The still stays ready; only the run carries the visible motion failure.
+          await this.#request(
+            `/rest/v1/generation_runs?id=eq.${input.run.id}`,
+            {
+              method: "PATCH",
+              body: JSON.stringify({
+                operator_review_reason: `video_request_failed:${reason}`.slice(
+                  0,
+                  300,
+                ),
+              }),
+            },
+          );
+        }
       }
     }
     await this.#request("/rest/v1/audit_events", {
@@ -1121,6 +1131,7 @@ export function productionPresentationDependencies(
     config.SUPABASE_URL,
     config.SUPABASE_SERVICE_ROLE_KEY,
     config.PROVIDER_MODE === "mock",
+    config.VIDEO_ENABLED,
   );
   if (config.PROVIDER_MODE === "mock")
     return {

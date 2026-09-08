@@ -90,18 +90,29 @@ export const jobsEnvSchema = trustedWebEnvSchema
       .min(1)
       .default(20),
     FAL_VIDEO_ESTIMATED_COST_CENTS: z.coerce.number().int().min(1).default(40),
+    // Motion is out of scope for the launch, so it is off unless a deployment
+    // opts in. Off means no fal video task is ever auto-requested and fal
+    // credentials are not required to run the studio in real provider mode.
+    VIDEO_ENABLED: z
+      .preprocess(blankToUndefined, z.enum(["0", "1"]).default("0"))
+      .transform((value) => value === "1"),
   })
   .superRefine((value, context) => {
-    if (value.PROVIDER_MODE === "real") {
-      for (const key of ["FAL_KEY", "OPENAI_API_KEY"] as const) {
-        if (!value[key])
-          context.addIssue({
-            code: "custom",
-            path: [key],
-            message: `${key} is required in real provider mode`,
-          });
-      }
-    }
+    if (value.PROVIDER_MODE !== "real") return;
+    if (!value.OPENAI_API_KEY)
+      context.addIssue({
+        code: "custom",
+        path: ["OPENAI_API_KEY"],
+        message: "OPENAI_API_KEY is required in real provider mode",
+      });
+    // fal only carries video, so it is required exactly when video is on.
+    if (value.VIDEO_ENABLED && !value.FAL_KEY)
+      context.addIssue({
+        code: "custom",
+        path: ["FAL_KEY"],
+        message:
+          "FAL_KEY is required in real provider mode when VIDEO_ENABLED=1",
+      });
   });
 
 export const ciEnvSchema = z.object({

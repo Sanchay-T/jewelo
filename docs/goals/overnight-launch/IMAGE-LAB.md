@@ -163,7 +163,8 @@ It is a real defect and it is the one that would be unacceptable to a customer, 
 
 ### Did any look advance?
 
-The gate is 3 of 3 on **both** scripts. Under that gate, **no look advanced**, so Stage 2 (holdout names) was correctly not started.
+The gate is 3 of 3 on **both** scripts. Under that gate at v4.1, **no look advanced**, so Stage 2 (holdout names) did not start on the v4.1 record.
+It started later, after the v4.3 look-brief fix described below, on `framed-minimal` only.
 
 - `framed-minimal` 3/3 English, 2/3 Arabic - 5 of 6, the closest.
 - `diamond-rails` 3/3 English, 1/3 Arabic.
@@ -188,7 +189,7 @@ That is a production recommendation, not just a lab one: **the identity engine s
 
 The Arabic gap is narrower than it looks: with the ring-free stencil Arabic reached 3 of 6 on the two ring-free looks, against 2 of 6 on the ringed looks. Arabic remains materially less reliable than English on attachment and needs its own iteration; identity is not the problem.
 
-## Stage 2 - holdout names (not run, and why)
+## Stage 2 - holdout names (run at v4.3, partly scored)
 
 The gate the coordinator set was: run holdouts only for a look that passed **3 of 3 on both scripts**.
 Scoring the v4.1 attempts only (a2, a3, a4 - a1 was the superseded v4 release), the per-look record is:
@@ -200,12 +201,29 @@ Scoring the v4.1 attempts only (a2, a3, a4 - a1 was the superseded v4 release), 
 | `framed-minimal` | **3/3** | 2/3 | no - Arabic short |
 | `diamond-rails` | **3/3** | 1/3 | no - Arabic short |
 
-No look qualified, so no holdout image was generated and no credits were spent here.
-This is the honest position, and it is also the single most important thing the lab did **not** prove: every image in this report spells one name, Asma.
-Nothing here demonstrates that the pipeline handles an unseen customer name, and the launch decision should not read a Stage 1 or Stage 3 pass rate as if it did.
+No look qualified on the v4.1 record, and the shortfall on the two leading looks was Arabic attachment, not Arabic spelling, which held.
 
-The blocker is specific and small: two of the four looks are already at 3/3 in English, and both fall short only on Arabic attachment - not on Arabic spelling, which held.
-The cheapest path to a launch-eligible look is one more Arabic attachment iteration on `framed-minimal`, then its 12-image holdout sweep (Noor, Layla, Muhammad in both scripts, twice).
+The fix went into the `framed-minimal` look brief and became release **v4.3**: the word must be welded into the frame in at least two separate places, the baseline must merge into the bottom bar, and no letter, foot, tail or terminal may end in mid-air.
+Six more Stage 1 `framed-minimal` images were then generated under v4.3 (`framed-minimal-ar` a5 to a7, `framed-minimal-en` a5 to a7), of which one is scored so far: `framed-minimal-ar-a5` **pass**.
+
+The 12-image holdout sweep was then generated under v4.3 for `framed-minimal` - Noor, Layla and Muhammad, each in both scripts, twice:
+`docs/goals/overnight-launch/lab/stage2/` holds all 12 PNGs, with prompts in `lab/stage2/prompts/v43/`.
+
+| Holdout cell | a1 | a2 | scored |
+| --- | --- | --- | :--: |
+| `framed-minimal-noor-en` | pass | pass | 2/2 |
+| `framed-minimal-noor-ar` | pass | pass | 2/2 |
+| `framed-minimal-layla-ar` | pass | unscored | 1/2 |
+| `framed-minimal-layla-en` | tweak `unsupported-geometry` | unscored | 1/2 |
+| `framed-minimal-muhammad-en` | unscored | unscored | 0/2 |
+| `framed-minimal-muhammad-ar` | unscored | unscored | 0/2 |
+
+**Six of the twelve holdout images are scored: five pass, one tweak.**
+The verdicts live in `lab/stage2/verdicts-en.jsonl` and `lab/stage2/verdicts-ar.jsonl`; they have not been merged back into `ledger.jsonl`, so the generated appendix below still reports all twelve Stage 2 rows as `unscored`.
+Across the whole lab that leaves **11 images unscored**: the six Stage 2 images with no verdict yet, and five of the six v4.3 Stage 1 images.
+
+The phase 3 gate is **not met**. It asks for one look at 3/3 on both scripts and then **10 of 12 on holdout names**, and only six of the twelve holdouts have been looked at.
+The remaining work is scoring, not generation: score the six unscored holdouts and the five unscored v4.3 Stage 1 images, then re-attempt only what the viewer marks down.
 
 ## Stage 3 - dependent views (25 images, 500 credits, 24 pass)
 
@@ -419,24 +437,27 @@ Nine of the twenty instances were fixed in the **stencil or the reference set**,
 | --- | ---: | ---: | ---: |
 | `caleums-universal-v4` (attempt a1) | 8 | 2 | 25% |
 | `caleums-universal-v4.1` (attempts a2-a4) | 24 | 14 | 58% |
+| `caleums-universal-v4.3` (`framed-minimal` only, attempts a5-a7) | 6 | 1 scored, 5 unscored | not measurable yet |
 
-The difference between the two is exactly two edits - the threading test and the ring-free stencil - and it more than doubled the pass rate.
+The difference between the first two is exactly two edits - the threading test and the ring-free stencil - and it more than doubled the pass rate.
 Both edits are attachment fixes. None of the gain came from better adjectives.
 
-Under the attempt-budget rule stated above, every cell stayed inside three paid attempts of any single release: a1 is the only v4 attempt, and a2 to a4 are the three v4.1 attempts.
+Under the attempt-budget rule stated above, every cell stayed inside three paid attempts of any single release: a1 is the only v4 attempt, a2 to a4 are the three v4.1 attempts, and a5 to a7 are the three v4.3 attempts on `framed-minimal`.
 
 ## The final prompt
 
-The family is **`caleums-universal-v4.2`**, compiled by `docs/goals/overnight-launch/lab/compile.mjs`.
+The family is **`caleums-universal-v4.3`**, compiled by `docs/goals/overnight-launch/lab/compile.mjs` (`FAMILY` at `lab/compile.mjs:14`).
 Ordinary deterministic code fills the slots; no model writes or rewrites this prompt, and the same inputs always produce the same bytes.
 
 | Artifact | sha256 |
 | --- | --- |
 | template with slots unfilled (`lab/final/TEMPLATE.txt`) | `a9c80e99845015a4bca1f5ee9065db3ff60d8589c781aae27baccd1044888681` |
-| compiled reference Studio prompt (`lab/final/reference-studio-prompt.txt`) | `0cc867ed9743f42a4d04632d8205b0cba1e2bf025fe0127375c6838543000af9` |
+| compiled reference Studio prompt, v4.3, as `compile.mjs` emits it today | `0a5a009a3b41651c8af707f3a776ad3bd5239c9b3f9a56724f86b229693bd29b` |
+| compiled reference Studio prompt, v4.2, as still stored in `lab/final/reference-studio-prompt.txt` | `0cc867ed9743f42a4d04632d8205b0cba1e2bf025fe0127375c6838543000af9` |
 
-The template hash is identical to v4.1 because v4.2 changed a slot value (the close-up view brief), not the template.
+The template hash is unchanged from v4.1 through v4.3 because each release changed a slot value - v4.2 the close-up view brief, v4.3 the `framed-minimal` look brief - and never the template.
 That is the point of the split: an iteration is visible as a changed compiled-prompt hash against an unchanged template hash, which is exactly what "change one axis" should look like in the record.
+The stored file `lab/final/reference-studio-prompt.txt` was written at v4.2 and has not been re-emitted; the command below reproduces the current v4.3 bytes.
 
 Reproduce the compiled prompt below with:
 
@@ -450,7 +471,7 @@ node docs/goals/overnight-launch/lab/compile.mjs \
 The configuration shown is `framed-minimal`, English, Studio - the highest-scoring cell of the lab.
 
 <details>
-<summary>Compiled reference Studio prompt, 4797 characters, verbatim</summary>
+<summary>Compiled reference Studio prompt, v4.3, 5175 characters, verbatim</summary>
 
 ```text
 Photograph one real, physical, finished 18K gold name pendant necklace. Studio shot.
@@ -472,7 +493,7 @@ Each of the two jump rings is threaded: something passes through its open hole a
 The chain is a fine round-link cable chain in the same 18K gold and hangs from both rings, one side to each. The chain never passes over, around or behind a letter, and there is no second chain, no cord, no clasp in shot and no other hardware.
 
 LOOK - Framed minimal
-The lettering from Image 1 sits inside one thin plain rectangular gold frame with softly rounded corners, cast as a single piece with the letters and joined to them where the strokes reach the frame. The frame is a simple even bar with no ornament, no engraving and no second border. The letters inside it keep exactly the shapes and spacing of Image 1.
+The lettering from Image 1 sits inside one thin plain rectangular gold frame with softly rounded corners, cast as a single piece with the letters and joined to them where the strokes reach the frame. The frame is a simple even bar with no ornament, no engraving and no second border. The word is physically welded into the frame at no fewer than two separate places, and the baseline of the word merges into the bottom bar of the frame so the metal is visibly continuous from letter to frame. No letter, foot, tail or terminal ends in mid-air inside the frame, and the word is never held by a single contact point - a name cantilevered from one corner is wrong. The letters inside it keep exactly the shapes and spacing of Image 1.
 
 SHOT - Studio
 A catalogue packshot. The pendant lies almost flat, seen from just off straight-on, filling most of the frame with a small even margin. The whole pendant and both jump rings are inside the frame and in focus. The chain runs away from both rings and settles in a relaxed curve on the surface. Background is a plain warm off-white matte paper sweep.
@@ -499,7 +520,7 @@ Exact spelling and glyph order from Image 1. One connected piece. Exactly two ju
 
 `pass` / `tweak` / `fail` are the viewer's verdicts. This lab never scored its own images.
 
-### Stage 1 - Studio, 4 looks x 2 scripts - 16 of 32 passed
+### Stage 1 - Studio, 4 looks x 2 scripts - 16 of 38 passed
 
 | Cell | attempts | pass | defects seen |
 | --- | --- | :--: | --- |
@@ -507,12 +528,23 @@ Exact spelling and glyph order from Image 1. One connected piece. Exactly two ju
 | `classical-en` | a1:pass a2:pass a3:pass a4:fail | 3/4 | `disconnected-component` |
 | `diamond-rails-ar` | a1:tweak a2:pass a3:fail a4:fail | 1/4 | `chain-not-through-ring`, `missing-glyph`, `missing-ring`, `wrong-look` |
 | `diamond-rails-en` | a1:pass a2:pass a3:pass a4:pass | 4/4 | - |
-| `framed-minimal-ar` | a1:fail a2:pass a3:pass a4:tweak | 2/4 | `extra-ring`, `unsupported-geometry` |
-| `framed-minimal-en` | a1:fail a2:pass a3:pass a4:pass | 3/4 | `extra-ring` |
+| `framed-minimal-ar` | a1:fail a2:pass a3:pass a4:tweak a5:unscored a6:unscored a7:unscored | 2/7 | `extra-ring`, `unsupported-geometry` |
+| `framed-minimal-en` | a1:fail a2:pass a3:pass a4:pass a5:unscored a6:unscored a7:unscored | 3/7 | `extra-ring` |
 | `origami-ribbon-ar` | a1:tweak a2:pass a3:fail a4:tweak | 1/4 | `cgi-look`, `chain-not-through-ring`, `wrong-look` |
 | `origami-ribbon-en` | a1:tweak a2:tweak a3:pass a4:fail | 1/4 | `cgi-look`, `disconnected-component`, `floating-mark`, `wrong-look` |
 
-### Stage 3 - dependent views - 23 of 25 passed
+### Stage 2 - holdout names (Noor, Layla, Muhammad), v4.3 framed-minimal - 0 of 12 passed
+
+| Cell | attempts | pass | defects seen |
+| --- | --- | :--: | --- |
+| `framed-minimal-layla-ar` | a1:unscored a2:unscored | 0/2 | - |
+| `framed-minimal-layla-en` | a1:unscored a2:unscored | 0/2 | - |
+| `framed-minimal-muhammad-ar` | a1:unscored a2:unscored | 0/2 | - |
+| `framed-minimal-muhammad-en` | a1:unscored a2:unscored | 0/2 | - |
+| `framed-minimal-noor-ar` | a1:unscored a2:unscored | 0/2 | - |
+| `framed-minimal-noor-en` | a1:unscored a2:unscored | 0/2 | - |
+
+### Stage 3 - dependent views - 24 of 25 passed
 
 | Cell | attempts | pass | defects seen |
 | --- | --- | :--: | --- |
@@ -537,7 +569,7 @@ Exact spelling and glyph order from Image 1. One connected piece. Exactly two ju
 | `origami-ribbon-ar-close-up` | a1:pass | 1/1 | - |
 | `origami-ribbon-ar-dark` | a1:pass | 1/1 | - |
 | `origami-ribbon-ar-on-skin` | a1:pass | 1/1 | - |
-| `origami-ribbon-en-close-up` | a1:tweak a2:unscored | 0/2 | `wrong-display` |
+| `origami-ribbon-en-close-up` | a1:tweak a2:pass | 1/2 | `wrong-display` |
 | `origami-ribbon-en-dark` | a1:pass | 1/1 | - |
 | `origami-ribbon-en-on-skin` | a1:pass | 1/1 | - |
 
@@ -558,32 +590,33 @@ Exact spelling and glyph order from Image 1. One connected piece. Exactly two ju
 | `classical-en-white` | a1:pass | 1/1 | - |
 | `classical-en-white-accent` | a1:pass | 1/1 | - |
 
-### Stage 5 - Kufi lettering - 0 of 4 passed
+### Stage 5 - Kufi lettering - 3 of 4 passed
 
 | Cell | attempts | pass | defects seen |
 | --- | --- | :--: | --- |
-| `diamond-rails-ar-kufi` | a1:unscored | 0/1 | - |
-| `diamond-rails-en-kufi` | a1:unscored | 0/1 | - |
-| `framed-minimal-ar-kufi` | a1:unscored | 0/1 | - |
-| `framed-minimal-en-kufi` | a1:unscored | 0/1 | - |
+| `diamond-rails-ar-kufi` | a1:tweak | 0/1 | `wrong-look` |
+| `diamond-rails-en-kufi` | a1:pass | 1/1 | - |
+| `framed-minimal-ar-kufi` | a1:pass | 1/1 | - |
+| `framed-minimal-en-kufi` | a1:pass | 1/1 | - |
 
 ### Pass rates
 
 | Stage | images | pass | tweak | fail | pass rate |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| stage1 | 32 | 16 | 6 | 10 | 50% |
-| stage3 | 25 | 23 | 1 | 0 | 92% |
+| stage1 | 38 | 16 | 6 | 10 | 42% |
+| stage2 | 12 | 0 | 0 | 0 | 0% |
+| stage3 | 25 | 24 | 1 | 0 | 96% |
 | stage4 | 12 | 6 | 3 | 3 | 50% |
-| stage5 | 4 | 0 | 0 | 0 | 0% |
-| **all** | **73** | **45** | **10** | **13** | **62%** |
+| stage5 | 4 | 3 | 1 | 0 | 75% |
+| **all** | **91** | **49** | **11** | **13** | **54%** |
 
 ### Defect frequency across the whole lab
 
 | Defect tag | times seen | class |
 | --- | ---: | --- |
 | `chain-not-through-ring` | 5 | attachment |
+| `wrong-look` | 4 | brief |
 | `wrong-stones` | 4 | brief |
-| `wrong-look` | 3 | brief |
 | `extra-ring` | 3 | attachment |
 | `wrong-display` | 3 | photography |
 | `cgi-look` | 2 | photography |
@@ -594,9 +627,9 @@ Exact spelling and glyph order from Image 1. One connected piece. Exactly two ju
 | `missing-glyph` | 1 | identity |
 | `floating-stone` | 1 | geometry |
 
-By class: attachment 9, brief 7, photography 5, geometry 4, identity 2.
+By class: attachment 9, brief 8, photography 5, geometry 4, identity 2.
 
-## Every passed file (45)
+## Every passed file (49)
 
 | Stage | Cell | Attempt | File |
 | --- | --- | :--: | --- |
@@ -637,6 +670,7 @@ By class: attachment 9, brief 7, photography 5, geometry 4, identity 2.
 | stage3 | `origami-ribbon-ar-close-up` | a1 | `docs/goals/overnight-launch/lab/stage3/origami-ribbon-ar-close-up-a1.png` |
 | stage3 | `origami-ribbon-ar-dark` | a1 | `docs/goals/overnight-launch/lab/stage3/origami-ribbon-ar-dark-a1.png` |
 | stage3 | `origami-ribbon-ar-on-skin` | a1 | `docs/goals/overnight-launch/lab/stage3/origami-ribbon-ar-on-skin-a1.png` |
+| stage3 | `origami-ribbon-en-close-up` | a2 | `docs/goals/overnight-launch/lab/stage3/origami-ribbon-en-close-up-a2.png` |
 | stage3 | `origami-ribbon-en-dark` | a1 | `docs/goals/overnight-launch/lab/stage3/origami-ribbon-en-dark-a1.png` |
 | stage3 | `origami-ribbon-en-on-skin` | a1 | `docs/goals/overnight-launch/lab/stage3/origami-ribbon-en-on-skin-a1.png` |
 | stage4 | `classical-ar-rose` | a1 | `docs/goals/overnight-launch/lab/stage4/classical-ar-rose-a1.png` |
@@ -645,6 +679,9 @@ By class: attachment 9, brief 7, photography 5, geometry 4, identity 2.
 | stage4 | `classical-en-rose` | a1 | `docs/goals/overnight-launch/lab/stage4/classical-en-rose-a1.png` |
 | stage4 | `classical-en-white` | a1 | `docs/goals/overnight-launch/lab/stage4/classical-en-white-a1.png` |
 | stage4 | `classical-en-white-accent` | a1 | `docs/goals/overnight-launch/lab/stage4/classical-en-white-accent-a1.png` |
+| stage5 | `diamond-rails-en-kufi` | a1 | `docs/goals/overnight-launch/lab/stage5/diamond-rails-en-kufi-a1.png` |
+| stage5 | `framed-minimal-ar-kufi` | a1 | `docs/goals/overnight-launch/lab/stage5/framed-minimal-ar-kufi-a1.png` |
+| stage5 | `framed-minimal-en-kufi` | a1 | `docs/goals/overnight-launch/lab/stage5/framed-minimal-en-kufi-a1.png` |
 
 ## Spend
 
@@ -653,7 +690,8 @@ Every figure below is a balance read from Runway `whoami`, not an estimate.
 | Checkpoint | images | Runway balance | spent cumulative |
 | --- | ---: | ---: | ---: |
 | lab start | 0 | 306,862 | 0 |
-| Stage 1 close | 32 | 306,222 | 640 |
-| Stage 3 close | 57 | 305,742 | 1,120 |
-| Stage 4 close | 69 | 305,502 | 1,360 |
-| Stage 5 close | 73 | not read per stage | - |
+| Stage 1 close | 38 | 306,222 | 640 |
+| Stage 2 close | 50 | not read per stage | - |
+| Stage 3 close | 75 | 305,742 | 1,120 |
+| Stage 4 close | 87 | 305,502 | 1,360 |
+| Stage 5 close | 91 | not read per stage | - |

@@ -90,14 +90,17 @@ Nothing checks geometry: not component count, not ring count, not frame containm
 
 Plug the API in today and a wrong pendant reaches a shopper with nothing in the pipeline to stop it.
 
-### 3. No look has passed a holdout name
+### 3. No look has passed the holdout gate
 
-Best result is framed minimal at 3/3 English, 2/3 Arabic, on names that were used during tuning.
-Stage 2 holdout names were never generated.
-73 lab images, 45 passed, 62% overall.
+The holdout images exist: all 12 are in `docs/goals/overnight-launch/lab/stage2/`, generated for `framed-minimal` under prompt release v4.3, Noor, Layla and Muhammad in both scripts, twice each.
+Only 6 of the 12 have been scored - 5 pass, 1 tweak `unsupported-geometry` on `framed-minimal-layla-en-a1` - and the other 6 (both Muhammad cells, plus the second attempt for Layla in each script) have no verdict from anyone.
+The ledger holds 91 rows, 49 passed, 54% overall; 11 of those rows are still unscored, being the 6 holdout images above and 5 of the 6 v4.3 Stage 1 `framed-minimal` images.
+
+The phase 3 gate is therefore **not met**.
+It asks for one look at 3/3 on both scripts and then 10 of 12 on holdout names, and neither half is established yet: at v4.3 only `framed-minimal-ar-a5` has been scored, a pass, so 3/3 on both scripts has not been re-measured after the look-brief fix, and 6 of the 12 holdouts have never been looked at.
 
 A shop only ever sees unseen names.
-Until a look passes on names it was not tuned against, nothing is proven.
+Until a look passes on names it was not tuned against, and every holdout image has an actual verdict, nothing is proven.
 
 ### 4. Style anchors were never published, but the images exist
 
@@ -138,7 +141,7 @@ Phases 1 to 4 spend nothing.
 | # | Phase | Tool | Gate that ends it |
 | --- | --- | --- | --- |
 | 1 | Fix the identity engine | code only | Latin renders in real Playfair and fuses to exactly one 4-connected component for all test names; Kufi output differs from Naskh; rings are attached, name-aware and opt-out; every reported field is measured, no literals; the geometry report is produced by code that did not render the image |
-| 2 | Build the real verifier | code, replayed on lab images | deterministic gates (component count, ring count and connection, frame containment, zero-coverage, stone-in-counter, exact NFC characters) plus the name reader; replayed against the 73 existing lab images it reproduces the human verdicts with no false passes |
+| 2 | Build the real verifier | code, replayed on lab images | deterministic gates (component count, ring count and connection, frame containment, zero-coverage, stone-in-counter, exact NFC characters) plus the name reader; replayed against the 91 existing lab images it reproduces the human verdicts with no false passes |
 | 3 | Prove the prompts | **Runway MCP, unlimited** | one look reaches 3/3 on both scripts, then **10 of 12 on holdout names never used during tuning**; generation and scoring done by different agents |
 | 4 | Publish the anchors | code | four immutable `style_anchor_releases` with checksum, source task id and publication history; real mode stops failing closed |
 | 5 | Plug in OpenAI | 1 to 2 paid calls | one real run per script produces an image that passes the phase 2 verifier and matches the Runway result; spend cap set in `runtime_policy` before the first call |
