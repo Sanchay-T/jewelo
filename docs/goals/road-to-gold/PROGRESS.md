@@ -49,9 +49,12 @@ Done:
 - P1-2b in `8838de5`, deployed to staging as `6a536690-41aa-4182-a051-486f864b11cc` (smoke passed). The lead called the route on the live URL: 401 without a session, 200 with one, harfbuzz 14.4.0, `wasmLoaded: true`, Playfair, Naskh and Kufi resolved from `.next/server/assets` with the same shas as the laptop. The probe found a live defect on its first run: `identityFontUrl` built the URL by string interpolation, which Turbopack cannot follow, so the deployed bundle returned Amiri for every requested face; fixed with a static per-file `import.meta.url` map and an unknown file now throws. No Next config change was needed; staging Node is 24.15.0 against the pinned 24.18.1.
 - P1-3 in `2f51a44`: path-only SVG from the HarfBuzz outlines on the 1024 lab canvas, black on white, no alpha; one `IdentityRasterizer` and `solveIdentity` for both scripts; Kufi English on `cairo.ttf`; `<text>`, fontconfig and the bucketed Latin advance table deleted; tests excluded from the jobs tsconfig; `render-stencils` script. Lead opened the renders: real Playfair, Cairo, Naskh, Kufi; letters still overlap because `fuse()` moves islands and rings still land on glyphs (P1-4, P1-5).
 
+- P1-4 in `af13e2b`: `fuse()` deleted; `bridgeAll` and `drawBar` ported with an exact distance transform and capsule bars; ink preservation asserted before recentre (`identity_bridge_moved_ink`); recentre matches Pillow LANCZOS and reports offset and scale; 216 cells (17 ZIP names plus Asma, both scripts, six live styles) are one piece with zero moved pixels, and the Python ruler agrees on all. Lead opened `muhammad-en-classic` and `asma-ar-classic`: letters where the font put them, bars on the baseline, rings still on the old rule. Behaviour change noted: every style now thickens two passes like the lab, not one.
+
 Doing:
 
-- P1-4 (implementer): port `bridge_all` and `draw_bar`; islands are never moved; ink preservation asserted in pre-recentre coordinates.
+- P1-5 (implementer): port `add_rings` (erosion, outer-corner centres, weld fillet), rings default on, `IDENTITY_RINGLESS_CONSTRUCTIONS` config flag, ring-free proven by script only.
+- reviewer (fresh context) over the committed P1-2 to P1-4 diff; findings go into P1-6.
 
 Follow-ups found by subagents, not fixed (outside the task rows):
 
