@@ -31,6 +31,51 @@ Three fix passes tuned raster rules (erosion size, island-area ratio, exemption 
 HarfBuzz already returns each glyph's contours and GDEF class, so the choice of carrier stroke is a property of the font data, not a guess about blobs.
 Alternative recorded and not taken: a fixed bar or bail behind the name (a product change that needs Omran's view and would change the proven look).
 
+### What GDEF actually decides, and where it decides nothing
+
+The first statement of D-020 said marks and small contours are excluded "by the font's own glyph data, never by a pixel-area threshold".
+That is true on four of the six live faces and false on the rest, and adversarial pass 4 (major 4) was right to call it.
+Measured over the 48-name matrix corpus, per face, counting shaped glyphs that carry an outline:
+
+| face | style | glyphs | GDEF class 3 |
+| --- | --- | --- | --- |
+| `NotoNaskhArabic-Regular` | classic, diwani, signature | 286 | 85 |
+| `NotoKufiArabic-Regular` | kufi (Arabic) | 286 | 85 |
+| `ScheherazadeNew-Regular` | minimal | 207 | 7 |
+| `rakkas` | thuluth-inspired | 196 | 0 |
+| `cairo` | kufi (Latin) | 259 | 0 (class 0 for every glyph: the face classifies nothing) |
+| `PlayfairDisplay-SemiBold` | Latin everywhere else | 259 | 0 (a Latin name shapes no separate mark) |
+
+On `cairo`, `rakkas` and `ScheherazadeNew` the nuqta is drawn inside the base contour, so class 3 never applies to a dot there and the exclusion is contour geometry alone.
+What does the work in that case is not a threshold but the tie-break: the carrier is the largest contour by area of the glyph, and a dot is never that.
+The two fractions only refuse a glyph whose largest contour is not letter-like, and their margin was measured rather than assumed: the smallest height fraction any real letter body reached across all six faces is 0.435 (`PlayfairDisplay`, the `w` of the longest stress name), which cleared the 0.4 floor by 3.5 points.
+That is thin, so fix pass 5 lowered the glyph-relative floor to 0.3, where real bodies clear it by 13.5 points and the tallest dot contour measured on the faces where a dot is its own contour (`cairo` 0.129, `NotoKufiArabic` 0.108) is still 17 points below it.
+A standalone dot glyph is a different case and is held out by the run-relative floor, which fix pass 5 also changed: it is measured against the tallest *base* glyph now, not against the run's ink box, because a madda or a damma used to raise that box and disqualify the very letters the ring hangs from.
+
+### What the weld may cover
+
+The seat search and the post-draw gate both refuse a ring whose weld fillet covers pre-ring ink belonging to any contour other than the carrier it is welding to.
+Before fix pass 5 the whole fillet capsule was exempt - 39 px wide and up to 165 px long on a lifted ring - so a stem run straight across a mark reported `welded 0`, and the independent harness repeated the same exemption, so the two agreed by construction rather than by measurement.
+The harness re-derives ownership from the rings-off render and the carrier the report names, by point-in-polygon on outlines it shapes itself.
+Ink that belongs to no contour at all - a bridging bar, the pixel of skin the thickening pass grows outside every outline - belongs to neither plane and is not held against the ring.
+
+### Two rings, two ends
+
+The left ring is sought from the leftmost base glyph inward and the right ring from the rightmost inward; they may never settle on the same glyph while another eligible base glyph exists, and the left glyph must sit left of the right glyph on the canvas.
+`identity_ring_span_too_narrow` measures the result on the encoded bytes: the two ring hole centroids must sit at least `IDENTITY_RING_MIN_SPAN_FRACTION` of the finished piece's own ink width apart.
+
+### The bar is a reached path
+
+The fallback is no longer a claim about a branch nothing takes.
+`آية` in `classic`, `diwani` and `signature` is built with the bar, because the madda covers the whole top of the alef at one end of the name and the search will not weld through it.
+The rail is as wide as the weld fillet it carries (it was narrower, and the fillet's foot then reached rows of the name the rail did not grip), and its rings sit at the lowest row at which both of them clear the lettering, found by search rather than by arithmetic that clamped to the canvas margin.
+A `bar` construction routes to operator review before spend (`acb2706`), so nothing built this way reaches a customer as the welded piece the lab proved.
+
+### Pinholes
+
+An enclosed region of a few pixels is a casting pinhole, not a counter and not a ring hole.
+Measured per pass, they are made by the ring pass - the fillet meeting the stroke - and not by thickening or bridging, so they are closed on the finished raster and `identity_stencil_pinhole` refuses any that survive into the encoded bytes.
+
 ## D-019 detail
 
 The engine used to name a font family and let the renderer find it.

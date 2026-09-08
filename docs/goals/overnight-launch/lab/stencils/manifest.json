@@ -94,36 +94,37 @@
       ],
       "stencil_source": "production",
       "productionGap": null,
-      "sha256": "dbb5dccfe0f497efb7de773f2d477778081bc6cfff64f7ebebc44d880c623ba1",
+      "sha256": "34e0e5fd234d6d78e7fbd6e567e55d8a36ae1f5669eb0d4932fc81070882e8e7",
       "pixelSize": [
-        1485,
-        805
+        1024,
+        1024
       ],
       "components": 1,
-      "holes": 4,
+      "holes": 3,
       "engineReport": {
-        "engineRelease": "caleums-arabic-v3",
-        "pipelineRelease": "caleums-final-media-v1",
+        "engineRelease": "caleums-identity-v4",
+        "pipelineRelease": "caleums-final-media-v2",
         "approvedCharacters": "أسماء",
         "style": "classic",
         "fontFile": "NotoNaskhArabic-Regular.ttf",
-        "fontSha256": "67b5a525a661b607971fbd3f96a81b89d3a768e74534fca84f18ac97e6fab72f",
+        "fontSha256Measured": "67b5a525a661b607971fbd3f96a81b89d3a768e74534fca84f18ac97e6fab72f",
         "shaping": {
-          "sharp": "0.34.5",
-          "libvips": "8.17.3",
-          "pango": "1.57.0",
-          "fribidi": "1.0.16",
-          "harfbuzz": "12.1.0",
-          "freetype": "2.14.1"
+          "sharp": "0.35.4",
+          "libvips": "8.18.6",
+          "harfbuzzShaper": "14.4.0"
         },
         "componentsBefore": 4,
-        "fuseMoves": 3,
-        "dilationPixels": 1,
-        "jumpRingCount": 2,
+        "islandsBeforeBridging": 4,
+        "bridges": 3,
+        "jumpRings": 2,
+        "ringPlacement": "welded",
         "componentsFinal": 1,
+        "ringSpan": 738.4578525549036,
+        "pinholes": 0,
         "exactCharactersPreserved": true,
         "passed": true
-      }
+      },
+      "regeneratedNote": "Regenerated 8 September 2026 (P1-5 fix pass 5, D-020): this cell is production-sourced, and both its bytes and this row predated D-019 and D-020 - the row still described a 1485x805 Pango render on engine release caleums-arabic-v3. It is now a byte copy of stencils/production/asma-ar-classic.png and the fields above are that render's own report. The lab-sourced files in this directory are inputs to the prompt lab and are untouched, and so is stencils/lab/, whose own lab-manifest.json names make_stencil.py as its generator."
     },
     {
       "file": "asma-ar-classic-norings.png",
@@ -376,36 +377,37 @@
       ],
       "stencil_source": "production",
       "productionGap": null,
-      "sha256": "268f77d4de827b026720585845997b78e372c23fe4285ae53e1e4d6753bf94f1",
+      "sha256": "7b24bde2a184506d3d67f2879f96146804f11fb8853c958603ae11197caf1ae7",
       "pixelSize": [
-        987,
-        806
+        1024,
+        1024
       ],
       "components": 1,
       "holes": 3,
       "engineReport": {
-        "engineRelease": "caleums-arabic-v3",
-        "pipelineRelease": "caleums-final-media-v1",
+        "engineRelease": "caleums-identity-v4",
+        "pipelineRelease": "caleums-final-media-v2",
         "approvedCharacters": "نور",
         "style": "classic",
         "fontFile": "NotoNaskhArabic-Regular.ttf",
-        "fontSha256": "67b5a525a661b607971fbd3f96a81b89d3a768e74534fca84f18ac97e6fab72f",
+        "fontSha256Measured": "67b5a525a661b607971fbd3f96a81b89d3a768e74534fca84f18ac97e6fab72f",
         "shaping": {
-          "sharp": "0.34.5",
-          "libvips": "8.17.3",
-          "pango": "1.57.0",
-          "fribidi": "1.0.16",
-          "harfbuzz": "12.1.0",
-          "freetype": "2.14.1"
+          "sharp": "0.35.4",
+          "libvips": "8.18.6",
+          "harfbuzzShaper": "14.4.0"
         },
         "componentsBefore": 3,
-        "fuseMoves": 2,
-        "dilationPixels": 1,
-        "jumpRingCount": 2,
+        "islandsBeforeBridging": 3,
+        "bridges": 2,
+        "jumpRings": 2,
+        "ringPlacement": "welded",
         "componentsFinal": 1,
+        "ringSpan": 692.1215800896291,
+        "pinholes": 0,
         "exactCharactersPreserved": true,
         "passed": true
-      }
+      },
+      "regeneratedNote": "Regenerated 8 September 2026 (P1-5 fix pass 5, D-020): this cell is production-sourced, and both its bytes and this row predated D-019 and D-020 - the row still described a 1485x805 Pango render on engine release caleums-arabic-v3. It is now a byte copy of stencils/production/noor-ar-classic.png and the fields above are that render's own report. The lab-sourced files in this directory are inputs to the prompt lab and are untouched, and so is stencils/lab/, whose own lab-manifest.json names make_stencil.py as its generator."
     },
     {
       "file": "noor-ar-classic-norings.png",
@@ -655,36 +657,37 @@
       ],
       "stencil_source": "production",
       "productionGap": null,
-      "sha256": "64130ad6121e170ec8b00909b7f8f23fcdebd09aae42144c65b22ea2063865f4",
+      "sha256": "bf8aac91410eb2734e92a514cc63adcb6f9279ec7b7db6c26bcedeaf07a3a8b8",
       "pixelSize": [
-        1165,
-        886
+        1024,
+        1024
       ],
       "components": 1,
-      "holes": 3,
+      "holes": 2,
       "engineReport": {
-        "engineRelease": "caleums-arabic-v3",
-        "pipelineRelease": "caleums-final-media-v1",
+        "engineRelease": "caleums-identity-v4",
+        "pipelineRelease": "caleums-final-media-v2",
         "approvedCharacters": "ليلى",
         "style": "classic",
         "fontFile": "NotoNaskhArabic-Regular.ttf",
-        "fontSha256": "67b5a525a661b607971fbd3f96a81b89d3a768e74534fca84f18ac97e6fab72f",
+        "fontSha256Measured": "67b5a525a661b607971fbd3f96a81b89d3a768e74534fca84f18ac97e6fab72f",
         "shaping": {
-          "sharp": "0.34.5",
-          "libvips": "8.17.3",
-          "pango": "1.57.0",
-          "fribidi": "1.0.16",
-          "harfbuzz": "12.1.0",
-          "freetype": "2.14.1"
+          "sharp": "0.35.4",
+          "libvips": "8.18.6",
+          "harfbuzzShaper": "14.4.0"
         },
-        "componentsBefore": 2,
-        "fuseMoves": 1,
-        "dilationPixels": 1,
-        "jumpRingCount": 2,
+        "componentsBefore": 3,
+        "islandsBeforeBridging": 3,
+        "bridges": 2,
+        "jumpRings": 2,
+        "ringPlacement": "welded",
         "componentsFinal": 1,
+        "ringSpan": 739.4067298770339,
+        "pinholes": 0,
         "exactCharactersPreserved": true,
         "passed": true
-      }
+      },
+      "regeneratedNote": "Regenerated 8 September 2026 (P1-5 fix pass 5, D-020): this cell is production-sourced, and both its bytes and this row predated D-019 and D-020 - the row still described a 1485x805 Pango render on engine release caleums-arabic-v3. It is now a byte copy of stencils/production/layla-ar-classic.png and the fields above are that render's own report. The lab-sourced files in this directory are inputs to the prompt lab and are untouched, and so is stencils/lab/, whose own lab-manifest.json names make_stencil.py as its generator."
     },
     {
       "file": "layla-ar-classic-norings.png",
@@ -945,36 +948,37 @@
       ],
       "stencil_source": "production",
       "productionGap": null,
-      "sha256": "62c80f1f0a86b9639a3bdbf292686d91107a02b33e6363a79a0a4030b2381b6d",
+      "sha256": "ef66dce750ce34857ff006da593f69c0cb41f1b297ffca643f9409517167687e",
       "pixelSize": [
-        1390,
-        615
+        1024,
+        1024
       ],
       "components": 1,
       "holes": 4,
       "engineReport": {
-        "engineRelease": "caleums-arabic-v3",
-        "pipelineRelease": "caleums-final-media-v1",
+        "engineRelease": "caleums-identity-v4",
+        "pipelineRelease": "caleums-final-media-v2",
         "approvedCharacters": "محمد",
         "style": "classic",
         "fontFile": "NotoNaskhArabic-Regular.ttf",
-        "fontSha256": "67b5a525a661b607971fbd3f96a81b89d3a768e74534fca84f18ac97e6fab72f",
+        "fontSha256Measured": "67b5a525a661b607971fbd3f96a81b89d3a768e74534fca84f18ac97e6fab72f",
         "shaping": {
-          "sharp": "0.34.5",
-          "libvips": "8.17.3",
-          "pango": "1.57.0",
-          "fribidi": "1.0.16",
-          "harfbuzz": "12.1.0",
-          "freetype": "2.14.1"
+          "sharp": "0.35.4",
+          "libvips": "8.18.6",
+          "harfbuzzShaper": "14.4.0"
         },
         "componentsBefore": 1,
-        "fuseMoves": 0,
-        "dilationPixels": 1,
-        "jumpRingCount": 2,
+        "islandsBeforeBridging": 1,
+        "bridges": 0,
+        "jumpRings": 2,
+        "ringPlacement": "welded",
         "componentsFinal": 1,
+        "ringSpan": 787.3969773881533,
+        "pinholes": 0,
         "exactCharactersPreserved": true,
         "passed": true
-      }
+      },
+      "regeneratedNote": "Regenerated 8 September 2026 (P1-5 fix pass 5, D-020): this cell is production-sourced, and both its bytes and this row predated D-019 and D-020 - the row still described a 1485x805 Pango render on engine release caleums-arabic-v3. It is now a byte copy of stencils/production/muhammad-ar-classic.png and the fields above are that render's own report. The lab-sourced files in this directory are inputs to the prompt lab and are untouched, and so is stencils/lab/, whose own lab-manifest.json names make_stencil.py as its generator."
     },
     {
       "file": "muhammad-ar-classic-norings.png",

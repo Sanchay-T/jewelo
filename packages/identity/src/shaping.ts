@@ -315,10 +315,22 @@ export async function shapeText(input: ShapeTextInput): Promise<ShapedText> {
     xOffset: glyph.xOffset ?? 0,
     yOffset: glyph.yOffset ?? 0,
     // A face with no GDEF table classifies nothing, which HarfBuzz reports as
-    // UNCLASSIFIED (0). That is not "this is a mark", so the carrier rule below
-    // treats only class 3 as a mark and falls back on contour geometry for the
-    // rest - which is the case Amiri and the Noto faces never hit, because all
-    // of them carry GDEF.
+    // UNCLASSIFIED (0). That is not "this is a mark", so the carrier rule only
+    // ever reads class 3 as "mark" and decides everything else on the contour
+    // geometry.
+    //
+    // Adversarial review 4, major 4, measured over the 48-name matrix on every
+    // live face: `NotoNaskhArabic` and `NotoKufiArabic` classify 85 of 286
+    // shaped glyphs as class 3, so on `classic`, `diwani`, `signature` and
+    // Arabic `kufi` the font's own answer does the work. `cairo` (the English
+    // face of `kufi`) returns class 0 for all 259, `rakkas`
+    // (`thuluth-inspired`) returns class 3 for none of 196 and draws the nuqta
+    // inside the base contour, and `ScheherazadeNew` (`minimal`) classifies
+    // only 7 of 207 for the same reason; `PlayfairDisplay` classifies every
+    // glyph as class 1 because a Latin name shapes no separate mark. On those
+    // faces the whole of the exclusion is geometry: the carrier is the largest
+    // contour of the glyph, which a dot never is, and the two fractions below
+    // hold a glyph out when its largest contour is not letter-like.
     glyphClass: face.getGlyphClass(glyph.codepoint) as number,
     path: font.glyphToPath(glyph.codepoint),
   }));
@@ -492,8 +504,76 @@ export const IDENTITY_RING_WELD_ANCHOR_DEPTH = 14;
  * past the top edge would have a clipped annulus and no enclosed hole, and the
  * `lowest` clamp in the search already refuses that, so this cap only has to be
  * large enough never to bind before the clamp does.
+ *
+ * Adversarial review 4, minor 4: `IDENTITY_CANVAS` made it unbounded in
+ * practice - the search is O(lift x columns x fillet box), about 1.9e8 pixel
+ * tests per ring at that cap. The lift a seat actually needs is bounded by the
+ * ring band the fit reserves plus the depth of the anchor pixel inside its own
+ * stroke; measured over the 576-cell matrix of fix pass 5 the deepest lift any
+ * accepted seat used was 144 rows (`zoe-en-kufi`), and 320 is that with more
+ * than twice the head-room while still cutting the worst case by two thirds. A
+ * seat that would need more lift than this is a seat above the top of the
+ * canvas, which the `lowest` clamp refuses anyway. The search reports what it
+ * actually spent as `seatSearchSteps`: over the same matrix, 4 to 216080 seats
+ * per piece with a mean of 5793.
  */
-export const IDENTITY_RING_MAX_LIFT = IDENTITY_CANVAS;
+export const IDENTITY_RING_MAX_LIFT = 320;
+
+/**
+ * Largest enclosed background region, in pixels of the finished PNG, that is a
+ * casting pinhole rather than a hole anyone asked for.
+ *
+ * Adversarial review 4, minor 2: `muhammad-en-classic` measured hole sizes
+ * `[..., 609, 600, 1]` and `muhammad-en-kufi` `[..., 722, 709, 2]`, and the
+ * capped list of eight sizes hid how many more there were. A one to fifteen
+ * pixel enclosed region is a tenth of a millimetre across on a 32 mm pendant:
+ * it is not a counter and not a ring hole.
+ *
+ * Measured per pass, the cause is the ring pass alone, not thickening and not
+ * bridging: over the names of the fix pass 5 probe the raster carries none
+ * after bridging and one to seven after the rings are drawn, where the fillet
+ * meets the stroke it welds to. `fillPinholes` therefore runs on the finished
+ * raster, after the recentre, which is the one point at which every pass that
+ * can make a void has already run, and `identity_stencil_pinhole` refuses any
+ * that survive into the encoded bytes.
+ *
+ * The floor is set at the gap in the corpus rather than chosen. Over the
+ * 576-cell matrix the finished pieces carry 2270 enclosed regions; the sizes
+ * run 9, 10, 11 ... 15 and then jump to 23, with nothing in between, so 16
+ * closes every void on the low side of that gap and leaves the smallest
+ * legitimate region 44% above it. A ring hole is 1810 px and the smallest
+ * letter counter of the corpus is 23 px.
+ */
+export const IDENTITY_STENCIL_PINHOLE_MAX_AREA = 16;
+
+/**
+ * Smallest distance the two ring holes may sit apart, as a fraction of the
+ * finished piece's ink width, both measured on the decoded PNG.
+ *
+ * Adversarial review 4, blocker 2: on 18 of 576 cells both rings landed on the
+ * same letter stroke 81 to 150 px apart - `علي` and `أمير` hung from two rings
+ * a centimetre apart at one corner of the pendant and would rotate to near
+ * vertical on a chain - and nothing measured ring separation at all. This is
+ * that measurement, taken on the bytes rather than on the solver's intention.
+ *
+ * The fraction is set from the corpus rather than chosen. Measured over the
+ * 576-cell matrix after the carrier fix, the smallest ratio any accepted piece
+ * reaches is 0.307 (`taim-ar-thuluth-inspired`: Rakkas climbs to the right, so
+ * both glyph tops sit near the middle of the piece even with the rings on
+ * different letters), the fifth percentile is 0.505 and the median 0.846; the
+ * leading- and trailing-punctuation case the review calls out, `-Ali-`,
+ * measures 0.480. The same measurement over the 576 cells of the pass this
+ * gate answers ran from 0.091, and 19 of those cells sat below 0.30.
+ *
+ * At 0.25 the gate clears the smallest legitimate cell by 5.7 points - 19% of
+ * its own value - and still refuses 17 of the 19 collapsed cells outright. It
+ * is a backstop and not the fix: what prevents the collapse is the placement
+ * rule (the two rings may not share a glyph while another eligible base glyph
+ * exists, and the left glyph must sit left of the right glyph). This is the
+ * measurement on the encoded bytes that says so, and no cell of the corpus
+ * reaches it.
+ */
+export const IDENTITY_RING_MIN_SPAN_FRACTION = 0.25;
 
 /**
  * How far outward of its computed centre a ring may be pushed, in pixels, when
@@ -580,24 +660,47 @@ export const IDENTITY_RING_CARRIER_MIN_CONTOUR_AREA_FRACTION = 0.5;
  * Smallest height a carrier contour may have, as a fraction of the bounding box
  * of the glyph it belongs to.
  *
- * This is what separates the stroke of an `i` from its tittle inside one glyph
- * outline, and the bowl of a Kufi `n` from the nuqta above it: both are one
- * glyph with two contours, and only one of them is metal a chain can hang from.
+ * What actually keeps a ring off the tittle of an `i` or the nuqta of a Kufi
+ * `n` is the tie-break: the carrier is the *largest contour by area* of the
+ * glyph, and a dot is never that. This test does one narrower job - it refuses
+ * a glyph whose largest contour is not letter-like against the glyph's own box,
+ * so the search steps one glyph inward rather than hanging a chain off a lump.
+ *
+ * Adversarial review 4, major 4: measured over the 48-name matrix on all six
+ * live faces, the smallest height fraction any real letter body reached was
+ * 0.435 (`PlayfairDisplay-SemiBold`, the `w` of the longest stress name), so at
+ * 0.4 a legitimate body cleared this by 3.5 points - thin enough that a font
+ * update or a name outside the corpus could put a letter the wrong side of it,
+ * and the cost of that is the ring stepping inward for no reason. It is 0.3
+ * now: real bodies clear it by 13.5 points, and the tallest satellite contour
+ * measured on the two faces where a dot is a contour of its own
+ * (`cairo` 0.129, `NotoKufiArabic` 0.108) is still 17 points below it. A
+ * standalone dot glyph is a different case and is held out by
+ * `IDENTITY_RING_CARRIER_MIN_TALLEST_HEIGHT_FRACTION`, which measures against
+ * the letters rather than against the dot's own box.
  */
-export const IDENTITY_RING_CARRIER_MIN_CONTOUR_GLYPH_HEIGHT_FRACTION = 0.4;
+export const IDENTITY_RING_CARRIER_MIN_CONTOUR_GLYPH_HEIGHT_FRACTION = 0.3;
 
 /**
- * Smallest height a carrier contour may have, as a fraction of the whole
- * shaped run's ink box.
+ * Smallest height a carrier contour may have, as a fraction of the height of
+ * the tallest *base* glyph of the run.
  *
  * The test above is inside one glyph, so it cannot see a glyph that is a lump
  * all by itself - a standalone hamza at the end of `dua`, a Latin full stop.
- * This one measures the candidate against the name it belongs to. Failing it is
- * not a refusal: the search simply steps one glyph inward, so the cost of the
- * threshold being slightly high is a ring one letter further in, never a
- * customer's name refused.
+ * This one measures the candidate against the letters it stands beside.
+ *
+ * Adversarial review 4, blocker 2: it used to be a fraction of the whole shaped
+ * run's ink box, which includes the marks. A madda or a damma sitting above the
+ * line raises that box, which raises this floor, which disqualifies the very
+ * base letters the ring is supposed to hang from: `أمير` in `minimal` missed by
+ * two pixels (261 against 263) while `امير` without the hamza passed, and the
+ * candidate list collapsed to one glyph for both sides. The reference is the
+ * tallest base glyph now, so a mark can never raise the floor above a letter,
+ * and the two sides may not share a glyph while another eligible base glyph
+ * exists (`carrierSeats`). Failing this test is still not a refusal: the search
+ * steps one glyph inward.
  */
-export const IDENTITY_RING_CARRIER_MIN_RUN_HEIGHT_FRACTION = 0.34;
+export const IDENTITY_RING_CARRIER_MIN_TALLEST_HEIGHT_FRACTION = 0.34;
 
 /**
  * How many straight segments each Bezier of a carrier contour is flattened
@@ -616,11 +719,19 @@ export const IDENTITY_CONTOUR_FLATTEN_SEGMENTS = 16;
 /**
  * Width of the fallback top bar, in pixels.
  *
- * Same as `IDENTITY_BRIDGE_WIDTH`, which is about 1.0 mm of metal at a 32 mm
+ * It is the weld fillet's own width, which is about 1.6 mm of metal at a 32 mm
  * pendant: thin enough to read as a bail rail rather than a second name, thick
  * enough to cast and to carry the piece.
+ *
+ * Adversarial review 4, major 3 and blocker 1: it used to be
+ * `IDENTITY_BRIDGE_WIDTH` (24 px), narrower than the 39 px fillet that hangs
+ * from it, so the fillet's foot reached rows of the name the rail did not grip.
+ * On `آية` in classic, 67 pixels of the madda lay under a bar ring's fillet and
+ * outside the rail. A rail at least as wide as the weld it carries makes the
+ * rail's own metal the exact exemption for a bar ring's fillet, which is the
+ * same statement the carrier contour makes for a welded ring.
  */
-export const IDENTITY_RING_BAR_WIDTH = IDENTITY_BRIDGE_WIDTH;
+export const IDENTITY_RING_BAR_WIDTH = IDENTITY_RING_WELD_WIDTH;
 
 /**
  * How far below the name's topmost ink row the fallback bar's centre line sits.

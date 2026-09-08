@@ -55,19 +55,42 @@ solver/font/runtime report, and fingerprint before provider-attempt reservation.
 Jump-ring anchors are chosen at the outline level, before rasterisation (D-020).
 For each end of the name the engine takes the outermost base glyph on the canvas
 and the largest contour of that glyph's outline; a glyph the font's GDEF table
-classes as a mark, and any contour too small or too short against its own glyph
-and against the whole run, is never a carrier. That contour is rasterised on its
-own to find the anchor - the outer top corner of the carrier stroke - and the
-ring is seated above it, lifting and shifting until its hole punches no name ink
-out and no name ink lies under its metal outside the weld. When no clean seat
-exists on any carrier at either end, the piece is built with a bar suspension
-instead: a thin rail across the top of the lettering with a ring at each of its
-ends. The construction reports `ringPlacement` as `welded`, `bar` or `none`, and
-a `bar` piece routes to operator review before it is photographed. The engine
-never refuses a customer's name because a ring would not seat; the measured ring
-gates (`identity_ring_punched_ink`, `identity_ring_welded_to_glyph`,
-`identity_ring_hole_too_small`) stay as post-draw measurements that must be zero
-for whichever construction was drawn.
+classes as a mark, and any contour too small against its own glyph or too short
+against the tallest base glyph of the run, is never a carrier. That contour is
+rasterised on its own to find the anchor - the outer top corner of the carrier
+stroke - and the ring is seated above it, lifting and shifting until its hole
+punches no name ink out and no name ink lies under its metal outside the weld.
+
+The weld exempts less than the weld metal: a pixel under the fillet is excused
+only when it is metal of the carrier contour the ring is being welded to, so a
+fillet that runs a stem across a madda, a hamza or a damma is refused where
+before it swallowed the mark and reported the piece clean. The left ring is
+sought from the leftmost base glyph inward and the right ring from the rightmost
+inward, the two may never settle on the same glyph while another eligible base
+glyph exists, and the left glyph must sit left of the right glyph on the canvas.
+`identity_ring_span_too_narrow` is the measurement of that on the encoded bytes:
+the two ring hole centroids must sit at least a validated fraction of the
+finished piece's own ink width apart, so a pendant that would hang from one
+corner and rotate on the chain is refused whatever the search believed.
+
+When no clean seat exists on any carrier pair, the piece is built with a bar
+suspension instead: a rail across the top of the lettering, as wide as the weld
+fillet it carries, with a ring at each of its ends seated at the lowest row at
+which both rings are clear of the name. The construction reports `ringPlacement`
+as `welded`, `bar` or `none`, and a `bar` piece routes to operator review before
+it is photographed. The bar is a reached path, not a claim: `آية` in `classic`,
+`diwani` and `signature` is built that way, because the madda covers the whole
+top of the alef at one end and the search will not weld through it.
+
+The engine never refuses a customer's name because a ring would not seat; the
+measured ring gates (`identity_ring_punched_ink`,
+`identity_ring_welded_to_glyph`, `identity_ring_hole_too_small`,
+`identity_ring_span_too_narrow`) stay as post-draw measurements that must be
+zero, or in range, for whichever construction was drawn.
+`identity_stencil_pinhole` is the same statement for the piece itself: an
+enclosed region of a few pixels is a casting pinhole rather than a counter or a
+ring hole, the ring pass is what makes them, they are closed on the finished
+raster and the gate refuses any that survive into the encoded bytes.
 
 The ring rule is not a fingerprint input. The fingerprint hashes the engine
 release, the pipeline release, the script, the approved text, the style, the

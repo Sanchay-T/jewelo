@@ -25,10 +25,10 @@
 // Run it (Node is pinned to 24.18.1):
 //   corepack pnpm --filter @jewelo/jobs measure-stencils
 //   corepack pnpm --filter @jewelo/jobs measure-stencils \
-//     docs/goals/overnight-launch/lab/stencils/production render-report.json
+//     docs/goals/overnight-launch/lab/stencils/lab manifest.json
 //
-// Both arguments are optional and default to the lab stencil directory and
-// `lab-manifest.json`. A directory argument is resolved against the current
+// Both arguments are optional and default to the production stencil directory
+// and its `render-report.json`. A directory argument is resolved against the current
 // working directory first and against the repository root second, so the same
 // path works from the repository root and from `apps/jobs`.
 import { createHash } from "node:crypto";
@@ -41,8 +41,16 @@ import { findMaskHoles, measureMask } from "@jewelo/identity";
 import { decodeMask } from "../src/decode-mask";
 
 const REPO_ROOT = resolve(fileURLToPath(new URL("../../..", import.meta.url)));
-const DEFAULT_DIR = "docs/goals/overnight-launch/lab/stencils/lab";
-const DEFAULT_MANIFEST = "lab-manifest.json";
+/**
+ * Adversarial review 4, major 5: the bare invocation used to default to
+ * `stencils/lab`, last written before D-020, whose manifest carries no
+ * construction account - so `measure-stencils` with no arguments printed
+ * `MATCH 16/16` and `CLAIM -/-` and the cross-check that is the point of this
+ * script was silently off against a stale directory. It defaults to the
+ * production stencils and their solver report, which is the claim under test.
+ */
+const DEFAULT_DIR = "docs/goals/overnight-launch/lab/stencils/production";
+const DEFAULT_MANIFEST = "render-report.json";
 
 /**
  * How far a measured ring hole centroid may sit from the ring centre the

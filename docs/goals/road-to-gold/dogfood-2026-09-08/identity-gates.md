@@ -932,3 +932,319 @@ pixels, so the seat moves to `919,452` and the mark stays a mark. (c) and (d) ar
 synthetic pieces that fill the canvas so no seat and no rail can clear the ink:
 both gates still fire and the engine still fails closed rather than shipping a
 ring welded across the lettering.
+
+## Fix pass 5 (P1-5), 8 September 2026
+
+Closes `docs/goals/road-to-gold/reviews/identity-engine-adversarial-4.md`: two
+blockers, three majors and three minors. Every number below is a measurement of
+the run named above it, not a restatement of the engine's intention.
+
+### Blocker 1. The weld fillet may only cover the metal it welds to
+
+`countGlyphPixelsUnderRingMetal` took a fourth argument: the plane of ink that
+belongs to some glyph contour other than the carrier this ring sits on
+(`allContourPixels` minus `carrierPixelsFor`). A pixel under the fillet counts
+as welded unless it is off that plane. `findSeat` uses the same function, so the
+search no longer proposes a seat whose stem crosses a mark, and the post-draw
+scan measures the same statement on the finished mask. Ink that belongs to no
+contour at all - a bridging bar, the pixel of skin the thickening pass grows
+outside every outline - is in neither plane and is not held against the ring;
+the stricter reading, "any pre-ring ink under the fillet that is not carrier
+ink", was measured too and rejected the outer seat of `أسماء` in Kufi and of
+`أمير` in `minimal` on a single pixel each.
+
+`apps/jobs/scripts/render-stencils.mts` re-derives the same rule without
+importing it: it shapes the outlines itself from the pinned bytes, decodes the
+rings-off render, and attributes each pre-ring pixel under a fillet by
+point-in-polygon, with the carrier the report names winning wherever contours
+overlap (Arabic letters join, and a letter's counter is a contour nested inside
+its body) out to the published `IDENTITY_THICKEN_PASSES`. A bar ring's fillet is
+excused only over the rail, which the harness rebuilds from the reported
+pre-ring glyph box and the published bar constants.
+
+```
+corepack pnpm --filter @jewelo/jobs render-stencils \
+  docs/goals/overnight-launch/lab/stencils/production
+```
+
+```
+MATRIX FILLET-FOREIGN 0/576 cells have pre-ring ink of another contour under a weld fillet
+MATRIX WELDED-GLYPH 0/576 cells have ink welded into ring metal
+```
+
+Before the fix the same harness, with the same rule, reported
+`MATRIX FILLET-FOREIGN 49/576`, worst `li-ar-minimal:1289`, `omar-en-classic:242`,
+`qq-en-classic:215`, while the engine still reported `welded 0` on every one of
+them.
+
+`fillet3.mts` rerun over its ten mark-carrying names in all six styles, with its
+two absolute imports repointed from the reviewer's worktree to this checkout -
+otherwise it would measure the engine that worktree holds - and nothing else
+changed:
+
+```
+for st in classic minimal diwani signature kufi thuluth-inspired; do
+  tsx <scratchpad>/fix5/fillet3.mts $st
+done
+```
+
+60 cells: 56 welded and 4 on the bar. Every welded cell reports
+`owners[...]` with no `cls3` entry at all - the madda of `آية`, the hamza of
+`أمير` and `أسماء` and the damma of `مُحَمَّدٌ` are whole and the rings sit on
+letter strokes. The four bar cells (`آية` in `classic`, `diwani` and
+`signature`, `مُحَمَّدٌ` in `thuluth-inspired`) do report `cls3` under the fillet -
+271, 271, 271 and 9 pixels - because `fillet3.mts` predates the bar rule and
+does not know the rail: a bar ring's fillet foot sits inside the rail, and the
+rail grips the topmost ink of the name along its whole span by construction.
+That ink is the joint, not a swallowed mark, and the piece still measures one
+component with the mark whole (`<scratchpad>/fix5/aya-ar-classic.png`).
+
+The `أمير` line the review printed as
+`ring1 filletLen=148 preInkUnderFillet=3178 owners[4:0:cls3=1540 5:0:cls1=761]`
+now reads `owners[5:0:cls1=...]` alone.
+
+`carriers.mts` rerun unchanged (same two import paths). Its `minH` column is the
+*old* rule written out inside the probe, so it still prints the defect: on `أمير`
+in `minimal` it shows `minH263` disqualifying the three base glyphs of heights
+261, 227 and 193 and leaving one carrier. The engine's own answer for the same
+cell is now `carrier 0:0@0,4:0@0` with a span ratio of 0.87.
+
+### Blocker 2. Two rings, two ends
+
+The height floor a carrier contour has to clear is measured against the tallest
+*base* glyph of the run now, not against the run's ink box, so a madda or a
+damma can no longer raise the floor above the letters the ring hangs from
+(`IDENTITY_RING_CARRIER_MIN_TALLEST_HEIGHT_FRACTION`). The pair is chosen
+jointly: the left ring works inward from the leftmost base glyph and the right
+ring inward from the rightmost, the two may not settle on the same glyph while
+any other glyph of the run carries a contour a ring could sit on, and the left
+glyph must sit left of the right glyph on the canvas. When no such pair has a
+clean seat the piece goes to the bar rather than sharing a glyph. Each ring
+records which entry of its side's candidate list it used
+(`glyphIndex:contourIndex@candidateIndex` in every `CELL` line and in
+`construction.ringCarriers`), which is minor 3: `-Ali-` steps inward and says so.
+
+`identity_ring_span_too_narrow:span=S,min=M` is the measurement on the decoded
+PNG: the distance between the two ring hole centroids against
+`IDENTITY_RING_MIN_SPAN_FRACTION` of the measured ink width of the finished
+piece.
+
+The 18 cells the review names, before and after (ratio of ring separation to
+measured ink width; before is this pass's own measurement of the reviewer's
+frozen `adv4/matrix/matrix` PNGs against the ring centres its
+`matrix-report.json` records):
+
+| cell | before | after | after placement |
+| --- | --- | --- | --- |
+| `niki-ar-minimal` | 0.091 | 0.72 | welded 0:0@0, 3:0@0 |
+| `tasneem-ar-minimal` | 0.091 | 0.91 | bar |
+| `maji-ar-classic`, `-diwani`, `-signature` | 0.095 | 0.79 | welded 1:0@0, 5:0@0 |
+| `ali-ar-classic`, `-diwani`, `-signature` | 0.096 | 0.63 | welded 1:0@0, 3:0@0 |
+| `titi-ar-thuluth-inspired` | 0.104 | 0.91 | bar |
+| `tasneem-ar-thuluth-inspired` | 0.109 | 0.59 | welded 1:0@1, 4:0@0 |
+| `taim-ar-minimal` | 0.112 | 0.82 | welded 0:0@0, 2:0@0 |
+| `taim-ar-thuluth-inspired` | 0.129 | 0.31 | welded 1:0@1, 2:0@0 |
+| `li-ar-classic`, `-diwani`, `-signature` | 0.137 | 0.84 | welded 1:0@0, 2:0@0 |
+| `titi-ar-minimal` | 0.139 | 0.63 | welded 0:0@0, 3:0@0 |
+| `shams-ar-minimal` | 0.169 | 0.69 | welded 0:0@0, 2:0@0 |
+| `amir-ar-minimal` | 0.235 | 0.87 | welded 0:0@0, 4:0@0 |
+
+Over the whole 576-cell matrix the ratio went from `min 0.091 p05 0.448 p50
+0.857`, with 19 cells below 0.30, to `min 0.307 p05 0.505 p50 0.846` with none.
+The floor is 0.25: below the smallest measured piece by 5.7 points, above 17 of
+the 19 collapsed cells, and reached by nothing in the corpus - the collapse is
+prevented by the placement rule and this gate is the measurement that says so.
+`-Ali-` in `classic` measures 0.480, which the review calls out as legitimate.
+
+A one-letter name is the only input the placement rule lets the two rings share
+a glyph on, and refusing it would be refusing a customer's name, which D-020
+does not do: the shared-glyph pair is measured against the same fraction before
+it is drawn and the piece goes to the bar instead. No cell of the 576-cell
+matrix shares a glyph, so nothing that hangs from two letters passes through
+that branch, and the 16 production stencils reproduce byte for byte with it in
+place (`<scratchpad>/fix5/reproduce.mts`, `REPRODUCED 16/16`).
+
+```
+tsx <scratchpad>/fix5/span-probe.mts
+ب ar minimal placement=bar    span=752.0 inkW=837 ratio=0.898
+ا ar classic placement=welded carriers=0:0@0,0:0@0 span=79.0 inkW=164 ratio=0.482
+O en classic placement=welded carriers=0:0@0,0:0@0 span=167.0 inkW=575 ratio=0.290
+```
+
+The gate itself is driven the other way by a negative probe: one copy of the
+engine that differs from the committed one in a single named way, the
+shared-glyph pre-check removed, so both rings really do land on one stroke.
+
+```
+tsx <scratchpad>/fix5/neg/span-negative.mts
+ب ar minimal        THREW identity_ring_span_too_narrow:span=83,min=199
+ج ar minimal        THREW identity_ring_span_too_narrow:span=154,min=155
+ق ar kufi           THREW identity_ring_span_too_narrow:span=129,min=146
+ل ar thuluth        THREW identity_ring_span_too_narrow:span=84,min=121
+ه ar classic        THREW identity_ring_span_too_narrow:span=83,min=128
+```
+
+### Major 3. The bar fallback, taken
+
+Option A. The rail is now as wide as the weld fillet it carries
+(`IDENTITY_RING_BAR_WIDTH = IDENTITY_RING_WELD_WIDTH`), because at 24 px the
+39 px fillet's foot reached rows of the name the rail did not grip - 67 pixels
+of the madda of `آية`. Its rings are placed at the lowest row at which both of
+them punch nothing and carry no letter under their metal, searched from the rail
+upward instead of clamped to the canvas margin, and the punch test runs against
+the name *and* the rail, because a ring seated so low that its hole bites the
+rail both shrinks the hole and cuts the rail in two (`إيج` in
+`thuluth-inspired` did exactly that at 1503 px against a floor of 1629).
+
+It is not a probe-only path: 20 of the 576 matrix cells are built on the bar,
+led by `آية` in `classic`, `diwani` and `signature`, where the madda covers the
+whole top of the alef at one end and the search will not weld through it.
+
+```
+MATRIX BAR-FALLBACK 20/576: omar-ar-thuluth-inspired aya-ar-classic aya-ar-diwani
+aya-ar-signature tasneem-ar-minimal titi-ar-thuluth-inspired li-ar-thuluth-inspired
+ij-ar-thuluth-inspired qq-ar-classic qq-ar-minimal qq-ar-diwani qq-ar-signature
+bartholomewsonlongest-en-classic bartholomewsonlongest-en-minimal
+bartholomewsonlongest-en-diwani bartholomewsonlongest-en-signature
+bartholomewsonlongest-en-kufi bartholomewsonlongest-en-thuluth-inspired
+salem-ar-thuluth-inspired shaikha-ar-thuluth-inspired
+```
+
+Every one of them measures one piece, two ring holes above the lettering,
+`punched 0 welded 0 foreign 0`, and every hole at or above the floor. `acb2706`
+routes a `bar` construction to operator review before spend, so none of them
+reaches a customer as the welded piece the lab proved.
+
+### Major 4. What GDEF decides, and where it decides nothing
+
+`<scratchpad>/fix5/gdefmargin.mts` shapes the 48-name matrix corpus on all six
+live faces and counts what the font actually says:
+
+```
+kufi/en    cairo.ttf                 glyphs=259 classes=[[0,259]]            class3=0
+minimal/ar ScheherazadeNew-Regular   glyphs=207 classes=[[1,199],[2,1],[3,7]] class3=7
+thuluth/ar rakkas.ttf                glyphs=196 classes=[[0,1],[1,193],[2,2]] class3=0
+classic/ar NotoNaskhArabic-Regular   glyphs=286 classes=[[1,201],[3,85]]      class3=85
+kufi/ar    NotoKufiArabic-Regular    glyphs=286 classes=[[1,201],[3,85]]      class3=85
+classic/en PlayfairDisplay-SemiBold  glyphs=259 classes=[[1,259]]             class3=0
+```
+
+So the claim "excluded by the font's own glyph data, never by a pixel-area
+threshold" holds on the two Noto faces and nowhere else. What holds everywhere
+is the tie-break: the carrier is the largest contour by area of the glyph, and a
+dot is never that. The two fractions only refuse a glyph whose largest contour
+is not letter-like, and their margin is measured:
+
+```
+smallest height fraction reached by a real letter body, per face
+cairo 0.714  ScheherazadeNew 0.472  rakkas 0.508  Naskh 1.000  NotoKufi 1.000
+PlayfairDisplay 0.435 (the w of the longest stress name)
+tallest satellite contour where a dot is its own contour
+cairo 0.129 (Shaikha)  NotoKufi 0.108 (Moza)
+```
+
+0.435 against a floor of 0.4 is 3.5 points, which is thin, so the floor is 0.3:
+real bodies clear it by 13.5 points and the tallest dot contour is 17 points
+below it. Lowering it cannot let a dot take a ring, because the largest contour
+of a glyph is always admitted by it and a dot is not the largest contour; what
+it stops is a letter being refused for no reason. `shaping.ts`, the engine
+manifest, the engine README and the D-020 detail in
+`docs/DECISION-REGISTER.md` all say this now instead of the old claim.
+
+### Major 5. The bare `measure-stencils` cross-checks the claim
+
+`DEFAULT_DIR` is `docs/goals/overnight-launch/lab/stencils/production` and
+`DEFAULT_MANIFEST` is `render-report.json`, so the invocation with no arguments
+reads the solver report and runs the cross-check.
+
+```
+corepack pnpm --filter @jewelo/jobs measure-stencils
+```
+
+```
+SINGLE-PIECE 16/16
+MATCH 16/16
+CLAIM 16/16
+```
+
+Before this the same command printed `MATCH 16/16 CLAIM -/-` against
+`stencils/lab`, last written in `7b76e5a` with pre-D-020 hole sizes.
+
+The other half of major 5 is the stale ringed PNGs. `stencils/lab/` is not
+touched: its own `lab-manifest.json` names `make_stencil.py`, the Python lab
+renderer, as its generator, so those files are lab-sourced and are inputs to the
+prompt lab. `stencils/manifest.json` marks exactly four files as
+`stencil_source: production` - `asma-ar-classic.png`, `noor-ar-classic.png`,
+`layla-ar-classic.png` and `muhammad-ar-classic.png` - and both their bytes and
+their manifest rows predated D-019, let alone D-020: the rows still described a
+1485x805 Pango render on engine release `caleums-arabic-v3` while the files on
+disk were 1024x1024. They are byte copies of the freshly rendered production
+stencils now and their rows carry that render's own report, which
+`measure-stencils docs/goals/overnight-launch/lab/stencils manifest.json`
+confirms as `MATCH 32/32`. Every lab-sourced file in that directory is
+unchanged.
+
+The third ruler, the Python oracle, reads the regenerated production stencils
+and agrees with `report.measured` on ink, components, holes, hole sizes,
+bounding box and canvas, and finds no enclosed region at or below the pinhole
+floor:
+
+```
+<scratchpad>/p3-3/venv/bin/python <scratchpad>/fix5/oracle.py
+PYTHON ORACLE AGREES 16/16
+```
+
+### Minors
+
+2. An enclosed region at or below `IDENTITY_STENCIL_PINHOLE_MAX_AREA` is a
+   casting pinhole. Measured pass by pass, the cause is the ring pass alone -
+   the same names carry none after thickening and after bridging and one to
+   seven once the rings and their fillets are drawn - so `fillPinholes` runs on
+   the finished raster after the recentre, where every pass that can make a void
+   has already run, and `identity_stencil_pinhole:count=N` refuses any that
+   survive into the encoded bytes. The floor is the gap in the corpus: over the
+   576 finished pieces the 2270 enclosed regions run 9, 10, 11 ... 15 and then
+   jump straight to 23, so 16 closes every void on the low side of that gap and
+   leaves the smallest legitimate region 44% above it. The review found the two
+   `muhammad-en` cells because the reported hole list is capped at eight
+   entries; the real count before this was 29 regions at or below 16 px spread
+   over the matrix.
+3. Each ring records its candidate index; see blocker 2.
+4. `IDENTITY_RING_MAX_LIFT` is 320 rows, not the canvas. The deepest lift any
+   accepted seat used over the matrix is 144 rows (`zoe-en-kufi`), and
+   `seatSearchSteps` is reported per piece: `min 4 max 216080 mean 5793`.
+
+### The whole run, and what it costs
+
+```
+export PATH=$HOME/.local/share/mise/installs/node/24.18.1/bin:$PATH
+corepack pnpm --filter @jewelo/jobs render-stencils \
+  docs/goals/overnight-launch/lab/stencils/production
+```
+
+```
+LUMINANCE 16/16
+SINGLE-PIECE 16/16
+WELDED-GLYPH 0/16 lab cells have ink welded into ring metal
+MATRIX SINGLE-PIECE 576/576
+MATRIX MOVED-INK 0/576
+MATRIX RECENTRE-DOWNSCALED 377/576
+MATRIX WELDED-GLYPH 0/576 cells have ink welded into ring metal
+MATRIX RING SPAN RATIO min 0.307 p05 0.505 p50 0.846 max 0.941 over 576 cells
+MATRIX FILLET-FOREIGN 0/576 cells have pre-ring ink of another contour under a weld fillet
+MATRIX PINHOLES 0/576 cells carry an enclosed region of 16 px or less
+MATRIX SEAT-SEARCH steps min 4 max 216080 mean 5793; deepest accepted lift 144 rows (zoe-en-kufi.png)
+MATRIX BAR-FALLBACK 20/576
+MATRIX RING HOLE FLOOR 576/576 cells have every ring hole at or above 90% of the ideal area
+MATRIX RINGS 576/576 cells have exactly 2 ring holes, each clear of the stroke it is welded to, with no punched-out and no welded-in ink
+MATRIX RING HOLE SIZE min 1408 max 1792 mean 1686
+```
+
+Exit code 0. Eight of the sixteen production stencils changed bytes; the other
+eight are byte-identical to `f221b44`, which is what it looks like when a fix
+touches only the cells that were wrong.
+
+The one number that is worse than before: the placement search costs up to
+216080 seats on a name where several carriers have to be tried before a pair
+works, against a mean of 5793. It is bounded now (`IDENTITY_RING_MAX_LIFT`),
+and it is spent once per pendant, before any provider call.

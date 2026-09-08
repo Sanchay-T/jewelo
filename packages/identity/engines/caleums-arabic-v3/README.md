@@ -17,8 +17,20 @@ The outlines HarfBuzz returns are laid out as a path-only 1024x1024 SVG with no 
 `packages/identity/src/caleums-arabic-v3.ts` then thickens, bridges and welds the two jump rings on that raster, and measures the encoded PNG back through the same ruler the independent harness uses.
 
 D-020: the metal a jump ring hangs from is chosen from the outlines, before anything is painted.
-For each end of the name the solver takes the outermost base glyph on the canvas and the largest contour of its outline; a glyph the font's GDEF table classes as a mark (a dot, a tittle, a hamza, a tanwin, a shadda) is never a carrier, and neither is a contour too small or too short against its own glyph and against the run.
-When no clean seat exists above any carrier at either end, the piece gets a thin top rail with a ring at each of its ends and reports `ringPlacement: "bar"`; a customer's name is never refused because a ring would not seat.
+For each end of the name the solver takes the outermost base glyph on the canvas and the largest contour of its outline; a glyph the font's GDEF table classes as a mark (a dot, a tittle, a hamza, a tanwin, a shadda) is never a carrier, and neither is a contour too small against its own glyph or too short against the tallest base glyph of the run.
+
+GDEF is the font's own answer only where the face gives one, and three live faces do not.
+Measured over the 48-name matrix: `NotoNaskhArabic` and `NotoKufiArabic` class 85 of 286 shaped glyphs as marks, so on `classic`, `diwani`, `signature` and Arabic `kufi` the table does the work.
+`cairo`, the Latin face of `kufi`, returns class 0 for all 259 glyphs; `rakkas` returns class 3 for none of 196 and `ScheherazadeNew` for only 7 of 207, because both draw the nuqta inside the base contour; `PlayfairDisplay` shapes no separate mark at all in a Latin name.
+On those faces the whole of the exclusion is geometry, and what does the work is the tie-break rather than a threshold: the carrier is the *largest contour by area* of the glyph, which a dot never is.
+The two fractions only hold a glyph out when its largest contour is not letter-like, and the smallest height fraction a real letter body reached across all six faces was 0.435, so that floor moved from 0.4 to 0.3 in fix pass 5 while the tallest dot contour measured where a dot is its own contour is 0.129.
+
+A weld fillet may only cover metal of the contour it is welding to.
+Any other contour's pre-ring ink under the fillet is a piece of the name the ring would swallow, and it refuses the piece; before fix pass 5 the whole capsule was exempt and the madda of `آية`, the hamza of `أمير` and the damma of `مُحَمَّدٌ` disappeared into a fillet on a stencil every gate called clean.
+The left ring is sought from the leftmost base glyph inward and the right ring from the rightmost inward, the two may never settle on the same glyph while another eligible base glyph exists, and the ring holes must sit at least a validated fraction of the finished ink width apart on the decoded PNG.
+
+When no clean seat exists on any carrier pair, the piece gets a top rail as wide as the weld fillet it carries, with a ring at each of its ends at the lowest row where both rings clear the name, and reports `ringPlacement: "bar"`; a customer's name is never refused because a ring would not seat.
+That path is reached, not hypothetical: `آية` in `classic`, `diwani` and `signature` is built that way, because the madda covers the whole top of the alef at one end.
 
 ## What is live
 

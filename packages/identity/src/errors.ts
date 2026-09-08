@@ -29,6 +29,8 @@ export class IdentitySolverError extends Error {
       | "identity_component_gate_failed"
       | "identity_ring_gate_failed"
       | "identity_ring_hole_too_small"
+      | "identity_ring_span_too_narrow"
+      | "identity_stencil_pinhole"
       | "identity_gate_failed"
       | "identity_ring_anchor_missing"
       | "identity_ring_punched_ink"
