@@ -25,6 +25,17 @@ export const JOB_EVENTS = {
 
 export type JobEventName = (typeof JOB_EVENTS)[DispatchOperation];
 
+/**
+ * P7-3. A shopper's request became durable operator work.
+ *
+ * Deliberately outside `JOB_EVENTS`: that map is the durable outbox's
+ * vocabulary, one name per `DispatchOperation`, and this event has no outbox row
+ * and no paid provider call behind it. Its exactly-once identity is the event
+ * `id` the route sends (`preview-request-created:<id>`), backed by the
+ * `notified_at` claim in the database.
+ */
+export const PREVIEW_REQUEST_CREATED_EVENT = "preview-request/created";
+
 export interface JobEventData {
   taskId: string;
   pollCount?: number;

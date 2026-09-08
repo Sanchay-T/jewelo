@@ -15,6 +15,7 @@ import { concurrencyLimitSchema, pipelineLimits } from "@jewelo/config";
 
 import { sendJobEvent } from "../lib/backend/job-dispatch";
 import { cronFunctionsEnabled, inngest, JOB_EVENTS } from "./client";
+import { previewRequestNotification } from "./preview-request-notification";
 
 /**
  * A provider concurrency limit, validated by `packages/config` rather than
@@ -248,6 +249,10 @@ export const functions = [
   presentationTask,
   videoSubmit,
   videoPoll,
+  // P7-3. Not a cron and not an outbox consumer: it is registered in every
+  // environment, because the shop must be told about a request captured on that
+  // environment and nothing else claims shared work.
+  previewRequestNotification,
   ...(cronFunctionsEnabled() ? [outboxRecovery, staleMediaRecovery] : []),
 ];
 

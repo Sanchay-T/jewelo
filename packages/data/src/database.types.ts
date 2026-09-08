@@ -914,6 +914,7 @@ export type Database = {
           generation_run_id: string | null
           id: string
           locale: string
+          notified_at: string | null
           operator_note: string | null
           principal_id: string
           request_key: string | null
@@ -931,6 +932,7 @@ export type Database = {
           generation_run_id?: string | null
           id?: string
           locale: string
+          notified_at?: string | null
           operator_note?: string | null
           principal_id: string
           request_key?: string | null
@@ -948,6 +950,7 @@ export type Database = {
           generation_run_id?: string | null
           id?: string
           locale?: string
+          notified_at?: string | null
           operator_note?: string | null
           principal_id?: string
           request_key?: string | null

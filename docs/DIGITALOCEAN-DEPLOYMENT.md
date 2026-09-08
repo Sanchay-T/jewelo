@@ -402,3 +402,51 @@ Cloud is a one-variable switch. Remove `INNGEST_BASE_URL` from `web`, replace
 `INNGEST_EVENT_KEY` and `INNGEST_SIGNING_KEY` with the Cloud values, delete the
 `inngest` component, and sync `https://APP.ondigitalocean.app/api/inngest` from
 the Inngest dashboard. No application code changes.
+
+## New-request notification (added 9 September 2026, P7-3 / DS-8)
+
+When a shopper's request is captured, `POST /api/preview-requests` sends the
+Inngest event `preview-request/created` carrying the request id and nothing
+else.
+The function `preview-request-notification` loads the row with the service role,
+composes one plain-text message and hands it to the notification port in
+`packages/ai/src/notification.ts`.
+
+Idempotence is a database claim, not an engine feature.
+The function updates `preview_requests.notified_at` where it is still null and
+only continues if that update returned a row, so a re-delivered event, an
+Inngest retry and a manual replay announce the request exactly once.
+A failed send releases the claim, so the next attempt announces it rather than
+swallowing it.
+
+Which transport runs is `NOTIFICATION_TRANSPORT`:
+
+```text
+NOTIFICATION_TRANSPORT   log | smtp    default log
+NOTIFICATION_TO          the shop's address; unset means nothing is composed
+NOTIFICATION_FROM        envelope and header sender, required when smtp
+NOTIFICATION_SMTP_HOST   required when smtp
+NOTIFICATION_SMTP_PORT   default 587
+NOTIFICATION_SMTP_SECURITY   starttls | implicit-tls   default starttls
+NOTIFICATION_SMTP_USER       required when smtp
+NOTIFICATION_SMTP_PASSWORD   required when smtp
+NOTIFICATION_SMTP_TIMEOUT_MS default 15000
+```
+
+All nine are optional in the app spec and ship only when present.
+`NOTIFICATION_TRANSPORT=smtp` without the four SMTP keys and the shop address
+fails `pnpm do:check-env` rather than the first shopper's request; the same rule
+is `assertNotificationConfigured` in `packages/config/src/index.ts`.
+
+`log` is the shipped default and is not a silent drop: the whole message,
+including the contact detail, is written to the DigitalOcean runtime log as
+`notification_logged`, and the durable truth stays the operator queue row that
+P7-1 renders. With `NOTIFICATION_TO` unset the job returns `not_configured` and
+logs `preview_request_notification_not_configured` instead of retrying.
+
+There is no mail account yet. The Supabase project has no custom SMTP host
+configured (Management API `config/auth`, 9 September 2026: `smtp_host`,
+`smtp_user`, `smtp_pass`, `smtp_port` and `smtp_admin_email` are all null), and
+Supabase's built-in sender only delivers auth mail to project members, so it
+cannot carry a shop notification. Turning the transport on needs a sending
+account and the shop's address from Sanchay; nothing in the code changes.

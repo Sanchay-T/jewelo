@@ -42,6 +42,21 @@ export const optionalRuntimeConfig = [
   // Platform sets and overwrites. Shipped when present so a move to another
   // host can name its own header, or empty it, without a code change.
   "TRUSTED_CLIENT_IP_HEADER",
+  // P7-3 / DS-8. New-request notification. Optional because the shop has no
+  // sending account yet: with `NOTIFICATION_TRANSPORT` unset the app defaults
+  // to `log`, which records the message in the runtime log and sends nothing,
+  // and with `NOTIFICATION_TO` unset the job reports `not_configured` instead
+  // of failing. The captured request stays durable in the operator queue either
+  // way, so a missing notification never loses a customer.
+  "NOTIFICATION_TRANSPORT",
+  "NOTIFICATION_TO",
+  "NOTIFICATION_FROM",
+  "NOTIFICATION_SMTP_HOST",
+  "NOTIFICATION_SMTP_PORT",
+  "NOTIFICATION_SMTP_SECURITY",
+  "NOTIFICATION_SMTP_USER",
+  "NOTIFICATION_SMTP_PASSWORD",
+  "NOTIFICATION_SMTP_TIMEOUT_MS",
 ];
 
 // Read from the environment file, never shipped to the app.
@@ -119,6 +134,24 @@ export function validateWebEnv(values) {
     errors.push(
       "TRUSTED_CLIENT_IP_HEADER must be at most 64 characters of a-z, 0-9, underscore or hyphen, or empty to trust no header",
     );
+  }
+
+  // P7-3 / DS-8. `smtp` without a host, a sender, a credential and a shop
+  // address is a deploy that boots and then throws on the first request; the
+  // same rule is `assertNotificationConfigured` in packages/config. No value is
+  // printed, only the missing key names.
+  if (values.get("NOTIFICATION_TRANSPORT") === "smtp") {
+    const missingNotification = [
+      "NOTIFICATION_TO",
+      "NOTIFICATION_FROM",
+      "NOTIFICATION_SMTP_HOST",
+      "NOTIFICATION_SMTP_USER",
+      "NOTIFICATION_SMTP_PASSWORD",
+    ].filter((name) => !values.get(name));
+    if (missingNotification.length)
+      errors.push(
+        `NOTIFICATION_TRANSPORT=smtp needs: ${missingNotification.join(", ")}`,
+      );
   }
 
   return errors;

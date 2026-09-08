@@ -230,6 +230,96 @@ export const browserEnvSchema = z
     }
   });
 
+/**
+ * P7-3 / DS-8. Telling the shop a request arrived.
+ *
+ * `NOTIFICATION_TRANSPORT` is the whole switch: `log` records the message in the
+ * job log and sends nothing, `smtp` submits it to a mail server. The default is
+ * `log`, because the Supabase project has no custom SMTP host configured
+ * (checked through the Management API on 9 September 2026: every `smtp_*` auth
+ * setting is null) and the shop has no sending account yet. A deployment that
+ * gains one flips one variable.
+ *
+ * The SMTP keys are optional in the schema and required by
+ * `assertNotificationConfigured` exactly when the transport is `smtp`, so a mock
+ * checkout still validates and a deployment cannot select `smtp` with nothing to
+ * send through.
+ */
+const notificationFields = {
+  NOTIFICATION_TRANSPORT: z.preprocess(
+    blankToUndefined,
+    z.enum(["log", "smtp"]).default("log"),
+  ),
+  /** The shop's address. Without it nothing is composed and nothing is sent. */
+  NOTIFICATION_TO: optionalOf(z.string().min(3).max(320)),
+  NOTIFICATION_FROM: optionalOf(z.string().min(3).max(320)),
+  NOTIFICATION_SMTP_HOST: optionalOf(z.string().min(1).max(253)),
+  NOTIFICATION_SMTP_PORT: z.preprocess(
+    blankToUndefined,
+    z.coerce.number().int().min(1).max(65535).default(587),
+  ),
+  /**
+   * `starttls` is submission on 587; `implicit-tls` is the wrapped connection on
+   * 465. Named rather than inferred from the port, because a host that listens
+   * for implicit TLS on another port would otherwise be undeployable.
+   */
+  NOTIFICATION_SMTP_SECURITY: z.preprocess(
+    blankToUndefined,
+    z.enum(["starttls", "implicit-tls"]).default("starttls"),
+  ),
+  NOTIFICATION_SMTP_USER: optionalOf(z.string().min(1).max(320)),
+  NOTIFICATION_SMTP_PASSWORD: optionalOf(z.string().min(1).max(512)),
+  /** One notification must never hold a job step open longer than this. */
+  NOTIFICATION_SMTP_TIMEOUT_MS: z.preprocess(
+    blankToUndefined,
+    z.coerce.number().int().min(1_000).max(120_000).default(15_000),
+  ),
+} as const;
+
+/** The keys the `smtp` transport cannot run without. */
+const NOTIFICATION_SMTP_REQUIRED = [
+  "NOTIFICATION_TO",
+  "NOTIFICATION_FROM",
+  "NOTIFICATION_SMTP_HOST",
+  "NOTIFICATION_SMTP_USER",
+  "NOTIFICATION_SMTP_PASSWORD",
+] as const;
+
+/**
+ * One implementation of "this transport is deployable", called from both
+ * `notificationEnvSchema` and `jobsEnvSchema`, so the sender factory and the
+ * deployed jobs environment can never disagree about it.
+ */
+function assertNotificationConfigured(
+  value: Record<string, unknown>,
+  context: z.RefinementCtx,
+): void {
+  if (value.NOTIFICATION_TRANSPORT !== "smtp") return;
+  for (const key of NOTIFICATION_SMTP_REQUIRED)
+    if (!value[key])
+      context.addIssue({
+        code: "custom",
+        path: [key],
+        message: `${key} is required when NOTIFICATION_TRANSPORT=smtp`,
+      });
+}
+
+export const notificationEnvSchema = z
+  .object(notificationFields)
+  .superRefine(assertNotificationConfigured);
+export type NotificationConfig = z.infer<typeof notificationEnvSchema>;
+
+/**
+ * The notification block on its own, so a process that cannot supply the whole
+ * jobs environment (the Next.js build has no service-role pair) can still build
+ * a sender from validated values. Same fields and same rule as `jobsEnvSchema`.
+ */
+export function parseNotificationEnv(
+  input: Record<string, string | undefined>,
+): NotificationConfig {
+  return notificationEnvSchema.parse(input);
+}
+
 export const trustedWebEnvSchema = z.object({
   SUPABASE_URL: url,
   SUPABASE_SERVICE_ROLE_KEY: nonEmpty,
@@ -252,6 +342,7 @@ export const trustedWebEnvSchema = z.object({
   OPERATOR_EMAIL: optionalNonEmpty,
   OPERATOR_PASSPHRASE: optionalNonEmpty,
   OPERATOR_SESSION_SECRET: optionalNonEmpty,
+  ...notificationFields,
 });
 
 export const jobsEnvSchema = trustedWebEnvSchema
@@ -302,6 +393,14 @@ export const jobsEnvSchema = trustedWebEnvSchema
     // Comma separated construction ids, empty by default, so the shipped
     // behaviour is rings on everywhere. Ring-free stays empty on staging until
     // P3-7 stops the prompts promising exactly two rings (P1-5a).
+    //
+    // P2-2b (D-021): this is the only construction setting an operator may
+    // touch. What a construction *is* - the frame's rail thickness and inset,
+    // the rails' gap and overhang, where the rings sit on them - is the drawing
+    // and lives in `packages/identity/src/shaping.ts`, inside the fingerprint;
+    // a pendant whose geometry could be retuned from a deployment console is a
+    // pendant nobody verified. Naming `framed-minimal` here now means a frame
+    // with no jump rings at all, not a bare name.
     IDENTITY_RINGLESS_CONSTRUCTIONS: z
       .preprocess(blankToUndefined, z.string().default(""))
       .transform((value, context) => {
@@ -326,6 +425,7 @@ export const jobsEnvSchema = trustedWebEnvSchema
       .transform((value) => value === "1"),
   })
   .superRefine((value, context) => {
+    assertNotificationConfigured(value, context);
     if (
       value.IDENTITY_RINGLESS_CONSTRUCTIONS.size > 0 &&
       !value.IDENTITY_RINGLESS_PROMPTS_READY
