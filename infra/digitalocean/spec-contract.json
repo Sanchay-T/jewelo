@@ -3,6 +3,35 @@
   "region": "blr",
   "repositoryCloneUrl": "https://github.com/Sanchay-T/jewelo.git",
   "integrationBranch": "codex/overnight-launch-2026-09-08",
+  "alerts": {
+    "app": [
+      { "rule": "DEPLOYMENT_FAILED", "disabled": false },
+      { "rule": "DOMAIN_FAILED", "disabled": false }
+    ],
+    "service": [
+      {
+        "rule": "CPU_UTILIZATION",
+        "operator": "GREATER_THAN",
+        "value": 80,
+        "window": "TEN_MINUTES",
+        "disabled": false
+      },
+      {
+        "rule": "MEM_UTILIZATION",
+        "operator": "GREATER_THAN",
+        "value": 85,
+        "window": "FIVE_MINUTES",
+        "disabled": false
+      },
+      {
+        "rule": "RESTART_COUNT",
+        "operator": "GREATER_THAN",
+        "value": 3,
+        "window": "FIVE_MINUTES",
+        "disabled": false
+      }
+    ]
+  },
   "service": {
     "name": "web",
     "environmentSlug": "node-js",

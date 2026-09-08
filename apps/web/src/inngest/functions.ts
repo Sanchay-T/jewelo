@@ -13,6 +13,8 @@ import {
 
 import { concurrencyLimitSchema, pipelineLimits } from "@jewelo/config";
 
+import { reportError } from "@jewelo/observability/server";
+
 import { sendJobEvent } from "../lib/backend/job-dispatch";
 import { cronFunctionsEnabled, inngest, JOB_EVENTS } from "./client";
 import { previewRequestNotification } from "./preview-request-notification";
@@ -23,6 +25,24 @@ import { previewRequestNotification } from "./preview-request-notification";
  */
 function concurrencyLimit(name: string): number {
   return concurrencyLimitSchema.parse(process.env[name]) as number;
+}
+
+/**
+ * P7-5 / DS-9. The one seam where a durable job's failure is reported.
+ *
+ * Inngest calls `onFailure` once a function has exhausted its retries, so this
+ * is exactly "this piece of work is not going to happen" and never a step that
+ * is about to be retried, and it cannot see Inngest's own control-flow
+ * signals. Only the function id and the run's ids travel with it - never the
+ * shopper's name, which lives in the design record and not in the event.
+ *
+ * With `SENTRY_DSN` empty this is a call that returns immediately; the failure
+ * is still in the task row and the runtime log, as it was before.
+ */
+function reportFunctionFailure(functionId: string) {
+  return ({ error }: { error: Error }): void => {
+    reportError(error, { functionId });
+  };
 }
 
 /** Mirrors the old `openai-image` Trigger queue: one shared, keyed sub-queue. */
@@ -126,6 +146,7 @@ export const presentationTask = inngest.createFunction(
   {
     id: "presentation-task",
     name: "Presentation still",
+    onFailure: reportFunctionFailure("presentation-task"),
     triggers: [{ event: JOB_EVENTS.still_execute }],
     concurrency: [openAIImageConcurrency],
     retries: 0,
@@ -142,6 +163,7 @@ export const outboxRecovery = inngest.createFunction(
   {
     id: "outbox-recovery",
     name: "Outbox recovery",
+    onFailure: reportFunctionFailure("outbox-recovery"),
     triggers: [{ cron: "* * * * *" }],
     concurrency: 1,
     retries: 3,
@@ -160,6 +182,7 @@ export const staleMediaRecovery = inngest.createFunction(
   {
     id: "stale-media-recovery",
     name: "Stale media recovery",
+    onFailure: reportFunctionFailure("stale-media-recovery"),
     triggers: [{ cron: "*/2 * * * *" }],
     concurrency: 1,
     retries: 0,
@@ -183,6 +206,7 @@ export const videoSubmit = inngest.createFunction(
   {
     id: "video-submit",
     name: "Video submit",
+    onFailure: reportFunctionFailure("video-submit"),
     triggers: [{ event: JOB_EVENTS.video_submit }],
     concurrency: [falVideoConcurrency],
     retries: 0,
@@ -213,6 +237,7 @@ export const videoPoll = inngest.createFunction(
   {
     id: "video-poll",
     name: "Video poll",
+    onFailure: reportFunctionFailure("video-poll"),
     triggers: [{ event: JOB_EVENTS.video_poll }],
     retries: 3,
   },

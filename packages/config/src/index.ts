@@ -1,4 +1,5 @@
 export * from "./load-env";
+export * from "./observability";
 import { z } from "zod";
 
 /**
@@ -342,6 +343,12 @@ export const trustedWebEnvSchema = z.object({
   OPERATOR_EMAIL: optionalNonEmpty,
   OPERATOR_PASSPHRASE: optionalNonEmpty,
   OPERATOR_SESSION_SECRET: optionalNonEmpty,
+  // P7-5 / DS-9. Server-side error tracking. Optional and empty by default:
+  // the Sentry account does not exist yet, and with no DSN
+  // `@jewelo/observability` never imports the SDK, so nothing initialises and
+  // no request leaves the box. The browser DSN is its own public key in
+  // `browserEnvSchema`; this one must never be exposed.
+  SENTRY_DSN: optionalUrl,
   ...notificationFields,
 });
 

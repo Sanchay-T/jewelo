@@ -1,6 +1,38 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
+/**
+ * P7-5 / DS-9. The alerts the app spec must carry.
+ *
+ * They live in `infra/digitalocean/spec-contract.json` next to the rest of the
+ * app shape, and both `bootstrap-app.mjs` (creation) and `deploy.sh` (every
+ * revision) read them from here, so an alert cannot exist in one path and not
+ * the other. `DEPLOYMENT_FAILED` and `DOMAIN_FAILED` are app-level rules;
+ * `CPU_UTILIZATION`, `MEM_UTILIZATION` and `RESTART_COUNT` are properties of a
+ * component and belong on the `web` service. The restart alert is the one that
+ * matters most on a 1 GB instance: a Next.js server that is being OOM-killed
+ * restarts silently and a shopper only sees a request that never answers.
+ */
+const specContract = JSON.parse(
+  readFileSync(resolve(import.meta.dirname, "../../infra/digitalocean/spec-contract.json"), "utf8"),
+);
+
+export const appAlerts = specContract.alerts?.app ?? [];
+export const serviceAlerts = specContract.alerts?.service ?? [];
+
+/**
+ * Merge the contract's alerts into whatever the platform already has, keyed by
+ * rule. An alert the contract does not name is left exactly as it is - a
+ * notification channel someone attached in the console is not this script's to
+ * delete - and an alert it does name keeps its existing fields (its `id`, its
+ * `disabled` flag) with the contract's threshold and window written over them.
+ */
+export function mergeAlerts(existing, desired) {
+  const merged = new Map((existing ?? []).map((alert) => [alert.rule, alert]));
+  for (const alert of desired) merged.set(alert.rule, { ...merged.get(alert.rule), ...alert });
+  return [...merged.values()];
+}
+
 export const buildConfig = [
   "NEXT_PUBLIC_JEWELO_DATA_MODE",
   "NEXT_PUBLIC_SUPABASE_URL",
@@ -57,6 +89,20 @@ export const optionalRuntimeConfig = [
   "NOTIFICATION_SMTP_USER",
   "NOTIFICATION_SMTP_PASSWORD",
   "NOTIFICATION_SMTP_TIMEOUT_MS",
+  // P7-5 / DS-9. Error tracking and journey analytics. All four are optional
+  // and all four are empty until Sanchay creates the Sentry and PostHog
+  // projects: `packages/observability` imports a vendor SDK only inside a
+  // credential check, so an app without them loads nothing, sends nothing and
+  // behaves exactly as it does today. `SENTRY_DSN` is the server key and is
+  // never exposed; the `NEXT_PUBLIC_` three are shipped at build time as well
+  // as run time because Next inlines them into the browser bundle, which is
+  // what `appSecretEnvs` scopes by prefix rather than by a required-key list.
+  // `SENTRY_AUTH_TOKEN` is deliberately absent: it is a build-machine
+  // credential for uploading source maps and the running app has no use for it.
+  "SENTRY_DSN",
+  "NEXT_PUBLIC_SENTRY_DSN",
+  "NEXT_PUBLIC_POSTHOG_KEY",
+  "NEXT_PUBLIC_POSTHOG_HOST",
 ];
 
 // Read from the environment file, never shipped to the app.
@@ -154,6 +200,14 @@ export function validateWebEnv(values) {
       );
   }
 
+  // P7-5 / DS-9. A PostHog key with nowhere to send is analytics that looks
+  // configured and silently is not, so a key requires its host. The reverse is
+  // not an error: a host with no key is the shipped state of this repository's
+  // own `.env` and nothing initialises from it. No value is printed.
+  if (values.get("NEXT_PUBLIC_POSTHOG_KEY") && !values.get("NEXT_PUBLIC_POSTHOG_HOST")) {
+    errors.push("NEXT_PUBLIC_POSTHOG_KEY requires NEXT_PUBLIC_POSTHOG_HOST");
+  }
+
   return errors;
 }
 
@@ -165,7 +219,14 @@ export function appSecretEnvs(values) {
     if (value === "" && !emptyAllowed.has(name)) continue;
     envs.push({
       key: name,
-      scope: buildConfig.includes(name) ? "RUN_AND_BUILD_TIME" : "RUN_TIME",
+      // A `NEXT_PUBLIC_` value that is only present at run time is a value the
+      // browser bundle was compiled without: Next inlines these at build time,
+      // so an optional public key scoped `RUN_TIME` would be shipped, look set
+      // in the console, and be `undefined` in the shopper's browser.
+      scope:
+        buildConfig.includes(name) || name.startsWith("NEXT_PUBLIC_")
+          ? "RUN_AND_BUILD_TIME"
+          : "RUN_TIME",
       // An empty string holds no secret, and App Platform will not accept an
       // encrypted variable with nothing to encrypt, so the deliberate empty
       // value ships as a plain one.

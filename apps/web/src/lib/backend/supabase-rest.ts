@@ -1,5 +1,7 @@
 import "server-only";
 
+import { reportError } from "@jewelo/observability/server";
+
 interface SupabaseConfig {
   url: string;
   key: string;
@@ -139,14 +141,29 @@ function errorResponse(error: string, status: number, code: string): Response {
   );
 }
 
+/**
+ * P7-5 / DS-9. Every route's last line, so it is also where a failure is
+ * reported from.
+ *
+ * Only the failures nobody expected are reported: a 5xx, or a throw that
+ * matched no rule and became `internal`. A 404 for a design that is gone and a
+ * 422 for a name that is too long are the API working, and an error tracker
+ * full of them is an error tracker nobody reads. The report is queued before
+ * the response is built and never awaited, so the shopper's answer is not one
+ * millisecond slower for it; with `SENTRY_DSN` empty it does nothing at all.
+ */
 export function jsonError(error: unknown): Response {
   if (error instanceof Response) return error;
-  if (error instanceof ApiError)
+  if (error instanceof ApiError) {
+    if (error.status >= 500)
+      reportError(error, { code: error.code, status: error.status });
     return errorResponse(error.message, error.status, error.code);
+  }
   const message = error instanceof Error ? error.message : "Unexpected error";
   const rule = PLAIN_ERROR_RULES.find(([pattern]) => pattern.test(message));
   if (!rule) {
     console.error("api_route_failed", message);
+    reportError(error, { code: "internal", status: 500 });
     return errorResponse("Internal error", 500, "internal");
   }
   return errorResponse(message, rule[1], rule[2]);

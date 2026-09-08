@@ -1,5 +1,9 @@
 import type { NextConfig } from "next";
 import { loadRootEnv, parseBrowserEnv } from "@jewelo/config";
+import {
+  observabilityConnectOrigins,
+  withObservabilityConfig,
+} from "@jewelo/observability/next-config";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -19,6 +23,21 @@ const supabaseOrigin = new URL(
   process.env.NEXT_PUBLIC_SUPABASE_URL ?? "https://example.supabase.co",
 ).origin;
 const isProduction = process.env.NODE_ENV === "production";
+
+/**
+ * P7-5 / DS-9. The error tracker and the analytics endpoint, if and only if
+ * this deployment has been given one.
+ *
+ * `connect-src` is an allowlist, so a Sentry DSN or a PostHog host that is not
+ * named here is a report the browser silently refuses to send - a dead
+ * observability stack that looks configured. Derived from the same two public
+ * variables the SDKs read, so the policy cannot drift from what is enabled:
+ * with both empty this list is empty and the shipped policy is unchanged.
+ */
+const observabilityOrigins = observabilityConnectOrigins();
+const observabilityConnectSrc = observabilityOrigins.length
+  ? ` ${observabilityOrigins.join(" ")}`
+  : "";
 
 /**
  * Security headers.
@@ -47,7 +66,7 @@ const contentSecurityPolicy = [
   "font-src 'self' data:",
   "style-src 'self' 'unsafe-inline'",
   `script-src 'self' 'unsafe-inline'${isProduction ? "" : " 'unsafe-eval'"}`,
-  `connect-src 'self' ${supabaseOrigin} ${supabaseOrigin.replace("https://", "wss://")}${isProduction ? "" : " ws: http://localhost:*"}`,
+  `connect-src 'self' ${supabaseOrigin} ${supabaseOrigin.replace("https://", "wss://")}${observabilityConnectSrc}${isProduction ? "" : " ws: http://localhost:*"}`,
   "worker-src 'self' blob:",
   ...(isProduction ? ["upgrade-insecure-requests"] : []),
 ].join("; ");
@@ -93,7 +112,7 @@ const nextConfig: NextConfig = {
     ],
   },
   reactStrictMode: true,
-  transpilePackages: ["@jewelo/config"],
+  transpilePackages: ["@jewelo/config", "@jewelo/observability"],
   // `@jewelo/jobs` renders the deterministic identity anchor with sharp, a
   // native module the Inngest route loads at runtime; it must not be bundled.
   // `harfbuzzjs` ships a `.wasm` its ESM entry reads next to its own module
@@ -120,4 +139,14 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+/**
+ * P7-5 / DS-9. The config, wrapped for source map upload only when the three
+ * variables that upload needs are present (`SENTRY_AUTH_TOKEN`, `SENTRY_ORG`,
+ * `SENTRY_PROJECT`). Until then `withObservabilityConfig` returns this object
+ * unchanged, so the build is exactly the build it was before observability
+ * existed. The function form is what lets that decision be asynchronous: the
+ * vendor plugin is imported only on a build that uses it.
+ */
+export default async function config(): Promise<NextConfig> {
+  return withObservabilityConfig(nextConfig);
+}

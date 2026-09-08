@@ -89,6 +89,14 @@ if [[ "${DEPLOY_DRY_RUN:-0}" == "1" ]]; then
         );
       const absent = contract.knownWebConfig.filter((key) => !envs.some((env) => env.key === key));
       if (absent.length) process.stdout.write(`absent from the environment file: ${absent.join(", ")}\n`);
+      // P7-5: the alerts a deploy would write, so a new threshold can be read
+      // before it is shipped. They come from the spec contract, not the file.
+      process.stdout.write("merged alerts:\n");
+      for (const alert of contract.appAlerts) process.stdout.write(`  app ${alert.rule}\n`);
+      for (const alert of contract.serviceAlerts)
+        process.stdout.write(
+          `  web ${alert.rule} ${alert.operator} ${alert.value} ${alert.window}\n`,
+        );
     })().catch((error) => {
       process.stderr.write(`${error.message}\n`);
       process.exit(1);
@@ -135,6 +143,17 @@ doctl apps get "$app_id" --output json |
       process.exit(1);
     }
     web.git.branch = process.env.SOURCE_REF;
+    const contract = await import(process.env.CONTRACT);
+    // P7-5 / DS-9. The alerts travel with the spec, so a deploy is also how a
+    // new alert reaches a live app. App-level rules (deployment, domain) sit on
+    // the spec; utilisation and restart rules are properties of a component and
+    // sit on `web`. The merge is by rule, so an alert someone added in the
+    // console with its own notification channel survives untouched.
+    app.spec.alerts = contract.mergeAlerts(app.spec.alerts, contract.appAlerts);
+    web.alerts = contract.mergeAlerts(web.alerts, contract.serviceAlerts);
+    process.stderr.write(
+      `alerts: ${[...contract.appAlerts, ...contract.serviceAlerts].map((alert) => alert.rule).join(", ")}\n`,
+    );
     // Merge the environment contract into the live spec: add a key the app has
     // never had, overwrite a rotated one, and leave every key the contract does
     // not know exactly as the platform returned it. Without this, a variable
@@ -142,7 +161,6 @@ doctl apps get "$app_id" --output json |
     // existing app, and this script used to rewrite only the branch - so a
     // fresh production app failed its smoke check with no way to fix it.
     if (process.env.ENV_SYNC === "1") {
-      const contract = await import(process.env.CONTRACT);
       const desired = contract.appSecretEnvs(
         contract.readEnvFiles([process.env.ENV_FILE]),
       );

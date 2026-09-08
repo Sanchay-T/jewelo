@@ -132,6 +132,36 @@ Optional values cover PostHog and Sentry. Shopify and temporary
 operator/session configuration are complete groups, so partial groups fail
 validation; a PostHog key also requires its host. `NEXT_PUBLIC_APP_URL` is the
 `${APP_URL}` App Platform binding.
+
+The four observability values (P7-5 / DS-9) are all optional and all empty
+today, because the accounts do not exist yet:
+
+```text
+SENTRY_DSN                server-side error reports
+NEXT_PUBLIC_SENTRY_DSN    browser error reports
+NEXT_PUBLIC_POSTHOG_KEY   journey analytics
+NEXT_PUBLIC_POSTHOG_HOST  where those events go
+```
+
+Empty is a working configuration and not a degraded one: `packages/observability`
+imports a vendor SDK only inside a credential check, so an app with these unset
+loads no Sentry or PostHog code, opens no connection to `sentry.io` or a PostHog
+host, and behaves exactly as it did before this task. `do:check-env` is
+unchanged when they are absent. A PostHog key requires its host, since a key
+with nowhere to send is analytics that looks configured and silently is not; a
+host with no key is fine and is what this repository's `.env` already carries. The three `NEXT_PUBLIC_` values ship as
+`RUN_AND_BUILD_TIME`, because Next inlines them into the browser bundle at build
+time - a public key that arrives at run time only is a key the bundle was
+compiled without. `SENTRY_DSN` is a server value and is never exposed to the
+browser.
+
+Source map upload is a separate decision. It happens only when
+`SENTRY_AUTH_TOKEN`, `SENTRY_ORG` and `SENTRY_PROJECT` are all present in the
+build environment (`packages/observability/src/next-config.ts`); none of the
+three is in the app contract, because they belong to the machine that builds and
+not to the app that runs. Enabling upload also means flipping `"@sentry/cli"` to
+`true` under `allowBuilds` in `pnpm-workspace.yaml`: it is denied today so that
+no install reaches out to download a release binary.
 `NEXT_PUBLIC_*` values are encrypted at rest but intentionally become public in
 the Next.js browser bundle; never place privileged credentials under that
 prefix.
@@ -208,6 +238,35 @@ string on any host that does not, where the last `x-forwarded-for` hop is used
 instead.
 An empty value is a decision, not an absence: it is shipped explicitly as an
 empty variable and the dry run reports it as `set (empty)`.
+
+## Alerts (added 9 September 2026, P7-5 / DS-9)
+
+The alerts live in `infra/digitalocean/spec-contract.json` under `alerts`, and
+`deploy.sh` merges them into the live spec on every deploy, so an alert is a
+committed decision rather than something a person once clicked:
+
+```text
+app  DEPLOYMENT_FAILED
+app  DOMAIN_FAILED
+web  CPU_UTILIZATION   > 80  over TEN_MINUTES
+web  MEM_UTILIZATION   > 85  over FIVE_MINUTES
+web  RESTART_COUNT     > 3   over FIVE_MINUTES
+```
+
+`RESTART_COUNT` is the one that matters most on a 1 GB instance: a Next.js
+server being OOM-killed restarts silently, and without this the only symptom is
+a shopper whose request never answers. The merge is keyed by rule, so an alert
+added in the console with its own notification channel is left alone, while a
+rule the contract names keeps its identity and takes the contract's threshold,
+window and enabled state.
+
+Where the e-mail goes is DigitalOcean's own setting on the app, which is why no
+address appears here. `DEPLOY_DRY_RUN=1` prints the alerts a deploy would write
+along with the environment keys.
+
+`bootstrap-app.mjs` still creates an app with the two app-level alerts written
+inline; a newly created app therefore picks up the component alerts on its first
+`pnpm do:deploy`, which is the same command that gives it its branch.
 
 ## First-time workstation check
 
