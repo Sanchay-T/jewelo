@@ -23,6 +23,13 @@
 | D-017 | Inngest is the durable job engine, self-hosted as a second DigitalOcean App Platform component; functions are served by `apps/web` at `/api/inngest`; Inngest Cloud is a one-variable switch (`INNGEST_BASE_URL`) | accepted 7 Sep 2026 on user instruction | Inngest Cloud account exists and its free tier suits the load, or a measured operability failure of the self-hosted server |
 | D-018 | Runway MCP serving `gpt-image-2` is the bench for all prompt and stencil work; OpenAI stays the production still provider, wired fail-closed and called only at the phase 5 gate in `docs/ROAD-TO-GOLD.md` | accepted 7 Sep 2026 on user instruction | Runway stops serving the same model as production, so lab results no longer transfer |
 | D-019 | The identity engine opens the pinned font file bytes and shapes them with HarfBuzz (`harfbuzzjs` in `packages/identity/src/shaping.ts`); no rendering library is ever asked for a font family name. The engine release identifier moves from `caleums-arabic-v3` to `caleums-identity-v4` | accepted 8 Sep 2026, DS-3 default B in `docs/TASKS.md` | HarfBuzz stops shaping a script the shop sells, or a measured stencil regression traces to the WASM build rather than to the fonts |
+| D-020 | Jump-ring anchors are chosen at the outline level, before rasterisation: the left ring anchors on the largest contour of the first base glyph and the right ring on the largest contour of the last base glyph, at the outer top corner; marks and small contours (dots, tittles, hamza) are excluded by the font's own glyph data, never by a pixel-area threshold. The raster ruler stays as the independent check that ring metal touches no other ink. When no clean seat exists the engine falls back to a bar construction or routes the run to operator review; it never refuses a customer's name for a ring seat | accepted 8 Sep 2026 by Sanchay after adversarial reviews 2 and 3 showed the pixel heuristics fail outside their tuning corpus (Noor, Ali) | a font whose base glyphs carry dots as separate glyphs rather than contours, or a style whose first or last glyph has no contour wide enough for a ring |
+
+## D-020 detail
+
+Three fix passes tuned raster rules (erosion size, island-area ratio, exemption zones) and each adversarial pass found a name outside the corpus where the ring landed on a dot.
+HarfBuzz already returns each glyph's contours and GDEF class, so the choice of carrier stroke is a property of the font data, not a guess about blobs.
+Alternative recorded and not taken: a fixed bar or bail behind the name (a product change that needs Omran's view and would change the proven look).
 
 ## D-019 detail
 
