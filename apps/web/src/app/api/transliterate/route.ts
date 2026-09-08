@@ -9,12 +9,25 @@ import {
   authenticatedUser,
   jsonError,
 } from "../../../lib/backend/supabase-rest";
+import {
+  BoundedTtlMap,
+  checkRateLimit,
+  clientIp,
+  createRateLimitStore,
+} from "../../../lib/backend/request-guard";
+import { webGuardLimits } from "@jewelo/config";
 
 const MAX_BODY_BYTES = 1024;
-const WINDOW_MS = 60_000;
-const REQUESTS_PER_WINDOW = 20;
-const requestWindows = new Map<string, { count: number; resetAt: number }>();
-const resultCache = new Map<string, ArabicTransliterationResult>();
+const WINDOW_MS = webGuardLimits.transliterateWindowMs;
+const REQUESTS_PER_WINDOW = webGuardLimits.transliterateRequestsPerWindow;
+// Both maps are bounded by age and by entry count: this route is reachable by
+// any authenticated anonymous principal and spends real provider budget, so an
+// unbounded key space here is both a memory leak and a spend hole.
+const requestWindows = createRateLimitStore();
+const resultCache = new BoundedTtlMap<ArabicTransliterationResult>(
+  webGuardLimits.transliterateCacheMaxEntries,
+  webGuardLimits.transliterateCacheTtlMs,
+);
 
 interface ArabicNameTransliterator {
   transliterate(name: string): Promise<ArabicTransliterationResult>;
@@ -32,24 +45,23 @@ function sameOrigin(request: Request) {
     throw new Response("Same-origin request required", { status: 403 });
 }
 
-function clientKey(request: Request) {
-  return (
-    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
-    request.headers.get("x-real-ip") ??
-    "local"
-  );
+/**
+ * The limiter key is the last proxy hop - the only one the caller cannot forge -
+ * combined with the authenticated principal, so neither rotating a header nor
+ * minting a new anonymous principal alone resets the window.
+ */
+function clientKey(request: Request, principalId: string) {
+  return `${clientIp(request)}|${principalId}`;
 }
 
-function assertRateLimit(request: Request) {
-  const now = Date.now();
-  const key = clientKey(request);
-  const active = requestWindows.get(key);
-  if (!active || active.resetAt <= now) {
-    requestWindows.set(key, { count: 1, resetAt: now + WINDOW_MS });
-    return;
-  }
-  active.count += 1;
-  if (active.count > REQUESTS_PER_WINDOW)
+function assertRateLimit(request: Request, principalId: string) {
+  const verdict = checkRateLimit(
+    requestWindows,
+    clientKey(request, principalId),
+    REQUESTS_PER_WINDOW,
+    WINDOW_MS,
+  );
+  if (!verdict.allowed)
     throw new Response("Too many transliteration requests", { status: 429 });
 }
 
@@ -98,8 +110,10 @@ export async function handleTransliteration(
 ) {
   try {
     sameOrigin(request);
-    await authenticate(request);
-    assertRateLimit(request);
+    const principal = (await authenticate(request)) as
+      | { user?: { id?: string } }
+      | undefined;
+    assertRateLimit(request, String(principal?.user?.id ?? "anonymous"));
     const declared = Number(request.headers.get("content-length") ?? 0);
     if (declared > MAX_BODY_BYTES)
       throw new Response("Request body is too large", { status: 413 });

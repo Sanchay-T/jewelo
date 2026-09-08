@@ -15,8 +15,74 @@ const supabaseHost = new URL(
   process.env.NEXT_PUBLIC_SUPABASE_URL ?? "https://example.supabase.co",
 ).hostname;
 
+const supabaseOrigin = new URL(
+  process.env.NEXT_PUBLIC_SUPABASE_URL ?? "https://example.supabase.co",
+).origin;
+const isProduction = process.env.NODE_ENV === "production";
+
+/**
+ * Security headers.
+ *
+ * The Content-Security-Policy is the one that matters: it stops anything the
+ * shop's own origin did not serve from executing, and it is what makes an
+ * injected script or a stored file a dead end rather than a session theft.
+ *
+ * `'unsafe-inline'` is present for scripts and styles because Next's App
+ * Router inlines its bootstrap and flight payload scripts, and styled-jsx
+ * inlines style elements; removing it needs a per-request nonce from
+ * middleware, which is a separate change. `'unsafe-eval'` is development only -
+ * the dev overlay and React refresh need it, production does not.
+ *
+ * Images and connections are limited to this origin plus the Supabase project,
+ * which is where every signed asset URL and every REST call goes.
+ */
+const contentSecurityPolicy = [
+  "default-src 'self'",
+  "base-uri 'self'",
+  "object-src 'none'",
+  "frame-ancestors 'none'",
+  "form-action 'self'",
+  `img-src 'self' data: blob: ${supabaseOrigin}`,
+  `media-src 'self' blob: ${supabaseOrigin}`,
+  "font-src 'self' data:",
+  "style-src 'self' 'unsafe-inline'",
+  `script-src 'self' 'unsafe-inline'${isProduction ? "" : " 'unsafe-eval'"}`,
+  `connect-src 'self' ${supabaseOrigin} ${supabaseOrigin.replace("https://", "wss://")}${isProduction ? "" : " ws: http://localhost:*"}`,
+  "worker-src 'self' blob:",
+  ...(isProduction ? ["upgrade-insecure-requests"] : []),
+].join("; ");
+
+const baseSecurityHeaders = [
+  { key: "X-Content-Type-Options", value: "nosniff" },
+  { key: "X-Frame-Options", value: "DENY" },
+  { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+  {
+    key: "Strict-Transport-Security",
+    value: "max-age=31536000; includeSubDomains",
+  },
+  { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
+];
+const documentSecurityHeaders = [
+  ...baseSecurityHeaders,
+  { key: "Content-Security-Policy", value: contentSecurityPolicy },
+];
+
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // `/api/inngest` and `/api/shopify` answer machine callers - the Inngest
+  // dashboard also renders its own signed page there - so they keep the
+  // transport headers and stay out of the document policy.
+  async headers() {
+    return [
+      { source: "/api/inngest/:path*", headers: baseSecurityHeaders },
+      { source: "/api/shopify/:path*", headers: baseSecurityHeaders },
+      { source: "/", headers: documentSecurityHeaders },
+      {
+        source: "/:path((?!api/inngest|api/shopify).*)",
+        headers: documentSecurityHeaders,
+      },
+    ];
+  },
   images: {
     remotePatterns: [
       {

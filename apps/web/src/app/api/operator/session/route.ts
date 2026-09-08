@@ -5,6 +5,14 @@ import {
   operatorSessionCookie,
 } from "../../../../lib/backend/operator-session";
 import { jsonError, readJson } from "../../../../lib/backend/supabase-rest";
+import {
+  assertNotBackedOff,
+  clearFailures,
+  clientIp,
+  recordFailure,
+} from "../../../../lib/backend/request-guard";
+
+const SCOPE = "operator-login";
 
 export async function GET(request: Request) {
   try {
@@ -16,15 +24,22 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
+    // Before the body is even read, so a guessing loop costs the attacker time
+    // and this process nothing.
+    const source = clientIp(request);
+    assertNotBackedOff(SCOPE, source);
     const { email, passphrase } = await readJson<{
       email: string;
       passphrase: string;
     }>(request, ["email", "passphrase"]);
-    if (!authenticateOperator(email, passphrase))
+    if (!authenticateOperator(email, passphrase)) {
+      recordFailure(SCOPE, source);
       return Response.json(
         { error: "Invalid operator credentials", code: "unauthenticated" },
         { status: 401 },
       );
+    }
+    clearFailures(SCOPE, source);
     return Response.json(
       { authenticated: true },
       { headers: { "set-cookie": operatorSessionCookie() } },

@@ -76,7 +76,7 @@ export async function POST(
         Array<{ specification: Record<string, unknown> }>
       >(
         admin,
-        `/rest/v1/design_revisions?id=eq.${encodeURIComponent(revisionId)}&owner_principal_id=eq.${user.id}&select=specification`,
+        `/rest/v1/design_revisions?id=eq.${encodeURIComponent(revisionId)}&design_id=eq.${encodeURIComponent(designId)}&owner_principal_id=eq.${user.id}&select=specification`,
       );
       if (revisions[0]?.specification.spellingConfirmed !== true)
         throw new Error("Persisted spelling confirmation required");

@@ -6,8 +6,15 @@ const COOKIE_NAME = "caleums_operator";
 const SESSION_SECONDS = 8 * 60 * 60;
 const MOCK_SESSION = "mock-development-session";
 
+/**
+ * The development shortcut that accepts any address with an `@` and four
+ * characters. It is an explicit opt-in: `OPERATOR_MOCK_AUTH=1` has to be set as
+ * well as the environment being non-production and non-remote, so a build that
+ * merely forgets `NODE_ENV=production` cannot open the operator console.
+ */
 function mockMode() {
   return (
+    process.env.OPERATOR_MOCK_AUTH === "1" &&
     process.env.NODE_ENV !== "production" &&
     process.env.NEXT_PUBLIC_JEWELO_DATA_MODE !== "remote"
   );

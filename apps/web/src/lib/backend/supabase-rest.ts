@@ -164,3 +164,37 @@ export async function readJson<T extends Record<string, unknown>>(
       throw new Error(`${field} required`);
   return body;
 }
+
+/**
+ * Runtime validation at the edge of a route.
+ *
+ * Structural, not a `zod` import: the schemas live in `@jewelo/contracts` and
+ * the web app has no direct provider or library dependency of its own. A
+ * failure is the existing `invalid_input` 422, with the first field path and
+ * message so the client can point at the field, and never the raw input.
+ */
+type ValidationResult<T> =
+  | { success: true; data: T }
+  | {
+      success: false;
+      error: { issues: Array<{ path: PropertyKey[]; message: string }> };
+    };
+export interface Validator<T> {
+  safeParse(value: unknown): ValidationResult<T>;
+}
+
+export function validated<T>(
+  schema: Validator<T>,
+  value: unknown,
+  label = "specification",
+): T {
+  const result = schema.safeParse(value);
+  if (result.success) return result.data;
+  const issue = result.error.issues[0];
+  const path = [label, ...(issue?.path ?? [])].map(String).join(".");
+  throw new ApiError(
+    `Invalid ${path}: ${issue?.message ?? "invalid value"}`,
+    422,
+    "invalid_input",
+  );
+}

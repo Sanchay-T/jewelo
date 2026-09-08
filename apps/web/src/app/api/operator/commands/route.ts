@@ -7,8 +7,31 @@ import {
 import { requireOperatorSession } from "../../../../lib/backend/operator-session";
 import { attemptImmediateDispatch } from "../../../../lib/backend/job-dispatch";
 
+/** A browser form on another origin must not be able to drive an operator
+ * command with the operator's own cookie. */
+function assertSameOrigin(request: Request, mutation = false) {
+  if (request.headers.get("sec-fetch-site") === "cross-site")
+    throw new Response("Cross-site request rejected", { status: 403 });
+  if (!mutation) return;
+  const origin = request.headers.get("origin");
+  const targetHost =
+    request.headers.get("x-forwarded-host") ??
+    request.headers.get("host") ??
+    new URL(request.url).host;
+  const originHost = (() => {
+    try {
+      return origin ? new URL(origin).host : "";
+    } catch {
+      return "";
+    }
+  })();
+  if (!originHost || originHost !== targetHost)
+    throw new Response("Same-origin request required", { status: 403 });
+}
+
 export async function POST(request: Request) {
   try {
+    assertSameOrigin(request, true);
     requireOperatorSession(request);
     const admin = adminConfig();
     const input = await readJson<{

@@ -1,9 +1,35 @@
+import { createHmac, timingSafeEqual } from "node:crypto";
+
+import { hasOperatorSession } from "../../../lib/backend/operator-session";
+
+/**
+ * Who may read the dependency detail.
+ *
+ * The bare `status` is public - a load balancer needs it - but the dependency
+ * block names the deployment's topology, so it is shown only to an operator
+ * session or to a deploy probe presenting `READINESS_PROBE_TOKEN` in
+ * `x-readiness-token`. The comparison is over digests so it is constant time
+ * and length-independent.
+ */
+function digest(value: string) {
+  return createHmac("sha256", "caleums-readiness-compare")
+    .update(value)
+    .digest();
+}
+
+function probeAuthorized(request: Request) {
+  const expected = process.env.READINESS_PROBE_TOKEN;
+  const presented = request.headers.get("x-readiness-token");
+  if (!expected || !presented) return false;
+  return timingSafeEqual(digest(presented), digest(expected));
+}
+
 /**
  * Readiness is bound to the two things a customer run cannot start without:
  * durable Supabase truth, and an Inngest job engine that will accept and
  * execute a dispatched event.
  */
-export function GET() {
+export function GET(request: Request) {
   const eventKey = process.env.INNGEST_EVENT_KEY;
   const signingKey = process.env.INNGEST_SIGNING_KEY;
   const supabaseConfigured = Boolean(
@@ -24,6 +50,13 @@ export function GET() {
         : "prod";
   const configured = Boolean(eventKey && signingKey);
   const ready = supabaseConfigured && configured;
+
+  const detailed = hasOperatorSession(request) || probeAuthorized(request);
+  if (!detailed)
+    return Response.json(
+      { status: ready ? "ready" : "not_ready" },
+      { status: ready ? 200 : 503, headers: { "cache-control": "no-store" } },
+    );
 
   return Response.json(
     {

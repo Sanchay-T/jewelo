@@ -1,3 +1,5 @@
+import { z } from "zod";
+
 export type Locale = "en" | "ar";
 export type Role = "customer" | "operator";
 export type ScenarioId =
@@ -327,3 +329,175 @@ export interface JeweloClient {
   getAudit(designId: string): AuditEvent[];
   reset(): Promise<SpikeState>;
 }
+
+/* ------------------------------------------------------------------------- */
+/* Runtime validation of a customer specification.                            */
+/*                                                                            */
+/* Everything above is a compile-time shape only: the drafts, draft-patch and  */
+/* approve routes used to hand an arbitrary JSON object straight to Postgres,  */
+/* to the HarfBuzz shaper and to a paid prompt. This schema is the runtime     */
+/* gate. It normalises names to NFC before storage, so the SQL fingerprint and */
+/* the renderer agree on the same bytes, caps their length, restricts them to  */
+/* one script, refuses invisible formatting characters, and constrains         */
+/* `referenceAsset.id` to the same alphabet the storage path builder expects.  */
+/*                                                                            */
+/* Nested objects are `.strict()`. The specification object itself strips      */
+/* unknown keys instead: a revision approved before a field existed is read    */
+/* back and re-posted verbatim by `refineDesign`, and a stored legacy key must */
+/* degrade to being dropped rather than to a 4xx on a returning customer.      */
+/* ------------------------------------------------------------------------- */
+
+const NAME_MAX = 30;
+/** Zero-width joiners, bidi overrides, soft hyphen and BOM: invisible in the
+ * shop, meaningful to a shaper and to anything that later renders the name. */
+const INVISIBLE =
+  /[\u00AD\u061C\u180E\u200B-\u200F\u202A-\u202E\u2060-\u2064\u2066-\u206F\uFEFF]/u;
+const LATIN_NAME = /^[\p{Script=Latin}'’\- ]+$/u;
+const ARABIC_NAME = /^[\p{Script=Arabic}\p{Mn}\p{Mc} ]+$/u;
+export const REFERENCE_ASSET_ID = /^[a-zA-Z0-9_-]{1,128}$/;
+
+const nameText = (script: "latin" | "arabic") =>
+  z
+    .string()
+    .max(NAME_MAX * 4)
+    .transform((value) => value.normalize("NFC").trim())
+    .refine((value) => value.length > 0, "Enter a name.")
+    .refine(
+      (value) => value.length <= NAME_MAX,
+      `Use at most ${NAME_MAX} characters.`,
+    )
+    .refine(
+      (value) => !INVISIBLE.test(value),
+      "Remove invisible formatting characters.",
+    )
+    .refine(
+      (value) => (script === "latin" ? LATIN_NAME : ARABIC_NAME).test(value),
+      script === "latin"
+        ? "Use Latin letters, spaces, apostrophes or hyphens."
+        : "Use Arabic letters and spaces.",
+    );
+
+export const approvedNameSchema = z
+  .strictObject({
+    approvedEnglishText: nameText("latin").nullable(),
+    approvedArabicText: nameText("arabic").nullable(),
+  })
+  .refine(
+    (value) =>
+      Boolean(value.approvedEnglishText) !== Boolean(value.approvedArabicText),
+    "Give exactly one script per name.",
+  );
+
+export const referenceAssetSchema = z.strictObject({
+  id: z.string().regex(REFERENCE_ASSET_ID, "Invalid reference ID."),
+  fileName: z.string().max(255).optional(),
+});
+
+const arabicStyleSchema = z.enum([
+  "none",
+  "contemporary",
+  "diwani",
+  "thuluth-inspired",
+  "kufi",
+  "signature",
+  "minimal",
+]);
+const layoutSchema = z.enum([
+  "single-name",
+  "side-by-side",
+  "connected-heart",
+  "stacked",
+  "stacked-heart",
+  "infinity",
+  "interlocked",
+]);
+const connectorSchema = z.enum([
+  "none",
+  "heart",
+  "infinity",
+  "plain",
+  "interlocked",
+]);
+const constructionSchema = z.enum([
+  "classical",
+  "origami-ribbon",
+  "framed-minimal",
+  "diamond-rails",
+]);
+const letteringSchema = z.enum([
+  "classic",
+  "minimal",
+  "diwani",
+  "kufi",
+  "signature",
+  "thuluth-inspired",
+]);
+const gemstoneSchema = z.enum([
+  "none",
+  "lab-diamond",
+  "natural-diamond",
+  "ruby",
+  "emerald",
+  "blue-sapphire",
+  "pink-sapphire",
+]);
+
+const specificationShape = {
+  jewelryType: z.literal("name-pendant"),
+  nameCount: z.union([z.literal(1), z.literal(2)]),
+  names: z.union([
+    z.tuple([approvedNameSchema]),
+    z.tuple([approvedNameSchema, approvedNameSchema]),
+  ]),
+  arabicStyle: arabicStyleSchema,
+  layout: layoutSchema,
+  source: z.enum(["fresh", "inspiration", "upload"]),
+  referenceAsset: referenceAssetSchema.optional(),
+  metalKarat: z.literal("18K"),
+  metalColor: z.enum(["yellow", "white", "rose"]),
+  finish: z.enum(["polished", "matte", "satin"]),
+  stoneCoverage: z.enum(["none", "accent", "partial-pave", "full-pave"]),
+  gemstone: gemstoneSchema,
+  connector: connectorSchema,
+  construction: constructionSchema.optional(),
+  lettering: letteringSchema.optional(),
+  origin: z.literal("caleums-atelier").optional(),
+  sizeProfile: z.enum(["delicate", "classic", "statement", "custom"]),
+  dimensions: z.strictObject({
+    widthMm: z.number().min(5).max(120),
+    heightMm: z.number().min(5).max(120),
+    thicknessMm: z.number().min(0.5).max(10),
+  }),
+  chain: z.strictObject({
+    style: z.enum(["cable", "curb", "rolo", "box"]),
+    lengthCm: z.union([
+      z.literal(40),
+      z.literal(45),
+      z.literal(50),
+      z.literal(55),
+    ]),
+  }),
+  complexity: z.number().min(0).max(10),
+  occasion: z.string().max(120).optional(),
+  notes: z.string().max(2000).optional(),
+} as const;
+
+const withNameCount = <T extends { nameCount: number; names: unknown[] }>(
+  value: T,
+) => value.nameCount === value.names.length;
+
+/** The draft specification: the shopper has not confirmed the spelling yet. */
+export const jewelryDraftSpecificationSchema = z
+  .object({
+    ...specificationShape,
+    spellingConfirmed: z.boolean().optional(),
+  })
+  .refine(withNameCount, "nameCount must match the number of names.");
+
+/** The approved specification a revision is cut from; spelling is confirmed. */
+export const jewelrySpecificationSchema = z
+  .object({
+    ...specificationShape,
+    spellingConfirmed: z.literal(true),
+  })
+  .refine(withNameCount, "nameCount must match the number of names.");
