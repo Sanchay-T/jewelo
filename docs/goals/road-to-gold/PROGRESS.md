@@ -133,6 +133,9 @@ Doing:
 
 - P1-5 fix pass 6 (implementer) on `reviews/identity-engine-adversarial-5.md`: joint pair scoring by tilt and overhang with gates on both, rings lifted above dots to the outer letter, the rail made honest or deleted, harness ownership rule independent of the engine, pinhole fill that cannot close a counter.
 
+
+- Field finding, 8 September 22:40 (Umayr testing staging `d4bb713f` on his phone): "What triggers generation" and "Put my name it gave me Asma". He typed his name and the photo panel kept showing the Asma example, because the sample stays until the shopper's own run produces photographs, and in mock mode it never does; the old "Preview my piece" label sent him to the review step without telling him the checkbox is the trigger. Second person in one day (the lead's own UX finding earlier) confused by the same panel. P6-3 (button renamed, honest end states) and P6-4 were committed after that deploy and are being deployed now. Open for P6-2/P6-3 follow-up: the "Asma example" caption is not read as an example; the panel needs to say plainly that it is a sample look until the shopper confirms, and in mock mode the honest end state should arrive faster than the current 30 s of "Being prepared".
+
 Follow-ups found by subagents, not fixed (outside the task rows):
 
 - `.env.production.local` at the repo root holds stale Convex keys from February; inert and gitignored; delete in a hygiene slice.
