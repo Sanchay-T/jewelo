@@ -1,0 +1,17 @@
+# Identity engine adversarial review 1 (range 79592b7..5fbbb07)
+
+Reviewer: fresh-context `adversarial-reviewer` subagent, 8 September 2026, committed range only.
+Verdict: Phase 1 not proved by this range. The engine is sound; the gate around it is weaker than the rows say. Owners assigned by the lead.
+
+1. HIGH. Pipeline release lineage: code stamps `caleums-final-media-v2` while the database (until P1-7 pushes the migration) and `docs/CALEUMS-FINAL-E2E-CONTRACT.md:9` say v1, and nothing compares `report.pipelineRelease` with `task.pipeline_release`. Owner: fix pass 2. Fix: throw `identity_pipeline_release_mismatch` in `signedIdentityUrl` when they differ; contract doc to v2.
+2. HIGH. A ring can be welded onto a letter: `drawDisk(..., IDENTITY_RING_OUTER, 1)` only adds ink, the punch check counts cleared pixels only, and the outer disk reaches 11 px past the anchor into the name. A floating Arabic dot fused into ring metal is a different letter and every gate passes. Owner: fix pass 2. Fix: the ring annulus and weld may touch pre-ring ink only inside the weld zone around the anchor; throw `identity_ring_welded_to_glyph` otherwise; measure how many of the 232 cells hit it and lift or shift the ring accordingly.
+3. MEDIUM. `blockPreSpend` raises `pre-spend gate cannot follow provider reservation` when `task.attempt <> 0`, so an identity throw on a retry escapes the catch and the task stays `retrying` with no `identity_*` code. Owner: fix pass 2. Fix: fall back to a terminal `fail` when the RPC rejects.
+4. MEDIUM. The P1-6 comparison is one ruler against itself (`measureMask` on the in-memory mask versus on the decoded PNG); the independent oracle is `verify_stencil.py` (P1-7). The tamper proofs were not saved in the tree. Owner: P1-7 for the Python oracle; fix pass 2 saves the negative-proof output under `docs/goals/road-to-gold/dogfood-2026-09-08/`.
+5. MEDIUM. `dilationPixels` and `thickenPasses` are constants in the report, and the `construction` block is the renderer's own account. Owner: fix pass 2. Fix: split the report into `measured` (from the decoded PNG) and `claimed` (renderer account) so a reader cannot confuse them; `measuredBy` derived from the injected decoder.
+6. MEDIUM. `IDENTITY_RINGLESS_CONSTRUCTIONS` is live for shop-selectable constructions while the prompts still demand two rings; only an untyped env var keeps them consistent. Owner: fix pass 2. Fix: `superRefine` in `packages/config` rejecting a non-empty set unless `IDENTITY_RINGLESS_PROMPTS_READY=1`, which P3-7 flips.
+7. LOW. No tie-break when two `pipeline_releases` rows are active. Owner: fix pass 2. Fix: partial unique index on `status='active'` in a new additive migration.
+8. LOW. The general disagreement set omits `components` and `holeSizes`. Owner: fix pass 2.
+9. LOW. ZWJ/ZWNJ are absent from the cmaps, so a Persian name with a joiner is refused (fail-closed, no copy warns). `approvedCharacters` is NFC while `identity_artifacts.approved_text` is raw. Owner: P6-2 copy; P1-7 records.
+10. LOW. Five of six Latin letterings pin the same Playfair file, so their stencils are byte-identical. Deliberate; P6-2 hides unproven options.
+11. LOW. Determinism across machines is unproved; sharp and libvips versions are reported, not asserted. Owner: P1-7 compares laptop and staging bytes for the same input.
+12. LOW. Diagnostics route discloses absolute paths behind operator auth. Recorded.

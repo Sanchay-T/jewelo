@@ -58,9 +58,12 @@ Done:
 
 - P1-6 in `5fbbb07`: `IdentityValidationReport` widened to measured numbers and booleans plus `measuredBy`, `rule`, `bbox`, `holes`, `ringHoles` and the construction block; the solver encodes, then decodes its own PNG through the rasterizer port's `decodePng` and measures it with `measureMask`; `passed` is a conjunction of those measurements and disagreement throws by name. Lead reran: `MATCH 16/16` with exact ring counts (Asma has four holes, two of them letter counters, which the old `>=` check could never tell apart), and the tampered decodes throw `identity_ring_gate_failed:holes=1,expected=2` and `identity_component_gate_failed:components=2`. `PIPELINE_RELEASE_ID` config, default `caleums-final-media-v2`; migration `20260908120000_pipeline_release_v2.sql` written, functions `expand_final_media_run` and `request_video_task` read the active release instead of a literal; not yet pushed.
 
+- P1-7 in `e5e598b`, staging deployment `ebdca539-24c8-422d-a659-369e2e21032f`: migration applied (`pipeline_releases`: v2 active with `caleums-identity-v4`, v1 legacy); 16 production stencils regenerated and identical under both rulers; two staging mock runs (`5917f2df` Rania en, `46030711` ريم ar) complete on v2 with `engine_release caleums-identity-v4`, the bucket stencils deep-equal their stored `validation_report`; an injected Devanagari name blocked as `identity_shaping_gate_failed:notdef=4,uncovered=4` with dependents unspent. Lead opened both staging stencils: Playfair and Naskh, one piece, two rings. `identity_artifacts` by engine: 19 latin-existing-v1, 15 arabic-v3, 2 identity-v4.
+- Adversarial review 1 recorded in `docs/goals/road-to-gold/reviews/identity-engine-adversarial-1.md`: two highs (a ring can be welded onto a floating dot with every gate passing; pipeline release lineage not cross-checked), four mediums, six lows, each with an owner.
+
 Doing:
 
-- P1-7 (platform): db push and types, production stencils regenerated, deploy, two staging mock runs, stencils pulled from the bucket and re-measured, dependency dump.
+- Fix pass 2 (implementer): adversarial findings 1, 2, 3, 5, 6, 7, 8, plus the negative-proof outputs saved under `dogfood-2026-09-08/`.
 
 Follow-ups found by subagents, not fixed (outside the task rows):
 
