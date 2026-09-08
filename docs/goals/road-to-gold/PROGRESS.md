@@ -70,10 +70,14 @@ Done:
 - Fix pass 3 in `b2ebea4^`: rings anchor only on 4-connected islands of the pre-bridge raster that are at least `IDENTITY_RING_ANCHOR_MIN_ISLAND_FRACTION` (0.1, measured: moved anchors sat on 2.4-9.9% islands, kept ones on 11.3-100%) of the largest island, so a dot, hamza or bridge bar can never carry a ring; the under-metal count exempts only the weld capsule and drawn fillet; the x-legality guard clamps instead of breaking so the five left-edge rings are searched; `blockPreSpendTerminally` covers `task_prompt_release_mismatch`, `prompt_compile_failed`, `prompt_snapshot_lineage_mismatch`; release compared before the render; `measure-stencils` prints a `CLAIM` cross-check of `measured` against `claimed`. 179/232 ring centres moved. Lead reran: `MATCH 16/16`, `CLAIM 16/16`, build exit 0, and opened `noor-ar-kufi` and `noor-ar-classic`: right ring on the ن stem and bowl, dot free.
 - Phase 2 plan review recorded in `reviews/phase2-plan-review.md` and the rows rewritten in `b2ebea4` (P2-0 to P2-7, corpus recount 73/49/13 with 7 geometry defect rows, gates per view, mask threshold measured not assumed, `MOCK_STILL_FIXTURE_DIR` so the verifier runs on staging for zero spend, DS-11 ceiling enforced by the replay script). `ROAD-TO-GOLD.md` phase 2 gate now names the 79 verdict-bearing images.
 
+- P2-0 committed: `packages/ai` tests excluded from the typecheck, `apps/jobs/scripts/**/*.mts` typechecked by the build gate (zero errors surfaced), `pnpm build --force` exit 0.
+- P2-1 committed: `merge_verdicts.py` picked up seven unmerged verdicts (six stage-2 plus one stray stage-1 v4.3), ledger now 80 scored, 55 pass, 12 tweak, 13 fail, 11 unscored; `IMAGE-LAB.md` appendix regenerated (all-lab pass rate 54% to 60%); `apps/jobs/scripts/replay-lab.mts` resolves 91/91 stills and 128/128 references with matching sha256 and writes `lab/replay-report.json`; mock baseline: 55/55 passes accepted, 25/25 tagged rows and 13/13 fail rows falsely accepted. The `StudioVerifier` port still takes a stencil URL, so the script passes a `file://` URL and marks gates `projected` until P2-5 adds real gates. Lead reran the script: same census.
+
 Doing:
 
 - Staging deploy of `b2ebea4` and re-proof (platform): Noor en and نور ar runs, stencils re-measured, ring on the ن body.
 - Adversarial pass 3 on `b2ebea4` (adversarial-reviewer). Phase 1 closes when this pass and the next find nothing above minor.
+- P2-2 (implementer): edge-based pendant mask with moment-initialised similarity registration, contact sheet under `dogfood-2026-09-08/phase2-mask/`, IoU distribution over the 55 passes; the measured p05 becomes the P2-3 threshold.
 
 Follow-ups found by subagents, not fixed (outside the task rows):
 
