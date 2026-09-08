@@ -67,10 +67,13 @@ Done:
 - Platform re-proof on `08d63e17` passed: Salma (en) and هدى (ar) mock runs complete on v2, both stencils downloaded from the bucket, sha equal to `png_sha256`, re-measured locally deep-equal to `validation_report.measured`, `glyphPixelsUnderRingMetal 0`; a second active pipeline release is refused with 409 `pipeline_releases_one_active`; diagnostics route 401/200 with harfbuzz 14.4.0 and the pinned font shas. `identity_artifacts` by engine: 19 latin-existing-v1, 15 arabic-v3, 5 identity-v4.
 - Adversarial pass 2 recorded in `reviews/identity-engine-adversarial-2.md`: one high (the under-metal count exempts a 46 px disc around the anchor, and a dot survives the 11x11 erosion, so `noor-ar-kufi` and `noor-ar-classic` weld the ring onto the ن dot with every gate green; lead confirmed by eye), three mediums (canvas guard breaks the lift search for five left rings; P1-5 proof wording; `prompt_compile_failed` path lacks the retry fallback), four lows. F-3 decision taken by default: `aboveAnchor` is the standard, row reworded.
 
+- Fix pass 3 in `b2ebea4^`: rings anchor only on 4-connected islands of the pre-bridge raster that are at least `IDENTITY_RING_ANCHOR_MIN_ISLAND_FRACTION` (0.1, measured: moved anchors sat on 2.4-9.9% islands, kept ones on 11.3-100%) of the largest island, so a dot, hamza or bridge bar can never carry a ring; the under-metal count exempts only the weld capsule and drawn fillet; the x-legality guard clamps instead of breaking so the five left-edge rings are searched; `blockPreSpendTerminally` covers `task_prompt_release_mismatch`, `prompt_compile_failed`, `prompt_snapshot_lineage_mismatch`; release compared before the render; `measure-stencils` prints a `CLAIM` cross-check of `measured` against `claimed`. 179/232 ring centres moved. Lead reran: `MATCH 16/16`, `CLAIM 16/16`, build exit 0, and opened `noor-ar-kufi` and `noor-ar-classic`: right ring on the ن stem and bowl, dot free.
+- Phase 2 plan review recorded in `reviews/phase2-plan-review.md` and the rows rewritten in `b2ebea4` (P2-0 to P2-7, corpus recount 73/49/13 with 7 geometry defect rows, gates per view, mask threshold measured not assumed, `MOCK_STILL_FIXTURE_DIR` so the verifier runs on staging for zero spend, DS-11 ceiling enforced by the replay script). `ROAD-TO-GOLD.md` phase 2 gate now names the 79 verdict-bearing images.
+
 Doing:
 
-- Fix pass 3 (implementer): adversarial-2 F-1, F-2, F-4, F-6, F-7 plus F-3 wording, F-5 comment, F-8 baseline; production stencils regenerated; negative proofs appended to `dogfood-2026-09-08/identity-gates.md`.
-- plan-reviewer challenging Phase 2 rows P2-1 to P2-7 before any Phase 2 brief is written.
+- Staging deploy of `b2ebea4` and re-proof (platform): Noor en and نور ar runs, stencils re-measured, ring on the ن body.
+- Adversarial pass 3 on `b2ebea4` (adversarial-reviewer). Phase 1 closes when this pass and the next find nothing above minor.
 
 Follow-ups found by subagents, not fixed (outside the task rows):
 
