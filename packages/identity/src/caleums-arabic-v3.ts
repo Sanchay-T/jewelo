@@ -1,6 +1,12 @@
 import { createHash } from "node:crypto";
+import type { ShapingMeasurement } from "./shaping";
 
-export const CALEUMS_ARABIC_ENGINE_RELEASE = "caleums-arabic-v3" as const;
+// D-019: the engine opens the pinned font bytes and shapes them with HarfBuzz
+// instead of asking a rendering library for a family name, and it now serves
+// both scripts, so the release identifier is no longer Arabic-only. The fonts
+// directory keeps its old name (`CALEUMS_IDENTITY_FONT_DIRECTORY`); only the
+// release identifier moves, and the fingerprint already carries it.
+export const CALEUMS_ARABIC_ENGINE_RELEASE = "caleums-identity-v4" as const;
 
 export type CaleumsArabicStyle =
   "classic" | "minimal" | "diwani" | "thuluth-inspired" | "kufi" | "signature";
@@ -26,6 +32,12 @@ export interface RasterMask {
   ink: Uint8Array;
 }
 
+/** What the rasterizer returns: the mask plus what shaping measured. */
+export interface TypesetResult {
+  readonly mask: RasterMask;
+  readonly shaping: ShapingMeasurement;
+}
+
 export interface ArabicIdentityRasterizer {
   typeset(input: {
     approvedText: string;
@@ -38,7 +50,7 @@ export interface ArabicIdentityRasterizer {
       | "rakkas.ttf";
     fontSize: number;
     padding: number;
-  }): Promise<RasterMask>;
+  }): Promise<TypesetResult>;
   encodePng(mask: RasterMask): Promise<Uint8Array>;
   shapingVersions(): Readonly<Record<string, string>>;
 }
@@ -49,14 +61,18 @@ export interface IdentityValidationReport {
   approvedCharacters: string;
   style: CaleumsArabicStyle;
   fontFile: string;
+  /** The sha declared by the pinned style table. */
   fontSha256: string;
+  /** The sha of the bytes HarfBuzz actually shaped with. */
+  fontSha256Measured: string;
   shaping: Readonly<Record<string, string>>;
   componentsBefore: number;
   fuseMoves: number;
   dilationPixels: number;
   jumpRingCount: 2;
   componentsFinal: 1;
-  exactCharactersPreserved: true;
+  /** Measured by HarfBuzz: no glyph id 0 and every NFC code point covered. */
+  exactCharactersPreserved: boolean;
   passed: true;
 }
 
@@ -75,7 +91,9 @@ export class IdentitySolverError extends Error {
       | "approved_text_missing"
       | "identity_mask_empty"
       | "identity_fuse_failed"
-      | "identity_component_gate_failed",
+      | "identity_component_gate_failed"
+      | "identity_font_bytes_mismatch"
+      | "identity_shaping_gate_failed",
     message: string = code,
   ) {
     super(message);
@@ -149,12 +167,24 @@ export async function solveArabicIdentity(
   const approvedText = input.approvedNames[0]?.normalize("NFC").trim();
   if (!approvedText) throw new IdentitySolverError("approved_text_missing");
   const style = LIVE_STYLES[support.style];
-  const mask = await rasterizer.typeset({
+  const { mask, shaping } = await rasterizer.typeset({
     approvedText,
     fontFile: style.fontFile,
     fontSize: 560,
     padding: 186,
   });
+  // The bytes that were shaped must be the bytes the style pins: a font
+  // swapped on disk changes the spelling without changing anything else.
+  if (shaping.fontSha256Measured !== style.fontSha256)
+    throw new IdentitySolverError(
+      "identity_font_bytes_mismatch",
+      `${style.fontFile}: loaded ${shaping.fontSha256Measured}`,
+    );
+  if (!shaping.exactCharactersPreserved)
+    throw new IdentitySolverError(
+      "identity_shaping_gate_failed",
+      `${approvedText}: ${shaping.notdefGlyphs} notdef glyphs, ${shaping.uncoveredCodePoints.length} uncovered code points`,
+    );
   const componentsBefore = components(mask).length;
   if (componentsBefore === 0)
     throw new IdentitySolverError(
@@ -182,7 +212,7 @@ export async function solveArabicIdentity(
       support.style,
       input.layout,
       input.connector,
-      style.fontSha256,
+      shaping.fontSha256Measured,
       pngSha256,
     ].join("|"),
   );
@@ -197,13 +227,17 @@ export async function solveArabicIdentity(
       style: support.style,
       fontFile: style.fontFile,
       fontSha256: style.fontSha256,
-      shaping: rasterizer.shapingVersions(),
+      fontSha256Measured: shaping.fontSha256Measured,
+      shaping: {
+        ...rasterizer.shapingVersions(),
+        harfbuzzShaper: shaping.harfbuzzVersion,
+      },
       componentsBefore,
       fuseMoves: fused.moves,
       dilationPixels: style.dilationPixels,
       jumpRingCount: 2,
       componentsFinal: 1,
-      exactCharactersPreserved: true,
+      exactCharactersPreserved: shaping.exactCharactersPreserved,
       passed: true,
     },
   };

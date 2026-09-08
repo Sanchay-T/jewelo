@@ -42,12 +42,15 @@ the deterministic validation report, and be stored privately before any model
 call. Models render and verify that identity; they never decide or silently
 alter it.
 
-`caleums-arabic-v3` is the versioned Arabic identity engine. It preserves the
-exact approved NFC characters and uses Pango/Fribidi/HarfBuzz/FreeType shaping,
-the checksum-pinned ZIP font, fused marks/groups, two physically connected
-hollow jump rings, and a hard exactly-one-connected-component mask gate. It
-stores an immutable PNG, checksum, solver/font/runtime report, and fingerprint
-before provider-attempt reservation.
+`caleums-identity-v4` is the versioned identity engine (D-019; it replaces the
+release identifier `caleums-arabic-v3`). It preserves the exact approved NFC
+characters and shapes them with HarfBuzz over the bytes of the pinned font file,
+opened directly and hashed into `fontSha256Measured`, never resolved by family
+name; fused marks/groups, two physically connected hollow jump rings, and a hard
+exactly-one-connected-component mask gate follow. `exactCharactersPreserved` is
+the measurement "no glyph id 0 in the shaped buffer and every NFC code point
+covered by a cluster", not an assertion. It stores an immutable PNG, checksum,
+solver/font/runtime report, and fingerprint before provider-attempt reservation.
 
 Only one-name Arabic `classic`/Amiri and `minimal`/Scheherazade New are live.
 Signature, Kufi, Contemporary, Diwani, Thuluth-inspired, every unapproved font,

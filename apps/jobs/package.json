@@ -11,6 +11,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "lint": "eslint src",
+    "measure-stencils": "tsx scripts/measure-stencils.mts",
     "test": "vitest run",
     "typecheck": "tsc -p tsconfig.json"
   },
@@ -22,5 +23,8 @@
     "@jewelo/identity": "workspace:*",
     "@jewelo/media": "workspace:*",
     "sharp": "0.34.5"
+  },
+  "devDependencies": {
+    "tsx": "4.23.13"
   }
 }

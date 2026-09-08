@@ -1,13 +1,17 @@
 import { createHash } from "node:crypto";
-import { existsSync, writeFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { dirname, join, resolve } from "node:path";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import {
-  CALEUMS_ARABIC_ENGINE_RELEASE,
+  identityFontUrl,
+  shapeText,
   solveArabicIdentity,
   type ArabicIdentityRasterizer,
   type IdentityValidationReport,
   type RasterMask,
+  type ShapedText,
+  type TypesetResult,
 } from "@jewelo/identity";
 import sharp from "sharp";
 
@@ -38,21 +42,27 @@ function xml(value: string) {
 export function identityAnchorSvg(
   anchor: IdentityAnchor,
   specification: Readonly<Record<string, unknown>>,
+  measured?: ShapedText,
 ) {
   const layout = String(specification.layout ?? "single-name");
   const connector = String(specification.connector ?? "none");
   // Playfair Display is the pinned Latin face: a clean serif the image model can
   // reproduce and the name reader can read, unlike the retired Great Vibes
   // cursive. Weight 700 with -0.04em tracking fuses the glyphs into one pendant
-  // body. Size the name to ~70% of the 1200px canvas from the font's own
-  // bucketed advances, and cap it so a short name's 1.082em ascent and 0.251em
-  // descent stay inside the 600px canvas.
+  // body. Size the name to ~70% of the 1200px canvas from the advances
+  // HarfBuzz measured in the pinned file, and cap it so a short name's 1.082em
+  // ascent and 0.251em descent stay inside the 600px canvas.
   const characters = [...anchor.approvedText.trim()];
+  // The width now comes from HarfBuzz over the pinned Playfair bytes, not from
+  // a bucketed guess. `measured` is absent only for callers that have no
+  // shaping; the render path below always measures.
   const advanceEm =
-    characters.reduce(
-      (total, character) => total + latinAdvanceEm(character),
-      0,
-    ) -
+    (measured
+      ? measured.advanceWidth / measured.upem
+      : characters.reduce(
+          (total, character) => total + latinAdvanceEm(character),
+          0,
+        )) -
     0.04 * Math.max(0, characters.length - 1);
   const fontSize = Math.max(90, Math.min(360, 840 / Math.max(0.5, advanceEm)));
   const baseline = Math.round(300 + fontSize * 0.3);
@@ -68,8 +78,9 @@ export function identityAnchorSvg(
   ].join("");
 }
 
-// Playfair Display hmtx advances scaled to the 700 instance, bucketed by glyph
-// width so a name is sized from what it actually is rather than its length.
+// Retired sizing fallback, kept only for the two-argument callers of
+// `identityAnchorSvg`: bucketed Playfair advances, guessed rather than
+// measured. P1-3 deletes this function together with the `<text>` element.
 const LATIN_NARROW = new Set("IJfijlt");
 const LATIN_WIDE = new Set("ADGHMNOQUVWmw");
 
@@ -123,7 +134,16 @@ export async function renderIdentityAnchor(
   // deployed container has neither the customer typography nor DejaVu Sans, so
   // the unpinned stencil rendered blank.
   pinFontconfig();
-  const svg = identityAnchorSvg(anchor, specification);
+  const measured = await shapeText({
+    fontBytes: fontBytes(LATIN_FONT_FILE),
+    text: anchor.approvedText.trim(),
+    script: "en",
+  });
+  if (!measured.exactCharactersPreserved)
+    throw new Error(
+      `identity_shaping_gate_failed:${measured.notdefGlyphs} notdef glyphs, ${measured.uncoveredCodePoints.length} uncovered code points`,
+    );
+  const svg = identityAnchorSvg(anchor, specification, measured);
   const png = await sharp(Buffer.from(svg))
     .png({ compressionLevel: 9, adaptiveFiltering: false, palette: false })
     .toBuffer();
@@ -137,8 +157,12 @@ export async function renderIdentityAnchor(
       pipelineRelease,
       approvedCharacters: anchor.approvedText.normalize("NFC"),
       language: "en",
+      fontFile: LATIN_FONT_FILE,
+      fontSha256Measured: measured.fontSha256Measured,
+      shaping: { harfbuzzShaper: measured.harfbuzzVersion },
+      glyphCount: measured.glyphCount,
       jumpRingCount: 2,
-      exactCharactersPreserved: true,
+      exactCharactersPreserved: measured.exactCharactersPreserved,
       passed: true,
     },
   };
@@ -150,11 +174,20 @@ class SharpArabicRasterizer implements ArabicIdentityRasterizer {
     fontFile: "Amiri-Regular.ttf" | "ScheherazadeNew-Regular.ttf";
     fontSize: number;
     padding: number;
-  }): Promise<RasterMask> {
+  }): Promise<TypesetResult> {
     // Pango/HarfBuzz/FriBidi shaping through sharp's text input with an explicit
     // font file: librsvg ignores data-URI @font-face in the deployed container
     // and rendered a blank raster.
     pinFontconfig();
+    // The spelling is measured against the pinned bytes with HarfBuzz before
+    // anything is drawn: gids, advances and outlines come from this exact file,
+    // never from whatever family name Pango happens to resolve. P1-3 replaces
+    // the `<text>` element below with those outlines.
+    const shaping = await shapeText({
+      fontBytes: fontBytes(input.fontFile),
+      text: input.approvedText,
+      script: "ar",
+    });
     // librsvg text layout (Pango without the lam-ya stacking libvips' text
     // input applies); the pinned fontconfig makes the family resolve to the
     // bundled file in every environment.
@@ -178,7 +211,10 @@ class SharpArabicRasterizer implements ArabicIdentityRasterizer {
       .raw()
       .toBuffer({ resolveWithObject: true });
     const ink = Uint8Array.from(data, (value) => (value < 128 ? 1 : 0));
-    return { width: info.width, height: info.height, ink };
+    return {
+      mask: { width: info.width, height: info.height, ink },
+      shaping,
+    };
   }
 
   async encodePng(mask: RasterMask): Promise<Uint8Array> {
@@ -229,16 +265,31 @@ const FONT_FAMILIES: Record<string, string> = {
   "PlayfairDisplay-SemiBold.ttf": "Playfair Display",
 };
 
+/** The pinned Latin face. Kufi has no Latin coverage; that is P1-3's problem. */
+const LATIN_FONT_FILE = "PlayfairDisplay-SemiBold.ttf";
+
+const fontBytesCache = new Map<string, Uint8Array>();
+
+/**
+ * Bytes of a pinned font file. The URL is resolved from the identity package's
+ * own module URL, never from `process.cwd()`, so the deployed Node buildpack
+ * reads the same file the laptop does whatever directory it was started in.
+ */
+function fontBytes(file: string): Uint8Array {
+  const cached = fontBytesCache.get(file);
+  if (cached) return cached;
+  let bytes: Uint8Array;
+  try {
+    bytes = new Uint8Array(readFileSync(identityFontUrl(file)));
+  } catch {
+    throw new Error(`identity_font_missing:${file}`);
+  }
+  fontBytesCache.set(file, bytes);
+  return bytes;
+}
+
 function fontPath(file: string): string {
-  const relative = `packages/identity/engines/${CALEUMS_ARABIC_ENGINE_RELEASE}/fonts/${file}`;
-  const candidates = [
-    resolve(process.cwd(), relative),
-    resolve(process.cwd(), "../..", relative),
-    resolve(process.cwd(), "..", relative),
-  ];
-  const found = candidates.find(existsSync);
-  if (!found) throw new Error(`identity_font_missing:${file}`);
-  return found;
+  return fileURLToPath(identityFontUrl(file));
 }
 
 function dimensions(value: unknown) {

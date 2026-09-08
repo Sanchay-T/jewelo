@@ -22,6 +22,22 @@
 | D-016 | Motion, Embla, react-zoom-pan-pinch, react-dropzone, native short MP4 video | accepted UI foundation | accessibility/performance evidence requires replacement |
 | D-017 | Inngest is the durable job engine, self-hosted as a second DigitalOcean App Platform component; functions are served by `apps/web` at `/api/inngest`; Inngest Cloud is a one-variable switch (`INNGEST_BASE_URL`) | accepted 7 Sep 2026 on user instruction | Inngest Cloud account exists and its free tier suits the load, or a measured operability failure of the self-hosted server |
 | D-018 | Runway MCP serving `gpt-image-2` is the bench for all prompt and stencil work; OpenAI stays the production still provider, wired fail-closed and called only at the phase 5 gate in `docs/ROAD-TO-GOLD.md` | accepted 7 Sep 2026 on user instruction | Runway stops serving the same model as production, so lab results no longer transfer |
+| D-019 | The identity engine opens the pinned font file bytes and shapes them with HarfBuzz (`harfbuzzjs` in `packages/identity/src/shaping.ts`); no rendering library is ever asked for a font family name. The engine release identifier moves from `caleums-arabic-v3` to `caleums-identity-v4` | accepted 8 Sep 2026, DS-3 default B in `docs/TASKS.md` | HarfBuzz stops shaping a script the shop sells, or a measured stencil regression traces to the WASM build rather than to the fonts |
+
+## D-019 detail
+
+The engine used to name a font family and let the renderer find it.
+sharp's bundled Pango never consults fontconfig on macOS, so "Playfair Display" became the system sans and "Noto Kufi Arabic" and "Noto Naskh Arabic" both resolved to the same fallback face: Kufi and Naskh produced byte-identical stencils (`268f77d4...` for نور, `dbb5dccf...` for أسماء) and the report still said the characters were exact.
+A name is the product, so a stencil that depends on which fonts a machine happens to have installed is not a product.
+
+Option A was to keep Pango and only prove stencils on Linux, which makes every laptop result meaningless and leaves the family-name lookup in place.
+Option B, taken here, is to read the bytes of one pinned file, hash exactly those bytes into `fontSha256Measured`, and shape them with HarfBuzz with an explicit script, direction and language.
+Joining forms, marks and ligatures then come from that file's own GSUB and GPOS tables, and the same bytes shape the same way on the laptop, on `home-mini` and in the DigitalOcean buildpack.
+`exactCharactersPreserved` stopped being a literal and became a measurement: no glyph id 0 in the shaped buffer, and every NFC code point covered by a cluster and present in the font.
+
+The release identifier moves to `caleums-identity-v4` because the engine now serves both scripts and no longer depends on any installed font.
+The fingerprint already hashes the engine release, so every artifact fingerprint changes and no old stencil can be mistaken for a new one; the fonts directory keeps its `caleums-arabic-v3` name so no font file has to move.
+Font and WASM assets resolve from `import.meta.url`, never `process.cwd()`, so the deployed buildpack reads the same file whatever directory it starts in.
 
 ## D-018 detail
 
