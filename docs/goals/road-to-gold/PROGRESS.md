@@ -85,8 +85,12 @@ Done:
 
 - Pipeline fix 1 committed (lead: build `--force` exit 0, `pnpm audit --prod` clean, four migrations applied to staging): two-name English and `O’Neill` pass the script test; `reading.matches` no longer sufficient; provider timeout, stale window (derived: timeout plus margin, 300 s over 180 s), poll and sweeper limits, signed URL expiry in `packages/config`; attempt budget in `runtime_policy.provider_attempt_budget`; usage rows keyed on the attempt date with upsert (midnight test rolled back on staging); `referenceAsset.id` validated and storage paths encoded; explicit-null patches; sweeper indexes; sharp 0.35.4 with overrides in `pnpm-workspace.yaml`. Bar-fallback routing skipped until D-020 lands `ringPlacement`.
 
+- P3-1 committed: viewer scored the 11 unscored images (10 pass, 1 tweak: `framed-minimal-layla-en` a2 floats its letters inside the frame, second time for that cell); lead opened the three flagged images and accepted the ring-looped-around-the-bar attachment as a pass (chain through the ring, manufacturable). Ledger 91/91 scored: 65 pass, 13 tweak, 13 fail. v4.3 studio 3/3 on both scripts, holdout 10/12. `finalise.py` run with the real Runway balance from `whoami` (305,042), budget paragraph restored in `IMAGE-LAB.md`.
+
 Doing:
 
+- P3-2 (implementer): `holdout.json` keyed by prompt hash, `compile.mjs` refuses unfrozen holdout names.
+- Pipeline fix 1 deploy and re-proof (platform), reviewer on `b7590a4`, reviewer on the security and tooling commits.
 - D-020 redesign (implementer): outline-level ring anchors from glyph contours and GDEF classes, bar fallback instead of refusal, ring-hole area gate, lift cap removed, the small package-review items, manifest and README brought in line.
 
 Follow-ups found by subagents, not fixed (outside the task rows):
