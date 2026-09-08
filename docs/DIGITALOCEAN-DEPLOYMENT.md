@@ -252,6 +252,21 @@ Run it only when the current task authorizes a staging update, record the
 printed deployment id as the rollback target, and stop after one failed retry
 rather than redeploying blindly.
 
+### Style anchors (run once per Supabase project)
+
+Real mode fails closed with `style_anchor_missing:<sourceTaskId>` until the six
+approved style anchors exist as published releases in that project's private
+`style-anchors` bucket.
+The migrations only seed six `missing` placeholders, so a fresh project, a restored
+project, or a new environment needs one run of
+`node scripts/style-anchors/publish.mjs` against it before `PROVIDER_MODE=real`.
+It is a database and storage change, not a deploy: nothing needs redeploying after it.
+The PNGs are private brand reference and are never in git; the script is pointed at
+them with `STYLE_ANCHORS_DIR`, and `scripts/style-anchors/README.md` has the command,
+the checks it refuses on, and the SQL readback.
+It is idempotent, so rerunning it on a project that already has them re-hashes the
+stored bytes and creates no new version.
+
 ## Production cutover
 
 Production cutover is a controlled transition, not another preview push:

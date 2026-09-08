@@ -20,3 +20,9 @@ supabase/.temp/
 
 # Agent worktrees created by the Claude Code harness
 .claude/worktrees/
+
+# Private brand reference. The style anchors and their sha manifest live outside
+# this repository (STYLE_ANCHORS_DIR); this only guards an accidental copy in.
+style-anchors-v1/
+scripts/style-anchors/*.png
+scripts/style-anchors/manifest.json
