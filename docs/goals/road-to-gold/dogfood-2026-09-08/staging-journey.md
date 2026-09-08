@@ -327,3 +327,56 @@ The restart that was fired did land on a live run - P5-1's `45892bcc` - and that
 Nothing was changed. The `web` component would need `INNGEST_BASE_URL` removed and `INNGEST_EVENT_KEY` and `INNGEST_SIGNING_KEY` replaced with the Cloud values; the `inngest` component, which carries `INNGEST_EVENT_KEY`, `INNGEST_SIGNING_KEY`, `INNGEST_POSTGRES_URI`, `INNGEST_SDK_URL`, `INNGEST_PORT` and `INNGEST_HOST`, would be deleted from the spec; and the app URL would be synced once from the Inngest dashboard.
 `INNGEST_CRON_ENABLED` stays as it is.
 That is one variable to remove, two values to swap and one component to delete - no application code, since the client already reads `baseUrl`, `eventKey` and `signingKey` from the environment.
+
+## Deploy `7db85045` (`d3dbd25`)
+
+Branch `codex/overnight-launch-2026-09-08` at tip `d3dbd25` (landing redirect commit), deployed from `home-mini`.
+`deployment_id=7db85045-9902-4838-9add-9c68cf0a1613`, phase `ACTIVE 9/9` at 22:34:59 UTC, `deploy.sh` exit 0.
+
+Before the pull, `git pull --ff-only` aborted: six untracked files under `scripts/backups/` on the `home-mini` checkout would have been overwritten by the incoming P7-3 commit.
+All six were byte-identical to the committed versions (sha256 compared one by one), so they were moved to `~/.jewelo-untracked-backup-20260909/scripts/backups/` on `home-mini` rather than deleted, and the fast-forward then succeeded.
+
+`DEPLOY_DRY_RUN=1` first, exit 0, no value printed.
+15 env keys merged (`NEXT_PUBLIC_JEWELO_DATA_MODE`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `INNGEST_EVENT_KEY`, `INNGEST_SIGNING_KEY`, `OPENAI_API_KEY`, `OPERATOR_EMAIL`, `OPERATOR_PASSPHRASE`, `OPERATOR_SESSION_SECRET`, `OPENAI_STILL_CONCURRENCY_LIMIT`, `PROVIDER_MODE`, `READINESS_PROBE_TOKEN`, `NEXT_PUBLIC_POSTHOG_HOST`).
+15 keys absent from the environment file: `INNGEST_BASE_URL`, `INNGEST_CRON_ENABLED`, `TRUSTED_CLIENT_IP_HEADER`, the nine `NOTIFICATION_*` keys, `SENTRY_DSN`, `NEXT_PUBLIC_SENTRY_DSN`, `NEXT_PUBLIC_POSTHOG_KEY`.
+So the nine notification keys are absent as expected, but only three of the four observability keys are: `NEXT_PUBLIC_POSTHOG_HOST` is present and set, which is why the merged count is 15 rather than 14.
+Merged alerts, five: app `DEPLOYMENT_FAILED`, app `DOMAIN_FAILED`, web `CPU_UTILIZATION GREATER_THAN 80 TEN_MINUTES`, web `MEM_UTILIZATION GREATER_THAN 85 FIVE_MINUTES`, web `RESTART_COUNT GREATER_THAN 3 FIVE_MINUTES`.
+
+`bash scripts/digitalocean/smoke.sh https://jewelo-staging-gqumd.ondigitalocean.app` exit 0: health 200, readiness 200.
+
+Endpoint checks against the deployed URL:
+
+- `/` -> 307 to `/en/design/new`; `/ar` -> 307 to `/ar/design/new`. The landing hop is one redirect, as P?-landing intends.
+- `/en/design/new` 200, contains "Review my piece".
+- `/ar/design/new` 200, contains "مراجعة قطعتي".
+- `/en/operator` 200, the login page (contains "Operator" and a password field), no operator data.
+- `/api/state?designId=...` with no session -> 401 `{"error":"Unauthorized","code":"unauthenticated"}`.
+- `/api/readiness` with `x-readiness-token` -> 200 `supabase configured`, `inngest {configured:true, keyEnvironment:"prod", transport:"self_hosted", cronsRegistered:true}`, `openai configured`, `trustedClientIpHeader valid`.
+- The sample-ownership copy is **not** in the server HTML at either locale. `Atelier.tsx:2061-2075` gates it on `sampleVisible`, which needs a loaded sample image and `piece.status !== "pending"`, so it renders only after hydration. Both strings do ship to the browser: `/_next/static/chunks/0gdtjf_cge2w1.js`, fetched from the served page's own script list, contains "Sample look, not your piece" and "قطعة نموذجية، ليست قطعتك". A curl grep cannot prove this one; the browser can.
+
+### The mock run did not complete: deployed code and published prompts are out of step
+
+Two `Ali` classic runs were driven over HTTPS against the deployed app, both refused before any spend.
+
+- run `4fed38ec-b0ff-4e96-8903-e4370421a123` (principal `203673bf`, revision `6914c993`), spec carrying `construction: "classical"`.
+- run `5268aa7d-6d61-49de-bb57-9cc4dbc9d7a6` (principal `6c00c85c`, revision `11959055`), identical spec with `construction` omitted.
+
+Both: `POST /api/designs/drafts` 201, `POST /api/revisions/approve` 201 `dispatchState accepted`, then `status operator_review`, `operator_review_reason prompt_compile_failed`, studio task `blocked` at attempt 0 with `terminal_error_code prompt_compile_failed`, the three dependents left `queued`, zero `provider_attempts`, zero assets, `actual_spend_cents 0`.
+
+Audit `task.pre_spend_block_detail`: `error prompt_compile_failed:Unknown prompt variable: construction`, and `task.pre_spend_operator_review` released the 100-cent studio reservation.
+
+Cause, not a defect of this deploy:
+at 22:25 UTC, while this deploy was building, another agent published the P3-7 prompt family as version 2 for `image.packshot` (`b0e4d0fb`), `image.worn` (`3a09c39b`), `image.macro_gift` (`2eada36b`) and `image.dark_editorial` (`ff47db1b`), and every one of those templates uses `{{construction}}`.
+`git show d3dbd25:packages/ai/src/prompt-registry.ts` has no `construction` variable at all - it arrives in `9e52bcc` (P3-7), which is not an ancestor of `d3dbd25`.
+So `validatePromptTemplate` (`packages/ai/src/prompt-registry.ts:337`) sees a template variable the deployed build does not know and throws, pre-spend.
+The previous deploy `b1ea4b6d` (`5b3f065`) predates `construction` too, so staging has been unable to complete a run since 22:25 UTC regardless of which of the two builds was live.
+
+The refusal is the safe direction: it happens before the provider call, spend stayed at zero, and nothing was shown to a shopper.
+The remedy is one deploy of the branch tip that carries P3-7 (`9e52bcc` or later); no rollback and no database change is needed.
+
+Residue: each of the two runs holds `reserved_spend_cents 300` for its three queued dependents, and each principal shows `runs_started 1, reserved_spend_cents 300, actual_spend_cents 0` for `2026-09-08`.
+The sweeper's `task.dependency_terminal_blocked` branch releases those, as it did for an unrelated run at 22:34 the same evening.
+`runtime_policy` was read, not touched: `global_daily_generation_limit 100`, `global_max_reserved_spend_cents 6000`, `daily_generation_limit 30`, `studio_only false`.
+
+`preview_requests`: no request was captured, as instructed, and the five most recent rows all still carry `notified_at null`.
+So the P7-3 notification path was not exercised by this deploy and nothing claims to have been notified.
