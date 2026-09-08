@@ -35,8 +35,33 @@ Next: first open task in `docs/TASKS.md`.
 
 Scope: next open tasks in order, Phase 0 then Phase 1.
 
+Done:
+
+- Phase 0 closed. P0-2, P0-3, P0-7 in `ff5e1a8`; P0-4, P0-5 in `77c9dfa`; P0-6 and P1-1 in `e6b8f0f`. Each was implemented by an Opus 5 subagent and its proof rerun by the lead before commit (`do:check-env` clean, `report.py` and `finalise.py` exit 0 over 91 rows, P0-5 config and completion-path scripts, P1-1 `MATCH 16/16`).
+- Ledger truth measured by the lead: 91 rows, 73 with a verdict; stage 2 has 12 holdout PNGs, 6 verdicts sit unmerged in `lab/stage2/verdicts-{en,ar}.jsonl` (5 pass, 1 tweak), 11 images unscored. Documents now say so.
+- P1-1 ruler: `measureMask` (pure, `packages/identity/src/geometry.ts`) and `decodeMask` (sharp, `apps/jobs/src/decode-mask.ts`) reproduce `verify_stencil.py` exactly on 16 lab and 16 production stencils. The ruler already shows the production renderer lying: English names measure 4 to 7 components while `render-report.json` says 1 and `passed: true`.
+- DS-3 default B taken for Phase 1; D-019 and the `caleums-identity-v4` release bump are part of P1-2.
+
 Doing:
 
-- Dispatched in parallel at session start: P0-2 (platform), P0-7 (platform, home-mini), P0-3, P0-4, P0-5 (implementer), P1-1 (implementer).
-- P0-6 queued behind P0-2 because both edit `docs/DIGITALOCEAN-DEPLOYMENT.md`.
-- DS-3 default B taken for Phase 1: to be recorded as D-019 with P1-2.
+- P1-2 (implementer): HarfBuzz shaping on the pinned font bytes, measured `fontSha256Measured` and `exactCharactersPreserved`, D-019.
+- P1-1 proof durability (implementer): `apps/jobs/scripts/measure-stencils.mts` plus a runnable package script.
+- plan-reviewer over P1-3 to P1-7 before those briefs are written.
+
+Follow-ups found by subagents, not fixed (outside the task rows):
+
+- `.env.production.local` at the repo root holds stale Convex keys from February; inert and gitignored; delete in a hygiene slice.
+- `scripts/digitalocean/check-env.mjs` still accepts several env files although the runbook forbids it; a one-line guard would enforce it.
+- `scripts/digitalocean/bootstrap-app.mjs:87-92` rebuilds `services` from the contract alone, so running it against staging would delete the `inngest` component. Warned in the runbook; script unchanged.
+- `scripts/digitalocean/configure-github.sh` and the `do:github` script entry are dead (write a token into GitHub environments nothing reads).
+- `apps/jobs/src/video.ts:69,140` uses `config.FAL_KEY!`; an operator video command in real mode with video off would fail at runtime instead of at the gate.
+- `VIDEO_ENABLED` is not yet listed in `docs/DIGITALOCEAN-DEPLOYMENT.md` or the app spec.
+- The stage 2 and v4.3 verdict files were never merged into the ledger (`merge_verdicts.py`); that is P3-1's first step.
+- `lab/final/reference-studio-prompt.txt` is still the v4.2 compile while `compile.mjs` emits v4.3.
+- `review/sample-images-board` on `home-mini` was refused by `git branch -d` (remote tip diverges); left in place.
+- DigitalOcean token expires 25 November 2026 (Sanchay).
+
+Open:
+
+- The parked Claude session on `home-mini` (`hq-claude2:2.1`) is stuck on an out-of-credits prompt with two background agents pending; only Sanchay can answer it.
+- Everything under Open in session 1 still stands.
