@@ -29,7 +29,9 @@ A weld fillet may only cover metal of the contour it is welding to.
 Any other contour's pre-ring ink under the fillet is a piece of the name the ring would swallow, and it refuses the piece; before fix pass 5 the whole capsule was exempt and the madda of `آية`, the hamza of `أمير` and the damma of `مُحَمَّدٌ` disappeared into a fillet on a stencil every gate called clean.
 The left ring is sought from the leftmost base glyph inward and the right ring from the rightmost inward, the two may never settle on the same glyph while another eligible base glyph exists, and the ring holes must sit at least a validated fraction of the finished ink width apart on the decoded PNG.
 
-When no clean seat exists on any carrier pair, the piece gets a top rail as wide as the weld fillet it carries, with a ring at each of its ends at the lowest row where both rings clear the name, and reports `ringPlacement: "bar"`; a customer's name is never refused because a ring would not seat.
+Each carrier offers a ladder of anchors - the columns of its load-bearing metal, from the outer edge of the stroke inward - and the two sides are chosen together: every allowed pair is scored on the shape it makes, gate violations first, then the tilt of the line through the two holes, then the worse side's overhang, then the metal lifted off the letters.
+When no pair meets the level, overhang and span gates, the piece raises `identity_no_ring_seat` and the run is routed to operator review before any spend; `ringPlacement` is `welded` or `none`, and `none` means a construction that carries its own suspension.
+The top rail that used to catch this case is gone: measured, it touched `قق` along 11% of its span and the pendant hung from two nuqta (adversarial review 5, major 3).
 That path is reached, not hypothetical: `آية` in `classic`, `diwani` and `signature` is built that way, because the madda covers the whole top of the alef at one end.
 
 ## What is live

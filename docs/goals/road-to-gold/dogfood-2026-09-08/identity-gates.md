@@ -1248,3 +1248,270 @@ The one number that is worse than before: the placement search costs up to
 216080 seats on a name where several carriers have to be tried before a pair
 works, against a mean of 5793. It is bounded now (`IDENTITY_RING_MAX_LIFT`),
 and it is spent once per pendant, before any provider call.
+
+## Fix pass 6 (P1-5), 8 September 2026
+
+Closes `docs/goals/road-to-gold/reviews/identity-engine-adversarial-5.md`: two
+blockers, two of the three majors, and minors 1, 2 and 4.
+Major 4 is a product question for Omran and is left open on purpose; the
+presentation layer's routing is untouched.
+Every number below is a measurement of the run named above it.
+
+### Blocker 1. The two rings hang level, and a gate measures it
+
+The pass-5 search took the first clean seat on the left, then the first clean
+seat on the right, and never looked at the shape the two of them made together.
+Over the 547 welded cells of pass 5 the line through the two holes was p50 4.7
+degrees off horizontal, p90 15.3, p95 23.9, max 64.7; `لي` in `minimal`, a live
+style, hung at 64.7 degrees with every gate green.
+
+Three changes, in the order they matter.
+
+1. The anchor is a ladder, not a point (`carrierAnchors`). Every rung is a
+   column of the carrier contour's load-bearing metal and the topmost pixel of
+   that column - the outer edge of the stroke first, then inward one
+   `IDENTITY_RING_ANCHOR_SHOULDER_STEP` at a time, with the lab's own anchor
+   (the topmost row of the contour) placed among them by its column.
+2. `findSeat` returns the column it settled on **and every row above the seat
+   that is also clean**, not just the first clean seat, so a ring can be raised
+   to meet its partner.
+3. `addRings` scores pairs. Every left carrier x left rung x right carrier x
+   right rung the ordering rules allow is scored on the finished shape, in this
+   order: whether it breaks the overhang gate, whether it breaks the tilt gate,
+   the tilt, how far the two rings sit from the top line of the name, the worse
+   side's overhang, and last the metal lifted off the letters. The rows within
+   the two ladders are chosen by the same idea: most level first, then nearest
+   the name's top line.
+
+The fourth key is not decoration. Without it the search answered "the outermost
+rung that works", and `Ali` in `classic` came out level, balanced, and hanging
+from the bottom serifs of the `A` and the `i` - a pendant that reads upside
+down. The top line of the name's own ink is where a jump ring belongs.
+
+The gate is `identity_ring_tilt_too_steep:deg=D,max=M`, measured on the decoded
+PNG as the angle of the line through the two ring hole centroids off horizontal.
+`IDENTITY_RING_MAX_TILT_DEGREES` is 15: that line is the line the chain makes,
+so it is the angle the name reads at on the neck, and past about 15 degrees a
+piece reads as sideways rather than as tilted. It is not fitted to the corpus.
+
+Tilt over the 576-cell matrix, before and after:
+
+| | p50 | p90 | p95 | max |
+| --- | --- | --- | --- | --- |
+| pass 5, 547 welded cells | 4.7 | 15.3 | 23.9 | 64.7 (`li-ar-minimal`) |
+| pass 6, 568 welded cells | 0.0 | 0.0 | 0.0 | 11.7 (`li-en-kufi`) |
+
+The only cells above 1 degree are `li-en-kufi` 11.7, `noor-ar-kufi` 11.0,
+`muhammad-ar-thuluth-inspired` 7.3, `omar-ar-thuluth-inspired` 5.1,
+`jiji-ar-thuluth-inspired` 4.7, `li-ar-kufi` 3.8 and the three `layla-ar` Naskh
+cells at 3.2. One cell fails the gate: `ij-en-kufi` at 18.1, a two-letter stress
+string in Latin Kufi whose ring columns are 230 px apart, so 76 rows of
+difference is already 18 degrees. It is refused, not shipped.
+
+### Blocker 2. A ring near each end, and a gate measures that too
+
+`identity_ring_overhang_too_wide:side=S,fraction=F,max=M` measures the ink
+outside the nearer ring hole on each side, over the measured ink width, on the
+decoded PNG. `IDENTITY_RING_MAX_OVERHANG_FRACTION` is 0.30: past a third of the
+piece hanging off one side, the pendant tips instead of hanging.
+
+What made the pass-5 collapse possible was the single anchor. A letter that
+carries dots directly above it - the ta marbuta of `عائشة` and `موزة`, the final
+qaf, the shin of `شمس` - has no clean corridor from a ring down to its one
+anchor point, because the ring is seated a little outward of the anchor and the
+fillet then runs back under the dots; the search's only move was to step inward
+to the next letter, and with both sides doing that both rings ended in one
+corner. On a bowl the outer column's top is most of a letter-height below the
+topmost row and out from under the dots, so the ring lifts above the dots and
+the fillet lands on the letter's outer shoulder from above.
+
+Overhang over the matrix, worst side per cell:
+
+| | p50 | p90 | p95 | max |
+| --- | --- | --- | --- | --- |
+| pass 6, 568 welded cells | 0.041 | 0.117 | 0.164 | 0.288 (`jiji-en-kufi`) |
+
+One cell fails: `salem-ar-thuluth-inspired` at 0.306, where Rakkas climbs so
+steeply that the last letter offers no load-bearing metal near the end of the
+piece. It is refused.
+
+The names the review named, in the two live-adjacent styles it asked for
+(`<scratchpad>/fix6/names2.mts`, 43 Arabic and 20 Latin names x `classic` and
+`minimal`, 126 cells, 126 welded, 0 refused, every tilt 0.0):
+
+```
+عائشة ar classic  span 0.917 tilt 0.0 over 0.041  cand 0/0
+عائشة ar minimal  span 0.917 tilt 0.0 over 0.041  cand 0/0
+موزة  ar classic  span 0.917 tilt 0.0 over 0.041  cand 0/0
+موزة  ar minimal  span 0.917 tilt 0.0 over 0.041  cand 0/0
+آمنة  ar classic  span 0.722 tilt 0.0 over 0.233  cand 0/1
+آمنة  ar minimal  span 0.897 tilt 0.0 over 0.056  cand 0/0
+فاطمة ar classic  span 0.917 tilt 0.0 over 0.041  cand 0/0
+فاطمة ar minimal  span 0.917 tilt 0.0 over 0.041  cand 0/0
+رقية  ar classic  span 0.917 tilt 0.0 over 0.041  cand 0/0
+رقية  ar minimal  span 0.914 tilt 0.0 over 0.043  cand 0/0
+شمس   ar classic  span 0.917 tilt 0.0 over 0.041  cand 0/0
+شمس   ar minimal  span 0.917 tilt 0.0 over 0.041  cand 0/0
+خالد  ar classic  span 0.917 tilt 0.0 over 0.041  cand 0/0
+خالد  ar minimal  span 0.917 tilt 0.0 over 0.041  cand 0/0
+آلاء  ar classic  span 0.907 tilt 0.0 over 0.046  cand 0/0
+آلاء  ar minimal  span 0.895 tilt 0.0 over 0.057  cand 0/0
+قق    ar classic  span 0.911 tilt 0.0 over 0.044  cand 0/0
+قق    ar minimal  span 0.897 tilt 0.0 over 0.051  cand 0/0
+```
+
+Against pass 5, where the same names measured overhang 0.66, 0.570, 0.636,
+0.498, 0.564 and 0.426 and `قق` had no welded seat at all. The ring hole
+separation gate moved with them: `MATRIX RING SPAN RATIO min 0.516 p05 0.791
+p50 0.917 max 0.934`, against `min 0.307 p05 0.505 p50 0.846` in pass 5.
+
+### Major 3. The rail is deleted, not repaired
+
+Option B. The rail was measured, not repaired, and it was not a load path: on
+`قق` it touched the name along 11% of its span so the pendant hung from the two
+nuqta of the final qaf through a 24 px bridge, on `آية` in `classic` it covered
+37.6% of the madda, on `تسنيم` in `minimal` it touched 11%, and no gate scanned
+under it. Making it honest means bridging the rail down to every base glyph and
+scanning under the rail exactly as a fillet is scanned - the weld machinery a
+second time, with weaker evidence - and the object that comes out is a nameplate
+on a bar, a different product the shop has never approved. Whether that product
+is sellable is major 4, and building one does not answer it.
+
+So `drawBarSuspension` is gone, `IDENTITY_RING_BAR_WIDTH` and
+`IDENTITY_RING_BAR_DEPTH` are gone, and `IdentityRingPlacement` is `welded` or
+`none`, where `none` means a construction that carries its own suspension and
+never a failure. A name that cannot seat two rings under the gates raises
+`identity_no_ring_seat`, which reaches the caller as a terminal pre-spend block
+with a code and no customer text - the same routing, and the same outcome for
+the shopper, that `identity_bar_fallback` already produced with its default on,
+without a piece that pretends to be a pendant.
+
+The proof is the 20 cells pass 5 sent to the bar. Thirteen of them are welded
+now, level, balanced, and on the outermost carrier of each side:
+
+```
+omar-ar-thuluth-inspired  welded 0:0@0,2:0@0  span 0.91 tilt 5.1 over 0.044
+aya-ar-classic            welded 1:0@0,5:0@0  span 0.90 tilt 0.0 over 0.050
+aya-ar-diwani             welded 1:0@0,5:0@0  span 0.90 tilt 0.0 over 0.050
+aya-ar-signature          welded 1:0@0,5:0@0  span 0.90 tilt 0.0 over 0.050
+tasneem-ar-minimal        welded 0:0@0,4:0@0  span 0.92 tilt 0.0 over 0.041
+titi-ar-thuluth-inspired  welded 0:0@0,2:0@0  span 0.77 tilt 0.0 over 0.187
+li-ar-thuluth-inspired    welded 0:0@0,1:0@0  span 0.87 tilt 0.0 over 0.065
+ij-ar-thuluth-inspired    welded 0:0@0,2:0@0  span 0.86 tilt 0.9 over 0.068
+qq-ar-classic             welded 1:0@0,3:0@0  span 0.91 tilt 0.0 over 0.044
+qq-ar-minimal             welded 0:0@0,1:0@0  span 0.90 tilt 0.0 over 0.051
+qq-ar-diwani              welded 1:0@0,3:0@0  span 0.91 tilt 0.0 over 0.044
+qq-ar-signature           welded 1:0@0,3:0@0  span 0.91 tilt 0.0 over 0.044
+shaikha-ar-thuluth-inspired welded 0:0@0,2:0@0 span 0.69 tilt 0.0 over 0.268
+```
+
+Seven are refused: `salem-ar-thuluth-inspired` on overhang, and the six
+`bartholomewsonlongest-en-*` cells on `identity_no_ring_seat` - a
+21-character stress string, not a name. `ij-en-kufi` is refused on tilt; in pass 5 it
+shipped welded with its two holes 28.5 degrees out of level (rings at 351,151
+and 636,306), which is the failure this pass exists to find. That is 8 refusals in 576 cells, 1.4%, against
+20 bar cells, 3.5%, and none of the 8 is a real customer name in a live style.
+
+### Major 5. The harness measures, it does not agree
+
+`render-stencils.mts` no longer imports a single placement or exemption constant
+from the engine. Its header states what is still shared and why: the shaper
+(the outlines come from the same pinned bytes through `shapeText` and
+`identityStencilSvg`), the rasteriser (the piece under test is the PNG the
+production path wrote) and the decoder (`decodeMask`). Those three are the
+subject of the measurement; there is no second rasteriser to render the same
+stencil twice, and a different shaper would be measuring a different pendant.
+Everything else - the ownership rule, the growth radius a carrier's ownership
+reaches, the ring and fillet capsule geometry and the hole floor - is restated
+in this file as `HARNESS_*` constants.
+
+And it reports the difference rather than assuming equality:
+
+```
+MATRIX WELDED-DELTA 0/568 cells where this harness and the engine disagree on welded ink
+MATRIX PUNCHED-DELTA 0/568 cells where this harness and the engine disagree on punched ink
+```
+
+That is now a falsifiable statement: change `HARNESS_OWNERSHIP_GROWTH` or the
+capsule width in one place and the count moves.
+
+### Minors
+
+1. `fillPinholes` no longer fills a counter. Every small enclosed region of the
+   finished raster is traced back through the recentre transform to the raster
+   as the rasteriser painted it. A region that still holds at least
+   `IDENTITY_STENCIL_COUNTER_REMNANT_FRACTION` (0.05) of the counter it came
+   from, scaled, is that counter and is left open, so
+   `identity_stencil_pinhole` refuses the piece. Below that, the thickening
+   closed the counter outright and what is left is a sliver of void, which is
+   filled. Measured: thirty `e` in Kufi has a 114 px counter as the rasteriser
+   paints it and 13 to 29 px in the finished piece - 0.11 to 0.25 - and every
+   one of them stays open, so the piece is refused with
+   `identity_stencil_pinhole:count=4` instead of coming out with four counters
+   welded solid and `passed: true`. The one-pixel region in `إبراهيم` in
+   `classic` is 0.0005 of the 2380 px counter it came from and is filled, which
+   is what a caster does with it. `pinholesFilled` counts regions, as its own
+   type doc always said it did.
+2. The shared-glyph welded branch keeps its own gate margin,
+   `IDENTITY_RING_SHARED_GLYPH_MIN_SPAN_FRACTION` at 0.45, because the general
+   0.25 floor was justified against multi-letter pieces and `م` in `minimal`
+   cleared it by 2.8%. Measured over 102 one-letter cells (`ا ب م ن ه و ي ع س
+   ق` and `A B e i M O Z`, six styles each,
+   `<scratchpad>/fix6/single.mts`): every one is welded on its single glyph,
+   the smallest span ratio is 0.617 (`ا` in `kufi`), the largest 0.917, the
+   worst tilt 9.5 degrees, and nothing is refused. The pass-5 counterexample,
+   `م` in `minimal` at 0.257, measures 0.816 now.
+4. `shaping.ts` cited `carrierSeats`, a function that has never existed. It
+   names `carrierCandidates` and `addRings`.
+
+### The run
+
+```
+export PATH=$HOME/.local/share/mise/installs/node/24.18.1/bin:$PATH
+corepack pnpm --filter @jewelo/jobs render-stencils <repo>/docs/goals/overnight-launch/lab/stencils/production
+```
+
+```
+LUMINANCE 16/16
+SINGLE-PIECE 16/16
+MATRIX REFUSED 8/576: ij-en-kufi.png:identity_ring_tilt_too_steep:deg=18.1,max=15 bartholomewsonlongest-en-classic.png:identity_no_ring_seat:left=6,right=6,steps=420888 bartholomewsonlongest-en-minimal.png:identity_no_ring_seat:left=6,right=6,steps=420888 bartholomewsonlongest-en-diwani.png:identity_no_ring_seat:left=6,right=6,steps=420888 bartholomewsonlongest-en-signature.png:identity_no_ring_seat:left=6,right=6,steps=420888 bartholomewsonlongest-en-kufi.png:identity_no_ring_seat:left=6,right=6,steps=434956 bartholomewsonlongest-en-thuluth-inspired.png:identity_no_ring_seat:left=6,right=6,steps=420888 salem-ar-thuluth-inspired.png:identity_ring_overhang_too_wide:side=right,fraction=0.306,max=0.3
+MATRIX SINGLE-PIECE 568/568
+MATRIX MOVED-INK 0/568
+MATRIX RECENTRE-DOWNSCALED 518/568
+MATRIX WELDED-GLYPH 0/568 cells have ink welded into ring metal
+MATRIX RING SPAN RATIO min 0.516 p05 0.791 p50 0.917 max 0.934 over 568 cells
+MATRIX FILLET-FOREIGN 0/568 cells have pre-ring ink of another contour under a weld fillet
+MATRIX PINHOLES 0/568 cells carry an enclosed region of 16 px or less
+MATRIX SEAT-SEARCH steps min 461 max 489843 mean 49258; deepest accepted lift 346 rows (muhammad-ar-thuluth-inspired.png)
+MATRIX RING TILT p50 0.0 p90 0.0 p95 0.0 max 11.7 over 568 cells
+MATRIX RING OVERHANG p50 0.041 p90 0.117 p95 0.164 max 0.288 over 568 cells
+MATRIX WELDED-DELTA 0/568 cells where this harness and the engine disagree on welded ink
+MATRIX PUNCHED-DELTA 0/568 cells where this harness and the engine disagree on punched ink
+MATRIX RING HOLE FLOOR 568/568 cells have every ring hole at or above 90% of the ideal area
+MATRIX RINGS 568/568 cells have exactly 2 ring holes, each clear of the stroke it is welded to, with no punched-out and no welded-in ink
+MATRIX RING HOLE SIZE min 1408 max 1792 mean 1497
+exit 0
+```
+
+The bare `measure-stencils`, which reads the production directory and its
+manifest, and the Python oracle, which shares code with neither:
+
+```
+corepack pnpm --filter @jewelo/jobs measure-stencils
+SINGLE-PIECE 16/16
+MATCH 16/16
+CLAIM 16/16
+
+<scratchpad>/p3-3/venv/bin/python <scratchpad>/fix6/oracle.py
+PYTHON ORACLE AGREES 16/16
+```
+
+`corepack pnpm build --force` exits 0. `corepack pnpm --filter @jewelo/identity
+lint` and `--filter @jewelo/jobs lint` both exit 0 with no output.
+
+The number that got worse: the placement search now costs a mean of 49258 seats
+per piece against 5793, and up to 489843 on a name where every carrier and every
+rung has to be tried. It is bounded (`IDENTITY_RING_MAX_LIFT`, six rungs, six
+carriers a side), it is spent once per pendant before any provider call, and the
+summed-area pre-filter added in this pass is what keeps it to seconds rather
+than minutes.

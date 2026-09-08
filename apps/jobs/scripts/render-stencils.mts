@@ -29,15 +29,6 @@ import { isAbsolute, join, resolve } from "node:path";
 
 import {
   findMaskHoles,
-  IDENTITY_RING_BAR_DEPTH,
-  IDENTITY_RING_BAR_WIDTH,
-  IDENTITY_RING_HOLE_MIN_AREA_FRACTION,
-  IDENTITY_RING_INNER,
-  IDENTITY_RING_OUTER,
-  IDENTITY_RING_WELD_ANCHOR_DEPTH,
-  IDENTITY_RING_WELD_START_GAP,
-  IDENTITY_RING_WELD_WIDTH,
-  IDENTITY_THICKEN_PASSES,
   identityFontUrl,
   identityStencilSvg,
   LIVE_IDENTITY_STYLES,
@@ -51,6 +42,53 @@ import {
 
 import { decodeMask } from "../src/decode-mask";
 import { renderIdentityAnchor } from "../src/identity-anchor";
+
+/* -------------------------------------------------------------------------
+ * What this harness shares with the engine, and what it does not.
+ *
+ * Adversarial review 5, major 5: this script used to import the engine's
+ * placement and exemption constants and rebuild the engine's rule out of them,
+ * so `FILLET-FOREIGN 0/576` was two copies of one belief rather than two
+ * measurements, and a wrong rule could not have been falsified by it.
+ *
+ * Shared, and named here so a reader does not have to look: the *shaper* (the
+ * outlines come from `shapeText` and `identityStencilSvg` over the same pinned
+ * font bytes), the *rasteriser* (the piece under test is the PNG the production
+ * path wrote) and the *decoder* (`decodeMask` reads those bytes back). Those
+ * three are the subject of the measurement, not the rule being tested: if the
+ * shaper laid out a different name the gate would be measuring a different
+ * pendant, and there is no second rasteriser to render the same stencil twice.
+ *
+ * Not shared: every number below. The ownership rule (which contour a pre-ring
+ * ink pixel belongs to), the growth radius that decides how far a carrier's
+ * ownership reaches, the ring and fillet geometry and the hole floor are
+ * restated here from the published drawing spec. When the engine changes one of
+ * them and this file is not changed with it, the two counts disagree and the
+ * disagreement is printed (`WELDED-DELTA`, `PUNCHED-DELTA`) instead of being
+ * assumed away.
+ * ---------------------------------------------------------------------- */
+
+/** Outer radius of a jump ring, px. */
+const HARNESS_RING_OUTER = 42;
+/** Radius of the hole, px. */
+const HARNESS_RING_INNER = 24;
+/** Width of the weld fillet capsule, px. */
+const HARNESS_WELD_WIDTH = 39;
+/** How far below the hole the fillet starts, px. */
+const HARNESS_WELD_START_GAP = HARNESS_WELD_WIDTH / 2;
+/** How far into the anchor stroke the fillet reaches, px. */
+const HARNESS_WELD_ANCHOR_DEPTH = 14;
+/**
+ * How far outside its own outline a contour still owns the metal, px.
+ *
+ * Arabic letters join, so two adjacent outlines share the joining stroke, and a
+ * letter's counter is a contour nested inside its body; the piece was also
+ * thickened before the rings were drawn. Ownership therefore reaches this far
+ * outside the outline, and the carrier wins wherever two claims overlap.
+ */
+const HARNESS_OWNERSHIP_GROWTH = 2;
+/** Smallest ring hole area accepted, as a fraction of the ideal disc. */
+const HARNESS_RING_HOLE_MIN_AREA_FRACTION = 0.9;
 
 /** The four names the image lab measures, in both scripts. */
 const NAMES: readonly {
@@ -304,6 +342,10 @@ interface Row {
   /** Blocker 2: ring hole separation, in pixels and against the ink width. */
   readonly ringSpan: number;
   readonly ringSpanRatio: number;
+  /** Blocker 1: the angle of the line through the two holes, off horizontal. */
+  readonly ringTilt: number;
+  /** Blocker 2: ink outside the nearer hole on the worse side, over the width. */
+  readonly ringOverhang: number;
   /** Minor 2: enclosed regions of a few pixels left in the written PNG. */
   readonly pinholes: number;
   /** Minor 4: seats the placement search evaluated for this cell. */
@@ -349,12 +391,11 @@ interface RingHole {
 /**
  * The smallest area a ring hole may measure on this cell, in pixels.
  *
- * The ideal hole is `pi * IDENTITY_RING_INNER^2` before the recentre downscale
- * and that area times the two applied scales after it.
- * `IDENTITY_RING_HOLE_MIN_AREA_FRACTION` is the engine's own floor; the script
- * recomputes it from the transform the manifest claims rather than reading a
- * verdict, so a hole the weld fillet crept back into fails here as well as in
- * the engine.
+ * The ideal hole is `pi * HARNESS_RING_INNER^2` before the recentre downscale
+ * and that area times the two applied scales after it. The radius and the
+ * fraction are this file's own numbers (major 5), and it recomputes the floor
+ * from the transform the manifest claims rather than reading a verdict, so a
+ * hole the weld fillet crept back into fails here as well as in the engine.
  */
 function ringHoleFloor(construction: {
   readonly recentreScale: number;
@@ -362,11 +403,11 @@ function ringHoleFloor(construction: {
 }): number {
   return (
     Math.PI *
-    IDENTITY_RING_INNER *
-    IDENTITY_RING_INNER *
+    HARNESS_RING_INNER *
+    HARNESS_RING_INNER *
     construction.recentreScale *
     construction.recentreScaleY *
-    IDENTITY_RING_HOLE_MIN_AREA_FRACTION
+    HARNESS_RING_HOLE_MIN_AREA_FRACTION
   );
 }
 
@@ -511,6 +552,33 @@ function ringSpanRatioOf(
   return { span, ratio: width > 0 ? span / width : 0 };
 }
 
+/**
+ * The tilt of the line through the two measured hole centroids, in degrees off
+ * horizontal, and the worse of the two sides' overhangs (blockers 1 and 2).
+ * Both are computed here from this file's own measurement of the written PNG.
+ */
+function ringHangOf(
+  ringHoles: readonly RingHole[],
+  bbox: readonly number[] | null,
+): { tilt: number; overhang: number } {
+  const [first, second] = ringHoles;
+  if (!first || !second || !first.found || !second.found || !bbox)
+    return { tilt: 0, overhang: 0 };
+  const width = (bbox[2] as number) - (bbox[0] as number) + 1;
+  const tilt =
+    (Math.atan2(
+      Math.abs(first.centreY - second.centreY),
+      Math.abs(first.centreX - second.centreX),
+    ) *
+      180) /
+    Math.PI;
+  const overhang = Math.max(
+    (Math.min(first.centreX, second.centreX) - (bbox[0] as number)) / width,
+    ((bbox[2] as number) - Math.max(first.centreX, second.centreX)) / width,
+  );
+  return { tilt, overhang };
+}
+
 function inPolygon(x: number, y: number, points: readonly number[]): boolean {
   let inside = false;
   const count = points.length / 2;
@@ -556,60 +624,43 @@ function measureRingMetal(
     readonly contourIndex: number;
   }[],
   glyphs: readonly StencilGlyphOutline[],
-  glyphBoxBeforeRings: readonly [number, number, number, number],
 ): { welded: number; punched: number; foreignUnderFillet: number } {
-  // A bar ring hangs from the rail, not from a letter, so the ink its fillet is
-  // allowed to cover is the ink the rail already grips. The rail is re-derived
-  // here from the pre-ring glyph box the report states and the published bar
-  // constants, not read back from the solver.
-  const [barMinX, barMinY, barMaxX] = glyphBoxBeforeRings;
-  const barLine = barMinY + IDENTITY_RING_BAR_DEPTH;
-  const onRail = (x: number, y: number) =>
-    insideCapsule(
-      x,
-      y,
-      barMinX,
-      barLine,
-      barMaxX,
-      barLine,
-      IDENTITY_RING_BAR_WIDTH / 2,
-    );
   let welded = 0;
   let punched = 0;
   let foreignUnderFillet = 0;
-  const radius = IDENTITY_RING_WELD_WIDTH / 2;
+  const radius = HARNESS_WELD_WIDTH / 2;
   for (const centre of centres) {
-    const barY0 = centre.y + IDENTITY_RING_INNER + IDENTITY_RING_WELD_START_GAP;
-    const barY1 = centre.anchorY + IDENTITY_RING_WELD_ANCHOR_DEPTH;
+    const barY0 = centre.y + HARNESS_RING_INNER + HARNESS_WELD_START_GAP;
+    const barY1 = centre.anchorY + HARNESS_WELD_ANCHOR_DEPTH;
     const yMin = Math.max(
       0,
       Math.trunc(
-        Math.min(centre.y - IDENTITY_RING_OUTER, barY0, barY1) - radius,
+        Math.min(centre.y - HARNESS_RING_OUTER, barY0, barY1) - radius,
       ),
     );
     const yMax = Math.min(
       pre.height - 1,
       Math.ceil(
-        Math.max(centre.y + IDENTITY_RING_OUTER, barY0, barY1) + radius,
+        Math.max(centre.y + HARNESS_RING_OUTER, barY0, barY1) + radius,
       ),
     );
     const xMin = Math.max(
       0,
       Math.trunc(
-        Math.min(centre.x - IDENTITY_RING_OUTER, centre.anchorX) - radius,
+        Math.min(centre.x - HARNESS_RING_OUTER, centre.anchorX) - radius,
       ),
     );
     const xMax = Math.min(
       pre.width - 1,
       Math.ceil(
-        Math.max(centre.x + IDENTITY_RING_OUTER, centre.anchorX) + radius,
+        Math.max(centre.x + HARNESS_RING_OUTER, centre.anchorX) + radius,
       ),
     );
     for (let y = yMin; y <= yMax; y += 1)
       for (let x = xMin; x <= xMax; x += 1) {
         if (!pre.at(x, y)) continue;
         const radial = (x - centre.x) ** 2 + (y - centre.y) ** 2;
-        if (radial <= IDENTITY_RING_INNER ** 2) {
+        if (radial <= HARNESS_RING_INNER ** 2) {
           punched += 1;
           continue;
         }
@@ -623,7 +674,6 @@ function measureRingMetal(
           radius,
         );
         if (underFillet) {
-          if (centre.glyphIndex < 0 && onRail(x, y)) continue;
           // Whose ink is it? Every contour of every glyph is asked, and the
           // weld only excuses the carrier the report named.
           //
@@ -632,22 +682,22 @@ function measureRingMetal(
           // adjacent glyph outlines share the joining stroke, and a letter's
           // own counter is a contour nested inside its body. Counting either of
           // those as "another contour" would call the weld itself a swallowed
-          // mark. `IDENTITY_THICKEN_PASSES` is the published growth and is
-          // applied here as nine samples on a square of that radius rather than
-          // by importing the engine's dilation.
+          // mark. `HARNESS_OWNERSHIP_GROWTH` is this file's own statement of
+          // that reach, applied as samples on a square of that radius rather
+          // than by importing the engine's dilation (major 5).
           const carrier = glyphs
             .find((glyph) => glyph.index === centre.glyphIndex)
             ?.contours[centre.contourIndex];
           let onCarrier = false;
           if (carrier)
             for (
-              let dx = -IDENTITY_THICKEN_PASSES;
-              dx <= IDENTITY_THICKEN_PASSES;
+              let dx = -HARNESS_OWNERSHIP_GROWTH;
+              dx <= HARNESS_OWNERSHIP_GROWTH;
               dx += 1
             )
               for (
-                let dy = -IDENTITY_THICKEN_PASSES;
-                dy <= IDENTITY_THICKEN_PASSES;
+                let dy = -HARNESS_OWNERSHIP_GROWTH;
+                dy <= HARNESS_OWNERSHIP_GROWTH;
                 dy += 1
               )
                 if (inPolygon(x + 0.5 + dx, y + 0.5 + dy, carrier.points))
@@ -675,7 +725,7 @@ function measureRingMetal(
           }
           continue;
         }
-        if (radial <= IDENTITY_RING_OUTER ** 2) welded += 1;
+        if (radial <= HARNESS_RING_OUTER ** 2) welded += 1;
       }
   }
   return { welded, punched, foreignUnderFillet };
@@ -731,7 +781,7 @@ function measureRings(
     if (hole !== undefined) {
       const reach =
         Math.ceil(
-          IDENTITY_RING_OUTER *
+          HARNESS_RING_OUTER *
             Math.max(construction.recentreScale, construction.recentreScaleY),
         ) + 4;
       for (let dy = -reach; dy <= reach; dy += 1)
@@ -823,7 +873,6 @@ for (const name of NAMES) {
             ),
             rendered.construction.ringCentres,
             layout.glyphs,
-            rendered.construction.glyphBoxBeforeRings,
           );
 
       rows.push({
@@ -875,6 +924,8 @@ for (const name of NAMES) {
         foreignUnderFillet: metal.foreignUnderFillet,
         ringSpan: ringSpanRatioOf(ring.ringHoles, measured.bbox).span,
         ringSpanRatio: ringSpanRatioOf(ring.ringHoles, measured.bbox).ratio,
+        ringTilt: ringHangOf(ring.ringHoles, measured.bbox).tilt,
+        ringOverhang: ringHangOf(ring.ringHoles, measured.bbox).overhang,
         pinholes: countPinholes(decoded),
         seatSearchSteps: rendered.construction.seatSearchSteps,
       });
@@ -952,7 +1003,7 @@ console.log("");
 console.log(
   ringsOff
     ? `P1-5 rings OFF (construction "${RINGLESS_CONSTRUCTION}" is in the ring-free set).`
-    : `P1-5 rings ON (the default). Ring radii: outer ${IDENTITY_RING_OUTER}px, inner ${IDENTITY_RING_INNER}px.`,
+    : `P1-5 rings ON (the default). Ring radii: outer ${HARNESS_RING_OUTER}px, inner ${HARNESS_RING_INNER}px.`,
 );
 console.log(
   "glyphTop is the pre-ring ink box top, mapped through the recentre transform.",
@@ -1204,6 +1255,8 @@ writeFileSync(
         recentreOffsetY: row.recentreOffsetY,
         ringPlacement: row.ringPlacement,
         ringCarriers: row.ringCarriers,
+        ringTilt: row.ringTilt,
+        ringOverhang: row.ringOverhang,
         seatSearchSteps: row.seatSearchSteps,
       },
     })),
@@ -1261,8 +1314,16 @@ interface MatrixCell {
   readonly moved: number;
   readonly recentreScale: number;
   readonly jumpRings: number;
-  /** D-020: `welded`, `bar` or `none`. Every `bar` cell is named in the log. */
+  /** D-020: `welded` or `none`. */
   readonly ringPlacement: string;
+  /**
+   * The engine's refusal code when this cell produced no piece at all, and
+   * undefined when it did. Adversarial review 5, major 3: the rail that used to
+   * catch a name with no clean seat is gone, so a name the placement cannot
+   * bring under the gates is refused with a code and no customer text, which
+   * the presentation layer turns into a terminal pre-spend block.
+   */
+  readonly refused?: string;
   /** D-020: `glyphIndex:contourIndex` of the carrier each ring was seated on. */
   readonly ringCarriers: readonly string[];
   readonly ringHoleFloor: number;
@@ -1279,6 +1340,17 @@ interface MatrixCell {
   /** Blocker 2: ring hole separation, in pixels and against the ink width. */
   readonly ringSpan: number;
   readonly ringSpanRatio: number;
+  /**
+   * Adversarial review 5, blocker 1: the angle of the line through the two
+   * measured hole centroids, off horizontal, in degrees. This file computes it
+   * from the two centroids it measured itself.
+   */
+  readonly ringTilt: number;
+  /**
+   * Blocker 2: the worse of the two sides' overhangs - measured ink outside the
+   * nearer hole centroid, over the measured ink width.
+   */
+  readonly ringOverhang: number;
   /** Minor 2: enclosed regions of a few pixels left in the written PNG. */
   readonly pinholes: number;
   /** Minor 4: seats the placement search evaluated for this cell. */
@@ -1307,25 +1379,66 @@ for (const name of MATRIX_NAMES) {
     for (const style of LIVE_IDENTITY_STYLES) {
       const text = name.text[script];
       const file = `${name.label}-${script}-${style}.png`;
-      const rendered = await renderIdentityAnchor(
-        {
-          approvedText: text,
-          language: script,
-          typography: style,
-          fingerprint: `p1-4-${name.label}-${script}-${style}`,
-        },
-        {
-          arabicStyle: style,
-          lettering: style,
-          construction: specificationConstruction,
-          layout: "single-name",
-          connector: "none",
-          names: [{ approvedArabicText: script === "ar" ? text : null }],
-          dimensions: { widthMm: 32, heightMm: 12, thicknessMm: 1.2 },
-        },
-        "caleums-final-media-v2",
-        ringlessConstructions,
-      );
+      // Adversarial review 5, major 3: a name the placement cannot bring under
+      // the level, overhang and span gates now has no piece at all, and that is
+      // a result to record rather than a crash. The code carries no customer
+      // text, so it is printed as it is raised.
+      let rendered;
+      try {
+        rendered = await renderIdentityAnchor(
+          {
+            approvedText: text,
+            language: script,
+            typography: style,
+            fingerprint: `p1-4-${name.label}-${script}-${style}`,
+          },
+          {
+            arabicStyle: style,
+            lettering: style,
+            construction: specificationConstruction,
+            layout: "single-name",
+            connector: "none",
+            names: [{ approvedArabicText: script === "ar" ? text : null }],
+            dimensions: { widthMm: 32, heightMm: 12, thicknessMm: 1.2 },
+          },
+          "caleums-final-media-v2",
+          ringlessConstructions,
+        );
+      } catch (error) {
+        const refused = (error as Error).message;
+        matrix.set(cellKey(name.label, script, style), {
+          file,
+          refused,
+          components: 0,
+          jumpRings: 0,
+          ringPlacement: "-",
+          ringCarriers: [],
+          ringHoleFloor: 0,
+          ringHolesFound: 0,
+          ringHolesAbove: 0,
+          ringHoleSizes: [],
+          holesAboveGlyphTop: 0,
+          measuredPunchedByRings: 0,
+          measuredWeldedIntoRingMetal: 0,
+          claimedPunchedByRings: 0,
+          claimedWeldedIntoRingMetal: 0,
+          foreignUnderFillet: 0,
+          ringSpan: 0,
+          ringSpanRatio: 0,
+          ringTilt: 0,
+          ringOverhang: 0,
+          pinholes: 0,
+          seatSearchSteps: 0,
+          ringLift: 0,
+          ringCentres: [],
+          islandsBeforeBridging: 0,
+          bridges: 0,
+          moved: 0,
+          recentreScale: 1,
+        });
+        console.log(`CELL ${file.padEnd(34)}refused ${refused}`);
+        continue;
+      }
       writeFileSync(join(matrixDirectory, file), rendered.png);
       const decodedCell = await decodeMask(rendered.png);
       const measured = measureMask(decodedCell);
@@ -1352,7 +1465,6 @@ for (const name of MATRIX_NAMES) {
             ),
             rendered.construction.ringCentres,
             cellLayout.glyphs,
-            rendered.construction.glyphBoxBeforeRings,
           );
       matrix.set(cellKey(name.label, script, style), {
         file,
@@ -1378,6 +1490,8 @@ for (const name of MATRIX_NAMES) {
         foreignUnderFillet: metal.foreignUnderFillet,
         ringSpan: ringSpanRatioOf(ring.ringHoles, measured.bbox).span,
         ringSpanRatio: ringSpanRatioOf(ring.ringHoles, measured.bbox).ratio,
+        ringTilt: ringHangOf(ring.ringHoles, measured.bbox).tilt,
+        ringOverhang: ringHangOf(ring.ringHoles, measured.bbox).overhang,
         pinholes: countPinholes(decodedCell),
         seatSearchSteps: rendered.construction.seatSearchSteps,
         ringLift: Math.max(
@@ -1419,6 +1533,8 @@ for (const name of MATRIX_NAMES) {
             .padEnd(20)}` +
           `punched ${metal.punched} welded ${metal.welded} foreign ${metal.foreignUnderFillet} ` +
           `span ${ringSpanRatioOf(ring.ringHoles, measured.bbox).ratio.toFixed(2)} ` +
+          `tilt ${ringHangOf(ring.ringHoles, measured.bbox).tilt.toFixed(1)} ` +
+          `over ${ringHangOf(ring.ringHoles, measured.bbox).overhang.toFixed(3)} ` +
           `pin ${countPinholes(decodedCell)} steps ${rendered.construction.seatSearchSteps}  ` +
           `holes [${ring.ringHoles.map((hole) => hole.size).join(" ")}] ` +
           `floor ${Math.round(ringHoleFloor(rendered.construction))}`,
@@ -1444,6 +1560,7 @@ for (const name of MATRIX_NAMES)
         script.padEnd(8) +
         LIVE_IDENTITY_STYLES.map((style) => {
           const cell = matrix.get(cellKey(name.label, script, style));
+          if (cell?.refused) return "refused".padStart(18);
           return String(cell ? cell.components : "-").padStart(18);
         }).join(""),
     );
@@ -1468,11 +1585,21 @@ for (const name of MATRIX_NAMES)
         }).join(""),
     );
 
-const matrixCells = [...matrix.values()];
+const allCells = [...matrix.values()];
+// A refused cell produced no piece, so it takes no part in the measurements of
+// pieces; it is reported on its own line with the code that refused it.
+const refusedCells = allCells.filter((cell) => cell.refused !== undefined);
+const matrixCells = allCells.filter((cell) => cell.refused === undefined);
 const joined = matrixCells.filter((cell) => cell.components === 1).length;
 const movedInk = matrixCells.filter((cell) => cell.moved !== 0);
 const downscaled = matrixCells.filter((cell) => cell.recentreScale !== 1);
 console.log("");
+console.log(
+  `MATRIX REFUSED ${refusedCells.length}/${allCells.length}` +
+    (refusedCells.length
+      ? `: ${refusedCells.map((cell) => `${cell.file}:${cell.refused}`).join(" ")}`
+      : " cells could not seat two rings under the gates"),
+);
 console.log(`MATRIX SINGLE-PIECE ${joined}/${matrixCells.length}`);
 console.log(`MATRIX MOVED-INK ${movedInk.length}/${matrixCells.length}`);
 console.log(
@@ -1558,18 +1685,89 @@ const lifts = matrixCells.map((cell) => cell.ringLift);
 console.log(
   `MATRIX SEAT-SEARCH steps min ${Math.min(...steps)} max ${Math.max(...steps)} mean ${Math.round(steps.reduce((total, value) => total + value, 0) / steps.length)}; deepest accepted lift ${Math.max(...lifts)} rows (${(matrixCells.find((cell) => cell.ringLift === Math.max(...lifts)) as MatrixCell).file})`,
 );
-const barCells = matrixCells.filter((cell) => cell.ringPlacement === "bar");
+// Blockers 1 and 2 of adversarial review 5: the two shape numbers of the
+// finished piece, over the whole matrix, so the gates are set from the corpus
+// and a regression is a number rather than a description.
+const distribution = (
+  label: string,
+  values: readonly number[],
+  worst: readonly MatrixCell[],
+  pick: (cell: MatrixCell) => number,
+  digits: number,
+) => {
+  if (values.length === 0) return;
+  const sorted = values.slice().sort((left, right) => left - right);
+  const quantile = (fraction: number) =>
+    (
+      sorted[
+        Math.min(sorted.length - 1, Math.floor(fraction * sorted.length))
+      ] as number
+    ).toFixed(digits);
+  console.log(
+    `MATRIX ${label} p50 ${quantile(0.5)} p90 ${quantile(0.9)} p95 ${quantile(0.95)} max ${(sorted[sorted.length - 1] as number).toFixed(digits)} over ${sorted.length} cells`,
+  );
+  console.log(
+    `MATRIX ${label} worst 12: ${worst
+      .slice(0, 12)
+      .map((cell) => `${cell.file}:${pick(cell).toFixed(digits)}`)
+      .join(" ")}`,
+  );
+};
+distribution(
+  "RING TILT",
+  matrixCells.map((cell) => cell.ringTilt),
+  matrixCells
+    .slice()
+    .sort((left, right) => right.ringTilt - left.ringTilt),
+  (cell) => cell.ringTilt,
+  1,
+);
+distribution(
+  "RING OVERHANG",
+  matrixCells.map((cell) => cell.ringOverhang),
+  matrixCells
+    .slice()
+    .sort((left, right) => right.ringOverhang - left.ringOverhang),
+  (cell) => cell.ringOverhang,
+  3,
+);
+// Major 5: this file's own count of welded and punched ink against the
+// engine's, printed as a difference rather than assumed to be equal.
+const weldedDelta = matrixCells.filter(
+  (cell) => cell.measuredWeldedIntoRingMetal !== cell.claimedWeldedIntoRingMetal,
+);
+const punchedDelta = matrixCells.filter(
+  (cell) => cell.measuredPunchedByRings !== cell.claimedPunchedByRings,
+);
 console.log(
-  `MATRIX BAR-FALLBACK ${barCells.length}/${matrixCells.length}` +
-    (barCells.length
-      ? `: ${barCells.map((cell) => cell.file).join(" ")}`
-      : " cells needed the bar suspension"),
+  `MATRIX WELDED-DELTA ${weldedDelta.length}/${matrixCells.length} cells where this harness and the engine disagree on welded ink` +
+    (weldedDelta.length
+      ? `: ${weldedDelta
+          .slice(0, 12)
+          .map(
+            (cell) =>
+              `${cell.file}:${cell.measuredWeldedIntoRingMetal}vs${cell.claimedWeldedIntoRingMetal}`,
+          )
+          .join(" ")}`
+      : ""),
+);
+console.log(
+  `MATRIX PUNCHED-DELTA ${punchedDelta.length}/${matrixCells.length} cells where this harness and the engine disagree on punched ink` +
+    (punchedDelta.length
+      ? `: ${punchedDelta
+          .slice(0, 12)
+          .map(
+            (cell) =>
+              `${cell.file}:${cell.measuredPunchedByRings}vs${cell.claimedPunchedByRings}`,
+          )
+          .join(" ")}`
+      : ""),
 );
 const undersized = matrixCells.filter((cell) =>
   cell.ringHoleSizes.some((size) => size < cell.ringHoleFloor),
 );
 console.log(
-  `MATRIX RING HOLE FLOOR ${matrixCells.length - undersized.length}/${matrixCells.length} cells have every ring hole at or above ${Math.round(IDENTITY_RING_HOLE_MIN_AREA_FRACTION * 100)}% of the ideal area`,
+  `MATRIX RING HOLE FLOOR ${matrixCells.length - undersized.length}/${matrixCells.length} cells have every ring hole at or above ${Math.round(HARNESS_RING_HOLE_MIN_AREA_FRACTION * 100)}% of the ideal area`,
 );
 for (const cell of undersized) {
   console.log(
@@ -1602,5 +1800,5 @@ for (const cell of matrixCells) {
 
 writeFileSync(
   join(matrixDirectory, "matrix-report.json"),
-  `${JSON.stringify(matrixCells, null, 2)}\n`,
+  `${JSON.stringify(allCells, null, 2)}\n`,
 );

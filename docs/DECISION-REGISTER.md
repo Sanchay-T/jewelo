@@ -23,7 +23,7 @@
 | D-017 | Inngest is the durable job engine, self-hosted as a second DigitalOcean App Platform component; functions are served by `apps/web` at `/api/inngest`; Inngest Cloud is a one-variable switch (`INNGEST_BASE_URL`) | accepted 7 Sep 2026 on user instruction | Inngest Cloud account exists and its free tier suits the load, or a measured operability failure of the self-hosted server |
 | D-018 | Runway MCP serving `gpt-image-2` is the bench for all prompt and stencil work; OpenAI stays the production still provider, wired fail-closed and called only at the phase 5 gate in `docs/ROAD-TO-GOLD.md` | accepted 7 Sep 2026 on user instruction | Runway stops serving the same model as production, so lab results no longer transfer |
 | D-019 | The identity engine opens the pinned font file bytes and shapes them with HarfBuzz (`harfbuzzjs` in `packages/identity/src/shaping.ts`); no rendering library is ever asked for a font family name. The engine release identifier moves from `caleums-arabic-v3` to `caleums-identity-v4` | accepted 8 Sep 2026, DS-3 default B in `docs/TASKS.md` | HarfBuzz stops shaping a script the shop sells, or a measured stencil regression traces to the WASM build rather than to the fonts |
-| D-020 | Jump-ring anchors are chosen at the outline level, before rasterisation: the left ring anchors on the largest contour of the first base glyph and the right ring on the largest contour of the last base glyph, at the outer top corner; marks and small contours (dots, tittles, hamza) are excluded by the font's own glyph data, never by a pixel-area threshold. The raster ruler stays as the independent check that ring metal touches no other ink. When no clean seat exists the engine falls back to a bar construction or routes the run to operator review; it never refuses a customer's name for a ring seat | accepted 8 Sep 2026 by Sanchay after adversarial reviews 2 and 3 showed the pixel heuristics fail outside their tuning corpus (Noor, Ali) | a font whose base glyphs carry dots as separate glyphs rather than contours, or a style whose first or last glyph has no contour wide enough for a ring |
+| D-020 | Jump-ring anchors are chosen at the outline level, before rasterisation: the left ring anchors on the largest contour of the first base glyph and the right ring on the largest contour of the last base glyph, at the outer top corner; marks and small contours (dots, tittles, hamza) are excluded by the font's own glyph data, never by a pixel-area threshold. The raster ruler stays as the independent check that ring metal touches no other ink. Both rings are chosen together, so the piece hangs level and neither end is cantilevered; when no pair of seats meets the level, overhang and span gates the run is routed to operator review with `identity_no_ring_seat` rather than shipped as a piece nobody would wear | accepted 8 Sep 2026 by Sanchay after adversarial reviews 2 and 3 showed the pixel heuristics fail outside their tuning corpus (Noor, Ali) | a font whose base glyphs carry dots as separate glyphs rather than contours, or a style whose first or last glyph has no contour wide enough for a ring |
 
 ## D-020 detail
 
@@ -63,18 +63,42 @@ Ink that belongs to no contour at all - a bridging bar, the pixel of skin the th
 
 The left ring is sought from the leftmost base glyph inward and the right ring from the rightmost inward; they may never settle on the same glyph while another eligible base glyph exists, and the left glyph must sit left of the right glyph on the canvas.
 `identity_ring_span_too_narrow` measures the result on the encoded bytes: the two ring hole centroids must sit at least `IDENTITY_RING_MIN_SPAN_FRACTION` of the finished piece's own ink width apart.
+A one-letter name is the one shape that has no second glyph to move to, and it is held to its own floor, `IDENTITY_RING_SHARED_GLYPH_MIN_SPAN_FRACTION`, because the general floor was measured against multi-letter pieces.
 
-### The bar is a reached path
+### The rail is gone
 
-The fallback is no longer a claim about a branch nothing takes.
-`آية` in `classic`, `diwani` and `signature` is built with the bar, because the madda covers the whole top of the alef at one end of the name and the search will not weld through it.
-The rail is as wide as the weld fillet it carries (it was narrower, and the fillet's foot then reached rows of the name the rail did not grip), and its rings sit at the lowest row at which both of them clear the lettering, found by search rather than by arithmetic that clamped to the canvas margin.
-A `bar` construction routes to operator review before spend (`acb2706`), so nothing built this way reaches a customer as the welded piece the lab proved.
+Fix pass 5 caught a name with no clean seat in a fallback: a rail across the top of the lettering with a ring at each of its ends.
+Adversarial pass 5 (major 3) measured the rail and it was not a load path.
+On `قق` it touched the name along 11% of its span and the whole pendant hung from the two nuqta of the final qaf through a 24 px bridge; on `آية` in `classic` it covered 37.6% of the madda; on `تسنيم` in `minimal` it touched 11%; and no gate scanned the ink under it.
+
+Making it honest means bridging the rail down to every base glyph and scanning under the rail exactly as a fillet is scanned - the weld machinery a second time, with weaker evidence - and the result is a different physical product, a nameplate on a bar, that the shop has never approved.
+Whether such a piece is sellable is a question for Omran (adversarial pass 5, major 4) and it is not answered by building one.
+So the rail is deleted. `ringPlacement` has two values, `welded` and `none`, and `none` means the construction carries its own suspension, never a failure.
+A name that cannot seat two rings under the gates raises `identity_no_ring_seat`: a terminal pre-spend block with a code and no customer text, which is the same routing the bar path already reached through `identity_bar_fallback` with its default on, and the same outcome for the shopper, without a piece that pretends to be one.
+
+### Level, and balanced
+
+Fix pass 5 chose the left seat and then the right seat independently, and nothing measured the shape the two of them made.
+Adversarial pass 5 measured it: over 547 welded cells the line through the two holes was p50 4.7 degrees off horizontal, p90 15.3 and max 64.7 - `لي` in `minimal` hung almost sideways - and `عائشة` in `classic` put both rings in the right-hand third with two thirds of the piece cantilevered off one corner.
+
+Three things answer it.
+The anchor is a ladder rather than a point: every rung is a column of the carrier's load-bearing metal and the top of that column, starting at the outer edge of the stroke and walking inward, so a letter with dots above it - the ta marbuta, the final qaf, the shin - is welded on its outer shoulder from above instead of surrendering its ring to the next letter inward.
+A seat search returns not one seat but every row above it that is also clean, so a ring can be raised to meet its partner.
+And the two sides are then chosen jointly: every allowed pair of carriers is scored on the finished shape - gate violations first, then the tilt, then the worse side's overhang, then the metal lifted off the letters - and the best pair wins.
+
+Two gates measure the result on the encoded bytes, not on what the search believed.
+`identity_ring_tilt_too_steep` is the angle of the line through the two hole centroids, against `IDENTITY_RING_MAX_TILT_DEGREES`; that line is the line the chain makes, so its angle is the angle the name reads at on the neck.
+`identity_ring_overhang_too_wide` is the ink outside the nearer hole on the worse side over the measured ink width, against `IDENTITY_RING_MAX_OVERHANG_FRACTION`; span alone cannot see a piece whose two rings are far apart but both in one half.
 
 ### Pinholes
 
 An enclosed region of a few pixels is a casting pinhole, not a counter and not a ring hole.
 Measured per pass, they are made by the ring pass - the fillet meeting the stroke - and not by thickening or bridging, so they are closed on the finished raster and `identity_stencil_pinhole` refuses any that survive into the encoded bytes.
+
+A counter is not one of them, and adversarial pass 5 (minor 1) caught the engine filling counters: thirty `e` in Kufi came out with the small ones welded solid before the gate could look at them.
+Each small region is now traced back through the recentre transform to the raster as the rasteriser painted it.
+A region that still holds at least `IDENTITY_STENCIL_COUNTER_REMNANT_FRACTION` of the counter it came from, scaled, is that counter and is left open, so the gate refuses the piece - a 13 px counter is a letter that did not cast, and welding it shut is not the fix.
+A region below that is what is left after the thickening closed a counter outright, which is a sliver of void and is filled.
 
 ## D-019 detail
 

@@ -18,8 +18,8 @@ import {
   IDENTITY_RESAMPLE_INK_THRESHOLD,
   IDENTITY_RING_ANCHOR_CANDIDATES,
   IDENTITY_RING_ANCHOR_EROSION,
-  IDENTITY_RING_BAR_DEPTH,
-  IDENTITY_RING_BAR_WIDTH,
+  IDENTITY_RING_ANCHOR_SHOULDER_STEP,
+  IDENTITY_RING_ANCHOR_SHOULDER_STEPS,
   IDENTITY_RING_CARRIER_MIN_CONTOUR_AREA_FRACTION,
   IDENTITY_RING_CARRIER_MIN_CONTOUR_GLYPH_HEIGHT_FRACTION,
   IDENTITY_RING_CARRIER_MIN_TALLEST_HEIGHT_FRACTION,
@@ -29,6 +29,9 @@ import {
   IDENTITY_RING_MAX_INWARD_SHIFT,
   IDENTITY_RING_MAX_LIFT,
   IDENTITY_RING_MAX_OUTWARD_SHIFT,
+  IDENTITY_RING_MAX_OVERHANG_FRACTION,
+  IDENTITY_RING_MAX_TILT_DEGREES,
+  IDENTITY_RING_SHARED_GLYPH_MIN_SPAN_FRACTION,
   IDENTITY_RING_OUTER,
   IDENTITY_RING_OUTWARD_FRACTION,
   IDENTITY_RING_TOP_CLEARANCE,
@@ -36,6 +39,7 @@ import {
   IDENTITY_RING_WELD_OVERLAP,
   IDENTITY_RING_WELD_START_GAP,
   IDENTITY_RING_WELD_WIDTH,
+  IDENTITY_STENCIL_COUNTER_REMNANT_FRACTION,
   IDENTITY_STENCIL_PINHOLE_MAX_AREA,
   IDENTITY_THICKEN_PASSES,
   type IdentityScript,
@@ -194,6 +198,19 @@ export interface IdentityMeasuredReport {
    */
   readonly ringSpan: number;
   /**
+   * Angle of the line through the two ring hole centroids off horizontal, in
+   * degrees; 0 when the piece does not carry two rings. This is the angle the
+   * piece hangs at on a chain, gated against `IDENTITY_RING_MAX_TILT_DEGREES`
+   * (adversarial review 5, blocker 1).
+   */
+  readonly ringTilt: number;
+  /**
+   * The worse of the two sides' overhangs: ink outside the nearer ring hole
+   * over the measured ink width; 0 when the piece does not carry two rings.
+   * Gated against `IDENTITY_RING_MAX_OVERHANG_FRACTION` (blocker 2).
+   */
+  readonly ringOverhang: number;
+  /**
    * Enclosed regions of at most `IDENTITY_STENCIL_PINHOLE_MAX_AREA` pixels
    * still present in the decoded PNG. Any at all is a refusal (minor 2).
    */
@@ -246,15 +263,18 @@ export interface IdentityRingCentre {
   readonly anchorY: number;
   /**
    * Which glyph of the shaped run carries this ring, as an index into the
-   * buffer HarfBuzz returned, and which contour of that glyph (D-020). Both are
-   * -1 on the bar fallback, where the ring hangs from the bar and not from a
-   * letter.
+   * buffer HarfBuzz returned, and which contour of that glyph (D-020). Every
+   * ring hangs from a letter stroke, so both are always a real index; the
+   * placeholder -1 the seat search uses while probing never reaches a drawn
+   * ring.
    */
   readonly glyphIndex: number;
   readonly contourIndex: number;
   /**
    * Which entry of that side's candidate list the carrier was, counting from
-   * the outermost base glyph inward; -1 on the bar fallback.
+   * the outermost base glyph inward. Zero is the outermost letter, which is
+   * where the overhang score pushes it back to (adversarial review 5,
+   * blocker 2).
    *
    * Adversarial review 4, minor 3: a ring stepped one glyph inward because the
    * name starts with punctuation (`-Ali-`) looked exactly like a ring that
@@ -268,16 +288,25 @@ export interface IdentityRingCentre {
  * How the two jump rings are attached.
  *
  * `welded` is the piece the lab proved and the shop sells: each ring sits on
- * the outer top corner of a letter stroke at one end of the name. `bar` is the
- * fallback for a name where no clean seat exists on any carrier at either end -
- * a thin rail across the top of the lettering with a ring at each of its ends.
- * `none` is the ring-free construction, which carries its own suspension.
+ * the outer top corner, or the outer shoulder, of a letter stroke at one end of
+ * the name. `none` is the ring-free construction, which carries its own
+ * suspension - a frame or a bezel the caller asked for, not a failure.
  *
- * D-020: the engine never refuses a customer's name because a ring would not
- * seat. A bar piece is a real pendant and it is reported as what it is, so the
- * pipeline can route it to an operator before it is photographed.
+ * Adversarial review 5, major 3: there used to be a third value, `bar`, a rail
+ * drawn across the top of the lettering with a ring at each end, for names
+ * where no carrier offered a clean seat. Measured, the rail was not a load
+ * path: on `قق` it touched the name along 11% of its span and the whole piece
+ * hung from the two nuqta of the final qaf through a 24 px bridge; on `آية` it
+ * covered 37.6% of the madda; on `تسنيم` in `minimal` it touched 11%. Making it
+ * honest means bridging the rail down to every base glyph and scanning under
+ * it, which is the weld machinery again with weaker evidence, and the result is
+ * a different product - a nameplate on a bar - that the shop never approved
+ * (major 4 is exactly that open question). The rail is gone. A name that cannot
+ * seat two rings under the gates raises `identity_no_ring_seat`, which is a
+ * terminal pre-spend block with a code and no customer text, the same routing
+ * the bar path reached through `identity_bar_fallback` with its default on.
  */
-export type IdentityRingPlacement = "welded" | "bar" | "none";
+export type IdentityRingPlacement = "welded" | "none";
 
 /**
  * How the raster was turned into one castable piece (P1-4), measured while it
@@ -309,9 +338,11 @@ export interface IdentityConstructionMeasurement {
   readonly inkPixelsPreserved: number;
   /**
    * Enclosed background regions at or below
-   * `IDENTITY_STENCIL_PINHOLE_MAX_AREA` that `fillPinholes` closed after
-   * bridging (minor 2). `measured.pinholes` is the independent statement that
-   * none survived into the encoded bytes.
+   * `IDENTITY_STENCIL_PINHOLE_MAX_AREA` that `fillPinholes` closed on the
+   * finished raster (minor 2). Regions the name itself asked for - counters
+   * present before the thickening - are never among them (adversarial review 5,
+   * minor 1). `measured.pinholes` is the independent statement that none
+   * survived into the encoded bytes.
    */
   readonly pinholesFilled: number;
   /** Jump rings welded on (P1-5): two by default, zero when rings are off. */
@@ -509,6 +540,10 @@ export async function solveIdentity(
       "identity_mask_empty:rasterizer produced no ink",
     );
 
+  // The counters of the name as the rasteriser painted it, before any pass of
+  // this engine could add or close one (minor 1 of adversarial review 5).
+  const enclosedBeforeThickening = enclosedRegionAreas(mask);
+
   // The lab's order (`make_stencil.py:227-232`): thicken, bridge, ring, centre.
   // Bridging before the rings means the rings are welded onto a body that is
   // already one piece, and re-centring last means every measurement above is
@@ -560,8 +595,10 @@ export async function solveIdentity(
     );
   const placement = recentre(mask);
   // Minor 2: casting pinholes are closed on the finished raster, which is the
-  // one place every pass that can make one has already run.
-  const pinholesFilled = fillPinholes(mask);
+  // one place every pass that can make one has already run. Adversarial review
+  // 5, minor 1: the raster as the rasteriser painted it says which enclosed
+  // regions are the name's own counters, and those are never filled.
+  const pinholesFilled = fillPinholes(mask, enclosedBeforeThickening, placement);
   const construction: IdentityConstructionMeasurement = {
     thickenPasses: IDENTITY_THICKEN_PASSES,
     islandsBeforeBridging,
@@ -634,13 +671,55 @@ export async function solveIdentity(
             (ringHoles[1] as MeasuredRingHole).centreY,
         )
       : 0;
+  // Adversarial review 5, blocker 1: the line through the two holes is the line
+  // the chain makes, so its angle off horizontal is the angle the name reads at
+  // on the neck. Span alone cannot see it - two holes far apart can be far
+  // apart diagonally - and 110 of the 547 welded cells of pass 5 were over 10
+  // degrees, `لي` in `minimal` at 64.7. The placement is what keeps this small;
+  // this is the measurement on the encoded bytes that says so.
+  let ringTilt = 0;
+  // Blocker 2: how much of the piece hangs outboard of the nearer hole on the
+  // worse side, over the measured ink width. `عائشة` in classic measured 0.66
+  // here with every pass-5 gate green.
+  let ringOverhang = 0;
   if (ringHoles.length === 2 && measured.bbox) {
     const inkWidth = measured.bbox[2] - measured.bbox[0] + 1;
-    const minimumSpan = inkWidth * IDENTITY_RING_MIN_SPAN_FRACTION;
+    const first = ringHoles[0] as MeasuredRingHole;
+    const second = ringHoles[1] as MeasuredRingHole;
+    const shared =
+      construction.ringCentres.length === 2 &&
+      (construction.ringCentres[0] as IdentityRingCentre).glyphIndex ===
+        (construction.ringCentres[1] as IdentityRingCentre).glyphIndex;
+    const spanFraction = shared
+      ? IDENTITY_RING_SHARED_GLYPH_MIN_SPAN_FRACTION
+      : IDENTITY_RING_MIN_SPAN_FRACTION;
+    const minimumSpan = inkWidth * spanFraction;
     if (ringSpan < minimumSpan)
       throw new IdentitySolverError(
         "identity_ring_span_too_narrow",
         `identity_ring_span_too_narrow:span=${Math.round(ringSpan)},min=${Math.round(minimumSpan)}`,
+      );
+    ringTilt =
+      (Math.atan2(
+        Math.abs(first.centreY - second.centreY),
+        Math.abs(first.centreX - second.centreX),
+      ) *
+        180) /
+      Math.PI;
+    if (ringTilt > IDENTITY_RING_MAX_TILT_DEGREES)
+      throw new IdentitySolverError(
+        "identity_ring_tilt_too_steep",
+        `identity_ring_tilt_too_steep:deg=${ringTilt.toFixed(1)},max=${IDENTITY_RING_MAX_TILT_DEGREES}`,
+      );
+    const leftOverhang =
+      (Math.min(first.centreX, second.centreX) - measured.bbox[0]) / inkWidth;
+    const rightOverhang =
+      (measured.bbox[2] - Math.max(first.centreX, second.centreX)) / inkWidth;
+    ringOverhang = Math.max(leftOverhang, rightOverhang);
+    if (ringOverhang > IDENTITY_RING_MAX_OVERHANG_FRACTION)
+      throw new IdentitySolverError(
+        "identity_ring_overhang_too_wide",
+        `identity_ring_overhang_too_wide:side=${leftOverhang > rightOverhang ? "left" : "right"},fraction=${ringOverhang.toFixed(3)},max=${IDENTITY_RING_MAX_OVERHANG_FRACTION}`,
       );
   }
 
@@ -723,6 +802,8 @@ export async function solveIdentity(
         jumpRingCount: ringHoles.length,
         ringHoles,
         ringSpan,
+        ringTilt,
+        ringOverhang,
         pinholes,
       },
       claimed: {
@@ -799,8 +880,30 @@ function countComponents(mask: RasterMask): number {
 }
 
 /**
+ * The area of the enclosed background region each pixel sits in, or 0.
+ *
+ * On the raster as the rasteriser painted it - before any thickening, bridging
+ * or ring - an enclosed region is a counter: the eye of an `e`, the bowl of a
+ * `ه`, the loop of a `و`. That is the plane `fillPinholes` needs in order to
+ * tell a casting pinhole from a letter, and the area is needed too, because a
+ * counter the thickening has all but closed is no longer a counter.
+ */
+function enclosedRegionAreas(mask: RasterMask): Float64Array {
+  const geometry = findMaskHoles(mask);
+  const plane = new Float64Array(mask.width * mask.height);
+  for (let y = 0; y < mask.height; y += 1)
+    for (let x = 0; x < mask.width; x += 1) {
+      const region = geometry.regionAt(x, y);
+      if (region < 0) continue;
+      plane[y * mask.width + x] = geometry.holes[region]?.size ?? 0;
+    }
+  return plane;
+}
+
+/**
  * Closes every enclosed background region of at most
- * `IDENTITY_STENCIL_PINHOLE_MAX_AREA` pixels, and returns how many it closed.
+ * `IDENTITY_STENCIL_PINHOLE_MAX_AREA` pixels that the piece's own construction
+ * created, and returns how many regions it closed.
  *
  * Adversarial review 4, minor 2: `muhammad-en-classic` and `muhammad-en-kufi`
  * carried one and two pixel enclosed regions among their hole sizes, counted as
@@ -815,19 +918,60 @@ function countComponents(mask: RasterMask): number {
  * thickening, bridging, the rings and the Lanczos resample - has already run.
  * It only ever adds metal, and `identity_stencil_pinhole` on the decoded bytes
  * is the proof that none survived.
+ *
+ * Adversarial review 5, minor 1: it used to fill *every* enclosed region under
+ * the floor, so a counter the recentre downscale had squeezed under the floor
+ * was welded solid before the gate could look - thirty `e` in Kufi came out
+ * with every counter filled and `passed: true`. A pinhole is a gap the
+ * construction made; a counter existed before it. So each small region is
+ * traced back through the recentre transform to the raster as the rasteriser
+ * painted it: a region that is still most of the counter it came from is left
+ * alone, and `identity_stencil_pinhole` then refuses the piece, which is the
+ * honest answer - a 16 px counter is a letter that did not cast. A region that
+ * retains less than `IDENTITY_STENCIL_COUNTER_REMNANT_FRACTION` of that
+ * counter's own scaled area is not a counter any more: the thickening closed
+ * the counter and left a sliver, which is precisely a pinhole, and it is filled.
  */
-function fillPinholes(mask: RasterMask): number {
+function fillPinholes(
+  mask: RasterMask,
+  beforeThickening: Float64Array,
+  placement: RecentrePlacement,
+): number {
   const geometry = findMaskHoles(mask);
-  let filled = 0;
+  const small = new Set<number>();
+  // The largest pre-thickening counter any pixel of a small region came from.
+  const origin = new Map<number, number>();
   for (let y = 0; y < mask.height; y += 1)
     for (let x = 0; x < mask.width; x += 1) {
       const region = geometry.regionAt(x, y);
       if (region < 0) continue;
       const hole = geometry.holes[region];
       if (!hole || hole.size > IDENTITY_STENCIL_PINHOLE_MAX_AREA) continue;
-      mask.ink[y * mask.width + x] = 1;
-      filled += 1;
+      small.add(region);
+      const sourceX = Math.round((x - placement.offsetX) / placement.scaleX);
+      const sourceY = Math.round((y - placement.offsetY) / placement.scaleY);
+      if (sourceX < 0 || sourceY < 0) continue;
+      if (sourceX >= mask.width || sourceY >= mask.height) continue;
+      const area = beforeThickening[sourceY * mask.width + sourceX] as number;
+      if (area > (origin.get(region) ?? 0)) origin.set(region, area);
     }
+  const counter = new Set<number>();
+  for (const region of small) {
+    const source = origin.get(region) ?? 0;
+    if (source <= 0) continue;
+    const expected = source * placement.scaleX * placement.scaleY;
+    const size = geometry.holes[region]?.size ?? 0;
+    if (size >= expected * IDENTITY_STENCIL_COUNTER_REMNANT_FRACTION)
+      counter.add(region);
+  }
+  for (let y = 0; y < mask.height; y += 1)
+    for (let x = 0; x < mask.width; x += 1) {
+      const region = geometry.regionAt(x, y);
+      if (region < 0 || !small.has(region) || counter.has(region)) continue;
+      mask.ink[y * mask.width + x] = 1;
+    }
+  let filled = 0;
+  for (const region of small) if (!counter.has(region)) filled += 1;
   return filled;
 }
 
@@ -1608,43 +1752,96 @@ function carrierPixelsFor(
 }
 
 /**
- * The outer top corner of a carrier stroke: the topmost row of its metal, and
- * on that row the pixel nearest the end of the name. This is the lab's anchor
- * (`np.argmin` over the eroded body's rows) computed on one contour's own
- * raster instead of on the merged piece, which is the whole of D-020.
+ * The anchor ladder of a carrier stroke, outermost first.
+ *
+ * Every rung is a column of the contour's load-bearing metal and the topmost
+ * pixel of that column: the top of the stroke, seen from above, where a weld
+ * fillet can land. The ladder starts at the outer edge of the stroke - the
+ * column nearest the end of the name - and walks inward in steps of
+ * `IDENTITY_RING_ANCHOR_SHOULDER_STEP`. `addRings` scores the rungs rather than
+ * taking the first that works, because outwardness and level pull against each
+ * other: the outer edge of a `Z` is the foot of its bottom serif, 620 px below
+ * its top-left corner, and hanging the left ring from there would cost more in
+ * tilt than it wins in balance. The lab's own anchor, the topmost row
+ * of the contour and on that row the pixel nearest the end of the name
+ * (`np.argmin` over the eroded body's rows, computed on one contour's own
+ * raster instead of on the merged piece, which is the whole of D-020), is a
+ * rung too, placed by its column like the rest.
+ *
+ * Adversarial review 5, blocker 2: with only the lab anchor, a letter carrying
+ * dots directly above it - the ta marbuta of `عائشة` and `موزة`, the final qaf,
+ * the shin of `شمس` - has no clean corridor from a ring down to that one point,
+ * because the ring is seated a little outward of the anchor and the fillet then
+ * runs back under the dots. The search's only move was to walk inward to the
+ * next letter, and with both sides doing that the two rings ended up in one
+ * corner of the piece with two thirds of it cantilevered. On a bowl like the ta
+ * marbuta the outermost column's top is most of a letter-height below the
+ * topmost row, and it is out from under the dots: the ring lifts above them and
+ * the fillet comes down beside them onto the letter's outer shoulder.
  */
-function carrierAnchor(
+function carrierAnchors(
   mask: RasterMask,
   carrier: Uint8Array,
   eroded: Uint8Array,
   side: "left" | "right",
-): { x: number; y: number } | undefined {
+): { x: number; y: number }[] {
   // Load-bearing first: metal thick enough to hold a chain. A contour whose
   // every stroke is thinner than the erosion window has none, and then the
   // contour itself is the best available answer - it is still a letter stroke.
   let solid = intersect(carrier, eroded);
   if (!solid.some((value) => value === 1)) solid = carrier;
+  const topOf = (x: number): number => {
+    for (let y = 0; y < mask.height; y += 1)
+      if (solid[y * mask.width + x]) return y;
+    return -1;
+  };
+  let edge = -1;
+  for (let step = 0; step < mask.width; step += 1) {
+    const x = side === "left" ? step : mask.width - 1 - step;
+    if (topOf(x) >= 0) {
+      edge = x;
+      break;
+    }
+  }
+  if (edge < 0) return [];
+  const inward = side === "left" ? 1 : -1;
+  const columns = new Set<number>();
+  for (let rung = 0; rung < IDENTITY_RING_ANCHOR_SHOULDER_STEPS; rung += 1) {
+    const x = edge + inward * rung * IDENTITY_RING_ANCHOR_SHOULDER_STEP;
+    if (x < 0 || x >= mask.width) break;
+    // A column with no load-bearing metal is not a shoulder; the stroke has
+    // ended or a counter is in the way. Later rungs may still find metal - a
+    // rounded letter dips and comes back - so this skips rather than stops.
+    if (topOf(x) >= 0) columns.add(x);
+  }
+  // The lab's anchor: the topmost row of the stroke, outermost pixel on it.
   for (let y = 0; y < mask.height; y += 1) {
     let found = -1;
     for (let x = 0; x < mask.width; x += 1) {
       if (!solid[y * mask.width + x]) continue;
-      if (side === "left") return { x, y };
+      if (side === "left") {
+        found = x;
+        break;
+      }
       found = x;
     }
-    if (found >= 0) return { x: found, y };
+    if (found >= 0) {
+      columns.add(found);
+      break;
+    }
   }
-  return undefined;
+  return [...columns]
+    .sort((a, b) => (side === "left" ? a - b : b - a))
+    .map((x) => ({ x, y: topOf(x) }));
 }
 
-/** A seat the search accepted: a clean ring centre over one carrier. */
+/** A seat ladder the search accepted for one rung of one carrier candidate. */
 interface RingSeat {
-  readonly x: number;
-  readonly y: number;
-  readonly anchorX: number;
-  readonly anchorY: number;
+  readonly ladder: SeatLadder;
   readonly glyphIndex: number;
   readonly contourIndex: number;
   readonly candidateIndex: number;
+  readonly glyphX: number;
   /**
    * Ink of every glyph contour except this seat's carrier. A weld fillet that
    * covers any of it is welding a piece of the name into the ring, which is
@@ -1654,22 +1851,99 @@ interface RingSeat {
 }
 
 /**
- * The first clean seat above one anchor, or nothing.
+ * A summed-area table over an ink plane, so "is there any ink in this box" is
+ * two subtractions instead of a scan.
+ *
+ * Adversarial review 5 asks the seat search to try a ladder of anchors and,
+ * for every seat it accepts, the whole run of rows above it that stay clean.
+ * That is an order of magnitude more probes than the pass-5 search, and the
+ * probe itself was a scan of the ring-and-fillet box. Almost every probe of a
+ * lifted ring is over empty canvas, and the table answers those in constant
+ * time; the exact scan still runs whenever a box is not empty, so the accepted
+ * seats are exactly the seats the scan would have accepted.
+ */
+function summedArea(
+  width: number,
+  height: number,
+  ink: Uint8Array,
+): Int32Array {
+  const table = new Int32Array((width + 1) * (height + 1));
+  for (let y = 0; y < height; y += 1) {
+    let row = 0;
+    for (let x = 0; x < width; x += 1) {
+      row += ink[y * width + x] ? 1 : 0;
+      table[(y + 1) * (width + 1) + x + 1] =
+        (table[y * (width + 1) + x + 1] as number) + row;
+    }
+  }
+  return table;
+}
+
+/** Ink in the inclusive box, clamped to the canvas; 0 when the box is empty. */
+function boxSum(
+  table: Int32Array,
+  width: number,
+  height: number,
+  x0: number,
+  y0: number,
+  x1: number,
+  y1: number,
+): number {
+  const left = Math.max(0, Math.floor(x0));
+  const top = Math.max(0, Math.floor(y0));
+  const right = Math.min(width - 1, Math.ceil(x1));
+  const bottom = Math.min(height - 1, Math.ceil(y1));
+  if (right < left || bottom < top) return 0;
+  const stride = width + 1;
+  return (
+    (table[(bottom + 1) * stride + right + 1] as number) -
+    (table[top * stride + right + 1] as number) -
+    (table[(bottom + 1) * stride + left] as number) +
+    (table[top * stride + left] as number)
+  );
+}
+
+/** Every clean seat one carrier offers, and the rows it stays clean through. */
+interface SeatLadder {
+  readonly x: number;
+  readonly anchorX: number;
+  readonly anchorY: number;
+  /**
+   * Ring centre rows that are clean at column `x` with this anchor, lowest
+   * first. The first entry is the seat the pass-5 search would have taken; the
+   * rest are the room above it, which is what lets two rings be brought to a
+   * common row (blocker 1).
+   */
+  readonly rows: readonly number[];
+}
+
+/**
+ * Every clean seat above one carrier's anchor ladder, or nothing.
  *
  * Clean means the hole punches no pre-ring ink out and no pre-ring ink lies
  * under the ring metal outside the weld. The search spends, in order, the room
- * above the anchor, the outward room and the inward room. Fix pass 3 kept the
+ * above the anchor, the outward room and the inward room, and it prefers the
+ * least lift. Fix pass 3 kept the
  * least-bad seat when nothing was clean and let the measured gate refuse the
- * customer's piece; D-020 returns nothing instead, and the caller moves to the
- * next carrier and then to the bar.
+ * customer's piece; D-020 returns nothing instead and the caller moves to the
+ * next carrier.
+ *
+ * Adversarial review 5, blocker 1: it used to return that first seat and
+ * nothing else, so the two sides were chosen independently and the piece could
+ * hang 64.7 degrees out of level with every gate green. It returns the column
+ * it settled on and every row above the seat that is also clean, so `addRings`
+ * can pick the pair of rows that levels the piece. It is called once per rung
+ * of the anchor ladder, and only for the rungs `addRings` asks for.
  */
 function findSeat(
   mask: RasterMask,
   beforeRings: Uint8Array,
+  beforeArea: Int32Array,
   anchor: { x: number; y: number },
   outward: -1 | 1,
   foreignInk: Uint8Array,
-): { seat: { x: number; y: number } | undefined; steps: number } {
+  foreignArea: Int32Array,
+): { ladder: SeatLadder | undefined; steps: number } {
   const outwardStep = Math.trunc(
     IDENTITY_RING_OUTER * IDENTITY_RING_OUTWARD_FRACTION,
   );
@@ -1677,16 +1951,12 @@ function findSeat(
   const rightmostRingX =
     mask.width - 1 - IDENTITY_RING_TOP_CLEARANCE - IDENTITY_RING_OUTER;
   const lowest = IDENTITY_RING_OUTER + IDENTITY_RING_TOP_CLEARANCE;
-  const seatX = anchor.x + outward * outwardStep;
-  const seat = Math.max(
-    lowest,
-    anchor.y - IDENTITY_RING_OUTER + IDENTITY_RING_WELD_OVERLAP,
-  );
   // A ring pushed off the canvas would have its annulus clipped, so its hole
   // would no longer be enclosed: the legal band is the canvas margin and
   // nothing narrower. The candidates are collected once, outward first and then
   // inward, deduplicated after clamping, so a clamp costs one candidate rather
   // than the whole search (adversarial review 3, finding 7).
+  const seatX = anchor.x + outward * outwardStep;
   const columns: number[] = [];
   const offer = (value: number) => {
     const clamped = Math.min(rightmostRingX, Math.max(leftmostRingX, value));
@@ -1696,41 +1966,79 @@ function findSeat(
     offer(seatX + outward * shift);
   for (let shift = 1; shift <= IDENTITY_RING_MAX_INWARD_SHIFT; shift += 1)
     offer(seatX - outward * shift);
+  const seatY = Math.max(
+    lowest,
+    anchor.y - IDENTITY_RING_OUTER + IDENTITY_RING_WELD_OVERLAP,
+  );
+  const highest = Math.max(lowest, seatY - IDENTITY_RING_MAX_LIFT);
 
   // Minor 4: every seat this search evaluates is one step, and the count is
   // reported so the cost of a name is a measured number rather than a bound.
   let steps = 0;
-  for (let lift = 0; lift <= IDENTITY_RING_MAX_LIFT; lift += 1) {
-    const candidateY = Math.max(lowest, seat - lift);
-    if (lift > 0 && candidateY === Math.max(lowest, seat - (lift - 1))) break;
-    for (const candidateX of columns) {
-      steps += 1;
-      const ring = {
-        x: candidateX,
-        y: candidateY,
-        anchorX: anchor.x,
-        anchorY: anchor.y,
-        glyphIndex: -1,
-        contourIndex: -1,
-        candidateIndex: -1,
-      } satisfies IdentityRingCentre;
-      const punched = countDisk(
-        mask,
-        beforeRings,
-        candidateX,
-        candidateY,
-        IDENTITY_RING_INNER,
-      );
-      if (punched !== 0) continue;
-      if (
-        countGlyphPixelsUnderRingMetal(mask, beforeRings, ring, foreignInk) !==
-        0
-      )
-        continue;
-      return { seat: { x: candidateX, y: candidateY }, steps };
-    }
-  }
-  return { seat: undefined, steps };
+  const clean = (x: number, y: number): boolean => {
+    steps += 1;
+    const barY0 = y + IDENTITY_RING_INNER + IDENTITY_RING_WELD_START_GAP;
+    const barY1 = anchor.y + IDENTITY_RING_WELD_ANCHOR_DEPTH;
+    const radius = IDENTITY_RING_WELD_WIDTH / 2;
+    const ringClear =
+      boxSum(
+        beforeArea,
+        mask.width,
+        mask.height,
+        x - IDENTITY_RING_OUTER,
+        y - IDENTITY_RING_OUTER,
+        x + IDENTITY_RING_OUTER,
+        y + IDENTITY_RING_OUTER,
+      ) === 0;
+    const filletClear =
+      boxSum(
+        foreignArea,
+        mask.width,
+        mask.height,
+        Math.min(x, anchor.x) - radius,
+        Math.min(barY0, barY1) - radius,
+        Math.max(x, anchor.x) + radius,
+        Math.max(barY0, barY1) + radius,
+      ) === 0;
+    // The two boxes together cover the punch disk, the annulus and the fillet,
+    // so an empty pair is a clean seat without a scan. Anything else is scanned
+    // by the same two functions the post-draw gate uses.
+    if (ringClear && filletClear) return true;
+    if (countDisk(mask, beforeRings, x, y, IDENTITY_RING_INNER) !== 0)
+      return false;
+    const ring = {
+      x,
+      y,
+      anchorX: anchor.x,
+      anchorY: anchor.y,
+      glyphIndex: -1,
+      contourIndex: -1,
+      candidateIndex: -1,
+    } satisfies IdentityRingCentre;
+    return (
+      countGlyphPixelsUnderRingMetal(mask, beforeRings, ring, foreignInk) === 0
+    );
+  };
+
+  let found: { x: number; y: number } | undefined;
+  for (let y = seatY; y >= highest && !found; y -= 1)
+    for (const candidateX of columns)
+      if (clean(candidateX, y)) {
+        found = { x: candidateX, y };
+        break;
+      }
+  if (!found) return { ladder: undefined, steps };
+  // The room above the seat. Every row is probed rather than stopping at the
+  // first that is not clean: a mark above the stroke blocks a band of rows and
+  // leaves clean air above it, and that air is often exactly where the other
+  // ring already sits.
+  const rows = [found.y];
+  for (let y = found.y - 1; y >= highest; y -= 1)
+    if (clean(found.x, y)) rows.push(y);
+  return {
+    ladder: { x: found.x, anchorX: anchor.x, anchorY: anchor.y, rows },
+    steps,
+  };
 }
 
 /** Draws one ring: the body, the hole, and the fillet down to its anchor. */
@@ -1761,8 +2069,11 @@ function drawRing(mask: RasterMask, ring: IdentityRingCentre): void {
  * hole itself clears the lettering.
  *
  * When no seat above the outermost carrier is clean the search steps one glyph
- * inward, and when no carrier on either side works it falls back to the bar.
- * The one thing it never does is refuse the customer's name.
+ * inward. When no pair of carriers can be brought under the level and overhang
+ * gates the piece raises `identity_no_ring_seat`: the rail that used to catch
+ * this case was not a load path (adversarial review 5, major 3) and a piece
+ * that hangs sideways or nose-down off one corner is not a piece the shop can
+ * sell either.
  */
 function addRings(
   mask: RasterMask,
@@ -1771,6 +2082,7 @@ function addRings(
   const glyphBox = inkBox(mask);
   const tallestBase = tallestBaseGlyphHeight(outlines);
   const beforeRings = mask.ink.slice();
+  const beforeArea = summedArea(mask.width, mask.height, beforeRings);
   const eroded = erodeSquare(
     mask.width,
     mask.height,
@@ -1780,40 +2092,68 @@ function addRings(
 
   const allContourInk = allContourPixels(mask, outlines);
   let seatSearchSteps = 0;
-  const evaluated = new Map<string, RingSeat | undefined>();
+  // One carrier contour costs a fill, a dilation and a summed-area table, so it
+  // is prepared once and shared by every rung of its anchor ladder.
+  interface CarrierPlane {
+    readonly anchors: readonly { x: number; y: number }[];
+    readonly foreignInk: Uint8Array;
+    readonly foreignArea: Int32Array;
+  }
+  const planes = new Map<string, CarrierPlane>();
+  const planeFor = (
+    side: "left" | "right",
+    candidate: CarrierCandidate,
+  ): CarrierPlane => {
+    const key = `${side}:${candidate.glyphIndex}:${candidate.contourIndex}`;
+    const cached = planes.get(key);
+    if (cached) return cached;
+    const carrierInk = carrierPixelsFor(mask, candidate.contour);
+    const foreignInk = subtract(allContourInk, carrierInk);
+    const plane: CarrierPlane = {
+      anchors: carrierAnchors(mask, carrierInk, eroded, side),
+      foreignInk,
+      foreignArea: summedArea(mask.width, mask.height, foreignInk),
+    };
+    planes.set(key, plane);
+    return plane;
+  };
+  // The seats of one rung, computed on demand and remembered. Lazily, because
+  // most names are seated by the first rung of the first carrier on each side
+  // and the further rungs are only worth their search when that pair is not
+  // level or not balanced.
+  const seats = new Map<string, RingSeat | undefined>();
   const seatFor = (
     side: "left" | "right",
     candidate: CarrierCandidate,
+    rung: number,
   ): RingSeat | undefined => {
-    const key = `${side}:${candidate.glyphIndex}:${candidate.contourIndex}`;
-    const cached = evaluated.get(key);
-    if (cached !== undefined || evaluated.has(key)) return cached;
-    const carrierInk = carrierPixelsFor(mask, candidate.contour);
-    const foreignInk = subtract(allContourInk, carrierInk);
-    const anchor = carrierAnchor(mask, carrierInk, eroded, side);
+    const key = `${side}:${candidate.glyphIndex}:${candidate.contourIndex}:${rung}`;
+    if (seats.has(key)) return seats.get(key);
+    const plane = planeFor(side, candidate);
+    const anchor = plane.anchors[rung];
     let seat: RingSeat | undefined;
     if (anchor) {
       const found = findSeat(
         mask,
         beforeRings,
+        beforeArea,
         anchor,
         side === "left" ? -1 : 1,
-        foreignInk,
+        plane.foreignInk,
+        plane.foreignArea,
       );
       seatSearchSteps += found.steps;
-      if (found.seat)
+      if (found.ladder)
         seat = {
-          x: found.seat.x,
-          y: found.seat.y,
-          anchorX: anchor.x,
-          anchorY: anchor.y,
+          ladder: found.ladder,
           glyphIndex: candidate.glyphIndex,
           contourIndex: candidate.contourIndex,
           candidateIndex: candidate.candidateIndex,
-          foreignInk,
+          glyphX: candidate.glyphX,
+          foreignInk: plane.foreignInk,
         };
     }
-    evaluated.set(key, seat);
+    seats.set(key, seat);
     return seat;
   };
 
@@ -1831,96 +2171,226 @@ function addRings(
   const eligible = new Set<number>();
   for (const candidate of [...left, ...right]) eligible.add(candidate.glyphIndex);
   const mayShare = eligible.size <= 1;
-  let pair: readonly [RingSeat, RingSeat] | undefined;
-  for (const candidate of left) {
-    const leftSeat = seatFor("left", candidate);
-    if (!leftSeat) continue;
-    for (const other of right) {
-      if (!mayShare && other.glyphIndex === leftSeat.glyphIndex) continue;
-      // The left ring hangs from a glyph that is actually to the left of the
-      // right ring's glyph. Without this the two lists can cross - `آية` in
-      // classic seated the left ring on the middle letter and the right ring on
-      // the first, 201 px apart on a 670 px piece - and the pendant hangs from
-      // one corner exactly as blocker 2 describes.
-      if (!mayShare && other.glyphX <= candidate.glyphX) continue;
-      const rightSeat = seatFor("right", other);
-      if (!rightSeat) continue;
-      // A one-letter name is the only case the rule above lets the two rings
-      // share a glyph, and it is exactly the shape
-      // `identity_ring_span_too_narrow` refuses. Refusing it would be refusing
-      // a customer's name, which D-020 does not do, so the shared-glyph pair is
-      // measured here against the same fraction and the piece goes to the bar
-      // instead. The estimate is the finished piece's own ink box before the
-      // recentre - the name's box widened by whichever ring reaches past it -
-      // so it is the same quantity the post-draw gate measures on the decoded
-      // bytes. No cell of the 576-cell matrix shares a glyph, so nothing that
-      // hangs from two letters passes through here.
-      if (leftSeat.glyphIndex === rightSeat.glyphIndex) {
-        const pieceMinX = Math.min(
-          glyphBox[0],
-          leftSeat.x - IDENTITY_RING_OUTER,
-          rightSeat.x - IDENTITY_RING_OUTER,
-        );
-        const pieceMaxX = Math.max(
-          glyphBox[2],
-          leftSeat.x + IDENTITY_RING_OUTER,
-          rightSeat.x + IDENTITY_RING_OUTER,
-        );
-        const span = Math.hypot(
-          leftSeat.x - rightSeat.x,
-          leftSeat.y - rightSeat.y,
-        );
-        if (
-          span <
-          (pieceMaxX - pieceMinX + 1) * IDENTITY_RING_MIN_SPAN_FRACTION
-        )
-          continue;
-      }
-      pair = [leftSeat, rightSeat];
-      break;
+
+  // Blockers 1 and 2 of adversarial review 5. The pass-5 search took the first
+  // clean seat on the left, then the first clean seat on the right, and
+  // whatever tilt and whatever balance came out of that was what the customer
+  // got: 110 of 547 welded cells hung more than 10 degrees off level and
+  // `عائشة` in classic put both rings in the right-hand third. The two sides are
+  // chosen together now. Every carrier and every rung of its anchor ladder that
+  // the ordering rules allow is scored as a pair on the finished shape - how
+  // far off level the two holes sit, and how much of the piece hangs outboard
+  // of the nearer ring on the worse side - and the best pair wins. The key, in
+  // order: a pair that satisfies both gates beats one that does not, then the
+  // most level, then the most balanced, then the least metal lifted off the
+  // letters.
+  // The row a ring belongs on: the top of the name's own ink. A jump ring is
+  // soldered at the top of a pendant, so a seat is judged by how close it comes
+  // to that line, not by how little metal it costs. Adversarial review 5 was
+  // answered once with "the outermost rung that works", and `Ali` in classic
+  // came out with both rings on the bottom serifs of the `A` and the `i` -
+  // level, balanced, and upside down on a chain.
+  const topLine = glyphBox[1];
+  const scoreOf = (
+    leftSeat: RingSeat,
+    leftY: number,
+    rightSeat: RingSeat,
+    rightY: number,
+  ): readonly number[] => {
+    const dx = Math.abs(rightSeat.ladder.x - leftSeat.ladder.x);
+    const tilt = (Math.atan2(Math.abs(rightY - leftY), dx) * 180) / Math.PI;
+    const pieceMinX = Math.min(
+      glyphBox[0],
+      leftSeat.ladder.x - IDENTITY_RING_OUTER,
+      rightSeat.ladder.x - IDENTITY_RING_OUTER,
+    );
+    const pieceMaxX = Math.max(
+      glyphBox[2],
+      leftSeat.ladder.x + IDENTITY_RING_OUTER,
+      rightSeat.ladder.x + IDENTITY_RING_OUTER,
+    );
+    const width = pieceMaxX - pieceMinX + 1;
+    const overhang = Math.max(
+      (leftSeat.ladder.x - pieceMinX) / width,
+      (pieceMaxX - rightSeat.ladder.x) / width,
+    );
+    return [
+      Math.max(0, overhang - IDENTITY_RING_MAX_OVERHANG_FRACTION),
+      Math.max(0, tilt - IDENTITY_RING_MAX_TILT_DEGREES),
+      tilt,
+      Math.abs(leftY - topLine) + Math.abs(rightY - topLine),
+      overhang,
+      leftSeat.ladder.anchorY - leftY + (rightSeat.ladder.anchorY - rightY),
+    ];
+  };
+  const better = (a: readonly number[], b: readonly number[]): boolean => {
+    for (let index = 0; index < a.length; index += 1) {
+      const first = a[index] as number;
+      const second = b[index] as number;
+      if (first < second) return true;
+      if (first > second) return false;
     }
-    if (pair) break;
+    return false;
+  };
+  // The most level rows the two ladders can both reach, and of those the pair
+  // nearest the top line of the name. Each ladder is its clean rows lowest
+  // first, so this walks the left ladder and takes the nearest right row to
+  // each: with the ladders sorted the walk is linear.
+  const levelRows = (
+    leftRows: readonly number[],
+    rightRows: readonly number[],
+  ): { leftY: number; rightY: number } => {
+    const keyOf = (leftY: number, rightY: number) => [
+      Math.abs(leftY - rightY),
+      Math.abs(leftY - topLine) + Math.abs(rightY - topLine),
+    ];
+    let best = { leftY: leftRows[0] as number, rightY: rightRows[0] as number };
+    let bestKey = keyOf(best.leftY, best.rightY);
+    let cursor = 0;
+    for (const leftY of leftRows) {
+      // `rightRows` descends, so the first row at or below `leftY` and the one
+      // before it bracket the closest match.
+      while (
+        cursor + 1 < rightRows.length &&
+        (rightRows[cursor] as number) > leftY
+      )
+        cursor += 1;
+      for (const index of [cursor - 1, cursor]) {
+        const rightY = rightRows[index];
+        if (rightY === undefined) continue;
+        const key = keyOf(leftY, rightY);
+        if (
+          (key[0] as number) < (bestKey[0] as number) ||
+          ((key[0] as number) === (bestKey[0] as number) &&
+            (key[1] as number) < (bestKey[1] as number))
+        ) {
+          best = { leftY, rightY };
+          bestKey = key;
+        }
+      }
+    }
+    return best;
+  };
+
+  let pair:
+    | {
+        readonly left: RingSeat;
+        readonly right: RingSeat;
+        readonly leftY: number;
+        readonly rightY: number;
+        readonly score: readonly number[];
+      }
+    | undefined;
+  // A pair that satisfies both gates, hangs dead level, holds both rings clear
+  // above the name's topmost ink and sits on the outermost letter of each side
+  // is as good as this search gets: nothing further in the order can beat it on
+  // anything but a tie, and stopping there is what keeps the common name at a
+  // few seat searches rather than at seventy-two.
+  const settled = () =>
+    pair !== undefined &&
+    (pair.score[0] as number) === 0 &&
+    (pair.score[1] as number) === 0 &&
+    (pair.score[2] as number) === 0 &&
+    pair.leftY <= topLine &&
+    pair.rightY <= topLine &&
+    pair.left.candidateIndex === 0 &&
+    pair.right.candidateIndex === 0;
+  for (const candidate of left) {
+    for (let leftRung = 0; leftRung < IDENTITY_RING_ANCHOR_SHOULDER_STEPS; leftRung += 1) {
+      const leftSeat = seatFor("left", candidate, leftRung);
+      if (!leftSeat) continue;
+      for (const other of right) {
+        if (!mayShare && other.glyphIndex === leftSeat.glyphIndex) continue;
+        // The left ring hangs from a glyph that is actually to the left of the
+        // right ring's glyph. Without this the two lists can cross - `آية` in
+        // classic seated the left ring on the middle letter and the right ring
+        // on the first, 201 px apart on a 670 px piece - and the pendant hangs
+        // from one corner exactly as blocker 2 describes.
+        if (!mayShare && other.glyphX <= candidate.glyphX) continue;
+        for (let rightRung = 0; rightRung < IDENTITY_RING_ANCHOR_SHOULDER_STEPS; rightRung += 1) {
+          const rightSeat = seatFor("right", other, rightRung);
+          if (!rightSeat) continue;
+          // Two rings in the same column is not a pair, whatever it scores.
+          if (rightSeat.ladder.x <= leftSeat.ladder.x) continue;
+          const rows = levelRows(leftSeat.ladder.rows, rightSeat.ladder.rows);
+          // A one-letter name is the only case the rule above lets the two
+          // rings share a glyph, and it is exactly the shape
+          // `identity_ring_span_too_narrow` refuses. It gets its own floor
+          // (adversarial review 5, minor 2): the general floor was justified
+          // against multi-letter pieces. The estimate is the finished piece's
+          // own ink box before the recentre - the name's box widened by
+          // whichever ring reaches past it - so it is the same quantity the
+          // post-draw gate measures on the decoded bytes.
+          if (leftSeat.glyphIndex === rightSeat.glyphIndex) {
+            const pieceMinX = Math.min(
+              glyphBox[0],
+              leftSeat.ladder.x - IDENTITY_RING_OUTER,
+              rightSeat.ladder.x - IDENTITY_RING_OUTER,
+            );
+            const pieceMaxX = Math.max(
+              glyphBox[2],
+              leftSeat.ladder.x + IDENTITY_RING_OUTER,
+              rightSeat.ladder.x + IDENTITY_RING_OUTER,
+            );
+            const span = Math.hypot(
+              leftSeat.ladder.x - rightSeat.ladder.x,
+              rows.leftY - rows.rightY,
+            );
+            if (
+              span <
+              (pieceMaxX - pieceMinX + 1) *
+                IDENTITY_RING_SHARED_GLYPH_MIN_SPAN_FRACTION
+            )
+              continue;
+          }
+          const score = scoreOf(leftSeat, rows.leftY, rightSeat, rows.rightY);
+          if (!pair || better(score, pair.score))
+            pair = {
+              left: leftSeat,
+              right: rightSeat,
+              leftY: rows.leftY,
+              rightY: rows.rightY,
+              score,
+            };
+          if (settled()) break;
+        }
+        if (settled()) break;
+      }
+      if (settled()) break;
+    }
+    if (settled()) break;
   }
 
   const centres: IdentityRingCentre[] = [];
   const foreigns: Uint8Array[] = [];
-  let placement: IdentityRingPlacement = "welded";
-  if (pair) {
-    for (const seat of pair) {
-      const ring: IdentityRingCentre = {
-        x: seat.x,
-        y: seat.y,
-        anchorX: seat.anchorX,
-        anchorY: seat.anchorY,
-        glyphIndex: seat.glyphIndex,
-        contourIndex: seat.contourIndex,
-        candidateIndex: seat.candidateIndex,
-      };
-      drawRing(mask, ring);
-      centres.push(ring);
-      foreigns.push(seat.foreignInk);
-    }
-  } else {
-    placement = "bar";
-    // A bar ring hangs from the rail, so the rail is what its fillet is allowed
-    // to cover: the rail overlaps the topmost ink of the name along its whole
-    // span, and that overlap is the joint being made, exactly as the carrier
-    // contour is on a welded ring.
-    const bar = drawBarSuspension(mask, beforeRings, glyphBox, allContourInk);
-    seatSearchSteps += bar.steps;
-    for (const ring of bar.centres) {
-      centres.push(ring);
-      foreigns.push(bar.foreignInk);
-    }
+  const placement: IdentityRingPlacement = "welded";
+  if (!pair)
+    throw new IdentitySolverError(
+      "identity_no_ring_seat",
+      `identity_no_ring_seat:left=${left.length},right=${right.length},steps=${seatSearchSteps}`,
+    );
+  for (const seat of [
+    { seat: pair.left, y: pair.leftY },
+    { seat: pair.right, y: pair.rightY },
+  ]) {
+    const ring: IdentityRingCentre = {
+      x: seat.seat.ladder.x,
+      y: seat.y,
+      anchorX: seat.seat.ladder.anchorX,
+      anchorY: seat.seat.ladder.anchorY,
+      glyphIndex: seat.seat.glyphIndex,
+      contourIndex: seat.seat.contourIndex,
+      candidateIndex: seat.seat.candidateIndex,
+    };
+    drawRing(mask, ring);
+    centres.push(ring);
+    foreigns.push(seat.seat.foreignInk);
   }
 
   // Measured, not predicted: the seat search asked what would happen before the
   // hole was cut, while this compares the finished mask against the name as it
   // stood before any ring, so a hole that ate a stroke the search never
-  // considered - or a fillet that filled one back in - is counted here. On the
-  // bar construction `beforeRings` is the name without the bar, so the bar's own
-  // metal is neither punched nor welded: it is part of the piece, not part of
-  // the name.
+  // considered - or a fillet that filled one back in - is counted here.
   let glyphPixelsPunchedByRings = 0;
   for (let index = 0; index < beforeRings.length; index += 1)
     if (beforeRings[index] && !mask.ink[index]) glyphPixelsPunchedByRings += 1;
@@ -1943,105 +2413,6 @@ function addRings(
     glyphPixelsUnderRingMetal,
     seatSearchSteps,
   };
-}
-
-/**
- * The fallback suspension: a thin rail across the top of the lettering with a
- * ring at each end.
- *
- * D-020's promise is that a customer's name is never refused for want of a ring
- * seat. When neither end of a name offers a carrier with clean air above it,
- * the piece gets a bail rail instead: a capsule at
- * `IDENTITY_RING_BAR_DEPTH` below the topmost ink, which overlaps that ink
- * along the whole span so the piece is still one casting, and a ring above each
- * of its ends, high enough that its whole annulus clears the lettering. The
- * construction reports itself as `bar` so an operator sees it before the piece
- * is photographed; nothing here is presented as the welded piece the lab
- * proved.
- */
-function drawBarSuspension(
-  mask: RasterMask,
-  beforeRings: Uint8Array,
-  glyphBox: readonly [number, number, number, number],
-  allContourInk: Uint8Array,
-): {
-  centres: IdentityRingCentre[];
-  steps: number;
-  foreignInk: Uint8Array;
-} {
-  const [minX, minY, maxX] = glyphBox;
-  const barY = minY + IDENTITY_RING_BAR_DEPTH;
-  const leftmostRingX = IDENTITY_RING_OUTER + IDENTITY_RING_TOP_CLEARANCE;
-  const rightmostRingX =
-    mask.width - 1 - IDENTITY_RING_TOP_CLEARANCE - IDENTITY_RING_OUTER;
-  const lowest = IDENTITY_RING_OUTER + IDENTITY_RING_TOP_CLEARANCE;
-  drawBar(mask, barY, minX, barY, maxX, IDENTITY_RING_BAR_WIDTH);
-  // The rail's own metal, drawn on an empty plane by the same call: ink the
-  // rail already grips is the joint, so a bar ring's fillet may cover it.
-  const rail: RasterMask = {
-    width: mask.width,
-    height: mask.height,
-    ink: new Uint8Array(mask.width * mask.height),
-  };
-  drawBar(rail, barY, minX, barY, maxX, IDENTITY_RING_BAR_WIDTH);
-  const foreignInk = subtract(allContourInk, rail.ink);
-  // The hole has to be open in the finished piece, and the rail is metal the
-  // piece already carries: a ring seated so low that its hole bites into the
-  // rail would both shrink the hole below its floor and cut the rail in two.
-  // The punch test therefore runs against the name *and* the rail.
-  const nameAndRail = new Uint8Array(beforeRings.length);
-  for (let index = 0; index < nameAndRail.length; index += 1)
-    nameAndRail[index] = beforeRings[index] || rail.ink[index] ? 1 : 0;
-  const columns = [minX, maxX].map((end) =>
-    Math.min(rightmostRingX, Math.max(leftmostRingX, end)),
-  );
-  const ringAt = (x: number, y: number): IdentityRingCentre => ({
-    x,
-    y,
-    // The fillet runs straight down the ring's own column into the rail, so
-    // the anchor is the rail rather than a letter, and `glyphIndex` says so.
-    anchorX: x,
-    anchorY: barY - IDENTITY_RING_WELD_ANCHOR_DEPTH,
-    glyphIndex: -1,
-    contourIndex: -1,
-    candidateIndex: -1,
-  });
-  // Adversarial review 4, major 3: `ringY` used to be
-  // `max(lowest, minY - OUTER - 1)`, arithmetic that assumes the row one ring
-  // radius above the topmost ink is clear and clamps to `lowest` when it is
-  // not - and a piece whose ink starts above `lowest + OUTER` would then die on
-  // `identity_ring_welded_to_glyph` in the one construction that exists so no
-  // name is ever refused. The rail's height is searched instead: from the rail
-  // itself upward, the lowest row at which *both* end rings punch nothing and
-  // carry no letter under their metal. A bar ring hangs from the rail, so the
-  // rail is its exemption plane and any other contour's ink under its fillet
-  // counts.
-  let steps = 0;
-  let ringY = lowest;
-  for (let y = barY; y >= lowest; y -= 1) {
-    if (steps >= IDENTITY_RING_MAX_LIFT) break;
-    steps += 1;
-    const clear = columns.every((x) => {
-      const ring = ringAt(x, y);
-      if (countDisk(mask, nameAndRail, x, y, IDENTITY_RING_INNER) !== 0)
-        return false;
-      return (
-        countGlyphPixelsUnderRingMetal(mask, beforeRings, ring, foreignInk) ===
-        0
-      );
-    });
-    if (clear) {
-      ringY = y;
-      break;
-    }
-  }
-  const centres: IdentityRingCentre[] = [];
-  for (const x of columns) {
-    const ring = ringAt(x, ringY);
-    drawRing(mask, ring);
-    centres.push(ring);
-  }
-  return { centres, steps, foreignInk };
 }
 
 /**

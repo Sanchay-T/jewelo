@@ -576,6 +576,29 @@ export const IDENTITY_STENCIL_PINHOLE_MAX_AREA = 16;
 export const IDENTITY_RING_MIN_SPAN_FRACTION = 0.25;
 
 /**
+ * How much of its own scaled area an enclosed region must still have for
+ * `fillPinholes` to treat it as the letter's counter rather than as a pinhole.
+ *
+ * Adversarial review 5, minor 1: a small enclosed region in the finished raster
+ * is either a counter the piece has shrunk or a void the construction made, and
+ * the two want opposite answers - a counter must survive to be gated, a void
+ * must be welded shut. Tracing the region back through the recentre transform
+ * to the raster as the rasteriser painted it tells them apart by area.
+ *
+ * Measured, the two populations are an order of magnitude apart. Thirty `e` in
+ * Kufi: the counter is 114 px as the rasteriser paints it and 13 to 29 px in
+ * the finished piece, because `IDENTITY_THICKEN_PASSES` takes a two-pixel band
+ * off a counter only twelve pixels across - 0.11 to 0.25 of its own area, and
+ * every one of them is still visibly the eye of an `e`. The one-pixel region
+ * left in `إبراهيم` in `classic`, where the thickening closed a counter
+ * outright, is 0.0005 of the 2380 px it came from. At 0.05 the rule keeps every
+ * counter of the Kufi row - so `identity_stencil_pinhole` refuses that piece
+ * with `count=4`, which is the honest answer, a 13 px counter is a letter that
+ * did not cast - and fills the sliver, which is what a caster does with it.
+ */
+export const IDENTITY_STENCIL_COUNTER_REMNANT_FRACTION = 0.05;
+
+/**
  * How far outward of its computed centre a ring may be pushed, in pixels, when
  * lifting alone cannot get the annulus off the lettering. Outward is away from
  * the middle of the name, and the ring still has to stay inside the canvas, so
@@ -697,8 +720,10 @@ export const IDENTITY_RING_CARRIER_MIN_CONTOUR_GLYPH_HEIGHT_FRACTION = 0.3;
  * candidate list collapsed to one glyph for both sides. The reference is the
  * tallest base glyph now, so a mark can never raise the floor above a letter,
  * and the two sides may not share a glyph while another eligible base glyph
- * exists (`carrierSeats`). Failing this test is still not a refusal: the search
- * steps one glyph inward.
+ * exists (`carrierCandidates` builds the per-side list and `addRings` scores
+ * the pairs). Adversarial review 5, minor 4: this used to cite `carrierSeats`,
+ * a function that has never existed. Failing this test is still not a refusal:
+ * the search steps one glyph inward.
  */
 export const IDENTITY_RING_CARRIER_MIN_TALLEST_HEIGHT_FRACTION = 0.34;
 
@@ -717,32 +742,104 @@ export const IDENTITY_RING_CARRIER_MIN_TALLEST_HEIGHT_FRACTION = 0.34;
 export const IDENTITY_CONTOUR_FLATTEN_SEGMENTS = 16;
 
 /**
- * Width of the fallback top bar, in pixels.
+ * How far off horizontal the line through the two ring holes may sit, in
+ * degrees, measured on the decoded PNG (`identity_ring_tilt_too_steep`).
  *
- * It is the weld fillet's own width, which is about 1.6 mm of metal at a 32 mm
- * pendant: thin enough to read as a bail rail rather than a second name, thick
- * enough to cast and to carry the piece.
+ * A pendant hangs from the two holes, so the line through them is the line the
+ * chain makes: the piece rotates until that line is horizontal, and whatever
+ * angle the letters make with it is the angle the name reads at on the neck. A
+ * name more than about 15 degrees out reads as sideways rather than as tilted,
+ * and that is what the number is: the angle at which the piece stops looking
+ * like a name on a chain, not a value fitted to the corpus.
  *
- * Adversarial review 4, major 3 and blocker 1: it used to be
- * `IDENTITY_BRIDGE_WIDTH` (24 px), narrower than the 39 px fillet that hangs
- * from it, so the fillet's foot reached rows of the name the rail did not grip.
- * On `آية` in classic, 67 pixels of the madda lay under a bar ring's fillet and
- * outside the rail. A rail at least as wide as the weld it carries makes the
- * rail's own metal the exact exemption for a bar ring's fillet, which is the
- * same statement the carrier contour makes for a welded ring.
+ * Adversarial review 5, blocker 1: nothing measured this at all. Over the 547
+ * welded cells of the 576-cell matrix at `2ad683c` the tilt was p50 4.7, p90
+ * 15.3, p95 23.9, max 64.7 - `لي` in `minimal`, a live style, hung at 64.7
+ * degrees with every gate green. The fix is the placement and not this number:
+ * the seat search scores left-carrier x right-carrier pairs jointly, over the
+ * rungs of both anchor ladders, and a clean seat stays clean as the ring rises
+ * in its own column, so two rings can nearly always be brought to a common row.
+ * Measured after that change over the same matrix, 568 pieces: p50 0.0, p90
+ * 0.0, p95 0.0, max 11.7 (`li-en-kufi`, whose two letters are 230 px apart so
+ * 47 rows of difference is already 11.7 degrees). The gate clears the largest
+ * accepted value by 3.3 degrees and refuses one cell, `ij-en-kufi` at 18.1.
  */
-export const IDENTITY_RING_BAR_WIDTH = IDENTITY_RING_WELD_WIDTH;
+export const IDENTITY_RING_MAX_TILT_DEGREES = 15;
 
 /**
- * How far below the name's topmost ink row the fallback bar's centre line sits.
+ * How much of the piece may hang outboard of the nearer ring on one side, as a
+ * fraction of the measured ink width (`identity_ring_overhang_too_wide`).
  *
- * It has to be less than half the bar width, or the capsule would float clear
- * of the letter it is meant to be part of and the piece would measure as two
- * components. At 8 px against a 12 px half-width the bar overlaps the topmost
- * ink row by 4 px along the whole span, so whichever letter reaches highest is
- * the one the bar is welded to.
+ * Adversarial review 5, blocker 2: `عائشة` in classic put both rings in the
+ * right-hand third, so 66% of the piece was cantilevered off one corner and the
+ * pendant hung nose-down. Span alone cannot see this - two rings 0.291 of the
+ * width apart can sit anywhere along it - so each side is measured on its own:
+ * the ink outside the nearer ring hole, over the ink width.
+ *
+ * A balanced piece measures the same small fraction on both sides, and that
+ * fraction is not zero: the ring sits over the end letter, so a ring radius of
+ * the piece always sticks out past the hole. Measured over the 568 pieces of
+ * the matrix after the joint search: worst side p50 0.041, p90 0.102, p95
+ * 0.134, max 0.288 (`jiji-en-kufi`, where the two `j` descenders put the usable
+ * stroke well inside the piece). At 0.30 the gate clears that by 1.2 points of
+ * width and it refuses the pass-5 shapes outright: `عائشة` 0.66, `آمنة` 0.636,
+ * `موزة` 0.570, `آلاء` 0.564, `خالد` 0.426. One matrix cell fails it,
+ * `salem-ar-thuluth-inspired` at 0.306, where Rakkas climbs so steeply that the
+ * last letter offers no load-bearing metal near the end of the piece.
  */
-export const IDENTITY_RING_BAR_DEPTH = 8;
+export const IDENTITY_RING_MAX_OVERHANG_FRACTION = 0.3;
+
+/**
+ * How many anchor points the seat search may try on one carrier contour.
+ *
+ * Every rung is a column of the carrier's load-bearing metal and the top of
+ * that column, where a weld fillet can land from above. The first is the outer
+ * edge of the stroke, and the rest walk inward one
+ * `IDENTITY_RING_ANCHOR_SHOULDER_STEP` at a time; the lab's own anchor, the
+ * topmost row of the contour, is a rung too.
+ *
+ * Adversarial review 5, blocker 2: with one anchor - the lab's - a letter that
+ * carries dots directly above it (the ta marbuta of `عائشة` and `موزة`, the
+ * final qaf, the shin of `شمس`) had no clean corridor from a ring down to that
+ * one point, because the ring is seated a little outward of the anchor and the
+ * fillet then runs back under the dots. The search's only move was to walk
+ * inward to the next letter, and with both sides doing that the two rings ended
+ * up in one corner with two thirds of the piece cantilevered. On a bowl the
+ * outer column's top is most of a letter-height below the topmost row and out
+ * from under the dots: the ring lifts above them and the fillet comes down
+ * beside them onto the letter's outer shoulder.
+ *
+ * Six rungs at 14 px covers 84 px of stroke, wider than any nuqta pair the six
+ * faces draw at the probe size, and it is a fixed count so the search cost stays
+ * bounded. `addRings` scores the rungs against each other rather than taking
+ * the outermost that works, and asks for them one at a time: measured over the
+ * 576-cell matrix the median cell is settled by the first rung of the first
+ * carrier on each side.
+ */
+export const IDENTITY_RING_ANCHOR_SHOULDER_STEPS = 6;
+
+/** Column step between two anchors of the shoulder ladder, in pixels. */
+export const IDENTITY_RING_ANCHOR_SHOULDER_STEP = 14;
+
+/**
+ * The span floor for the one shape where both rings may sit on the same glyph:
+ * a one-letter name, where there is no second letter to move to.
+ *
+ * Adversarial review 5, minor 2: `م` in `minimal` measured 0.257 against the
+ * general 0.25 floor, a 2.8% margin, and that floor was justified against
+ * multi-letter pieces (smallest legitimate 0.307 there). The two populations are
+ * different shapes and now have their own numbers. Measured over 102 one-letter
+ * cells - `ا ب م ن ه و ي ع س ق` and `A B e i M O Z`, six styles each - after
+ * the joint search: every one is welded on its single glyph, the smallest span
+ * ratio is 0.617 (`ا` in `kufi`, then `i` in `kufi` at 0.644 and `ا` in
+ * `minimal` at 0.647), the largest 0.917, and the worst tilt 9.5 degrees (`ع`
+ * in `classic`).
+ * At 0.45 the floor clears the smallest one-letter piece by 27% of its own
+ * value and still refuses the collapsed pairs of pass 4, which sat at 0.091 to
+ * 0.19. A one-letter name that cannot reach it is not silently shipped: it
+ * raises `identity_no_ring_seat` like any other unseatable name.
+ */
+export const IDENTITY_RING_SHARED_GLYPH_MIN_SPAN_FRACTION = 0.45;
 
 /**
  * Smallest ring hole area the gate accepts, as a fraction of the ideal
