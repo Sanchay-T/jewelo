@@ -61,9 +61,12 @@ Done:
 - P1-7 in `e5e598b`, staging deployment `ebdca539-24c8-422d-a659-369e2e21032f`: migration applied (`pipeline_releases`: v2 active with `caleums-identity-v4`, v1 legacy); 16 production stencils regenerated and identical under both rulers; two staging mock runs (`5917f2df` Rania en, `46030711` ريم ar) complete on v2 with `engine_release caleums-identity-v4`, the bucket stencils deep-equal their stored `validation_report`; an injected Devanagari name blocked as `identity_shaping_gate_failed:notdef=4,uncovered=4` with dependents unspent. Lead opened both staging stencils: Playfair and Naskh, one piece, two rings. `identity_artifacts` by engine: 19 latin-existing-v1, 15 arabic-v3, 2 identity-v4.
 - Adversarial review 1 recorded in `docs/goals/road-to-gold/reviews/identity-engine-adversarial-1.md`: two highs (a ring can be welded onto a floating dot with every gate passing; pipeline release lineage not cross-checked), four mediums, six lows, each with an owner.
 
+- Adversarial fixes in `6d7382b`, deployed to staging as `08d63e17` (health 200, readiness ready): ring placement lifts and shifts outward until the hole is clear and no name ink sits under the metal (`identity_ring_welded_to_glyph`, 0/232 cells after 130/232 before); per-task `identity_pipeline_release_mismatch` when the stamped release differs from the active row; migration `20260908130000_one_active_pipeline_release.sql` applied (partial unique index, one active release); `blockPreSpend` failure on a retry falls back to terminal `fail` instead of rejecting; negative-proof outputs in `dogfood-2026-09-08/identity-gates.md`.
+- Lead dogfood of `08d63e17` in the in-app browser, recorded in `dogfood-2026-09-08/staging-journey.md`: Rania journey approves (`drafts 201`, `approve 201`), polling stops at a terminal state, the four tiles read "Being prepared" with the contact fallback, and every image on the page is an Asma example, so no mock asset is shown as the customer's piece. 390x844 has no horizontal overflow. P6-1 sticky numbers unchanged.
+
 Doing:
 
-- Fix pass 2 (implementer): adversarial findings 1, 2, 3, 5, 6, 7, 8, plus the negative-proof outputs saved under `dogfood-2026-09-08/`.
+- Adversarial pass 2 on `6d7382b` and a platform re-proof of the two staging runs on `08d63e17`, both running; findings above minor go to a fix pass 3.
 
 Follow-ups found by subagents, not fixed (outside the task rows):
 
