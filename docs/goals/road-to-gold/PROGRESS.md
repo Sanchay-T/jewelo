@@ -120,6 +120,8 @@ Doing:
 - Edge timeout probe (platform): throwaway branch with a token-gated hold route deployed to staging, silent and heartbeat holds from 30 to 400 s measured, then the real branch restored and the probe branch deleted.
 - Adversarial pass 5 on the identity engine (adversarial-reviewer) against `2ad683c`; the lead records the report to `reviews/identity-engine-adversarial-5.md`. P1-5 closes only after two consecutive passes find nothing above minor.
 - Deploy `2ad683c` (fix 3, fix 4, fix pass 5) to staging and re-prove, once the edge timeout probe has restored the branch.
+- P6-1 (implementer, CSS only): preview panel under the action bar per the row, plus UX review B2 mobile crop; the lead measures in the browser.
+- P6-4 (implementer): UX review B1 crash path with an `error.tsx`, B3 false photographing state, checkbox `id` and `aria-describedby`, no silent truncation, two-name fit ceiling in contracts, client validator mirrors the server schema.
 
 Follow-ups found by subagents, not fixed (outside the task rows):
 
