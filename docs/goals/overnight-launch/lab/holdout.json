@@ -1,0 +1,967 @@
+{
+  "version": 1,
+  "generated": "2026-09-08",
+  "policy": [
+    "A holdout name may be compiled only against a prompt hash where holdout.json has already frozen it.",
+    "Freezing happens before the first image of a release is generated, never after its results are read.",
+    "Once a name has been frozen for any hash it is burnt: a later release must be frozen with fresh names."
+  ],
+  "seenNames": [
+    "Asma",
+    "أسماء"
+  ],
+  "hashes": {
+    "bacc7a7dbe4104d1adb070b617fa7a0d7f9dafe4233a5c18efd0169aee3e1d07": {
+      "release": "pre-v4.3",
+      "stage": "stage1",
+      "cell": "classical-ar",
+      "promptPath": "docs/goals/overnight-launch/lab/stage1/prompts/v41/classical-ar.txt",
+      "attempts": 3,
+      "frozen": "2026-09-08",
+      "holdout": [],
+      "seen": [
+        "Asma",
+        "أسماء"
+      ],
+      "reason": "Tuning record only. Asma is the name every release was written while looking at, so Asma measures nothing about generalisation and is marked seen. No holdout name is frozen here, so compiling Noor, Layla or Muhammad against this hash is refused."
+    },
+    "d96c13a51be56c80eb86ac1779186b84150dccf8f06599a8c6bab3599de3fc3d": {
+      "release": "pre-v4.3",
+      "stage": "stage1",
+      "cell": "classical-ar",
+      "promptPath": "docs/goals/overnight-launch/lab/stage1/prompts/classical-ar.txt",
+      "attempts": 1,
+      "frozen": "2026-09-08",
+      "holdout": [],
+      "seen": [
+        "Asma",
+        "أسماء"
+      ],
+      "reason": "Tuning record only. Asma is the name every release was written while looking at, so Asma measures nothing about generalisation and is marked seen. No holdout name is frozen here, so compiling Noor, Layla or Muhammad against this hash is refused."
+    },
+    "72b9d5aa574e4ba2129128dec33d615a27228cd2441064f1c2669274bbe15438": {
+      "release": "pre-v4.3",
+      "stage": "stage1",
+      "cell": "classical-en",
+      "promptPath": "docs/goals/overnight-launch/lab/stage1/prompts/v41/classical-en.txt",
+      "attempts": 3,
+      "frozen": "2026-09-08",
+      "holdout": [],
+      "seen": [
+        "Asma",
+        "أسماء"
+      ],
+      "reason": "Tuning record only. Asma is the name every release was written while looking at, so Asma measures nothing about generalisation and is marked seen. No holdout name is frozen here, so compiling Noor, Layla or Muhammad against this hash is refused."
+    },
+    "aab0e5466f681350bf2e8d211f99f9230ee6d1725bed402198b1700481d505ef": {
+      "release": "pre-v4.3",
+      "stage": "stage1",
+      "cell": "classical-en",
+      "promptPath": "docs/goals/overnight-launch/lab/stage1/prompts/classical-en.txt",
+      "attempts": 1,
+      "frozen": "2026-09-08",
+      "holdout": [],
+      "seen": [
+        "Asma",
+        "أسماء"
+      ],
+      "reason": "Tuning record only. Asma is the name every release was written while looking at, so Asma measures nothing about generalisation and is marked seen. No holdout name is frozen here, so compiling Noor, Layla or Muhammad against this hash is refused."
+    },
+    "42ad51df6595f6315de84192f72403583c67ae1d54506bc7d9266b7d889b9628": {
+      "release": "pre-v4.3",
+      "stage": "stage1",
+      "cell": "diamond-rails-ar",
+      "promptPath": "docs/goals/overnight-launch/lab/stage1/prompts/diamond-rails-ar.txt",
+      "attempts": 1,
+      "frozen": "2026-09-08",
+      "holdout": [],
+      "seen": [
+        "Asma",
+        "أسماء"
+      ],
+      "reason": "Tuning record only. Asma is the name every release was written while looking at, so Asma measures nothing about generalisation and is marked seen. No holdout name is frozen here, so compiling Noor, Layla or Muhammad against this hash is refused."
+    },
+    "d2fbf4e2e6926c7885fc3b5ac051025785bac8d6cf50cfa7777d4c6f6f7ee4ff": {
+      "release": "pre-v4.3",
+      "stage": "stage1",
+      "cell": "diamond-rails-ar",
+      "promptPath": "docs/goals/overnight-launch/lab/stage1/prompts/v41/diamond-rails-ar.txt",
+      "attempts": 3,
+      "frozen": "2026-09-08",
+      "holdout": [],
+      "seen": [
+        "Asma",
+        "أسماء"
+      ],
+      "reason": "Tuning record only. Asma is the name every release was written while looking at, so Asma measures nothing about generalisation and is marked seen. No holdout name is frozen here, so compiling Noor, Layla or Muhammad against this hash is refused."
+    },
+    "4d6bec93d1d31bba58bff9d66545e2e2a592535f18864d90d53eeb5a36827e91": {
+      "release": "pre-v4.3",
+      "stage": "stage1",
+      "cell": "diamond-rails-en",
+      "promptPath": "docs/goals/overnight-launch/lab/stage1/prompts/diamond-rails-en.txt",
+      "attempts": 1,
+      "frozen": "2026-09-08",
+      "holdout": [],
+      "seen": [
+        "Asma",
+        "أسماء"
+      ],
+      "reason": "Tuning record only. Asma is the name every release was written while looking at, so Asma measures nothing about generalisation and is marked seen. No holdout name is frozen here, so compiling Noor, Layla or Muhammad against this hash is refused."
+    },
+    "ac722c708add198f64c2dfe571abb74dc84f386b84231cfe0ee15903606c50c1": {
+      "release": "pre-v4.3",
+      "stage": "stage1",
+      "cell": "diamond-rails-en",
+      "promptPath": "docs/goals/overnight-launch/lab/stage1/prompts/v41/diamond-rails-en.txt",
+      "attempts": 3,
+      "frozen": "2026-09-08",
+      "holdout": [],
+      "seen": [
+        "Asma",
+        "أسماء"
+      ],
+      "reason": "Tuning record only. Asma is the name every release was written while looking at, so Asma measures nothing about generalisation and is marked seen. No holdout name is frozen here, so compiling Noor, Layla or Muhammad against this hash is refused."
+    },
+    "153ff7b7de536c6cc6d8bdac6c2fbd6d6b85a1420f73c785034b68cd5ab2d3cd": {
+      "release": "pre-v4.3",
+      "stage": "stage1",
+      "cell": "framed-minimal-ar",
+      "promptPath": "docs/goals/overnight-launch/lab/stage1/prompts/v41/framed-minimal-ar.txt",
+      "attempts": 3,
+      "frozen": "2026-09-08",
+      "holdout": [],
+      "seen": [
+        "Asma",
+        "أسماء"
+      ],
+      "reason": "Tuning record only. Asma is the name every release was written while looking at, so Asma measures nothing about generalisation and is marked seen. No holdout name is frozen here, so compiling Noor, Layla or Muhammad against this hash is refused."
+    },
+    "71e1a93236b155f78578f2e7863ebb39a6ec862f318c82d4e6269ac452c97555": {
+      "release": "pre-v4.3",
+      "stage": "stage1",
+      "cell": "framed-minimal-ar",
+      "promptPath": "docs/goals/overnight-launch/lab/stage1/prompts/framed-minimal-ar.txt",
+      "attempts": 1,
+      "frozen": "2026-09-08",
+      "holdout": [],
+      "seen": [
+        "Asma",
+        "أسماء"
+      ],
+      "reason": "Tuning record only. Asma is the name every release was written while looking at, so Asma measures nothing about generalisation and is marked seen. No holdout name is frozen here, so compiling Noor, Layla or Muhammad against this hash is refused."
+    },
+    "a2d2c1035bfc1e4656b57242b61e3d4f448113036e3da8684013d787aa398624": {
+      "release": "pre-v4.3",
+      "stage": "stage1",
+      "cell": "framed-minimal-ar",
+      "promptPath": "docs/goals/overnight-launch/lab/stage1/prompts/v43/framed-minimal-ar.txt",
+      "attempts": 3,
+      "frozen": "2026-09-08",
+      "holdout": [],
+      "seen": [
+        "Asma",
+        "أسماء"
+      ],
+      "reason": "Tuning record only. Asma is the name every release was written while looking at, so Asma measures nothing about generalisation and is marked seen. No holdout name is frozen here, so compiling Noor, Layla or Muhammad against this hash is refused."
+    },
+    "0a5a009a3b41651c8af707f3a776ad3bd5239c9b3f9a56724f86b229693bd29b": {
+      "release": "pre-v4.3",
+      "stage": "stage1",
+      "cell": "framed-minimal-en",
+      "promptPath": "docs/goals/overnight-launch/lab/stage1/prompts/v43/framed-minimal-en.txt",
+      "attempts": 3,
+      "frozen": "2026-09-08",
+      "holdout": [],
+      "seen": [
+        "Asma",
+        "أسماء"
+      ],
+      "reason": "Tuning record only. Asma is the name every release was written while looking at, so Asma measures nothing about generalisation and is marked seen. No holdout name is frozen here, so compiling Noor, Layla or Muhammad against this hash is refused."
+    },
+    "0cc867ed9743f42a4d04632d8205b0cba1e2bf025fe0127375c6838543000af9": {
+      "release": "pre-v4.3",
+      "stage": "stage1",
+      "cell": "framed-minimal-en",
+      "promptPath": "docs/goals/overnight-launch/lab/stage1/prompts/v41/framed-minimal-en.txt",
+      "attempts": 3,
+      "frozen": "2026-09-08",
+      "holdout": [],
+      "seen": [
+        "Asma",
+        "أسماء"
+      ],
+      "reason": "Tuning record only. Asma is the name every release was written while looking at, so Asma measures nothing about generalisation and is marked seen. No holdout name is frozen here, so compiling Noor, Layla or Muhammad against this hash is refused."
+    },
+    "3bab4153008828ebb328dbd7367dcf8ff3ef90df68f05f3c1a7717f7fbb3114a": {
+      "release": "pre-v4.3",
+      "stage": "stage1",
+      "cell": "framed-minimal-en",
+      "promptPath": "docs/goals/overnight-launch/lab/stage1/prompts/framed-minimal-en.txt",
+      "attempts": 1,
+      "frozen": "2026-09-08",
+      "holdout": [],
+      "seen": [
+        "Asma",
+        "أسماء"
+      ],
+      "reason": "Tuning record only. Asma is the name every release was written while looking at, so Asma measures nothing about generalisation and is marked seen. No holdout name is frozen here, so compiling Noor, Layla or Muhammad against this hash is refused."
+    },
+    "9a90a420e0450a303ee2083710e210d747f3a7112d9b17132babab7208fcfdf0": {
+      "release": "pre-v4.3",
+      "stage": "stage1",
+      "cell": "origami-ribbon-ar",
+      "promptPath": "docs/goals/overnight-launch/lab/stage1/prompts/origami-ribbon-ar.txt",
+      "attempts": 1,
+      "frozen": "2026-09-08",
+      "holdout": [],
+      "seen": [
+        "Asma",
+        "أسماء"
+      ],
+      "reason": "Tuning record only. Asma is the name every release was written while looking at, so Asma measures nothing about generalisation and is marked seen. No holdout name is frozen here, so compiling Noor, Layla or Muhammad against this hash is refused."
+    },
+    "c2685a77e57d7f1fdee8d4e2f135f8d12d8f61318357a33f0eb174ae9d275e17": {
+      "release": "pre-v4.3",
+      "stage": "stage1",
+      "cell": "origami-ribbon-ar",
+      "promptPath": "docs/goals/overnight-launch/lab/stage1/prompts/v41/origami-ribbon-ar.txt",
+      "attempts": 3,
+      "frozen": "2026-09-08",
+      "holdout": [],
+      "seen": [
+        "Asma",
+        "أسماء"
+      ],
+      "reason": "Tuning record only. Asma is the name every release was written while looking at, so Asma measures nothing about generalisation and is marked seen. No holdout name is frozen here, so compiling Noor, Layla or Muhammad against this hash is refused."
+    },
+    "a182be6e7f07451eddf32097d03af80b594107a2c994fa8ece4182b05373f1c7": {
+      "release": "pre-v4.3",
+      "stage": "stage1",
+      "cell": "origami-ribbon-en",
+      "promptPath": "docs/goals/overnight-launch/lab/stage1/prompts/origami-ribbon-en.txt",
+      "attempts": 1,
+      "frozen": "2026-09-08",
+      "holdout": [],
+      "seen": [
+        "Asma",
+        "أسماء"
+      ],
+      "reason": "Tuning record only. Asma is the name every release was written while looking at, so Asma measures nothing about generalisation and is marked seen. No holdout name is frozen here, so compiling Noor, Layla or Muhammad against this hash is refused."
+    },
+    "aac5e529c577a250e65aead38ca3e25ae61e4c8998e37880bd3946e00ae77997": {
+      "release": "pre-v4.3",
+      "stage": "stage1",
+      "cell": "origami-ribbon-en",
+      "promptPath": "docs/goals/overnight-launch/lab/stage1/prompts/v41/origami-ribbon-en.txt",
+      "attempts": 3,
+      "frozen": "2026-09-08",
+      "holdout": [],
+      "seen": [
+        "Asma",
+        "أسماء"
+      ],
+      "reason": "Tuning record only. Asma is the name every release was written while looking at, so Asma measures nothing about generalisation and is marked seen. No holdout name is frozen here, so compiling Noor, Layla or Muhammad against this hash is refused."
+    },
+    "210973037b03b0b75925400d369a1056fbf22c48978e834de020322d0efb85eb": {
+      "release": "caleums-universal-v4.3",
+      "stage": "stage2",
+      "cell": "framed-minimal-layla-ar",
+      "promptPath": "docs/goals/overnight-launch/lab/stage2/prompts/v43/framed-minimal-layla-ar.txt",
+      "attempts": 2,
+      "frozen": "2026-09-08",
+      "holdout": [
+        "Noor",
+        "نور",
+        "Layla",
+        "ليلى",
+        "Muhammad",
+        "محمد"
+      ],
+      "seen": [
+        "Asma",
+        "أسماء"
+      ],
+      "reason": "Frozen for the v4.3 framed-minimal holdout sweep. Noor, Layla and Muhammad were never looked at while this prompt was written, so the twelve stage-2 images at these six hashes are the only honest measurement of them. Any later release compiles to a different hash and must be frozen with fresh names."
+    },
+    "d069d7b3143b39df1280d5eeca01661afa4dab3be3695795d41eaae474250ad4": {
+      "release": "caleums-universal-v4.3",
+      "stage": "stage2",
+      "cell": "framed-minimal-layla-en",
+      "promptPath": "docs/goals/overnight-launch/lab/stage2/prompts/v43/framed-minimal-layla-en.txt",
+      "attempts": 2,
+      "frozen": "2026-09-08",
+      "holdout": [
+        "Noor",
+        "نور",
+        "Layla",
+        "ليلى",
+        "Muhammad",
+        "محمد"
+      ],
+      "seen": [
+        "Asma",
+        "أسماء"
+      ],
+      "reason": "Frozen for the v4.3 framed-minimal holdout sweep. Noor, Layla and Muhammad were never looked at while this prompt was written, so the twelve stage-2 images at these six hashes are the only honest measurement of them. Any later release compiles to a different hash and must be frozen with fresh names."
+    },
+    "df44a292f11d27c02bf51a94c93f82c4932fba3714edc9783ad883d02de9dd3e": {
+      "release": "caleums-universal-v4.3",
+      "stage": "stage2",
+      "cell": "framed-minimal-muhammad-ar",
+      "promptPath": "docs/goals/overnight-launch/lab/stage2/prompts/v43/framed-minimal-muhammad-ar.txt",
+      "attempts": 2,
+      "frozen": "2026-09-08",
+      "holdout": [
+        "Noor",
+        "نور",
+        "Layla",
+        "ليلى",
+        "Muhammad",
+        "محمد"
+      ],
+      "seen": [
+        "Asma",
+        "أسماء"
+      ],
+      "reason": "Frozen for the v4.3 framed-minimal holdout sweep. Noor, Layla and Muhammad were never looked at while this prompt was written, so the twelve stage-2 images at these six hashes are the only honest measurement of them. Any later release compiles to a different hash and must be frozen with fresh names."
+    },
+    "501269bd415024f42913ff94e1689e1f44629ca75fafb7d2e2070fcc6d6f8b6f": {
+      "release": "caleums-universal-v4.3",
+      "stage": "stage2",
+      "cell": "framed-minimal-muhammad-en",
+      "promptPath": "docs/goals/overnight-launch/lab/stage2/prompts/v43/framed-minimal-muhammad-en.txt",
+      "attempts": 2,
+      "frozen": "2026-09-08",
+      "holdout": [
+        "Noor",
+        "نور",
+        "Layla",
+        "ليلى",
+        "Muhammad",
+        "محمد"
+      ],
+      "seen": [
+        "Asma",
+        "أسماء"
+      ],
+      "reason": "Frozen for the v4.3 framed-minimal holdout sweep. Noor, Layla and Muhammad were never looked at while this prompt was written, so the twelve stage-2 images at these six hashes are the only honest measurement of them. Any later release compiles to a different hash and must be frozen with fresh names."
+    },
+    "e38110d3760864a934324b0127b9dcf8f9a5c06f89b65ae18cae78a39cddf428": {
+      "release": "caleums-universal-v4.3",
+      "stage": "stage2",
+      "cell": "framed-minimal-noor-ar",
+      "promptPath": "docs/goals/overnight-launch/lab/stage2/prompts/v43/framed-minimal-noor-ar.txt",
+      "attempts": 2,
+      "frozen": "2026-09-08",
+      "holdout": [
+        "Noor",
+        "نور",
+        "Layla",
+        "ليلى",
+        "Muhammad",
+        "محمد"
+      ],
+      "seen": [
+        "Asma",
+        "أسماء"
+      ],
+      "reason": "Frozen for the v4.3 framed-minimal holdout sweep. Noor, Layla and Muhammad were never looked at while this prompt was written, so the twelve stage-2 images at these six hashes are the only honest measurement of them. Any later release compiles to a different hash and must be frozen with fresh names."
+    },
+    "0252cd8aefc42caa04eea25b25c72694a7a801df6b7b421414bb8179f8b27ece": {
+      "release": "caleums-universal-v4.3",
+      "stage": "stage2",
+      "cell": "framed-minimal-noor-en",
+      "promptPath": "docs/goals/overnight-launch/lab/stage2/prompts/v43/framed-minimal-noor-en.txt",
+      "attempts": 2,
+      "frozen": "2026-09-08",
+      "holdout": [
+        "Noor",
+        "نور",
+        "Layla",
+        "ليلى",
+        "Muhammad",
+        "محمد"
+      ],
+      "seen": [
+        "Asma",
+        "أسماء"
+      ],
+      "reason": "Frozen for the v4.3 framed-minimal holdout sweep. Noor, Layla and Muhammad were never looked at while this prompt was written, so the twelve stage-2 images at these six hashes are the only honest measurement of them. Any later release compiles to a different hash and must be frozen with fresh names."
+    },
+    "604bd1779db57028595916c27bfac8e7b8efec9e89c9bb0d8ffd5c9a5068ed92": {
+      "release": "pre-v4.3",
+      "stage": "stage3",
+      "cell": "classical-ar-close-up",
+      "promptPath": "docs/goals/overnight-launch/lab/stage3/prompts/classical-ar-close-up.txt",
+      "attempts": 1,
+      "frozen": "2026-09-08",
+      "holdout": [],
+      "seen": [
+        "Asma",
+        "أسماء"
+      ],
+      "reason": "Tuning record only. Asma is the name every release was written while looking at, so Asma measures nothing about generalisation and is marked seen. No holdout name is frozen here, so compiling Noor, Layla or Muhammad against this hash is refused."
+    },
+    "54b5a64606d7fb122c4c0863ef208910c7d3056ded6bee18e3a34469f3c89a10": {
+      "release": "pre-v4.3",
+      "stage": "stage3",
+      "cell": "classical-ar-dark",
+      "promptPath": "docs/goals/overnight-launch/lab/stage3/prompts/classical-ar-dark.txt",
+      "attempts": 1,
+      "frozen": "2026-09-08",
+      "holdout": [],
+      "seen": [
+        "Asma",
+        "أسماء"
+      ],
+      "reason": "Tuning record only. Asma is the name every release was written while looking at, so Asma measures nothing about generalisation and is marked seen. No holdout name is frozen here, so compiling Noor, Layla or Muhammad against this hash is refused."
+    },
+    "b689db2b41dd7f909cc1abb294c49cfaba4d51200741a973c75e27a4093e629d": {
+      "release": "pre-v4.3",
+      "stage": "stage3",
+      "cell": "classical-ar-on-skin",
+      "promptPath": "docs/goals/overnight-launch/lab/stage3/prompts/classical-ar-on-skin.txt",
+      "attempts": 1,
+      "frozen": "2026-09-08",
+      "holdout": [],
+      "seen": [
+        "Asma",
+        "أسماء"
+      ],
+      "reason": "Tuning record only. Asma is the name every release was written while looking at, so Asma measures nothing about generalisation and is marked seen. No holdout name is frozen here, so compiling Noor, Layla or Muhammad against this hash is refused."
+    },
+    "2354cc5e457b5056fa908ab3e2593f57d9578a036968432df96058b77c0f9dde": {
+      "release": "pre-v4.3",
+      "stage": "stage3",
+      "cell": "classical-en-close-up",
+      "promptPath": "docs/goals/overnight-launch/lab/stage3/prompts/classical-en-close-up.txt",
+      "attempts": 1,
+      "frozen": "2026-09-08",
+      "holdout": [],
+      "seen": [
+        "Asma",
+        "أسماء"
+      ],
+      "reason": "Tuning record only. Asma is the name every release was written while looking at, so Asma measures nothing about generalisation and is marked seen. No holdout name is frozen here, so compiling Noor, Layla or Muhammad against this hash is refused."
+    },
+    "c1182d01d08d5365f2f2a1eae025e75f8c99f66dbf03db1f3c4acfac0948713f": {
+      "release": "pre-v4.3",
+      "stage": "stage3",
+      "cell": "classical-en-dark",
+      "promptPath": "docs/goals/overnight-launch/lab/stage3/prompts/classical-en-dark.txt",
+      "attempts": 1,
+      "frozen": "2026-09-08",
+      "holdout": [],
+      "seen": [
+        "Asma",
+        "أسماء"
+      ],
+      "reason": "Tuning record only. Asma is the name every release was written while looking at, so Asma measures nothing about generalisation and is marked seen. No holdout name is frozen here, so compiling Noor, Layla or Muhammad against this hash is refused."
+    },
+    "cd360c831edce29fa8cea6b430d48319779ab6737a7eadad89b1729a3a8140e3": {
+      "release": "pre-v4.3",
+      "stage": "stage3",
+      "cell": "classical-en-on-skin",
+      "promptPath": "docs/goals/overnight-launch/lab/stage3/prompts/classical-en-on-skin.txt",
+      "attempts": 1,
+      "frozen": "2026-09-08",
+      "holdout": [],
+      "seen": [
+        "Asma",
+        "أسماء"
+      ],
+      "reason": "Tuning record only. Asma is the name every release was written while looking at, so Asma measures nothing about generalisation and is marked seen. No holdout name is frozen here, so compiling Noor, Layla or Muhammad against this hash is refused."
+    },
+    "5589acecd3432f5e243268caf80b74a253965d1295b4465b39395df2518e0112": {
+      "release": "pre-v4.3",
+      "stage": "stage3",
+      "cell": "diamond-rails-ar-close-up",
+      "promptPath": "docs/goals/overnight-launch/lab/stage3/prompts/diamond-rails-ar-close-up.txt",
+      "attempts": 1,
+      "frozen": "2026-09-08",
+      "holdout": [],
+      "seen": [
+        "Asma",
+        "أسماء"
+      ],
+      "reason": "Tuning record only. Asma is the name every release was written while looking at, so Asma measures nothing about generalisation and is marked seen. No holdout name is frozen here, so compiling Noor, Layla or Muhammad against this hash is refused."
+    },
+    "48d1672e46e771400c0705feff5dabc035bb4b566110bd934cde46495ab6143e": {
+      "release": "pre-v4.3",
+      "stage": "stage3",
+      "cell": "diamond-rails-ar-dark",
+      "promptPath": "docs/goals/overnight-launch/lab/stage3/prompts/diamond-rails-ar-dark.txt",
+      "attempts": 1,
+      "frozen": "2026-09-08",
+      "holdout": [],
+      "seen": [
+        "Asma",
+        "أسماء"
+      ],
+      "reason": "Tuning record only. Asma is the name every release was written while looking at, so Asma measures nothing about generalisation and is marked seen. No holdout name is frozen here, so compiling Noor, Layla or Muhammad against this hash is refused."
+    },
+    "d34118e7dd809be919f972590cf648c53fe46d66ffdacd9402c2c28fc6601ad6": {
+      "release": "pre-v4.3",
+      "stage": "stage3",
+      "cell": "diamond-rails-ar-on-skin",
+      "promptPath": "docs/goals/overnight-launch/lab/stage3/prompts/diamond-rails-ar-on-skin.txt",
+      "attempts": 1,
+      "frozen": "2026-09-08",
+      "holdout": [],
+      "seen": [
+        "Asma",
+        "أسماء"
+      ],
+      "reason": "Tuning record only. Asma is the name every release was written while looking at, so Asma measures nothing about generalisation and is marked seen. No holdout name is frozen here, so compiling Noor, Layla or Muhammad against this hash is refused."
+    },
+    "8f3d9b560d9b4a98d5169ee9e5e7650a831d7a5e6878cbd04f46843e1515286d": {
+      "release": "pre-v4.3",
+      "stage": "stage3",
+      "cell": "diamond-rails-en-close-up",
+      "promptPath": "docs/goals/overnight-launch/lab/stage3/prompts/diamond-rails-en-close-up.txt",
+      "attempts": 1,
+      "frozen": "2026-09-08",
+      "holdout": [],
+      "seen": [
+        "Asma",
+        "أسماء"
+      ],
+      "reason": "Tuning record only. Asma is the name every release was written while looking at, so Asma measures nothing about generalisation and is marked seen. No holdout name is frozen here, so compiling Noor, Layla or Muhammad against this hash is refused."
+    },
+    "543db771b878825338670b6e3697914669a4d71e539eb9713f4a1c82608b8272": {
+      "release": "pre-v4.3",
+      "stage": "stage3",
+      "cell": "diamond-rails-en-dark",
+      "promptPath": "docs/goals/overnight-launch/lab/stage3/prompts/diamond-rails-en-dark.txt",
+      "attempts": 1,
+      "frozen": "2026-09-08",
+      "holdout": [],
+      "seen": [
+        "Asma",
+        "أسماء"
+      ],
+      "reason": "Tuning record only. Asma is the name every release was written while looking at, so Asma measures nothing about generalisation and is marked seen. No holdout name is frozen here, so compiling Noor, Layla or Muhammad against this hash is refused."
+    },
+    "acd649543136a82cad0d42465c98fc106828e1c8bd324e50090bdb87a47b24d1": {
+      "release": "pre-v4.3",
+      "stage": "stage3",
+      "cell": "diamond-rails-en-on-skin",
+      "promptPath": "docs/goals/overnight-launch/lab/stage3/prompts/diamond-rails-en-on-skin.txt",
+      "attempts": 1,
+      "frozen": "2026-09-08",
+      "holdout": [],
+      "seen": [
+        "Asma",
+        "أسماء"
+      ],
+      "reason": "Tuning record only. Asma is the name every release was written while looking at, so Asma measures nothing about generalisation and is marked seen. No holdout name is frozen here, so compiling Noor, Layla or Muhammad against this hash is refused."
+    },
+    "2f2a1aede17f2b5ed256e78a2eecb05ae7cdf7b19ca4802e626d92be8335c76e": {
+      "release": "pre-v4.3",
+      "stage": "stage3",
+      "cell": "framed-minimal-ar-close-up",
+      "promptPath": "docs/goals/overnight-launch/lab/stage3/prompts/framed-minimal-ar-close-up.txt",
+      "attempts": 1,
+      "frozen": "2026-09-08",
+      "holdout": [],
+      "seen": [
+        "Asma",
+        "أسماء"
+      ],
+      "reason": "Tuning record only. Asma is the name every release was written while looking at, so Asma measures nothing about generalisation and is marked seen. No holdout name is frozen here, so compiling Noor, Layla or Muhammad against this hash is refused."
+    },
+    "dc67dc396c3d0f0e1e5fb6db61c6833c8ed71a116cf7d107f8a6fa6691546e67": {
+      "release": "pre-v4.3",
+      "stage": "stage3",
+      "cell": "framed-minimal-ar-dark",
+      "promptPath": "docs/goals/overnight-launch/lab/stage3/prompts/framed-minimal-ar-dark.txt",
+      "attempts": 1,
+      "frozen": "2026-09-08",
+      "holdout": [],
+      "seen": [
+        "Asma",
+        "أسماء"
+      ],
+      "reason": "Tuning record only. Asma is the name every release was written while looking at, so Asma measures nothing about generalisation and is marked seen. No holdout name is frozen here, so compiling Noor, Layla or Muhammad against this hash is refused."
+    },
+    "9d5a032b5afd63acbd71b8190ba856446eb99dc6b8f8306ba2be483206ecdc3f": {
+      "release": "pre-v4.3",
+      "stage": "stage3",
+      "cell": "framed-minimal-ar-on-skin",
+      "promptPath": "docs/goals/overnight-launch/lab/stage3/prompts/framed-minimal-ar-on-skin.txt",
+      "attempts": 1,
+      "frozen": "2026-09-08",
+      "holdout": [],
+      "seen": [
+        "Asma",
+        "أسماء"
+      ],
+      "reason": "Tuning record only. Asma is the name every release was written while looking at, so Asma measures nothing about generalisation and is marked seen. No holdout name is frozen here, so compiling Noor, Layla or Muhammad against this hash is refused."
+    },
+    "5c569567e2b21ac60481250db9dc140fa2a507e57c064118d66092083741d8cb": {
+      "release": "pre-v4.3",
+      "stage": "stage3",
+      "cell": "framed-minimal-en-close-up",
+      "promptPath": "docs/goals/overnight-launch/lab/stage3/prompts/framed-minimal-en-close-up.txt",
+      "attempts": 1,
+      "frozen": "2026-09-08",
+      "holdout": [],
+      "seen": [
+        "Asma",
+        "أسماء"
+      ],
+      "reason": "Tuning record only. Asma is the name every release was written while looking at, so Asma measures nothing about generalisation and is marked seen. No holdout name is frozen here, so compiling Noor, Layla or Muhammad against this hash is refused."
+    },
+    "002973148cc113371eeb47df92f19c37042f836f6b91387c5987bc381e77a8da": {
+      "release": "pre-v4.3",
+      "stage": "stage3",
+      "cell": "framed-minimal-en-dark",
+      "promptPath": "docs/goals/overnight-launch/lab/stage3/prompts/framed-minimal-en-dark.txt",
+      "attempts": 1,
+      "frozen": "2026-09-08",
+      "holdout": [],
+      "seen": [
+        "Asma",
+        "أسماء"
+      ],
+      "reason": "Tuning record only. Asma is the name every release was written while looking at, so Asma measures nothing about generalisation and is marked seen. No holdout name is frozen here, so compiling Noor, Layla or Muhammad against this hash is refused."
+    },
+    "fd53726b31c0ef677d2b8b871e39ca9e4e66d3f3525904475abb297596377d55": {
+      "release": "pre-v4.3",
+      "stage": "stage3",
+      "cell": "framed-minimal-en-on-skin",
+      "promptPath": "docs/goals/overnight-launch/lab/stage3/prompts/framed-minimal-en-on-skin.txt",
+      "attempts": 1,
+      "frozen": "2026-09-08",
+      "holdout": [],
+      "seen": [
+        "Asma",
+        "أسماء"
+      ],
+      "reason": "Tuning record only. Asma is the name every release was written while looking at, so Asma measures nothing about generalisation and is marked seen. No holdout name is frozen here, so compiling Noor, Layla or Muhammad against this hash is refused."
+    },
+    "618f7fdd5cc068a52cfb114b7c22a6df69e2176c8b93077107d3751ee7811c53": {
+      "release": "pre-v4.3",
+      "stage": "stage3",
+      "cell": "origami-ribbon-ar-close-up",
+      "promptPath": "docs/goals/overnight-launch/lab/stage3/prompts/origami-ribbon-ar-close-up.txt",
+      "attempts": 1,
+      "frozen": "2026-09-08",
+      "holdout": [],
+      "seen": [
+        "Asma",
+        "أسماء"
+      ],
+      "reason": "Tuning record only. Asma is the name every release was written while looking at, so Asma measures nothing about generalisation and is marked seen. No holdout name is frozen here, so compiling Noor, Layla or Muhammad against this hash is refused."
+    },
+    "6ce0d2fc180117aea2e6cfe40d23c8b87efea9e9e279039399612068fdf01e00": {
+      "release": "pre-v4.3",
+      "stage": "stage3",
+      "cell": "origami-ribbon-ar-dark",
+      "promptPath": "docs/goals/overnight-launch/lab/stage3/prompts/origami-ribbon-ar-dark.txt",
+      "attempts": 1,
+      "frozen": "2026-09-08",
+      "holdout": [],
+      "seen": [
+        "Asma",
+        "أسماء"
+      ],
+      "reason": "Tuning record only. Asma is the name every release was written while looking at, so Asma measures nothing about generalisation and is marked seen. No holdout name is frozen here, so compiling Noor, Layla or Muhammad against this hash is refused."
+    },
+    "d03634f934b09311613c1be27e964a825b616af1fbb34e05cd71b1317ff5e5a5": {
+      "release": "pre-v4.3",
+      "stage": "stage3",
+      "cell": "origami-ribbon-ar-on-skin",
+      "promptPath": "docs/goals/overnight-launch/lab/stage3/prompts/origami-ribbon-ar-on-skin.txt",
+      "attempts": 1,
+      "frozen": "2026-09-08",
+      "holdout": [],
+      "seen": [
+        "Asma",
+        "أسماء"
+      ],
+      "reason": "Tuning record only. Asma is the name every release was written while looking at, so Asma measures nothing about generalisation and is marked seen. No holdout name is frozen here, so compiling Noor, Layla or Muhammad against this hash is refused."
+    },
+    "4f0b88578c87f9cc6b2dc9da06675a8b877e01e043acee5b2aaa14543d682217": {
+      "release": "pre-v4.3",
+      "stage": "stage3",
+      "cell": "origami-ribbon-en-close-up",
+      "promptPath": "docs/goals/overnight-launch/lab/stage3/prompts/v42/origami-ribbon-en-close-up.txt",
+      "attempts": 1,
+      "frozen": "2026-09-08",
+      "holdout": [],
+      "seen": [
+        "Asma",
+        "أسماء"
+      ],
+      "reason": "Tuning record only. Asma is the name every release was written while looking at, so Asma measures nothing about generalisation and is marked seen. No holdout name is frozen here, so compiling Noor, Layla or Muhammad against this hash is refused."
+    },
+    "7eaed2396260ce18283fdc5230d513f9d2ca3d87b0b0882b4533135bde1906b5": {
+      "release": "pre-v4.3",
+      "stage": "stage3",
+      "cell": "origami-ribbon-en-close-up",
+      "promptPath": "docs/goals/overnight-launch/lab/stage3/prompts/origami-ribbon-en-close-up.txt",
+      "attempts": 1,
+      "frozen": "2026-09-08",
+      "holdout": [],
+      "seen": [
+        "Asma",
+        "أسماء"
+      ],
+      "reason": "Tuning record only. Asma is the name every release was written while looking at, so Asma measures nothing about generalisation and is marked seen. No holdout name is frozen here, so compiling Noor, Layla or Muhammad against this hash is refused."
+    },
+    "3c40101d450fcebd2830772d762e5ce99c2283fbdfae77ad8ed4099657e59b4f": {
+      "release": "pre-v4.3",
+      "stage": "stage3",
+      "cell": "origami-ribbon-en-dark",
+      "promptPath": "docs/goals/overnight-launch/lab/stage3/prompts/origami-ribbon-en-dark.txt",
+      "attempts": 1,
+      "frozen": "2026-09-08",
+      "holdout": [],
+      "seen": [
+        "Asma",
+        "أسماء"
+      ],
+      "reason": "Tuning record only. Asma is the name every release was written while looking at, so Asma measures nothing about generalisation and is marked seen. No holdout name is frozen here, so compiling Noor, Layla or Muhammad against this hash is refused."
+    },
+    "75b3b630855bd636faf65bad6fe29dab3a3a530258be2127ec843e0de644c043": {
+      "release": "pre-v4.3",
+      "stage": "stage3",
+      "cell": "origami-ribbon-en-on-skin",
+      "promptPath": "docs/goals/overnight-launch/lab/stage3/prompts/origami-ribbon-en-on-skin.txt",
+      "attempts": 1,
+      "frozen": "2026-09-08",
+      "holdout": [],
+      "seen": [
+        "Asma",
+        "أسماء"
+      ],
+      "reason": "Tuning record only. Asma is the name every release was written while looking at, so Asma measures nothing about generalisation and is marked seen. No holdout name is frozen here, so compiling Noor, Layla or Muhammad against this hash is refused."
+    },
+    "ef91972bb8bb8d2a3738f3381dfbafe25744e9ad049def27b6e9b1b312223790": {
+      "release": "pre-v4.3",
+      "stage": "stage4",
+      "cell": "classical-ar-accent",
+      "promptPath": "docs/goals/overnight-launch/lab/stage4/prompts/classical-ar-accent.txt",
+      "attempts": 1,
+      "frozen": "2026-09-08",
+      "holdout": [],
+      "seen": [
+        "Asma",
+        "أسماء"
+      ],
+      "reason": "Tuning record only. Asma is the name every release was written while looking at, so Asma measures nothing about generalisation and is marked seen. No holdout name is frozen here, so compiling Noor, Layla or Muhammad against this hash is refused."
+    },
+    "019360480f733cd066208093554c466d3b80eef91006586ad541d03f41942ab1": {
+      "release": "pre-v4.3",
+      "stage": "stage4",
+      "cell": "classical-ar-full-pave",
+      "promptPath": "docs/goals/overnight-launch/lab/stage4/prompts/classical-ar-full-pave.txt",
+      "attempts": 1,
+      "frozen": "2026-09-08",
+      "holdout": [],
+      "seen": [
+        "Asma",
+        "أسماء"
+      ],
+      "reason": "Tuning record only. Asma is the name every release was written while looking at, so Asma measures nothing about generalisation and is marked seen. No holdout name is frozen here, so compiling Noor, Layla or Muhammad against this hash is refused."
+    },
+    "0b049c9334061bd4f45ffe7a8fc021e393e9a0c03a68c08a317fc7e2be809cdd": {
+      "release": "pre-v4.3",
+      "stage": "stage4",
+      "cell": "classical-ar-partial-pave",
+      "promptPath": "docs/goals/overnight-launch/lab/stage4/prompts/classical-ar-partial-pave.txt",
+      "attempts": 1,
+      "frozen": "2026-09-08",
+      "holdout": [],
+      "seen": [
+        "Asma",
+        "أسماء"
+      ],
+      "reason": "Tuning record only. Asma is the name every release was written while looking at, so Asma measures nothing about generalisation and is marked seen. No holdout name is frozen here, so compiling Noor, Layla or Muhammad against this hash is refused."
+    },
+    "aaa3528d5e226d6bf5f3f6e9dc2a3dab9474edd18b2c2e1a89f623c37abf8682": {
+      "release": "pre-v4.3",
+      "stage": "stage4",
+      "cell": "classical-ar-rose",
+      "promptPath": "docs/goals/overnight-launch/lab/stage4/prompts/classical-ar-rose.txt",
+      "attempts": 1,
+      "frozen": "2026-09-08",
+      "holdout": [],
+      "seen": [
+        "Asma",
+        "أسماء"
+      ],
+      "reason": "Tuning record only. Asma is the name every release was written while looking at, so Asma measures nothing about generalisation and is marked seen. No holdout name is frozen here, so compiling Noor, Layla or Muhammad against this hash is refused."
+    },
+    "a6ac58319b9aa2657d1951d11d20f62180b65513e893ad618e3050c6df2d060e": {
+      "release": "pre-v4.3",
+      "stage": "stage4",
+      "cell": "classical-ar-white",
+      "promptPath": "docs/goals/overnight-launch/lab/stage4/prompts/classical-ar-white.txt",
+      "attempts": 1,
+      "frozen": "2026-09-08",
+      "holdout": [],
+      "seen": [
+        "Asma",
+        "أسماء"
+      ],
+      "reason": "Tuning record only. Asma is the name every release was written while looking at, so Asma measures nothing about generalisation and is marked seen. No holdout name is frozen here, so compiling Noor, Layla or Muhammad against this hash is refused."
+    },
+    "a86fe6a66dd39b0dd8af83522874ae06c26efb744af6276db59e88a3faf754e4": {
+      "release": "pre-v4.3",
+      "stage": "stage4",
+      "cell": "classical-ar-white-accent",
+      "promptPath": "docs/goals/overnight-launch/lab/stage4/prompts/classical-ar-white-accent.txt",
+      "attempts": 1,
+      "frozen": "2026-09-08",
+      "holdout": [],
+      "seen": [
+        "Asma",
+        "أسماء"
+      ],
+      "reason": "Tuning record only. Asma is the name every release was written while looking at, so Asma measures nothing about generalisation and is marked seen. No holdout name is frozen here, so compiling Noor, Layla or Muhammad against this hash is refused."
+    },
+    "0a604812a1589ee7756c5e8961f4592e6a2a471c532f42d20fc0674b79e91605": {
+      "release": "pre-v4.3",
+      "stage": "stage4",
+      "cell": "classical-en-accent",
+      "promptPath": "docs/goals/overnight-launch/lab/stage4/prompts/classical-en-accent.txt",
+      "attempts": 1,
+      "frozen": "2026-09-08",
+      "holdout": [],
+      "seen": [
+        "Asma",
+        "أسماء"
+      ],
+      "reason": "Tuning record only. Asma is the name every release was written while looking at, so Asma measures nothing about generalisation and is marked seen. No holdout name is frozen here, so compiling Noor, Layla or Muhammad against this hash is refused."
+    },
+    "d7ef625bd85fcac2558bc63fe838a785ff8a685b8ca699e6051106ac7649a92e": {
+      "release": "pre-v4.3",
+      "stage": "stage4",
+      "cell": "classical-en-full-pave",
+      "promptPath": "docs/goals/overnight-launch/lab/stage4/prompts/classical-en-full-pave.txt",
+      "attempts": 1,
+      "frozen": "2026-09-08",
+      "holdout": [],
+      "seen": [
+        "Asma",
+        "أسماء"
+      ],
+      "reason": "Tuning record only. Asma is the name every release was written while looking at, so Asma measures nothing about generalisation and is marked seen. No holdout name is frozen here, so compiling Noor, Layla or Muhammad against this hash is refused."
+    },
+    "146837ae050b87cbbc26f7d2f6d183ddc245095c4c99972e402e58098240c1c1": {
+      "release": "pre-v4.3",
+      "stage": "stage4",
+      "cell": "classical-en-partial-pave",
+      "promptPath": "docs/goals/overnight-launch/lab/stage4/prompts/classical-en-partial-pave.txt",
+      "attempts": 1,
+      "frozen": "2026-09-08",
+      "holdout": [],
+      "seen": [
+        "Asma",
+        "أسماء"
+      ],
+      "reason": "Tuning record only. Asma is the name every release was written while looking at, so Asma measures nothing about generalisation and is marked seen. No holdout name is frozen here, so compiling Noor, Layla or Muhammad against this hash is refused."
+    },
+    "84b028ead420eb9283f2753bd342a7c77de1104b173aa1406a13f840f8a94948": {
+      "release": "pre-v4.3",
+      "stage": "stage4",
+      "cell": "classical-en-rose",
+      "promptPath": "docs/goals/overnight-launch/lab/stage4/prompts/classical-en-rose.txt",
+      "attempts": 1,
+      "frozen": "2026-09-08",
+      "holdout": [],
+      "seen": [
+        "Asma",
+        "أسماء"
+      ],
+      "reason": "Tuning record only. Asma is the name every release was written while looking at, so Asma measures nothing about generalisation and is marked seen. No holdout name is frozen here, so compiling Noor, Layla or Muhammad against this hash is refused."
+    },
+    "faee6e6ccba07c758984957a5f0d66b9e2509931b1c5e7396cb3233d0c9c2a57": {
+      "release": "pre-v4.3",
+      "stage": "stage4",
+      "cell": "classical-en-white",
+      "promptPath": "docs/goals/overnight-launch/lab/stage4/prompts/classical-en-white.txt",
+      "attempts": 1,
+      "frozen": "2026-09-08",
+      "holdout": [],
+      "seen": [
+        "Asma",
+        "أسماء"
+      ],
+      "reason": "Tuning record only. Asma is the name every release was written while looking at, so Asma measures nothing about generalisation and is marked seen. No holdout name is frozen here, so compiling Noor, Layla or Muhammad against this hash is refused."
+    },
+    "0308f27bec36fb9c13155f865ecafad2557507230f4a7da26fec88a2195104be": {
+      "release": "pre-v4.3",
+      "stage": "stage4",
+      "cell": "classical-en-white-accent",
+      "promptPath": "docs/goals/overnight-launch/lab/stage4/prompts/classical-en-white-accent.txt",
+      "attempts": 1,
+      "frozen": "2026-09-08",
+      "holdout": [],
+      "seen": [
+        "Asma",
+        "أسماء"
+      ],
+      "reason": "Tuning record only. Asma is the name every release was written while looking at, so Asma measures nothing about generalisation and is marked seen. No holdout name is frozen here, so compiling Noor, Layla or Muhammad against this hash is refused."
+    },
+    "ec8c904e8b733296e10fa7cd6195b134bb9f637d7b844dbf163a715073815e30": {
+      "release": "pre-v4.3",
+      "stage": "stage5",
+      "cell": "diamond-rails-ar-kufi",
+      "promptPath": "docs/goals/overnight-launch/lab/stage5/prompts/diamond-rails-ar-kufi.txt",
+      "attempts": 1,
+      "frozen": "2026-09-08",
+      "holdout": [],
+      "seen": [
+        "Asma",
+        "أسماء"
+      ],
+      "reason": "Tuning record only. Asma is the name every release was written while looking at, so Asma measures nothing about generalisation and is marked seen. No holdout name is frozen here, so compiling Noor, Layla or Muhammad against this hash is refused."
+    },
+    "e253e543fed04e84e7deb20a55b1984baf3303ea7edff3201636e82f974692de": {
+      "release": "pre-v4.3",
+      "stage": "stage5",
+      "cell": "diamond-rails-en-kufi",
+      "promptPath": "docs/goals/overnight-launch/lab/stage5/prompts/diamond-rails-en-kufi.txt",
+      "attempts": 1,
+      "frozen": "2026-09-08",
+      "holdout": [],
+      "seen": [
+        "Asma",
+        "أسماء"
+      ],
+      "reason": "Tuning record only. Asma is the name every release was written while looking at, so Asma measures nothing about generalisation and is marked seen. No holdout name is frozen here, so compiling Noor, Layla or Muhammad against this hash is refused."
+    },
+    "6c1259ec6f3b93209d7a162b3d732f0ce59ac62c3c244da9dbea0f0b50d5b17a": {
+      "release": "pre-v4.3",
+      "stage": "stage5",
+      "cell": "framed-minimal-ar-kufi",
+      "promptPath": "docs/goals/overnight-launch/lab/stage5/prompts/framed-minimal-ar-kufi.txt",
+      "attempts": 1,
+      "frozen": "2026-09-08",
+      "holdout": [],
+      "seen": [
+        "Asma",
+        "أسماء"
+      ],
+      "reason": "Tuning record only. Asma is the name every release was written while looking at, so Asma measures nothing about generalisation and is marked seen. No holdout name is frozen here, so compiling Noor, Layla or Muhammad against this hash is refused."
+    },
+    "170b378ead78d0d26d74f8441d565f3d97333a9345bdf4ae55b038ba135a77ee": {
+      "release": "pre-v4.3",
+      "stage": "stage5",
+      "cell": "framed-minimal-en-kufi",
+      "promptPath": "docs/goals/overnight-launch/lab/stage5/prompts/framed-minimal-en-kufi.txt",
+      "attempts": 1,
+      "frozen": "2026-09-08",
+      "holdout": [],
+      "seen": [
+        "Asma",
+        "أسماء"
+      ],
+      "reason": "Tuning record only. Asma is the name every release was written while looking at, so Asma measures nothing about generalisation and is marked seen. No holdout name is frozen here, so compiling Noor, Layla or Muhammad against this hash is refused."
+    }
+  }
+}

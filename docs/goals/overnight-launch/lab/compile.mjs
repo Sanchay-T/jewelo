@@ -8,8 +8,22 @@
 //     --gem none --size 32 --chain Cable
 //
 // Prints the compiled prompt and its sha256.
+//
+// Holdout policy (docs/TASKS.md P3-2). A name that has ever been used as a holdout is
+// controlled: it compiles only against a prompt hash that lab/holdout.json has already
+// frozen it under. A new release compiles to a new hash, so it needs fresh names frozen
+// before its first image exists:
+//
+//   node docs/goals/overnight-launch/lab/compile.mjs --freeze-holdout "Sara,سارة" \
+//     --name Sara --script en --lettering Classic --look framed-minimal --view studio
+//
+// Refusals print the hash and the name and exit non-zero. Names that were never holdouts
+// (Asma, and any customer name) compile exactly as before.
 
 import { createHash } from "node:crypto";
+import { readFileSync, writeFileSync, existsSync } from "node:fs";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 
 export const FAMILY = "caleums-universal-v4.3";
 
@@ -190,7 +204,7 @@ Exact spelling and glyph order from Image 1. One connected piece. Exactly two ju
 
 // ------------------------------------------------------------------ compiler
 
-export function compile(input) {
+export function renderPrompt(input) {
   const {
     name,
     script,
@@ -259,6 +273,140 @@ export function compile(input) {
   };
 }
 
+// Every caller goes through compile(); the holdout guard is not optional.
+export function compile(input) {
+  const result = renderPrompt(input);
+  assertHoldoutAllowed(result);
+  return result;
+}
+
+// ------------------------------------------------------------------ holdout
+
+const HERE = dirname(fileURLToPath(import.meta.url));
+export const HOLDOUT_PATH = resolve(HERE, "holdout.json");
+const LEDGER_PATH = resolve(HERE, "..", "ledger.jsonl");
+
+export class HoldoutRefusal extends Error {
+  constructor(message) {
+    super(message);
+    this.name = "HoldoutRefusal";
+  }
+}
+
+export function loadHoldout() {
+  if (!existsSync(HOLDOUT_PATH)) {
+    throw new HoldoutRefusal(
+      `holdout.json is missing at ${HOLDOUT_PATH}. The compiler fails closed: without the frozen ` +
+        `record it cannot tell a holdout name from a tuning name.`,
+    );
+  }
+  const doc = JSON.parse(readFileSync(HOLDOUT_PATH, "utf8"));
+  if (!doc || typeof doc.hashes !== "object") throw new HoldoutRefusal("holdout.json has no hashes map");
+  return doc;
+}
+
+// A name is controlled once it has been frozen as a holdout under any hash - using it again
+// after its results were read would make it a tuning name wearing a holdout's clothes.
+export function controlledNames(doc = loadHoldout()) {
+  const names = new Set();
+  for (const entry of Object.values(doc.hashes)) for (const n of entry.holdout ?? []) names.add(n);
+  return names;
+}
+
+export function holdoutStatus(name, promptSha256, doc = loadHoldout()) {
+  if (!controlledNames(doc).has(name)) return { controlled: false, allowed: true, entry: null };
+  const entry = doc.hashes[promptSha256] ?? null;
+  return { controlled: true, allowed: Boolean(entry?.holdout?.includes(name)), entry };
+}
+
+export function assertHoldoutAllowed(result) {
+  const name = result.config.name;
+  const hash = result.promptSha256;
+  const doc = loadHoldout();
+  const { controlled, allowed, entry } = holdoutStatus(name, hash, doc);
+  if (!controlled || allowed) return result;
+  const frozen = entry
+    ? `holdout.json has an entry for that hash (${entry.cell}) but "${name}" is not frozen in it; ` +
+      `frozen there: ${(entry.holdout ?? []).join(", ") || "none"}.`
+    : `holdout.json has no entry for that hash, so this is a prompt "${name}" has never been held out for.`;
+  throw new HoldoutRefusal(
+    `REFUSED: "${name}" is a holdout name and prompt sha256 ${hash} is not frozen for it.\n` +
+      `${frozen}\n` +
+      `A holdout name that is reused on a release written after its results were read measures nothing. ` +
+      `Freeze fresh names for this hash first:\n` +
+      `  node ${"docs/goals/overnight-launch/lab/compile.mjs"} --freeze-holdout "<fresh names, comma separated>" ` +
+      `--name <a name in that fresh set> ... (same slots)`,
+  );
+}
+
+function ledgerHashes() {
+  if (!existsSync(LEDGER_PATH)) return new Set();
+  const hashes = new Set();
+  for (const line of readFileSync(LEDGER_PATH, "utf8").split("\n")) {
+    if (!line.trim()) continue;
+    const row = JSON.parse(line);
+    if (row.promptHash) hashes.add(row.promptHash);
+  }
+  return hashes;
+}
+
+// Writes the frozen entry for one prompt hash. Refuses to reuse a burnt name and refuses to
+// freeze a hash that already has images in the ledger, because that would be freezing after
+// the results were seen.
+export function freezeHoldout(result, names, options = {}) {
+  const hash = result.promptSha256;
+  const doc = loadHoldout();
+  const fresh = names.map((n) => n.trim()).filter(Boolean);
+  if (fresh.length === 0) throw new HoldoutRefusal("REFUSED: --freeze-holdout needs at least one name");
+
+  const existing = doc.hashes[hash];
+  if (existing?.holdout?.length) {
+    const same =
+      fresh.length === existing.holdout.length && fresh.every((n) => existing.holdout.includes(n));
+    if (same) return { doc, entry: existing, written: false };
+    throw new HoldoutRefusal(
+      `REFUSED: prompt sha256 ${hash} is already frozen with ${existing.holdout.join(", ")}. ` +
+        `A hash is frozen once; a different set of names means a different release.`,
+    );
+  }
+  if (ledgerHashes().has(hash)) {
+    throw new HoldoutRefusal(
+      `REFUSED: prompt sha256 ${hash} already has images in the ledger. Holdout names are frozen ` +
+        `before the first generation of a release, never after its results exist.`,
+    );
+  }
+  const burnt = controlledNames(doc);
+  for (const n of fresh) {
+    if (burnt.has(n)) {
+      throw new HoldoutRefusal(
+        `REFUSED: "${n}" has already been used as a holdout under another prompt hash. ` +
+          `Its results have been read, so it can no longer measure a new release. Pick a fresh name.`,
+      );
+    }
+    if ((doc.seenNames ?? []).includes(n)) {
+      throw new HoldoutRefusal(`REFUSED: "${n}" is a seen (tuning) name and can never be a holdout.`);
+    }
+  }
+
+  const entry = {
+    release: options.release ?? FAMILY,
+    stage: options.stage ?? "unassigned",
+    cell: options.cell ?? `${result.config.look}-${result.config.script}`,
+    promptPath: options.promptPath ?? null,
+    attempts: 0,
+    frozen: options.frozen ?? new Date().toISOString().slice(0, 10),
+    holdout: fresh,
+    seen: doc.seenNames ?? [],
+    reason:
+      options.reason ??
+      `Frozen before the first generation of ${options.release ?? FAMILY} at this hash. These names ` +
+        `were not looked at while this prompt was written, so their results measure generalisation.`,
+  };
+  doc.hashes[hash] = entry;
+  writeFileSync(HOLDOUT_PATH, JSON.stringify(doc, null, 2) + "\n");
+  return { doc, entry, written: true };
+}
+
 // ---------------------------------------------------------------------- cli
 
 function cli(argv) {
@@ -273,7 +421,31 @@ function cli(argv) {
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
-  const result = compile(cli(process.argv.slice(2)));
+  const args = cli(process.argv.slice(2));
+  const freeze = args["freeze-holdout"];
+  const reason = args.reason;
+  const cell = args.cell;
+  delete args["freeze-holdout"];
+  delete args.reason;
+  delete args.cell;
+
+  let result;
+  try {
+    result = renderPrompt(args);
+    if (freeze) {
+      const { entry, written } = freezeHoldout(result, String(freeze).split(","), { reason, cell });
+      process.stderr.write(
+        `${written ? "frozen" : "already frozen"}: ${entry.holdout.join(", ")} under ${result.promptSha256}\n`,
+      );
+    }
+    assertHoldoutAllowed(result);
+  } catch (error) {
+    if (error instanceof HoldoutRefusal) {
+      process.stderr.write(error.message + "\n");
+      process.exit(2);
+    }
+    throw error;
+  }
   if (process.env.JSON === "1") {
     process.stdout.write(JSON.stringify(result, null, 2) + "\n");
   } else {

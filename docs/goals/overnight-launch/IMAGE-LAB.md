@@ -459,6 +459,12 @@ The template hash is unchanged from v4.1 through v4.3 because each release chang
 That is the point of the split: an iteration is visible as a changed compiled-prompt hash against an unchanged template hash, which is exactly what "change one axis" should look like in the record.
 The stored file `lab/final/reference-studio-prompt.txt` was written at v4.2 and has not been re-emitted; the command below reproduces the current v4.3 bytes.
 
+### Holdout names are frozen per prompt hash
+
+A name that has ever been used as a holdout is frozen in `lab/holdout.json` against the exact prompt sha256 it was held out for, and `compile.mjs` refuses with a non-zero exit to compile that name against any other hash.
+Freezing happens before a release generates its first image, through `compile.mjs --freeze-holdout "<names>"`, which itself refuses a name already frozen under another hash and refuses any hash that already has rows in `ledger.jsonl`.
+So a v4.4 written after reading the `framed-minimal-layla-en` result cannot be measured on Noor, Layla or Muhammad again - it compiles to a new hash and must be given fresh names first - while Asma stays marked `seen` on every hash in the ledger, because every release was written while looking at Asma.
+
 Reproduce the compiled prompt below with:
 
 ```
