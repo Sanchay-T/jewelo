@@ -11,6 +11,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "lint": "eslint src",
+    "mask-contact-sheet": "tsx scripts/mask-contact-sheet.mts",
     "measure-stencils": "tsx scripts/measure-stencils.mts",
     "render-stencils": "tsx scripts/render-stencils.mts",
     "replay-lab": "tsx scripts/replay-lab.mts",

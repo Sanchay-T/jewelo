@@ -277,3 +277,167 @@ export function measureMask(input: MaskGeometryInput): MaskGeometryReport {
     bbox: maxX < 0 ? null : [minX, minY, maxX, maxY],
   };
 }
+
+/**
+ * Dilation by a square of ones with an odd side of `2 * radius + 1`, with the
+ * outside of the canvas treated as background. Separable: one horizontal pass
+ * over a running window count and then one vertical pass, so it is O(width *
+ * height) whatever the radius is.
+ *
+ * `caleums-arabic-v3.ts` carries its own `dilate` and `erodeSquare`. Those are
+ * private to the stencil solver, fixed at the ring-anchor erosion side and at
+ * scipy's `border_value=0`, and one of them mutates a `RasterMask` in place.
+ * These two are the generic pair the photo mask needs: any radius, either
+ * border value, a plain `Uint8Array` in and a new one out. Merging the four
+ * into one pair means editing the solver, which P2-2 may not touch; it is
+ * recorded as a follow-up rather than done half way.
+ */
+export function dilateSquare(
+  width: number,
+  height: number,
+  ink: Uint8Array,
+  radius: number,
+): Uint8Array {
+  if (radius <= 0) return ink.slice();
+  const horizontal = new Uint8Array(ink.length);
+  for (let y = 0; y < height; y += 1) {
+    const row = y * width;
+    let inWindow = 0;
+    for (let x = 0; x <= radius && x < width; x += 1)
+      if (ink[row + x] !== 0) inWindow += 1;
+    for (let x = 0; x < width; x += 1) {
+      horizontal[row + x] = inWindow > 0 ? 1 : 0;
+      const leaving = x - radius;
+      if (leaving >= 0 && ink[row + leaving] !== 0) inWindow -= 1;
+      const entering = x + radius + 1;
+      if (entering < width && ink[row + entering] !== 0) inWindow += 1;
+    }
+  }
+  const dilated = new Uint8Array(ink.length);
+  for (let x = 0; x < width; x += 1) {
+    let inWindow = 0;
+    for (let y = 0; y <= radius && y < height; y += 1)
+      if (horizontal[y * width + x] !== 0) inWindow += 1;
+    for (let y = 0; y < height; y += 1) {
+      dilated[y * width + x] = inWindow > 0 ? 1 : 0;
+      const leaving = y - radius;
+      if (leaving >= 0 && horizontal[leaving * width + x] !== 0) inWindow -= 1;
+      const entering = y + radius + 1;
+      if (entering < height && horizontal[entering * width + x] !== 0)
+        inWindow += 1;
+    }
+  }
+  return dilated;
+}
+
+/**
+ * Erosion by the same square. `outside` says what lies beyond the canvas: 0 is
+ * scipy's default and eats a border of `radius` pixels, 1 leaves the border
+ * alone. A closing built from `dilateSquare` then `erodeSquare(outside = 1)`
+ * therefore seals gaps without shaving anything that runs off the frame - a
+ * chain leaving the top of a packshot, for instance.
+ */
+export function erodeSquare(
+  width: number,
+  height: number,
+  ink: Uint8Array,
+  radius: number,
+  outside: 0 | 1,
+): Uint8Array {
+  if (radius <= 0) return ink.slice();
+  const horizontal = new Uint8Array(ink.length);
+  for (let y = 0; y < height; y += 1) {
+    const row = y * width;
+    let set = 0;
+    for (let x = 0; x <= radius && x < width; x += 1)
+      if (ink[row + x] !== 0) set += 1;
+    for (let x = 0; x < width; x += 1) {
+      const from = x - radius;
+      const to = x + radius;
+      const clipped = Math.max(0, -from) + Math.max(0, to - (width - 1));
+      const inside = to - from + 1 - clipped;
+      horizontal[row + x] =
+        set === inside && (outside === 1 || clipped === 0) ? 1 : 0;
+      if (from >= 0 && ink[row + from] !== 0) set -= 1;
+      const entering = to + 1;
+      if (entering < width && ink[row + entering] !== 0) set += 1;
+    }
+  }
+  const eroded = new Uint8Array(ink.length);
+  for (let x = 0; x < width; x += 1) {
+    let set = 0;
+    for (let y = 0; y <= radius && y < height; y += 1)
+      if (horizontal[y * width + x] !== 0) set += 1;
+    for (let y = 0; y < height; y += 1) {
+      const from = y - radius;
+      const to = y + radius;
+      const clipped = Math.max(0, -from) + Math.max(0, to - (height - 1));
+      const inside = to - from + 1 - clipped;
+      eroded[y * width + x] =
+        set === inside && (outside === 1 || clipped === 0) ? 1 : 0;
+      if (from >= 0 && horizontal[from * width + x] !== 0) set -= 1;
+      const entering = to + 1;
+      if (entering < height && horizontal[entering * width + x] !== 0) set += 1;
+    }
+  }
+  return eroded;
+}
+
+/**
+ * Zeroth, first and second image moments of a binary mask: the ink area, the
+ * centroid, the central second moments and the angle of the principal axis.
+ *
+ * This is what initialises a similarity registration (P2-2): the centroid
+ * gives the translation, the square root of the area ratio gives the uniform
+ * scale, and the difference of the two principal angles gives the in-plane
+ * rotation. The angle is in radians, in the half-open range [-pi/2, pi/2),
+ * because a second-moment axis has no direction - the caller resolves the
+ * 180 degree ambiguity by scoring both hypotheses.
+ */
+export interface MaskMoments {
+  readonly area: number;
+  readonly centreX: number;
+  readonly centreY: number;
+  /** Central second moments, normalised by the area. */
+  readonly mu20: number;
+  readonly mu11: number;
+  readonly mu02: number;
+  /** Principal axis angle in radians, or 0 for an empty or isotropic mask. */
+  readonly angle: number;
+}
+
+export function maskMoments(input: MaskGeometryInput): MaskMoments {
+  const { width, ink } = input;
+  let area = 0;
+  let sumX = 0;
+  let sumY = 0;
+  for (let index = 0; index < ink.length; index += 1) {
+    if (ink[index] === 0) continue;
+    const x = index % width;
+    area += 1;
+    sumX += x;
+    sumY += (index - x) / width;
+  }
+  if (area === 0)
+    return { area: 0, centreX: 0, centreY: 0, mu20: 0, mu11: 0, mu02: 0, angle: 0 };
+  const centreX = sumX / area;
+  const centreY = sumY / area;
+  let mu20 = 0;
+  let mu11 = 0;
+  let mu02 = 0;
+  for (let index = 0; index < ink.length; index += 1) {
+    if (ink[index] === 0) continue;
+    const x = index % width;
+    const dx = x - centreX;
+    const dy = (index - x) / width - centreY;
+    mu20 += dx * dx;
+    mu11 += dx * dy;
+    mu02 += dy * dy;
+  }
+  mu20 /= area;
+  mu11 /= area;
+  mu02 /= area;
+  const angle =
+    mu20 === mu02 && mu11 === 0 ? 0 : 0.5 * Math.atan2(2 * mu11, mu20 - mu02);
+  return { area, centreX, centreY, mu20, mu11, mu02, angle };
+}
