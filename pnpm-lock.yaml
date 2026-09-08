@@ -90,6 +90,9 @@ importers:
       '@jewelo/data':
         specifier: workspace:*
         version: link:../../packages/data
+      '@jewelo/identity':
+        specifier: workspace:*
+        version: link:../../packages/identity
       '@jewelo/jobs':
         specifier: workspace:*
         version: link:../jobs

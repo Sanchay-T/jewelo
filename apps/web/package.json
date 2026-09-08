@@ -18,6 +18,7 @@
     "@jewelo/config": "workspace:*",
     "@jewelo/contracts": "workspace:*",
     "@jewelo/data": "workspace:*",
+    "@jewelo/identity": "workspace:*",
     "@jewelo/jobs": "workspace:*",
     "@phosphor-icons/react": "2.1.10",
     "embla-carousel-react": "8.6.0",

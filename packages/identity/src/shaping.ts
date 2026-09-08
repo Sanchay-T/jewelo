@@ -24,19 +24,87 @@ import type * as HarfBuzzModule from "harfbuzzjs";
  * Directory that holds the pinned font files, under `packages/identity/engines`.
  * The release identifier moved to `caleums-identity-v4` (D-019); the on-disk
  * fonts directory keeps its original name so no font file has to move.
+ *
+ * `IDENTITY_FONT_URLS` below repeats this name as a literal on purpose - a
+ * bundler cannot follow an interpolated asset path - so any rename must change
+ * both.
  */
 export const CALEUMS_IDENTITY_FONT_DIRECTORY = "caleums-arabic-v3" as const;
 
 /**
+ * Every pinned font file, each as its own literal `new URL(..., import.meta.url)`.
+ *
+ * This map used to be one template literal with the file name interpolated.
+ * Under plain Node that is correct, but a bundler cannot follow an interpolated
+ * asset URL: Next/Turbopack emitted all ten faces into `.next/server/assets`
+ * and then handed back the *first* of them for every request, so a deployed
+ * shape of "Asma" with Playfair and of "أسماء" with Naskh and with Kufi all
+ * returned byte-identical Amiri glyphs (measured by the `P1-2b` diagnostics
+ * route, three identical `fontSha256Measured` values). That is the exact
+ * silent-fallback failure this module exists to prevent, so the reference is
+ * static per file and the bundler resolves each one on its own.
+ */
+const IDENTITY_FONT_URLS: Readonly<Record<string, URL>> = {
+  "Amiri-Regular.ttf": new URL(
+    "../engines/caleums-arabic-v3/fonts/Amiri-Regular.ttf",
+    import.meta.url,
+  ),
+  "ArefRuqaa-Regular.ttf": new URL(
+    "../engines/caleums-arabic-v3/fonts/ArefRuqaa-Regular.ttf",
+    import.meta.url,
+  ),
+  "cairo.ttf": new URL(
+    "../engines/caleums-arabic-v3/fonts/cairo.ttf",
+    import.meta.url,
+  ),
+  "GreatVibes-Regular.ttf": new URL(
+    "../engines/caleums-arabic-v3/fonts/GreatVibes-Regular.ttf",
+    import.meta.url,
+  ),
+  "NotoKufiArabic-Regular.ttf": new URL(
+    "../engines/caleums-arabic-v3/fonts/NotoKufiArabic-Regular.ttf",
+    import.meta.url,
+  ),
+  "NotoNaskhArabic-Regular.ttf": new URL(
+    "../engines/caleums-arabic-v3/fonts/NotoNaskhArabic-Regular.ttf",
+    import.meta.url,
+  ),
+  "PlayfairDisplay-SemiBold.ttf": new URL(
+    "../engines/caleums-arabic-v3/fonts/PlayfairDisplay-SemiBold.ttf",
+    import.meta.url,
+  ),
+  "rakkas.ttf": new URL(
+    "../engines/caleums-arabic-v3/fonts/rakkas.ttf",
+    import.meta.url,
+  ),
+  "reemkufi.ttf": new URL(
+    "../engines/caleums-arabic-v3/fonts/reemkufi.ttf",
+    import.meta.url,
+  ),
+  "ScheherazadeNew-Regular.ttf": new URL(
+    "../engines/caleums-arabic-v3/fonts/ScheherazadeNew-Regular.ttf",
+    import.meta.url,
+  ),
+};
+
+/** File names of the pinned fonts, in the order the manifest lists them. */
+export const IDENTITY_FONT_FILES = Object.freeze(
+  Object.keys(IDENTITY_FONT_URLS),
+);
+
+/**
  * URL of a pinned font file, resolved relative to this module rather than to
  * the working directory, so the deployed Node buildpack finds the same bytes
- * the laptop does.
+ * the laptop does. An unknown file name throws instead of resolving to some
+ * other face: a wrong face is a wrong pendant.
  */
 export function identityFontUrl(file: string): URL {
-  return new URL(
-    `../engines/${CALEUMS_IDENTITY_FONT_DIRECTORY}/fonts/${file}`,
-    import.meta.url,
-  );
+  const url = IDENTITY_FONT_URLS[file];
+  if (!url)
+    throw new Error(
+      `Unknown pinned identity font: ${file}. Known: ${IDENTITY_FONT_FILES.join(", ")}`,
+    );
+  return url;
 }
 
 /** Scripts the identity engine shapes. */
