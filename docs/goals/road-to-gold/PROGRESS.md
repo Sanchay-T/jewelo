@@ -126,6 +126,7 @@ Done:
 Doing:
 
 - Adversarial pass 5 on the identity engine (adversarial-reviewer) against `2ad683c`; the lead records the report to `reviews/identity-engine-adversarial-5.md`. P1-5 closes only after two consecutive passes find nothing above minor.
+- P6-3 (implementer, DS-5 default): button renamed to what it does with the AR key, checkbox stays the commitment, runs finishing after the ceiling are shown, terminal failure never says "Being prepared", contact form shows the server's format guidance, B4 Arabic strings.
 - Deploy `2ad683c` (fix 3, fix 4, fix pass 5) to staging and re-prove, once the edge timeout probe has restored the branch.
 
 Follow-ups found by subagents, not fixed (outside the task rows):
