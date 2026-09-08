@@ -22,9 +22,7 @@ import {
   ArrowLeft,
 } from "@phosphor-icons/react";
 import {
-  STORAGE_KEY,
   initialState,
-  restore,
   signature,
   validate,
   savedExampleSource,
@@ -44,6 +42,11 @@ import {
   type State,
   type View,
 } from "./model";
+import {
+  clearDeviceState,
+  loadDeviceState,
+  saveDeviceState,
+} from "./deviceState";
 import { NAME_MAX } from "@jewelo/contracts";
 import s from "./atelier.module.css";
 
@@ -132,6 +135,10 @@ const arabic: Record<string, string> = {
   Box: "مربعة",
   Curb: "كبح",
   "New piece": "قطعة جديدة",
+  "This clears the bag, the design and the name so the next customer starts fresh.":
+    "سيؤدي هذا إلى مسح الحقيبة والتصميم والاسم ليبدأ العميل التالي من جديد.",
+  "Clear and start fresh": "امسح وابدأ من جديد",
+  "Keep this bag": "احتفظ بالحقيبة",
   "Cancel editing": "إلغاء التعديل",
   "Continue designing": "متابعة التصميم",
   "Checkout unavailable": "الدفع غير متاح",
@@ -323,6 +330,8 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
   // sample moves to the small tile row and is only shown when asked for.
   const [showSample, setShowSample] = useState(false);
   const [imageAttempt, setImageAttempt] = useState(0);
+  /** Handing the tablet on drops kept pieces, so it is asked for once. */
+  const [clearing, setClearing] = useState(false);
   const photoElement = useRef<HTMLImageElement>(null);
   const viewRail = useRef<HTMLDivElement>(null);
   const bag = useRef<HTMLDialogElement>(null);
@@ -566,42 +575,41 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
       process.env.NODE_ENV === "development" &&
         new URLSearchParams(window.location.search).has("preview-test"),
     );
-    try {
-      const saved = restore(localStorage.getItem(STORAGE_KEY));
-      const runs = saved.runs.map((r) => ({
-        ...r,
-        slots: r.slots.map((slot) =>
-          slot.status === "pending"
-            ? { ...slot, status: "failed" as const }
-            : slot,
-        ),
-      }));
-      setState({ ...saved, runs });
-      // The spelling confirmation belongs to the approved revision, not to this
-      // tab. Without it, a reload on the review stage says "we have your
-      // request" and "you have not confirmed your name" at the same time, and
-      // Add to bag stays disabled. Re-ticking is still idempotent: the stored
-      // submission already marks this specification as started.
-      const restoredRun = runs.at(-1);
-      setConfirmed(
-        !!restoredRun?.confirmed &&
-          restoredRun.signature === signature(saved.draft),
-      );
-    } catch {
+    // `deviceState` owns every read of this tablet's storage; a record written
+    // by the other language hands over the kept pieces and nothing else, so a
+    // previous shopper's name can never appear in the name box.
+    const device = loadDeviceState(locale);
+    const saved = device.state;
+    const runs = saved.runs.map((r) => ({
+      ...r,
+      slots: r.slots.map((slot) =>
+        slot.status === "pending" ? { ...slot, status: "failed" as const } : slot,
+      ),
+    }));
+    setState({ ...saved, runs });
+    // The spelling confirmation belongs to the approved revision, not to this
+    // tab. Without it, a reload on the review stage says "we have your
+    // request" and "you have not confirmed your name" at the same time, and
+    // Add to bag stays disabled. Re-ticking is still idempotent: the stored
+    // submission already marks this specification as started.
+    const restoredRun = runs.at(-1);
+    setConfirmed(
+      !!restoredRun?.confirmed &&
+        restoredRun.signature === signature(saved.draft),
+    );
+    if (device.unreadable)
       setNotice("Your saved draft could not be read. A fresh draft is ready.");
-    }
     setLoaded(true);
-  }, []);
+    // `locale` is fixed for the life of this page: the language link is a full
+    // navigation, so this reads the tablet exactly once.
+  }, [locale]);
   useEffect(() => {
     if (!loaded) return;
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    } catch {
+    if (!saveDeviceState(locale, state))
       setNotice(
         "Storage is unavailable. Keep this tab open; changes cannot be recovered after reload.",
       );
-    }
-  }, [state, loaded]);
+  }, [state, loaded, locale]);
   useEffect(() => {
     const update = () => {
       const vv = window.visualViewport;
@@ -853,6 +861,7 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
     });
   }
   function openBag() {
+    setClearing(false);
     bag.current?.showModal();
   }
   async function add() {
@@ -925,13 +934,33 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
       setSaving(false);
     }
   }
+  /**
+   * The tablet is handed to the next shopper.
+   *
+   * The bag, the saved draft, the name, the reference of the request the shop
+   * is holding and the run this tab is watching all belong to the person who
+   * just left, so all of them go. The anonymous session stays: signing out
+   * would buy one of the shop's 30 sign-ins an hour on the next page load.
+   */
   function newPiece() {
     bag.current?.close();
-    setState((old) => ({ ...initialState(), bag: old.bag }));
-    confirmSpelling(false);
+    setClearing(false);
+    clearDeviceState();
+    setState(initialState());
+    setConfirmed(false);
+    setErrors({});
+    setImageErrors([]);
+    setNotice("");
+    setAutoplay(false);
+    setPlayRequested(false);
     setView("Studio");
     setExpanded(["name"]);
-    focusDesign();
+    // A reload is the only honest way to drop the request reference and the run
+    // this tab is watching: both outlive a specification change on purpose, so
+    // the shopper who edits a piece keeps the reference the shop is holding.
+    // Storage is already empty, so the page comes back exactly as it does for a
+    // first visitor, on the same principal.
+    window.location.assign(`/${locale}/design/new`);
   }
   function editItem(id: string) {
     const item = state.bag.find((b) => b.id === id);
@@ -2520,11 +2549,31 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
           )}
         </div>
         <div className={s.bagFooter}>
-          <button className={s.outline} onClick={newPiece}>
+          {/* One tablet, many shoppers: this is the control that hands it on. */}
+          <button
+            className={s.outline}
+            onClick={() => (state.bag.length ? setClearing(true) : newPiece())}
+          >
             {t("New piece")}
             <Plus />
           </button>
-          <p>{t("Saved locally on this device. Prices are unconfirmed; no order has been placed.")}</p>
+          {clearing ? (
+            <div className={s.clearConfirm} role="alert">
+              <p>
+                {t(
+                  "This clears the bag, the design and the name so the next customer starts fresh.",
+                )}
+              </p>
+              <div>
+                <button onClick={newPiece}>{t("Clear and start fresh")}</button>
+                <button onClick={() => setClearing(false)}>
+                  {t("Keep this bag")}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <p>{t("Saved locally on this device. Prices are unconfirmed; no order has been placed.")}</p>
+          )}
           <button className={s.primary} disabled>
             {t("Checkout unavailable")}
           </button>

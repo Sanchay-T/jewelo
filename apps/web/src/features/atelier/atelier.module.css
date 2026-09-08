@@ -858,6 +858,23 @@
   color: var(--muted);
   margin-block: 15px;
 }
+.clearConfirm {
+  margin-block: 15px;
+}
+.clearConfirm p {
+  margin-block: 0 10px;
+}
+.clearConfirm > div {
+  display: flex;
+  gap: 10px;
+}
+.clearConfirm > div button {
+  flex: 1;
+  border: 1px solid var(--line);
+  background: none;
+  padding: 10px 12px;
+  font-size: 12px;
+}
 .bagFooter .primary {
   width: 100%;
   justify-content: center;
