@@ -101,10 +101,12 @@ Done:
 
 - P3-3 committed (lead: opened `muhammad-en-kufi-norings.png`, one piece, eight islands bridged, no ring holes; manifest diff is 538 insertions and zero deletions): six Kufi rings-off holdout stencils from the lab renderer, `verify_stencil.py` components 1 on all six; 16 rings-off records manifested; `build_stencils.py` now additive, idempotent, refuses production-sourced files. Zero Runway credits (balance 305,042). Follow-up: no Python in the repo or on PATH runs the lab scripts (scipy missing); the agent built a scratch uv venv (3.12, numpy 2.5.3, scipy 1.18.1, pillow 12.3.0) that reproduces the published bytes; pin it in the lab.
 
+- Fix-2 review recorded in `reviews/fix-2-review-1.md` (lead wrote the file from the reviewer's report; the reviewer definition cannot write): no blocker, six majors. M1 `terminal_error_code` still gets raw PostgREST bodies through `blockPreSpend` and `fail`; M2 the retry top-up books on `current_date` so a midnight-crossing retry permanently eats the daily reserved cap; M3 `deploy.sh` would push the laptop `.env` into production; M4 an empty `TRUSTED_CLIENT_IP_HEADER` is dropped by the contract so "trust no header" cannot ship; M5 `notes` is model prose in the shopper payload; M6 the 420 s window exceeds the 300 s `maxDuration`. Minors 8, 9, 12, 13 recorded as follow-ups: harakat and modifier-only Latin names accept then shape to notdef (fail closed, worse message); the atelier client accepts any `\p{L}` for English; the source limiter before auth is per NAT address (no caller today); policy change between reservation and expansion leaves a swallowed difference.
+
 Doing:
 
 - Deploy `f3f8775` to staging and re-prove (platform): dry-run key list, deployment id, smoke, `Ali` and `أمير` runs, `verification_result` allowlist, `ringPlacement` in the identity claims, readiness with a forged cookie, transliterate 429 on the 21st call, name schema refusals.
-- Fresh review of security fix 2 and pipeline fix 2 (reviewer); report to `reviews/fix-2-review-1.md`.
+- Fix 3 (implementer) on `reviews/fix-2-review-1.md` M1 to M6 and minors 7, 10, 11, 14: codes-only error writes at every site, retry top-up on the booking date, deploy env sync gated on `JEWELO_DEPLOY_TARGET`, empty-allowed contract keys, `notes` dropped from the state allowlist, executor cap and stale window as one derived invariant.
 - Adversarial pass 4 on the identity engine (adversarial-reviewer) against `f221b44`; report to `reviews/identity-engine-adversarial-4.md`. P1-5 closes only after two consecutive passes find nothing above minor.
 
 Follow-ups found by subagents, not fixed (outside the task rows):
