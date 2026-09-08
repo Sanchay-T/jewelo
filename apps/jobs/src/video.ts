@@ -322,10 +322,19 @@ function supabase(url: string, key: string, fetcher: typeof fetch) {
         body: JSON.stringify(body),
       }),
     async sign(bucket: string, path: string) {
-      // Segment by segment, so nothing in an object name can change which
-      // object is signed.
-      const encodedPath = path
-        .split("/")
+      // Pipeline fix review 1 finding 4. Segment by segment, so a `/` inside an
+      // object name stays part of the name. Encoding alone does not make the
+      // path safe: `encodeURIComponent` leaves `.` untouched, so a `.` or `..`
+      // segment passes through it unchanged and would still be resolved. It is
+      // refused here, before anything is signed.
+      const segments = path.split("/");
+      if (
+        segments.some(
+          (segment) => !segment || segment === "." || segment === "..",
+        )
+      )
+        throw new Error("signed_storage_path_invalid");
+      const encodedPath = segments
         .map((segment) => encodeURIComponent(segment))
         .join("/");
       const response = await fetcher(

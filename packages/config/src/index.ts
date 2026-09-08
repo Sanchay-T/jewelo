@@ -455,7 +455,8 @@ export const webGuardEnvSchema = z.object({
 /*                                                                            */
 /* Pipeline review 1, findings 2 and 10. Every one of these numbers used to be */
 /* a literal in business code: the 180 s provider timeout in                   */
-/* `packages/ai/src/studio.ts`, the two-minute stale window and the sweeper    */
+/* `packages/ai/src/studio.ts`, the stale window (two minutes then, derived    */
+/* here now) and the sweeper                                                   */
 /* limit in `apps/web/src/inngest/functions.ts`, the poll count and interval   */
 /* in the same file, `expiresIn: 300` in four storage-signing call sites, and  */
 /* the attempt budget 3 in `apps/jobs/src/presentation.ts` and in three SQL    */
@@ -465,8 +466,9 @@ export const webGuardEnvSchema = z.object({
 /* recovered, blocked and then could not transition back.                      */
 /*                                                                            */
 /* The stale window is therefore not a number anyone can set: it is derived as */
-/* the provider timeout plus a validated margin, so the sweeper can never fire */
-/* while a provider call this process started is still legally running.        */
+/* the image timeout plus the two vision timeouts plus a validated margin, so  */
+/* the sweeper can never fire while a provider call this process started is    */
+/* still legally running.                                                      */
 /* ------------------------------------------------------------------------- */
 
 export const pipelineLimitsSchema = z
@@ -474,10 +476,19 @@ export const pipelineLimitsSchema = z
     /** Hard ceiling on one provider image request, aborted by the adapter. */
     providerRequestTimeoutMs: positiveInt.min(30_000).max(600_000),
     /**
-     * Grace added to the provider timeout to get the stale window. It covers
-     * the work either side of the provider call inside one dispatch - the
-     * identity render, the storage upload, the verification read - so a task
-     * is only stale once no live dispatch could still be working on it.
+     * Hard ceiling on one vision request, aborted by the adapter. Both vision
+     * calls a still can make use it: `OpenAIStudioVerifier.verify` and
+     * `OpenAINameReader.read` in `packages/ai/src/studio.ts`. A vision read
+     * answers in seconds where an image edit takes minutes, so it is its own
+     * number rather than the image timeout reused.
+     */
+    visionRequestTimeoutMs: positiveInt.min(10_000).max(300_000),
+    /**
+     * Grace added to the bounded provider calls to get the stale window. It
+     * covers the work either side of those calls inside one dispatch - the
+     * identity render, the reference and anchor downloads, the storage upload,
+     * the database writes - so a task is only stale once no live dispatch
+     * could still be working on it.
      */
     staleRecoveryMarginMs: positiveInt.min(30_000).max(600_000),
     /** `p_limit` for `recover_stale_generation_tasks`; the RPC caps it at 500. */
@@ -498,14 +509,28 @@ export const pipelineLimitsSchema = z
   })
   .transform((value) => ({
     ...value,
-    /** Derived, never configured: see the note above. */
+    /**
+     * Derived, never configured: see the note above.
+     *
+     * Pipeline fix review 1 finding 2. The window has to bound every provider
+     * call one dispatch of a still can still be inside, and a still makes
+     * three: the image edit (`OpenAIStillAdapter.generate`), the still
+     * verification (`OpenAIStudioVerifier.verify`) and the engraved-name read
+     * (`OpenAINameReader.read`). They run in sequence, each aborted by its own
+     * timeout, so the longest a live dispatch can legally be working is the
+     * image timeout plus the two vision timeouts, plus the margin for the
+     * unbounded local work around them.
+     */
     staleRecoveryWindowMs:
-      value.providerRequestTimeoutMs + value.staleRecoveryMarginMs,
+      value.providerRequestTimeoutMs +
+      2 * value.visionRequestTimeoutMs +
+      value.staleRecoveryMarginMs,
   }));
 export type PipelineLimits = z.infer<typeof pipelineLimitsSchema>;
 
 export const pipelineLimits: PipelineLimits = pipelineLimitsSchema.parse({
   providerRequestTimeoutMs: 180_000,
+  visionRequestTimeoutMs: 60_000,
   staleRecoveryMarginMs: 120_000,
   staleRecoveryLimit: 100,
   videoPollMaxAttempts: 60,

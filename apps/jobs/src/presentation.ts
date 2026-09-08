@@ -8,6 +8,7 @@ import {
   buildPromptVariableSnapshot,
   compilePrompt,
   identityTextMatches,
+  normalizeIdentityText,
   type GeneratedMedia,
   type PromptProfile,
   type PromptVariableSnapshot,
@@ -16,6 +17,11 @@ import {
   type StudioVerifier,
 } from "@jewelo/ai";
 import { parseJobsEnv, pipelineLimits } from "@jewelo/config";
+// Pipeline fix review 1 finding 5. The one definition of a reference-asset id -
+// the opaque identifier the upload route mints, and nothing that can traverse a
+// path - is the one the upload route validates against, so this job cannot
+// drift from it.
+import { REFERENCE_ASSET_ID } from "@jewelo/contracts";
 import { isDuplicateObject } from "@jewelo/media";
 import sharp from "sharp";
 import { renderIdentityAnchor } from "./identity-anchor";
@@ -176,9 +182,21 @@ export interface PresentationRepository {
   }): Promise<void>;
   /**
    * Paid attempts this task may make, read from the same row the SQL gates
-   * read (`runtime_policy.provider_attempt_budget`). Optional so a repository
-   * that cannot reach the policy falls back to the validated default in
-   * `packages/config`; the database stays the authority whenever it answers.
+   * read (`runtime_policy.provider_attempt_budget`).
+   *
+   * Optional so a repository that has no policy to read - the in-memory one in
+   * a harness - can leave it out, and only then is the validated default in
+   * `packages/config` used.
+   *
+   * Pipeline fix review 1 finding 8: this used to promise that same fallback
+   * when the policy read failed, which the Supabase implementation does not do
+   * and should not do. A read that errors leaves this job unable to say how
+   * many paid attempts the SQL gates will allow, and guessing that number is
+   * how a task either wastes a still or is declared retryable when
+   * `reserve_provider_attempt` will never serve it again. It throws instead,
+   * the dispatch stops before any provider call, and the stale sweeper brings
+   * the task back when the database answers again. The config default applies
+   * only to a policy row that answered with a missing or invalid value.
    */
   providerAttemptBudget?(): Promise<number>;
 }
@@ -257,12 +275,47 @@ export function promptSnapshotRejectionClass(
  * PostgREST is `Supabase job request <status>: <body>`, whose body can carry
  * row values. Cutting at the first colon or newline keeps the class and drops
  * the detail, so a customer's name can never reach `terminal_error_code`.
+ *
+ * Pipeline fix review 1 finding 7: the token used to keep spaces, dots and
+ * mixed case, so a first line that is prose rather than a category ("Sara &
+ * Omar is not a valid name") survived as prose. It is now lower-cased and
+ * reduced to `[a-z0-9_]`, the alphabet the codes this job writes are spelled
+ * in; any word from a customer's name that reaches here arrives as an
+ * unreadable run of letters at most 60 characters long, and no caller appends
+ * the original message next to it.
  */
 function errorClass(error: unknown): string {
   const message = error instanceof Error ? error.message : String(error);
   const head = message.split(/[:\n]/, 1)[0] ?? "";
-  const token = head.trim().replaceAll(/[^A-Za-z0-9 ._-]/g, "");
+  const token = head
+    .trim()
+    .toLowerCase()
+    .replaceAll(/[^a-z0-9_]/g, "");
   return token.slice(0, 60) || "unknown";
+}
+
+/**
+ * What a name rejection is allowed to say: a code, a count and a script name.
+ *
+ * Pipeline fix review 1 finding 7. This used to be `name_mismatch:<read text>`,
+ * and `terminal_error_code` is a customer-visible column (`/api/state` selects
+ * it), so a wrong reading of somebody's name was published back to the browser.
+ * An operator who needs the actual letters reads `verification_result.nameCheck`
+ * on the attempt, which never leaves the server.
+ *
+ * The length is of the comparison form - the letters that decided the verdict,
+ * after presentation forms are folded and marks and punctuation dropped - so it
+ * describes the decision rather than the raw string. `script` is `none` when the
+ * reader returned no letters at all, which is a different failure from a reading
+ * in the wrong script and has to be told apart in the operator console.
+ */
+function nameMismatchCode(readText: string): string {
+  const letters = normalizeIdentityText(readText.normalize("NFKC"));
+  const arabic = /\p{Script=Arabic}/u.test(letters);
+  const latin = /\p{Script=Latin}/u.test(letters);
+  const script =
+    arabic && latin ? "mixed" : arabic ? "arabic" : latin ? "latin" : "none";
+  return `name_mismatch:len=${letters.length},script=${script}`;
 }
 
 export async function executePresentationTask(
@@ -291,8 +344,9 @@ export async function executePresentationTask(
    * sites carried that fallback, and the gates that simply threw carried none,
    * so on a retry the throw escaped `executePresentationTask` (the Inngest
    * function runs with `retries: 0`), the task stayed `retrying` with no
-   * `terminal_error_code`, and the two-minute stale sweeper re-dispatched it
-   * for ever. Every deterministic pre-spend refusal now ends the same way:
+   * `terminal_error_code`, and the stale sweeper re-dispatched it for ever.
+   * (The sweeper runs every two minutes but only claims tasks older than
+   * `pipelineLimits.staleRecoveryWindowMs`; the cadence is not the window.) Every deterministic pre-spend refusal now ends the same way:
    * block if the RPC will take it, terminal `fail` with the same message if it
    * will not, and `operator_review` either way. The messages are category
    * strings; a customer name never appears in one.
@@ -303,14 +357,20 @@ export async function executePresentationTask(
     } catch (blockError) {
       // Pipeline review 1 finding 8: the bare catch discarded why the RPC
       // refused, so an operator saw the gate's reason and no trace of the
-      // second failure. The cause is recorded as its class only.
-      const reason = error instanceof Error ? error.message : String(error);
+      // second failure. Both causes are recorded as their class only.
+      //
+      // Pipeline fix review 1 finding 7: the gate's own message used to be
+      // concatenated in raw. Most gate messages are category strings, but this
+      // path also carries whatever `signedIdentityUrl`, the anchor read or the
+      // inspiration read threw, including a PostgREST body with row values in
+      // it, and `fail` writes this string into the customer-visible
+      // `terminal_error_code`. Two classes, no free text.
       await repository.fail({
         task,
         run,
         attempt: task.attempt,
         error: new Error(
-          `${reason}|pre_spend_block_failed:${errorClass(blockError)}`,
+          `${errorClass(error)}|pre_spend_block_failed:${errorClass(blockError)}`,
         ),
         terminal: true,
         actualCostCents: 0,
@@ -344,8 +404,8 @@ export async function executePresentationTask(
     } catch (error) {
       // A revision whose specification cannot fill the release's pinned
       // variable set can never compile, however often it is re-dispatched.
-      // Left to throw, the task stays `queued` at attempt 0 and the two-minute
-      // stale sweeper re-queues it for ever. This is a pre-spend gate like the
+      // Left to throw, the task stays `queued` at attempt 0 and the stale
+      // sweeper re-queues it once per stale window for ever. This is a pre-spend gate like the
       // identity and anchor gates: block once, release the reservation, and
       // send it to operator review.
       return blockPreSpendTerminally(
@@ -373,8 +433,8 @@ export async function executePresentationTask(
       // same task succeeds on the next dispatch, so it is rethrown and the
       // stale sweeper recovers it. A deterministic raise from the RPC is about
       // the rows, so re-dispatching it turns one bad row into an outbox event
-      // every two minutes for ever; it is refused once, pre-spend, like the
-      // other gates here.
+      // once per stale window for ever; it is refused once, pre-spend, like
+      // the other gates here.
       const reason = promptSnapshotRejectionClass(error);
       if (reason === undefined) throw error;
       return blockPreSpendTerminally(
@@ -405,7 +465,7 @@ export async function executePresentationTask(
       if (!reference) {
         // A dependent view whose studio still is terminal can never get a
         // pendant to copy. Deferring would let the stale sweeper re-queue it
-        // every two minutes forever; block it once instead, which also
+        // once per stale window forever; block it once instead, which also
         // releases its reservation through the pre-spend path below.
         const terminal = await repository.dependencyTerminalStatus?.(task);
         if (terminal) throw new Error(`dependency_${terminal}`);
@@ -552,10 +612,19 @@ export async function executePresentationTask(
         // which it never did. Every attempt failed, three paid stills per view
         // were spent, and the shopper was told the piece was unavailable.
         const expectedLetters = expected.replaceAll(/\P{L}/gu, "");
-        const latinExpected = !/\p{Script=Arabic}/u.test(expectedLetters);
-        const scriptOk = latinExpected
-          ? !/\p{Script=Arabic}/u.test(readText)
-          : /\p{Script=Arabic}/u.test(readText);
+        // Pipeline fix review 1 finding 1. An approved text with no letters
+        // ("1234", "-", "'") normalises to `""`, which made `latinExpected`
+        // true, the script test vacuous and `identityTextMatches` compare `""`
+        // to `""` - so the gate passed whatever the model had engraved. It is
+        // a property of the approved row, not of this attempt: no regeneration
+        // can give a letterless name letters, so it fails closed at once
+        // instead of spending two more stills first.
+        const letterlessApproved = normalizeIdentityText(expected).length === 0;
+        const scriptOk =
+          !letterlessApproved &&
+          (!/\p{Script=Arabic}/u.test(expectedLetters)
+            ? !/\p{Script=Arabic}/u.test(readText)
+            : /\p{Script=Arabic}/u.test(readText));
         // Pipeline review 1 finding 3. The deterministic comparison is the only
         // thing that can pass a still. The model's own `matches` is kept in the
         // decision as evidence of what it claimed, and is never sufficient: a
@@ -566,11 +635,14 @@ export async function executePresentationTask(
           readText,
           expected,
           scriptOk,
+          letterlessApproved,
           modelReportedMatch: reading.matches,
         };
         if (!passed) {
           const terminal =
-            regeneration >= 2 || reservation.attempt >= attemptBudget;
+            letterlessApproved ||
+            regeneration >= 2 ||
+            reservation.attempt >= attemptBudget;
           if (repository.storeRejectedOutput)
             rejectedObjectPaths.push(
               await repository.storeRejectedOutput({
@@ -585,7 +657,11 @@ export async function executePresentationTask(
             task,
             run,
             attempt: reservation.attempt,
-            error: new Error(`name_mismatch:${readText}`),
+            error: new Error(
+              letterlessApproved
+                ? "approved_text_has_no_letters"
+                : nameMismatchCode(readText),
+            ),
             terminal,
             actualCostCents: actualCostCents ?? 0,
             rejectedObjectPaths,
@@ -645,12 +721,6 @@ export async function executePresentationTask(
     return { status: "operator_review" as const, attempt: reservation.attempt };
   }
 }
-
-/**
- * The shape of a reference-asset id in the specification: the opaque
- * identifier the upload route mints, and nothing that can traverse a path.
- */
-const REFERENCE_ASSET_ID = /^[a-zA-Z0-9_-]{1,128}$/;
 
 export class SupabasePresentationRepository implements PresentationRepository {
   constructor(
@@ -1035,10 +1105,20 @@ export class SupabasePresentationRepository implements PresentationRepository {
     });
   }
   async signedStorageUrl(bucket: string, path: string) {
-    // Each segment is encoded on its own so a `/` inside a name stays a name
-    // and `.`, `..` or a space can never change which object is signed.
-    const encodedPath = path
-      .split("/")
+    // Pipeline fix review 1 finding 4. Each segment is encoded on its own so a
+    // `/` inside a name stays part of the name rather than a new segment. That
+    // is all the encoding does: `encodeURIComponent` leaves `.` and `-`
+    // untouched, so `..` survives it unchanged and a dot segment would still
+    // be resolved by whatever normalises the path. The traversal is refused
+    // here instead, before anything is signed.
+    const segments = path.split("/");
+    if (
+      segments.some(
+        (segment) => !segment || segment === "." || segment === "..",
+      )
+    )
+      throw new Error("signed_storage_path_invalid");
+    const encodedPath = segments
       .map((segment) => encodeURIComponent(segment))
       .join("/");
     const result = await this.#request<{

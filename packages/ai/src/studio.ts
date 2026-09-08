@@ -249,6 +249,10 @@ export class OpenAIStudioVerifier implements StudioVerifier {
           },
         },
       }),
+      // Pipeline fix review 1 finding 2: without this the call could outlive
+      // the stale window, a second worker would take the task, and the two
+      // would race to complete or fail it.
+      signal: AbortSignal.timeout(pipelineLimits.visionRequestTimeoutMs),
     });
     if (!response.ok)
       throw new Error(`OpenAI verification failed:${response.status}`);
@@ -288,16 +292,41 @@ export function normalizeIdentityText(value: string): string {
 }
 
 /**
+ * The comparison form of what the reader said it saw.
+ *
+ * NFKC folds the Arabic presentation forms (U+FB50-U+FDFF, U+FE70-U+FEFF) back
+ * onto the letters they render: a reader that answers with U+FEE7 U+FEEC U+FEAE
+ * is describing the same three letters as U+0646 U+0648 U+0631, and refusing it
+ * would burn three paid stills on a pendant that is actually correct.
+ *
+ * It is applied to the read side and never to the approved side. The approved
+ * text is the customer's name as they typed and confirmed it: it is what the
+ * stencil was shaped from and what the identity fingerprint hashes, so folding
+ * it would compare against a name nobody approved and would widen the target
+ * the still has to hit. Folding the reader's answer only interprets a report;
+ * folding the approval would move the truth.
+ */
+function normalizeReadText(value: string): string {
+  return normalizeIdentityText(value.normalize("NFKC"));
+}
+
+/**
  * A serif Latin render can lose or swap a single glyph to the reader without
  * being a different name, so a five-letter-or-longer Latin name passes within
  * one Damerau-Levenshtein edit. Arabic identity stays exact.
+ *
+ * Pipeline fix review 1 finding 1: an empty comparison form on either side is
+ * a refusal, never a match. A name with no letters ("-", "1234") normalises to
+ * `""`, and `"" === ""` used to pass any still at all, whatever was engraved
+ * on it. There is nothing to compare, so there is nothing that can pass.
  */
 export function identityTextMatches(
   readText: string,
   approvedText: string,
 ): boolean {
-  const read = normalizeIdentityText(readText);
+  const read = normalizeReadText(readText);
   const approved = normalizeIdentityText(approvedText);
+  if (!read || !approved) return false;
   if (read === approved) return true;
   if (approved.length < 5 || !/^[a-z]+$/.test(approved)) return false;
   return damerauLevenshteinDistance(read, approved) <= 1;
@@ -376,6 +405,10 @@ export class OpenAINameReader implements StudioNameReader {
           },
         },
       }),
+      // The name read is the longest un-bumped gap in a dispatch: the task
+      // sits in `verifying` while it runs. Bounded by the same vision timeout
+      // the stale window is derived from.
+      signal: AbortSignal.timeout(pipelineLimits.visionRequestTimeoutMs),
     });
     if (!response.ok)
       throw new Error(`OpenAI name read failed:${response.status}`);

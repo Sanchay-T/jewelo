@@ -563,6 +563,7 @@ export type Database = {
           provider_response_url: string | null
           provider_status_url: string | null
           reservation_cents: number
+          reservation_usage_date: string | null
           run_id: string
           status: Database["public"]["Enums"]["task_status"]
           style_anchor_release_id: string | null
@@ -591,6 +592,7 @@ export type Database = {
           provider_response_url?: string | null
           provider_status_url?: string | null
           reservation_cents?: number
+          reservation_usage_date?: string | null
           run_id: string
           status?: Database["public"]["Enums"]["task_status"]
           style_anchor_release_id?: string | null
@@ -619,6 +621,7 @@ export type Database = {
           provider_response_url?: string | null
           provider_status_url?: string | null
           reservation_cents?: number
+          reservation_usage_date?: string | null
           run_id?: string
           status?: Database["public"]["Enums"]["task_status"]
           style_anchor_release_id?: string | null
@@ -1393,6 +1396,7 @@ export type Database = {
           global_max_reserved_spend_cents: number
           id: boolean
           max_reserved_spend_cents: number
+          provider_attempt_budget: number
           studio_reservation_cents: number
           supabase_region: string
           updated_at: string
@@ -1405,6 +1409,7 @@ export type Database = {
           global_max_reserved_spend_cents?: number
           id?: boolean
           max_reserved_spend_cents?: number
+          provider_attempt_budget?: number
           studio_reservation_cents?: number
           supabase_region?: string
           updated_at?: string
@@ -1417,6 +1422,7 @@ export type Database = {
           global_max_reserved_spend_cents?: number
           id?: boolean
           max_reserved_spend_cents?: number
+          provider_attempt_budget?: number
           studio_reservation_cents?: number
           supabase_region?: string
           updated_at?: string
@@ -1676,6 +1682,7 @@ export type Database = {
           provider_response_url: string | null
           provider_status_url: string | null
           reservation_cents: number
+          reservation_usage_date: string | null
           run_id: string
           status: Database["public"]["Enums"]["task_status"]
           style_anchor_release_id: string | null
@@ -1869,6 +1876,7 @@ export type Database = {
           provider_response_url: string | null
           provider_status_url: string | null
           reservation_cents: number
+          reservation_usage_date: string | null
           run_id: string
           status: Database["public"]["Enums"]["task_status"]
           style_anchor_release_id: string | null
@@ -1940,6 +1948,7 @@ export type Database = {
           provider_response_url: string | null
           provider_status_url: string | null
           reservation_cents: number
+          reservation_usage_date: string | null
           run_id: string
           status: Database["public"]["Enums"]["task_status"]
           style_anchor_release_id: string | null
@@ -2050,6 +2059,7 @@ export type Database = {
           provider_response_url: string | null
           provider_status_url: string | null
           reservation_cents: number
+          reservation_usage_date: string | null
           run_id: string
           status: Database["public"]["Enums"]["task_status"]
           style_anchor_release_id: string | null
@@ -2107,6 +2117,7 @@ export type Database = {
           provider_response_url: string | null
           provider_status_url: string | null
           reservation_cents: number
+          reservation_usage_date: string | null
           run_id: string
           status: Database["public"]["Enums"]["task_status"]
           style_anchor_release_id: string | null
@@ -2186,6 +2197,7 @@ export type Database = {
           provider_response_url: string | null
           provider_status_url: string | null
           reservation_cents: number
+          reservation_usage_date: string | null
           run_id: string
           status: Database["public"]["Enums"]["task_status"]
           style_anchor_release_id: string | null

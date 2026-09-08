@@ -1,3 +1,4 @@
+import { pipelineLimits } from "@jewelo/config";
 import { hasOperatorSession } from "../../../lib/backend/operator-session";
 import {
   adminConfig,
@@ -69,15 +70,41 @@ function project(
 }
 
 /**
- * The verifier record is customer-visible lineage, but a name-rejected attempt
- * records the private storage paths of the images it threw away. Those never
- * leave the server.
+ * The verifier fields the atelier actually reads. `VerificationResult` in
+ * `@jewelo/contracts` is what `supabase-jewelo-client.ts` casts this object to
+ * (`status`, `exactText`, `identityScore`, `notes`), `mock-client.ts` reads
+ * `exactText`, and `passed` is the flag the SQL gates and the operator console
+ * key on. Nothing else in the browser touches this record.
+ */
+const VERIFICATION_FIELDS = [
+  "status",
+  "passed",
+  "exactText",
+  "identityScore",
+  "notes",
+] as const;
+
+/**
+ * Pipeline fix review 1 finding 11. This used to be a denylist that removed
+ * `rejectedObjectPaths` and published everything else, so the job's whole
+ * verification record reached the browser: `nameCheck.readText` (what the model
+ * thought was engraved on somebody's pendant), `nameCheck.scriptOk`, and
+ * `modelReportedMatch`, which names a model's opinion in a shopper's payload.
+ * A denylist also publishes by default: any field a later job adds is public
+ * until someone remembers to remove it.
+ *
+ * It is an allowlist now. Everything else - the whole `nameCheck` block
+ * included - stays on the server, where the operator reads it on the asset row.
  */
 function customerVerification(value: unknown) {
   if (!value || typeof value !== "object" || Array.isArray(value)) return value;
-  const rest = { ...(value as Record<string, unknown>) };
-  delete rest.rejectedObjectPaths;
-  return rest;
+  const record = value as Record<string, unknown>;
+  return Object.fromEntries(
+    VERIFICATION_FIELDS.filter((field) => field in record).map((field) => [
+      field,
+      record[field],
+    ]),
+  );
 }
 
 const DESIGN_SCOPED = new Set([
@@ -99,8 +126,7 @@ export async function GET(request: Request) {
     const designId = new URL(request.url).searchParams.get("designId");
     const scope = (table: string) => {
       if (!designId) return "";
-      if (table === "designs")
-        return `&id=eq.${encodeURIComponent(designId)}`;
+      if (table === "designs") return `&id=eq.${encodeURIComponent(designId)}`;
       if (DESIGN_SCOPED.has(table))
         return `&design_id=eq.${encodeURIComponent(designId)}`;
       return "";
@@ -161,7 +187,14 @@ export async function GET(request: Request) {
             .split("/")
             .map(encodeURIComponent)
             .join("/")}`,
-          { method: "POST", body: JSON.stringify({ expiresIn: 300 }) },
+          {
+            method: "POST",
+            // Pipeline fix review 1 finding 6: the customer-facing signer kept
+            // the literal every other call site had already given up.
+            body: JSON.stringify({
+              expiresIn: pipelineLimits.signedUrlExpirySeconds,
+            }),
+          },
           bearer,
         );
         const relative = signed.signedURL ?? signed.signedUrl;
