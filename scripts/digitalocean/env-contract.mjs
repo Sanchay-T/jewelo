@@ -27,6 +27,9 @@ export const runtimeConfig = [
 export const optionalRuntimeConfig = [
   "INNGEST_BASE_URL",
   "INNGEST_CRON_ENABLED",
+  // Defaults to 2 in the config schema. Shipped when present so an environment
+  // can lower the number of paid generations in flight without a code change.
+  "OPENAI_STILL_CONCURRENCY_LIMIT",
   // Defaults to "mock" in the config schema, so it is not required; shipped
   // explicitly so the deployed provider mode is visible in the app spec
   // instead of implied.

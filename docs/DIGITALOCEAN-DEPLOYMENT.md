@@ -149,13 +149,14 @@ JEWELO_ALLOW_PRODUCTION_BOOTSTRAP=yes \
   pnpm do:bootstrap -- production /absolute/path/to/.env
 ```
 
-Re-running bootstrap updates the encrypted environment and creates a new
-deployment. Record the previous deployment ID first so the change is
-reversible.
-Know before running it that `bootstrap-app.mjs` builds `services: [web]` from
-the contract alone, so a bootstrap against the live staging app would drop the
-`inngest` component; prefer `deploy.sh` for anything that is not an environment
-change, and restore with `rollback.sh` if a bootstrap removes the component. Never print, diff, or capture the resulting app spec because it may
+Bootstrap creates an app and never updates one. Re-running it against an app
+that already exists prints the app id and exits 1, because `bootstrap-app.mjs`
+builds `services: [web]` from the contract alone: applying that spec to a live
+app is a full replace that would drop the `inngest` component, repoint the
+branch, and wipe every environment variable outside the web contract. Deploy a
+new revision with `pnpm do:deploy` (`scripts/digitalocean/deploy.sh`), which
+edits the existing spec, and restore with `rollback.sh` if a deployment goes
+wrong. Never print, diff, or capture the resulting app spec because it may
 contain secret material.
 
 ## First-time workstation check
@@ -210,7 +211,8 @@ Production cutover is a controlled transition, not another preview push:
 2. After human-approved integration, confirm
    `infra/digitalocean/spec-contract.json` names that exact integration branch,
    since it is the only place the branch is declared.
-3. Update staging with `pnpm do:bootstrap` only with explicit authorization.
+3. Update staging with `pnpm do:deploy`; `pnpm do:bootstrap` refuses to run
+   against the existing app.
 4. Confirm the staging app still has the expected encrypted configuration; run
    `corepack pnpm build`, health smoke, browser smoke, and the app's
    customer/operator acceptance flow.

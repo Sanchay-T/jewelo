@@ -1,6 +1,6 @@
 {
   "census": {
-    "generatedAt": "2026-09-08T10:26:40.192Z",
+    "ledgerNewestTs": "2026-09-07T06:49:42.179Z",
     "verifier": "mock",
     "ledger": "docs/goals/overnight-launch/ledger.jsonl",
     "rows": 91,
@@ -14,6 +14,8 @@
     "referencesTotal": 128,
     "referencesResolved": 128,
     "referenceShaMismatches": 0,
+    "rowsNotRun": 0,
+    "notRunReasons": {},
     "resolutionBases": [
       "repo-root"
     ],
@@ -133,6 +135,7 @@
       "variant": null,
       "presentationView": "studio",
       "approvedText": "Asma",
+      "approvedTextSource": "stencil",
       "verdict": "pass",
       "tags": [],
       "file": "docs/goals/overnight-launch/lab/stage1/classical-en-a1.png",
@@ -149,6 +152,7 @@
         }
       ],
       "decision": "accepted",
+      "notRunReason": null,
       "gateSource": "projected",
       "gates": [
         {
@@ -211,6 +215,7 @@
       "variant": null,
       "presentationView": "studio",
       "approvedText": "أسماء",
+      "approvedTextSource": "stencil",
       "verdict": "fail",
       "tags": [
         "chain-not-through-ring"
@@ -229,6 +234,7 @@
         }
       ],
       "decision": "accepted",
+      "notRunReason": null,
       "gateSource": "projected",
       "gates": [
         {
@@ -291,6 +297,7 @@
       "variant": null,
       "presentationView": "studio",
       "approvedText": "Asma",
+      "approvedTextSource": "stencil",
       "verdict": "tweak",
       "tags": [
         "wrong-look"
@@ -309,6 +316,7 @@
         }
       ],
       "decision": "accepted",
+      "notRunReason": null,
       "gateSource": "projected",
       "gates": [
         {
@@ -371,6 +379,7 @@
       "variant": null,
       "presentationView": "studio",
       "approvedText": "أسماء",
+      "approvedTextSource": "stencil",
       "verdict": "tweak",
       "tags": [
         "wrong-look"
@@ -389,6 +398,7 @@
         }
       ],
       "decision": "accepted",
+      "notRunReason": null,
       "gateSource": "projected",
       "gates": [
         {
@@ -451,6 +461,7 @@
       "variant": null,
       "presentationView": "studio",
       "approvedText": "Asma",
+      "approvedTextSource": "stencil",
       "verdict": "fail",
       "tags": [
         "extra-ring"
@@ -469,6 +480,7 @@
         }
       ],
       "decision": "accepted",
+      "notRunReason": null,
       "gateSource": "projected",
       "gates": [
         {
@@ -531,6 +543,7 @@
       "variant": null,
       "presentationView": "studio",
       "approvedText": "أسماء",
+      "approvedTextSource": "stencil",
       "verdict": "fail",
       "tags": [
         "extra-ring"
@@ -549,6 +562,7 @@
         }
       ],
       "decision": "accepted",
+      "notRunReason": null,
       "gateSource": "projected",
       "gates": [
         {
@@ -611,6 +625,7 @@
       "variant": null,
       "presentationView": "studio",
       "approvedText": "Asma",
+      "approvedTextSource": "stencil",
       "verdict": "pass",
       "tags": [],
       "file": "docs/goals/overnight-launch/lab/stage1/diamond-rails-en-a1.png",
@@ -627,6 +642,7 @@
         }
       ],
       "decision": "accepted",
+      "notRunReason": null,
       "gateSource": "projected",
       "gates": [
         {
@@ -689,6 +705,7 @@
       "variant": null,
       "presentationView": "studio",
       "approvedText": "أسماء",
+      "approvedTextSource": "stencil",
       "verdict": "tweak",
       "tags": [
         "wrong-look"
@@ -707,6 +724,7 @@
         }
       ],
       "decision": "accepted",
+      "notRunReason": null,
       "gateSource": "projected",
       "gates": [
         {
@@ -769,6 +787,7 @@
       "variant": null,
       "presentationView": "studio",
       "approvedText": "Asma",
+      "approvedTextSource": "stencil",
       "verdict": "pass",
       "tags": [],
       "file": "docs/goals/overnight-launch/lab/stage1/classical-en-a2.png",
@@ -785,6 +804,7 @@
         }
       ],
       "decision": "accepted",
+      "notRunReason": null,
       "gateSource": "projected",
       "gates": [
         {
@@ -847,6 +867,7 @@
       "variant": null,
       "presentationView": "studio",
       "approvedText": "أسماء",
+      "approvedTextSource": "stencil",
       "verdict": "fail",
       "tags": [
         "chain-not-through-ring"
@@ -865,6 +886,7 @@
         }
       ],
       "decision": "accepted",
+      "notRunReason": null,
       "gateSource": "projected",
       "gates": [
         {
@@ -927,6 +949,7 @@
       "variant": null,
       "presentationView": "studio",
       "approvedText": "Asma",
+      "approvedTextSource": "stencil",
       "verdict": "tweak",
       "tags": [
         "cgi-look"
@@ -945,6 +968,7 @@
         }
       ],
       "decision": "accepted",
+      "notRunReason": null,
       "gateSource": "projected",
       "gates": [
         {
@@ -1007,6 +1031,7 @@
       "variant": null,
       "presentationView": "studio",
       "approvedText": "أسماء",
+      "approvedTextSource": "stencil",
       "verdict": "pass",
       "tags": [],
       "file": "docs/goals/overnight-launch/lab/stage1/origami-ribbon-ar-a2.png",
@@ -1023,6 +1048,7 @@
         }
       ],
       "decision": "accepted",
+      "notRunReason": null,
       "gateSource": "projected",
       "gates": [
         {
@@ -1085,6 +1111,7 @@
       "variant": null,
       "presentationView": "studio",
       "approvedText": "Asma",
+      "approvedTextSource": "stencil",
       "verdict": "pass",
       "tags": [],
       "file": "docs/goals/overnight-launch/lab/stage1/framed-minimal-en-a2.png",
@@ -1101,6 +1128,7 @@
         }
       ],
       "decision": "accepted",
+      "notRunReason": null,
       "gateSource": "projected",
       "gates": [
         {
@@ -1163,6 +1191,7 @@
       "variant": null,
       "presentationView": "studio",
       "approvedText": "أسماء",
+      "approvedTextSource": "stencil",
       "verdict": "pass",
       "tags": [],
       "file": "docs/goals/overnight-launch/lab/stage1/framed-minimal-ar-a2.png",
@@ -1179,6 +1208,7 @@
         }
       ],
       "decision": "accepted",
+      "notRunReason": null,
       "gateSource": "projected",
       "gates": [
         {
@@ -1241,6 +1271,7 @@
       "variant": null,
       "presentationView": "studio",
       "approvedText": "Asma",
+      "approvedTextSource": "stencil",
       "verdict": "pass",
       "tags": [],
       "file": "docs/goals/overnight-launch/lab/stage1/diamond-rails-en-a2.png",
@@ -1257,6 +1288,7 @@
         }
       ],
       "decision": "accepted",
+      "notRunReason": null,
       "gateSource": "projected",
       "gates": [
         {
@@ -1319,6 +1351,7 @@
       "variant": null,
       "presentationView": "studio",
       "approvedText": "أسماء",
+      "approvedTextSource": "stencil",
       "verdict": "pass",
       "tags": [],
       "file": "docs/goals/overnight-launch/lab/stage1/diamond-rails-ar-a2.png",
@@ -1335,6 +1368,7 @@
         }
       ],
       "decision": "accepted",
+      "notRunReason": null,
       "gateSource": "projected",
       "gates": [
         {
@@ -1397,6 +1431,7 @@
       "variant": null,
       "presentationView": "studio",
       "approvedText": "Asma",
+      "approvedTextSource": "stencil",
       "verdict": "pass",
       "tags": [],
       "file": "docs/goals/overnight-launch/lab/stage1/classical-en-a3.png",
@@ -1413,6 +1448,7 @@
         }
       ],
       "decision": "accepted",
+      "notRunReason": null,
       "gateSource": "projected",
       "gates": [
         {
@@ -1475,6 +1511,7 @@
       "variant": null,
       "presentationView": "studio",
       "approvedText": "أسماء",
+      "approvedTextSource": "stencil",
       "verdict": "fail",
       "tags": [
         "chain-not-through-ring",
@@ -1494,6 +1531,7 @@
         }
       ],
       "decision": "accepted",
+      "notRunReason": null,
       "gateSource": "projected",
       "gates": [
         {
@@ -1556,6 +1594,7 @@
       "variant": null,
       "presentationView": "studio",
       "approvedText": "Asma",
+      "approvedTextSource": "stencil",
       "verdict": "pass",
       "tags": [],
       "file": "docs/goals/overnight-launch/lab/stage1/origami-ribbon-en-a3.png",
@@ -1572,6 +1611,7 @@
         }
       ],
       "decision": "accepted",
+      "notRunReason": null,
       "gateSource": "projected",
       "gates": [
         {
@@ -1634,6 +1674,7 @@
       "variant": null,
       "presentationView": "studio",
       "approvedText": "أسماء",
+      "approvedTextSource": "stencil",
       "verdict": "fail",
       "tags": [
         "chain-not-through-ring"
@@ -1652,6 +1693,7 @@
         }
       ],
       "decision": "accepted",
+      "notRunReason": null,
       "gateSource": "projected",
       "gates": [
         {
@@ -1714,6 +1756,7 @@
       "variant": null,
       "presentationView": "studio",
       "approvedText": "Asma",
+      "approvedTextSource": "stencil",
       "verdict": "pass",
       "tags": [],
       "file": "docs/goals/overnight-launch/lab/stage1/framed-minimal-en-a3.png",
@@ -1730,6 +1773,7 @@
         }
       ],
       "decision": "accepted",
+      "notRunReason": null,
       "gateSource": "projected",
       "gates": [
         {
@@ -1792,6 +1836,7 @@
       "variant": null,
       "presentationView": "studio",
       "approvedText": "أسماء",
+      "approvedTextSource": "stencil",
       "verdict": "pass",
       "tags": [],
       "file": "docs/goals/overnight-launch/lab/stage1/framed-minimal-ar-a3.png",
@@ -1808,6 +1853,7 @@
         }
       ],
       "decision": "accepted",
+      "notRunReason": null,
       "gateSource": "projected",
       "gates": [
         {
@@ -1870,6 +1916,7 @@
       "variant": null,
       "presentationView": "studio",
       "approvedText": "Asma",
+      "approvedTextSource": "stencil",
       "verdict": "pass",
       "tags": [],
       "file": "docs/goals/overnight-launch/lab/stage1/diamond-rails-en-a3.png",
@@ -1886,6 +1933,7 @@
         }
       ],
       "decision": "accepted",
+      "notRunReason": null,
       "gateSource": "projected",
       "gates": [
         {
@@ -1948,6 +1996,7 @@
       "variant": null,
       "presentationView": "studio",
       "approvedText": "أسماء",
+      "approvedTextSource": "stencil",
       "verdict": "fail",
       "tags": [
         "missing-ring",
@@ -1967,6 +2016,7 @@
         }
       ],
       "decision": "accepted",
+      "notRunReason": null,
       "gateSource": "projected",
       "gates": [
         {
@@ -2029,6 +2079,7 @@
       "variant": null,
       "presentationView": "studio",
       "approvedText": "Asma",
+      "approvedTextSource": "stencil",
       "verdict": "fail",
       "tags": [
         "disconnected-component"
@@ -2047,6 +2098,7 @@
         }
       ],
       "decision": "accepted",
+      "notRunReason": null,
       "gateSource": "projected",
       "gates": [
         {
@@ -2109,6 +2161,7 @@
       "variant": null,
       "presentationView": "studio",
       "approvedText": "أسماء",
+      "approvedTextSource": "stencil",
       "verdict": "pass",
       "tags": [],
       "file": "docs/goals/overnight-launch/lab/stage1/classical-ar-a4.png",
@@ -2125,6 +2178,7 @@
         }
       ],
       "decision": "accepted",
+      "notRunReason": null,
       "gateSource": "projected",
       "gates": [
         {
@@ -2187,6 +2241,7 @@
       "variant": null,
       "presentationView": "studio",
       "approvedText": "Asma",
+      "approvedTextSource": "stencil",
       "verdict": "fail",
       "tags": [
         "disconnected-component",
@@ -2206,6 +2261,7 @@
         }
       ],
       "decision": "accepted",
+      "notRunReason": null,
       "gateSource": "projected",
       "gates": [
         {
@@ -2268,6 +2324,7 @@
       "variant": null,
       "presentationView": "studio",
       "approvedText": "أسماء",
+      "approvedTextSource": "stencil",
       "verdict": "tweak",
       "tags": [
         "cgi-look"
@@ -2286,6 +2343,7 @@
         }
       ],
       "decision": "accepted",
+      "notRunReason": null,
       "gateSource": "projected",
       "gates": [
         {
@@ -2348,6 +2406,7 @@
       "variant": null,
       "presentationView": "studio",
       "approvedText": "Asma",
+      "approvedTextSource": "stencil",
       "verdict": "pass",
       "tags": [],
       "file": "docs/goals/overnight-launch/lab/stage1/framed-minimal-en-a4.png",
@@ -2364,6 +2423,7 @@
         }
       ],
       "decision": "accepted",
+      "notRunReason": null,
       "gateSource": "projected",
       "gates": [
         {
@@ -2426,6 +2486,7 @@
       "variant": null,
       "presentationView": "studio",
       "approvedText": "أسماء",
+      "approvedTextSource": "stencil",
       "verdict": "tweak",
       "tags": [
         "unsupported-geometry"
@@ -2444,6 +2505,7 @@
         }
       ],
       "decision": "accepted",
+      "notRunReason": null,
       "gateSource": "projected",
       "gates": [
         {
@@ -2506,6 +2568,7 @@
       "variant": null,
       "presentationView": "studio",
       "approvedText": "Asma",
+      "approvedTextSource": "stencil",
       "verdict": "pass",
       "tags": [],
       "file": "docs/goals/overnight-launch/lab/stage1/diamond-rails-en-a4.png",
@@ -2522,6 +2585,7 @@
         }
       ],
       "decision": "accepted",
+      "notRunReason": null,
       "gateSource": "projected",
       "gates": [
         {
@@ -2584,6 +2648,7 @@
       "variant": null,
       "presentationView": "studio",
       "approvedText": "أسماء",
+      "approvedTextSource": "stencil",
       "verdict": "fail",
       "tags": [
         "missing-glyph"
@@ -2602,6 +2667,7 @@
         }
       ],
       "decision": "accepted",
+      "notRunReason": null,
       "gateSource": "projected",
       "gates": [
         {
@@ -2664,6 +2730,7 @@
       "variant": "on-skin",
       "presentationView": "on_skin",
       "approvedText": "Asma",
+      "approvedTextSource": "stencil",
       "verdict": "pass",
       "tags": [],
       "file": "docs/goals/overnight-launch/lab/stage3/classical-en-on-skin-a1.png",
@@ -2686,6 +2753,7 @@
         }
       ],
       "decision": "accepted",
+      "notRunReason": null,
       "gateSource": "projected",
       "gates": [
         {
@@ -2748,6 +2816,7 @@
       "variant": "dark",
       "presentationView": "dark",
       "approvedText": "Asma",
+      "approvedTextSource": "stencil",
       "verdict": "pass",
       "tags": [],
       "file": "docs/goals/overnight-launch/lab/stage3/classical-en-dark-a1.png",
@@ -2770,6 +2839,7 @@
         }
       ],
       "decision": "accepted",
+      "notRunReason": null,
       "gateSource": "projected",
       "gates": [
         {
@@ -2832,6 +2902,7 @@
       "variant": "close-up",
       "presentationView": "close_up",
       "approvedText": "Asma",
+      "approvedTextSource": "stencil",
       "verdict": "pass",
       "tags": [],
       "file": "docs/goals/overnight-launch/lab/stage3/classical-en-close-up-a1.png",
@@ -2854,6 +2925,7 @@
         }
       ],
       "decision": "accepted",
+      "notRunReason": null,
       "gateSource": "projected",
       "gates": [
         {
@@ -2916,6 +2988,7 @@
       "variant": "on-skin",
       "presentationView": "on_skin",
       "approvedText": "أسماء",
+      "approvedTextSource": "stencil",
       "verdict": "pass",
       "tags": [],
       "file": "docs/goals/overnight-launch/lab/stage3/classical-ar-on-skin-a1.png",
@@ -2938,6 +3011,7 @@
         }
       ],
       "decision": "accepted",
+      "notRunReason": null,
       "gateSource": "projected",
       "gates": [
         {
@@ -3000,6 +3074,7 @@
       "variant": "close-up",
       "presentationView": "close_up",
       "approvedText": "أسماء",
+      "approvedTextSource": "stencil",
       "verdict": "pass",
       "tags": [],
       "file": "docs/goals/overnight-launch/lab/stage3/classical-ar-close-up-a1.png",
@@ -3022,6 +3097,7 @@
         }
       ],
       "decision": "accepted",
+      "notRunReason": null,
       "gateSource": "projected",
       "gates": [
         {
@@ -3084,6 +3160,7 @@
       "variant": "dark",
       "presentationView": "dark",
       "approvedText": "أسماء",
+      "approvedTextSource": "stencil",
       "verdict": "pass",
       "tags": [],
       "file": "docs/goals/overnight-launch/lab/stage3/classical-ar-dark-a1.png",
@@ -3106,6 +3183,7 @@
         }
       ],
       "decision": "accepted",
+      "notRunReason": null,
       "gateSource": "projected",
       "gates": [
         {
@@ -3168,6 +3246,7 @@
       "variant": "on-skin",
       "presentationView": "on_skin",
       "approvedText": "Asma",
+      "approvedTextSource": "stencil",
       "verdict": "pass",
       "tags": [],
       "file": "docs/goals/overnight-launch/lab/stage3/origami-ribbon-en-on-skin-a1.png",
@@ -3190,6 +3269,7 @@
         }
       ],
       "decision": "accepted",
+      "notRunReason": null,
       "gateSource": "projected",
       "gates": [
         {
@@ -3252,6 +3332,7 @@
       "variant": "close-up",
       "presentationView": "close_up",
       "approvedText": "Asma",
+      "approvedTextSource": "stencil",
       "verdict": "tweak",
       "tags": [
         "wrong-display"
@@ -3276,6 +3357,7 @@
         }
       ],
       "decision": "accepted",
+      "notRunReason": null,
       "gateSource": "projected",
       "gates": [
         {
@@ -3338,6 +3420,7 @@
       "variant": "dark",
       "presentationView": "dark",
       "approvedText": "Asma",
+      "approvedTextSource": "stencil",
       "verdict": "pass",
       "tags": [],
       "file": "docs/goals/overnight-launch/lab/stage3/origami-ribbon-en-dark-a1.png",
@@ -3360,6 +3443,7 @@
         }
       ],
       "decision": "accepted",
+      "notRunReason": null,
       "gateSource": "projected",
       "gates": [
         {
@@ -3422,6 +3506,7 @@
       "variant": "on-skin",
       "presentationView": "on_skin",
       "approvedText": "أسماء",
+      "approvedTextSource": "stencil",
       "verdict": "pass",
       "tags": [],
       "file": "docs/goals/overnight-launch/lab/stage3/origami-ribbon-ar-on-skin-a1.png",
@@ -3444,6 +3529,7 @@
         }
       ],
       "decision": "accepted",
+      "notRunReason": null,
       "gateSource": "projected",
       "gates": [
         {
@@ -3506,6 +3592,7 @@
       "variant": "dark",
       "presentationView": "dark",
       "approvedText": "أسماء",
+      "approvedTextSource": "stencil",
       "verdict": "pass",
       "tags": [],
       "file": "docs/goals/overnight-launch/lab/stage3/origami-ribbon-ar-dark-a1.png",
@@ -3528,6 +3615,7 @@
         }
       ],
       "decision": "accepted",
+      "notRunReason": null,
       "gateSource": "projected",
       "gates": [
         {
@@ -3590,6 +3678,7 @@
       "variant": "close-up",
       "presentationView": "close_up",
       "approvedText": "أسماء",
+      "approvedTextSource": "stencil",
       "verdict": "pass",
       "tags": [],
       "file": "docs/goals/overnight-launch/lab/stage3/origami-ribbon-ar-close-up-a1.png",
@@ -3612,6 +3701,7 @@
         }
       ],
       "decision": "accepted",
+      "notRunReason": null,
       "gateSource": "projected",
       "gates": [
         {
@@ -3674,6 +3764,7 @@
       "variant": "on-skin",
       "presentationView": "on_skin",
       "approvedText": "Asma",
+      "approvedTextSource": "stencil",
       "verdict": "pass",
       "tags": [],
       "file": "docs/goals/overnight-launch/lab/stage3/framed-minimal-en-on-skin-a1.png",
@@ -3696,6 +3787,7 @@
         }
       ],
       "decision": "accepted",
+      "notRunReason": null,
       "gateSource": "projected",
       "gates": [
         {
@@ -3758,6 +3850,7 @@
       "variant": "dark",
       "presentationView": "dark",
       "approvedText": "Asma",
+      "approvedTextSource": "stencil",
       "verdict": "pass",
       "tags": [],
       "file": "docs/goals/overnight-launch/lab/stage3/framed-minimal-en-dark-a1.png",
@@ -3780,6 +3873,7 @@
         }
       ],
       "decision": "accepted",
+      "notRunReason": null,
       "gateSource": "projected",
       "gates": [
         {
@@ -3842,6 +3936,7 @@
       "variant": "close-up",
       "presentationView": "close_up",
       "approvedText": "Asma",
+      "approvedTextSource": "stencil",
       "verdict": "pass",
       "tags": [],
       "file": "docs/goals/overnight-launch/lab/stage3/framed-minimal-en-close-up-a1.png",
@@ -3864,6 +3959,7 @@
         }
       ],
       "decision": "accepted",
+      "notRunReason": null,
       "gateSource": "projected",
       "gates": [
         {
@@ -3926,6 +4022,7 @@
       "variant": "on-skin",
       "presentationView": "on_skin",
       "approvedText": "أسماء",
+      "approvedTextSource": "stencil",
       "verdict": "pass",
       "tags": [],
       "file": "docs/goals/overnight-launch/lab/stage3/framed-minimal-ar-on-skin-a1.png",
@@ -3948,6 +4045,7 @@
         }
       ],
       "decision": "accepted",
+      "notRunReason": null,
       "gateSource": "projected",
       "gates": [
         {
@@ -4010,6 +4108,7 @@
       "variant": "close-up",
       "presentationView": "close_up",
       "approvedText": "أسماء",
+      "approvedTextSource": "stencil",
       "verdict": "pass",
       "tags": [],
       "file": "docs/goals/overnight-launch/lab/stage3/framed-minimal-ar-close-up-a1.png",
@@ -4032,6 +4131,7 @@
         }
       ],
       "decision": "accepted",
+      "notRunReason": null,
       "gateSource": "projected",
       "gates": [
         {
@@ -4094,6 +4194,7 @@
       "variant": "dark",
       "presentationView": "dark",
       "approvedText": "أسماء",
+      "approvedTextSource": "stencil",
       "verdict": "pass",
       "tags": [],
       "file": "docs/goals/overnight-launch/lab/stage3/framed-minimal-ar-dark-a1.png",
@@ -4116,6 +4217,7 @@
         }
       ],
       "decision": "accepted",
+      "notRunReason": null,
       "gateSource": "projected",
       "gates": [
         {
@@ -4178,6 +4280,7 @@
       "variant": "on-skin",
       "presentationView": "on_skin",
       "approvedText": "Asma",
+      "approvedTextSource": "stencil",
       "verdict": "pass",
       "tags": [],
       "file": "docs/goals/overnight-launch/lab/stage3/diamond-rails-en-on-skin-a1.png",
@@ -4200,6 +4303,7 @@
         }
       ],
       "decision": "accepted",
+      "notRunReason": null,
       "gateSource": "projected",
       "gates": [
         {
@@ -4262,6 +4366,7 @@
       "variant": "close-up",
       "presentationView": "close_up",
       "approvedText": "Asma",
+      "approvedTextSource": "stencil",
       "verdict": "pass",
       "tags": [],
       "file": "docs/goals/overnight-launch/lab/stage3/diamond-rails-en-close-up-a1.png",
@@ -4284,6 +4389,7 @@
         }
       ],
       "decision": "accepted",
+      "notRunReason": null,
       "gateSource": "projected",
       "gates": [
         {
@@ -4346,6 +4452,7 @@
       "variant": "dark",
       "presentationView": "dark",
       "approvedText": "Asma",
+      "approvedTextSource": "stencil",
       "verdict": "pass",
       "tags": [],
       "file": "docs/goals/overnight-launch/lab/stage3/diamond-rails-en-dark-a1.png",
@@ -4368,6 +4475,7 @@
         }
       ],
       "decision": "accepted",
+      "notRunReason": null,
       "gateSource": "projected",
       "gates": [
         {
@@ -4430,6 +4538,7 @@
       "variant": "on-skin",
       "presentationView": "on_skin",
       "approvedText": "أسماء",
+      "approvedTextSource": "stencil",
       "verdict": "pass",
       "tags": [],
       "file": "docs/goals/overnight-launch/lab/stage3/diamond-rails-ar-on-skin-a1.png",
@@ -4452,6 +4561,7 @@
         }
       ],
       "decision": "accepted",
+      "notRunReason": null,
       "gateSource": "projected",
       "gates": [
         {
@@ -4514,6 +4624,7 @@
       "variant": "close-up",
       "presentationView": "close_up",
       "approvedText": "أسماء",
+      "approvedTextSource": "stencil",
       "verdict": "pass",
       "tags": [],
       "file": "docs/goals/overnight-launch/lab/stage3/diamond-rails-ar-close-up-a1.png",
@@ -4536,6 +4647,7 @@
         }
       ],
       "decision": "accepted",
+      "notRunReason": null,
       "gateSource": "projected",
       "gates": [
         {
@@ -4598,6 +4710,7 @@
       "variant": "dark",
       "presentationView": "dark",
       "approvedText": "أسماء",
+      "approvedTextSource": "stencil",
       "verdict": "pass",
       "tags": [],
       "file": "docs/goals/overnight-launch/lab/stage3/diamond-rails-ar-dark-a1.png",
@@ -4620,6 +4733,7 @@
         }
       ],
       "decision": "accepted",
+      "notRunReason": null,
       "gateSource": "projected",
       "gates": [
         {
@@ -4682,6 +4796,7 @@
       "variant": "white",
       "presentationView": "studio",
       "approvedText": "Asma",
+      "approvedTextSource": "stencil",
       "verdict": "pass",
       "tags": [],
       "file": "docs/goals/overnight-launch/lab/stage4/classical-en-white-a1.png",
@@ -4704,6 +4819,7 @@
         }
       ],
       "decision": "accepted",
+      "notRunReason": null,
       "gateSource": "projected",
       "gates": [
         {
@@ -4766,6 +4882,7 @@
       "variant": "rose",
       "presentationView": "studio",
       "approvedText": "Asma",
+      "approvedTextSource": "stencil",
       "verdict": "pass",
       "tags": [],
       "file": "docs/goals/overnight-launch/lab/stage4/classical-en-rose-a1.png",
@@ -4788,6 +4905,7 @@
         }
       ],
       "decision": "accepted",
+      "notRunReason": null,
       "gateSource": "projected",
       "gates": [
         {
@@ -4850,6 +4968,7 @@
       "variant": "accent",
       "presentationView": "studio",
       "approvedText": "Asma",
+      "approvedTextSource": "stencil",
       "verdict": "tweak",
       "tags": [
         "wrong-display"
@@ -4874,6 +4993,7 @@
         }
       ],
       "decision": "accepted",
+      "notRunReason": null,
       "gateSource": "projected",
       "gates": [
         {
@@ -4936,6 +5056,7 @@
       "variant": "partial-pave",
       "presentationView": "studio",
       "approvedText": "Asma",
+      "approvedTextSource": "stencil",
       "verdict": "fail",
       "tags": [
         "wrong-stones"
@@ -4960,6 +5081,7 @@
         }
       ],
       "decision": "accepted",
+      "notRunReason": null,
       "gateSource": "projected",
       "gates": [
         {
@@ -5022,6 +5144,7 @@
       "variant": "full-pave",
       "presentationView": "studio",
       "approvedText": "Asma",
+      "approvedTextSource": "stencil",
       "verdict": "pass",
       "tags": [],
       "file": "docs/goals/overnight-launch/lab/stage4/classical-en-full-pave-a1.png",
@@ -5044,6 +5167,7 @@
         }
       ],
       "decision": "accepted",
+      "notRunReason": null,
       "gateSource": "projected",
       "gates": [
         {
@@ -5106,6 +5230,7 @@
       "variant": "white-accent",
       "presentationView": "studio",
       "approvedText": "Asma",
+      "approvedTextSource": "stencil",
       "verdict": "pass",
       "tags": [],
       "file": "docs/goals/overnight-launch/lab/stage4/classical-en-white-accent-a1.png",
@@ -5128,6 +5253,7 @@
         }
       ],
       "decision": "accepted",
+      "notRunReason": null,
       "gateSource": "projected",
       "gates": [
         {
@@ -5190,6 +5316,7 @@
       "variant": "white",
       "presentationView": "studio",
       "approvedText": "أسماء",
+      "approvedTextSource": "stencil",
       "verdict": "pass",
       "tags": [],
       "file": "docs/goals/overnight-launch/lab/stage4/classical-ar-white-a1.png",
@@ -5212,6 +5339,7 @@
         }
       ],
       "decision": "accepted",
+      "notRunReason": null,
       "gateSource": "projected",
       "gates": [
         {
@@ -5274,6 +5402,7 @@
       "variant": "rose",
       "presentationView": "studio",
       "approvedText": "أسماء",
+      "approvedTextSource": "stencil",
       "verdict": "pass",
       "tags": [],
       "file": "docs/goals/overnight-launch/lab/stage4/classical-ar-rose-a1.png",
@@ -5296,6 +5425,7 @@
         }
       ],
       "decision": "accepted",
+      "notRunReason": null,
       "gateSource": "projected",
       "gates": [
         {
@@ -5358,6 +5488,7 @@
       "variant": "accent",
       "presentationView": "studio",
       "approvedText": "أسماء",
+      "approvedTextSource": "stencil",
       "verdict": "tweak",
       "tags": [
         "wrong-stones"
@@ -5382,6 +5513,7 @@
         }
       ],
       "decision": "accepted",
+      "notRunReason": null,
       "gateSource": "projected",
       "gates": [
         {
@@ -5444,6 +5576,7 @@
       "variant": "partial-pave",
       "presentationView": "studio",
       "approvedText": "أسماء",
+      "approvedTextSource": "stencil",
       "verdict": "fail",
       "tags": [
         "wrong-stones",
@@ -5469,6 +5602,7 @@
         }
       ],
       "decision": "accepted",
+      "notRunReason": null,
       "gateSource": "projected",
       "gates": [
         {
@@ -5531,6 +5665,7 @@
       "variant": "full-pave",
       "presentationView": "studio",
       "approvedText": "أسماء",
+      "approvedTextSource": "stencil",
       "verdict": "tweak",
       "tags": [
         "wrong-stones"
@@ -5555,6 +5690,7 @@
         }
       ],
       "decision": "accepted",
+      "notRunReason": null,
       "gateSource": "projected",
       "gates": [
         {
@@ -5617,6 +5753,7 @@
       "variant": "white-accent",
       "presentationView": "studio",
       "approvedText": "أسماء",
+      "approvedTextSource": "stencil",
       "verdict": "fail",
       "tags": [
         "floating-stone"
@@ -5641,6 +5778,7 @@
         }
       ],
       "decision": "accepted",
+      "notRunReason": null,
       "gateSource": "projected",
       "gates": [
         {
@@ -5703,6 +5841,7 @@
       "variant": "kufi",
       "presentationView": "studio",
       "approvedText": "Asma",
+      "approvedTextSource": "stencil",
       "verdict": "pass",
       "tags": [],
       "file": "docs/goals/overnight-launch/lab/stage5/framed-minimal-en-kufi-a1.png",
@@ -5719,6 +5858,7 @@
         }
       ],
       "decision": "accepted",
+      "notRunReason": null,
       "gateSource": "projected",
       "gates": [
         {
@@ -5781,6 +5921,7 @@
       "variant": "kufi",
       "presentationView": "studio",
       "approvedText": "أسماء",
+      "approvedTextSource": "stencil",
       "verdict": "pass",
       "tags": [],
       "file": "docs/goals/overnight-launch/lab/stage5/framed-minimal-ar-kufi-a1.png",
@@ -5797,6 +5938,7 @@
         }
       ],
       "decision": "accepted",
+      "notRunReason": null,
       "gateSource": "projected",
       "gates": [
         {
@@ -5859,6 +6001,7 @@
       "variant": "kufi",
       "presentationView": "studio",
       "approvedText": "Asma",
+      "approvedTextSource": "stencil",
       "verdict": "pass",
       "tags": [],
       "file": "docs/goals/overnight-launch/lab/stage5/diamond-rails-en-kufi-a1.png",
@@ -5875,6 +6018,7 @@
         }
       ],
       "decision": "accepted",
+      "notRunReason": null,
       "gateSource": "projected",
       "gates": [
         {
@@ -5937,6 +6081,7 @@
       "variant": "kufi",
       "presentationView": "studio",
       "approvedText": "أسماء",
+      "approvedTextSource": "stencil",
       "verdict": "tweak",
       "tags": [
         "wrong-look"
@@ -5955,6 +6100,7 @@
         }
       ],
       "decision": "accepted",
+      "notRunReason": null,
       "gateSource": "projected",
       "gates": [
         {
@@ -6017,6 +6163,7 @@
       "variant": "close-up",
       "presentationView": "close_up",
       "approvedText": "Asma",
+      "approvedTextSource": "stencil",
       "verdict": "pass",
       "tags": [],
       "file": "docs/goals/overnight-launch/lab/stage3/origami-ribbon-en-close-up-a2.png",
@@ -6039,6 +6186,7 @@
         }
       ],
       "decision": "accepted",
+      "notRunReason": null,
       "gateSource": "projected",
       "gates": [
         {
@@ -6101,6 +6249,7 @@
       "variant": null,
       "presentationView": "studio",
       "approvedText": "أسماء",
+      "approvedTextSource": "stencil",
       "verdict": "pass",
       "tags": [],
       "file": "docs/goals/overnight-launch/lab/stage1/framed-minimal-ar-a5.png",
@@ -6117,6 +6266,7 @@
         }
       ],
       "decision": "accepted",
+      "notRunReason": null,
       "gateSource": "projected",
       "gates": [
         {
@@ -6179,6 +6329,7 @@
       "variant": null,
       "presentationView": "studio",
       "approvedText": "أسماء",
+      "approvedTextSource": "stencil",
       "verdict": null,
       "tags": [],
       "file": "docs/goals/overnight-launch/lab/stage1/framed-minimal-ar-a6.png",
@@ -6195,6 +6346,7 @@
         }
       ],
       "decision": "accepted",
+      "notRunReason": null,
       "gateSource": "projected",
       "gates": [
         {
@@ -6257,6 +6409,7 @@
       "variant": null,
       "presentationView": "studio",
       "approvedText": "أسماء",
+      "approvedTextSource": "stencil",
       "verdict": null,
       "tags": [],
       "file": "docs/goals/overnight-launch/lab/stage1/framed-minimal-ar-a7.png",
@@ -6273,6 +6426,7 @@
         }
       ],
       "decision": "accepted",
+      "notRunReason": null,
       "gateSource": "projected",
       "gates": [
         {
@@ -6335,6 +6489,7 @@
       "variant": null,
       "presentationView": "studio",
       "approvedText": "Asma",
+      "approvedTextSource": "stencil",
       "verdict": null,
       "tags": [],
       "file": "docs/goals/overnight-launch/lab/stage1/framed-minimal-en-a7.png",
@@ -6351,6 +6506,7 @@
         }
       ],
       "decision": "accepted",
+      "notRunReason": null,
       "gateSource": "projected",
       "gates": [
         {
@@ -6413,6 +6569,7 @@
       "variant": null,
       "presentationView": "studio",
       "approvedText": "Noor",
+      "approvedTextSource": "cell",
       "verdict": "pass",
       "tags": [],
       "file": "docs/goals/overnight-launch/lab/stage2/framed-minimal-noor-en-a1.png",
@@ -6429,6 +6586,7 @@
         }
       ],
       "decision": "accepted",
+      "notRunReason": null,
       "gateSource": "projected",
       "gates": [
         {
@@ -6491,6 +6649,7 @@
       "variant": null,
       "presentationView": "studio",
       "approvedText": "Noor",
+      "approvedTextSource": "cell",
       "verdict": "pass",
       "tags": [],
       "file": "docs/goals/overnight-launch/lab/stage2/framed-minimal-noor-en-a2.png",
@@ -6507,6 +6666,7 @@
         }
       ],
       "decision": "accepted",
+      "notRunReason": null,
       "gateSource": "projected",
       "gates": [
         {
@@ -6569,6 +6729,7 @@
       "variant": null,
       "presentationView": "studio",
       "approvedText": "نور",
+      "approvedTextSource": "cell",
       "verdict": "pass",
       "tags": [],
       "file": "docs/goals/overnight-launch/lab/stage2/framed-minimal-noor-ar-a1.png",
@@ -6585,6 +6746,7 @@
         }
       ],
       "decision": "accepted",
+      "notRunReason": null,
       "gateSource": "projected",
       "gates": [
         {
@@ -6647,6 +6809,7 @@
       "variant": null,
       "presentationView": "studio",
       "approvedText": "نور",
+      "approvedTextSource": "cell",
       "verdict": "pass",
       "tags": [],
       "file": "docs/goals/overnight-launch/lab/stage2/framed-minimal-noor-ar-a2.png",
@@ -6663,6 +6826,7 @@
         }
       ],
       "decision": "accepted",
+      "notRunReason": null,
       "gateSource": "projected",
       "gates": [
         {
@@ -6725,6 +6889,7 @@
       "variant": null,
       "presentationView": "studio",
       "approvedText": "Layla",
+      "approvedTextSource": "cell",
       "verdict": "tweak",
       "tags": [
         "unsupported-geometry"
@@ -6743,6 +6908,7 @@
         }
       ],
       "decision": "accepted",
+      "notRunReason": null,
       "gateSource": "projected",
       "gates": [
         {
@@ -6805,6 +6971,7 @@
       "variant": null,
       "presentationView": "studio",
       "approvedText": "Layla",
+      "approvedTextSource": "cell",
       "verdict": null,
       "tags": [],
       "file": "docs/goals/overnight-launch/lab/stage2/framed-minimal-layla-en-a2.png",
@@ -6821,6 +6988,7 @@
         }
       ],
       "decision": "accepted",
+      "notRunReason": null,
       "gateSource": "projected",
       "gates": [
         {
@@ -6883,6 +7051,7 @@
       "variant": null,
       "presentationView": "studio",
       "approvedText": "ليلى",
+      "approvedTextSource": "cell",
       "verdict": "pass",
       "tags": [],
       "file": "docs/goals/overnight-launch/lab/stage2/framed-minimal-layla-ar-a1.png",
@@ -6899,6 +7068,7 @@
         }
       ],
       "decision": "accepted",
+      "notRunReason": null,
       "gateSource": "projected",
       "gates": [
         {
@@ -6961,6 +7131,7 @@
       "variant": null,
       "presentationView": "studio",
       "approvedText": "ليلى",
+      "approvedTextSource": "cell",
       "verdict": null,
       "tags": [],
       "file": "docs/goals/overnight-launch/lab/stage2/framed-minimal-layla-ar-a2.png",
@@ -6977,6 +7148,7 @@
         }
       ],
       "decision": "accepted",
+      "notRunReason": null,
       "gateSource": "projected",
       "gates": [
         {
@@ -7039,6 +7211,7 @@
       "variant": null,
       "presentationView": "studio",
       "approvedText": "Muhammad",
+      "approvedTextSource": "cell",
       "verdict": null,
       "tags": [],
       "file": "docs/goals/overnight-launch/lab/stage2/framed-minimal-muhammad-en-a1.png",
@@ -7055,6 +7228,7 @@
         }
       ],
       "decision": "accepted",
+      "notRunReason": null,
       "gateSource": "projected",
       "gates": [
         {
@@ -7117,6 +7291,7 @@
       "variant": null,
       "presentationView": "studio",
       "approvedText": "Muhammad",
+      "approvedTextSource": "cell",
       "verdict": null,
       "tags": [],
       "file": "docs/goals/overnight-launch/lab/stage2/framed-minimal-muhammad-en-a2.png",
@@ -7133,6 +7308,7 @@
         }
       ],
       "decision": "accepted",
+      "notRunReason": null,
       "gateSource": "projected",
       "gates": [
         {
@@ -7195,6 +7371,7 @@
       "variant": null,
       "presentationView": "studio",
       "approvedText": "محمد",
+      "approvedTextSource": "cell",
       "verdict": null,
       "tags": [],
       "file": "docs/goals/overnight-launch/lab/stage2/framed-minimal-muhammad-ar-a1.png",
@@ -7211,6 +7388,7 @@
         }
       ],
       "decision": "accepted",
+      "notRunReason": null,
       "gateSource": "projected",
       "gates": [
         {
@@ -7273,6 +7451,7 @@
       "variant": null,
       "presentationView": "studio",
       "approvedText": "محمد",
+      "approvedTextSource": "cell",
       "verdict": null,
       "tags": [],
       "file": "docs/goals/overnight-launch/lab/stage2/framed-minimal-muhammad-ar-a2.png",
@@ -7289,6 +7468,7 @@
         }
       ],
       "decision": "accepted",
+      "notRunReason": null,
       "gateSource": "projected",
       "gates": [
         {
@@ -7351,6 +7531,7 @@
       "variant": null,
       "presentationView": "studio",
       "approvedText": "Asma",
+      "approvedTextSource": "stencil",
       "verdict": null,
       "tags": [],
       "file": "docs/goals/overnight-launch/lab/stage1/framed-minimal-en-a5.png",
@@ -7367,6 +7548,7 @@
         }
       ],
       "decision": "accepted",
+      "notRunReason": null,
       "gateSource": "projected",
       "gates": [
         {
@@ -7429,6 +7611,7 @@
       "variant": null,
       "presentationView": "studio",
       "approvedText": "Asma",
+      "approvedTextSource": "stencil",
       "verdict": null,
       "tags": [],
       "file": "docs/goals/overnight-launch/lab/stage1/framed-minimal-en-a6.png",
@@ -7445,6 +7628,7 @@
         }
       ],
       "decision": "accepted",
+      "notRunReason": null,
       "gateSource": "projected",
       "gates": [
         {

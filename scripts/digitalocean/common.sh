@@ -31,9 +31,14 @@ load_digitalocean_token() {
     exit 1
   }
 
+  # Quotes are stripped exactly as `env-contract.mjs` strips them, so a token
+  # written as KEY="dop_v1_..." is not sent to the API with its quotes attached.
   local key value
   while IFS='=' read -r key value; do
     if [[ "$key" == "DIGITALOCEAN_ACCESS_TOKEN" ]]; then
+      if [[ "$value" == \"*\" || "$value" == \'*\' ]] && (( ${#value} >= 2 )); then
+        value="${value:1:${#value}-2}"
+      fi
       DIGITALOCEAN_ACCESS_TOKEN="$value"
     fi
   done < "$env_file"

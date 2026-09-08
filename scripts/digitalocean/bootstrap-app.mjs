@@ -113,19 +113,28 @@ const apps = JSON.parse(
   }),
 );
 const existing = apps.find((app) => app.spec?.name === target.appName);
-const args = existing
-  ? ["apps", "update", existing.id, "--spec", "-", "--update-sources", "--wait", "--output", "json"]
-  : [
-      "apps",
-      "create",
-      "--spec",
-      "-",
-      "--project-id",
-      contract.projectId,
-      "--wait",
-      "--output",
-      "json",
-    ];
+// Creation only. This script builds `services: [web]` from the contract alone,
+// so applying it to a live app is a full-spec replace: it deletes the
+// image-based `inngest` service, repoints the branch, and wipes every
+// environment variable outside `knownWebConfig`. An update belongs to
+// `pnpm do:deploy`, which edits the existing spec instead of replacing it.
+if (existing) {
+  console.error(
+    `${target.appName} already exists (app id ${existing.id}). Bootstrap creates an app and never updates one: applying this spec would drop the inngest service and every environment variable outside the web contract. Use "pnpm do:deploy <environment> <branch>" to deploy, or delete the app first if you really mean to recreate it.`,
+  );
+  process.exit(1);
+}
+const args = [
+  "apps",
+  "create",
+  "--spec",
+  "-",
+  "--project-id",
+  contract.projectId,
+  "--wait",
+  "--output",
+  "json",
+];
 
 let rawResult;
 try {
@@ -137,12 +146,12 @@ try {
   });
 } catch (error) {
   console.error(
-    `${existing ? "update" : "creation"} of ${target.appName} did not become active; inspect its latest deployment logs`,
+    `creation of ${target.appName} did not become active; inspect its latest deployment logs`,
   );
   process.exit(error.status || 1);
 }
 const result = JSON.parse(rawResult);
 const app = Array.isArray(result) ? result[0] : result;
-console.log(`${existing ? "updated" : "created"} ${target.appName}`);
+console.log(`created ${target.appName}`);
 console.log(`app_id=${app.id}`);
 console.log(`url=${app.default_ingress ?? app.live_url ?? "pending"}`);

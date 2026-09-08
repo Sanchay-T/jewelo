@@ -2,6 +2,7 @@ import "server-only";
 
 import { Inngest } from "inngest";
 
+import { concurrencyLimitSchema } from "@jewelo/config";
 import type { DispatchOperation } from "@jewelo/data/outbox-dispatch";
 
 /**
@@ -37,10 +38,31 @@ export interface JobEventData {
  */
 function isDevelopmentServer(): boolean {
   const explicit = process.env.INNGEST_DEV;
-  if (explicit === "1" || explicit === "true") return true;
-  if (explicit === "0" || explicit === "false") return false;
-  return !process.env.INNGEST_SIGNING_KEY;
+  return explicit === "1" || explicit === "true";
 }
+
+/**
+ * Signature verification is never skipped by accident. Before this, a missing
+ * `INNGEST_SIGNING_KEY` silently put the client in dev mode, so a deployment
+ * that lost the key served `/api/inngest` with verification off and accepted
+ * unsigned calls. Dev mode is now opt-in only, and a process that has neither
+ * `INNGEST_DEV=1` nor a signing key refuses to start rather than serve an
+ * unverified endpoint.
+ *
+ * The Next.js build is exempt: `INNGEST_SIGNING_KEY` is a RUN_TIME variable in
+ * the App Platform spec (`scripts/digitalocean/env-contract.mjs`), so it does
+ * not exist while the route is compiled. The check runs in every process that
+ * actually serves a request.
+ */
+function assertSignatureVerificationDecided(): void {
+  if (process.env.NEXT_PHASE === "phase-production-build") return;
+  if (isDevelopmentServer() || process.env.INNGEST_SIGNING_KEY) return;
+  throw new Error(
+    "Inngest refuses to start: set INNGEST_SIGNING_KEY to verify signatures, or INNGEST_DEV=1 to run against a local dev server.",
+  );
+}
+
+assertSignatureVerificationDecided();
 
 /**
  * "Configured" means the dispatch can actually reach an Inngest server:
@@ -67,12 +89,17 @@ export function cronFunctionsEnabled(): boolean {
   return process.env.INNGEST_CRON_ENABLED === "1";
 }
 
-export function integerFromEnv(
-  name: string,
-  fallback: number,
-  max = 32,
-): number {
-  const parsed = Number(process.env[name] ?? fallback);
-  if (!Number.isFinite(parsed)) return fallback;
-  return Math.max(1, Math.min(max, Math.trunc(parsed)));
+/**
+ * A provider concurrency limit, validated by `packages/config` instead of
+ * clamped here: integer, 1..32, default 2. The previous local parser accepted
+ * anything and defaulted `OPENAI_STILL_CONCURRENCY_LIMIT` to 4, so real mode
+ * ran four paid generations at once while the validated configuration said two
+ * and the deploy tooling had no way to lower it.
+ *
+ * `fallback` is accepted and ignored: the default belongs to the schema. It
+ * stays in the signature only because `functions.ts` still passes one and that
+ * file belongs to another task; drop the parameter with its last caller.
+ */
+export function integerFromEnv(name: string, _fallback?: number): number {
+  return concurrencyLimitSchema.parse(process.env[name]) as number;
 }

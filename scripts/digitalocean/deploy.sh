@@ -49,6 +49,9 @@ doctl apps update "$app_id" \
   --wait \
   --output json >/dev/null
 
+# The writer ends its line, and the `read` is guarded with `|| true`: without
+# both, `read` returns 1 at an unterminated EOF and `set -e` kills the script
+# after a successful deploy, before the outputs are ever written.
 read -r service_url deployment_id < <(
   doctl apps get "$app_id" --output json | node -e '
     let input = "";
@@ -56,10 +59,15 @@ read -r service_url deployment_id < <(
     process.stdin.on("end", () => {
       const value = JSON.parse(input);
       const app = Array.isArray(value) ? value[0] : value;
-      process.stdout.write(`${app.default_ingress} ${app.active_deployment?.id ?? "unknown"}`);
+      process.stdout.write(`${app.default_ingress} ${app.active_deployment?.id ?? "unknown"}\n`);
     });
   '
-)
+) || true
+
+if [[ -z "${service_url:-}" ]]; then
+  echo "deploy succeeded but the app URL could not be read from doctl" >&2
+  exit 1
+fi
 
 if [[ -n "${GITHUB_OUTPUT:-}" ]]; then
   {

@@ -5,8 +5,34 @@ Everything above the marker is hand-written narrative and is never touched.
 Everything below it is derived, so it can be rebuilt after each stage lands.
 """
 import json
+import os
+import sys
 from collections import Counter, defaultdict
 from pathlib import Path
+
+# The spend section is the one part of the appendix that cannot be derived from
+# the ledger: the final balance is read from Runway `whoami`. Without it this
+# script used to rebuild the document silently minus the budget paragraph, so
+# the evidence that the night stayed inside its cap disappeared and the file
+# still looked complete. Refuse instead, before anything is written.
+FINAL_BALANCE = os.environ.get("FINAL_BALANCE", "").strip()
+if not FINAL_BALANCE:
+    print(
+        "FINAL_BALANCE is required: it is the Runway `whoami` balance after the "
+        "last generation, and the budget paragraph cannot be rebuilt without it. "
+        "Re-run as FINAL_BALANCE=<balance> python3 lab/finalise.py. "
+        "IMAGE-LAB.md was not modified.",
+        file=sys.stderr,
+    )
+    sys.exit(1)
+try:
+    FINAL = int(FINAL_BALANCE)
+except ValueError:
+    print(f"FINAL_BALANCE must be an integer, got {FINAL_BALANCE!r}", file=sys.stderr)
+    sys.exit(1)
+if FINAL <= 0:
+    print(f"FINAL_BALANCE must be a positive balance, got {FINAL}", file=sys.stderr)
+    sys.exit(1)
 
 DOC = Path(__file__).resolve().parents[1] / "IMAGE-LAB.md"
 LEDGER = Path(__file__).resolve().parents[1] / "ledger.jsonl"
@@ -96,9 +122,8 @@ for r in sorted(passed, key=lambda r: (r["stage"], r["cell"], r["attempt"])):
     out.append(f"| {r['stage']} | `{r['cell']}` | a{r['attempt']} | `{r['file']}` |")
 out.append("")
 
-# spend
-import os
-FINAL = int(os.environ.get("FINAL_BALANCE", "0")) or None
+# spend. `FINAL` is validated at the top of the file; the script never gets
+# here without it.
 out.append("## Spend\n")
 out.append("Every figure below is a balance read from Runway `whoami`, not an estimate.\n")
 out.append("| Checkpoint | images | Runway balance | spent cumulative |")
@@ -118,18 +143,17 @@ for stage, label in (("stage1", "Stage 1 close"), ("stage2", "Stage 2 close"),
         out.append(f"| {label} | {seen} | {bal:,} | {START-bal:,} |")
     else:
         out.append(f"| {label} | {seen} | not read per stage | - |")
-if FINAL:
-    out.append(f"| **final `whoami`** | **{len(rows)}** | **{FINAL:,}** | **{START-FINAL:,}** |")
-    out.append("")
-    out.append(f"Budget for the night was 40,000 credits. **{START-FINAL:,} were used, "
-               f"{(START-FINAL)/40000*100:.1f}% of the cap**, across {len(rows)} images.")
-    per = (START - FINAL) / len(rows)
-    out.append(f"That averages {per:.0f} credits per image against a documented rate of 20; "
-               "one Stage 5 task was charged 60 rather than 20 and the API response gave no reason, "
-               "so the discrepancy is recorded rather than explained away.")
-    out.append("")
-    out.append(f"The 50-tasks-in-flight cap was never approached; the largest batch submitted at once was 12. "
-               f"The three-paid-attempts-per-cell cap was never exceeded.\n")
+out.append(f"| **final `whoami`** | **{len(rows)}** | **{FINAL:,}** | **{START-FINAL:,}** |")
+out.append("")
+out.append(f"Budget for the night was 40,000 credits. **{START-FINAL:,} were used, "
+           f"{(START-FINAL)/40000*100:.1f}% of the cap**, across {len(rows)} images.")
+per = (START - FINAL) / len(rows)
+out.append(f"That averages {per:.0f} credits per image against a documented rate of 20; "
+           "one Stage 5 task was charged 60 rather than 20 and the API response gave no reason, "
+           "so the discrepancy is recorded rather than explained away.")
+out.append("")
+out.append(f"The 50-tasks-in-flight cap was never approached; the largest batch submitted at once was 12. "
+           f"The three-paid-attempts-per-cell cap was never exceeded.\n")
 
 text = DOC.read_text()
 head_txt = text.split(MARKER)[0].rstrip() + "\n\n"

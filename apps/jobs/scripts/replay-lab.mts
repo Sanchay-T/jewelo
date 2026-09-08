@@ -112,6 +112,7 @@ interface LedgerReference {
 }
 
 interface LedgerRow {
+  readonly ts: string | null;
   readonly stage: string;
   readonly cell: string;
   readonly attempt: number;
@@ -145,6 +146,8 @@ interface ReplayRow {
   readonly variant: string | null;
   readonly presentationView: PresentationView;
   readonly approvedText: string | null;
+  /** Where `approvedText` came from, so a reader can audit the join. */
+  readonly approvedTextSource: "cell" | "stencil" | null;
   readonly verdict: Verdict | null;
   readonly tags: readonly string[];
   readonly file: string;
@@ -159,6 +162,8 @@ interface ReplayRow {
     readonly shaMatches: boolean | null;
   }[];
   readonly decision: "accepted" | "rejected" | "not_run";
+  /** Why the verifier was never shown this row. `null` when it was run. */
+  readonly notRunReason: string | null;
   readonly gateSource: "carried" | "projected" | "none";
   readonly gates: readonly GateRecord[];
   readonly notes: string | null;
@@ -239,6 +244,7 @@ function parseRow(line: string, index: number): LedgerRow {
       })
     : [];
   return {
+    ts: asString(record.ts),
     stage,
     cell,
     attempt,
@@ -250,10 +256,18 @@ function parseRow(line: string, index: number): LedgerRow {
   };
 }
 
-/** `framed-minimal-layla-ar-close-up` -> look, holdout name, script, variant. */
+/**
+ * `framed-minimal-layla-ar-close-up` -> look, holdout name, script, variant.
+ *
+ * An unknown or empty name segment is `null`, never a guess. It used to fall
+ * back to `asma`, which meant a cell that names nobody would have been verified
+ * against a stranger's name and the accept recorded as if it meant something.
+ * Most of stage 1 leaves the name out of the cell id; the name for those rows
+ * comes from the stencil the row actually used, in `parseStencilFile`.
+ */
 function parseCell(cell: string): {
   look: string | null;
-  name: string;
+  name: string | null;
   script: Script | null;
   variant: string | null;
 } {
@@ -264,14 +278,33 @@ function parseCell(cell: string): {
     (part) => part === "en" || part === "ar",
   );
   if (scriptAt < 0)
-    return { look: look ?? null, name: "asma", script: null, variant: null };
+    return { look: look ?? null, name: null, script: null, variant: null };
   const before = parts.slice(0, scriptAt).join("-");
   const after = parts.slice(scriptAt + 1).join("-");
   return {
     look: look ?? null,
-    name: before === "" ? "asma" : before,
+    name: before !== "" && before in NAME_TEXT ? before : null,
     script: parts[scriptAt] === "ar" ? "ar" : "en",
     variant: after === "" ? null : after,
+  };
+}
+
+/**
+ * `docs/.../stencils/asma-en-classic-norings.png` -> the name and script the
+ * stencil was cut for. The stencil is the identity truth for a row, so when the
+ * cell id omits the name this is the only honest place to read it from: it is
+ * the artifact the generation was actually anchored to, not an assumption.
+ */
+function parseStencilFile(file: string | null): {
+  name: string | null;
+  script: Script | null;
+} {
+  if (file === null) return { name: null, script: null };
+  const base = (file.split("/").pop() ?? "").replace(/\.png$/iu, "");
+  const [name, script] = base.split("-");
+  return {
+    name: name !== undefined && name in NAME_TEXT ? name : null,
+    script: script === "ar" ? "ar" : script === "en" ? "en" : null,
   };
 }
 
@@ -375,10 +408,18 @@ async function main(): Promise<void> {
   const resolutionBases = new Set<string>();
 
   for (const row of rows) {
-    const { look, name, script, variant } = parseCell(row.cell);
+    const cellParts = parseCell(row.cell);
+    const { look, variant } = cellParts;
+    const stencilReference =
+      row.references.find((reference) => reference.tag === "stencil") ?? null;
+    const fromStencil = parseStencilFile(stencilReference?.file ?? null);
+    const name = cellParts.name ?? fromStencil.name;
+    const script = cellParts.script ?? fromStencil.script;
+    const approvedTextSource: "cell" | "stencil" | null =
+      cellParts.name !== null ? "cell" : name === null ? null : "stencil";
     const presentationView: PresentationView =
       (variant === null ? undefined : VIEW_BY_VARIANT[variant]) ?? "studio";
-    const nameText = NAME_TEXT[name];
+    const nameText = name === null ? undefined : NAME_TEXT[name];
     const approvedText =
       nameText !== undefined && script !== null ? nameText[script] : null;
 
@@ -413,8 +454,7 @@ async function main(): Promise<void> {
       };
     });
 
-    const stencil =
-      row.references.find((reference) => reference.tag === "stencil") ?? null;
+    const stencil = stencilReference;
     const stencilResolved =
       stencil === null ? null : resolveLedgerPath(stencil.file);
     // Temporary adaptation: the port still takes a URL for the stencil (P2-5
@@ -424,7 +464,18 @@ async function main(): Promise<void> {
         ? null
         : pathToFileURL(stencilResolved.absolute).href;
 
-    if (still === null) {
+    // A row the verifier cannot honestly be shown is recorded as `not_run` with
+    // the reason, never verified against a substitute. Passing `""` as the
+    // approved text would have made a text gate trivially satisfiable and the
+    // accept would have been counted in the baseline.
+    const notRunReason =
+      still === null
+        ? `still not found on disk: ${row.file}`
+        : approvedText === null
+          ? `no approved text: neither the cell id nor the stencil reference names a known name and script (name ${JSON.stringify(name)}, script ${JSON.stringify(script)})`
+          : null;
+
+    if (notRunReason !== null) {
       replayed.push({
         id: `${row.cell}-a${row.attempt}`,
         stage: row.stage,
@@ -434,21 +485,26 @@ async function main(): Promise<void> {
         variant,
         presentationView,
         approvedText,
+        approvedTextSource,
         verdict: row.verdict,
         tags: row.defects,
         file: row.file,
-        fileResolved: false,
+        fileResolved: still !== null,
         bytes: null,
         stencil: stencil?.file ?? null,
         identityImageUrl,
         references,
         decision: "not_run",
+        notRunReason,
         gateSource: "none",
         gates: [],
         notes: null,
       });
       continue;
     }
+    // Narrowing only: `notRunReason` is non-null in exactly these two cases.
+    if (still === null || approvedText === null)
+      throw new Error(`unreachable not_run row: ${row.cell}`);
 
     const bytes = new Uint8Array(readFileSync(still.absolute));
     const media: GeneratedMedia = {
@@ -460,7 +516,7 @@ async function main(): Promise<void> {
       estimatedCostCents: 0,
     };
     const decision = await verifier.verify({
-      approvedText: approvedText ?? "",
+      approvedText,
       identityFingerprint: stencil?.sha256 ?? "",
       identityImageUrl: identityImageUrl ?? "",
       presentationView,
@@ -477,6 +533,7 @@ async function main(): Promise<void> {
       variant,
       presentationView,
       approvedText,
+      approvedTextSource,
       verdict: row.verdict,
       tags: row.defects,
       file: row.file,
@@ -486,6 +543,7 @@ async function main(): Promise<void> {
       identityImageUrl,
       references,
       decision: decision.passed ? "accepted" : "rejected",
+      notRunReason: null,
       gateSource: carried === null ? "projected" : "carried",
       gates: carried ?? projectGates(decision),
       notes: decision.notes,
@@ -538,8 +596,24 @@ async function main(): Promise<void> {
   };
   const defectRows = replayed.filter((row) => row.tags.length > 0);
 
+  const notRun = replayed.filter((row) => row.decision === "not_run");
+  const notRunReasons: Record<string, number> = {};
+  for (const row of notRun) {
+    const kind = row.fileResolved ? "no-approved-text" : "still-missing";
+    notRunReasons[kind] = (notRunReasons[kind] ?? 0) + 1;
+  }
+
   const census = {
-    generatedAt: new Date().toISOString(),
+    // The newest ledger timestamp, not the clock: the report is a function of
+    // the ledger, so a rerun that changes nothing must produce byte-identical
+    // output and an empty `git diff`.
+    ledgerNewestTs: rows.reduce<string | null>(
+      (newest, row) =>
+        row.ts !== null && (newest === null || row.ts > newest)
+          ? row.ts
+          : newest,
+      null,
+    ),
     verifier: verifierName,
     ledger: ledgerArgument,
     rows: replayed.length,
@@ -553,6 +627,8 @@ async function main(): Promise<void> {
     referencesTotal,
     referencesResolved,
     referenceShaMismatches,
+    rowsNotRun: notRun.length,
+    notRunReasons,
     resolutionBases: [...resolutionBases].sort(),
     defectTagCounts: tagCounts,
     rowsCarryingADefectTag: defectRows.length,
@@ -594,6 +670,24 @@ async function main(): Promise<void> {
       `  ${tag}: rows ${bucket.rows}, accepted ${bucket.accepted}, rejected ${bucket.rejected}, not run ${bucket.notRun}`,
     );
   console.log(`report written: ${outPath}`);
+
+  // A replay whose corpus is not intact is not a baseline; it is a smaller
+  // corpus quietly reported as if it were the whole one. Printing that and
+  // exiting 0 let P2-4 and P2-7 inherit a number nothing stands behind.
+  const stillsMissing = replayed.length - stillsResolved;
+  const blocking: string[] = [];
+  if (referenceShaMismatches > 0)
+    blocking.push(
+      `${referenceShaMismatches} reference file(s) no longer match the sha256 the ledger recorded, so the images on disk are not the images that were generated`,
+    );
+  if (stillsMissing > 0)
+    blocking.push(
+      `${stillsMissing} still(s) named by the ledger are not on disk, so those rows were never shown to the verifier`,
+    );
+  if (blocking.length > 0) {
+    for (const reason of blocking) console.error(`corpus not intact: ${reason}`);
+    process.exitCode = 1;
+  }
 }
 
 await main();
