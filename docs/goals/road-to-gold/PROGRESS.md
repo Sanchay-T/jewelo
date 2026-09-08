@@ -89,10 +89,12 @@ Done:
 
 - P3-2 and P3-4 committed (lead verified: frozen hash compiles, unfrozen refuses with the hash named; planner plans, replans as a no-op, refuses a holdout leak, reserves and unreserves; ingest now skips planned rows). Review of the security and tooling commits recorded in `reviews/security-tooling-fix-review-1.md`: no blocker, four majors (transliteration limiter widened by the composite key, letterless names accepted, some real Latin names rejected, anonymous cap on a route the site never calls); security fix 2 in flight for all but the last, which is a Supabase dashboard setting under Needs Sanchay.
 
+- Pipeline fix 1 deployed to staging as `2a1a8a7a-a4d9-40c6-8eb4-debb96298830` (ACTIVE, commit `30a9edc`, smoke passed with the readiness token). Re-proof: two-name English run `fbcf44fa` (`Sara & Omar`) and Arabic run `d85dbdc6` (`نور`) complete on v2, four tasks each ready, zero spend; the two-name stencil downloaded, sha equal, re-measured deep-equal (`decodeMask@sharp0.35.4`, one component, two ring holes); lead opened it: one piece bridged through the ampersand, rings on the S and the final r. `runtime_policy.provider_attempt_budget` 3, both sweeper indexes present, readiness `keyEnvironment prod`. Follow-up: a two-name string fits into the same pendant width, so letters are small against fixed-size rings; the P6-4 copy must say so.
+
 Doing:
 
 - Security fix 2 (implementer): two limiters on transliteration, letter requirement and wider Latin set in the name schema, trusted-header config, env sync in `deploy.sh`, readiness never 500, one `mockMode`, dead export removed.
-- Pipeline fix 1 deploy and re-proof (platform), reviewer on `b7590a4`, reviewer on the security and tooling commits.
+- Pipeline fix 2 (implementer) on `reviews/pipeline-fix-review-1.md`: letterless approved text rejects, vision calls get timeouts and the window is derived from them, reservation usage date, dot segments rejected, codes-only `terminal_error_code`, allowlist projection of `verification_result`.
 - D-020 redesign (implementer): outline-level ring anchors from glyph contours and GDEF classes, bar fallback instead of refusal, ring-hole area gate, lift cap removed, the small package-review items, manifest and README brought in line.
 
 Follow-ups found by subagents, not fixed (outside the task rows):
