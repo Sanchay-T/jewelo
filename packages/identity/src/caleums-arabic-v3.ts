@@ -1,5 +1,12 @@
 import { createHash } from "node:crypto";
-import { label4 } from "./geometry";
+import {
+  findMaskHoles,
+  label4,
+  measureMask,
+  type DecodedMaskGeometryInput,
+  type MaskBoundingBox,
+  type MaskInkRule,
+} from "./geometry";
 import {
   IDENTITY_BRIDGE_WIDTH,
   IDENTITY_LANCZOS_SUPPORT,
@@ -92,7 +99,21 @@ export interface IdentityRasterizer {
     script: IdentityScript;
   }): Promise<TypesetResult>;
   encodePng(mask: RasterMask): Promise<Uint8Array>;
+  /**
+   * Decodes PNG bytes back into a binary mask, with the ink rule the decoder
+   * used. P1-6: the solver measures its own encoded bytes through this port and
+   * reports only what came back, so the report can disagree with the renderer.
+   * `apps/jobs` injects `decodeMask`, the same decoder the P1-1 ruler uses.
+   */
+  decodePng(bytes: Uint8Array): Promise<DecodedMaskGeometryInput>;
   shapingVersions(): Readonly<Record<string, string>>;
+}
+
+/** One measured ring hole, in the coordinates of the encoded PNG. */
+export interface MeasuredRingHole {
+  readonly size: number;
+  readonly centreX: number;
+  readonly centreY: number;
 }
 
 export interface IdentityValidationReport {
@@ -111,13 +132,47 @@ export interface IdentityValidationReport {
   bridges: number;
   /** Dilation passes applied before bridging. */
   dilationPixels: number;
-  /** Rings welded on: two by default, zero for a ring-free construction. */
+  /**
+   * Which ruler produced every measured field below, so a stored report says
+   * who measured it rather than leaving the reader to assume.
+   */
+  measuredBy: typeof IDENTITY_REPORT_MEASURED_BY;
+  /** The decoder's ink branch on the encoded bytes; the stencil is luminance. */
+  rule: MaskInkRule;
+  /** Canvas of the encoded PNG, as decoded. */
+  width: number;
+  height: number;
+  /** Ink pixels in the decoded PNG. */
+  inkPixels: number;
+  /** 4-connected ink components in the decoded PNG. One means one piece. */
+  componentsFinal: number;
+  /** Every enclosed hole in the decoded PNG: ring holes plus letter counters. */
+  holes: number;
+  /** The largest hole sizes, descending, as `measureMask` caps them. */
+  holeSizes: readonly number[];
+  /** Ink bounding box of the decoded PNG, or null when it carries no ink. */
+  bbox: MaskBoundingBox | null;
+  /**
+   * Ring holes still open in the decoded PNG: the holes the welded ring centres
+   * actually land in, not the rings the solver intended to draw.
+   */
   jumpRingCount: number;
-  componentsFinal: 1;
+  ringHoles: readonly MeasuredRingHole[];
   /** Measured by HarfBuzz: no glyph id 0 and every NFC code point covered. */
   exactCharactersPreserved: boolean;
-  passed: true;
+  /**
+   * Every gate above agreed with the decoded measurement. It is computed, never
+   * asserted: a disagreement throws before this object exists, and the database
+   * check on `identity_artifacts.validation_report` rejects anything else.
+   */
+  passed: boolean;
+  /** How the piece was built (P1-4/P1-5), folded in by P1-6. */
+  construction: IdentityConstructionMeasurement;
 }
+
+/** The ruler that produced the measured half of the report. */
+export const IDENTITY_REPORT_MEASURED_BY =
+  `measureMask@${CALEUMS_ARABIC_ENGINE_RELEASE}` as const;
 
 /** One welded ring: where its centre is, and the metal it grips. */
 export interface IdentityRingCentre {
@@ -192,7 +247,7 @@ export interface IdentityArtifact {
   pngSha256: string;
   fingerprint: string;
   report: IdentityValidationReport;
-  /** P1-6 folds this into the report; until then it rides alongside it. */
+  /** The same object the report now carries, kept for callers that read it. */
   construction: IdentityConstructionMeasurement;
 }
 
@@ -207,6 +262,8 @@ export class IdentitySolverError extends Error {
       | "identity_bridge_moved_ink"
       | "identity_recentre_too_large"
       | "identity_component_gate_failed"
+      | "identity_ring_gate_failed"
+      | "identity_gate_failed"
       | "identity_ring_anchor_missing"
       | "identity_ring_punched_ink"
       | "identity_font_bytes_mismatch"
@@ -380,12 +437,6 @@ export async function solveIdentity(
       `identity_ring_punched_ink:pixels=${rings.glyphPixelsPunchedByRings}`,
     );
   const placement = recentre(mask);
-  const componentsFinal = countComponents(mask);
-  if (componentsFinal !== 1)
-    throw new IdentitySolverError(
-      "identity_component_gate_failed",
-      `identity_component_gate_failed:components=${componentsFinal}`,
-    );
   const construction: IdentityConstructionMeasurement = {
     thickenPasses: IDENTITY_THICKEN_PASSES,
     islandsBeforeBridging,
@@ -402,6 +453,45 @@ export async function solveIdentity(
     recentreOffsetY: placement.offsetY,
   };
   const png = await rasterizer.encodePng(mask);
+
+  // P1-6. Everything the report claims about the finished piece is measured
+  // here, on the bytes that were just encoded, by the P1-1 ruler reading them
+  // back through the decoder. `intended` is what the renderer believes it drew;
+  // it is only ever used to name a disagreement, never to fill in the report.
+  const decoded = await rasterizer.decodePng(png);
+  const measured = measureMask(decoded);
+  const intended = measureMask(mask);
+
+  if (measured.components !== 1)
+    throw new IdentitySolverError(
+      "identity_component_gate_failed",
+      `identity_component_gate_failed:components=${measured.components}`,
+    );
+
+  const ringHoles = measureRingHoles(decoded, construction);
+  if (ringHoles.length !== construction.jumpRings)
+    throw new IdentitySolverError(
+      "identity_ring_gate_failed",
+      `identity_ring_gate_failed:holes=${ringHoles.length},expected=${construction.jumpRings}`,
+    );
+
+  const disagreements: string[] = [];
+  if (decoded.rule !== "luminance") disagreements.push("rule");
+  if (
+    measured.width !== intended.width ||
+    measured.height !== intended.height
+  )
+    disagreements.push("canvas");
+  if (measured.inkPixels !== intended.inkPixels) disagreements.push("ink");
+  if (JSON.stringify(measured.bbox) !== JSON.stringify(intended.bbox))
+    disagreements.push("bbox");
+  if (measured.holes !== intended.holes) disagreements.push("holes");
+  if (disagreements.length > 0)
+    throw new IdentitySolverError(
+      "identity_gate_failed",
+      `identity_gate_failed:${disagreements.join(",")}`,
+    );
+
   const pngSha256 = sha256(png);
   const fingerprint = sha256(
     [
@@ -435,13 +525,62 @@ export async function solveIdentity(
       componentsBefore,
       bridges: bridged.bridges,
       dilationPixels: IDENTITY_THICKEN_PASSES,
-      jumpRingCount: rings.centres.length,
-      componentsFinal: 1,
+      measuredBy: IDENTITY_REPORT_MEASURED_BY,
+      rule: decoded.rule,
+      width: measured.width,
+      height: measured.height,
+      inkPixels: measured.inkPixels,
+      componentsFinal: measured.components,
+      holes: measured.holes,
+      holeSizes: measured.holeSizes,
+      bbox: measured.bbox,
+      jumpRingCount: ringHoles.length,
+      ringHoles,
       exactCharactersPreserved: shaping.exactCharactersPreserved,
-      passed: true,
+      // Every gate above threw on disagreement, so this is the conjunction of
+      // measurements rather than a promise.
+      passed:
+        measured.components === 1 &&
+        ringHoles.length === construction.jumpRings &&
+        shaping.exactCharactersPreserved &&
+        decoded.rule === "luminance",
+      construction,
     },
     construction,
   };
+}
+
+/**
+ * The ring holes that are still open in the encoded PNG.
+ *
+ * The solver knows where it welded each ring, in pre-recentre coordinates;
+ * `recentre` then reported the exact transform it applied, so each centre maps
+ * forward to a pixel in the decoded image. A ring hole counts only when that
+ * pixel lands inside an enclosed hole the ruler found in the decoded bytes, so
+ * a filled ring is missing here even though the letter counters still count as
+ * holes. Two rings that somehow merged into one hole count once, which is also
+ * a failure.
+ */
+function measureRingHoles(
+  decoded: DecodedMaskGeometryInput,
+  construction: IdentityConstructionMeasurement,
+): MeasuredRingHole[] {
+  const geometry = findMaskHoles(decoded);
+  const seen = new Set<number>();
+  const holes: MeasuredRingHole[] = [];
+  for (const centre of construction.ringCentres) {
+    const x = Math.round(
+      centre.x * construction.recentreScale + construction.recentreOffsetX,
+    );
+    const y = Math.round(
+      centre.y * construction.recentreScale + construction.recentreOffsetY,
+    );
+    const region = geometry.regionAt(x, y);
+    if (region < 0 || seen.has(region)) continue;
+    seen.add(region);
+    holes.push(geometry.holes[region] as MeasuredRingHole);
+  }
+  return holes;
 }
 
 export function countConnectedComponents(mask: RasterMask): number {
@@ -788,10 +927,6 @@ interface RecentrePlacement {
   readonly offsetY: number;
 }
 
-function round3(value: number): number {
-  return Math.round(value * 1000) / 1000;
-}
-
 /**
  * Crops the finished piece and centres it on the canvas, downscaling only when
  * it overflows the body box. A port of `recentre` (`make_stencil.py:181-198`).
@@ -856,10 +991,13 @@ function recentre(mask: RasterMask): RecentrePlacement {
     for (let x = 0; x < width; x += 1)
       if (art[y * width + x]) mask.ink[(top + y) * mask.width + left + x] = 1;
 
+  // Review finding 10: reported unrounded. Rounding the offsets to three
+  // decimals while the transform itself is exact makes the mapping wrong as
+  // soon as `scale` is not 1, and the ring gate maps ring centres through it.
   return {
-    scale: round3(scale),
-    offsetX: round3(left - minX * scale),
-    offsetY: round3(top - minY * scale),
+    scale,
+    offsetX: left - minX * scale,
+    offsetY: top - minY * scale,
   };
 }
 

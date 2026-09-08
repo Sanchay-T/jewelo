@@ -5,6 +5,7 @@ import {
   INK_LUMINANCE_THRESHOLD,
   shapeText,
   solveIdentity,
+  type DecodedMaskGeometryInput,
   type IdentityConstructionMeasurement,
   type IdentityFontFile,
   type IdentityRasterizer,
@@ -14,6 +15,8 @@ import {
   type TypesetResult,
 } from "@jewelo/identity";
 import sharp from "sharp";
+
+import { decodeMask } from "./decode-mask";
 
 interface IdentityAnchor {
   approvedText: string;
@@ -27,11 +30,11 @@ export interface RenderedIdentityAnchor {
   png: Buffer;
   pngSha256: string;
   fingerprint: string;
-  report: IdentityValidationReport | Readonly<Record<string, unknown>>;
+  report: IdentityValidationReport;
   /**
    * What the solver measured while it built the piece (P1-4): islands, bridges,
-   * the ink-preservation counts and the re-centring transform. It rides beside
-   * the report until P1-6 folds it in.
+   * the ink-preservation counts and the re-centring transform. Since P1-6 the
+   * report carries the same object; this is the same reference, unwrapped.
    */
   construction: IdentityConstructionMeasurement;
 }
@@ -48,7 +51,7 @@ export interface RenderedIdentityAnchor {
 export async function renderIdentityAnchor(
   anchor: IdentityAnchor,
   specification: Readonly<Record<string, unknown>>,
-  pipelineRelease = "caleums-final-media-v1",
+  pipelineRelease: string,
   ringlessConstructions: ReadonlySet<string> = new Set<string>(),
 ): Promise<RenderedIdentityAnchor> {
   const artifact = await solveIdentity(
@@ -157,6 +160,13 @@ class SharpIdentityRasterizer implements IdentityRasterizer {
       .toColourspace("b-w")
       .raw()
       .toBuffer({ resolveWithObject: true });
+    // Review finding 13: the loop below reads one byte per pixel, so a raster
+    // that came back with three or four interleaved channels would silently be
+    // read as a third of the canvas rather than fail.
+    if (info.channels !== 1)
+      throw new Error(
+        `identity_raster_channels:${String(info.channels)} (expected 1)`,
+      );
     const ink = Uint8Array.from(data, (value) =>
       value < INK_LUMINANCE_THRESHOLD ? 1 : 0,
     );
@@ -175,6 +185,15 @@ class SharpIdentityRasterizer implements IdentityRasterizer {
         .png({ compressionLevel: 9, adaptiveFiltering: false, palette: false })
         .toBuffer(),
     );
+  }
+
+  /**
+   * The other half of the P1-6 gate: the solver hands its own encoded bytes
+   * back through the same decoder the independent ruler uses, so the report is
+   * a measurement of the file rather than a restatement of the mask.
+   */
+  async decodePng(bytes: Uint8Array): Promise<DecodedMaskGeometryInput> {
+    return decodeMask(bytes);
   }
 
   /**

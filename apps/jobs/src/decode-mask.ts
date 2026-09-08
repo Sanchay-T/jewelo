@@ -12,16 +12,19 @@
 import {
   INK_ALPHA_THRESHOLD,
   INK_LUMINANCE_THRESHOLD,
-  type MaskGeometryInput,
+  type DecodedMaskGeometryInput,
+  type MaskInkRule,
 } from "@jewelo/identity";
 import sharp from "sharp";
 
-/** Which of the two Python branches decided the mask. */
-export type MaskInkRule = "alpha" | "luminance";
-
-export interface DecodedMask extends MaskGeometryInput {
-  readonly rule: MaskInkRule;
-}
+/**
+ * Which of the two Python branches decided the mask, and the decoded mask that
+ * carries it. Both are declared in `@jewelo/identity` beside the ruler, because
+ * the solver's rasteriser port returns this shape (P1-6); they are re-exported
+ * here so the decoder still names its own result type.
+ */
+export type { MaskInkRule };
+export type DecodedMask = DecodedMaskGeometryInput;
 
 /**
  * PIL's `convert("L")` uses the ITU-R 601-2 luma transform with the integer

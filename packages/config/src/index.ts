@@ -105,6 +105,12 @@ export const jobsEnvSchema = trustedWebEnvSchema
     VIDEO_ENABLED: z
       .preprocess(blankToUndefined, z.enum(["0", "1"]).default("0"))
       .transform((value) => value === "1"),
+    // P1-6. Which pipeline release a run pins its identity artifacts and tasks
+    // to. It used to be a literal in `presentation.ts`, so bumping the release
+    // meant editing business code. The default is the release the migration in
+    // `supabase/migrations/20260908_pipeline_release_v2.sql` marks active.
+    PIPELINE_RELEASE_ID: z
+      .preprocess(blankToUndefined, nonEmpty.default("caleums-final-media-v2")),
     // P1-5. Jump rings are on for every pendant; a construction that carries
     // its own suspension (a frame, a rail) can opt out by naming itself here.
     // Comma separated construction ids, empty by default, so the shipped

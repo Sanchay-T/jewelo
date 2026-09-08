@@ -28,8 +28,39 @@ export interface MaskGeometryInput {
   readonly ink: Uint8Array;
 }
 
+/**
+ * Which of the two ink branches the decoder took. Declared here, beside the
+ * ruler, because the solver's report carries it (P1-6) and `packages/identity`
+ * must not import the decoder, which owns sharp.
+ */
+export type MaskInkRule = "alpha" | "luminance";
+
+/** A decoded mask plus the branch that decided it: what `decodePng` returns. */
+export interface DecodedMaskGeometryInput extends MaskGeometryInput {
+  readonly rule: MaskInkRule;
+}
+
 /** `[minX, minY, maxX, maxY]`, inclusive, in pixels. */
 export type MaskBoundingBox = readonly [number, number, number, number];
+
+/** One enclosed background region: how big it is and where its centroid is. */
+export interface MaskHole {
+  readonly size: number;
+  readonly centreX: number;
+  readonly centreY: number;
+}
+
+/**
+ * Every enclosed hole in a mask, plus a lookup that answers "which hole, if
+ * any, contains this pixel". The lookup is what turns "there are five holes"
+ * into "the two ring holes are still open": a ring centre that lands in no hole
+ * is a ring that was filled in.
+ */
+export interface MaskHoleGeometry {
+  readonly holes: readonly MaskHole[];
+  /** Index into `holes`, or -1 when the pixel is ink or an open region. */
+  readonly regionAt: (x: number, y: number) => number;
+}
 
 export interface MaskGeometryReport {
   readonly width: number;
@@ -126,6 +157,68 @@ const isInk = (value: number) => value !== 0;
 const isBackground = (value: number) => value === 0;
 
 /**
+ * Finds every enclosed background region (4-connected) that does not reach the
+ * border - exactly what `binary_fill_holes` would fill - with its size, its
+ * centroid and a pixel lookup. `measureMask` reports the same regions; this is
+ * the detailed view a ring gate needs.
+ */
+export function findMaskHoles(input: MaskGeometryInput): MaskHoleGeometry {
+  const { width, height, ink } = input;
+  const background = label4(width, height, ink, isBackground);
+  const touchesBorder = new Uint8Array(background.count + 1);
+  for (let x = 0; x < width; x += 1) {
+    touchesBorder[background.labels[x] as number] = 1;
+    touchesBorder[background.labels[(height - 1) * width + x] as number] = 1;
+  }
+  for (let y = 0; y < height; y += 1) {
+    touchesBorder[background.labels[y * width] as number] = 1;
+    touchesBorder[background.labels[y * width + width - 1] as number] = 1;
+  }
+
+  const sizes = new Float64Array(background.count + 1);
+  const sumX = new Float64Array(background.count + 1);
+  const sumY = new Float64Array(background.count + 1);
+  for (let index = 0; index < background.labels.length; index += 1) {
+    const region = background.labels[index] as number;
+    if (region === 0 || touchesBorder[region] === 1) continue;
+    const x = index % width;
+    sizes[region] = (sizes[region] as number) + 1;
+    sumX[region] = (sumX[region] as number) + x;
+    sumY[region] = (sumY[region] as number) + (index - x) / width;
+  }
+
+  const order = new Int32Array(background.count + 1).fill(-1);
+  const holes: MaskHole[] = [];
+  for (let region = 1; region <= background.count; region += 1) {
+    if (touchesBorder[region] === 1) continue;
+    order[region] = holes.length;
+    holes.push({
+      size: sizes[region] as number,
+      centreX: (sumX[region] as number) / (sizes[region] as number),
+      centreY: (sumY[region] as number) / (sizes[region] as number),
+    });
+  }
+
+  return {
+    holes,
+    regionAt: (x, y) => {
+      if (
+        !Number.isFinite(x) ||
+        !Number.isFinite(y) ||
+        x < 0 ||
+        y < 0 ||
+        x >= width ||
+        y >= height
+      )
+        return -1;
+      const region = background.labels[y * width + x] as number;
+      if (region === 0 || touchesBorder[region] === 1) return -1;
+      return order[region] as number;
+    },
+  };
+}
+
+/**
  * Measures a decoded mask. Equivalent to `report()` in `verify_stencil.py`:
  * `ndimage.label` with the 4-connected structure over the ink, then
  * `binary_fill_holes` minus the ink, labelled the same way, for the holes.
@@ -167,30 +260,12 @@ export function measureMask(input: MaskGeometryInput): MaskGeometryReport {
   }
 
   // A hole is a background region that never reaches the border, which is what
-  // `binary_fill_holes` fills. Label the background, then discard every region
-  // that touches an edge pixel.
-  const background = label4(width, height, ink, isBackground);
-  const touchesBorder = new Uint8Array(background.count + 1);
-  for (let x = 0; x < width; x += 1) {
-    touchesBorder[background.labels[x] as number] = 1;
-    touchesBorder[background.labels[(height - 1) * width + x] as number] = 1;
-  }
-  for (let y = 0; y < height; y += 1) {
-    touchesBorder[background.labels[y * width] as number] = 1;
-    touchesBorder[background.labels[y * width + width - 1] as number] = 1;
-  }
-  const holeSizes = new Int32Array(background.count + 1);
-  for (let index = 0; index < background.labels.length; index += 1) {
-    const region = background.labels[index] as number;
-    if (region === 0) continue;
-    holeSizes[region] = (holeSizes[region] as number) + 1;
-  }
-  const enclosed: number[] = [];
-  for (let region = 1; region <= background.count; region += 1) {
-    if (touchesBorder[region] === 1) continue;
-    enclosed.push(holeSizes[region] as number);
-  }
-  enclosed.sort((a, b) => b - a);
+  // `binary_fill_holes` fills. `findMaskHoles` labels the background and drops
+  // every region that touches an edge pixel; one implementation serves both the
+  // count reported here and the per-hole lookup the ring gate uses.
+  const enclosed = findMaskHoles(input)
+    .holes.map((hole) => hole.size)
+    .sort((a, b) => b - a);
 
   return {
     width,

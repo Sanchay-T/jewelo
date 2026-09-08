@@ -495,6 +495,10 @@ export class SupabasePresentationRepository implements PresentationRepository {
     // rings welded on. Read once from the validated environment; the identity
     // package never reads an environment variable itself.
     private readonly ringlessConstructions: ReadonlySet<string> = new Set<string>(),
+    // P1-6. The pipeline release every identity artifact and task is pinned to,
+    // validated in `@jewelo/config` (PIPELINE_RELEASE_ID) rather than written
+    // here as a literal, so a release bump is a configuration change.
+    private readonly pipelineReleaseId = "caleums-final-media-v2",
   ) {}
   async #request<T>(path: string, init: RequestInit = {}): Promise<T> {
     const response = await fetch(`${this.url}${path}`, {
@@ -678,7 +682,7 @@ export class SupabasePresentationRepository implements PresentationRepository {
         fingerprint: revision.identity_anchor.fingerprint,
       },
       revision.specification,
-      "caleums-final-media-v1",
+      this.pipelineReleaseId,
       this.ringlessConstructions,
     );
     const basePath = `principal/${ownerId}/revision/${revision.id}/identity-${rendered.fingerprint}`;
@@ -720,9 +724,10 @@ export class SupabasePresentationRepository implements PresentationRepository {
             revision_id: revision.id,
             owner_principal_id: ownerId,
             engine_release: String(rendered.report.engineRelease),
-            font_release: String(
-              rendered.report.fontSha256 ?? "existing-latin",
-            ),
+            // P1-6: the sha of the bytes HarfBuzz actually shaped with, never
+            // a placeholder. `existing-latin` used to stand in for the Latin
+            // path, which no longer exists: both scripts go through the solver.
+            font_release: rendered.report.fontSha256Measured,
             approved_text: revision.identity_anchor.approvedText,
             script: revision.identity_anchor.language,
             fingerprint: rendered.fingerprint,
@@ -1138,6 +1143,7 @@ export function productionPresentationDependencies(
     config.PROVIDER_MODE === "mock",
     config.VIDEO_ENABLED,
     config.IDENTITY_RINGLESS_CONSTRUCTIONS,
+    config.PIPELINE_RELEASE_ID,
   );
   if (config.PROVIDER_MODE === "mock")
     return {

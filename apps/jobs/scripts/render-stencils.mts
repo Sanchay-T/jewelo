@@ -28,15 +28,17 @@ import { tmpdir } from "node:os";
 import { isAbsolute, join, resolve } from "node:path";
 
 import {
+  findMaskHoles,
   IDENTITY_RING_INNER,
   IDENTITY_RING_OUTER,
   identityFontUrl,
   identityStencilSvg,
-  label4,
   LIVE_IDENTITY_STYLES,
   measureMask,
   shapeText,
   type IdentityScript,
+  type IdentityValidationReport,
+  type MaskHoleGeometry,
 } from "@jewelo/identity";
 
 import { decodeMask } from "../src/decode-mask";
@@ -185,6 +187,12 @@ interface Row {
   readonly ringHoles: readonly RingHole[];
   /** Every enclosed hole whose centroid sits above the glyph box top. */
   readonly holesAboveGlyphTop: number;
+  /**
+   * The solver's own validation report, verbatim. Review finding 6: the
+   * manifest used to restate this script's measurement, so re-measuring it
+   * confirmed nothing. The claim under test has to come from the engine.
+   */
+  readonly report: IdentityValidationReport;
 }
 
 /* -------------------------------------------------------------------------
@@ -215,66 +223,6 @@ interface RingHole {
   readonly aboveAnchor: boolean;
 }
 
-interface HoleGeometry {
-  /** One entry per enclosed hole: size and centroid. */
-  readonly holes: readonly {
-    readonly size: number;
-    readonly centreX: number;
-    readonly centreY: number;
-  }[];
-  /** Region index per pixel, or -1 when the pixel is ink or an open region. */
-  readonly regionAt: (x: number, y: number) => number;
-}
-
-function holeGeometry(mask: {
-  width: number;
-  height: number;
-  ink: Uint8Array;
-}): HoleGeometry {
-  const { width, height, ink } = mask;
-  const background = label4(width, height, ink, (value) => value === 0);
-  const touchesBorder = new Uint8Array(background.count + 1);
-  for (let x = 0; x < width; x += 1) {
-    touchesBorder[background.labels[x] as number] = 1;
-    touchesBorder[background.labels[(height - 1) * width + x] as number] = 1;
-  }
-  for (let y = 0; y < height; y += 1) {
-    touchesBorder[background.labels[y * width] as number] = 1;
-    touchesBorder[background.labels[y * width + width - 1] as number] = 1;
-  }
-  const sizes = new Float64Array(background.count + 1);
-  const sumX = new Float64Array(background.count + 1);
-  const sumY = new Float64Array(background.count + 1);
-  for (let index = 0; index < background.labels.length; index += 1) {
-    const region = background.labels[index] as number;
-    if (region === 0 || touchesBorder[region] === 1) continue;
-    const x = index % width;
-    sizes[region] = (sizes[region] as number) + 1;
-    sumX[region] = (sumX[region] as number) + x;
-    sumY[region] = (sumY[region] as number) + (index - x) / width;
-  }
-  const order = new Int32Array(background.count + 1).fill(-1);
-  const holes: { size: number; centreX: number; centreY: number }[] = [];
-  for (let region = 1; region <= background.count; region += 1) {
-    if (touchesBorder[region] === 1) continue;
-    order[region] = holes.length;
-    holes.push({
-      size: sizes[region] as number,
-      centreX: (sumX[region] as number) / (sizes[region] as number),
-      centreY: (sumY[region] as number) / (sizes[region] as number),
-    });
-  }
-  return {
-    holes,
-    regionAt: (x, y) => {
-      if (x < 0 || y < 0 || x >= width || y >= height) return -1;
-      const region = background.labels[y * width + x] as number;
-      if (region === 0 || touchesBorder[region] === 1) return -1;
-      return order[region] as number;
-    },
-  };
-}
-
 /** Maps a pre-recentre point through the transform `recentre` applied. */
 const mapForward = (value: number, scale: number, offset: number): number =>
   value * scale + offset;
@@ -300,7 +248,7 @@ function measureRings(
     readonly recentreOffsetY: number;
   },
 ): RingMeasurement {
-  const geometry = holeGeometry(decoded);
+  const geometry: MaskHoleGeometry = findMaskHoles(decoded);
   const glyphTop = mapForward(
     construction.glyphBoxBeforeRings[1],
     construction.recentreScale,
@@ -365,13 +313,12 @@ for (const name of NAMES) {
           names: [{ approvedArabicText: script === "ar" ? text : null }],
           dimensions: { widthMm: 32, heightMm: 12, thicknessMm: 1.2 },
         },
-        "caleums-final-media-v1",
+        "caleums-final-media-v2",
         ringlessConstructions,
       );
       writeFileSync(join(directory, file), rendered.png);
 
-      const report = rendered.report as Record<string, unknown>;
-      const fontFile = String(report.fontFile ?? "unknown");
+      const fontFile = rendered.report.fontFile;
       // The advances and the outline box are measured again here, straight from
       // the pinned bytes, so the table compares two independent measurements of
       // the same run rather than echoing one.
@@ -386,6 +333,7 @@ for (const name of NAMES) {
       const ring = measureRings(decoded, rendered.construction);
 
       rows.push({
+        report: rendered.report,
         file,
         label: name.label,
         script,
@@ -405,7 +353,7 @@ for (const name of NAMES) {
         inkBoxWidth: measured.bbox
           ? measured.bbox[2] - measured.bbox[0] + 1
           : 0,
-        componentsBefore: Number(report.componentsBefore ?? -1),
+        componentsBefore: rendered.report.componentsBefore,
         islandsBeforeBridging: rendered.construction.islandsBeforeBridging,
         bridges: rendered.construction.bridges,
         bridgePixelsAdded: rendered.construction.bridgePixelsAdded,
@@ -644,7 +592,10 @@ writeFileSync(
     rows.map((row) => ({
       file: row.file,
       pngSha256: row.sha256,
-      report: { componentsFinal: row.components, jumpRingCount: row.jumpRings },
+      // The engine's claim, verbatim; `measure-stencils` re-measures the PNG
+      // and compares against it, which is only a test while the two differ in
+      // origin. `measured` below is this script's own reading of the same file.
+      report: row.report,
       text: row.text,
       script: row.script,
       lettering: row.lettering,
@@ -771,7 +722,7 @@ for (const name of MATRIX_NAMES) {
           names: [{ approvedArabicText: script === "ar" ? text : null }],
           dimensions: { widthMm: 32, heightMm: 12, thicknessMm: 1.2 },
         },
-        "caleums-final-media-v1",
+        "caleums-final-media-v2",
         ringlessConstructions,
       );
       writeFileSync(join(matrixDirectory, file), rendered.png);

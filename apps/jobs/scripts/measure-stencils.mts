@@ -19,7 +19,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { isAbsolute, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { measureMask } from "@jewelo/identity";
+import { findMaskHoles, measureMask } from "@jewelo/identity";
 
 import { decodeMask } from "../src/decode-mask";
 
@@ -34,6 +34,14 @@ interface StencilClaim {
   readonly componentsFinal: number | null;
   /** Jump rings the manifest claims. Holes are a superset (letter counters count too). */
   readonly jumpRings: number | null;
+  /**
+   * Where the claim says the open ring holes are, in image coordinates. When a
+   * manifest carries these (a solver report does), the ring count is checked
+   * exactly: the ruler looks up the enclosed hole at each of those points in
+   * the decoded PNG and counts the distinct ones. Without them the total hole
+   * count is only a lower bound, because letter counters are holes too.
+   */
+  readonly ringHoleCentres: readonly (readonly [number, number])[] | null;
   readonly sha256: string | null;
 }
 
@@ -54,6 +62,10 @@ type RenderReport = readonly {
   readonly report?: {
     readonly componentsFinal?: number;
     readonly jumpRingCount?: number;
+    readonly ringHoles?: readonly {
+      readonly centreX: number;
+      readonly centreY: number;
+    }[];
   };
 }[];
 
@@ -72,6 +84,10 @@ function readClaims(manifestPath: string): StencilClaim[] {
       file: entry.file,
       componentsFinal: entry.report?.componentsFinal ?? null,
       jumpRings: entry.report?.jumpRingCount ?? null,
+      ringHoleCentres:
+        entry.report?.ringHoles?.map(
+          (hole) => [hole.centreX, hole.centreY] as const,
+        ) ?? null,
       sha256: entry.pngSha256 ?? null,
     }));
   }
@@ -86,6 +102,7 @@ function readClaims(manifestPath: string): StencilClaim[] {
     file: entry.file,
     componentsFinal: entry.componentsFinal ?? null,
     jumpRings: entry.jumpRings ?? null,
+    ringHoleCentres: null,
     sha256: entry.sha256 ?? null,
   }));
 }
@@ -101,7 +118,7 @@ console.log(
   "file".padEnd(26) +
     "size".padEnd(12) +
     "ink".padStart(8) +
-    "  comp(node/man)  holes(node/rings)  rule       sha  holeSizes",
+    "  comp(node/man)  holes/rings(cmp)   rule       sha  holeSizes",
 );
 
 let matches = 0;
@@ -118,9 +135,23 @@ for (const claim of claims) {
   const shaOk = claim.sha256 === null || sha === claim.sha256;
   const componentsOk =
     claim.componentsFinal === null || report.components === claim.componentsFinal;
-  // Holes include the jump rings plus every letter counter, so the manifest's
-  // jump ring count is a lower bound, not an equality.
-  const holesOk = claim.jumpRings === null || report.holes >= claim.jumpRings;
+  // The ring count is measured, not inferred from the total: the ruler finds
+  // the enclosed hole at each claimed ring centre in the decoded PNG and counts
+  // the distinct ones. A filled ring is a point that lands in no hole, so the
+  // count drops and the comparison below fails. Manifests without ring centres
+  // (the lab's own) can only be checked as a lower bound; that is printed.
+  const geometry = findMaskHoles(decoded);
+  const exactRings = claim.ringHoleCentres !== null;
+  const measuredRings = exactRings
+    ? new Set(
+        (claim.ringHoleCentres ?? [])
+          .map(([x, y]) => geometry.regionAt(Math.round(x), Math.round(y)))
+          .filter((region) => region >= 0),
+      ).size
+    : report.holes;
+  const holesOk =
+    claim.jumpRings === null ||
+    (exactRings ? measuredRings === claim.jumpRings : report.holes >= claim.jumpRings);
 
   if (claim.componentsFinal === null) unclaimed += 1;
   if (report.components === 1) singlePiece += 1;
@@ -129,7 +160,7 @@ for (const claim of claims) {
   else
     mismatches.push(
       `${claim.file}: components ${report.components} vs ${claim.componentsFinal ?? "-"}, ` +
-        `holes ${report.holes} vs jumpRings ${claim.jumpRings ?? "-"}, ` +
+        `ring holes ${measuredRings} ${exactRings ? "==" : ">="} jumpRings ${claim.jumpRings ?? "-"}, ` +
         `sha ${shaOk ? "ok" : "DIFFERENT"}`,
     );
 
@@ -138,7 +169,7 @@ for (const claim of claims) {
       `${report.width}x${report.height}`.padEnd(12) +
       String(report.inkPixels).padStart(8) +
       `  ${report.components}/${claim.componentsFinal ?? "-"}`.padEnd(18) +
-      `${report.holes}/${claim.jumpRings ?? "-"}`.padEnd(19) +
+      `${report.holes}/${measuredRings}${exactRings ? "=" : ">"}${claim.jumpRings ?? "-"}`.padEnd(19) +
       decoded.rule.padEnd(11) +
       (shaOk ? "ok " : "DIFF") +
       "  " +
