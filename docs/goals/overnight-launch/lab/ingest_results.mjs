@@ -21,7 +21,11 @@ const results = raw.startsWith("[")
 const existing = new Set(
   (existsSync(LEDGER) ? readFileSync(LEDGER, "utf8").trim().split("\n") : [])
     .filter(Boolean)
-    .map((l) => { const r = JSON.parse(l); return `${r.stage}|${r.cell}|${r.attempt}`; })
+    .flatMap((l) => {
+      const r = JSON.parse(l);
+      // A row reserved by plan_grid.mjs --reserve must not block its own result.
+      return r.status === "planned" ? [] : [`${r.stage}|${r.cell}|${r.attempt}`];
+    })
 );
 
 const sha = (p) => createHash("sha256").update(readFileSync(p)).digest("hex");

@@ -520,6 +520,16 @@ Exact spelling and glyph order from Image 1. One connected piece. Exactly two ju
 
 </details>
 
+## Grid planner
+
+A batch is planned by `docs/goals/overnight-launch/lab/plan_grid.mjs`, not by hand.
+It expands the axes - looks x scripts x letterings x names x views, with an attempts count per cell - and writes one prompt file per cell under `lab/<stage>/prompts/` plus `index.json` (a bare array, the shape `ingest_results.mjs` reads) and `plan.json` (the totals).
+Every cell is compiled through `compile.mjs`'s guarded `compile()`, so a holdout name on a prompt hash `holdout.json` has not frozen refuses the whole plan with exit 2 before any file is written; a half-written grid looks executable and is not.
+Each index entry carries its `stencilKey`, the `-norings` stencil path it needs and a `missingStencils` list when that file is not on disk yet, so the stencils a batch is short of are known before a single credit is spent.
+The planner refuses more than three attempts per cell, estimates cost at 20 credits per image, and records `inFlightLimit` 12, the largest batch this lab has ever submitted at once.
+`--reserve` appends one ledger row per planned attempt with `verdict: null` and `status: "planned"` so a restart mid-batch can see what was already claimed, `--unreserve` drops those rows again once the real results are ingested, and `--status` prints planned / submitted / ingested / scored per cell with the credit total, so the state of a batch is readable without opening Runway.
+Re-running the same plan writes nothing: files are compared before they are written, and reservations are keyed the way the ledger is keyed.
+
 <!-- GENERATED APPENDIX - rebuilt by lab/finalise.py, do not hand-edit below -->
 
 ## Every cell, every attempt
