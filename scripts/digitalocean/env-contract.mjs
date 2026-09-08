@@ -34,6 +34,10 @@ export const optionalRuntimeConfig = [
   // explicitly so the deployed provider mode is visible in the app spec
   // instead of implied.
   "PROVIDER_MODE",
+  // Optional because `/api/readiness` still answers the bare public `status`
+  // without it; shipped when present so `smoke.sh` can read the dependency
+  // block and assert the deploy is bound to a prod Inngest signing key.
+  "READINESS_PROBE_TOKEN",
 ];
 
 export const requiredWebConfig = [...new Set([...buildConfig, ...runtimeConfig])];
