@@ -93,10 +93,12 @@ Done:
 
 - Security fix 2 committed in `3ee31c2` (lead: config, contracts and web builds exit 0; `packages/config` staged as the appended block only because pipeline fix 2 is editing the same file): source limiter before auth plus principal limiter after (request 21 from one address returns 429), name schemas demand a letter of the script and reject Arabic digits while accepting combining marks and the ʻokina (20-case table in the agent report), `TRUSTED_CLIENT_IP_HEADER` validated with default `do-connecting-ip`, `deploy.sh` merges the env contract into the live spec with `DEPLOY_DRY_RUN=1` printing key names only, readiness degrades to the public answer on a throw, one `operatorMockMode`. Not yet deployed; ships with pipeline fix 2.
 
+- P1-5 (D-020) committed in `f221b44` (lead: opened `ali-en-classic`, `zoe-en-classic`, `noor-ar-kufi`, `amir-ar-kufi` from the agent's scratchpad, rings on letter strokes with tittle, diaeresis, nuqta and hamza whole; reran `measure-stencils` myself `MATCH 16/16 CLAIM 16/16`; `pnpm build --force` exit 0; no `ringAnchorCarrier` or raster anchor constant left in `packages/identity`, `apps/jobs`). Agent proof: 48 names x 2 scripts x 6 styles, 576/576 single piece, welded 0, punched 0, bar fallbacks 0, hole floor 576/576, Python oracle 16/16, adv3 corridor-mark probe no longer under metal. The 16 production PNGs changed bytes (six-place SVG precision, fillet start, new anchors). One thing for pass 4 to probe: in `أمير` Kufi the fillet from the lifted ring runs down beside the hamza. Follow-ups: `presentation.ts` does not read `construction.ringPlacement` yet (bar fallback routing); `identity-anchor.test.ts` imports a removed symbol (tests untouched by instruction); `IDENTITY_RING_CARRIER_MIN_RUN_HEIGHT_FRACTION` 0.34 is a preference, re-measure on any new face.
+
 Doing:
 
 - Pipeline fix 2 (implementer) on `reviews/pipeline-fix-review-1.md`: letterless approved text rejects, vision calls get timeouts and the window is derived from them, reservation usage date, dot segments rejected, codes-only `terminal_error_code`, allowlist projection of `verification_result`.
-- D-020 redesign (implementer): outline-level ring anchors from glyph contours and GDEF classes, bar fallback instead of refusal, ring-hole area gate, lift cap removed, the small package-review items, manifest and README brought in line.
+- Adversarial pass 4 on the identity engine (adversarial-reviewer) against `f221b44`; report to `reviews/identity-engine-adversarial-4.md`. P1-5 closes only after two consecutive passes find nothing above minor.
 
 Follow-ups found by subagents, not fixed (outside the task rows):
 
