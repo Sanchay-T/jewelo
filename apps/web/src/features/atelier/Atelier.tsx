@@ -90,7 +90,7 @@ const arabic: Record<string, string> = {
   "Second name": "الاسم الثاني",
   "Your photograph is being made. About two minutes.": "جارٍ تصوير قطعتك. نحو دقيقتين.",
   "The shop will photograph it and send it to you.": "سيصوّرها المتجر ويرسلها إليك.",
-  "Language / script": "اللغة / الكتابة",
+  "Language": "اللغة",
   "Pendant construction": "بنية القلادة",
   "Lettering style": "أسلوب الخط",
   "Connection layout": "تنسيق الربط",
@@ -236,7 +236,6 @@ const arabic: Record<string, string> = {
   // The lettering the page carries outside a sentence: the house line beside
   // the wordmark, the caption over the photograph, the footer. CALEUMS is the
   // brand and stays Latin in both journeys.
-  "THE NAME ATELIER": "مشغل الأسماء",
   "◇ 18K GOLD": "◇ ذهب عيار ١٨",
   "✧ PERSONAL BY DESIGN": "✧ قطعة شخصية بتصميمك",
   "CALEUMS · DUBAI": "CALEUMS · دبي",
@@ -1167,7 +1166,7 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
     );
   }
   const summaries = [
-    { id: "name", label: "Name", value: `${pendantName(d)} · ${t(d.script)}` },
+    { id: "name", label: "Name", value: t(d.script) },
     {
       id: "style",
       label: "Style & Arrangement",
@@ -1235,7 +1234,6 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
         >
           CALEUMS
         </a>
-        <span className={s.headerNote}>{t("THE NAME ATELIER")}</span>
         <div className={s.headerActions}>
           <a
             href={`/${locale === "ar" ? "en" : "ar"}/design/new`}
@@ -1331,7 +1329,7 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                   summaries[0]!.value,
                   <>
                     {choices(
-                      "Language / script",
+                      "Language",
                       ["English", "Arabic"] as const,
                       d.script,
                       (x) => change("script", x),
@@ -1439,16 +1437,6 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                         ? "اكتب الاسم كما تريده تمامًا. يمكنك تصحيح الإملاء هنا."
                         : "Enter the exact spelling you want. You can correct it here at any time."}
                     </p>
-                    {d.name && (
-                      <div className={s.spelling}>
-                        <small>
-                          {locale === "ar"
-                            ? "النص المطلوب · ليس معاينة للقطعة"
-                            : "YOUR SPELLING · TEXT ONLY"}
-                        </small>
-                        <b dir="auto">{pendantName(d)}</b>
-                      </div>
-                    )}
                   </>,
                 )}
                 {section(
