@@ -361,6 +361,9 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
   const bag = useRef<HTMLDialogElement>(null);
   const zoom = useRef<HTMLDialogElement>(null);
   const title = useRef<HTMLHeadingElement>(null);
+  const workspace = useRef<HTMLDivElement>(null);
+  const previewPanel = useRef<HTMLElement>(null);
+  const actionBar = useRef<HTMLDivElement>(null);
   const d = sellableDraft(state.draft);
   useEffect(() => {
     if (d === state.draft) return;
@@ -657,6 +660,46 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
       document.documentElement.style.removeProperty("--atelier-keyboard");
     };
   }, []);
+
+  // The initial document position matters as well as the sticky position:
+  // the complete rail must fit before the shopper has scrolled at all.
+  useEffect(() => {
+    const root = workspace.current;
+    const panel = previewPanel.current;
+    const actions = actionBar.current;
+    if (!root || !panel || !actions) return;
+    const update = () => {
+      const styles = getComputedStyle(panel);
+      const gap = parseFloat(styles.getPropertyValue("--preview-gap"));
+      const reserved = parseFloat(styles.getPropertyValue("--preview-reserved"));
+      const initialTop = root.getBoundingClientRect().top + window.scrollY;
+      const viewportHeight = Math.min(
+        window.innerHeight,
+        window.visualViewport?.height ?? window.innerHeight,
+      );
+      const budget = Math.max(0, Math.min(
+        viewportHeight - reserved,
+        viewportHeight - Math.max(initialTop, gap)
+          - actions.getBoundingClientRect().height - gap,
+      ));
+      panel.style.setProperty("--preview-budget", `${budget}px`);
+      root.style.setProperty(
+        "--preview-scroll-clearance",
+        `${panel.getBoundingClientRect().height + gap * 2}px`,
+      );
+    };
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(root);
+    observer.observe(actions);
+    window.addEventListener("resize", update);
+    window.visualViewport?.addEventListener("resize", update);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", update);
+      window.visualViewport?.removeEventListener("resize", update);
+    };
+  }, [locale, state.stage]);
 
   function change<K extends keyof Draft>(key: K, value: Draft[K]) {
     if (d[key] === value) return;
@@ -1294,27 +1337,28 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
         </div>
       )}
       <main className={s.main}>
-        <div className={s.intro}>
-          <p className={s.eyebrow}>
-            {t(state.stage === "design" ? "Create your piece" : "Your design")}
-          </p>
-          <h1 ref={title} tabIndex={-1}>
-            {t(
-              state.stage === "design"
-                ? "Your name, made precious."
-                : "Your piece, in every light.",
-            )}
-          </h1>
-          <p>
-            {state.stage === "design"
-              ? t("A piece of you. Designed by you.")
-              : locale === "ar"
-                ? "راجع التفاصيل واحفظ قطعتك في الحقيبة."
-                : "Take a closer look. Make sure every detail feels like you."}
-          </p>
-        </div>
-        <div className={s.workspace}>
+        <div ref={workspace} className={s.workspace}>
           <div className={s.controls}>
+            <div className={s.intro}>
+              <p className={s.eyebrow}>
+                {t(state.stage === "design" ? "Create your piece" : "Your design")}
+              </p>
+              <h1 ref={title} tabIndex={-1}>
+                {t(
+                  state.stage === "design"
+                    ? "Your name, made precious."
+                    : "Your piece, in every light.",
+                )}
+              </h1>
+              <p>
+                {state.stage === "design"
+                  ? t("A piece of you. Designed by you.")
+                  : locale === "ar"
+                    ? "راجع التفاصيل واحفظ قطعتك في الحقيبة."
+                    : "Take a closer look. Make sure every detail feels like you."}
+              </p>
+            </div>
+
             {state.stage === "design" ? (
               <>
                 {section(
@@ -1927,6 +1971,43 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                 )}
               </div>
             )}
+            <div
+              className={s.selectionSummary}
+              aria-label={locale === "ar" ? "اختياراتك" : "Your selections"}
+            >
+              <div className={s.selectionName}>
+                <small>
+                  {locale === "ar" ? "اختياراتك" : "YOUR SELECTIONS"}
+                </small>
+                <b dir="auto">{pendantName(d)}</b>
+              </div>
+              <div className={s.specChips}>
+                <span>
+                  {t(d.construction)} · {t(d.lettering)}
+                </span>
+                {d.twoNames && <span>{t(d.layout)}</span>}
+                <span>
+                  <i
+                    style={{
+                      background:
+                        d.metal === "White gold"
+                          ? "#d5d5d3"
+                          : d.metal === "Rose gold"
+                            ? "#c58f75"
+                            : "#b59b5b",
+                    }}
+                  />
+                  {goldLabel(d.metal)}
+                </span>
+                <span>
+                  {t(d.coverage)}
+                  {d.coverage !== "No stones" ? " · " + t(d.gem) : ""}
+                </span>
+                <span>
+                  {d.size} {t("mm")} · {t(d.chain)}
+                </span>
+              </div>
+            </div>
             {debug && (
               <details className={s.demo}>
                 <summary>Local preview controls</summary>
@@ -1951,6 +2032,7 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
             )}
           </div>
           <aside
+            ref={previewPanel}
             className={s.preview}
             aria-label={t("Jewelry preview")}
             aria-roledescription={t("carousel")}
@@ -2336,49 +2418,12 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                   })}
                 </div>
                 {piece.warning && <p role="status">{t(piece.warning)}</p>}
-                <div
-                  className={s.selectionSummary}
-                  aria-label={locale === "ar" ? "اختياراتك" : "Your selections"}
-                >
-                  <div className={s.selectionName}>
-                    <small>
-                      {locale === "ar" ? "اختياراتك" : "YOUR SELECTIONS"}
-                    </small>
-                    <b dir="auto">{pendantName(d)}</b>
-                  </div>
-                  <div className={s.specChips}>
-                    <span>
-                      {t(d.construction)} · {t(d.lettering)}
-                    </span>
-                    {d.twoNames && <span>{t(d.layout)}</span>}
-                    <span>
-                      <i
-                        style={{
-                          background:
-                            d.metal === "White gold"
-                              ? "#d5d5d3"
-                              : d.metal === "Rose gold"
-                                ? "#c58f75"
-                                : "#b59b5b",
-                        }}
-                      />
-                      {goldLabel(d.metal)}
-                    </span>
-                    <span>
-                      {t(d.coverage)}
-                      {d.coverage !== "No stones" ? " · " + t(d.gem) : ""}
-                    </span>
-                    <span>
-                      {d.size} {t("mm")} · {t(d.chain)}
-                    </span>
-                  </div>
-                </div>
               </div>
             </div>
           </aside>
         </div>
       </main>
-      <div className={s.actionBar}>
+      <div ref={actionBar} className={s.actionBar}>
         <div>
           <small>{t("Price unconfirmed")}</small>
           {/* Once the shopper's own run exists, this is their design, whether
