@@ -434,7 +434,9 @@ export const jobsEnvSchema = trustedWebEnvSchema
     FAL_KEY: optionalNonEmpty,
     OPENAI_API_KEY: optionalNonEmpty,
     OPENAI_IMAGE_MODEL: z
-      .literal("gpt-image-2-2026-04-21")
+      // Explicit snapshots keep a deployment reproducible. Sunburst is opt-in
+      // until the same stencil, prompt and verifier pass its paid gate.
+      .enum(["gpt-image-2-2026-04-21", "gpt-image-2.5-sunburst-2026-09-08"])
       .default("gpt-image-2-2026-04-21"),
     OPENAI_VERIFIER_MODEL: nonEmpty.default("gpt-5.6-luna"),
     OPENAI_STILL_CONCURRENCY_LIMIT: z.coerce

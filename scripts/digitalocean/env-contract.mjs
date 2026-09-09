@@ -62,6 +62,12 @@ export const optionalRuntimeConfig = [
   // Defaults to 2 in the config schema. Shipped when present so an environment
   // can lower the number of paid generations in flight without a code change.
   "OPENAI_STILL_CONCURRENCY_LIMIT",
+  // Preserve explicit model snapshots and the worker's policy ceilings across
+  // deploys. Omission retains the validated defaults in @jewelo/config.
+  "OPENAI_IMAGE_MODEL",
+  "OPENAI_VERIFIER_MODEL",
+  "REAL_MODE_MAX_RESERVED_SPEND_CENTS",
+  "REAL_MODE_MAX_ATTEMPT_BUDGET",
   // Defaults to "mock" in the config schema, so it is not required; shipped
   // explicitly so the deployed provider mode is visible in the app spec
   // instead of implied.
@@ -183,6 +189,27 @@ export function validateWebEnv(values) {
   const dataMode = values.get("NEXT_PUBLIC_JEWELO_DATA_MODE");
   if (dataMode && dataMode !== "remote") {
     errors.push("NEXT_PUBLIC_JEWELO_DATA_MODE must select the remote data client");
+  }
+
+  // Match jobsEnvSchema before shipping configuration, without logging values.
+  const imageModel = values.get("OPENAI_IMAGE_MODEL");
+  if (imageModel && !["gpt-image-2-2026-04-21", "gpt-image-2.5-sunburst-2026-09-08"].includes(imageModel)) {
+    errors.push("OPENAI_IMAGE_MODEL must select an approved exact model snapshot");
+  }
+  const verifierModel = values.get("OPENAI_VERIFIER_MODEL");
+  if (verifierModel && !verifierModel.trim()) {
+    errors.push("OPENAI_VERIFIER_MODEL must be non-empty");
+  }
+  for (const [name, maximum] of [
+    ["REAL_MODE_MAX_RESERVED_SPEND_CENTS", 100_000],
+    ["REAL_MODE_MAX_ATTEMPT_BUDGET", 10],
+  ]) {
+    const raw = values.get(name);
+    if (raw === undefined || raw.trim() === "") continue;
+    const value = Number(raw);
+    if (!Number.isInteger(value) || value < 1 || value > maximum) {
+      errors.push(`${name} must be an integer between 1 and ${maximum}`);
+    }
   }
 
   // Fix-3 review minor 9: the header name is parsed at module scope by
