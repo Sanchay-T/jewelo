@@ -438,11 +438,12 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
   // A failed start has no run id, so run existence alone cannot guard samples.
   const ownDesignInProgress = own.attempted && !own.personalized;
   const ownRunOver = own.unavailable;
-  const ownPlaceholderText = t(
-    ownRunOver
+  const ownPlaceholderFor = (camera: View) => t(
+    ownRunOver || (own.personalized && own.statusFor(camera) === "unavailable")
       ? "The shop will photograph it and send it to you."
       : "Your photograph is being made. About two minutes.",
   );
+  const ownPlaceholderText = ownPlaceholderFor(view);
   /**
    * The shop received a request. Counted where the capture actually lands
    * rather than on the button, so a submission that the server refused is not
@@ -2313,6 +2314,7 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                     const ownView = own.imageFor(v);
                     const ownStatus = own.statusFor(v);
                     const placeholder = own.attempted && !ownView;
+                    const placeholderText = ownPlaceholderFor(v);
                     const thumbnail = ownView ?? (own.attempted ? "" : photo.asset.src);
                     const missing = !thumbnail;
                     /* Once the shopper's own photographs exist, the rail is
@@ -2341,7 +2343,7 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                             ? (locale === "ar" ? "عينة. " : "Sample. ")
                             : ""}
                           {placeholder
-                            ? ownPlaceholderText
+                            ? placeholderText
                             : ownStatus
                             ? ownStatusText(ownStatus)
                             : status === "unavailable"
@@ -2390,7 +2392,7 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                         <span>{t(v)}</span>
                         <em aria-hidden="true" data-sample-tile={sampleTile || undefined}>
                           {placeholder
-                            ? ownPlaceholderText
+                            ? placeholderText
                             : sampleTile
                             ? locale === "ar"
                               ? "عينة"

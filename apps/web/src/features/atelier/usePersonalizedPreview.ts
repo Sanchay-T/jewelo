@@ -245,7 +245,11 @@ export function usePersonalizedPreview(input: {
       setPreviousRequestId(stored.previewRequestId);
       setCaptureStatus("captured");
     }
-    setPhase(resumed.phase);
+    // Without a run id there is nothing to watch: the previous start was
+    // interrupted or refused. Keep the capture path open after reload while
+    // preserving its request key so re-confirming can safely replay approval.
+    setPhase(stored.runId ? resumed.phase : "degraded");
+    if (!stored.runId) setReason("unavailable");
   }, [enabled, input.loaded, currentSignature, submission]);
 
   // The specification changed under the run: nothing from the old run may be
@@ -544,7 +548,7 @@ export function usePersonalizedPreview(input: {
     phase,
     attempted: submission?.signature === currentSignature ||
       (enabled && input.loaded && input.stage === "review" && input.confirmed),
-    unavailable: phase === "degraded" || stalled || watchWindowClosed || run?.outcome === "unavailable",
+    unavailable: phase === "degraded" || stalled || watchWindowClosed || !!run?.settled,
     run,
     reason,
     imageFor,
