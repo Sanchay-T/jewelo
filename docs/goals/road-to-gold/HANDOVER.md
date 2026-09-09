@@ -4,6 +4,35 @@ This file is the handover.
 Its content is mirrored into the description of https://github.com/Sanchay-T/jewelo/pull/12 by `/handover` at the end of every session, so the pull request link is the only thing Sanchay needs.
 Every section below is rewritten, not appended, so it always describes the current state.
 
+## The whole story, in plain paragraphs
+
+CALEUMS is a pendant studio for Omran's jewelry shop in the UAE, brokered by Umayr.
+A shopper at the counter types their name in English or Arabic, picks a look and a metal, and is meant to see four photographs of that exact pendant: studio, on skin, close up, dark.
+The name has to be spelled exactly, as one connected piece of gold, and then the request has to reach the shop so someone can make it and call the customer.
+Everything in this repository serves that one sentence, and the seven-phase plan in `docs/ROAD-TO-GOLD.md` is the route from where the overnight agents left it to a shop tablet that can be trusted.
+
+The core idea is that the image model never decides the name.
+A deterministic engine turns the typed name into a black-and-white stencil of the pendant, with the letters bridged into one piece and two ring holes for the chain.
+That stencil is the truth; the prompt only dresses it in gold and light, and a verifier refuses any photograph that drifted from it.
+Phase 1 replaced the old Pango-based engine, which rendered differently on every machine, with a HarfBuzz engine that opens the pinned font bytes directly and gives byte-identical output everywhere.
+That engine is done and deployed, and it measures its own output: every stencil is decoded back and checked for one component, exactly two ring holes, no ink punched by a ring, correct characters.
+What is still moving is how the rings attach.
+Six adversarial review passes have each found a way the rings could be wrong: inside a letter, on a dot, not level, both in one corner, welded onto a long post that reads as an extra letter.
+Fix pass 7 answers the last of those (rings on the shoulder of the outer letter, post length capped and gated) and is half written on its own branch.
+Until two consecutive adversarial passes find nothing above minor, task P1-5 stays open and a few names still refuse honestly rather than ship a wrong pendant.
+
+Phase 2 is the verifier and the vision readers, and phase 3 is the prompt lab: the prompts were proven on Runway against the lab stencils, are versioned in the database, and now carry the construction (classical, framed minimal, diamond rails) so the model draws the frame the stencil drew.
+Phase 4 published the six style anchor images that give every photograph the same house look; they live outside git because the repository is public.
+Phase 5 is the first paid run: everything is wired to OpenAI and fail-closed, the spend caps are proven to block, and the worker now refuses to spend a cent in real mode until the daily ceiling is set to the launch values.
+It is waiting only on Sanchay saying yes to the spend.
+Phase 6 is the shopper's page: honest sample labelling so nobody mistakes a catalogue photo for their piece, Arabic typography and right-to-left layout, the tablet forgetting the previous shopper, a landing redirect, and Umayr's feedback on the button wording.
+Phase 7 is the shop side: an operator queue with contacted, fulfilled, cancelled and note, notification of every new request by e-mail once an address is set, nightly database backups on `home-mini`, error tracking behind empty keys, and the in-process job runner accepted with an eight-to-ten minute recovery of any lost run.
+
+Right now staging runs in mock mode: the whole pipeline completes, the fake photographs are refused by the page, and the shopper is told the shop will send the real one.
+Two review rounds tonight (a security review and a storyline review, then a review of those fixes) closed twenty findings and found one live blocker: a permissions tightening had silently broken the request capture for every shopper on staging for about two hours.
+That is fixed at the database and the staging proof is the first thing the next session does.
+After that the order is: deploy the four pushed commits, finish fix pass 7 and run adversarial pass 7, close the remaining review minors, drive the seven-viewport ladder with screenshots, and then, on Sanchay's yes, the first real photograph.
+
 ## Status
 
 | | |
