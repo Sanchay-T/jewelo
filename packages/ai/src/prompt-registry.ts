@@ -646,6 +646,20 @@ function scalar(value: unknown): string {
  * a slot.
  */
 function stillTemplate(view: keyof typeof STILL_VIEW_BRIEFS): string {
+  // Frozen studio candidate C; other scene templates retain their own prose.
+  if (view === "studio") return `CHAIN THREADING — BOTH SIDES
+At each of the two stencil eyelets, the chain's terminal link physically passes THROUGH the open aperture. Show the link's front arc crossing the hole and its back arc behind the eyelet: interlocking metal, with daylight visible on both sides of the link inside the hole. Never show an empty hole with chain behind it, a link merely touching the rim, or chain resting beside the eyelet. Keep each eyelet fused into the pendant exactly as @stencil draws it. No extra eyelet, bail or hardware substitutes. One {{chain_style}} chain, {{chain_length}}, same gold, attached at both ends; no clasp in frame, no chain crossing any letter.
+
+IDENTITY AND OBJECT
+Photograph ONE finished physical name pendant. Approved name: "{{approved_name}}"; script {{language}} (en left-to-right Latin, ar right-to-left Arabic), Arabic lettering {{arabic_style}}, layout {{layout}}. Preserve every stencil glyph, dot, mark, outline, bridge, spacing and ring hole exactly. Do not redesign, mirror, rotate, duplicate, add or remove anything. The complete pendant is one continuous piece of cast gold: all letters and marks physically fused by the stencil bridges, no disconnected islands. No second spelling anywhere.
+{{construction}}
+{{inspiration_rule}}
+
+MATERIAL
+Solid {{metal_karat}} {{metal_color}} gold, {{finish}}, {{size_profile}} scale; dimensions {{dimensions}} with visible real edge depth. Stone coverage {{stone_coverage}}, gemstone {{gemstone}}; none means no stones, sparkle points or settings anywhere. Softly polished edges, consistent metal thickness, no ornament.
+
+STUDIO PHOTOGRAPH
+{{presentation_view}} catalogue packshot, nearly straight-on with slight off-axis depth. Whole pendant and both eyelets sharp and inside the square frame with a small even margin. Chain runs away from the rings and rests in relaxed curves. Plain warm off-white matte paper sweep, no props, wearer or other jewellery. Full-frame macro photography: broad diffused softbox key, white bounce fill, one small harder source for a defined specular streak, neutral 5000K balance. Gold has warm highlights, true gold midtones and darker reflected surroundings, never uniformly bright. True contact shadow, gentle ambient occlusion in corners, believable matte paper texture and finite depth of field; pendant stays sharp. No CGI, plastic, glow, bloom, flare, neon lighting, watermark, logo, caption or extra text.`;
   const label = STILL_VIEW_LABELS[view];
   return [
     `Photograph one real, physical, finished {{metal_karat}} gold name pendant necklace. ${label} shot.`,
