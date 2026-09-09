@@ -1,0 +1,703 @@
+diff --git a/apps/web/src/features/atelier/Atelier.tsx b/apps/web/src/features/atelier/Atelier.tsx
+index 3a367ca..e860070 100644
+--- a/apps/web/src/features/atelier/Atelier.tsx
++++ b/apps/web/src/features/atelier/Atelier.tsx
+@@ -88,7 +88,8 @@ const arabic: Record<string, string> = {
+     "القلادات العربية تُصاغ باسم واحد؛ ويصنع المتجر قطعة الاسمين يدويًا.",
+   "Name on your pendant": "الاسم على القلادة",
+   "Second name": "الاسم الثاني",
+-  "Language / script": "اللغة / الكتابة",
++  // P6-8. "Language / script" was jargon on the first field a shopper meets.
++  Language: "اللغة",
+   "Pendant construction": "بنية القلادة",
+   "Lettering style": "أسلوب الخط",
+   "Connection layout": "تنسيق الربط",
+@@ -157,16 +158,25 @@ const arabic: Record<string, string> = {
+   "Local draft": "مسودة محلية",
+   "Zoom image": "تكبير الصورة",
+   "Your name": "اسمك",
+-  "Asma example": "مثال أسماء",
+   "Your selected design": "تصميمك المحدد",
+   "Sample coming": "العينة قريبًا",
+-  "Sample for this look": "عينة لهذا الأسلوب",
+   "Not yet photographed": "لم تُصوَّر بعد",
+   "Not yet photographed; the shop will confirm this look by hand":
+     "لم تُصوَّر بعد؛ سيؤكد المتجر هذا الشكل يدويًا",
+-  "Sample look, not your piece": "قطعة نموذجية، ليست قطعتك",
+-  "This is a sample look from the shop, not your piece. Your own piece is photographed after you confirm the spelling of your name.":
+-    "هذه قطعة نموذجية من المتجر، وليست قطعتك. تُصوَّر قطعتك بعد أن تؤكد تهجئة اسمك.",
++  // P6-8. The shop's photograph of Asma carries exactly one label, once, and
++  // says whose piece it is in the words a shopper uses. The three overlapping
++  // markers it used to carry ("Asma example", "Sample look, not your piece",
++  // the collection footer) read to the first outside tester as his own piece,
++  // wrongly named.
++  "Shop sample · Asma": "عينة المتجر · أسماء",
++  "Shop sample": "عينة المتجر",
++  "A shop sample. Yours is photographed after you confirm the spelling.":
++    "عينة من المتجر. تُصوَّر قطعتك بعد أن تؤكد كتابة اسمك.",
++  // P6-8. One preview state: while the shopper's own run is in flight every
++  // tile says the same thing, and this line above them carries the time.
++  "Your photograph is being made. About two minutes.":
++    "جارٍ تصوير قطعتك. حوالي دقيقتين.",
++  "The shop will send this one": "سيرسل المتجر هذه الصورة",
+   Size: "المقاس",
+   Delicate: "رقيق",
+   Statement: "بارز",
+@@ -233,11 +243,10 @@ const arabic: Record<string, string> = {
+   // the choice tile, which is how the Arabic journey kept two spellings of the
+   // same word; it is one key now.
+   Unavailable: "جار التحضير",
+-  // The lettering the page carries outside a sentence: the house line beside
+-  // the wordmark, the caption over the photograph, the footer. CALEUMS is the
+-  // brand and stays Latin in both journeys.
+-  "THE NAME ATELIER": "مشغل الأسماء",
+-  "CALEUMS — THE NAME COLLECTION": "CALEUMS — مجموعة الأسماء",
++  // The lettering the page carries outside a sentence: the footer. CALEUMS is
++  // the brand and stays Latin in both journeys. The header line and the
++  // caption over the photograph are gone (P6-8): "atelier" is not a word a
++  // shop assistant says, and the caption was a third label on one picture.
+   "◇ 18K GOLD": "◇ ذهب عيار ١٨",
+   "✧ PERSONAL BY DESIGN": "✧ قطعة شخصية بتصميمك",
+   "CALEUMS · DUBAI": "CALEUMS · دبي",
+@@ -394,17 +403,29 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
+           working: "جارٍ التصوير",
+           checking: "جارٍ التحقق من الكتابة",
+           ready: "جاهزة",
+-          unavailable: "سنصوّرها في المتجر ونرسلها إليك",
++          unavailable: "سيرسل المتجر هذه الصورة",
+         }[status]
+       : {
+           waiting: "Waiting to start",
+           working: "Photographing",
+           checking: "Checking the spelling",
+           ready: "Ready",
+-          unavailable: "We will photograph it in the shop and send it",
++          unavailable: "The shop will send this one",
+         }[status];
+   const ownPhoto = own.imageFor(view);
+   const showingOwnPhoto = !!ownPhoto && !showSample;
++  /**
++   * P6-8. The moment the shopper's own run exists, the preview surface belongs
++   * to their piece: a tile carries their photograph, or the same calm frame
++   * that says it is being made, or the sentence that says the shop will send
++   * it. The shop's Asma sample is never one of the four again unless the
++   * shopper asks for it by pressing the switch, because two of four tiles
++   * showing somebody else's name is how the first outside tester read the page
++   * as "I put my name, it gave me Asma".
++   */
++  const ownRunExists = !!own.run;
++  /** At least one view can still change on its own. */
++  const ownRunInFlight = !!own.run && !own.run.settled;
+   /**
+    * The shopper's own run exists but no photograph of it has arrived yet. The
+    * image on screen is still the labelled illustrated sample - the chip over it
+@@ -449,12 +470,9 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
+     ? views.filter((v) => shownViews.includes(v) || !!own.statusFor(v))
+     : shownViews;
+   const shown = piece.family.anchor.asset?.draft ?? d;
+-  /* The illustrated photograph shows the design (Tier 1). Gold, stones, gem,
+-     width and chain (Tier 2) are carried into the customer's own preview, so
+-     the panel says once, quietly, what this photograph is made of. */
+-  const materialNote = locale === "ar"
+-    ? `المعروض: ${t(shown.metal)} عيار ١٨ ${shown.coverage === "No stones" ? "بدون أحجار" : `مع ${t(shown.coverage)}`}. لون ذهبك وأحجارك تظهر في معاينتك الشخصية.`
+-    : `Shown in 18K ${shown.metal.toLowerCase()} with ${shown.coverage === "No stones" ? "no stones" : shown.coverage.toLowerCase()}. Your gold and stones appear in your personalized preview.`;
++  /* P6-8. The gold-and-stones sentence under the card is gone: it was the
++     second of two grey paragraphs a shopper read as instructions, and the
++     chips in "Your selections" already carry the metal and the stones. */
+   /** What this photograph is, when it is not a photograph of this exact design. */
+   const sampleNote = !piece.sampleComing
+     ? ""
+@@ -465,9 +483,7 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
+       : locale === "ar"
+         ? `عينة ${t(shown.construction)} ${shown.twoNames === d.twoNames ? `بخط ${t(shown.lettering)}` : shown.twoNames ? "باسمين" : "باسم واحد"}. صورة هذا التصميم قيد التحضير.`
+         : `Sample of this ${shown.construction.toLowerCase()} look, ${shown.twoNames === d.twoNames ? `shown in ${shown.lettering} lettering` : shown.twoNames ? "shown with two names" : "shown with one name"}. A photograph of this design is coming.`;
+-  const exampleLabel = t(
+-    noSample ? "Sample coming" : piece.sampleComing ? "Sample for this look" : "Asma example",
+-  );
++  const exampleLabel = t(noSample ? "Sample coming" : "Shop sample");
+   /** The exemplar names in the script the photograph actually shows. */
+   const exampleNames = (join: string) =>
+     shown.script === "Arabic"
+@@ -478,7 +494,11 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
+     (!run || slot?.status === "ready") &&
+     !imageFailed &&
+     !!source &&
+-    piece.status !== "pending";
++    piece.status !== "pending" &&
++    // P6-8. Once their own run exists the shopper sees their piece or the
++    // frame that says it is being made; the sample returns only when they
++    // press the switch for it.
++    (!ownRunExists || showSample);
+   const currentReady = !noSample && piece.key === assemblyKey(d) && !!source && !imageFailed;
+   const ownKept = own.personalized || own.captureStatus === "captured";
+   const eligible =
+@@ -1255,7 +1275,6 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
+         >
+           CALEUMS
+         </a>
+-        <span className={s.headerNote}>{t("THE NAME ATELIER")}</span>
+         <div className={s.headerActions}>
+           <a
+             href={`/${locale === "ar" ? "en" : "ar"}/design/new`}
+@@ -1351,7 +1370,7 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
+                   summaries[0]!.value,
+                   <>
+                     {choices(
+-                      "Language / script",
++                      "Language",
+                       ["English", "Arabic"] as const,
+                       d.script,
+                       (x) => change("script", x),
+@@ -1459,16 +1478,10 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
+                         ? "اكتب الاسم كما تريده تمامًا. يمكنك تصحيح الإملاء هنا."
+                         : "Enter the exact spelling you want. You can correct it here at any time."}
+                     </p>
+-                    {d.name && (
+-                      <div className={s.spelling}>
+-                        <small>
+-                          {locale === "ar"
+-                            ? "النص المطلوب · ليس معاينة للقطعة"
+-                            : "YOUR SPELLING · TEXT ONLY"}
+-                        </small>
+-                        <b dir="auto">{pendantName(d)}</b>
+-                      </div>
+-                    )}
++                    {/* P6-8. The echo box that repeated the name straight
++                        back under the field is gone: the input is the
++                        spelling, and reading the same name three times on one
++                        screen read as a glitch to the first outside tester. */}
+                   </>,
+                 )}
+                 {section(
+@@ -2019,9 +2032,14 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
+                     stepView((dx < 0 ? 1 : -1) * (locale === "ar" ? -1 : 1));
+                 }}
+               >
+-                <span className={s.photoLabel}>
+-                  {showingOwnPhoto ? ownPhotoLabel : exampleLabel}
+-                </span>
++                {/* P6-8. Exactly one label, once, top-left, and nothing else
++                    on the card. It names whose piece the picture is in the
++                    words a shopper uses. */}
++                {(showingOwnPhoto || sampleVisible) && (
++                  <span className={s.photoLabel}>
++                    {showingOwnPhoto ? ownPhotoLabel : t("Shop sample · Asma")}
++                  </span>
++                )}
+                 {showingOwnPhoto ? (
+                   <img
+                     key={heroSource}
+@@ -2060,11 +2078,39 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
+                     }
+                   />
+                 ) : (
+-                  <div className={s.previewState} role="status" data-preview-missing={noSample}>
+-                    {!noSample && piece.status === "pending" && piece.previousImage && (
++                  <div
++                    className={s.previewState}
++                    role="status"
++                    data-preview-missing={noSample}
++                    data-own-preview={
++                      ownRunExists
++                        ? own.statusFor(view) === "unavailable"
++                          ? "unavailable"
++                          : "preparing"
++                        : undefined
++                    }
++                  >
++                    {!ownRunExists && !noSample && piece.status === "pending" && piece.previousImage && (
+                       <img className={s.previousPhoto} src={piece.previousImage.src} alt={piece.previousImage.alt} />
+                     )}
+-                    {noSample ? (
++                    {/* P6-8. One state for the shopper's own run: no glyph, no
++                        red, no sample underneath it. The sentence and the time
++                        are said once, on the line above the four tiles. */}
++                    {ownRunExists ? (
++                      own.statusFor(view) === "unavailable" ? (
++                        <>
++                          <Diamond size={36} />
++                          <h2>{t("The shop will send this one")}</h2>
++                        </>
++                      ) : (
++                        <>
++                          <span className={s.spinner} />
++                          <span className={s.srOnly}>
++                            {t("Your photograph is being made. About two minutes.")}
++                          </span>
++                        </>
++                      )
++                    ) : noSample ? (
+                       <>
+                         <Diamond size={36} />
+                         <h2>{locale === "ar" ? "عينة هذا الأسلوب قيد التحضير" : "The sample photo for this look is coming"}</h2>
+@@ -2125,35 +2171,14 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
+                       <MagnifyingGlassPlus size={21} />
+                     </button>
+                   )}
+-                <div className={s.photoCaption}>
+-                  <span>{t("CALEUMS — THE NAME COLLECTION")}</span>
+-                  <span dir="auto">
+-                    {showingOwnPhoto
+-                      ? `${pendantName(d)} · ${ownPhotoLabel}`
+-                      : ownDesignInProgress
+-                        ? `${pendantName(d)} · ${
+-                            ownRunOver
+-                              ? locale === "ar"
+-                                ? "سنرسل الصورة"
+-                                : "we will send the photograph"
+-                              : locale === "ar"
+-                                ? "قيد التحضير"
+-                                : "Being prepared"
+-                          }`
+-                        : `${exampleNames(shown.script === "Arabic" ? " و" : " & ")} · ${t("Asma example")}`}
+-                  </span>
+-                  {/* Two shoppers in one day read the shop's example photograph
+-                      as their own piece (field test, 8 September). The caption
+-                      now says whose piece this is, in the same breath as the
+-                      name it shows. */}
+-                  {!showingOwnPhoto && sampleVisible && (
+-                    <span dir="auto" data-sample-ownership="caption">
+-                      {t("Sample look, not your piece")}
+-                    </span>
+-                  )}
+-                </div>
++                {/* P6-8. The caption strip is gone. It carried the
++                    collection line, "Asma · Asma example" and a second
++                    ownership badge over one picture that already has its
++                    label; three markers at once is what made the sample read
++                    as the shopper's own piece. */}
+               </div>
+               <div className={s.previewDock}>
++                {/* P6-8. One line under the card, not two paragraphs. */}
+                 {!showingOwnPhoto && sampleVisible && (
+                   <p
+                     className={s.previewNote}
+@@ -2161,7 +2186,7 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
+                     data-sample-ownership="panel"
+                   >
+                     {t(
+-                      "This is a sample look from the shop, not your piece. Your own piece is photographed after you confirm the spelling of your name.",
++                      "A shop sample. Yours is photographed after you confirm the spelling.",
+                     )}
+                   </p>
+                 )}
+@@ -2170,11 +2195,6 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
+                     {sampleNote}
+                   </p>
+                 )}
+-                {!noSample && (
+-                  <p className={s.previewNote} data-sample-note="material">
+-                    {materialNote}
+-                  </p>
+-                )}
+                 <div className={s.dockHeading}>
+                   <div>
+                     <small>
+@@ -2233,6 +2253,18 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
+                 >
+                   <span />
+                 </div>
++                {/* P6-8. The one sentence for the whole run: said above the
++                    four tiles, with the time, so no tile has to invent its own
++                    story about what is happening. */}
++                {ownRunInFlight && (
++                  <p
++                    className={s.previewNote}
++                    data-own-progress="in-flight"
++                    role="status"
++                  >
++                    {t("Your photograph is being made. About two minutes.")}
++                  </p>
++                )}
+                 <div
+                   ref={viewRail}
+                   className={s.views}
+@@ -2261,20 +2293,34 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
+                     // The customer's own photograph of this camera, when it exists.
+                     const ownView = own.imageFor(v);
+                     const ownStatus = own.statusFor(v);
+-                    const thumbnail = ownView ?? photo.asset.src;
++                    /* P6-8. Once the run exists the rail is the shopper's four
++                       views and nothing else: their photograph, the same calm
++                       preparing frame, or the sentence that says the shop
++                       sends this one. The catalogue sample is never a tile
++                       here again - two tiles reading somebody else's name
++                       beside two grey boxes with a "!" is exactly what the
++                       first outside tester read as a broken page. */
++                    const ownUnavailable =
++                      ownRunExists &&
++                      !ownView &&
++                      (!ownStatus || ownStatus === "unavailable");
++                    const ownPreparing = ownRunExists && !ownView && !ownUnavailable;
++                    const thumbnail = ownRunExists ? ownView : photo.asset.src;
+                     const missing = !thumbnail;
+-                    /* Once the shopper's own photographs exist, the rail is
+-                       read as "my four views". Any tile still showing the
+-                       illustrated catalogue must say so, in words. */
+-                    const sampleTile = own.personalized && !ownView && !missing;
+                     return (
+                       <button
+                         key={v}
+                         aria-label={t(v)}
+                         data-preview-status={
+-                          imageErrors.includes(photo.asset.src)
+-                            ? "failed"
+-                            : (status ?? "ready")
++                          ownRunExists
++                            ? ownView
++                              ? "ready"
++                              : ownUnavailable
++                                ? "unavailable"
++                                : "pending"
++                            : imageErrors.includes(photo.asset.src)
++                              ? "failed"
++                              : (status ?? "ready")
+                         }
+                         data-personalized-status={ownStatus}
+                         aria-describedby={`view-status-${index}`}
+@@ -2282,12 +2328,6 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
+                         onClick={() => chooseView(v)}
+                       >
+                         <span id={`view-status-${index}`} className={s.srOnly}>
+-                          {/* The button's own aria-label is the view name, so
+-                              the sample marker has to travel with the status
+-                              this describes it by. */}
+-                          {sampleTile
+-                            ? (locale === "ar" ? "عينة. " : "Sample. ")
+-                            : ""}
+                           {ownStatus
+                             ? ownStatusText(ownStatus)
+                             : status === "unavailable"
+@@ -2312,56 +2352,64 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
+                         {!missing ? (
+                           <img
+                             src={thumbnail}
+-                            alt={
+-                              sampleTile
+-                                ? locale === "ar"
+-                                  ? `صورة عينة لزاوية ${t(v)}، وليست قطعتك`
+-                                  : `Sample photograph of the ${v} view, not your piece`
+-                                : ""
+-                            }
+-                            aria-hidden={sampleTile ? undefined : "true"}
++                            alt=""
++                            aria-hidden="true"
+                             data-caleums-photo={ownView ? "personalized" : "sample"}
+                           />
+                         ) : (
+-                          <div className={s.missingAngle}>—</div>
++                          <div
++                            className={s.missingAngle}
++                            data-preparing={ownPreparing || undefined}
++                          >
++                            —
++                          </div>
+                         )}
+                         <span>{t(v)}</span>
+-                        <em aria-hidden="true" data-sample-tile={sampleTile || undefined}>
+-                          {sampleTile
+-                            ? locale === "ar"
+-                              ? "عينة"
+-                              : "Sample"
+-                            : status === "unavailable" && !ownStatus
++                        <em aria-hidden="true">
++                          {ownUnavailable
++                            ? t("The shop will send this one")
++                            : ownPreparing
+                               ? locale === "ar"
+-                                ? "غير مصوَّرة"
+-                                : "Not photographed"
+-                              : missing
+-                            ? locale === "ar"
+-                              ? "جار التحضير"
+-                              : "Preparing"
+-                            : locale === "ar"
+-                              ? ["التصميم", "المقاس", "التفاصيل", "الإضاءة"][
+-                                  index
+-                                ]
+-                              : [
+-                                  "The design",
+-                                  "On you",
+-                                  "The details",
+-                                  "After hours",
+-                                ][index]}
++                                ? "قيد التحضير"
++                                : "Preparing"
++                              : !ownRunExists && status === "unavailable"
++                                ? locale === "ar"
++                                  ? "غير مصوَّرة"
++                                  : "Not photographed"
++                                : !ownRunExists && missing
++                                  ? locale === "ar"
++                                    ? "قيد التحضير"
++                                    : "Preparing"
++                                  : locale === "ar"
++                                    ? ["التصميم", "المقاس", "التفاصيل", "الإضاءة"][
++                                        index
++                                      ]
++                                    : [
++                                        "The design",
++                                        "On you",
++                                        "The details",
++                                        "After hours",
++                                      ][index]}
+                         </em>
+-                        {status !== "unavailable" &&
+-                          (v === view ||
+-                            status === "pending" ||
+-                            status === "failed") && (
+-                            <small aria-hidden="true">
+-                              {status === "pending"
++                        {/* No "!" and no red while a run is in flight: a tile
++                            either has the photograph or it is waiting, and the
++                            line above the rail already says so. */}
++                        {(ownRunExists
++                          ? !!ownView && v === view
++                          : status !== "unavailable" &&
++                            (v === view ||
++                              status === "pending" ||
++                              status === "failed")) && (
++                          <small aria-hidden="true">
++                            {ownRunExists
++                              ? "✓"
++                              : status === "pending"
+                                 ? "◌"
+                                 : status === "failed"
+                                   ? "!"
+                                   : "✓"}
+-                            </small>
+-                          )}
++                          </small>
++                        )}
+                       </button>
+                     );
+                   })}
+@@ -2388,7 +2436,7 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
+                       {!!source && (
+                         <img src={source} alt="" aria-hidden="true" />
+                       )}
+-                      {t("Asma example")}
++                      {t("Shop sample")}
+                     </button>
+                   </div>
+                 )}
+@@ -2415,11 +2463,13 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
+                   className={s.selectionSummary}
+                   aria-label={locale === "ar" ? "اختياراتك" : "Your selections"}
+                 >
++                  {/* P6-8. The name is on the screen already - in the field
++                      on the design step, in the summary on the review step -
++                      so the selections panel carries the choices only. */}
+                   <div className={s.selectionName}>
+                     <small>
+                       {locale === "ar" ? "اختياراتك" : "YOUR SELECTIONS"}
+                     </small>
+-                    <b dir="auto">{pendantName(d)}</b>
+                   </div>
+                   <div className={s.specChips}>
+                     <span>
+@@ -2671,7 +2721,7 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
+       >
+         <div className={s.dialogHeader}>
+           <span dir="auto">
+-            {t(view)} · {showingOwnPhoto ? ownPhotoLabel : t("Asma example")}
++            {t(view)} · {showingOwnPhoto ? ownPhotoLabel : t("Shop sample")}
+           </span>
+           <button aria-label={t("Close")} onClick={() => zoom.current?.close()}>
+             <X size={22} />
+diff --git a/apps/web/src/features/atelier/atelier.module.css b/apps/web/src/features/atelier/atelier.module.css
+index 23bc3f0..bf6e8e7 100644
+--- a/apps/web/src/features/atelier/atelier.module.css
++++ b/apps/web/src/features/atelier/atelier.module.css
+@@ -62,11 +62,6 @@
+   text-decoration: none;
+   letter-spacing: 2px;
+ }
+-.headerNote {
+-  font-size: 10px;
+-  letter-spacing: 3px;
+-  color: var(--muted);
+-}
+ .headerActions {
+   display: flex;
+   align-items: center;
+@@ -309,23 +304,6 @@
+   font-size: 12px;
+   margin-bottom: 16px !important;
+ }
+-.spelling {
+-  background: #f6f2eb;
+-  border-inline-start: 2px solid var(--gold);
+-  padding: 14px 18px;
+-  display: flex;
+-  flex-direction: column;
+-  gap: 4px;
+-  overflow-wrap: anywhere;
+-}
+-.spelling small {
+-  font-size: 8px;
+-  letter-spacing: 1.2px;
+-  color: var(--muted);
+-}
+-.spelling b {
+-  font: 26px var(--serif);
+-}
+ .construction {
+   font: 30px var(--serif);
+   color: var(--gold);
+@@ -438,18 +416,6 @@
+   border-radius: 2px;
+   max-width: calc(100% - 36px);
+ }
+-.photoCaption {
+-  position: absolute;
+-  inset: auto 0 0;
+-  background: linear-gradient(transparent, #f7f3ecee);
+-  padding: 50px 22px 18px;
+-  display: flex;
+-  justify-content: space-between;
+-  gap: 10px;
+-  font-size: 8px;
+-  letter-spacing: 1px;
+-  pointer-events: none;
+-}
+ .zoomButton {
+   position: absolute;
+   inset-inline-end: 16px;
+@@ -974,9 +940,6 @@
+   .visualChoices {
+     grid-template-columns: repeat(2, minmax(0, 1fr));
+   }
+-  .photoCaption {
+-    flex-direction: column;
+-  }
+   .previewSummary {
+     gap: 10px;
+     flex-direction: column;
+@@ -999,9 +962,6 @@
+   .wordmark {
+     font-size: 25px;
+   }
+-  .headerNote {
+-    display: none;
+-  }
+   .headerActions {
+     gap: 14px;
+   }
+@@ -1065,11 +1025,6 @@
+     font-size: 8px;
+     max-width: calc(100% - 24px);
+   }
+-  .photoCaption {
+-    padding: 40px 14px 14px;
+-    letter-spacing: 0.5px;
+-    font-size: 7px;
+-  }
+   .zoomButton {
+     inset-block-end: 42px;
+     inset-inline-end: 12px;
+@@ -1204,9 +1159,6 @@
+   .choice {
+     padding-inline: 5px;
+   }
+-  .photoCaption > span:first-child {
+-    display: none;
+-  }
+   .previewSummary {
+     gap: 8px;
+   }
+@@ -1440,6 +1392,18 @@
+ .previewNote[data-sample-note="ownership"] {
+   color: #3c3a33;
+ }
++/* P6-8. The single sentence for a run in flight, above the four tiles. Darker
++   than the dock notes because it is the answer to "what is happening now". */
++.previewNote[data-own-progress] {
++  color: #3c3a33;
++  margin: 4px 0 2px !important;
++}
++/* A tile waiting for its photograph is a calm empty frame: no glyph, no red,
++   no borrowed sample underneath it. */
++.missingAngle[data-preparing] {
++  background: #ece5d8;
++  color: #b3a894;
++}
+ .sampleDetails {
+   border-block-end: 1px solid #d8d0c0;
+   padding: 0 0 10px;
+@@ -1475,15 +1439,6 @@
+   letter-spacing: 1.3px;
+   color: #696356;
+ }
+-.selectionName b {
+-  display: block;
+-  margin-top: 5px;
+-  font-family: var(--serif);
+-  font-weight: 400;
+-  font-size: 24px;
+-  line-height: 1.15;
+-  overflow-wrap: anywhere;
+-}
+ .specChips {
+   flex: 1;
+   display: flex;
+@@ -1564,10 +1519,6 @@
+     gap: 8px;
+     margin-bottom: 8px;
+   }
+-  .selectionName b {
+-    font-size: 22px;
+-    margin: 0;
+-  }
+ }
+ @media (max-width: 767px) {
+   .previewDock {
+@@ -1599,10 +1550,6 @@
+     gap: 8px;
+     margin-bottom: 9px;
+   }
+-  .selectionName b {
+-    font-size: 22px;
+-    margin: 0;
+-  }
+ }
+ @media (min-width: 768px) and (max-height: 700px) {
+   .previewSticky {
+@@ -1892,9 +1839,6 @@
+   .selectionSummary {
+     padding-block-start: 8px;
+   }
+-  .selectionName b {
+-    font-size: 20px;
+-  }
+   .previewDock .specChips > span {
+     padding: 3px 6px;
+   }
+@@ -1941,12 +1885,8 @@
+ :global([dir="rtl"]) .app textarea {
+   font-family: inherit;
+ }
+-/* Three micro-labels are tracked out for Latin small caps. Arabic is cursive:
+-   the same tracking pulls the joined letters apart. Only the three that this
+-   change turned from Latin into Arabic are named here; the Latin journey keeps
+-   its spacing exactly as it was. */
+-:global([dir="rtl"]) .headerNote,
+-:global([dir="rtl"]) .photoCaption,
++/* The footer is tracked out for Latin small caps. Arabic is cursive: the same
++   tracking pulls the joined letters apart. */
+ :global([dir="rtl"]) .footer {
+   letter-spacing: normal;
+ }
+diff --git a/docs/TASKS.md b/docs/TASKS.md
+index d1dc752..078bda1 100644
+--- a/docs/TASKS.md
++++ b/docs/TASKS.md
+@@ -57,7 +57,7 @@ Today `identity-anchor.ts:140-142` and `caleums-arabic-v3.ts:57-60,204-207` retu
+ | P1-2b | **done (session 2, `8838de5`, staging deployment `6a536690`)**: `/api/operator/diagnostics/identity` returns harfbuzz 14.4.0, `wasmLoaded: true`, three faces with distinct measured shas equal to the laptop's; the probe caught and fixed an interpolated `import.meta.url` font path that made the bundle hand back Amiri for every face. Was: deploy probe: prove the WASM and font assets survive the buildpack | new operator diagnostics route in `apps/web` under `/api/operator/` | An operator-authenticated diagnostics route that shapes one name per script and returns harfbuzz version, wasm path, resolved font path, measured font sha and the glyph count | deploy the branch to staging with `scripts/digitalocean/deploy.sh` and call the route; paste the JSON. Proves WASM and font assets survive the DigitalOcean buildpack before P1-3 builds on them | S |
+ | P1-3 | **done (session 2)**: path-only 1024x1024 SVG from the HarfBuzz outlines, one `IdentityRasterizer` and `solveIdentity` for both scripts, Kufi English on `cairo.ttf`, `<text>` and fontconfig gone, tests excluded from the jobs tsconfig; 16 renders identical under `measureMask` and `verify_stencil.py`, `hb-shape` drift 0%. Was: rasterise outlines only | replaces `identityAnchorSvg` (`identity-anchor.ts:38-80`) and `typeset` (`:147-182`); `apps/jobs/tsconfig.json` | Path-only SVG, canvas 1024x1024, black ink on white, no alpha channel, both scripts, matching `make_stencil.py`; the ruler must report `rule === 'luminance'`. Fit-by-probe sizing as `lab/make_stencil.py:207-219`, reserved ring band; no `<text>` element anywhere. Rename the rasterizer port `ArabicIdentityRasterizer` to a script-neutral `IdentityRasterizer` if one solver serves both scripts. In the same commit exclude `src/**/*.test.ts` from `apps/jobs/tsconfig.json` (and any other package whose tsconfig would typecheck a test importing a removed export); test files stay unedited and unrun | `corepack pnpm build` passes with no test file edited; render the four names in both scripts and open them in the browser; per-glyph widths match P1-2; a script renders all 16 lab names in both scripts and prints `measureMask` next to `verify_stencil.py` for the same PNG bytes; a byte-difference table Kufi versus Naskh versus Playfair per name with the font sha the engine actually loaded | M |
+ | P1-4 | **done (session 2)**: `bridgeAll` and `drawBar` ported (exact distance transform, capsule bars), `fuse()` deleted, ink preservation asserted pre-recentre (`identity_bridge_moved_ink`), Pillow-equivalent LANCZOS recentre with offset and scale reported; 216/216 cells (18 names x 2 scripts x 6 styles) single piece, 0 moved pixels, Python agrees. Was: bridge, never move | replaces `fuse()` (`caleums-arabic-v3.ts:216-277`) | Port `bridge_all` and `draw_bar` (`make_stencil.py:90-140`): thicken 2, 24 px capsule bridge to the nearest island. The ink-preservation invariant is stated in pre-recentre coordinates, and the applied recentre offset and scale are reported alongside it. Today `fuse()` translates the smallest island, so a hamza or dot can move while "exact" is reported | every pre-bridge ink pixel is still ink at the same pre-recentre coordinate, with the offset and scale printed; P1-1 reports one component for the 17 ZIP names plus Asma, Noor, Layla, Muhammad in both scripts and all live styles | M |
+-| P1-5 | **reopened (session 2, adversarial review 3; D-020 redesign: outline-level anchors with a no-refusal fallback, after fix pass 4 lands)**: `addRings` ported (11x11 erosion, outer-corner anchors, weld fillet, lift until the hole is clear of name ink); 232/232 rings-on stencils have exactly two ring holes with zero punched name pixels and hole sizes within 1.7% of the lab's; `IDENTITY_RINGLESS_CONSTRUCTIONS` validated in `packages/config`, rings-off proven by script (0 ring holes, one piece). Was: rings: attached, name-aware, ring-free opt-in | delete `addJumpRings` (`caleums-arabic-v3.ts:339-368`) and the fixed circles (`identity-anchor.ts:64-65`); `packages/config/src/index.ts` | Port `add_rings` (`make_stencil.py:143-178`): 11x11 erosion so a dot never anchors a ring, outer-corner centre, weld fillet; `rings` derived from `specification.construction`. Rings default on. Ring-free is opt-in through a validated flag in `packages/config`, `IDENTITY_RINGLESS_CONSTRUCTIONS`, a comma list of constructions, default empty, and is proven by script, not the UI. Today the rings sit at x=255 and x=945 while the glyph run spans about 180 to 1020, so they always land inside letters | rings on (the default): exactly two round ring holes, each above its anchor and clear of all name ink, and no glyph ink inside a hole (Asma regression); with `IDENTITY_RINGLESS_CONSTRUCTIONS` set in a script run: zero holes, one component. Decision (adversarial review 2, F-3): "above its anchor" and not "above the glyph bbox" is the standard, because the lab's own `make_stencil.py` seats rings at corner anchors of the eroded body, which for a tall Arabic letter is inside the name band, and the prompts were proven on those stencils | M |
++| P1-5 | **reopened (session 2, adversarial review 3; D-020 redesign: outline-level anchors, welded at the shoulder of the letter, and an honest refusal when no pair of seats meets the gates)**: `addRings` ported (11x11 erosion, outer-corner anchors, weld fillet, lift until the hole is clear of name ink); 232/232 rings-on stencils have exactly two ring holes with zero punched name pixels and hole sizes within 1.7% of the lab's; `IDENTITY_RINGLESS_CONSTRUCTIONS` validated in `packages/config`, rings-off proven by script (0 ring holes, one piece). Was: rings: attached, name-aware, ring-free opt-in | delete `addJumpRings` (`caleums-arabic-v3.ts:339-368`) and the fixed circles (`identity-anchor.ts:64-65`); `packages/config/src/index.ts` | Port `add_rings` (`make_stencil.py:143-178`): 11x11 erosion so a dot never anchors a ring, outer-corner centre, weld fillet; `rings` derived from `specification.construction`. Rings default on. Ring-free is opt-in through a validated flag in `packages/config`, `IDENTITY_RINGLESS_CONSTRUCTIONS`, a comma list of constructions, default empty, and is proven by script, not the UI. Today the rings sit at x=255 and x=945 while the glyph run spans about 180 to 1020, so they always land inside letters | rings on (the default): exactly two round ring holes, each above its anchor and clear of all name ink, and no glyph ink inside a hole (Asma regression); with `IDENTITY_RINGLESS_CONSTRUCTIONS` set in a script run: zero holes, one component. Decision (adversarial review 2, F-3): "above its anchor" and not "above the glyph bbox" is the standard, because the lab's own `make_stencil.py` seats rings at corner anchors of the eroded body, which for a tall Arabic letter is inside the name band, and the prompts were proven on those stencils | M |
+ | P1-5a | **done (session 2)**: the three surfaces are unchanged and quoted here; `IDENTITY_RINGLESS_CONSTRUCTIONS` is absent from the staging app spec (P0-6 env-name readback); P3-7 carries the prompt rewrite. Was: ring-free stays off until the prompts stop promising rings | `packages/ai/src/prompt-registry.ts:121,373,376`, the seeded `verification.image` prompt in `supabase/migrations/20260827080000_*:113`, `docs/CALEUMS-FINAL-E2E-CONTRACT.md` | Prompt and verification surfaces still say exactly two rings, so a ring-free stencil would be generated and verified against a two-ring instruction. P3-7 rewrites the prompt sentences and republishes `verification.image`; until then the ring-free flag stays empty on staging | the three surfaces are quoted in the row and left unchanged, `IDENTITY_RINGLESS_CONSTRUCTIONS` is empty in the staging env, and the dependency is recorded on P3-7 | S |
+ | P1-6 | **done (session 2)**: report widened to numbers and booleans plus `measuredBy`, `rule`, `bbox`, `holes`, `ringHoles`, construction; `passed` and every measured field come from `decodePng` + `measureMask` on the encoded PNG; `identity_ring_gate_failed:holes=1,expected=2` and `identity_component_gate_failed:components=2` proven on tampered decodes; `PIPELINE_RELEASE_ID` config (default `caleums-final-media-v2`); migration `20260908120000_pipeline_release_v2.sql` (not yet pushed, P1-7). Was: report equals measurement | `IdentityValidationReport` (`caleums-arabic-v3.ts:46-61`), `identity-anchor.ts:125-142`, `presentation.ts:677,717-720`, `packages/config/src/index.ts`, new `supabase/migrations/` file | Widen the report types (`jumpRingCount`, `componentsFinal`, `exactCharactersPreserved`, `passed` in `caleums-arabic-v3.ts:57-60`) to `number` / `boolean`, plus `measuredBy`, `bbox`, `holes`, `fontSha256Measured`. Extend the rasterizer port (`ArabicIdentityRasterizer`, renamed to the script-neutral `IdentityRasterizer` in P1-3) with `decodePng(bytes) => MaskGeometryInput`; `apps/jobs` injects `decodeMask`; the solver decodes and measures its own encoded PNG bytes and `passed` is computed from that report only; throw `identity_*_gate_failed` otherwise (the DB check at `supabase/migrations/20260827080000_…:38` already rejects a false `passed`); one solver for both scripts; store the measured font sha instead of `existing-latin`. Additive migration inserting a `pipeline_releases` row whose `identity_engine_release` is `caleums-identity-v4`, and `presentation.ts:677` reads the pipeline release id from validated config instead of a literal | the report deep-equals an independent run of P1-1; a PNG with a ring hole filled in fails; the run's `generation_tasks` rows point at the new pipeline release id | S |
+ | P1-7 | **done (session 2, `e5e598b`, staging deployment `ebdca539`)**: v2 migration pushed (v2 active, v1 legacy, readback pasted); 16 production stencils regenerated and identical under `measureMask` and `verify_stencil.py`; two staging mock runs (Rania, ريم) complete on `caleums-final-media-v2` with `engine_release caleums-identity-v4`, stencils pulled from the bucket deep-equal their stored `validation_report`; an injected Devanagari name blocked with `identity_shaping_gate_failed:notdef=4,uncovered=4` in `terminal_error_code`, dependents never spent; next.config externalises harfbuzzjs and traces the fonts and wasm, probe unchanged. Was: second oracle and the real runtime | `lab/stencils/production/`, `lab/verify_stencil.py`, `apps/web/next.config.ts`, `identity-anchor.ts:232-242`, staging `identity-anchors` bucket | Regenerate the production stencils and run the Python gate on them: numbers must match P1-1. Then trigger one mock run on staging per script and pull the stencil the deployed Node buildpack rendered from the bucket: it must pass P1-1 too. Font and WASM assets resolve from `import.meta.url` first, keeping the `process.cwd()` candidate chain as a fallback after it (`identity-anchor.ts:232-242`); add `harfbuzzjs` and `@jewelo/identity` to `serverExternalPackages` in `apps/web/next.config.ts`, and `outputFileTracingIncludes` for `packages/identity/engines/**/*.ttf` and the harfbuzzjs wasm | four staging-rendered stencils open in the browser and pass the gate, and the ruler reports `rule === 'luminance'` on each; read the run's block reason and `terminal_error_code` from the database and paste them - a missing font or wasm must surface as `identity_*` there, not as a silent `operator_review`; `select engine_release, count(*) from identity_artifacts group by 1`; pull `identity_artifacts.validation_report` for the staging run and re-measure the downloaded object locally, the two must agree; a deployed dependency dump prints harfbuzz version, wasm path, font path, canvas size and ink rule | S |
