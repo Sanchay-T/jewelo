@@ -1,5 +1,9 @@
 import { readFileSync } from "node:fs";
+import { createHash } from "node:crypto";
 import {
+  CALEUMS_ARABIC_ENGINE_RELEASE,
+  IDENTITY_CANVAS,
+  classifyArabicIdentityInput,
   identityFontUrl,
   identityStencilSvg,
   INK_LUMINANCE_THRESHOLD,
@@ -37,6 +41,89 @@ export interface RenderedIdentityAnchor {
    * report carries the same object; this is the same reference, unwrapped.
    */
   construction: IdentityConstructionMeasurement;
+}
+
+/** Immutable row already accepted by the studio task in this same revision. */
+export interface StoredIdentityAnchor {
+  id: string;
+  revision_id: string;
+  owner_principal_id: string;
+  engine_release: string;
+  font_release: string;
+  approved_text: string;
+  script: string;
+  fingerprint: string;
+  bucket_id: string;
+  object_path: string;
+  png_sha256: string;
+  validation_report: IdentityValidationReport;
+}
+
+/**
+ * Validate already-measured bytes without running the constructive solver again.
+ * The repository first binds this row to the accepted studio asset, task and
+ * immutable revision. A mismatch is a refusal, never a fresh-render fallback.
+ */
+export async function validateStoredIdentityAnchor(
+  stored: StoredIdentityAnchor,
+  png: Uint8Array,
+  anchor: IdentityAnchor,
+  specification: Readonly<Record<string, unknown>>,
+  pipelineRelease: string,
+  ringlessConstructions: ReadonlySet<string> = new Set<string>(),
+): Promise<void> {
+  const construction = constructionOf(specification).normalize("NFC");
+  const names = approvedNames(anchor, specification);
+  const support = classifyArabicIdentityInput({
+    approvedNames: names,
+    language: anchor.language,
+    style: styleFor(anchor, specification),
+    construction,
+    layout: String(specification.layout ?? "single-name"),
+    connector: String(specification.connector ?? "none"),
+    dimensions: dimensions(specification.dimensions),
+    pipelineRelease,
+    rings: ringsFor(specification, ringlessConstructions),
+  });
+  if (!support.supported) throw new Error("identity_reuse_unsupported_input");
+  const approvedText = names[0]?.normalize("NFC").trim();
+  const report = stored.validation_report;
+  const rings = ringsFor(specification, ringlessConstructions) ? 2 : 0;
+  if (
+    !report || stored.engine_release !== CALEUMS_ARABIC_ENGINE_RELEASE ||
+    report.engineRelease !== CALEUMS_ARABIC_ENGINE_RELEASE ||
+    report.pipelineRelease !== pipelineRelease ||
+    stored.approved_text !== anchor.approvedText || stored.script !== anchor.language ||
+    report.approvedCharacters !== approvedText || report.style !== support.style ||
+    report.passed !== true || report.exactCharactersPreserved !== true ||
+    report.measured?.rule !== "luminance" || report.measured.componentsFinal !== 1 ||
+    report.measured.width !== IDENTITY_CANVAS || report.measured.height !== IDENTITY_CANVAS ||
+    report.measured.jumpRingCount !== rings || report.measured.ringHoles?.length !== rings ||
+    report.claimed?.jumpRings !== rings || report.claimed.constructionId !== construction ||
+    !Number.isSafeInteger(report.claimed.inkPixelsBeforeBridging) ||
+    report.claimed.inkPixelsBeforeBridging <= 0 ||
+    report.claimed.inkPixelsBeforeBridging !== report.claimed.inkPixelsPreserved ||
+    !/^[a-f0-9]{64}$/.test(stored.png_sha256) ||
+    !/^[a-f0-9]{64}$/.test(stored.fingerprint)
+  ) throw new Error("identity_reuse_report_mismatch");
+  const fontSha = createHash("sha256").update(fontBytes(report.fontFile)).digest("hex");
+  if (
+    fontSha !== stored.font_release || fontSha !== report.fontSha256Measured ||
+    fontSha !== report.claimed.fontSha256Declared
+  ) throw new Error("identity_reuse_font_mismatch");
+  const pngSha = createHash("sha256").update(png).digest("hex");
+  if (pngSha !== stored.png_sha256) throw new Error("identity_reuse_png_mismatch");
+  const fingerprint = createHash("sha256").update([
+    CALEUMS_ARABIC_ENGINE_RELEASE, pipelineRelease, anchor.language, approvedText,
+    support.style, construction, String(specification.layout ?? "single-name"),
+    String(specification.connector ?? "none"), fontSha, pngSha,
+  ].join("|")).digest("hex");
+  if (fingerprint !== stored.fingerprint) throw new Error("identity_reuse_fingerprint_mismatch");
+  const metadata = await sharp(png, { failOn: "error" }).metadata();
+  if (
+    metadata.format !== "png" || metadata.width !== IDENTITY_CANVAS ||
+    metadata.height !== IDENTITY_CANVAS || metadata.hasAlpha
+  ) throw new Error("identity_reuse_png_format_mismatch");
 }
 
 /**

@@ -29,7 +29,11 @@ import sharp from "sharp";
 // shared jobs module now and every category write in `apps/jobs` goes through
 // it.
 import { errorClass, nameMismatchCode } from "./error-class";
-import { renderIdentityAnchor } from "./identity-anchor";
+import {
+  renderIdentityAnchor,
+  validateStoredIdentityAnchor,
+  type StoredIdentityAnchor,
+} from "./identity-anchor";
 // Storyline review 1 M2: what the day's money is allowed to be before a
 // real-mode dispatch spends any of it.
 import {
@@ -55,6 +59,7 @@ interface TaskRow {
   cancel_requested_at?: string;
   /** Set on the three model views: the studio still they must reproduce. */
   dependency_task_id?: string | null;
+  identity_artifact_id?: string | null;
 }
 interface RunRow {
   id: string;
@@ -930,6 +935,8 @@ export class SupabasePresentationRepository implements PresentationRepository {
       throw new Error(
         `identity_pipeline_release_mismatch:task=${task.pipeline_release},report=${this.pipelineReleaseId}`,
       );
+    if (task.dependency_task_id)
+      return this.#reuseDependencyIdentity(revision, ownerId, task);
     const rendered = await renderIdentityAnchor(
       {
         approvedText: revision.identity_anchor.approvedText,
@@ -1021,6 +1028,77 @@ export class SupabasePresentationRepository implements PresentationRepository {
       url,
       fingerprint: rendered.fingerprint,
       artifactId,
+    };
+  }
+  async #reuseDependencyIdentity(revision: RevisionRow, ownerId: string, task: TaskRow) {
+    const parents = await this.#request<TaskRow[]>(
+      `/rest/v1/generation_tasks?id=eq.${encodeURIComponent(task.dependency_task_id!)}&select=id,run_id,owner_principal_id,presentation_view,status,attempt,cancel_requested_at,pipeline_release,identity_artifact_id`,
+    );
+    const parent = parents[0];
+    if (
+      !parent || parent.id !== task.dependency_task_id || parent.run_id !== task.run_id ||
+      parent.owner_principal_id !== ownerId || task.owner_principal_id !== ownerId ||
+      parent.presentation_view !== "studio" || parent.status !== "ready" ||
+      parent.cancel_requested_at || parent.pipeline_release !== task.pipeline_release ||
+      !parent.identity_artifact_id
+    ) throw new Error("identity_reuse_source_task_mismatch");
+    const runs = await this.#request<RunRow[]>(
+      `/rest/v1/generation_runs?id=eq.${encodeURIComponent(task.run_id)}&select=id,revision_id,owner_principal_id`,
+    );
+    if (runs[0]?.revision_id !== revision.id || runs[0]?.owner_principal_id !== ownerId)
+      throw new Error("identity_reuse_revision_mismatch");
+    const assets = await this.#request<Array<{
+      owner_principal_id: string; run_id: string; revision_id: string;
+      identity_artifact_id: string; identity_fingerprint: string;
+      presentation_view: string; pipeline_release: string; provider: string;
+      verification_result: Record<string, unknown>;
+    }>>(
+      `/rest/v1/assets?task_id=eq.${encodeURIComponent(parent.id)}&attempt=eq.${parent.attempt}&select=owner_principal_id,run_id,revision_id,identity_artifact_id,identity_fingerprint,presentation_view,pipeline_release,provider,verification_result`,
+    );
+    const asset = assets[0];
+    const verification = asset?.verification_result;
+    const nameCheck = verification?.nameCheck as Record<string, unknown> | undefined;
+    if (
+      assets.length !== 1 || !asset || asset.owner_principal_id !== ownerId ||
+      asset.run_id !== task.run_id || asset.revision_id !== revision.id ||
+      asset.identity_artifact_id !== parent.identity_artifact_id ||
+      !["openai", "mock"].includes(asset.provider) ||
+      asset.presentation_view !== "studio" || asset.pipeline_release !== task.pipeline_release ||
+      !verification || verification.passed !== true || verification.exactText !== true ||
+      verification.exactScript !== true || verification.exactlyTwoConnectedRings !== true ||
+      verification.correctShot !== true || verification.noAddedIdentityElements !== true ||
+      (asset.provider === "openai" && nameCheck?.passed !== true)
+    ) throw new Error("identity_reuse_source_asset_mismatch");
+    const artifacts = await this.#request<StoredIdentityAnchor[]>(
+      `/rest/v1/identity_artifacts?id=eq.${encodeURIComponent(parent.identity_artifact_id)}`,
+    );
+    const artifact = artifacts[0];
+    if (
+      !artifact || artifact.id !== parent.identity_artifact_id ||
+      artifact.revision_id !== revision.id || artifact.owner_principal_id !== ownerId ||
+      artifact.fingerprint !== asset.identity_fingerprint ||
+      artifact.bucket_id !== "identity-anchors" ||
+      artifact.object_path !== `principal/${ownerId}/revision/${revision.id}/identity-${artifact.fingerprint}.png`
+    ) throw new Error("identity_reuse_artifact_mismatch");
+    const signed = await this.signedStorageUrl(artifact.bucket_id, artifact.object_path);
+    const response = await fetch(signed, {
+      signal: AbortSignal.timeout(pipelineLimits.visionRequestTimeoutMs),
+    });
+    if (!response.ok) throw new Error(`identity_reuse_download_failed:${response.status}`);
+    const png = new Uint8Array(await response.arrayBuffer());
+    await validateStoredIdentityAnchor(
+      artifact, png, revision.identity_anchor, revision.specification,
+      task.pipeline_release, this.ringlessConstructions,
+    );
+    await this.#request(`/rest/v1/generation_tasks?id=eq.${task.id}`, {
+      method: "PATCH",
+      body: JSON.stringify({ identity_artifact_id: artifact.id }),
+    });
+    // Feed the checked bytes to the adapter, not a URL fetched again later.
+    return {
+      url: `data:image/png;base64,${Buffer.from(png).toString("base64")}`,
+      fingerprint: artifact.fingerprint,
+      artifactId: artifact.id,
     };
   }
   async signedStyleAnchorUrl(task: TaskRow) {
