@@ -6,7 +6,7 @@ import {
   OpenAIStillAdapter,
   PRESENTATION_ASPECT_RATIO,
   buildPromptVariableSnapshot,
-  compilePrompt,
+  compileStillPrompt,
   identityTextMatches,
   normalizeIdentityText,
   type GeneratedMedia,
@@ -229,14 +229,6 @@ export interface PresentationRepository {
 }
 
 /**
- * The three model views edit the approved studio still, so the compiled prompt
- * has to name the extra first image before the published template's own
- * "first image is the only source for the pendant" rule is read.
- */
-export const DEPENDENT_REFERENCE_RULE =
-  "REFERENCE: the first supplied image is the finished pendant photographed in the studio; reproduce this exact object - same letterforms, same metal, same stones, same chain - in the new scene. The second image is its black stencil (identical shape). The third image is style only.";
-
-/**
  * The deterministic refusals `materialize_prompt_snapshot` raises
  * (`supabase/migrations/20260827060000_caleums_prompt_registry.sql:284-289`),
  * each mapped to a reason class.
@@ -360,7 +352,7 @@ export async function executePresentationTask(
     return blockPreSpendTerminally(new Error("task_prompt_release_mismatch"));
   let snapshot = existingSnapshot;
   if (!snapshot) {
-    let compiled: ReturnType<typeof compilePrompt>;
+    let compiled: ReturnType<typeof compileStillPrompt>;
     let compiledPrompt: string;
     try {
       const variables = buildPromptVariableSnapshot({
@@ -369,14 +361,17 @@ export async function executePresentationTask(
         specification: revision.specification,
         presentationView: task.presentation_view,
       });
-      compiled = compilePrompt({
+      compiled = compileStillPrompt({
         profile: release.profile,
         template: release.template,
         variables,
+        references: {
+          master: Boolean(task.dependency_task_id),
+          style: task.presentation_view !== "studio",
+          inspiration: Boolean(revision.specification.referenceAsset),
+        },
       });
-      compiledPrompt = task.dependency_task_id
-        ? `${DEPENDENT_REFERENCE_RULE} ${compiled.compiledPrompt}`
-        : compiled.compiledPrompt;
+      compiledPrompt = compiled.compiledPrompt;
     } catch (error) {
       // A revision whose specification cannot fill the release's pinned
       // variable set can never compile, however often it is re-dispatched.
