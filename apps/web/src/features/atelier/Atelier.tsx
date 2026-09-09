@@ -1688,7 +1688,7 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                   <div className={s.specRow} key={row.id}>
                     <div>
                       <small>{t(row.label)}</small>
-                      <p dir="auto">{row.value}</p>
+                      <p dir="auto">{row.id === "name" ? `${pendantName(d)} · ${t(d.script)}` : row.value}</p>
                     </div>
                     <button
                       onClick={() => go("design", row.id)}
