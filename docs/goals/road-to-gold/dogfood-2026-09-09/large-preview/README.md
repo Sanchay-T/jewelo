@@ -1,6 +1,8 @@
 # Larger preview - local and staging follow-up proof, 9 September 2026
 
-Task P6-10. Integrated source: `57189c5aa53a1ba7f525d1b48898a704629d7ebb`, pushed on `codex/overnight-launch-2026-09-08`. The lead drove both the local page and the deployed staging page in their own in-app browser. Local, mock staging and the later real API checkpoint are distinguished below. The initial staging layout captures use mock mode; the English API photograph checkpoint is recorded separately.
+Task P6-10 is complete for the requested preview/form and live-display scope. Current real staging serves `ba06a6605c8882ddb84af5af0a8f569dc44d7883` on `codex/overnight-launch-2026-09-08`: the lead watched a real Arabic four-view result arrive without reload, inspected every view and enlarged it, then checked the completed page at all seven viewport sizes. New requests are currently blocked by the validation quota of 10/10; other product-readiness limits are stated below.
+
+The earlier local and mock-staging captures served `57189c5aa53a1ba7f525d1b48898a704629d7ebb`; the first English real image served `b5f9758`. They remain identified separately from the final `ba06a66` real-page evidence.
 
 At 390x844 the main photograph is 436.8 px tall. Once the full panel scrolls away, an 81 px reminder stays at the top; its inspection button opens a 390x844 dialog. The name-first action focuses `pendant-name`, placing the input at y=305.9 px while the reminder is hidden. At the bottom of the desktop form, the corrected panel is y=16 px and h=583.3 px. RTL 390x844 and short mobile sizes 320x568/390x600 have separate captures below. Three additional initial captures at 1280x720, 1024x768 and 768x1024 were viewed on the built production server after the 13/13 build at `57189c5`; panel heights are 424, 472 and 728 px respectively. Mobile deliberately uses a scrolling full photograph: its whole dock need not fit above the fold on short screens.
 
@@ -84,11 +86,11 @@ The lead submitted the synthetic lab name Asma through the deployed English form
 
 The asset identifies exact model `gpt-image-2-2026-04-21`, canonical studio release v3 `f2ba654a-3454-4ec0-86ec-a4281a411145`, and attempt 1. The ledger booked 20 cents for this image using the adapter's estimate; that is not the provider invoice and excludes name-reader usage. At 12:08:31 UTC the preserved daily totals were 9 runs, 100 cents reserved and 120 cents actual in the ledger. The other three English tasks were cancelled at attempt 0 by the studio-only policy, with no provider calls. Private readback: `/tmp/jewelo-staging-plan/en-live-observation.json`; original API PNG and independent verdict remain private under `/tmp/jewelo-api-proof/`.
 
-**P6-10 readiness race - implemented correction, runtime proof pending:** the real browser first showed the final shop-follow-up contact state even though the studio photograph completed. Source inspection found readiness was committed before the asset insertion; parallel state reads could also combine a ready task with an older asset list. Reloading the same page displayed the existing photograph without making another paid call. The premature fallback capture is failure evidence, not a passing pending state.
+**P6-10 readiness race - reproduced, corrected and runtime-verified:** the real browser first showed the final shop-follow-up contact state even though the studio photograph completed. Source inspection found readiness was committed before the asset insertion; parallel state reads could also combine a ready task with an older asset list. Reloading the same page displayed the existing photograph without making another paid call. The premature fallback capture is failure evidence, not a passing pending state.
 
 Pushed correction `ba06a6605c8882ddb84af5af0a8f569dc44d7883` adds migration `20260909030000_complete_presentation_atomically.sql` and changes only jobs presentation completion and the state route. A service-role-only transaction validates the current attempt, cancellation fence, ownership, checkpoint and identity lineage, then publishes the immutable asset, settles the attempt once, marks ready, releases dependents and records the ready audit together. Reconciliation keeps its existing booking-date calculations and gains matching task/run lock order. The state route reads assets after tasks, closing the mixed-snapshot window without weakening the UI's real-provider rule. No identity-engine files or acceptance gates changed.
 
-Full build passed **13 successful, 13 total**, exit 0, on `ba06a66`; two fresh independent source reviews were clean above minor. Migration and deployment are underway at this checkpoint. The next Arabic run must demonstrate the real photograph appearing without reload before this correction is called runtime-verified. The existing `MockStudioVerifier` limitation described above remains open; this transaction change does not add a geometry verifier.
+Full build passed **13 successful, 13 total**, exit 0, on `ba06a66`; two fresh independent source reviews were clean above minor. Migration `20260909030000` was applied and read back (38 applied migrations), and real deployment `12e1be30-154e-4845-b02a-2cac87c27b54` is ACTIVE at `ba06a6605c8882ddb84af5af0a8f569dc44d7883`; deploy and health/protected-readiness smoke passed. The following Arabic run demonstrated the studio and all three dependent photographs arriving without a page reload. The existing `MockStudioVerifier` limitation described above remains open; this transaction change does not add a geometry verifier.
 
 | Real API browser state | Screenshot | DOM measurement |
 | --- | --- | --- |
@@ -98,12 +100,61 @@ Full build passed **13 successful, 13 total**, exit 0, on `ba06a66`; two fresh i
 | Mobile enlarged API photograph | [Screenshot](api-en-studio-enlarged.png) | [Measurement](api-en-studio-enlarged.json) |
 | Unrequested on-skin view remains honest | [Screenshot](api-en-unrequested-view-honest.png) | [Measurement](api-en-unrequested-view-honest.json) |
 
-These public browser captures contain only the approved synthetic Asma demonstration and visible app UI. The raw API photograph, private reference images and signed asset URLs are not committed. On mobile the ready photograph measured 350 by 436.8 px, and enlarged inspection occupied the complete 390 by 844 px dialog. Selecting the unrequested on-skin view retained its shop-follow-up placeholder instead of presenting the studio photograph as that view. Arabic and its dependent photographs remain pending.
+These public browser captures contain only the approved synthetic Asma demonstration and visible app UI. The raw API photograph, private reference images and signed asset URLs are not committed. On mobile the ready photograph measured 350 by 436.8 px, and enlarged inspection occupied the complete 390 by 844 px dialog. Selecting the unrequested English on-skin view retained its shop-follow-up placeholder instead of presenting the studio photograph as that view. The completed Arabic four-view proof follows.
+
+## Completed Arabic four-view API proof
+
+On deployed `ba06a66`, the lead submitted the approved fictional fixture أسماء through the Arabic form. All four real OpenAI photographs appeared in the existing page without reload. The lead selected Studio, On skin, Close-up and Dark, opened enlarged inspection, and inspected the originals. An independent reviewer who did not generate these images passed all four against six visual criteria and recognized the same pendant across views. Each task had exactly one paid attempt and one final asset; no manual retry or agent worker restart was used.
+
+| View | Ready at UTC, 9 September 2026 | Returned PNG SHA-256 |
+| --- | --- | --- |
+| Studio | 12:47:21.838542 | `290b764a2bbbfa3a20e60055cf5f1faf368105a31945f8005f082fda78777f4d` |
+| On skin | 12:54:32.926108 | `7580bb9a14986d69415287d80c536a4d0a40f695f341901a34acbcb518658b8e` |
+| Close-up | 12:54:43.672497 | `ac65beef5444909c98efe166a66b347b354d7a0c1d79c5214810e43dd3b5f5e7` |
+| Dark | 12:54:33.720171 | `08675c2d8f78d2e4455c91e029e165c3cc6aaaea6d9f57839b8033c0bd98d504` |
+
+Every asset used `gpt-image-2-2026-04-21` and the same production identity artifact, whose PNG hash is `aeca9c818776974f5dbae0679753ba92bba9c37cb2c79eaf79121ac76e464e56`. The Arabic studio prompt hash exactly matches qualified C: `faa714b789764e17b81d54b401def343f2405346daac2902650a5743b57883c6`. Each dependent asset references the completed Studio asset as its input. All four name-reader transcripts exactly equalled the approved text. Asset, ready audit and terminal settlement timestamps match within each atomic completion.
+
+Private evidence: `/tmp/jewelo-staging-plan/real-deployment-ba06a66.json`, `jewelo-ba06-migration-readback.json`, `ar-live-observation.json`, `ar-all-verification-metadata.json`, `ar-child-executor-followup.json`; independent visual summary `/tmp/jewelo-api-proof/ar-four-view-summary.json`. Raw photographs, credentials, private references and signed URLs remain outside this public repository. Approved browser screenshots below show only the fictional fixture and app UI.
+
+The final real completed page was personally checked at 1440x900, 1280x720, 1024x768, 768x1024, 390x844, 390x600 and 320x568 on `ba06a66`. The 390x844 proof includes the four-ready state, selection of each photograph and enlarged Dark inspection. Earlier staging Design/Review, RTL and reduced-motion captures remain above; this final ladder concerns the completed real result.
+
+| Final real Arabic state | Screenshot | DOM measurement |
+| --- | --- | --- |
+| close up ready | [Screenshot](api-ar-close-up-ready.png) | [Measurement](api-ar-close-up-ready.json) |
+| complete 1024x768 | [Screenshot](api-ar-complete-1024x768.png) | [Measurement](api-ar-complete-1024x768.json) |
+| complete 1280x720 | [Screenshot](api-ar-complete-1280x720.png) | [Measurement](api-ar-complete-1280x720.json) |
+| complete 1440x900 | [Screenshot](api-ar-complete-1440x900.png) | [Measurement](api-ar-complete-1440x900.json) |
+| complete 320x568 | [Screenshot](api-ar-complete-320x568.png) | [Measurement](api-ar-complete-320x568.json) |
+| complete 390x600 | [Screenshot](api-ar-complete-390x600.png) | [Measurement](api-ar-complete-390x600.json) |
+| complete 768x1024 | [Screenshot](api-ar-complete-768x1024.png) | [Measurement](api-ar-complete-768x1024.json) |
+| dark enlarged | [Screenshot](api-ar-dark-enlarged.png) | [Measurement](api-ar-dark-enlarged.json) |
+| dark ready | [Screenshot](api-ar-dark-ready.png) | [Measurement](api-ar-dark-ready.json) |
+| four ready without reload | [Screenshot](api-ar-four-ready-without-reload.png) | [Measurement](api-ar-four-ready-without-reload.json) |
+| full pending | [Screenshot](api-ar-full-pending.png) | [Measurement](api-ar-full-pending.json) |
+| on skin ready | [Screenshot](api-ar-on-skin-ready.png) | [Measurement](api-ar-on-skin-ready.json) |
+| studio ready without reload | [Screenshot](api-ar-studio-ready-without-reload.png) | [Measurement](api-ar-studio-ready-without-reload.json) |
+
+Final readback at **13:05:59 UTC** (`/tmp/jewelo-staging-plan/final-live-state.json`) confirmed ACTIVE `ba06a66`, no pending deployment, zero active tasks, exactly five successful new OpenAI attempts and five assets, all attempt 1, and no duplicates. Daily usage remained 10 runs, 100 cents reserved and 200 cents recorded actual. The new-request quota restriction below is inferred from this read-only policy/usage readback; no extra request was submitted to provoke a rejection.
+
+## Current limits and follow-ups
+
+**New photograph requests are currently blocked by the validation quota:** the global daily allowance is 10 and all 10 runs are used on 9 September UTC. It resets with the UTC day; no quota increase or usage reset was made. Existing completed photographs remain available in their owning sessions. `studio_only` was switched to false before the Arabic run; both 800-cent ledger caps, one-attempt budget and per-principal limit 2 remain.
+
+The two validation runs produced five new images, one attempt each. They booked 100 cents total at the adapter's 20-cent-per-image estimate. Current daily ledger totals are 10 runs, 100 cents reserved and 200 cents recorded actual, including 100 cents from earlier work. These are estimates recorded by the application, not a provider invoice; paid name-reader usage is not reconciled into those amounts.
+
+The requested preview/form, shared-prompt transfer and bounded live photo validation scope is complete. This does not establish readiness for unrestricted customer use:
+
+- Real dependencies still use `MockStudioVerifier` plus paid name reading. Human visual acceptance is proven here; a complete automatic geometry/attachment gate remains a pre-existing follow-up.
+- Inngest reported “Unable to reach SDK URL” during the long dependent-view preparation, yet the original handlers completed with one paid attempt per child. No current active task remained in the observation. The cause is not established; stencil preparation and executor connection lifetime need profiling. No out-of-memory diagnosis is claimed.
+- Shop contact delivery and checkout were not exercised in this work.
+- The Arabic Reset label is slightly clipped in enlarged inspection; recorded as a minor UI follow-up.
+- The API model is the verified 2026-04-21 Image 2 snapshot. The built-in image tool's version is unexposed; Image 2.5 is not verified.
 
 ## Build, review and remaining proof
 
-The lead reports full `corepack pnpm build`: **13 successful, 13 total**, exit 0, through `ba06a66`; two final independent reviews of the atomic completion correction were clean above minor. The mock staging layout captures served `57189c5`; the first English real-photo captures served `b5f9758`. None yet verifies `ba06a66` at runtime. No tests ran or changed. The follow-up adds the dictionary key `Start with your name` / `ابدأ باسمك`.
+The lead reports full `corepack pnpm build`: **13 successful, 13 total**, exit 0, through `ba06a66`; two final independent reviews of the atomic completion correction were clean above minor. The mock staging layout captures served `57189c5`; the first English real-photo captures served `b5f9758`. The Arabic four-view captures verify `ba06a66` at runtime. No tests ran or changed. The follow-up adds the dictionary key `Start with your name` / `ابدأ باسمك`.
 
-The earlier seven-item UI acceptance, full dictionary changes and broader local layout matrix remain in [Umayr UI proof](../umayr-ui/README.md). Those earlier captures do not substitute for the newer staging observations above. Mock staging UI coverage, canonical publication, real deployment/smoke, and the first English API studio photograph are complete at this checkpoint. Runtime verification of the implemented readiness-race correction and Arabic four-view API proof remain pending. The current prompt qualification is recorded in [Image lab](../../../overnight-launch/IMAGE-LAB.md#9-september-follow-up---shared-still-compiler-and-studio-candidate-c).
+The earlier seven-item UI acceptance, full dictionary changes and broader local layout matrix remain in [Umayr UI proof](../umayr-ui/README.md). Those earlier captures do not substitute for the newer staging observations above. Mock staging UI coverage, canonical publication, real deployment/smoke, the English API studio photograph and the Arabic four-view API result are complete. The atomic readiness correction and Arabic four-view API flow are now runtime-verified; the operational limits and untouched flows are listed above. The current prompt qualification is recorded in [Image lab](../../../overnight-launch/IMAGE-LAB.md#9-september-follow-up---shared-still-compiler-and-studio-candidate-c).
 
 The separate uncommitted identity-engine and stencil-renderer script work in the original checkout remains excluded. PROGRESS.md and HANDOVER.md are unchanged under the original brief's explicit boundary.
