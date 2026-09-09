@@ -127,11 +127,28 @@ Adversarial pass 5 measured it: over 547 welded cells the line through the two h
 Three things answer it.
 The anchor is a ladder rather than a point: every rung is a column of the carrier's load-bearing metal and the top of that column, starting at the outer edge of the stroke and walking inward, so a letter with dots above it - the ta marbuta, the final qaf, the shin - is welded on its outer shoulder from above instead of surrendering its ring to the next letter inward.
 A seat search returns not one seat but every row above it that is also clean, so a ring can be raised to meet its partner.
-And the two sides are then chosen jointly: every allowed pair of carriers is scored on the finished shape - gate violations first, then the tilt, then the worse side's overhang, then the metal lifted off the letters - and the best pair wins.
+And the two sides are then chosen jointly: every allowed pair of carriers is scored on the finished shape and the best pair wins.
 
 Two gates measure the result on the encoded bytes, not on what the search believed.
 `identity_ring_tilt_too_steep` is the angle of the line through the two hole centroids, against `IDENTITY_RING_MAX_TILT_DEGREES`; that line is the line the chain makes, so its angle is the angle the name reads at on the neck.
-`identity_ring_overhang_too_wide` is the ink outside the nearer hole on the worse side over the measured ink width, against `IDENTITY_RING_MAX_OVERHANG_FRACTION`; span alone cannot see a piece whose two rings are far apart but both in one half.
+`identity_ring_overhang_too_wide` is the ink outside the nearer hole on the worse side, against `IDENTITY_RING_MAX_OVERHANG_FRACTION`.
+Its ruler is the *name's own* ink box, taken before any ring was drawn and carried into the frame of the encoded piece by the recentre transform (adversarial pass 6, minor 6: the piece box put a ring radius into the numerator and the denominator both, which floored the whole distribution at a constant 0.041 and made every reading a few points lenient).
+Span alone cannot see a piece whose two rings are far apart but both in one half.
+
+### On the shoulder, not on a post
+
+Fix pass 6 answered level and balance and left the suspension unmeasured, and adversarial pass 6 measured it: the post between the anchor and the centre of the ring hole ran p50 203 px, p95 346, with 67 of 568 cells carrying a post longer than the whole name was tall, and 56% of the anchors sat in the bottom half of the lettering against a D-020 that says "at the outer top corner".
+On the 32 mm pendant that is a 1.2 mm wire up to 10.9 mm long joined to the letter at one point, and on a Latin face the eye reads it as a stroke: `Sara` in `classic` came out `iSarai`, upstream of the verifier and of anything that would have caught it.
+
+Three changes, and the first is the point of the other two.
+The anchor ladder is cut to the shoulder of the carrier: the outermost columns of the contour that lie in the top `IDENTITY_RING_ANCHOR_MAX_DEPTH_FRACTION` of the contour's own height, scanned for rather than stepped into, so a face whose outer edge is the middle of a bowl still offers its shoulder instead of collapsing onto the lab anchor in the middle of the letter.
+The post is capped at the smaller of `IDENTITY_RING_MAX_POST_FRACTION` of the name's ink height and `IDENTITY_RING_MAX_POST_PX`: the seat search cannot evaluate a seat outside that cap, and `identity_ring_post_too_long` states it again on the finished account, the way `identity_ring_punched_ink` states the punch the search already avoided.
+And the score key charges for it. The order is: the two gate violations and the post violation; the tilt to the whole degree; the balance counted in ring radii, which is the overhang a ring seated on the end letter cannot avoid; then the post; then the exact angle, the distance from the top line of the name and the exact balance.
+The two quantised terms are there because a tenth of a degree and a fraction of a ring's own width are below what an eye on a neck can resolve and a rod is not: inside those resolutions the shorter post wins, and outside them a pair may not buy level or balance with a rod.
+The pass-6 key put continuous overhang above everything below it and left the lift last, so a pair a fraction of a point better balanced beat a pair whose posts were 300 px shorter.
+
+The preferred ring column is also pulled back inside the name's own ink where there is room for it, bounded by the ring's radius, by half the overhang gate and by half the post cap.
+A ring whose body stays inside the name's box costs the piece no width, which is what adversarial pass 6 major 4 was about: 450 of 568 pass-6 cells had a ring against the canvas margin, so the piece measured 1020 px against a 912 px recentre box and the lettering was resampled down to 0.894 for nothing.
 
 ### Pinholes
 

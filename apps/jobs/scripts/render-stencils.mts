@@ -334,10 +334,112 @@ const D020_NAMES: readonly {
 ];
 
 /**
+ * Every single letter of both alphabets, one letter to a piece.
+ *
+ * Adversarial review 6, major 2: eleven of the fifty-two Latin letters refused
+ * in both live styles and the fix-6 note's seven-letter sample contained none
+ * of them. A one-letter pendant is a real order in a jewellery shop and it is
+ * the hardest shape the ring placement meets - both rings have to share one
+ * glyph - so the whole alphabet is a permanent matrix of its own rather than a
+ * sample somebody remembers to take. The Arabic column walks the 36 letter
+ * forms and repeats sixteen of them so the two columns line up; the Latin
+ * column is A-Z then a-z.
+ */
+const LETTER_NAMES: readonly {
+  readonly label: string;
+  readonly text: Record<IdentityScript, string>;
+}[] = [
+  ["L01", "\u0627", "A"], ["L02", "\u0628", "B"], ["L03", "\u062a", "C"],
+  ["L04", "\u062b", "D"], ["L05", "\u062c", "E"], ["L06", "\u062d", "F"],
+  ["L07", "\u062e", "G"], ["L08", "\u062f", "H"], ["L09", "\u0630", "I"],
+  ["L10", "\u0631", "J"], ["L11", "\u0632", "K"], ["L12", "\u0633", "L"],
+  ["L13", "\u0634", "M"], ["L14", "\u0635", "N"], ["L15", "\u0636", "O"],
+  ["L16", "\u0637", "P"], ["L17", "\u0638", "Q"], ["L18", "\u0639", "R"],
+  ["L19", "\u063a", "S"], ["L20", "\u0641", "T"], ["L21", "\u0642", "U"],
+  ["L22", "\u0643", "V"], ["L23", "\u0644", "W"], ["L24", "\u0645", "X"],
+  ["L25", "\u0646", "Y"], ["L26", "\u0647", "Z"], ["L27", "\u0648", "a"],
+  ["L28", "\u064a", "b"], ["L29", "\u0623", "c"], ["L30", "\u0625", "d"],
+  ["L31", "\u0622", "e"], ["L32", "\u0629", "f"], ["L33", "\u0649", "g"],
+  ["L34", "\u0621", "h"], ["L35", "\u0624", "i"], ["L36", "\u0626", "j"],
+  ["L37", "\u0627", "k"], ["L38", "\u0628", "l"], ["L39", "\u062a", "m"],
+  ["L40", "\u062b", "n"], ["L41", "\u062c", "o"], ["L42", "\u062d", "p"],
+  ["L43", "\u062e", "q"], ["L44", "\u062f", "r"], ["L45", "\u0630", "s"],
+  ["L46", "\u0631", "t"], ["L47", "\u0632", "u"], ["L48", "\u0633", "v"],
+  ["L49", "\u0634", "w"], ["L50", "\u0635", "x"], ["L51", "\u0636", "y"],
+  ["L52", "\u0637", "z"],
+].map(([label, ar, en]) => ({
+  label: label as string,
+  text: { ar: ar as string, en: en as string },
+}));
+
+/**
+ * Ninety names a shop in Dubai actually types, outside the geometry matrix.
+ *
+ * Adversarial review 6, major 3 found `\u0643\u0648\u062b\u0631` refusing in a live style, and
+ * four more names inside a hundredth of the overhang gate, on a list that lived
+ * in a scratch file. Forty-five Arabic names and forty-five Latin ones, with
+ * the shapes the matrix does not carry: long compounds, two-word names, an
+ * apostrophe, a hyphen, an ampersand, all-capitals, and two-letter names.
+ */
+const REAL_NAMES: readonly {
+  readonly label: string;
+  readonly text: Record<IdentityScript, string>;
+}[] = [
+  ["n01", "\u0639\u0628\u062f\u0627\u0644\u0639\u0632\u064a\u0632", "Omran"],
+  ["n02", "\u0639\u0628\u062f\u0627\u0644\u0631\u062d\u064a\u0645", "Umayr"],
+  ["n03", "\u0639\u0628\u062f\u0627\u0644\u0645\u062c\u064a\u062f", "Sanchay"],
+  ["n04", "\u0641\u0627\u0637\u0645\u0629 \u0627\u0644\u0632\u0647\u0631\u0627\u0621", "Zayed"],
+  ["n05", "\u0623\u0645 \u0643\u0644\u062b\u0648\u0645", "Maryam"],
+  ["n06", "\u0627\u0644\u0634\u064a\u062e\u0629 \u0645\u0648\u0632\u0629", "O'Brien"],
+  ["n07", "\u0631\u064a\u0645", "D'Angelo"],
+  ["n08", "\u0634\u0647\u062f", "Al-Maktoum"],
+  ["n09", "\u063a\u0627\u0644\u064a\u0629", "Bin-Rashid"],
+  ["n10", "\u0628\u062f\u0648\u0631", "JOSEPH"],
+  ["n11", "\u062c\u0648\u0627\u0647\u0631", "ANNA"],
+  ["n12", "\u0644\u0648\u0644\u0648\u0629", "MOHAMMED"],
+  ["n13", "\u0639\u0627\u0626\u0634\u0629", "Amy & Ben"],
+  ["n14", "\u0622\u0633\u064a\u0627", "Mia & Leo"],
+  ["n15", "\u0622\u062f\u0645", "Jo"],
+  ["n16", "\u0625\u064a\u0627\u062f", "Ty"],
+  ["n17", "\u0625\u0633\u0631\u0627\u0621", "Lu"],
+  ["n18", "\u0623\u0631\u0648\u0649", "Al"],
+  ["n19", "\u0623\u0646\u0633", "Ed"],
+  ["n20", "\u0623\u0633\u0627\u0645\u0629", "Bo"],
+  ["n21", "\u0628\u0644\u0642\u064a\u0633", "Zoe"],
+  ["n22", "\u062b\u0631\u064a\u0627", "Chloe"],
+  ["n23", "\u062c\u0645\u0627\u0646\u0629", "Yousif"],
+  ["n24", "\u062d\u0635\u0629", "Khalifa"],
+  ["n25", "\u062e\u0648\u0644\u0629", "Abdulaziz"],
+  ["n26", "\u062f\u0627\u0646\u0629", "Jean-Luc"],
+  ["n27", "\u0631\u063a\u062f", "Mary-Jane"],
+  ["n28", "\u0632\u0627\u064a\u062f", "Emma"],
+  ["n29", "\u0633\u064a\u0641", "Liam"],
+  ["n30", "\u0634\u0630\u0649", "Olivia"],
+  ["n31", "\u0635\u0627\u0644\u062d", "Noah"],
+  ["n32", "\u0636\u062d\u0649", "Ava"],
+  ["n33", "\u0637\u0644\u0627\u0644", "Sophia"],
+  ["n34", "\u0638\u0627\u0641\u0631", "Ethan"],
+  ["n35", "\u0639\u0647\u0648\u062f", "Isabella"],
+  ["n36", "\u063a\u064a\u062f\u0627\u0621", "Lucas"],
+  ["n37", "\u0641\u062c\u0631", "Mila"],
+  ["n38", "\u0642\u0645\u0631", "Ibrahim"],
+  ["n39", "\u0643\u0648\u062b\u0631", "Hessa"],
+  ["n40", "\u0644\u064a\u0627\u0646", "Wilhelmina"],
+  ["n41", "\u0645\u064a\u062b\u0627\u0621", "Jack"],
+  ["n42", "\u0646\u0627\u064a\u0641", "Ayaan"],
+  ["n43", "\u0647\u064a\u0627", "Yusuf"],
+  ["n44", "\u0648\u0636\u062d\u0649", "Layan"],
+  ["n45", "\u064a\u0627\u0631\u0627", "Rayan"],
+].map(([label, ar, en]) => ({
+  label: label as string,
+  text: { ar: ar as string, en: en as string },
+}));
+
+/**
  * The 17 ZIP names, the four lab names, the 18 stress names and the 12 D-020
  * names, deduplicated by label.
  */
-const MATRIX_NAMES = [
+const GEOMETRY_NAMES = [
   ...ZIP_NAMES,
   ...[...NAMES, ...STRESS_NAMES, ...D020_NAMES].filter(
     (candidate, index, all) =>
@@ -345,6 +447,27 @@ const MATRIX_NAMES = [
       all.findIndex((other) => other.label === candidate.label) === index,
   ),
 ];
+
+/**
+ * Which sweep the `matrix/` subdirectory runs, `--matrix=geometry|letters|names`.
+ *
+ * Adversarial review 6, majors 2 and 3: the alphabet and the real-name list
+ * were scratch files, so eleven refusing Latin letters and a refusing Gulf name
+ * survived a whole fix pass. All three are permanent now and every one of them
+ * is measured by the same code path.
+ */
+const matrixFlag = process.argv
+  .slice(2)
+  .find((value) => value.startsWith("--matrix="))
+  ?.slice("--matrix=".length);
+if (matrixFlag !== undefined && !["geometry", "letters", "names"].includes(matrixFlag))
+  throw new Error(`--matrix must be geometry, letters or names, not ${matrixFlag}`);
+const MATRIX_NAMES =
+  matrixFlag === "letters"
+    ? LETTER_NAMES
+    : matrixFlag === "names"
+      ? REAL_NAMES
+      : GEOMETRY_NAMES;
 
 /** The two letterings `make_stencil.py` renders: classic and kufi. */
 const LETTERINGS = ["classic", "kufi"] as const;
@@ -377,7 +500,8 @@ if (
     (flag) =>
       flag !== "--rings=off" &&
       flag !== "--rings=on" &&
-      !flag.startsWith("--construction="),
+      !flag.startsWith("--construction=") &&
+      !flag.startsWith("--matrix="),
   )
 )
   throw new Error(`unknown flag among ${JSON.stringify(flags)}`);
@@ -834,12 +958,11 @@ function ringSpanRatioOf(
  */
 function ringHangOf(
   ringHoles: readonly RingHole[],
-  bbox: readonly number[] | null,
+  name: { readonly left: number; readonly width: number } | null,
 ): { tilt: number; overhang: number } {
   const [first, second] = ringHoles;
-  if (!first || !second || !first.found || !second.found || !bbox)
+  if (!first || !second || !first.found || !second.found || !name)
     return { tilt: 0, overhang: 0 };
-  const width = (bbox[2] as number) - (bbox[0] as number) + 1;
   const tilt =
     (Math.atan2(
       Math.abs(first.centreY - second.centreY),
@@ -847,11 +970,74 @@ function ringHangOf(
     ) *
       180) /
     Math.PI;
+  // Minor 6 of adversarial review 6: the ruler is the name's own ink, not the
+  // piece with the ring metal added. A ring at the very end of the piece put
+  // its own radius into the numerator and the denominator both, which floored
+  // the whole distribution at a constant 0.041. The name box comes from the
+  // rings-off geometry the report states, carried into the frame of the written
+  // PNG by this file's own `mapForward`; the hole centroids are this file's own
+  // measurement of the bytes.
   const overhang = Math.max(
-    (Math.min(first.centreX, second.centreX) - (bbox[0] as number)) / width,
-    ((bbox[2] as number) - Math.max(first.centreX, second.centreX)) / width,
-  );
+    Math.max(0, Math.min(first.centreX, second.centreX) - name.left),
+    Math.max(0, name.left + name.width - 1 - Math.max(first.centreX, second.centreX)),
+  ) / name.width;
   return { tilt, overhang };
+}
+
+/** The name's own ink box on the written PNG: the claim, mapped and measured. */
+function nameSpanOf(construction: {
+  readonly glyphBoxBeforeRings: readonly [number, number, number, number];
+  readonly recentreScale: number;
+  readonly recentreOffsetX: number;
+}): { left: number; width: number } {
+  const left = mapForward(
+    construction.glyphBoxBeforeRings[0],
+    construction.recentreScale,
+    construction.recentreOffsetX,
+  );
+  const width =
+    (construction.glyphBoxBeforeRings[2] -
+      construction.glyphBoxBeforeRings[0] +
+      1) *
+    construction.recentreScale;
+  return { left, width };
+}
+
+/**
+ * Adversarial review 6, blocker 1: the metal between the letter a ring is
+ * welded to and the centre of its hole, in pre-recentre pixels, and how far
+ * below the top line of the name that weld sits as a fraction of the name's
+ * height. Both are taken from the anchors the report states, which is the one
+ * frame an anchor exists in; a post the engine never drew where it says would
+ * show up in `WELDED-DELTA` and in the ring-hole measurements instead.
+ */
+function ringPostOf(construction: {
+  readonly ringCentres: readonly {
+    readonly x: number;
+    readonly y: number;
+    readonly anchorX: number;
+    readonly anchorY: number;
+  }[];
+  readonly glyphBoxBeforeRings: readonly [number, number, number, number];
+}): { post: number; depth: number } {
+  if (construction.ringCentres.length === 0) return { post: 0, depth: 0 };
+  const height =
+    construction.glyphBoxBeforeRings[3] -
+    construction.glyphBoxBeforeRings[1] +
+    1;
+  const post = Math.max(
+    ...construction.ringCentres.map((centre) =>
+      Math.hypot(centre.x - centre.anchorX, centre.y - centre.anchorY),
+    ),
+  );
+  const depth = Math.max(
+    ...construction.ringCentres.map(
+      (centre) =>
+        (centre.anchorY - construction.glyphBoxBeforeRings[1]) /
+        Math.max(1, height),
+    ),
+  );
+  return { post, depth };
 }
 
 function inPolygon(x: number, y: number, points: readonly number[]): boolean {
@@ -1210,8 +1396,8 @@ for (const name of NAMES) {
         foreignUnderFillet: metal.foreignUnderFillet,
         ringSpan: ringSpanRatioOf(ring.ringHoles, measured.bbox).span,
         ringSpanRatio: ringSpanRatioOf(ring.ringHoles, measured.bbox).ratio,
-        ringTilt: ringHangOf(ring.ringHoles, measured.bbox).tilt,
-        ringOverhang: ringHangOf(ring.ringHoles, measured.bbox).overhang,
+        ringTilt: ringHangOf(ring.ringHoles, nameSpanOf(rendered.construction)).tilt,
+        ringOverhang: ringHangOf(ring.ringHoles, nameSpanOf(rendered.construction)).overhang,
         pinholes: countPinholes(decoded),
         seatSearchSteps: rendered.construction.seatSearchSteps,
       });
@@ -1664,6 +1850,13 @@ interface MatrixCell {
   /** The lift the accepted seats needed, the deepest of the two rings. */
   readonly ringLift: number;
   /**
+   * Adversarial review 6, blocker 1: the longer of the two posts, in
+   * pre-recentre pixels, and how far below the top line of the name the deeper
+   * of the two anchors sits as a fraction of the name's height.
+   */
+  readonly ringPost: number;
+  readonly anchorDepth: number;
+  /**
    * The solver's own ring centres and anchors, in pre-recentre coordinates.
    * Recorded so a placement change can be compared cell by cell against an
    * earlier sweep instead of being taken on trust.
@@ -1740,6 +1933,8 @@ for (const name of MATRIX_NAMES) {
           pinholes: 0,
           seatSearchSteps: 0,
           ringLift: 0,
+          ringPost: 0,
+          anchorDepth: 0,
           ringCentres: [],
           islandsBeforeBridging: 0,
           bridges: 0,
@@ -1809,8 +2004,8 @@ for (const name of MATRIX_NAMES) {
         foreignUnderFillet: metal.foreignUnderFillet,
         ringSpan: ringSpanRatioOf(ring.ringHoles, measured.bbox).span,
         ringSpanRatio: ringSpanRatioOf(ring.ringHoles, measured.bbox).ratio,
-        ringTilt: ringHangOf(ring.ringHoles, measured.bbox).tilt,
-        ringOverhang: ringHangOf(ring.ringHoles, measured.bbox).overhang,
+        ringTilt: ringHangOf(ring.ringHoles, nameSpanOf(rendered.construction)).tilt,
+        ringOverhang: ringHangOf(ring.ringHoles, nameSpanOf(rendered.construction)).overhang,
         pinholes: countPinholes(decodedCell),
         seatSearchSteps: rendered.construction.seatSearchSteps,
         ringLift: Math.max(
@@ -1819,6 +2014,8 @@ for (const name of MATRIX_NAMES) {
             (centre) => centre.anchorY - centre.y,
           ),
         ),
+        ringPost: ringPostOf(rendered.construction).post,
+        anchorDepth: ringPostOf(rendered.construction).depth,
         ringCentres: rendered.construction.ringCentres.map((centre) => ({
           x: centre.x,
           y: centre.y,
@@ -1852,8 +2049,8 @@ for (const name of MATRIX_NAMES) {
             .padEnd(20)}` +
           `punched ${metal.punched} welded ${metal.welded} foreign ${metal.foreignUnderFillet} ` +
           `span ${ringSpanRatioOf(ring.ringHoles, measured.bbox).ratio.toFixed(2)} ` +
-          `tilt ${ringHangOf(ring.ringHoles, measured.bbox).tilt.toFixed(1)} ` +
-          `over ${ringHangOf(ring.ringHoles, measured.bbox).overhang.toFixed(3)} ` +
+          `tilt ${ringHangOf(ring.ringHoles, nameSpanOf(rendered.construction)).tilt.toFixed(1)} ` +
+          `over ${ringHangOf(ring.ringHoles, nameSpanOf(rendered.construction)).overhang.toFixed(3)} ` +
           `pin ${countPinholes(decodedCell)} steps ${rendered.construction.seatSearchSteps}  ` +
           `holes [${ring.ringHoles.map((hole) => hole.size).join(" ")}] ` +
           `floor ${Math.round(ringHoleFloor(rendered.construction))}`,
@@ -2050,6 +2247,41 @@ distribution(
   (cell) => cell.ringOverhang,
   3,
 );
+// Adversarial review 6, blocker 1 and major 4: the length of the suspension
+// post, how deep in the lettering it is welded, and what the rings cost the
+// name in size. All three were invisible in pass 6 and all three were bad.
+distribution(
+  "RING POST",
+  matrixCells.map((cell) => cell.ringPost),
+  matrixCells.slice().sort((left, right) => right.ringPost - left.ringPost),
+  (cell) => cell.ringPost,
+  0,
+);
+distribution(
+  "ANCHOR DEPTH",
+  matrixCells.map((cell) => cell.anchorDepth),
+  matrixCells.slice().sort((left, right) => right.anchorDepth - left.anchorDepth),
+  (cell) => cell.anchorDepth,
+  3,
+);
+{
+  const scales = matrixCells.map((cell) => cell.recentreScale);
+  const full = scales.filter((value) => value === 1).length;
+  const buckets = new Map<string, number>();
+  for (const value of scales) {
+    const key = value === 1 ? "1.000" : `${(Math.floor(value * 20) / 20).toFixed(2)}-`;
+    buckets.set(key, (buckets.get(key) ?? 0) + 1);
+  }
+  const sorted = scales.slice().sort((left, right) => left - right);
+  console.log(
+    `MATRIX RECENTRE SCALE full ${full}/${scales.length} min ${(sorted[0] ?? 1).toFixed(3)} p50 ${(sorted[Math.floor(sorted.length / 2)] ?? 1).toFixed(3)} distribution ${[
+      ...buckets.entries(),
+    ]
+      .sort((left, right) => left[0].localeCompare(right[0]))
+      .map(([key, count]) => `${key}:${count}`)
+      .join(" ")}`,
+  );
+}
 // Major 5: this file's own count of welded and punched ink against the
 // engine's, printed as a difference rather than assumed to be equal.
 const weldedDelta = matrixCells.filter(

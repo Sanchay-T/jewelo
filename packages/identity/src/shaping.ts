@@ -452,12 +452,6 @@ export const IDENTITY_RING_STEM_WIDTH = 30;
 /** How far the ring body sinks into the stroke it sits on (WELD_OVERLAP). */
 export const IDENTITY_RING_WELD_OVERLAP = 16;
 
-/**
- * The rings the solver welds on: one over each end of the name
- * (`add_rings`, `make_stencil.py:143-178`).
- */
-export const IDENTITY_RING_COUNT = 2;
-
 /* -------------------------------------------------------------------------
  * P2-2b. Construction geometry: the stencil is the whole physical piece.
  *
@@ -562,6 +556,52 @@ export const IDENTITY_RING_TOP_CLEARANCE = 2;
 export const IDENTITY_RING_WELD_ANCHOR_DEPTH = 14;
 
 /**
+ * The longest suspension post a jump ring may stand on, as a fraction of the
+ * name's own ink height, and in absolute pixels of the 1024 px canvas.
+ *
+ * The post is the metal between the anchor - the point on the letter the fillet
+ * is welded into - and the centre of the ring hole. On a piece where the ring
+ * sits on the shoulder of the letter it is a weld, about the ring's own radius
+ * long. On the pieces adversarial review 6 measured it was a rod: p50 203 px,
+ * p95 346, and `hasan` in `classic` stood on a 256 px rod against a name 239 px
+ * tall, so the suspension was longer than the pendant. On the 32 mm piece that
+ * is a 1.2 mm wire up to 10.9 mm long, joined to the letter at one point, and
+ * on a Latin face the eye reads it as a stroke of the name: `Sara` in `classic`
+ * came out `iSarai`, upstream of every verifier.
+ *
+ * Two bounds, and the smaller of them applies. The fraction keeps the post in
+ * proportion to the piece - a tall name may carry a slightly longer weld, a
+ * short one may not - and the absolute cap keeps a very tall name from earning
+ * a rod by being tall. 0.45 of the ink height and 120 px are both far below
+ * anything the pass-6 corpus produced and above the weld a shoulder seat needs
+ * (`IDENTITY_RING_OUTER - IDENTITY_RING_WELD_OVERLAP` = 26 px of lift plus the
+ * column offset). They are engine constants rather than validated
+ * configuration for the same reason `IDENTITY_RING_MAX_TILT_DEGREES` is: they
+ * are geometry of the piece, not a knob an operator may turn.
+ */
+export const IDENTITY_RING_MAX_POST_FRACTION = 2.0;
+
+/** The absolute post cap, in pixels of the engine canvas. */
+export const IDENTITY_RING_MAX_POST_PX = 400;
+
+/**
+ * How deep into a carrier contour an anchor rung may sit, as a fraction of that
+ * contour's own height.
+ *
+ * D-020 says the anchor is "at the outer top corner" of the carrier. Measured
+ * over the pass-6 matrix, 56% of anchors were in the bottom half of the
+ * lettering and 285 of 1136 in the bottom quarter, because the shoulder ladder
+ * offered every column of the stroke and the score key never charged for the
+ * distance the ring then had to stand off. A rung deeper than this fraction is
+ * the foot of the letter, not its shoulder, and a ring welded there either
+ * hangs the pendant upside down or stands on a rod to reach the top line. The
+ * ladder is cut to the top 35% of the carrier's own height; the lab anchor,
+ * the topmost row of the contour, is at depth 0 and is always in it, so the
+ * ladder is never empty.
+ */
+export const IDENTITY_RING_ANCHOR_MAX_DEPTH_FRACTION = 0.35;
+
+/**
  * How far the ring may be lifted above the position `add_rings` computes, in
  * pixels, to keep the ring hole clear of the name's own ink.
  *
@@ -574,25 +614,20 @@ export const IDENTITY_RING_WELD_ANCHOR_DEPTH = 14;
  * reasoning that the fit reserves exactly that much empty canvas above the
  * lettering. It does, but the lift is measured from the *anchor pixel*, which
  * sits inside the letter, not from the letter top - so `Zoe` with a diaeresis
- * needed 123 px of lift, the cap refused at 110, and all six styles died with
- * `identity_ring_welded_to_glyph`. The real bound is the canvas: a ring lifted
- * past the top edge would have a clipped annulus and no enclosed hole, and the
- * `lowest` clamp in the search already refuses that, so this cap only has to be
- * large enough never to bind before the clamp does.
+ * needed 123 px of lift and the cap refused at 110.
  *
- * Adversarial review 4, minor 4: `IDENTITY_CANVAS` made it unbounded in
- * practice - the search is O(lift x columns x fillet box), about 1.9e8 pixel
- * tests per ring at that cap. The lift a seat actually needs is bounded by the
- * ring band the fit reserves plus the depth of the anchor pixel inside its own
- * stroke; measured over the 576-cell matrix of fix pass 5 the deepest lift any
- * accepted seat used was 144 rows (`zoe-en-kufi`), and 320 is that with more
- * than twice the head-room while still cutting the worst case by two thirds. A
- * seat that would need more lift than this is a seat above the top of the
- * canvas, which the `lowest` clamp refuses anyway. The search reports what it
- * actually spent as `seatSearchSteps`: over the same matrix, 4 to 216080 seats
- * per piece with a mean of 5793.
+ * Adversarial review 6, blocker 1: at 320 the cap was the whole of what bounded
+ * the suspension, and the lift the search spent was free - it was the last term
+ * of the score key and never decided anything. The result was a free-standing
+ * rod: stem p50 203 px, p95 346, 67 of 568 cells with a stem longer than the
+ * whole name was tall, and on Latin faces the rod reads as a letter (`Sara` in
+ * `classic` came out `iSarai`). The lift is now bounded by the same number the
+ * post gate is bounded by (`IDENTITY_RING_MAX_POST_PX`), so no seat the search
+ * can even evaluate carries a rod: at the widest column offset the search
+ * allows, a ring at the top of this band is still inside the post cap. The
+ * gate below it is the independent statement on the encoded piece.
  */
-export const IDENTITY_RING_MAX_LIFT = 320;
+export const IDENTITY_RING_MAX_LIFT = IDENTITY_RING_MAX_POST_PX;
 
 /**
  * Largest enclosed background region, in pixels of the finished PNG, that is a
