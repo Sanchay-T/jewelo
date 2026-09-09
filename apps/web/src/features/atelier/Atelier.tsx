@@ -88,6 +88,8 @@ const arabic: Record<string, string> = {
     "القلادات العربية تُصاغ باسم واحد؛ ويصنع المتجر قطعة الاسمين يدويًا.",
   "Name on your pendant": "الاسم على القلادة",
   "Second name": "الاسم الثاني",
+  "Your photograph is being made. About two minutes.": "جارٍ تصوير قطعتك. نحو دقيقتين.",
+  "The shop will photograph it and send it to you.": "سيصوّرها المتجر ويرسلها إليك.",
   "Language / script": "اللغة / الكتابة",
   "Pendant construction": "بنية القلادة",
   "Lettering style": "أسلوب الخط",
@@ -404,24 +406,16 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
           unavailable: "We will photograph it in the shop and send it",
         }[status];
   const ownPhoto = own.imageFor(view);
-  const showingOwnPhoto = !!ownPhoto && !showSample;
-  /**
-   * The shopper's own run exists but no photograph of it has arrived yet. The
-   * image on screen is still the labelled illustrated sample - the chip over it
-   * says so - but the piece this page is about is theirs, so the captions must
-   * stop calling it an example.
-   */
-  const ownDesignInProgress =
-    state.stage === "review" &&
-    (!!own.run || own.captureStatus === "captured") &&
-    !own.personalized;
-  /**
-   * The run is over and produced no photograph of this piece. The action bar
-   * used to keep saying "being prepared" here, which is the contradiction the
-   * review found: nothing is being prepared by the pipeline any more, the shop
-   * takes it from here.
-   */
-  const ownRunOver = own.run?.outcome === "unavailable";
+  const showingOwnPhoto = !!ownPhoto && (!showSample || own.attempted);
+  // An attempted approval stays the shopper's piece after back, untick or reload.
+  // A failed start has no run id, so run existence alone cannot guard samples.
+  const ownDesignInProgress = own.attempted && !own.personalized;
+  const ownRunOver = own.unavailable;
+  const ownPlaceholderText = t(
+    ownRunOver
+      ? "The shop will photograph it and send it to you."
+      : "Your photograph is being made. About two minutes.",
+  );
   /**
    * The shop received a request. Counted where the capture actually lands
    * rather than on the button, so a submission that the server refused is not
@@ -441,13 +435,11 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
       channel: own.contact.channel,
     });
   }, [own.captureStatus, own.capturedRequestId, own.contact.channel, locale]);
-  const heroSource = showingOwnPhoto ? ownPhoto! : source;
+  const heroSource = showingOwnPhoto ? ownPhoto! : own.attempted ? "" : source;
   /** Only the cameras this family was photographed in; Studio is always one. */
   const shownViews = views.filter((v) => piece.availableViews.includes(v));
   /** The customer's own run covers all four cameras even when the sample does not. */
-  const railViews = own.run
-    ? views.filter((v) => shownViews.includes(v) || !!own.statusFor(v))
-    : shownViews;
+  const railViews = own.attempted ? views : shownViews;
   const shown = piece.family.anchor.asset?.draft ?? d;
   /* The illustrated photograph shows the design (Tier 1). Gold, stones, gem,
      width and chain (Tier 2) are carried into the customer's own preview, so
@@ -475,6 +467,7 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
       : shown.twoNames ? `Asma${join}Fatima` : "Asma";
   const imageFailed = !!piece.errors[view] || imageErrors.includes(source);
   const sampleVisible =
+    !own.attempted &&
     (!run || slot?.status === "ready") &&
     !imageFailed &&
     !!source &&
@@ -2019,9 +2012,11 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                     stepView((dx < 0 ? 1 : -1) * (locale === "ar" ? -1 : 1));
                 }}
               >
-                <span className={s.photoLabel}>
-                  {showingOwnPhoto ? ownPhotoLabel : exampleLabel}
-                </span>
+                {(!own.attempted || showingOwnPhoto) && (
+                  <span className={s.photoLabel}>
+                    {showingOwnPhoto ? ownPhotoLabel : exampleLabel}
+                  </span>
+                )}
                 {showingOwnPhoto ? (
                   <img
                     key={heroSource}
@@ -2038,6 +2033,11 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                     data-personalized-view={view}
                     data-caleums-photo="personalized"
                   />
+                ) : own.attempted ? (
+                  <div className={s.previewState} role="status" data-own-placeholder="true">
+                    <Diamond size={36} aria-hidden="true" />
+                    <h2>{ownPlaceholderText}</h2>
+                  </div>
                 ) : sampleVisible ? (
                   <img
                     ref={photoElement}
@@ -2165,12 +2165,12 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                     )}
                   </p>
                 )}
-                {piece.sampleComing && (
+                {!own.attempted && piece.sampleComing && (
                   <p className={s.previewNote} data-sample-note="look">
                     {sampleNote}
                   </p>
                 )}
-                {!noSample && (
+                {!own.attempted && !noSample && (
                   <p className={s.previewNote} data-sample-note="material">
                     {materialNote}
                   </p>
@@ -2233,6 +2233,11 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                 >
                   <span />
                 </div>
+                {ownDesignInProgress && (
+                  <p className={s.previewNote} role="status" data-own-preview-status="true">
+                    {ownPlaceholderText}
+                  </p>
+                )}
                 <div
                   ref={viewRail}
                   className={s.views}
@@ -2261,7 +2266,8 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                     // The customer's own photograph of this camera, when it exists.
                     const ownView = own.imageFor(v);
                     const ownStatus = own.statusFor(v);
-                    const thumbnail = ownView ?? photo.asset.src;
+                    const placeholder = own.attempted && !ownView;
+                    const thumbnail = ownView ?? (own.attempted ? "" : photo.asset.src);
                     const missing = !thumbnail;
                     /* Once the shopper's own photographs exist, the rail is
                        read as "my four views". Any tile still showing the
@@ -2272,7 +2278,7 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                         key={v}
                         aria-label={t(v)}
                         data-preview-status={
-                          imageErrors.includes(photo.asset.src)
+                          placeholder ? "placeholder" : imageErrors.includes(photo.asset.src)
                             ? "failed"
                             : (status ?? "ready")
                         }
@@ -2288,7 +2294,9 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                           {sampleTile
                             ? (locale === "ar" ? "عينة. " : "Sample. ")
                             : ""}
-                          {ownStatus
+                          {placeholder
+                            ? ownPlaceholderText
+                            : ownStatus
                             ? ownStatusText(ownStatus)
                             : status === "unavailable"
                               ? t("Not photographed for this look")
@@ -2309,7 +2317,11 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                                   ? "جاهز"
                                   : "Preview ready"}
                         </span>
-                        {!missing ? (
+                        {placeholder ? (
+                          <div className={s.missingAngle} data-own-placeholder="true">
+                            <Diamond size={22} aria-hidden="true" />
+                          </div>
+                        ) : !missing ? (
                           <img
                             src={thumbnail}
                             alt={
@@ -2327,7 +2339,9 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                         )}
                         <span>{t(v)}</span>
                         <em aria-hidden="true" data-sample-tile={sampleTile || undefined}>
-                          {sampleTile
+                          {placeholder
+                            ? ownPlaceholderText
+                            : sampleTile
                             ? locale === "ar"
                               ? "عينة"
                               : "Sample"
@@ -2350,7 +2364,7 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                                   "After hours",
                                 ][index]}
                         </em>
-                        {status !== "unavailable" &&
+                        {!placeholder && status !== "unavailable" &&
                           (v === view ||
                             status === "pending" ||
                             status === "failed") && (
@@ -2366,7 +2380,7 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                     );
                   })}
                 </div>
-                {own.personalized && (
+                {own.personalized && !own.attempted && (
                   <div
                     className={s.photoSwitch}
                     role="group"

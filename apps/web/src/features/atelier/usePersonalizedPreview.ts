@@ -93,6 +93,9 @@ interface Submission {
 export interface PersonalizedPreview {
   enabled: boolean;
   phase: PreviewPhase;
+  /** Approval has been attempted for this specification, including a failed start. */
+  attempted: boolean;
+  unavailable: boolean;
   /** The live run, when one exists and belongs to the piece on screen. */
   run?: PersonalizedRun;
   /** Why the personalized path cannot deliver, when it cannot. */
@@ -539,6 +542,9 @@ export function usePersonalizedPreview(input: {
   return {
     enabled,
     phase,
+    attempted: submission?.signature === currentSignature ||
+      (enabled && input.loaded && input.stage === "review" && input.confirmed),
+    unavailable: phase === "degraded" || stalled || watchWindowClosed || run?.outcome === "unavailable",
     run,
     reason,
     imageFor,
