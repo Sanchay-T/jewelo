@@ -1,6 +1,6 @@
-# Larger preview - local follow-up proof, 9 September 2026
+# Larger preview - local and staging follow-up proof, 9 September 2026
 
-Task P6-10. Integrated source: `57189c5aa53a1ba7f525d1b48898a704629d7ebb`, pushed on `codex/overnight-launch-2026-09-08`. The lead drove the local page in their own in-app browser; these screenshots and DOM measurements record those observations. This is focused local evidence, not a completed staging viewport ladder or a real customer photograph.
+Task P6-10. Integrated source: `57189c5aa53a1ba7f525d1b48898a704629d7ebb`, pushed on `codex/overnight-launch-2026-09-08`. The lead drove both the local page and the deployed staging page in their own in-app browser. Local and staging captures are distinguished below; staging UI proof uses mock mode and does not establish a real customer photograph.
 
 At 390x844 the main photograph is 436.8 px tall. Once the full panel scrolls away, an 81 px reminder stays at the top; its inspection button opens a 390x844 dialog. The name-first action focuses `pendant-name`, placing the input at y=305.9 px while the reminder is hidden. At the bottom of the desktop form, the corrected panel is y=16 px and h=583.3 px. RTL 390x844 and short mobile sizes 320x568/390x600 have separate captures below. Three additional initial captures at 1280x720, 1024x768 and 768x1024 were viewed on the built production server after the 13/13 build at `57189c5`; panel heights are 424, 472 and 728 px respectively. Mobile deliberately uses a scrolling full photograph: its whole dock need not fit above the fold on short screens.
 
@@ -33,10 +33,43 @@ Each row links the lead's original screenshot and measurement. JSON values are b
 
 The lead also personally checked the built review step at 390x600: reduced-motion playback stopped, the compact reminder measured 81 px while review controls remained accessible, and enlarged inspection showed the complete photograph in a 390x600 modal. These are local browser observations; the reduced-motion behavior was observed by the lead, while the linked DOM files record geometry and visible text.
 
+## Staging checkpoint - served source 57189c5
+
+Mock deployment `0e64cfea-2da0-4905-8bde-b1c462ec86b7` reached ACTIVE at source `57189c5aa53a1ba7f525d1b48898a704629d7ebb`. Deployment and smoke exited 0; health and protected readiness passed. Evidence: `/tmp/jewelo-staging-plan/mock-deployment-57189c5.json`. The remote dirty checkout was preserved; deployment used a clean separate worktree.
+
+The lead personally inspected staging at all seven viewport sizes: 1440x900, 1280x720, 1024x768, 768x1024, 390x844, 390x600 and 320x568. Initial captures cover all seven; additional captures cover desktop bottom, mobile focus/compact/enlarged inspection, Arabic name entry and RTL short-screen review/confirmation with reduced motion. This is the observed coverage, not every form state at every size. The deployed desktop bottom panel is y=16 px, h=583.3 px; 390x844 photograph h=436.8 px; 320x568 compact reminder h=81 px, with a complete 320x568 inspection dialog. Name focus hides the compact row.
+
+| Staging state | Screenshot | DOM measurement |
+| --- | --- | --- |
+| 1024x768 | [Screenshot](staging-1024x768.png) | [Measurement](staging-1024x768.json) |
+| 1280x720 | [Screenshot](staging-1280x720.png) | [Measurement](staging-1280x720.json) |
+| 1440x900 bottom | [Screenshot](staging-1440x900-bottom.png) | [Measurement](staging-1440x900-bottom.json) |
+| 1440x900 top | [Screenshot](staging-1440x900-top.png) | [Measurement](staging-1440x900-top.json) |
+| 320x568 compact | [Screenshot](staging-320x568-compact.png) | [Measurement](staging-320x568-compact.json) |
+| 320x568 enlarged | [Screenshot](staging-320x568-enlarged.png) | [Measurement](staging-320x568-enlarged.json) |
+| 320x568 name focus | [Screenshot](staging-320x568-name-focus.png) | [Measurement](staging-320x568-name-focus.json) |
+| 320x568 top | [Screenshot](staging-320x568-top.png) | [Measurement](staging-320x568-top.json) |
+| 390x600 top | [Screenshot](staging-390x600-top.png) | [Measurement](staging-390x600-top.json) |
+| 390x844 top | [Screenshot](staging-390x844-top.png) | [Measurement](staging-390x844-top.json) |
+| 768x1024 | [Screenshot](staging-768x1024.png) | [Measurement](staging-768x1024.json) |
+| review 1440x900 | [Screenshot](staging-review-1440x900.png) | [Measurement](staging-review-1440x900.json) |
+| rtl 390x600 confirmation | [Screenshot](staging-rtl-390x600-confirmation.png) | [Measurement](staging-rtl-390x600-confirmation.json) |
+| rtl 390x600 review reduced motion | [Screenshot](staging-rtl-390x600-review-reduced-motion.png) | [Measurement](staging-rtl-390x600-review-reduced-motion.json) |
+| rtl 390x844 | [Screenshot](staging-rtl-390x844.png) | [Measurement](staging-rtl-390x844.json) |
+| rtl name entry | [Screenshot](staging-rtl-name-entry.png) | [Measurement](staging-rtl-name-entry.json) |
+
+The daily policy was tightened with one compare-and-set update and read back: global/per-principal ledger caps 800 cents, provider attempt budget 1, studio_only true, global generation limit 10 and per-principal limit 2. Usage was not reset or edited: 8 runs, 100 cents actual and 100 cents reserved remained unchanged. Evidence: `/tmp/jewelo-staging-plan/runtime-policy-executed.json`. These are ledger values, not an exact provider invoice guarantee.
+
+After the canonical compiler deployment was ACTIVE, four compatible v3 prompt releases were created, published and read back: image.packshot `f2ba654a-3454-4ec0-86ec-a4281a411145`, image.worn `ee9a0920-7bf5-4958-a912-053b1c46b200`, image.macro_gift `b702d84c-cd8e-4b89-b58a-34a289408379`, image.dark_editorial `f9b83ec1-5f67-4bed-8b89-09059904c5a2`. Frozen hashes match the canonical templates; old immutable releases remain. Evidence: `/tmp/jewelo-staging-plan/canonical-publication-executed.json`.
+
+Newer pushed source `b5f9758d60feaf7db75a1f66ac57bcc5b2641cf1` caps the paid name reader's response at a validated 2,048 output tokens. Its full build passed 13/13, exit 0, and two independent source reviews were clean. At this recorded checkpoint the real-mode deployment beginning `927ac5b1` was BUILDING that source; it was not yet the served version in the staging screenshots, and no real-mode image request had been made.
+
+**Verification boundary:** existing real-mode dependencies deliberately use `MockStudioVerifier` plus a paid `OpenAINameReader`. Human lab scoring checks photograph geometry; the running application's paid gate reads the name. It is not a complete automatic geometry/attachment verifier. The token cap does not add provider-cost reconciliation. No four-photo production readiness is claimed.
+
 ## Build, review and remaining proof
 
-The lead reports full `corepack pnpm build`: **13 successful, 13 total**, exit 0, through `57189c5`; two final independent source reviews were clean above minor. No tests ran or changed. The follow-up adds the dictionary key `Start with your name` / `ابدأ باسمك`.
+The lead reports full `corepack pnpm build`: **13 successful, 13 total**, exit 0, through `b5f9758`; two final independent source reviews of the name-reader cap were clean above minor. Staging browser captures above still served `57189c5`. No tests ran or changed. The follow-up adds the dictionary key `Start with your name` / `ابدأ باسمك`.
 
-The earlier seven-item UI acceptance, full dictionary changes and broader local layout matrix remain in [Umayr UI proof](../umayr-ui/README.md). Those earlier captures do not substitute for a final seven-viewport staging pass after this follow-up. At this checkpoint, deployment, final staging RTL/reduced-motion coverage and real API photographs remain pending. The current prompt qualification is recorded in [Image lab](../../../overnight-launch/IMAGE-LAB.md#9-september-follow-up---shared-still-compiler-and-studio-candidate-c).
+The earlier seven-item UI acceptance, full dictionary changes and broader local layout matrix remain in [Umayr UI proof](../umayr-ui/README.md). Those earlier captures do not substitute for the newer staging observations above. Mock staging UI coverage and canonical publication are complete at this checkpoint; activation and smoke of the newer real-mode deployment and real API photographs remain pending. The current prompt qualification is recorded in [Image lab](../../../overnight-launch/IMAGE-LAB.md#9-september-follow-up---shared-still-compiler-and-studio-candidate-c).
 
 The separate identity/jobs work in the original checkout remains excluded. PROGRESS.md and HANDOVER.md are unchanged under the original brief's explicit boundary.
