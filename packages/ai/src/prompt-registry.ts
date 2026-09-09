@@ -449,6 +449,20 @@ const STILL_ROLE_RULES = {
   inspiration: "is optional customer inspiration only; never copy text, identity, branding or unapproved objects from it.",
 } as const;
 
+/** Reject legacy role numbering before a release can become active. */
+export function assertStillTemplateCompatibility(
+  profile: PromptProfile,
+  template: string,
+) {
+  if (!["image.packshot", "image.worn", "image.macro_gift", "image.dark_editorial"].includes(profile))
+    return;
+  // Check template prose, not interpolated customer names or saved snapshots.
+  if (/\bimage\s+\d|\b(first|second|third|fourth)\s+(supplied\s+)?(image|input)|IMAGE ROLES/iu.test(template))
+    throw new Error(
+      "Still prompt uses legacy image numbering or IMAGE ROLES. Create a new release using @stencil, @master, @style and @inspiration tags; image order is assigned by the compiler.",
+    );
+}
+
 /** Compiles a new release; stored snapshots never pass through this function. */
 export function compileStillPrompt(input: {
   profile: PromptProfile;
@@ -472,8 +486,7 @@ export function compileStillPrompt(input: {
   };
   // Inspect the release prose before interpolation: an approved customer name
   // such as "First Image" is data, not a legacy reference instruction.
-  if (/\bimage\s+\d|\b(first|second|third|fourth)\s+(supplied\s+)?(image|input)|IMAGE ROLES/iu.test(input.template))
-    throw new Error("still_legacy_reference_roles_require_new_release");
+  assertStillTemplateCompatibility(input.profile, input.template);
   const compiled = compilePrompt({ ...input, variables });
   const references = buildStillReferences({
     identityImageUrl: "stencil",

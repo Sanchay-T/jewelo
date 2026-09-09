@@ -1,4 +1,8 @@
-import { isPromptProfile, validatePromptTemplate } from "@jewelo/ai";
+import {
+  assertStillTemplateCompatibility,
+  isPromptProfile,
+  validatePromptTemplate,
+} from "@jewelo/ai";
 import {
   assertSameOrigin,
   operatorMockMode,
@@ -164,6 +168,7 @@ export async function POST(request: Request) {
       if (!input.changeNote.trim() || input.changeNote.length > 500)
         throw new Error("Change note must be 1–500 characters");
       const parsed = validatePromptTemplate(input.profile, input.template);
+      assertStillTemplateCompatibility(input.profile, input.template);
       let release: StoredPromptRelease;
       if (mockMode())
         release = createMockPromptRelease({
@@ -210,9 +215,18 @@ export async function POST(request: Request) {
           releaseId: input.releaseId,
           expectedCurrentReleaseId: input.expectedCurrentReleaseId,
         });
-      else
+      else {
+        const admin = adminConfig();
+        const releases = await supabaseRequest<StoredPromptRelease[]>(
+          admin,
+          `/rest/v1/prompt_releases?id=eq.${encodeURIComponent(input.releaseId)}&select=id,profile,template&limit=1`,
+        );
+        const release = releases[0];
+        if (!release) throw new Error("Prompt release not found");
+        validatePromptTemplate(release.profile, release.template);
+        assertStillTemplateCompatibility(release.profile, release.template);
         await supabaseRequest(
-          adminConfig(),
+          admin,
           "/rest/v1/rpc/publish_prompt_release",
           {
             method: "POST",
@@ -223,6 +237,7 @@ export async function POST(request: Request) {
             }),
           },
         );
+      }
       return Response.json(
         { requestId: id },
         { headers: { "cache-control": "no-store", "x-request-id": id } },
