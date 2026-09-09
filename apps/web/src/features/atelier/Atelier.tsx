@@ -72,6 +72,7 @@ const arabic: Record<string, string> = {
   // spelling is what buys the run. It is named for what it does; the key had to
   // change with it or the Arabic journey would silently read the English one.
   "Review my piece": "مراجعة قطعتي",
+  "Start with your name": "ابدأ باسمك",
   "Back to design": "العودة للتصميم",
   "Your piece, in every light.": "قطعتك في كل ضوء.",
   "Add to bag": "أضف إلى الحقيبة",
@@ -505,6 +506,7 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
    * an edit makes the old one stale and leaves this true again.
    */
   const needsPreview = !run;
+  const needsFirstName = state.stage === "design" && !d.name.trim();
   const rotatingViews = views.filter(
     (v) =>
       piece.views[v] &&
@@ -2468,10 +2470,19 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
             className={s.primary}
             /* A sample photograph that does not exist yet never blocks the
                customer's own preview: only real work in flight does. */
-            disabled={!loaded || (!noSample && piece.status === "pending") || saving}
-            onClick={generate}
+            disabled={!loaded || (!needsFirstName && ((!noSample && piece.status === "pending") || saving))}
+            onClick={() => {
+              if (!needsFirstName) {
+                void generate();
+                return;
+              }
+              go("design", "name");
+              requestAnimationFrame(() => {
+                document.getElementById("pendant-name")?.focus();
+              });
+            }}
           >
-            {t("Review my piece")}
+            {t(needsFirstName ? "Start with your name" : "Review my piece")}
             <ArrowRight size={19} />
           </button>
         ) : (
