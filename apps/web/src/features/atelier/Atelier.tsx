@@ -72,6 +72,8 @@ const arabic: Record<string, string> = {
   // spelling is what buys the run. It is named for what it does; the key had to
   // change with it or the Arabic journey would silently read the English one.
   "Review my piece": "مراجعة قطعتي",
+  "Reference only": "للاطلاع فقط",
+  "You can explore this style. Personal previews are not available for it yet.": "يمكنك استكشاف هذا الأسلوب. المعاينات الشخصية غير متاحة له بعد.",
   "Start with your name": "ابدأ باسمك",
   "Back to design": "العودة للتصميم",
   "Your piece, in every light.": "قطعتك في كل ضوء.",
@@ -274,17 +276,10 @@ const sellable = sellableLooks({
   NEXT_PUBLIC_SELLABLE_ENGLISH_LETTERING: process.env.NEXT_PUBLIC_SELLABLE_ENGLISH_LETTERING,
   NEXT_PUBLIC_SELLABLE_ARABIC_LETTERING: process.env.NEXT_PUBLIC_SELLABLE_ARABIC_LETTERING,
 });
-const offeredConstructions = constructions.filter((option) => sellable.constructions.has(option));
-const offeredLetters = (script: Draft["script"]) => letters.filter((option) =>
-  (script === "Arabic" ? sellable.arabicLettering : sellable.englishLettering).has(option),
-);
-function sellableDraft(draft: Draft): Draft {
-  const construction = offeredConstructions.includes(draft.construction)
-    ? draft.construction : offeredConstructions[0]!;
-  const options = offeredLetters(draft.script);
-  const lettering = options.includes(draft.lettering) ? draft.lettering : options[0]!;
-  return construction === draft.construction && lettering === draft.lettering
-    ? draft : { ...draft, construction, lettering };
+function isSellableDraft(draft: Draft) {
+  return sellable.constructions.has(draft.construction) &&
+    (draft.script === "Arabic" ? sellable.arabicLettering : sellable.englishLettering)
+      .has(draft.lettering);
 }
 
 const icons = ["Aa", "◇", "▱", "≋"];
@@ -368,12 +363,9 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
   const workspace = useRef<HTMLDivElement>(null);
   const previewPanel = useRef<HTMLElement>(null);
   const actionBar = useRef<HTMLDivElement>(null);
-  const d = sellableDraft(state.draft);
-  useEffect(() => {
-    if (d === state.draft) return;
-    setConfirmed(false);
-    setState((old) => ({ ...old, draft: sellableDraft(old.draft) }));
-  }, [d, state.draft]);
+  // Browsing all styles does not certify them for a personal request.
+  const d = state.draft;
+  const isSellable = isSellableDraft(d);
   /**
    * The draft checked on every render, not only when "Review my piece" was
    * pressed. Step 02 stays reachable - a shopper can switch to two names from
@@ -406,7 +398,7 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
     // A confirmation left over from a valid draft never survives an edit that
     // breaks it: the run may only be started for a specification the shop can
     // actually make.
-    confirmed: confirmed && !confirmBlockedBy,
+    confirmed: confirmed && !confirmBlockedBy && isSellable,
     sample: piece.family.anchor.asset,
     ...(fixtureDeps ? { deps: fixtureDeps, enabled: true } : {}),
   });
@@ -496,7 +488,7 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
   const currentReady = !noSample && piece.key === assemblyKey(d) && !!source && !imageFailed;
   const ownKept = own.personalized || own.captureStatus === "captured";
   const eligible =
-    canAdd(d, run, confirmed, ownKept) &&
+    isSellable && canAdd(d, run, confirmed, ownKept) &&
     (currentReady || ownKept) &&
     !saving;
   /**
@@ -725,12 +717,13 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
     setErrors({});
     setState((old) => ({
       ...old,
-      draft: sellableDraft({ ...old.draft, [key]: value }),
+      draft: { ...old.draft, [key]: value },
       sampleFocus: (visualFields as readonly string[]).includes(key) ? key as VisualField : old.sampleFocus,
     }));
   }
   /** Local for this render, durable on the run it approves. */
   function confirmSpelling(next: boolean) {
+    if (next && !isSellable) return;
     // Only the tick itself is a journey moment; clearing it is bookkeeping the
     // shopper never performed (an edit calls this with `false`). The script is
     // the alphabet the piece is made in, not the name in it.
@@ -1162,24 +1155,28 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
      * under the option, `note` the sentence under the field once it is chosen.
      */
     advisory?: (value: T) => { tile: string; note: string } | undefined,
+    referenceOnly?: (value: T) => boolean,
   ) {
     return (
       <fieldset className={s.field}>
         <legend>{t(label)}</legend>
         <div className={visual ? s.visualChoices : s.choices}>
           {options.map((option, i) => {
-            const refused = !!unphotographed?.(option);
+            const inspectionOnly = !!referenceOnly?.(option);
+            const refused = !inspectionOnly && !!unphotographed?.(option);
             const advice = refused ? undefined : advisory?.(option);
             // One note per option: a look with no photograph at all does not
             // also get told that its sample is on its way, and an option the
             // shop makes differently says that rather than "sample coming".
-            const coming = refused || advice ? undefined : note?.(option);
+            const coming = inspectionOnly || refused || advice ? undefined : note?.(option);
             return (
               <button
                 key={option}
                 type="button"
                 aria-label={
-                  refused
+                  inspectionOnly
+                    ? `${t(String(option))} - ${t("Reference only")}`
+                    : refused
                     ? `${t(String(option))} - ${t("Not yet photographed")}`
                     : advice
                       ? `${t(String(option))} - ${advice.tile}`
@@ -1188,6 +1185,7 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                 aria-pressed={option === value}
                 disabled={disabled?.includes(option)}
                 data-not-photographed={refused ? true : undefined}
+                data-reference-only={inspectionOnly || undefined}
                 data-advisory={advice ? true : undefined}
                 data-sample-coming={coming ? true : undefined}
                 onClick={() => onChange(option)}
@@ -1200,6 +1198,8 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                 )}
                 {disabled?.includes(option) ? (
                   <small>{t("Unavailable")}</small>
+                ) : inspectionOnly ? (
+                  <small>{t("Reference only")}</small>
                 ) : refused ? (
                   <small>{t("Not yet photographed")}</small>
                 ) : advice ? (
@@ -1509,7 +1509,7 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                   <>
                     {choices(
                       "Pendant construction",
-                      offeredConstructions,
+                      constructions,
                       d.construction,
                       (x) => change("construction", x),
                       (x) => (
@@ -1517,13 +1517,14 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                       ),
                       undefined,
                       (x) => comingNote({ construction: x }),
-                      (x) =>
-                        notPhotographed({ construction: x }),
+                      (x) => notPhotographed({ construction: x }),
+                      undefined,
+                      (x) => !sellable.constructions.has(x),
                     )}
 
                     {choices(
                       "Lettering style",
-                      offeredLetters(d.script),
+                      letters,
                       d.lettering,
                       (x) => change("lettering", x),
                       (lettering) => {
@@ -1556,6 +1557,13 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                       undefined,
                       undefined,
                       (x) => notPhotographed({ lettering: x }),
+                      undefined,
+                      (x) => !(d.script === "Arabic" ? sellable.arabicLettering : sellable.englishLettering).has(x),
+                    )}
+                    {!isSellable && (
+                      <p className={s.fieldNote} role="status">
+                        {t("You can explore this style. Personal previews are not available for it yet.")}
+                      </p>
                     )}
 
                     {d.twoNames && (
@@ -1725,15 +1733,15 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                   <input
                     id="confirm-spelling"
                     type="checkbox"
-                    checked={confirmed && !confirmBlockedBy}
-                    disabled={!!confirmBlockedBy}
+                    checked={confirmed && !confirmBlockedBy && isSellable}
+                    disabled={!!confirmBlockedBy || !isSellable}
                     aria-describedby={
-                      confirmBlockedBy ? "confirm-blocked" : undefined
+                      !isSellable ? "reference-only-note" : confirmBlockedBy ? "confirm-blocked" : undefined
                     }
                     onChange={(e) => confirmSpelling(e.target.checked)}
                   />
                   <span id="confirm-spelling-label">
-                    {locale === "ar"
+                    {!isSellable ? t("Reference only") : locale === "ar"
                       ? own.enabled
                         ? "أؤكد صحة كتابة الاسم والتفاصيل المحددة، وابدأوا معاينتي الشخصية."
                         : "أؤكد صحة كتابة الاسم والتفاصيل المحددة."
@@ -1757,7 +1765,12 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                     </button>
                   </p>
                 )}
-                {own.enabled && (
+                {!isSellable && (
+                  <p id="reference-only-note" className={s.fieldNote} role="status">
+                    {t("You can explore this style. Personal previews are not available for it yet.")}
+                  </p>
+                )}
+                {own.enabled && isSellable && (
                   <section
                     className={s.ownPreview}
                     aria-live="polite"
@@ -1949,8 +1962,10 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                         <button
                           className={s.outline}
                           type="button"
-                          disabled={own.captureStatus === "sending"}
-                          onClick={() => void own.submitContact()}
+                          disabled={!isSellable || own.captureStatus === "sending"}
+                          onClick={() => {
+                            if (isSellable) void own.submitContact();
+                          }}
                         >
                           {own.captureStatus === "sending"
                             ? locale === "ar"
