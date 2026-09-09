@@ -212,7 +212,6 @@ export async function GET(request: Request) {
       "design_revisions",
       "generation_runs",
       "generation_tasks",
-      "assets",
       "price_snapshots",
       "quotes",
       "orders",
@@ -225,20 +224,28 @@ export async function GET(request: Request) {
           `/rest/v1/${table}?select=${
             table === "generation_tasks"
               ? TASK_COLUMNS
-              : table === "assets"
-                ? ASSET_COLUMNS
-                : table === "audit_events"
-                  ? AUDIT_COLUMNS
-                  : "*"
+              : table === "audit_events"
+                ? AUDIT_COLUMNS
+                : "*"
           }&order=created_at${scope(table)}`,
           {},
           bearer,
         ),
       ),
     );
-    const rows = Object.fromEntries(
-      tables.map((table, index) => [table, results[index] ?? []]),
+    // Assets must be read after task rows: parallel REST reads can straddle
+    // an atomic completion and pair a new ready task with an old empty asset
+    // list. The browser reasonably stops polling terminal rows.
+    const assetRows = await supabaseRequest<Array<Record<string, unknown>>>(
+      config,
+      `/rest/v1/assets?select=${ASSET_COLUMNS}&order=created_at${scope("assets")}`,
+      {},
+      bearer,
     );
+    const rows = Object.fromEntries([
+      ...tables.map((table, index) => [table, results[index] ?? []]),
+      ["assets", assetRows],
+    ]);
     if (designId) {
       // generation_tasks has no design_id column; scope it through its run.
       const runIds = new Set(

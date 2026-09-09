@@ -1331,118 +1331,87 @@ export class SupabasePresentationRepository implements PresentationRepository {
     identityArtifactId: string;
     inputAssetIds?: readonly string[];
   }): Promise<TransitionOutcome> {
-    // Claim `ready` first: a task cancelled mid-verification must not gain an
-    // asset, a motion request, or a `task.ready` audit event.
-    const ready = await this.transitionTask(
-      input.task.id,
-      ["generating", "verifying"],
-      "ready",
-    );
-    if (ready === "cancelled") return "cancelled";
-    await this.#request("/rest/v1/assets", {
-      method: "POST",
-      headers: { prefer: "resolution=ignore-duplicates" },
-      body: JSON.stringify({
-        design_id: input.run.design_id,
-        revision_id: input.revision.id,
-        run_id: input.run.id,
-        task_id: input.task.id,
-        owner_principal_id: input.task.owner_principal_id,
-        presentation_view: input.task.presentation_view,
-        bucket_id: input.stored.bucket,
-        object_path: input.stored.path,
-        mime_type: input.media.mimeType,
-        byte_size: input.media.bytes.byteLength,
-        checksum_sha256: input.stored.checksum,
-        provider: input.media.provider,
-        model: input.media.model,
-        prompt_release: input.task.prompt_release,
-        prompt_release_id: input.task.prompt_release_id,
-        identity_fingerprint: input.identityFingerprint,
-        identity_artifact_id: input.identityArtifactId,
-        attempt: input.attempt,
-        verification_result: input.verification,
-        pipeline_release: input.task.pipeline_release,
-        style_anchor_release_id: input.task.style_anchor_release_id,
-        input_asset_ids: input.inputAssetIds ?? [],
-      }),
-    });
-    await this.#request("/rest/v1/rpc/reconcile_provider_attempt", {
-      method: "POST",
-      body: JSON.stringify({
-        p_task_id: input.task.id,
-        p_attempt: input.attempt,
-        p_status: "succeeded",
-        p_actual_cost_cents: input.media.estimatedCostCents,
-        p_terminal: true,
-      }),
-    });
-    let motionPreview = "not_applicable";
-    if (input.task.presentation_view === "studio") {
-      // The three model views only become dispatchable once this still exists.
-      await this.#request("/rest/v1/rpc/release_dependent_tasks", {
+    // The database owns the cancellation fence and publishes asset + ready +
+    // accounting together. A replay cannot charge or create the asset twice.
+    try {
+      await this.#request("/rest/v1/rpc/complete_presentation_task", {
         method: "POST",
-        body: JSON.stringify({ p_source_task_id: input.task.id }),
+        body: JSON.stringify({
+          p_task_id: input.task.id,
+          p_attempt: input.attempt,
+          p_actual_cost_cents: input.media.estimatedCostCents,
+          p_asset: {
+            design_id: input.run.design_id,
+            revision_id: input.revision.id,
+            run_id: input.run.id,
+            task_id: input.task.id,
+            owner_principal_id: input.task.owner_principal_id,
+            presentation_view: input.task.presentation_view,
+            bucket_id: input.stored.bucket,
+            object_path: input.stored.path,
+            mime_type: input.media.mimeType,
+            byte_size: input.media.bytes.byteLength,
+            checksum_sha256: input.stored.checksum,
+            provider: input.media.provider,
+            model: input.media.model,
+            prompt_release: input.task.prompt_release,
+            prompt_release_id: input.task.prompt_release_id,
+            identity_fingerprint: input.identityFingerprint,
+            identity_artifact_id: input.identityArtifactId,
+            attempt: input.attempt,
+            verification_result: input.verification,
+            pipeline_release: input.task.pipeline_release,
+            style_anchor_release_id: input.task.style_anchor_release_id,
+            input_asset_ids: input.inputAssetIds ?? [],
+          },
+        }),
       });
-      // Motion is opt-in; with video off no fal preview is requested.
-      if (!this.videoEnabled) motionPreview = "disabled";
-      else {
-        try {
-          await this.#request("/rest/v1/rpc/request_video_task", {
-            method: "POST",
+    } catch (error) {
+      if (isTaskCancelled(error)) return "cancelled";
+      throw error;
+    }
+    if (input.task.presentation_view === "studio" && this.videoEnabled) {
+      // Still completion and dependent dispatch are already committed. Motion
+      // remains opt-in and uses its existing idempotent request key.
+      try {
+        await this.#request("/rest/v1/rpc/request_video_task", {
+          method: "POST",
+          body: JSON.stringify({
+            p_run_id: input.run.id,
+            p_kind: "preview",
+            p_source_task_id: input.task.id,
+            p_request_key: `auto-preview:${input.run.id}:${input.task.id}`,
+          }),
+        });
+      } catch (error) {
+        const reason = String(
+          error instanceof Error ? error.message : "unknown",
+        ).slice(0, 120);
+        await this.#request("/rest/v1/audit_events", {
+          method: "POST",
+          body: JSON.stringify({
+            design_id: input.run.design_id,
+            principal_id: input.task.owner_principal_id,
+            actor_type: "job",
+            action: "video.auto_request_failed",
+            detail: { sourceTaskId: input.task.id, reason },
+          }),
+        });
+        // The still stays ready; only the run carries the visible motion failure.
+        await this.#request(
+          `/rest/v1/generation_runs?id=eq.${input.run.id}`,
+          {
+            method: "PATCH",
             body: JSON.stringify({
-              p_run_id: input.run.id,
-              p_kind: "preview",
-              p_source_task_id: input.task.id,
-              p_request_key: `auto-preview:${input.run.id}:${input.task.id}`,
+              operator_review_reason: `video_request_failed:${reason}`.slice(
+                0,
+                300,
+              ),
             }),
-          });
-          motionPreview = "requested";
-        } catch (error) {
-          motionPreview = "operator_review";
-          const reason = String(
-            error instanceof Error ? error.message : "unknown",
-          ).slice(0, 120);
-          await this.#request("/rest/v1/audit_events", {
-            method: "POST",
-            body: JSON.stringify({
-              design_id: input.run.design_id,
-              principal_id: input.task.owner_principal_id,
-              actor_type: "job",
-              action: "video.auto_request_failed",
-              detail: { sourceTaskId: input.task.id, reason },
-            }),
-          });
-          // The still stays ready; only the run carries the visible motion failure.
-          await this.#request(
-            `/rest/v1/generation_runs?id=eq.${input.run.id}`,
-            {
-              method: "PATCH",
-              body: JSON.stringify({
-                operator_review_reason: `video_request_failed:${reason}`.slice(
-                  0,
-                  300,
-                ),
-              }),
-            },
-          );
-        }
+          },
+        );
       }
     }
-    await this.#request("/rest/v1/audit_events", {
-      method: "POST",
-      body: JSON.stringify({
-        design_id: input.run.design_id,
-        principal_id: input.task.owner_principal_id,
-        actor_type: "job",
-        action: "task.ready",
-        detail: {
-          taskId: input.task.id,
-          attempt: input.attempt,
-          motionPreview,
-        },
-      }),
-    });
     return "applied";
   }
   async fail(input: {
