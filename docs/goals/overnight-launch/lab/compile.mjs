@@ -306,7 +306,11 @@ async function renderRequest(input) {
     throw new Error("still_master_required");
   if (input.presentationView === "studio" && references.styleAnchorUrl)
     throw new Error("studio_style_reference_not_approved");
-  if (Boolean(references.inspirationImageUrl) !== Boolean(input.specification?.referenceAsset))
+  const approvedInspiration = input.specification?.referenceAsset;
+  if (approvedInspiration && (typeof approvedInspiration !== "object" ||
+      Array.isArray(approvedInspiration) || !approvedInspiration.id))
+    throw new Error("inspiration_reference_approval_invalid");
+  if (Boolean(references.inspirationImageUrl) !== Boolean(approvedInspiration))
     throw new Error("inspiration_reference_approval_mismatch");
   const template = input.template ?? BASELINE_PROMPT_TEMPLATES[profile];
   const compiled = compileStillPrompt({
