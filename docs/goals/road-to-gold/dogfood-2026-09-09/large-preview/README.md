@@ -1,6 +1,6 @@
 # Larger preview - local and staging follow-up proof, 9 September 2026
 
-**New P6-11 objective:** prepare four additional internal-team preview runs today, one run per person with manual design review. Pilot code is implemented and independently reviewed; build, deployment and quota opening are pending. The current served code and completed earlier proof remain below.
+**New P6-11 objective:** prepare four additional internal-team preview runs today, one run per person with manual design review. Pilot code is implemented, independently reviewed and built; deployment and quota opening are pending. The current served code and completed earlier proof remain below.
 
 Task P6-10 is complete for the requested preview/form and live-display scope. Current real staging serves `ba06a6605c8882ddb84af5af0a8f569dc44d7883` on `codex/overnight-launch-2026-09-08`: the lead watched a real Arabic four-view result arrive without reload, inspected every view and checked enlarged inspection, then checked the completed page at all seven viewport sizes. New requests are currently blocked by the validation quota of 10/10; other product-readiness limits are stated below.
 
@@ -163,7 +163,7 @@ The separate uncommitted identity-engine and stencil-renderer script work in the
 
 ## P6-11 - internal preview pilot prepared, not yet open
 
-Candidate source `48f81a4595d1669bc77cf95cbe83b49359a522ce` contains two targeted changes: `1af429f` gives the Arabic Reset label its natural width, and `48f81a4` lets dependent views reuse the verified immutable Studio stencil rather than rerendering it. Both fresh independent reviews were clean above minor. The build is pending at this checkpoint; current real staging still serves `ba06a66` and the exhausted 10/10 validation quota still blocks new requests.
+Candidate source `48f81a4595d1669bc77cf95cbe83b49359a522ce` contains two targeted changes: `1af429f` gives the Arabic Reset label its natural width, and `48f81a4` lets dependent views reuse the verified immutable Studio stencil rather than rerendering it. Both fresh independent reviews were clean above minor. The clean `48f81a4` build passed **13 successful, 13 total**, exit 0 (11 cached, 1m33.618s; `/tmp/jewelo-four-person-pilot-build.log`). Deployment is underway; current verified real staging still serves `ba06a66` and the exhausted 10/10 validation quota still blocks new requests until the new deployment and policy are confirmed.
 
 The lead personally checked the Reset fix locally at RTL 320x568 and 390x844: the full label measured 90.078 by 44 px, stayed inside the toolbar, and zoom/reset/close worked. The other zoom controls retain their 44 px minimum targets.
 
