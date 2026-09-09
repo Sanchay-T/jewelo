@@ -193,6 +193,8 @@ const arabic: Record<string, string> = {
   "Use Arabic letters and spaces.": "استخدم حروفًا عربية ومسافات.",
   "Enter a name containing Latin letters.": "اكتب اسمًا بحروف لاتينية.",
   "Enter a name containing Arabic letters.": "اكتب اسمًا بحروف عربية.",
+  "Enter the exact Arabic spelling, or choose English.": "اكتب الاسم بالعربية كما تريده تمامًا، أو اختر الإنجليزية.",
+  "Your keyboard is in English; switch it to Arabic or choose English above.": "لوحة مفاتيحك بالإنجليزية؛ بدّلها إلى العربية أو اختر الإنجليزية أعلاه.",
   "Together these two names are longer than we can make as one pendant. Shorten one of them.":
     "الاسمان معًا أطول مما يمكننا صنعه في قلادة واحدة. اختصر أحدهما.",
   "This is the longest name we can make: 30 characters.":
@@ -378,6 +380,10 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
    * run and the page dies on the throw.
    */
   const draftErrors = validate(d);
+  const arabicKeyboardMismatch = d.script === "Arabic" && /\p{Script=Latin}/u.test(d.name);
+  const nameError = arabicKeyboardMismatch
+    ? "Enter the exact Arabic spelling, or choose English."
+    : errors.name;
   /** The one sentence that says why the confirmation cannot be ticked yet. */
   const confirmBlockedBy =
     draftErrors.name ?? draftErrors.secondName ?? draftErrors.fit;
@@ -1391,6 +1397,7 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                       {t("Name on your pendant")}
                       <input
                         id="pendant-name"
+                        lang={d.script === "Arabic" ? "ar" : "en"}
                         value={d.name}
                         dir={d.script === "Arabic" ? "rtl" : "auto"}
                         placeholder={
@@ -1398,10 +1405,11 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                         }
                         maxLength={NAME_MAX}
                         onChange={(e) => change("name", e.target.value)}
-                        aria-invalid={!!errors.name}
+                        aria-invalid={!!nameError}
                         aria-describedby={
                           [
-                            errors.name ? "name-error" : "spelling-help",
+                            nameError ? "name-error" : "spelling-help",
+                            arabicKeyboardMismatch ? "arabic-keyboard-hint" : "",
                             atLimit(d.name) ? "name-limit" : "",
                           ]
                             .filter(Boolean)
@@ -1410,9 +1418,14 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                         autoComplete="off"
                       />
                     </label>
-                    {errors.name && (
+                    {nameError && (
                       <p id="name-error" role="alert" className={s.error}>
-                        {t(errors.name)}
+                        {t(nameError)}
+                      </p>
+                    )}
+                    {arabicKeyboardMismatch && (
+                      <p id="arabic-keyboard-hint" className={s.help}>
+                        {t("Your keyboard is in English; switch it to Arabic or choose English above.")}
                       </p>
                     )}
                     {/* The field stops accepting characters at the cap. Saying
