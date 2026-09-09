@@ -1261,6 +1261,15 @@
   .app[data-text-entry="true"] .actionBar {
     display: none;
   }
+  .app[data-text-entry="true"] .preview {
+    position: static;
+  }
+  .app[data-text-entry="true"] .previewSticky {
+    max-block-size: none;
+  }
+  .app[data-text-entry="true"] .controls :is(input, textarea, button) {
+    scroll-margin-block-start: 16px;
+  }
   .app[data-text-entry="true"] {
     padding-bottom: 140px;
   }

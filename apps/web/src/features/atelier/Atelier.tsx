@@ -676,14 +676,14 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
     const actions = actionBar.current;
     if (!root || !panel || !actions) return;
     const update = () => {
+      // The keyboard gets the screen while typing. Preserve the last complete
+      // panel size; the non-sticky preview can scroll away above the field.
+      if (editingText && window.matchMedia("(max-width: 767px)").matches) return;
       const styles = getComputedStyle(panel);
       const gap = parseFloat(styles.getPropertyValue("--preview-gap"));
       const reserved = parseFloat(styles.getPropertyValue("--preview-reserved"));
       const initialTop = root.getBoundingClientRect().top + window.scrollY;
-      const viewportHeight = Math.min(
-        window.innerHeight,
-        window.visualViewport?.height ?? window.innerHeight,
-      );
+      const viewportHeight = window.innerHeight;
       const budget = Math.max(0, Math.min(
         viewportHeight - reserved,
         viewportHeight - Math.max(initialTop, gap)
@@ -706,7 +706,7 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
       window.removeEventListener("resize", update);
       window.visualViewport?.removeEventListener("resize", update);
     };
-  }, [locale, state.stage]);
+  }, [locale, state.stage, editingText]);
 
   function change<K extends keyof Draft>(key: K, value: Draft[K]) {
     if (d[key] === value) return;
