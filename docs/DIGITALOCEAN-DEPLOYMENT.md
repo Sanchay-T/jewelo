@@ -346,6 +346,19 @@ The order for P5-2, first real-provider smoke on staging:
    `docs/goals/road-to-gold/dogfood-2026-09-08/staging-journey.md` (`P5-1 caps`):
    `global_max_reserved_spend_cents 800`, `global_daily_generation_limit 2`,
    `daily_generation_limit 2`.
+   This step is not optional and is no longer a matter of remembering it.
+   Storyline review 1 M2 found the row back at `6000` cents and `100` attempts, one
+   `PROVIDER_MODE` flip away from spending four hundred cents a run against a six
+   thousand cent ceiling, so the worker now refuses the flip itself: in real mode
+   every dispatch reads `public.runtime_policy` once (cached for
+   `pipelineLimits.policyCacheMs`, 60 s) and blocks the task pre-spend with
+   `terminal_error_code = 'spend_ceiling_not_set:cap=<cents>,max=<cents>'` while
+   `global_max_reserved_spend_cents` is above `REAL_MODE_MAX_RESERVED_SPEND_CENTS`
+   (default 800) or `provider_attempt_budget` is above
+   `REAL_MODE_MAX_ATTEMPT_BUDGET` (default 3). No reservation is booked and no
+   provider is called. Both ceilings are optional app-spec variables in
+   `@jewelo/config`; raising one only permits a looser policy row, it never lets a
+   run spend more. Mock mode never reads the row.
 2. `update public.runtime_policy set studio_only = true, updated_at = now() where id = true;`
    and read the row back.
 3. Ship `PROVIDER_MODE=real` (spec update plus deploy) and smoke it.

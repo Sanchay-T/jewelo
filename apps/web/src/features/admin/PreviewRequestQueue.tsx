@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   PREVIEW_REQUEST_STATUSES,
+  isDeterministicRefusal,
   type PreviewRequestCommand,
   type PreviewRequestStatus,
 } from "@jewelo/contracts";
@@ -52,6 +53,8 @@ const PLAIN_WORDS: Readonly<Record<string, string>> = {
   identity_ring_span_too_narrow: "The rings sit too close together to hang straight.",
   identity_ring_overhang_too_wide: "The rings hang past the letters.",
   identity_ring_tilt_too_steep: "The pendant would hang crooked.",
+  identity_ring_post_too_long:
+    "The rings would need a stem too long to look right.",
   identity_ring_welded_to_glyph: "The rings run into a letter.",
   identity_ring_punched_ink: "The rings would cut into a letter.",
   identity_bar_fallback:
@@ -79,6 +82,10 @@ const PLAIN_WORDS: Readonly<Record<string, string>> = {
     "A photograph stopped half way. Check it before running it again.",
   video_poll_timeout: "The film took too long and was let go.",
   style_anchor_missing: "A reference photograph is missing.",
+  prompt_compile_failed:
+    "The recipe cannot be written for this specification.",
+  studio_only_policy:
+    "The shop is set to the studio photograph only, so this view was not taken.",
   task_prompt_release_mismatch: "The recipe versions do not line up.",
   prompt_snapshot_lineage_mismatch: "The recipe versions do not line up.",
   pre_spend_gate_failed: "The piece was stopped before anything was spent.",
@@ -139,6 +146,7 @@ interface StillsState {
 export function PreviewRequestQueue() {
   const [requests, setRequests] = useState<OperatorPreviewRequestRecord[]>([]);
   const [reviewRuns, setReviewRuns] = useState<OperatorReviewRun[]>([]);
+  const [reviewError, setReviewError] = useState("");
   const [filter, setFilter] = useState<PreviewRequestStatus | "all">("all");
   const [busy, setBusy] = useState<string>();
   const [error, setError] = useState("");
@@ -170,10 +178,17 @@ export function PreviewRequestQueue() {
     }
     try {
       setReviewRuns(await loadOperatorReviewRuns());
+      setReviewError("");
     } catch {
       // The stopped-run list is an addition to the queue, not the queue: a
       // failure here leaves the requests readable and says so on its own line.
-      setReviewRuns([]);
+      //
+      // Storyline review 1, minor: it used to say so nowhere. An empty list and
+      // a list that could not be loaded looked identical, so a shop reading
+      // "nothing stopped today" could be reading a broken read instead. The
+      // previously loaded runs are kept - stale is more use than blank - and
+      // the line below says the refresh failed.
+      setReviewError("The stopped pieces could not be loaded.");
     }
   }, [filter]);
 
@@ -281,14 +296,26 @@ export function PreviewRequestQueue() {
                 {task.errorCode ?? "no code"}
               </span>
               <span>{plainWords(task.errorCode)}</span>
-              <button
-                type="button"
-                className="clm-secondary"
-                disabled={busy === task.id || task.cancelRequested}
-                onClick={() => void retry(run, task.id)}
-              >
-                Photograph it again
-              </button>
+              {/* Storyline review 1 M7: a deterministic refusal is a property
+                  of the name, the specification or the recipe, decided before
+                  any money is spent, so the same dispatch decides it the same
+                  way every time. Offering "Photograph it again" there told the
+                  shop a piece had been sent back when nothing had moved. The
+                  code list is `@jewelo/contracts`; retry stays for a provider
+                  or worker failure, which is exactly what running it again
+                  fixes. */}
+              {isDeterministicRefusal(task.errorCode) ? (
+                <span className={s.byHand}>Make this one by hand</span>
+              ) : (
+                <button
+                  type="button"
+                  className="clm-secondary"
+                  disabled={busy === task.id || task.cancelRequested}
+                  onClick={() => void retry(run, task.id)}
+                >
+                  Photograph it again
+                </button>
+              )}
               {taskMessage[task.id] ? (
                 <p className={s.message} role="status">
                   {taskMessage[task.id]}
@@ -323,6 +350,11 @@ export function PreviewRequestQueue() {
       {error ? (
         <p className={s.message} role="status">
           {error}
+        </p>
+      ) : null}
+      {reviewError ? (
+        <p className={s.message} role="status">
+          {reviewError}
         </p>
       ) : null}
       {requests.length === 0 ? (

@@ -589,9 +589,33 @@ export class SupabaseJeweloClient implements LegacyJeweloClient {
   }
 
   async #loadState(activeDesignId = this.#state.activeDesignId) {
-    const payload = await this.#request<StatePayload>("/api/state");
+    /*
+     * Storyline review 1 follow-up. This asked `/api/state` for everything the
+     * caller could see and then used one design out of the answer, which on the
+     * customer branch is one shopper's own rows (RLS) but is a whole-shop read
+     * with a freshly signed URL per asset on the operator branch - which is why
+     * `/api/state` now refuses an operator read with no `designId` (422,
+     * security review 2 H-2). Every call that knows which piece it is reading
+     * for now says so, so the browser asks for the design it is about to show
+     * and the server scopes the query to it.
+     *
+     * The list call - the first load, before any design is active - stays
+     * unscoped, because listing the shopper's own pieces is what it is for.
+     * That is the customer branch by construction: an operator cookie in the
+     * same browser gets 422 there, and that is deliberate. The operator console
+     * has its own client (`operator-preview-request-client.ts`), which always
+     * names a design.
+     */
+    const scoped = activeDesignId
+      ? `?designId=${encodeURIComponent(activeDesignId)}`
+      : "";
+    const payload = await this.#request<StatePayload>(`/api/state${scoped}`);
     this.#stabiliseSignedUrls(payload.assets, payload);
-    this.#drafts.clear();
+    // A scoped read only answers about one design, so it upserts that design's
+    // drafts and leaves the map alone; clearing it would drop the drafts of
+    // every other piece this browser has loaded. Only the list call, which does
+    // answer about everything, may replace the map.
+    if (!scoped) this.#drafts.clear();
     for (const row of payload.design_drafts)
       this.#rememberDraft(
         row,
@@ -701,14 +725,28 @@ export class SupabaseJeweloClient implements LegacyJeweloClient {
         audit,
       } satisfies LegacyDesign;
     });
-    const resumeDesign = designs.find((design) => design.id === activeDesignId);
+    /*
+     * A scoped read answers about one design, so it replaces that design and
+     * leaves the rest of the list alone; an unscoped read is the whole list and
+     * replaces it. Without this, asking for one piece would empty the bag of
+     * every other piece the shopper had already loaded.
+     */
+    const merged = scoped
+      ? [
+          ...this.#state.designs.filter(
+            (existing) => !designs.some((design) => design.id === existing.id),
+          ),
+          ...designs,
+        ].sort((left, right) => left.createdAt.localeCompare(right.createdAt))
+      : designs;
+    const resumeDesign = merged.find((design) => design.id === activeDesignId);
     const persistedResume = payload.designs.find((row) =>
       Boolean(row.resume_path),
     );
     const selectedDesign =
       resumeDesign ??
-      designs.find((design) => design.id === persistedResume?.id) ??
-      designs.at(-1);
+      merged.find((design) => design.id === persistedResume?.id) ??
+      merged.at(-1);
     this.#state = {
       ...this.#state,
       principal: {
@@ -716,7 +754,7 @@ export class SupabaseJeweloClient implements LegacyJeweloClient {
         name: payload.role === "operator" ? "Caleums Operator" : "Guest",
         role: payload.role,
       },
-      designs,
+      designs: merged,
       activeDesignId: selectedDesign?.id,
       resumePath:
         text(

@@ -2,6 +2,8 @@ import "server-only";
 
 import { createHmac, timingSafeEqual } from "node:crypto";
 
+import { configuredAppHost } from "@jewelo/config";
+
 const COOKIE_NAME = "caleums_operator";
 const SESSION_SECONDS = 8 * 60 * 60;
 const MOCK_SESSION = "mock-development-session";
@@ -102,10 +104,6 @@ export function assertSameOrigin(request: Request, mutation = false) {
     throw new Response("Cross-site request rejected", { status: 403 });
   if (!mutation) return;
   const origin = request.headers.get("origin");
-  const targetHost =
-    request.headers.get("x-forwarded-host") ??
-    request.headers.get("host") ??
-    new URL(request.url).host;
   const originHost = (() => {
     try {
       return origin ? new URL(origin).host : "";
@@ -113,7 +111,31 @@ export function assertSameOrigin(request: Request, mutation = false) {
       return "";
     }
   })();
-  if (!originHost || originHost !== targetHost)
+  // Storyline review 1, CSRF minor: this used to compare `Origin` with
+  // `x-forwarded-host`, and a caller who sends one sends both, so the check
+  // compared an attacker's value with the attacker's other value and passed.
+  // `x-forwarded-host` is gone from this decision entirely.
+  //
+  // The configured app host comes first because `NEXT_PUBLIC_APP_URL` is set by
+  // the deployment and nothing a request carries can change it. `Host` is kept
+  // as a second accepted value rather than a fallback used only when the
+  // configuration is absent, for two reasons: behind DigitalOcean's ingress
+  // `Host` is what routed the request there at all, so a forged one never
+  // reaches this process; and locally the app answers on port 3011 while
+  // `NEXT_PUBLIC_APP_URL` names the default port, so a configured-host-only
+  // rule would refuse every operator mutation made in a developer's own
+  // browser. Neither value is attacker-chosen, which is the property the check
+  // needs.
+  //
+  // `new URL(request.url).host` is deliberately not on the list: the framework
+  // reconstructs that URL from the forwarded headers, so trusting it would put
+  // `x-forwarded-host` back into the comparison through the back door.
+  const allowed = new Set(
+    [configuredAppHost(), request.headers.get("host")].filter(
+      (host): host is string => Boolean(host),
+    ),
+  );
+  if (!originHost || !allowed.has(originHost))
     throw new Response("Same-origin request required", { status: 403 });
 }
 

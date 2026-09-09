@@ -693,3 +693,53 @@ export const jewelrySpecificationSchema = z
     spellingConfirmed: z.literal(true),
   })
   .refine(withNameCount, "nameCount must match the number of names.");
+
+/* ------------------------------------------------------------------------- */
+/* Storyline review 1 M7. The refusals that will never change their mind.     */
+/*                                                                           */
+/* A stopped task carries the head of an error class in `terminal_error_code`. */
+/* Some of those are about the moment - the provider timed out, a worker died, */
+/* an upload failed - and running the piece again is exactly right. These are  */
+/* not: each one is a property of the name, the specification or the published */
+/* recipe, decided before any money is spent, and the same dispatch decides it */
+/* the same way every time. "Photograph it again" on one of these is a         */
+/* guaranteed no-op that tells the shop the piece was sent back when nothing   */
+/* moved, which is why the operator queue offers to make it by hand instead.   */
+/*                                                                           */
+/* The list lives here, not in the queue component, because it is a fact about */
+/* the pipeline's refusals rather than about one screen.                      */
+/* ------------------------------------------------------------------------- */
+
+export const DETERMINISTIC_REFUSAL_CODES = [
+  "identity_no_ring_seat",
+  "identity_ring_tilt_too_steep",
+  "identity_ring_overhang_too_wide",
+  "identity_ring_span_too_narrow",
+  "identity_ring_post_too_long",
+  "identity_shaping_gate_failed",
+  "identity_component_gate_failed",
+  "identity_bar_fallback",
+  "prompt_compile_failed",
+  "studio_only_policy",
+  "dependency_blocked",
+] as const;
+
+export type DeterministicRefusalCode =
+  (typeof DETERMINISTIC_REFUSAL_CODES)[number];
+
+const DETERMINISTIC_REFUSALS: ReadonlySet<string> = new Set(
+  DETERMINISTIC_REFUSAL_CODES,
+);
+
+/**
+ * True when a stored error code can only ever be refused again.
+ *
+ * The stored value carries measurements (`identity_no_ring_seat:left=6,right=6`)
+ * and can compose two classes with `|`, so the head - what stands before the
+ * first `:` or `|` - is what is matched, exactly as the operator queue's own
+ * vocabulary matches it.
+ */
+export function isDeterministicRefusal(code: string | undefined): boolean {
+  if (!code) return false;
+  return DETERMINISTIC_REFUSALS.has(code.split("|")[0]?.split(":")[0] ?? "");
+}

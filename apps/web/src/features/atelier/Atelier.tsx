@@ -48,6 +48,11 @@ import {
   saveDeviceState,
 } from "./deviceState";
 import { NAME_MAX } from "@jewelo/contracts";
+// P7-5 / DS-9. The three moments the shop wants counted, through the port:
+// a step was reached, the spelling was confirmed, the request arrived. Ids and
+// enumerated values only, and with `NEXT_PUBLIC_POSTHOG_KEY` empty - which is
+// every deployment today - this loads no vendor code at all.
+import { captureJourneyEvent } from "@jewelo/observability/client";
 import s from "./atelier.module.css";
 
 const arabic: Record<string, string> = {
@@ -417,6 +422,25 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
    * takes it from here.
    */
   const ownRunOver = own.run?.outcome === "unavailable";
+  /**
+   * The shop received a request. Counted where the capture actually lands
+   * rather than on the button, so a submission that the server refused is not
+   * counted as one that arrived, and counted once per reference: the effect
+   * keys on the request id the server minted, which does not change while the
+   * shopper stays on the page. The channel is which door the shopper chose to
+   * be reached through, never the address they left.
+   */
+  const capturedForEvent = useRef<string | null>(null);
+  useEffect(() => {
+    if (own.captureStatus !== "captured") return;
+    const reference = own.capturedRequestId ?? "captured";
+    if (capturedForEvent.current === reference) return;
+    capturedForEvent.current = reference;
+    captureJourneyEvent("journey_request_captured", {
+      locale,
+      channel: own.contact.channel,
+    });
+  }, [own.captureStatus, own.capturedRequestId, own.contact.channel, locale]);
   const heroSource = showingOwnPhoto ? ownPhoto! : source;
   /** Only the cameras this family was photographed in; Studio is always one. */
   const shownViews = views.filter((v) => piece.availableViews.includes(v));
@@ -646,6 +670,14 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
   }
   /** Local for this render, durable on the run it approves. */
   function confirmSpelling(next: boolean) {
+    // Only the tick itself is a journey moment; clearing it is bookkeeping the
+    // shopper never performed (an edit calls this with `false`). The script is
+    // the alphabet the piece is made in, not the name in it.
+    if (next)
+      captureJourneyEvent("journey_spelling_confirmed", {
+        locale,
+        script: d.script === "Arabic" ? "arabic" : "latin",
+      });
     setConfirmed(next);
     setState((old) => {
       const last = old.runs.at(-1);
@@ -659,6 +691,10 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
     });
   }
   function go(stage: "design" | "review", section?: string) {
+    // The step chips and every in-page jump land here, so this is the one place
+    // that knows a shopper reached a step. The stage id is the shop's own word
+    // for the step; nothing the shopper typed goes with it.
+    captureJourneyEvent("journey_step_reached", { stage, locale });
     setState((old) => ({ ...old, stage }));
     if (section) setExpanded((old) => Array.from(new Set([...old, section])));
     requestAnimationFrame(() => {

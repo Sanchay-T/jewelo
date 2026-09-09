@@ -30,6 +30,13 @@ import sharp from "sharp";
 // it.
 import { errorClass, nameMismatchCode } from "./error-class";
 import { renderIdentityAnchor } from "./identity-anchor";
+// Storyline review 1 M2: what the day's money is allowed to be before a
+// real-mode dispatch spends any of it.
+import {
+  readSpendPolicy,
+  spendCeilingRefusal,
+  type RuntimeSpendPolicy,
+} from "./spend-ceiling";
 
 interface TaskRow {
   id: string;
@@ -208,6 +215,17 @@ export interface PresentationRepository {
    * only to a policy row that answered with a missing or invalid value.
    */
   providerAttemptBudget?(): Promise<number>;
+  /**
+   * The two `runtime_policy` numbers a real-mode dispatch refuses to spend
+   * against when they are looser than the deployment's ceilings
+   * (`./spend-ceiling`). One row, one query, cached per process.
+   *
+   * Optional for the same reason as `providerAttemptBudget`: an in-memory
+   * repository in a harness has no policy row. A repository that has one and
+   * cannot read it throws rather than guessing; the dispatch then stops before
+   * the provider and the stale sweeper brings the task back.
+   */
+  spendPolicy?(): Promise<RuntimeSpendPolicy>;
 }
 
 /**
@@ -481,6 +499,20 @@ export async function executePresentationTask(
     generator instanceof OpenAIStillAdapter
       ? generator.model
       : "mock-openai-still-v1";
+  // Storyline review 1 M2. The last pre-spend gate, and the only one that is
+  // about the shop rather than the piece: a real-mode dispatch refuses to book
+  // an attempt at all while `runtime_policy` is looser than the ceilings this
+  // deployment set. `provider` is `mock` exactly when the generator is the mock
+  // one, which `productionPresentationDependencies` selects exactly when
+  // `PROVIDER_MODE=mock`, so this reads "real mode" without a second copy of
+  // the environment in here. It sits above `reserveAttempt` because
+  // `mark_task_pre_spend_blocked` only takes a task at attempt 0, and because a
+  // reservation is already spend.
+  if (provider !== "mock" && repository.spendPolicy) {
+    const readPolicy = repository.spendPolicy.bind(repository);
+    const refusal = spendCeilingRefusal(await readSpendPolicy(readPolicy));
+    if (refusal) return blockPreSpendTerminally(new Error(refusal));
+  }
   let reservation: {
     attempt: number;
     idempotencyKey: string;
@@ -1122,6 +1154,33 @@ export class SupabasePresentationRepository implements PresentationRepository {
     return typeof budget === "number" && Number.isInteger(budget) && budget > 0
       ? budget
       : pipelineLimits.providerAttemptBudget;
+  }
+  /**
+   * The spend ceiling gate's one read: the same single row, both numbers, with
+   * the service key. A value the row does not hold, or holds as null, is read
+   * as the largest number rather than the smallest - an unreadable policy is
+   * not evidence that the day is capped, and this gate exists to refuse exactly
+   * that. `Number.MAX_SAFE_INTEGER` is above every configurable ceiling, so a
+   * missing column refuses pre-spend instead of passing.
+   */
+  async spendPolicy(): Promise<RuntimeSpendPolicy> {
+    const rows = await this.#request<
+      Array<{
+        global_max_reserved_spend_cents: number | null;
+        provider_attempt_budget: number | null;
+      }>
+    >(
+      "/rest/v1/runtime_policy?id=eq.true&select=global_max_reserved_spend_cents,provider_attempt_budget",
+    );
+    const row = rows[0];
+    const number = (value: number | null | undefined) =>
+      typeof value === "number" && Number.isFinite(value)
+        ? value
+        : Number.MAX_SAFE_INTEGER;
+    return {
+      globalMaxReservedSpendCents: number(row?.global_max_reserved_spend_cents),
+      providerAttemptBudget: number(row?.provider_attempt_budget),
+    };
   }
   /**
    * Fix-2 review M1: `mark_task_pre_spend_blocked` writes `p_reason` straight

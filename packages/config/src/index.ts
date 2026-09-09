@@ -364,9 +364,57 @@ export const trustedWebEnvSchema = z.object({
   ...notificationFields,
 });
 
+/* ------------------------------------------------------------------------- */
+/* Storyline review 1 M2. What a real-mode worker refuses to spend against.    */
+/*                                                                            */
+/* The day's money is governed by `public.runtime_policy`, which an operator   */
+/* can change from the database at any time; P5-1 tightened it and it was      */
+/* found back at 6000 cents and 100 attempts, which is a `PROVIDER_MODE=real`  */
+/* flip away from four hundred cents a run against a six thousand cent ceiling */
+/* with a hundred paid attempts per task. These two numbers are the deployment */
+/* saying what it will tolerate in that row before it spends anything; the     */
+/* worker reads the row and refuses pre-spend when the row is looser. Mock     */
+/* mode never reads them - there is nothing to protect.                        */
+/*                                                                            */
+/* They are ceilings on the policy, not the policy: raising one here does not  */
+/* let a run spend more, it only lets the database's own number be that high.  */
+/* ------------------------------------------------------------------------- */
+const realModeSpendCeilingFields = {
+  /**
+   * The largest `runtime_policy.global_max_reserved_spend_cents` a real-mode
+   * worker will spend against. 800 cents is two four-view runs at the shipped
+   * 20-cent still estimate plus room for one retry; more than that is a day
+   * nobody signed off.
+   */
+  REAL_MODE_MAX_RESERVED_SPEND_CENTS: z.preprocess(
+    blankToUndefined,
+    z.coerce.number().int().min(1).max(100_000).default(800),
+  ),
+  /**
+   * The largest `runtime_policy.provider_attempt_budget` a real-mode worker
+   * will spend against. Matches `pipelineLimits.providerAttemptBudget`, the
+   * value the column is meant to hold.
+   */
+  REAL_MODE_MAX_ATTEMPT_BUDGET: z.preprocess(
+    blankToUndefined,
+    z.coerce.number().int().min(1).max(10).default(3),
+  ),
+} as const;
+
+export const realModeSpendCeilingSchema = z.object(realModeSpendCeilingFields);
+export type RealModeSpendCeilings = z.infer<typeof realModeSpendCeilingSchema>;
+
+/** The two ceilings alone, for a worker that has no reason to parse the rest. */
+export function realModeSpendCeilings(
+  env: NodeJS.ProcessEnv | Record<string, string | undefined> = process.env,
+): RealModeSpendCeilings {
+  return realModeSpendCeilingSchema.parse(env);
+}
+
 export const jobsEnvSchema = trustedWebEnvSchema
   .extend({
     ...photoMaskFields,
+    ...realModeSpendCeilingFields,
     PROVIDER_MODE: z.enum(["mock", "real"]).default("mock"),
     FAL_KEY: optionalNonEmpty,
     OPENAI_API_KEY: optionalNonEmpty,
@@ -712,6 +760,17 @@ export const pipelineLimitsSchema = z
      */
     providerAttemptBudget: positiveInt.max(10),
     /**
+     * How long one process may reuse a `runtime_policy` read before asking the
+     * database again.
+     *
+     * Storyline review 1 M2: the real-mode spend ceiling gate runs before every
+     * dispatch, and a row read per task would put one extra round trip on the
+     * pre-spend path of every still. A minute is short enough that tightening
+     * the policy takes effect while the shop is still watching it, and long
+     * enough that a burst of tasks reads it once.
+     */
+    policyCacheMs: positiveInt.min(1_000).max(600_000),
+    /**
      * The largest JSON body an API route will read into memory.
      *
      * Security review 2 L-6: `readJson` used to buffer the whole body before
@@ -797,6 +856,7 @@ export const pipelineLimits: PipelineLimits = pipelineLimitsSchema.parse({
   // makes about a server too old to publish this number at all.
   signedUrlRefreshFloorSeconds: 30,
   providerAttemptBudget: 3,
+  policyCacheMs: 60_000,
   requestBodyMaxBytes: 65_536,
 });
 
@@ -826,4 +886,27 @@ export function trustedClientIpHeader(
   env: NodeJS.ProcessEnv = process.env,
 ): string {
   return trustedClientIpHeaderSchema.parse(env.TRUSTED_CLIENT_IP_HEADER);
+}
+
+/* ------------------------------------------------------------------------- */
+/* The host this deployment answers to.                                       */
+/*                                                                            */
+/* Storyline review 1, CSRF minor: the operator routes compared the `Origin`  */
+/* header with `x-forwarded-host`, and a caller who sends both sends both, so */
+/* the check compared an attacker's value with the attacker's other value. A  */
+/* deployment already declares its own address in `NEXT_PUBLIC_APP_URL`, and  */
+/* that is a value only the deployment can set. Validated as a URL here so a  */
+/* typo is a boot failure rather than a silent refusal of every mutation.     */
+/* ------------------------------------------------------------------------- */
+
+export const appHostSchema = z.preprocess(
+  blankToUndefined,
+  optionalOf(url).transform((value) => (value ? new URL(value).host : undefined)),
+);
+
+/** The host of `NEXT_PUBLIC_APP_URL`, or undefined when it is not configured. */
+export function configuredAppHost(
+  env: NodeJS.ProcessEnv | Record<string, string | undefined> = process.env,
+): string | undefined {
+  return appHostSchema.parse(env.NEXT_PUBLIC_APP_URL) as string | undefined;
 }

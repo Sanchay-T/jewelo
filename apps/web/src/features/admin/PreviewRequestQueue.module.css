@@ -213,6 +213,15 @@
   font-size: 0.82rem;
 }
 
+/* The instruction that stands where the retry button would be on a refusal
+   that can only ever be refused again. Text, not a control: there is nothing
+   the console can do about it, and the jeweller is the one who acts. */
+.byHand {
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--ink);
+}
+
 .message {
   margin: 0;
   color: #983e39;

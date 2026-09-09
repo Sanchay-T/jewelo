@@ -64,6 +64,15 @@ export interface JourneyProperties {
   readonly construction?: string;
   readonly designId?: string;
   readonly requestId?: string;
+  /**
+   * Which alphabet the piece is being made in - `latin` or `arabic` - and how
+   * the shop was asked to reach the shopper - `phone`, `email` and the rest of
+   * the contact channels. Both are the shop's own words about a choice, never
+   * the name and never the number: a channel says an e-mail address was left,
+   * not what it was.
+   */
+  readonly script?: "latin" | "arabic";
+  readonly channel?: string;
 }
 
 /** True when a value is a usable credential rather than an unset one. */
