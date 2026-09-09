@@ -1,4 +1,5 @@
 import { pipelineLimits } from "@jewelo/config";
+import { prepareOpenAIStillRequest } from "./prompt-registry";
 
 export interface StudioGenerationInput {
   idempotencyKey: string;
@@ -99,25 +100,14 @@ export class OpenAIStillAdapter implements StudioGenerator {
   ) {}
 
   async generate(input: StudioGenerationInput): Promise<GeneratedMedia> {
+    const request = prepareOpenAIStillRequest(input, this.model);
     const form = new FormData();
-    form.set("model", this.model);
-    form.set("prompt", input.prompt);
-    form.set("size", OPENAI_SIZE_BY_RATIO[input.aspectRatio]);
-    form.set("quality", "high");
-    form.set("output_format", "png");
-    const references = [
-      ...(input.referenceImageUrl
-        ? ([[input.referenceImageUrl, "reference.png"]] as const)
-        : []),
-      [input.identityImageUrl, "identity.png"],
-      ...(input.styleAnchorUrl
-        ? ([[input.styleAnchorUrl, "style-anchor.png"]] as const)
-        : []),
-      ...(input.inspirationImageUrl
-        ? ([[input.inspirationImageUrl, "inspiration.png"]] as const)
-        : []),
-    ] as const;
-    for (const [url, fileName] of references) {
+    form.set("model", request.model);
+    form.set("prompt", request.prompt);
+    form.set("size", request.size);
+    form.set("quality", request.quality);
+    form.set("output_format", request.output_format);
+    for (const { url, fileName } of request.references) {
       const response = await this.fetcher(url);
       if (!response.ok)
         throw new Error(`OpenAI input download failed:${response.status}`);
@@ -160,13 +150,6 @@ export class OpenAIStillAdapter implements StudioGenerator {
     };
   }
 }
-
-const OPENAI_SIZE_BY_RATIO = {
-  "1:1": "1024x1024",
-  "4:5": "1024x1280",
-  "9:16": "1024x1824",
-  "16:9": "1536x864",
-} as const;
 
 export class OpenAIStudioVerifier implements StudioVerifier {
   constructor(

@@ -280,6 +280,80 @@ export function compile(input) {
   return result;
 }
 
+// Production-parity mode. The JSON contains the immutable approvedName,
+// language, specification, presentationView, and named reference URLs. A caller
+// may supply a pinned template; omission selects the current unpublished baseline.
+// Include model and optional transport (openai or runway) in the JSON.
+// Treat the output as private when inputs contain signed URLs or customer names.
+// No provider is called. The request artifact is also the API adapter's input
+// preparation; a Runway caller must preserve its prompt and reference order.
+async function renderRequest(input) {
+  const { BASELINE_PROMPT_TEMPLATES, buildPromptVariableSnapshot,
+    compileStillPrompt, prepareStillRequest, prepareOpenAIStillRequest,
+    prepareRunwayStillRequest } = await import(
+    "../../../../packages/ai/src/prompt-registry.ts"
+  );
+  const profiles = {
+    studio: "image.packshot", on_skin: "image.worn",
+    close_up: "image.macro_gift", dark: "image.dark_editorial",
+  };
+  const ratios = { studio: "1:1", on_skin: "4:5", close_up: "1:1", dark: "9:16" };
+  const profile = profiles[input.presentationView];
+  if (!profile) throw new Error("unsupported_canonical_view");
+  const references = input.references ?? {};
+  if (!references.identityImageUrl) throw new Error("still_stencil_required");
+  if (input.presentationView !== "studio" && !references.referenceImageUrl)
+    throw new Error("still_master_required");
+  if (input.presentationView === "studio" && references.styleAnchorUrl)
+    throw new Error("studio_style_reference_not_approved");
+  if (Boolean(references.inspirationImageUrl) !== Boolean(input.specification?.referenceAsset))
+    throw new Error("inspiration_reference_approval_mismatch");
+  const template = input.template ?? BASELINE_PROMPT_TEMPLATES[profile];
+  const compiled = compileStillPrompt({
+    profile, template,
+    variables: buildPromptVariableSnapshot(input),
+    references: {
+      master: Boolean(references.referenceImageUrl),
+      style: Boolean(references.styleAnchorUrl),
+      inspiration: Boolean(references.inspirationImageUrl),
+    },
+  });
+  const request = prepareStillRequest({
+    ...references, prompt: compiled.compiledPrompt,
+    aspectRatio: ratios[input.presentationView],
+  });
+  const transport = input.transport ?? "openai";
+  if (transport !== "openai" && transport !== "runway")
+    throw new Error("unsupported_still_transport");
+  if (typeof input.model !== "string" || !input.model.trim())
+    throw new Error("still_model_required");
+  const transportInput = transport === "runway"
+    ? prepareRunwayStillRequest({ ...references, prompt: request.prompt,
+        aspectRatio: request.aspectRatio }, input.model)
+    : prepareOpenAIStillRequest({ ...references, prompt: request.prompt,
+        aspectRatio: request.aspectRatio }, input.model);
+  const result = {
+    family: compiled.compilerVersion,
+    templateSha256: createHash("sha256").update(template).digest("hex"),
+    config: { name: input.approvedName, script: input.language,
+      look: input.specification?.construction, view: input.presentationView },
+    ratio: request.aspectRatio,
+    prompt: request.prompt,
+    promptSha256: request.promptSha256,
+    variableSnapshot: compiled.variableSnapshot,
+    request, transport, transportInput,
+    templateSource: input.template ? "supplied-template" : "unpublished-baseline",
+    modelVerification: "requested-model-only; no provider call",
+  };
+  return result;
+}
+
+export async function compileRequest(input) {
+  const result = await renderRequest(input);
+  assertHoldoutAllowed(result);
+  return result;
+}
+
 // ------------------------------------------------------------------ holdout
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -431,7 +505,9 @@ if (import.meta.url === `file://${process.argv[1]}`) {
 
   let result;
   try {
-    result = renderPrompt(args);
+    result = args["canonical-request"]
+      ? await renderRequest(JSON.parse(readFileSync(args["canonical-request"], "utf8")))
+      : renderPrompt(args);
     if (freeze) {
       const { entry, written } = freezeHoldout(result, String(freeze).split(","), { reason, cell });
       process.stderr.write(

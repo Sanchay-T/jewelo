@@ -15,6 +15,7 @@ export const PROMPT_PROFILES = [
 export type PromptProfile = (typeof PROMPT_PROFILES)[number];
 
 export const PROMPT_COMPILER_VERSION = "caleums-prompt-compiler-v2";
+export const STILL_COMPILER_VERSION = "caleums-still-compiler-v1";
 export const MAX_PROMPT_TEMPLATE_LENGTH = 12_000;
 export const MAX_COMPILED_PROMPT_LENGTH = 16_000;
 /**
@@ -102,36 +103,10 @@ export const PROMPT_PROFILE_REGISTRY: Readonly<
 >;
 
 /**
- * The four independent stills, expressed as the image lab's measured prompt
- * family `caleums-universal-v4.3`
- * (`docs/goals/overnight-launch/lab/compile.mjs`, results in
- * `docs/goals/overnight-launch/IMAGE-LAB.md`).
- *
- * What transfers verbatim from the lab is the prose the lab actually measured:
- * the tagged image roles, the geometry claim stated once there and again in
- * `PRESERVE`, the casting paragraph, the threading test that took the pass rate
- * from 25 to 58 percent, the per-view shot brief, the photography block and the
- * preserve list. What becomes a slot is everything the lab held fixed at one
- * value across all 91 ledger rows: the name, the script, the metal, the stones,
- * the chain, the dimensions and the presentation view.
- *
- * Two deliberate differences from the lab bytes, both forced by production:
- *
- * 1. The lab studio prompt says "there is no other reference image". Production
- *    always passes the published style anchor as a second input, so `IMAGE
- *    ROLES` names it `@style` and confines it to framing, light, palette,
- *    setting and mood.
- * 2. The lab's per-look ring rule told the model that the stencil carried no
- *    rings, because the lab rendered ring-free stencils for `framed-minimal`
- *    and `diamond-rails` and described the attachment in prose. P2-2b (D-021)
- *    makes the production stencil the whole physical piece - frame, rails and
- *    rings are drawn into it - so the single production rule is that the rings
- *    are wherever Image 1 puts them. The construction brief must never claim
- *    otherwise; see `PENDANT_CONSTRUCTION_PROSE`.
- *
- * `PHOTOGRAPHY` carries one word-level edit: the lab wrote "warm mid tones"
- * because every lab image was yellow gold, and metal colour is a customer
- * choice here.
+ * Canonical still prose. Image positions are assigned by compileStillPrompt
+ * from the same ordered references the transports consume. Historical published
+ * templates and stored snapshots are immutable; publish a new release only after
+ * jobs uses the canonical compiler. The historical lab v4.3 remains reproducible.
  */
 const STILL_VIEW_LABELS: Readonly<Record<string, string>> = {
   studio: "Studio",
@@ -183,7 +158,7 @@ const STILL_VIEW_BRIEFS: Readonly<Record<string, string>> = {
  * the geometry law.
  */
 export const PENDANT_CONSTRUCTION_FALLBACK =
-  "The pendant is exactly the piece drawn in Image 1 and nothing more. No frame, no plate, no rail and no " +
+  "The pendant is exactly the piece drawn in @stencil and nothing more. No frame, no plate, no rail and no " +
   "border is added, and no part of the outline is redrawn. Stroke weight is even, edges are softly rounded " +
   "where a polishing wheel would reach, and the metal has a single consistent thickness.";
 
@@ -191,10 +166,10 @@ export const PENDANT_CONSTRUCTION_PROSE: Readonly<Record<string, string>> = {
   "": PENDANT_CONSTRUCTION_FALLBACK,
   classical:
     "Classical. The letters themselves are the entire pendant. There is no frame, no plate, no rail and no " +
-    "border. The outline of the piece is exactly the outline in Image 1. Stroke weight is even, edges are " +
+    "border. The outline of the piece is exactly the outline in @stencil. Stroke weight is even, edges are " +
     "softly rounded where a polishing wheel would reach, and the metal has a single consistent thickness.",
   "origami-ribbon":
-    "Origami ribbon. The outline is exactly Image 1, but the gold is a flat strip that has been FOLDED into " +
+    "Origami ribbon. The outline is exactly @stencil, but the gold is a flat strip that has been FOLDED into " +
     "the shape of the name, the way a paper ribbon is folded. Every curve is replaced by a run of straight " +
     "flat facets that meet at sharp visible crease lines, so each stroke shows two or three separate planes " +
     "tilted at slightly different angles. Because the planes are tilted, each one returns a different amount " +
@@ -202,22 +177,22 @@ export const PENDANT_CONSTRUCTION_PROSE: Readonly<Record<string, string>> = {
     "as a hard bright line. Where a stroke changes direction there is a crisp mitred crease, never a smooth " +
     "rounded bend. A plain nameplate has one continuous polished surface; this piece is visibly built from " +
     "angled planes. The ribbon keeps a constant width and never doubles back over itself. The folds are a " +
-    "finish on the metal, not a change of shape: the outline stays exactly as Image 1 draws it.",
+    "finish on the metal, not a change of shape: the outline stays exactly as @stencil draws it.",
   "framed-minimal":
     "Framed minimal. The lettering sits inside one thin plain rectangular gold frame with softly rounded " +
     "corners, cast as a single piece with the letters and joined to them where the strokes reach the frame. " +
-    "The frame is a simple even bar with no ornament, no engraving and no second border. Image 1 already " +
+    "The frame is a simple even bar with no ornament, no engraving and no second border. @stencil already " +
     "draws that frame, the welds where the word meets it and the two jump rings on its top bar: reproduce " +
     "them exactly as drawn and add nothing to them. The word is continuous metal into the frame at more than " +
     "one place, no letter, foot, tail or terminal ends in mid-air inside the frame, and the letters keep " +
-    "exactly the shapes and spacing of Image 1.",
+    "exactly the shapes and spacing of @stencil.",
   "diamond-rails":
     "Diamond rails. The lettering is held between two straight parallel gold rails, one running along the top " +
     "and one along the bottom, cast as a single piece with the letters that touch them. The rails are narrow, " +
-    "flat and perfectly straight, the same metal as the letters. Image 1 already draws both rails, the welds " +
+    "flat and perfectly straight, the same metal as the letters. @stencil already draws both rails, the welds " +
     "where the word meets them and the two jump rings at the outer ends of the top rail: reproduce them " +
     "exactly as drawn and add nothing to them. The letters between the rails keep exactly the shapes and " +
-    "spacing of Image 1.",
+    "spacing of @stencil.",
 };
 
 export const BASELINE_PROMPT_TEMPLATES: Readonly<
@@ -297,7 +272,7 @@ export interface PromptTemplateValidation {
 export interface CompiledPrompt {
   profile: PromptProfile;
   compiledPrompt: string;
-  compilerVersion: typeof PROMPT_COMPILER_VERSION;
+  compilerVersion: typeof PROMPT_COMPILER_VERSION | typeof STILL_COMPILER_VERSION;
   sha256: string;
   variableSnapshot: PromptVariableSnapshot;
 }
@@ -439,6 +414,132 @@ export function compilePrompt(input: {
   };
 }
 
+/** Ordered exactly as the existing API transport, including historical snapshots. */
+export function buildStillReferences(input: {
+  identityImageUrl: string;
+  referenceImageUrl?: string;
+  styleAnchorUrl?: string;
+  inspirationImageUrl?: string;
+}) {
+  if (!input.identityImageUrl?.trim()) throw new Error("still_stencil_required");
+  return [
+    ...(input.referenceImageUrl
+      ? [{ role: "master" as const, url: input.referenceImageUrl, fileName: "reference.png" }]
+      : []),
+    { role: "stencil" as const, url: input.identityImageUrl, fileName: "identity.png" },
+    ...(input.styleAnchorUrl
+      ? [{ role: "style" as const, url: input.styleAnchorUrl, fileName: "style-anchor.png" }]
+      : []),
+    ...(input.inspirationImageUrl
+      ? [{ role: "inspiration" as const, url: input.inspirationImageUrl, fileName: "inspiration.png" }]
+      : []),
+  ];
+}
+
+export type StillReferencePresence = {
+  master: boolean;
+  style: boolean;
+  inspiration: boolean;
+};
+
+const STILL_ROLE_RULES = {
+  master: "is an approved photograph of this exact pendant. Preserve the same physical object, metal, stones, thickness and chain, changing only the requested scene. It never overrides @stencil geometry or spelling.",
+  stencil: "is the sole authority for geometry and spelling: the exact black silhouette of the whole physical pendant, including all letters, joins, marks and two hollow rings. Reproduce it as gold without redesigning, adding, removing, mirroring or separating anything.",
+  style: "is style only: use framing, light, palette, setting and mood; never copy its pendant, name, letterforms, text or objects.",
+  inspiration: "is optional customer inspiration only; never copy text, identity, branding or unapproved objects from it.",
+} as const;
+
+/** Compiles a new release; stored snapshots never pass through this function. */
+export function compileStillPrompt(input: {
+  profile: PromptProfile;
+  template: string;
+  variables: PromptVariableSnapshot;
+  references: StillReferencePresence;
+}): CompiledPrompt {
+  if (!["image.packshot", "image.worn", "image.macro_gift", "image.dark_editorial"].includes(input.profile))
+    throw new Error("unsupported_canonical_still_profile");
+  if (input.profile !== "image.packshot" && !input.references.master)
+    throw new Error("still_master_required");
+  if (input.profile === "image.packshot" && (input.references.master || input.references.style))
+    throw new Error("studio_extra_reference_not_approved");
+  if (input.profile !== "image.packshot" && !input.references.style)
+    throw new Error("still_style_reference_required");
+  const variables = {
+    ...input.variables,
+    inspiration_rule: input.references.inspiration
+      ? "Only @inspiration is approved as customer inspiration; never copy its identity or text."
+      : "No customer inspiration input is approved for this task.",
+  };
+  const compiled = compilePrompt({ ...input, variables });
+  // A legacy release's image positions must not silently acquire new meaning.
+  if (/\bimage\s+\d|\b(first|second|third|fourth)\s+(supplied\s+)?(image|input)|IMAGE ROLES/iu.test(compiled.compiledPrompt))
+    throw new Error("still_legacy_reference_roles_require_new_release");
+  const references = buildStillReferences({
+    identityImageUrl: "stencil",
+    referenceImageUrl: input.references.master ? "master" : undefined,
+    styleAnchorUrl: input.references.style ? "style" : undefined,
+    inspirationImageUrl: input.references.inspiration ? "inspiration" : undefined,
+  });
+  const roles = references.map(({ role }, index) =>
+    `Image ${index + 1}, tagged @${role}, ${STILL_ROLE_RULES[role]}`,
+  );
+  const compiledPrompt = ["IMAGE ROLES", ...roles, "", compiled.compiledPrompt].join("\n");
+  if (compiledPrompt.length > MAX_COMPILED_PROMPT_LENGTH)
+    throw new Error("Canonical still prompt exceeds maximum length");
+  return {
+    ...compiled,
+    compiledPrompt,
+    compilerVersion: STILL_COMPILER_VERSION,
+    sha256: createHash("sha256").update(compiledPrompt, "utf8").digest("hex"),
+  };
+}
+
+export const STILL_API_SIZE_BY_RATIO = {
+  "1:1": "1024x1024",
+  "4:5": "1024x1280",
+  "9:16": "1024x1824",
+  "16:9": "1536x864",
+} as const;
+
+/** Both transport preparers consume this artifact without rewriting its prompt. */
+export function prepareStillRequest(input: {
+  prompt: string;
+  aspectRatio: keyof typeof STILL_API_SIZE_BY_RATIO;
+  identityImageUrl: string;
+  referenceImageUrl?: string;
+  styleAnchorUrl?: string;
+  inspirationImageUrl?: string;
+}) {
+  const size = STILL_API_SIZE_BY_RATIO[input.aspectRatio];
+  if (!size) throw new Error("unsupported_still_aspect_ratio");
+  return {
+    prompt: input.prompt,
+    promptSha256: createHash("sha256").update(input.prompt, "utf8").digest("hex"),
+    references: buildStillReferences(input),
+    aspectRatio: input.aspectRatio,
+    size,
+  };
+}
+
+export function prepareOpenAIStillRequest(
+  input: Parameters<typeof prepareStillRequest>[0], model: string,
+) {
+  if (!model.trim()) throw new Error("still_model_required");
+  return { ...prepareStillRequest(input), model, quality: "high", output_format: "png" };
+}
+
+/** Runway's current callable model list exposes only this GPT image alias. */
+export function prepareRunwayStillRequest(
+  input: Parameters<typeof prepareStillRequest>[0], model: string,
+) {
+  if (model !== "gpt-image-2") throw new Error("runway_model_unavailable");
+  const request = prepareStillRequest(input);
+  return {
+    model, promptText: request.prompt, ratio: request.aspectRatio, count: 1,
+    referenceImages: request.references.map(({ role, url }) => ({ url, tag: role })),
+  };
+}
+
 // Photographic prose for the immutable enum tokens. Unknown values pass through
 // unchanged so an older revision still compiles.
 const ARABIC_STYLE_PROSE: Readonly<Record<string, string>> = {
@@ -535,25 +636,22 @@ function stillTemplate(view: keyof typeof STILL_VIEW_BRIEFS): string {
   return [
     `Photograph one real, physical, finished {{metal_karat}} gold name pendant necklace. ${label} shot.`,
     "",
-    "IMAGE ROLES",
-    "Image 1, tagged @stencil, is the exact shape and the exact spelling of this pendant, drawn as a black silhouette. It is not a drawing to be re-designed. Reproduce its outline, its letter shapes, its joins and its proportions exactly, rendered as solid cast gold in a real photograph.",
-    "Image 2, tagged @style, is a style reference only: match its framing, light, palette, setting and mood, and never copy its pendant, its name, its letterforms, its text or its objects. {{inspiration_rule}}",
-    "",
     "IDENTITY",
     'The name is "{{approved_name}}". Script: {{language}} - "en" is English Latin letters read left to right, "ar" is Arabic script read right to left. Lettering: {{arabic_style}}. Layout: {{layout}}.',
-    "Every glyph, dot, mark and stroke in Image 1 appears in the photograph, in the same order, at the same place, at the same angle. Nothing is added, nothing is removed, nothing is rotated, nothing is duplicated, nothing is mirrored. Do not write the name a second time anywhere in the picture.",
+    "Every glyph, dot, mark and stroke in @stencil appears in the photograph, in the same order, at the same place, at the same angle. Nothing is added, nothing is removed, nothing is rotated, nothing is duplicated, nothing is mirrored. Do not write the name a second time anywhere in the picture.",
     "",
     "CASTING",
     "This is one piece of gold, as if it came out of a single mould.",
-    "Every letter is physically fused to the next letter or to the part of the piece that holds it. There are no separate islands and no air gap that would make this two objects. Where Image 1 shows a bridge of metal between two shapes, that bridge is metal in the photograph. A jeweller could pick this whole pendant up as one object and nothing would fall off. If any letter, dot or mark is a separate floating piece, the picture is wrong.",
+    "Every letter is physically fused to the next letter or to the part of the piece that holds it. There are no separate islands and no air gap that would make this two objects. Where @stencil shows a bridge of metal between two shapes, that bridge is metal in the photograph. A jeweller could pick this whole pendant up as one object and nothing would fall off. If any letter, dot or mark is a separate floating piece, the picture is wrong.",
     "",
     "ATTACHMENT",
-    "Exactly two jump rings, no more and no fewer. Both are closed rings of the same gold, grown out of the body of the piece, not soldered-on afterthoughts and not floating beside it. Both jump rings sit exactly where Image 1 places them: Image 1 is the whole physical piece, so it is the only authority on where they are, and no further eyelet, loop or ring is added anywhere.",
+    "Exactly two jump rings, no more and no fewer. Both are closed rings of the same gold, grown out of the body of the piece, not soldered-on afterthoughts and not floating beside it. Both jump rings sit exactly where @stencil places them: @stencil is the whole physical piece, so it is the only authority on where they are, and no further eyelet, loop or ring is added anywhere.",
     "Each of the two jump rings is threaded: something passes through its open hole and you can see daylight through the hole on both sides of what passes through it. That is either the chain's own end link or one small connector link, and it goes THROUGH the hole - never behind the pendant, never hooked on the outside of the ring, never resting against a closed eyelet. An empty ring hole with the chain passing behind the piece is wrong.",
     "The chain is a fine {{chain_style}}-link chain at {{chain_length}} in the same gold and hangs from both rings, one side to each. The chain never passes over, around or behind a letter, and there is no second chain, no cord, no clasp in shot and no other hardware.",
     "",
     "CONSTRUCTION",
     "{{construction}}",
+    "{{inspiration_rule}}",
     "",
     `SHOT - ${label} ({{presentation_view}})`,
     STILL_VIEW_BRIEFS[view],
@@ -569,7 +667,7 @@ function stillTemplate(view: keyof typeof STILL_VIEW_BRIEFS): string {
     "No 3D-render look, no plastic or candy gold, no glow, no bloom, no neon rim light, no beauty-filter smoothing, no lens flare, no watermark, no logo, no caption, no added words or numbers anywhere in the frame.",
     "",
     "PRESERVE",
-    "Exact spelling and glyph order from Image 1. One connected piece. Exactly two jump rings with the chain through both. The pendant is the sharpest thing in the frame. No added letters, no second name, no charms, no duplicate pendant and no extra jewellery.",
+    "Exact spelling and glyph order from @stencil. One connected piece. Exactly two jump rings with the chain through both. The pendant is the sharpest thing in the frame. No added letters, no second name, no charms, no duplicate pendant and no extra jewellery.",
   ].join("\n");
 }
 
