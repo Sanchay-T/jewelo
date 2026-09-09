@@ -1,6 +1,6 @@
 # Larger preview - local and staging follow-up proof, 9 September 2026
 
-Task P6-10. Integrated source: `57189c5aa53a1ba7f525d1b48898a704629d7ebb`, pushed on `codex/overnight-launch-2026-09-08`. The lead drove both the local page and the deployed staging page in their own in-app browser. Local and staging captures are distinguished below; staging UI proof uses mock mode and does not establish a real customer photograph.
+Task P6-10. Integrated source: `57189c5aa53a1ba7f525d1b48898a704629d7ebb`, pushed on `codex/overnight-launch-2026-09-08`. The lead drove both the local page and the deployed staging page in their own in-app browser. Local, mock staging and the later real API checkpoint are distinguished below. The initial staging layout captures use mock mode; the English API photograph checkpoint is recorded separately.
 
 At 390x844 the main photograph is 436.8 px tall. Once the full panel scrolls away, an 81 px reminder stays at the top; its inspection button opens a 390x844 dialog. The name-first action focuses `pendant-name`, placing the input at y=305.9 px while the reminder is hidden. At the bottom of the desktop form, the corrected panel is y=16 px and h=583.3 px. RTL 390x844 and short mobile sizes 320x568/390x600 have separate captures below. Three additional initial captures at 1280x720, 1024x768 and 768x1024 were viewed on the built production server after the 13/13 build at `57189c5`; panel heights are 424, 472 and 728 px respectively. Mobile deliberately uses a scrolling full photograph: its whole dock need not fit above the fold on short screens.
 
@@ -68,14 +68,38 @@ The daily policy was tightened with one compare-and-set update and read back: gl
 
 After the canonical compiler deployment was ACTIVE, four compatible v3 prompt releases were created, published and read back: image.packshot `f2ba654a-3454-4ec0-86ec-a4281a411145`, image.worn `ee9a0920-7bf5-4958-a912-053b1c46b200`, image.macro_gift `b702d84c-cd8e-4b89-b58a-34a289408379`, image.dark_editorial `f9b83ec1-5f67-4bed-8b89-09059904c5a2`. Frozen hashes match the canonical templates; old immutable releases remain. Evidence: `/tmp/jewelo-staging-plan/canonical-publication-executed.json`.
 
-Newer pushed source `b5f9758d60feaf7db75a1f66ac57bcc5b2641cf1` caps the paid name reader's response at a validated 2,048 output tokens. Its full build passed 13/13, exit 0, and two independent source reviews were clean. At 12:02 UTC the real-mode deployment beginning `927ac5b1` was DEPLOYING that source and awaiting web health; it was not yet the served version in the staging screenshots, and no real-mode image request had been made.
+Newer pushed source `b5f9758d60feaf7db75a1f66ac57bcc5b2641cf1` caps the paid name reader's response at a validated 2,048 output tokens. Its full build passed 13/13, exit 0, and two independent source reviews were clean. Real-mode deployment `927ac5b1-564a-47f8-bf01-0b6849160d40` reached ACTIVE at 12:04:16 UTC. Deployment exited 0; health and protected readiness passed. The initial staging layout captures above still served the earlier mock source; the real API captures below served `b5f9758`. Private deployment evidence: `/tmp/jewelo-staging-plan/real-deployment-b5f9758.json`.
 
 **Verification boundary:** existing real-mode dependencies deliberately use `MockStudioVerifier` plus a paid `OpenAINameReader`. Human lab scoring checks photograph geometry; the running application's paid gate reads the name. It is not a complete automatic geometry/attachment verifier. The token cap does not add provider-cost reconciliation. No four-photo production readiness is claimed.
+
+## First real API photograph - English studio
+
+The lead submitted the synthetic lab name Asma through the deployed English form. One studio task reached ready on its first OpenAI attempt. The application name-reading gate passed, and an independent reviewer who did not generate this API image passed all six visual criteria: correct name, recognizable stencil geometry, connected metal, two fused eyelets, both chain ends threaded through the holes, and plausible polished-gold studio photography. This is one successful English still, not Arabic or four-view acceptance.
+
+| Exact parity evidence | SHA-256 |
+| --- | --- |
+| Deployed compiled prompt - same as qualified English C | `04ee836ea3df77b420d26728ff6b4741e0044ce9cf93d85ee2eae17725d9011c` |
+| Deployed identity PNG - same as actual production stencil used in qualification | `7d73154755d55dacf611266bc8865d10f1ca93a4f2bef637272698d05d7040b4` |
+| OpenAI returned PNG - same checkpoint and persisted asset | `e41cec49bf2749248190de8ca5c890605b2f008190831275971448ad51bb4328` |
+
+The asset identifies exact model `gpt-image-2-2026-04-21`, canonical studio release v3 `f2ba654a-3454-4ec0-86ec-a4281a411145`, and attempt 1. The ledger booked 20 cents for this image using the adapter's estimate; that is not the provider invoice and excludes name-reader usage. At 12:08:31 UTC the preserved daily totals were 9 runs, 100 cents reserved and 120 cents actual in the ledger. The other three English tasks were cancelled at attempt 0 by the studio-only policy, with no provider calls. Private readback: `/tmp/jewelo-staging-plan/en-live-observation.json`; original API PNG and independent verdict remain private under `/tmp/jewelo-api-proof/`.
+
+**Open P6-10 readiness race:** the real browser first showed the final shop-follow-up contact state even though the studio photograph completed. Source inspection found readiness was committed before the asset insertion; parallel state reads could also combine a ready task with an older asset list. Reloading the same page displayed the existing photograph without making another paid call. The atomic completion/state-read correction is in progress and has not been accepted or deployed at this checkpoint. The premature fallback capture is failure evidence, not a passing pending state.
+
+| Real API browser state | Screenshot | DOM measurement |
+| --- | --- | --- |
+| Desktop while the studio photograph was being made | [Screenshot](api-en-studio-pending.png) | [Measurement](api-en-studio-pending.json) |
+| Mobile premature final fallback - race reproduction | [Screenshot](api-en-mobile-premature-fallback.png) | [Measurement](api-en-mobile-premature-fallback.json) |
+| Mobile existing studio photograph after same-page reload | [Screenshot](api-en-studio-ready-after-reload.png) | [Measurement](api-en-studio-ready-after-reload.json) |
+| Mobile enlarged API photograph | [Screenshot](api-en-studio-enlarged.png) | [Measurement](api-en-studio-enlarged.json) |
+| Unrequested on-skin view remains honest | [Screenshot](api-en-unrequested-view-honest.png) | [Measurement](api-en-unrequested-view-honest.json) |
+
+These public browser captures contain only the approved synthetic Asma demonstration and visible app UI. The raw API photograph, private reference images and signed asset URLs are not committed. On mobile the ready photograph measured 350 by 436.8 px, and enlarged inspection occupied the complete 390 by 844 px dialog. Selecting the unrequested on-skin view retained its shop-follow-up placeholder instead of presenting the studio photograph as that view. Arabic and its dependent photographs remain pending.
 
 ## Build, review and remaining proof
 
 The lead reports full `corepack pnpm build`: **13 successful, 13 total**, exit 0, through `b5f9758`; two final independent source reviews of the name-reader cap were clean above minor. Staging browser captures above still served `57189c5`. No tests ran or changed. The follow-up adds the dictionary key `Start with your name` / `ابدأ باسمك`.
 
-The earlier seven-item UI acceptance, full dictionary changes and broader local layout matrix remain in [Umayr UI proof](../umayr-ui/README.md). Those earlier captures do not substitute for the newer staging observations above. Mock staging UI coverage and canonical publication are complete at this checkpoint; activation and smoke of the newer real-mode deployment and real API photographs remain pending. The current prompt qualification is recorded in [Image lab](../../../overnight-launch/IMAGE-LAB.md#9-september-follow-up---shared-still-compiler-and-studio-candidate-c).
+The earlier seven-item UI acceptance, full dictionary changes and broader local layout matrix remain in [Umayr UI proof](../umayr-ui/README.md). Those earlier captures do not substitute for the newer staging observations above. Mock staging UI coverage, canonical publication, real deployment/smoke, and the first English API studio photograph are complete at this checkpoint. The readiness-race correction and Arabic four-view API proof remain pending. The current prompt qualification is recorded in [Image lab](../../../overnight-launch/IMAGE-LAB.md#9-september-follow-up---shared-still-compiler-and-studio-candidate-c).
 
 The separate identity/jobs work in the original checkout remains excluded. PROGRESS.md and HANDOVER.md are unchanged under the original brief's explicit boundary.
