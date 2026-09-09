@@ -538,14 +538,20 @@ swallowing it.
 
 The announcement is not left to one send.
 `POST /api/preview-requests` emits the event on all three of its answers - the row it inserts, the replay of an existing `request_key`, and the loser of the unique-index race - and the cron function `preview-request-notification-sweep` runs every two minutes as the backstop.
-The sweep reads up to `notificationSweepBatch` (50, `packages/config/src/index.ts`) rows whose `notified_at` is still null and which are older than `notificationSweepMinAgeMs` (60 s), oldest first, over the `preview_requests_unnotified` index, and re-emits `preview-request/created` with the same event id the route uses, so the claim in the database still makes it exactly one message.
+The sweep reads up to `notificationSweepBatch` (50, `packages/config/src/index.ts`) rows whose `notified_at` is still null, which are older than `notificationSweepMinAgeMs` (60 s) and which were captured no earlier than `NOTIFICATION_SWEEP_FLOOR`, oldest first, over the `preview_requests_unnotified` index, and re-emits `preview-request/created` with the same event id the route uses, so the claim in the database still makes it exactly one message.
+Because that event id is byte-identical to the route's, Inngest's 24 h event deduplication applies: the sweep covers "the event never got in", not "the send kept failing".
+A request whose send failed its three attempts has already spent its event id, so the sweep cannot re-announce it for 24 hours; that one is the operator queue's job, not the sweeper's.
 It reads the shared table with service-role credentials, so like the other crons it is registered only where `INNGEST_CRON_ENABLED=1`.
 With `NOTIFICATION_TO` unset it stops before the read and reports `not_configured`, because every event it could send would end there anyway.
 A tick that announces rows logs one `preview_request_notification_swept` line with the count and no ids.
 
 Storyline review 1 (B3) found this the hard way: 13 captured requests were sitting unannounced because the create-path send is best effort and nothing ever looked at them again.
 Those 13 rows are still unannounced by choice - they are old test requests, and the deployment has no shop address, so the sweep stops on `not_configured`.
-The first tick after `NOTIFICATION_TO` is set will announce every unannounced row, including them; clear them first with a single SQL update setting `notified_at = now()` on the rows that predate the shop's address if the shop should not receive them.
+`NOTIFICATION_SWEEP_FLOOR` is what keeps them that way (fix review 3, MN-7): the sweep only announces captures at or after it, and the default `2026-09-09T00:00:00Z` is the morning the sweep was written, so the first tick after `NOTIFICATION_TO` is set announces the shop's real requests and not the backlog.
+The manual override is still there when a specific old row should stay silent for good, or when the floor is lowered on purpose: set `notified_at = now()` on the rows the shop should not receive.
+
+Staging has neither `INNGEST_CRON_ENABLED=1` nor `NOTIFICATION_TO`, so the sweeper is not registered there and would report `not_configured` if it were.
+The backstop is code and configuration that is proven in the tree and dormant in the deployment until Sanchay sets both values (see Needs Sanchay in the handover); nothing about the 13 rows changes until then.
 
 Which transport runs is `NOTIFICATION_TRANSPORT`:
 
@@ -559,9 +565,11 @@ NOTIFICATION_SMTP_SECURITY   starttls | implicit-tls   default starttls
 NOTIFICATION_SMTP_USER       required when smtp
 NOTIFICATION_SMTP_PASSWORD   required when smtp
 NOTIFICATION_SMTP_TIMEOUT_MS default 15000
+NOTIFICATION_SWEEP_FLOOR     oldest capture the sweep may announce (ISO 8601)
+                             default 2026-09-09T00:00:00Z
 ```
 
-All nine are optional in the app spec and ship only when present.
+All ten are optional in the app spec and ship only when present.
 `NOTIFICATION_TRANSPORT=smtp` without the four SMTP keys and the shop address
 fails `pnpm do:check-env` rather than the first shopper's request; the same rule
 is `assertNotificationConfigured` in `packages/config/src/index.ts`.

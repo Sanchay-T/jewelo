@@ -9,6 +9,7 @@ import type {
   TaskState,
   UpdateDraftInput,
 } from "@jewelo/contracts";
+import { allowedFulfillmentTransitions } from "@jewelo/contracts";
 import {
   createSupabaseDataClient,
   type RealtimeChannel,
@@ -535,12 +536,13 @@ export class SupabaseJeweloClient implements LegacyJeweloClient {
   async updateFulfillment(designId: string) {
     const design = this.#requireDesign(designId);
     if (!design.order) throw new Error("Order required");
-    const next = {
-      confirmed: "in-production",
-      "in-production": "quality-check",
-      "quality-check": "ready",
-      ready: "ready",
-    } as const;
+    // Fix review 3, MN-3. The ladder used to be a second copy of the transition
+    // table living here, and its `ready: "ready"` entry asked the server to move
+    // a finished order to the status it is already in. The table is one thing in
+    // `@jewelo/contracts` now, and the route refuses anything off it, so a
+    // finished order is simply not asked about.
+    const [next] = allowedFulfillmentTransitions(design.order.status);
+    if (!next) return structuredClone(design);
     await this.#request("/api/operator/commands", {
       method: "POST",
       body: JSON.stringify({
@@ -551,7 +553,7 @@ export class SupabaseJeweloClient implements LegacyJeweloClient {
           "fulfillment",
           `${design.order.id}:${design.order.status}`,
         ),
-        payload: { status: next[design.order.status] },
+        payload: { status: next },
       }),
     });
     await this.#loadState(designId);

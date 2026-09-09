@@ -305,6 +305,30 @@ export const ORDER_FULFILLMENT_STATUSES = [
 export type OrderFulfillmentStatus = (typeof ORDER_FULFILLMENT_STATUSES)[number];
 
 /**
+ * Fix review 3, MN-3. The four statuses are a line, not a set: an order is
+ * confirmed, then in production, then at quality check, then ready. The command
+ * used to accept any of the four from any of the four, so a mis-click could
+ * send a piece that was already at quality check back to confirmed, and the
+ * audit trail would record it as a legitimate move. Forward only, one step at a
+ * time, and the terminal status has nowhere left to go.
+ */
+export const ORDER_FULFILLMENT_TRANSITIONS: Readonly<
+  Record<OrderFulfillmentStatus, readonly OrderFulfillmentStatus[]>
+> = {
+  confirmed: ["in-production"],
+  "in-production": ["quality-check"],
+  "quality-check": ["ready"],
+  ready: [],
+};
+
+/** The statuses an order in `from` may move to, empty when it is finished. */
+export function allowedFulfillmentTransitions(
+  from: string,
+): readonly OrderFulfillmentStatus[] {
+  return ORDER_FULFILLMENT_TRANSITIONS[from as OrderFulfillmentStatus] ?? [];
+}
+
+/**
  * Security review 2 M-4. The operator command that moves an order along used to
  * hand `payload.status` to PostgREST as it arrived and filter on the order id
  * alone, so any string the check constraint happened to accept could be written

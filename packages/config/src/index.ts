@@ -287,6 +287,21 @@ const notificationFields = {
     blankToUndefined,
     z.coerce.number().int().min(1_000).max(120_000).default(15_000),
   ),
+  /**
+   * Fix review 3, MN-7. The oldest request the sweep is allowed to announce.
+   *
+   * Thirteen unannounced rows exist from before the notification path worked at
+   * all, and most of them are test captures. Without a floor, the first sweep
+   * after the shop's address is set would mail the shop thirteen times about
+   * requests nobody is going to act on, and the shop's first experience of the
+   * feature would be a mailbox full of noise. The default is the morning the
+   * sweep was written: everything captured from then on is announced, and the
+   * backlog is left to the manual override in the runbook.
+   */
+  NOTIFICATION_SWEEP_FLOOR: z.preprocess(
+    blankToUndefined,
+    z.iso.datetime().default("2026-09-09T00:00:00Z"),
+  ),
 } as const;
 
 /** The keys the `smtp` transport cannot run without. */

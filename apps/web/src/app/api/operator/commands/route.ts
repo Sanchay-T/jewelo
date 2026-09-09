@@ -1,4 +1,5 @@
 import {
+  allowedFulfillmentTransitions,
   fulfillmentTransitionCommandSchema,
   isPreviewRequestCommand,
   previewRequestCommandSchema,
@@ -143,6 +144,24 @@ export async function POST(request: Request) {
         admin,
         `/rest/v1/orders?${filter}&select=id,status&limit=1`,
       );
+      // Fix review 3, MN-3. A command against an order id that matches nothing
+      // used to PATCH nothing and answer `200 {}`, so the operator surface said
+      // "done" about an order the shop does not have; and any of the four
+      // statuses could be written from any other, so a piece at quality check
+      // could go back to confirmed with the audit trail calling it a move. The
+      // row decides now: no row is a 404, and the from-status names the only
+      // statuses that may follow it.
+      if (!before) throw new ApiError("Unknown order", 404, "not_found");
+      const from = statusOf(before);
+      const allowed = allowedFulfillmentTransitions(from ?? "");
+      if (!allowed.includes(command.payload.status))
+        throw new ApiError(
+          allowed.length
+            ? `An order in ${from} can only move to ${allowed.join(", ")}`
+            : `An order in ${from} cannot move further`,
+          422,
+          "invalid_input",
+        );
       const patched = await supabaseRequest<Array<Record<string, unknown>>>(
         admin,
         `/rest/v1/orders?${filter}`,

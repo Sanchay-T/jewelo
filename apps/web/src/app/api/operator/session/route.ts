@@ -1,4 +1,5 @@
 import {
+  assertSameOrigin,
   authenticateOperator,
   clearOperatorSessionCookie,
   hasOperatorSession,
@@ -24,6 +25,12 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
+    // Fix review 3, MN-5. Login is a mutation like any other operator command:
+    // it hands out the operator cookie. Without this check a page on another
+    // origin could post credentials it already knows and have the browser keep
+    // the resulting session, and the guessing loop below could be driven from
+    // off-site. Same helper and same rule as every other operator route.
+    assertSameOrigin(request, true);
     // Before the body is even read, so a guessing loop costs the attacker time
     // and this process nothing.
     const source = clientIp(request);

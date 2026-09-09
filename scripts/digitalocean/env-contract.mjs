@@ -89,6 +89,11 @@ export const optionalRuntimeConfig = [
   "NOTIFICATION_SMTP_USER",
   "NOTIFICATION_SMTP_PASSWORD",
   "NOTIFICATION_SMTP_TIMEOUT_MS",
+  // Fix review 3, MN-7. The oldest capture the two-minute sweep may announce.
+  // Optional: the config default is the morning the sweep was written, so a
+  // deployment that gains a shop address announces new requests and leaves the
+  // pre-notification backlog to the runbook's manual update.
+  "NOTIFICATION_SWEEP_FLOOR",
   // P7-5 / DS-9. Error tracking and journey analytics. All four are optional
   // and all four are empty until Sanchay creates the Sentry and PostHog
   // projects: `packages/observability` imports a vendor SDK only inside a

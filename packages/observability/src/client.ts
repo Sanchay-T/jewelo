@@ -117,8 +117,17 @@ async function sentryClient(): Promise<SentryModule | undefined> {
     maxBreadcrumbs: observabilityLimits.maxBreadcrumbs,
     sendDefaultPii: false,
     beforeSend: (event) => scrubBrowserEvent(event),
+    // Fix review 3, MN-6. Console breadcrumbs were dropped and DOM ones were
+    // not, so a crash report still carried a trail of what the shopper clicked
+    // and, for `ui.input`, the target of every keystroke in the name field -
+    // the one field that holds a customer's name. Neither category tells us
+    // anything the error and its route do not.
     beforeBreadcrumb: (breadcrumb) =>
-      breadcrumb.category === "console" ? null : breadcrumb,
+      breadcrumb.category === "console" ||
+      breadcrumb.category === "ui.click" ||
+      breadcrumb.category === "ui.input"
+        ? null
+        : breadcrumb,
   });
   sentry = module;
   return module;

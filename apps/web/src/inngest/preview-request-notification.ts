@@ -65,6 +65,7 @@ function environment(): Record<string, string | undefined> {
     NOTIFICATION_SMTP_USER: process.env.NOTIFICATION_SMTP_USER,
     NOTIFICATION_SMTP_PASSWORD: process.env.NOTIFICATION_SMTP_PASSWORD,
     NOTIFICATION_SMTP_TIMEOUT_MS: process.env.NOTIFICATION_SMTP_TIMEOUT_MS,
+    NOTIFICATION_SWEEP_FLOOR: process.env.NOTIFICATION_SWEEP_FLOOR,
   };
 }
 
@@ -226,16 +227,27 @@ interface SweepDependencies {
   to: () => string | undefined;
   send: (events: AnnouncementEvent[]) => Promise<unknown>;
   now: () => Date;
+  /**
+   * The oldest capture the sweep may announce, validated
+   * (`NOTIFICATION_SWEEP_FLOOR`). Rows older than this were captured before the
+   * notification path worked and are the runbook's manual job, not thirteen
+   * mails the first time a shop address is set.
+   */
+  floor: () => string;
 }
 
 /**
- * The rows the sweep may announce: unannounced, older than the floor, oldest
- * first, capped by the validated batch. Only the id is selected - the message
- * is composed by the claim function with the service role, so no contact detail
- * is read here and none can travel in an event.
+ * The rows the sweep may announce: unannounced, settled (older than the minimum
+ * age), captured no earlier than `NOTIFICATION_SWEEP_FLOOR`, oldest first,
+ * capped by the validated batch. Only the id is selected - the message is
+ * composed by the claim function with the service role, so no contact detail is
+ * read here and none can travel in an event.
  */
-export function unannouncedRequestsQuery(before: string): string {
-  return `/rest/v1/preview_requests?select=id&notified_at=is.null&created_at=lt.${encodeURIComponent(before)}&order=created_at.asc&limit=${notificationSweepLimits.notificationSweepBatch}`;
+export function unannouncedRequestsQuery(
+  before: string,
+  floor: string,
+): string {
+  return `/rest/v1/preview_requests?select=id&notified_at=is.null&created_at=lt.${encodeURIComponent(before)}&created_at=gte.${encodeURIComponent(floor)}&order=created_at.asc&limit=${notificationSweepLimits.notificationSweepBatch}`;
 }
 
 export type SweepOutcome =
@@ -258,6 +270,7 @@ export async function sweepUnannouncedRequests(
     to: () => process.env.NOTIFICATION_TO?.trim() || undefined,
     send: (events) => inngest.send(events),
     now: () => new Date(),
+    floor: () => parseNotificationEnv(environment()).NOTIFICATION_SWEEP_FLOOR,
     ...overrides,
   };
   // No shop address means every event this sweep sent would end in
@@ -271,13 +284,16 @@ export async function sweepUnannouncedRequests(
     dependencies.now().getTime() -
       notificationSweepLimits.notificationSweepMinAgeMs,
   ).toISOString();
-  const response = await fetch(`${admin.url}${unannouncedRequestsQuery(before)}`, {
-    headers: {
-      apikey: admin.key,
-      authorization: `Bearer ${admin.key}`,
-      accept: "application/json",
+  const response = await fetch(
+    `${admin.url}${unannouncedRequestsQuery(before, dependencies.floor())}`,
+    {
+      headers: {
+        apikey: admin.key,
+        authorization: `Bearer ${admin.key}`,
+        accept: "application/json",
+      },
     },
-  });
+  );
   if (!response.ok)
     throw new Error(
       `preview_request_notification_sweep_read_failed:${response.status}`,
