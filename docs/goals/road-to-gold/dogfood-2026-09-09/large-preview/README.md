@@ -37,7 +37,7 @@ The lead also personally checked the built review step at 390x600: reduced-motio
 
 Mock deployment `0e64cfea-2da0-4905-8bde-b1c462ec86b7` reached ACTIVE at source `57189c5aa53a1ba7f525d1b48898a704629d7ebb`. Deployment and smoke exited 0; health and protected readiness passed. Evidence: `/tmp/jewelo-staging-plan/mock-deployment-57189c5.json`. The remote dirty checkout was preserved; deployment used a clean separate worktree.
 
-The lead personally inspected staging at all seven viewport sizes: 1440x900, 1280x720, 1024x768, 768x1024, 390x844, 390x600 and 320x568. Initial captures cover all seven; additional captures cover desktop bottom, mobile focus/compact/enlarged inspection, Arabic name entry and RTL short-screen review/confirmation with reduced motion. This is the observed coverage, not every form state at every size. The deployed desktop bottom panel is y=16 px, h=583.3 px; 390x844 photograph h=436.8 px; 320x568 compact reminder h=81 px, with a complete 320x568 inspection dialog. Name focus hides the compact row.
+The lead personally inspected staging at all seven viewport sizes: 1440x900, 1280x720, 1024x768, 768x1024, 390x844, 390x600 and 320x568. Both Design and Review were personally checked at all seven sizes. Additional captures cover desktop bottom, mobile focus/compact/enlarged inspection, Arabic name entry and RTL short-screen review/confirmation with reduced motion. The spelling confirmation remained unchecked; these checks initiated no paid runs. This is the observed coverage, not every possible form state at every size. The deployed desktop bottom panel is y=16 px, h=583.3 px; 390x844 photograph h=436.8 px; 320x568 compact reminder h=81 px, with a complete 320x568 inspection dialog. Name focus hides the compact row.
 
 | Staging state | Screenshot | DOM measurement |
 | --- | --- | --- |
@@ -57,12 +57,18 @@ The lead personally inspected staging at all seven viewport sizes: 1440x900, 128
 | rtl 390x600 review reduced motion | [Screenshot](staging-rtl-390x600-review-reduced-motion.png) | [Measurement](staging-rtl-390x600-review-reduced-motion.json) |
 | rtl 390x844 | [Screenshot](staging-rtl-390x844.png) | [Measurement](staging-rtl-390x844.json) |
 | rtl name entry | [Screenshot](staging-rtl-name-entry.png) | [Measurement](staging-rtl-name-entry.json) |
+| Review 1024x768 | [Screenshot](staging-review-1024x768.png) | [Measurement](staging-review-1024x768.json) |
+| Review 1280x720 | [Screenshot](staging-review-1280x720.png) | [Measurement](staging-review-1280x720.json) |
+| Review 320x568 | [Screenshot](staging-review-320x568.png) | [Measurement](staging-review-320x568.json) |
+| Review 390x600 | [Screenshot](staging-review-390x600.png) | [Measurement](staging-review-390x600.json) |
+| Review 390x844 | [Screenshot](staging-review-390x844.png) | [Measurement](staging-review-390x844.json) |
+| Review 768x1024 | [Screenshot](staging-review-768x1024.png) | [Measurement](staging-review-768x1024.json) |
 
 The daily policy was tightened with one compare-and-set update and read back: global/per-principal ledger caps 800 cents, provider attempt budget 1, studio_only true, global generation limit 10 and per-principal limit 2. Usage was not reset or edited: 8 runs, 100 cents actual and 100 cents reserved remained unchanged. Evidence: `/tmp/jewelo-staging-plan/runtime-policy-executed.json`. These are ledger values, not an exact provider invoice guarantee.
 
 After the canonical compiler deployment was ACTIVE, four compatible v3 prompt releases were created, published and read back: image.packshot `f2ba654a-3454-4ec0-86ec-a4281a411145`, image.worn `ee9a0920-7bf5-4958-a912-053b1c46b200`, image.macro_gift `b702d84c-cd8e-4b89-b58a-34a289408379`, image.dark_editorial `f9b83ec1-5f67-4bed-8b89-09059904c5a2`. Frozen hashes match the canonical templates; old immutable releases remain. Evidence: `/tmp/jewelo-staging-plan/canonical-publication-executed.json`.
 
-Newer pushed source `b5f9758d60feaf7db75a1f66ac57bcc5b2641cf1` caps the paid name reader's response at a validated 2,048 output tokens. Its full build passed 13/13, exit 0, and two independent source reviews were clean. At this recorded checkpoint the real-mode deployment beginning `927ac5b1` was BUILDING that source; it was not yet the served version in the staging screenshots, and no real-mode image request had been made.
+Newer pushed source `b5f9758d60feaf7db75a1f66ac57bcc5b2641cf1` caps the paid name reader's response at a validated 2,048 output tokens. Its full build passed 13/13, exit 0, and two independent source reviews were clean. At 12:02 UTC the real-mode deployment beginning `927ac5b1` was DEPLOYING that source and awaiting web health; it was not yet the served version in the staging screenshots, and no real-mode image request had been made.
 
 **Verification boundary:** existing real-mode dependencies deliberately use `MockStudioVerifier` plus a paid `OpenAINameReader`. Human lab scoring checks photograph geometry; the running application's paid gate reads the name. It is not a complete automatic geometry/attachment verifier. The token cap does not add provider-cost reconciliation. No four-photo production readiness is claimed.
 
