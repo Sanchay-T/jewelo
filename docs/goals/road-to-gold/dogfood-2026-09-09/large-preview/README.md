@@ -1,5 +1,7 @@
 # Larger preview - local and staging follow-up proof, 9 September 2026
 
+**New P6-11 objective:** prepare four additional internal-team preview runs today, one run per person with manual design review. Pilot code is implemented and independently reviewed; build, deployment and quota opening are pending. The current served code and completed earlier proof remain below.
+
 Task P6-10 is complete for the requested preview/form and live-display scope. Current real staging serves `ba06a6605c8882ddb84af5af0a8f569dc44d7883` on `codex/overnight-launch-2026-09-08`: the lead watched a real Arabic four-view result arrive without reload, inspected every view and checked enlarged inspection, then checked the completed page at all seven viewport sizes. New requests are currently blocked by the validation quota of 10/10; other product-readiness limits are stated below.
 
 The earlier local and mock-staging captures served `57189c5aa53a1ba7f525d1b48898a704629d7ebb`; the first English real image served `b5f9758`. They remain identified separately from the final `ba06a66` real-page evidence.
@@ -158,3 +160,24 @@ The lead reports full `corepack pnpm build`: **13 successful, 13 total**, exit 0
 The earlier seven-item UI acceptance, full dictionary changes and broader local layout matrix remain in [Umayr UI proof](../umayr-ui/README.md). Those earlier captures do not substitute for the newer staging observations above. Mock staging UI coverage, canonical publication, real deployment/smoke, the English API studio photograph and the Arabic four-view API result are complete. The atomic readiness correction and Arabic four-view API flow are now runtime-verified; the operational limits and untouched flows are listed above. The current prompt qualification is recorded in [Image lab](../../../overnight-launch/IMAGE-LAB.md#9-september-follow-up---shared-still-compiler-and-studio-candidate-c).
 
 The separate uncommitted identity-engine and stencil-renderer script work in the original checkout remains excluded. PROGRESS.md and HANDOVER.md are unchanged under the original brief's explicit boundary.
+
+## P6-11 - internal preview pilot prepared, not yet open
+
+Candidate source `48f81a4595d1669bc77cf95cbe83b49359a522ce` contains two targeted changes: `1af429f` gives the Arabic Reset label its natural width, and `48f81a4` lets dependent views reuse the verified immutable Studio stencil rather than rerendering it. Both fresh independent reviews were clean above minor. The build is pending at this checkpoint; current real staging still serves `ba06a66` and the exhausted 10/10 validation quota still blocks new requests.
+
+The lead personally checked the Reset fix locally at RTL 320x568 and 390x844: the full label measured 90.078 by 44 px, stayed inside the toolbar, and zoom/reset/close worked. The other zoom controls retain their 44 px minimum targets.
+
+| Local pilot check | Screenshot | DOM measurement |
+| --- | --- | --- |
+| RTL 320x568 Reset | [Screenshot](pilot-local-rtl-reset-320x568.png) | [Measurement](pilot-local-rtl-reset-320x568.json) |
+| RTL 390x844 Reset | [Screenshot](pilot-local-rtl-reset-390x844.png) | [Measurement](pilot-local-rtl-reset-390x844.json) |
+
+Read-only reuse proof downloaded the actual existing Arabic Studio identity PNG and ran the new helper against clean identity dependencies in 1,818.28 ms. PNG hash matched stored `aeca9c818776974f5dbae0679753ba92bba9c37cb2c79eaf79121ac76e464e56`; fingerprint and validation metadata passed. This check performed zero database writes and zero provider calls. It did not execute the child identity-binding write or a full child dispatch and is not a measured end-to-end speedup. Evidence: `/tmp/jewelo-staging-plan/p6-11-reuse-read-proof.json`.
+
+The prepared pilot plan opens **four additional runs**, not four total today: global daily limit 10→14 and per-principal daily limit 2→3. A principal that already used two runs can therefore use one more; the one-run-per-person rule is a manual team instruction, not an enforced allocation per person. Keep full four-view mode, one provider attempt, 100-cent reservation per image and the 800-cent per-principal spend cap. Planned global image ledger cap is 1,900 cents: 300 cents already recorded/reserved plus 1,600 cents for four new four-image runs. An additional 100-cent reader allowance makes the selected total allowance US$20. This is not a provider-enforced invoice cap; the adapter still records its fixed image estimate and does not reconcile reader usage.
+
+Deployment overlay changes only the intended validated settings: `PROVIDER_MODE=real`, `REAL_MODE_MAX_RESERVED_SPEND_CENTS=1900`, `OPENAI_STILL_CONCURRENCY_LIMIT=2`. The concurrency limit applies to actively executing presentation steps, including identity preparation and the provider call inside the same step; it does not limit all queued/sleeping function runs or guarantee latency. Models remain unchanged.
+
+**Opening sequence, not yet executed:** deploy reviewed/built code while the old 10/10 quota prevents new runs; verify ACTIVE source, smoke and registered presentation concurrency 2; reread current UTC policy/usage/active tasks; then compare-and-set the three policy changes and read back, preserving all usage and other fields. No team test slot is consumed by an agent. The four-slot arithmetic applies to 9 September UTC and must be reassessed across a UTC date change. Prepared evidence: `/tmp/jewelo-staging-plan/pilot-budget-plan.json` and `pilot-concurrency-evidence.json`.
+
+Pilot scope is preview and manual design review for 3-4 internal teammates. It does not establish shop contact delivery, checkout, a complete automatic geometry gate or unrestricted customer readiness. Existing `MockStudioVerifier` and executor-connection follow-ups remain; stencil reuse has read-only helper evidence, not new live-dispatch performance proof yet.
