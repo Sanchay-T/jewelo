@@ -1,0 +1,87 @@
+$ turbo run build
+• turbo 2.10.12
+
+   • Packages in scope: @jewelo/ai, @jewelo/config, @jewelo/contracts, @jewelo/data, @jewelo/domain, @jewelo/identity, @jewelo/jobs, @jewelo/media, @jewelo/observability, @jewelo/pricing, @jewelo/testing, @jewelo/ui, @jewelo/web
+   • Running build in 13 packages
+   • Remote caching disabled, using shared worktree cache
+
+@jewelo/domain:build: cache hit, replaying logs 785d9815e703446e
+@jewelo/data:build: cache hit, replaying logs a2bc272a0e490218
+@jewelo/contracts:build: cache hit, replaying logs 5b8aee7bea55f764
+@jewelo/data:build: $ tsc -p tsconfig.json
+@jewelo/media:build: cache hit, replaying logs 892ea49aadc8146d
+@jewelo/domain:build: $ tsc -p tsconfig.json
+@jewelo/contracts:build: $ tsc -p tsconfig.json
+@jewelo/media:build: $ tsc -p tsconfig.json
+@jewelo/pricing:build: cache hit, replaying logs afdac0a94e1c2ff8
+@jewelo/ui:build: cache hit, replaying logs 4a78b2e14f0bbc0f
+@jewelo/pricing:build: $ tsc -p tsconfig.json
+@jewelo/ui:build: $ tsc -p tsconfig.json
+@jewelo/identity:build: cache hit, replaying logs 6d0db2a3d749f68a
+@jewelo/identity:build: $ tsc -p tsconfig.json
+@jewelo/config:build: cache hit, replaying logs 5c135bd5055b1440
+@jewelo/config:build: $ tsc -p tsconfig.json
+@jewelo/observability:build: cache hit, replaying logs c093e1f255b50bfd
+@jewelo/ai:build: cache hit, replaying logs 87db2534b47a947f
+@jewelo/observability:build: $ tsc -p tsconfig.json
+@jewelo/ai:build: $ tsc -p tsconfig.json
+@jewelo/jobs:build: cache hit, replaying logs eab9ed20db904cca
+@jewelo/testing:build: cache hit, replaying logs b98a7a6e7ba6d000
+@jewelo/jobs:build: $ tsc -p tsconfig.json
+@jewelo/testing:build: $ tsc -p tsconfig.json
+@jewelo/web:build: cache miss, executing 4636c4aa8b31885d
+@jewelo/web:build: $ next build
+@jewelo/web:build: ▲ Next.js 16.2.12 (Turbopack)
+@jewelo/web:build: 
+@jewelo/web:build:   Creating an optimized production build ...
+@jewelo/web:build: ✓ Compiled successfully in 5.4s
+@jewelo/web:build:   Running TypeScript ...
+@jewelo/web:build:   Finished TypeScript in 3.0s ...
+@jewelo/web:build:   Collecting page data using 9 workers ...
+@jewelo/web:build:   Generating static pages using 9 workers (0/25) ...
+@jewelo/web:build:   Generating static pages using 9 workers (6/25) 
+@jewelo/web:build:   Generating static pages using 9 workers (12/25) 
+@jewelo/web:build:   Generating static pages using 9 workers (18/25) 
+@jewelo/web:build: ✓ Generating static pages using 9 workers (25/25) in 98ms
+@jewelo/web:build:   Finalizing page optimization ...
+@jewelo/web:build: 
+@jewelo/web:build: Route (app)
+@jewelo/web:build: ┌ ƒ /
+@jewelo/web:build: ├ ƒ /_not-found
+@jewelo/web:build: ├ ƒ /[locale]
+@jewelo/web:build: ├ ƒ /[locale]/design/new
+@jewelo/web:build: ├ ƒ /[locale]/operator
+@jewelo/web:build: ├ ƒ /api/auth/anonymous
+@jewelo/web:build: ├ ƒ /api/checkout
+@jewelo/web:build: ├ ƒ /api/designs/[designId]/commands
+@jewelo/web:build: ├ ƒ /api/designs/[designId]/run
+@jewelo/web:build: ├ ƒ /api/designs/drafts
+@jewelo/web:build: ├ ƒ /api/designs/drafts/[draftId]
+@jewelo/web:build: ├ ƒ /api/health
+@jewelo/web:build: ├ ƒ /api/inngest
+@jewelo/web:build: ├ ƒ /api/operator/commands
+@jewelo/web:build: ├ ƒ /api/operator/diagnostics/identity
+@jewelo/web:build: ├ ƒ /api/operator/preview-requests
+@jewelo/web:build: ├ ƒ /api/operator/prompts
+@jewelo/web:build: ├ ƒ /api/operator/review-runs
+@jewelo/web:build: ├ ƒ /api/operator/session
+@jewelo/web:build: ├ ƒ /api/preview-requests
+@jewelo/web:build: ├ ƒ /api/preview-requests/[id]
+@jewelo/web:build: ├ ƒ /api/readiness
+@jewelo/web:build: ├ ƒ /api/references
+@jewelo/web:build: ├ ƒ /api/revisions/approve
+@jewelo/web:build: ├ ƒ /api/state
+@jewelo/web:build: ├ ƒ /api/tasks/[taskId]/[action]
+@jewelo/web:build: ├ ƒ /api/transliterate
+@jewelo/web:build: └ ƒ /api/webhooks/shopify
+@jewelo/web:build: 
+@jewelo/web:build: 
+@jewelo/web:build: ƒ Proxy (Middleware)
+@jewelo/web:build: 
+@jewelo/web:build: ƒ  (Dynamic)  server-rendered on demand
+@jewelo/web:build: 
+
+ Tasks:    13 successful, 13 total
+Cached:    12 cached, 13 total
+  Time:    10.167s 
+

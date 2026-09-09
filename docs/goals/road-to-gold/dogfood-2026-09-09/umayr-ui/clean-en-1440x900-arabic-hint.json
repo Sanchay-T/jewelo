@@ -1,0 +1,6 @@
+{
+  "result": {
+    "type": "string",
+    "value": "{\"viewport\":[1440,900],\"scrollY\":0,\"dir\":\"ltr\",\"panel\":{\"x\":664.1953125,\"y\":178,\"width\":703.8046875,\"height\":620,\"top\":178,\"right\":1368,\"bottom\":798,\"left\":664.1953125},\"rail\":{\"x\":683.1953125,\"y\":628.5,\"width\":665.8046875,\"height\":150.5,\"top\":628.5,\"right\":1349,\"bottom\":779,\"left\":683.1953125},\"samples\":1,\"exampleInPreview\":false,\"lettering\":[{\"text\":\"U\",\"font\":\"naskh, \\\"naskh Fallback\\\"\"},{\"text\":\"U\",\"font\":\"scheherazade, \\\"scheherazade Fallback\\\"\"},{\"text\":\"U\",\"font\":\"naskh, \\\"naskh Fallback\\\"\"},{\"text\":\"U\",\"font\":\"kufi, \\\"kufi Fallback\\\"\"},{\"text\":\"U\",\"font\":\"naskh, \\\"naskh Fallback\\\"\"},{\"text\":\"U\",\"font\":\"rakkas, \\\"rakkas Fallback\\\"\"}],\"fonts\":\"loaded\",\"name\":\"U\",\"forbidden\":false,\"previewText\":\"Shop sample · Asma\\n\\nA shop sample. Yours is photographed after you confirm the spelling.\\n\\nONE PIECE · EVERY PERSPECTIVE\\nStudio\\n▷\\nPreview ready\\nStudio\\nThe design\\n✓\\nPreview ready\\nOn skin\\nOn you\\nPreview ready\\nClose-up\\nThe details\\nPreview ready\\nDark\\nAfter hours\"}"
+  }
+}

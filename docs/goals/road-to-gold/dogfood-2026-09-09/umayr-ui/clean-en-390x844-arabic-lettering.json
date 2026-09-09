@@ -1,0 +1,6 @@
+{
+  "result": {
+    "type": "string",
+    "value": "{\"viewport\":[390,844],\"scrollY\":928.5,\"dir\":\"ltr\",\"panel\":{\"x\":20,\"y\":8,\"width\":350,\"height\":340,\"top\":8,\"right\":370,\"bottom\":348,\"left\":20},\"rail\":{\"x\":29,\"y\":254,\"width\":332,\"height\":85,\"top\":254,\"right\":361,\"bottom\":339,\"left\":29},\"samples\":0,\"exampleInPreview\":false,\"lettering\":[{\"text\":\"عمير\",\"font\":\"naskh, \\\"naskh Fallback\\\"\"},{\"text\":\"عمير\",\"font\":\"scheherazade, \\\"scheherazade Fallback\\\"\"},{\"text\":\"عمير\",\"font\":\"naskh, \\\"naskh Fallback\\\"\"},{\"text\":\"عمير\",\"font\":\"kufi, \\\"kufi Fallback\\\"\"},{\"text\":\"عمير\",\"font\":\"naskh, \\\"naskh Fallback\\\"\"},{\"text\":\"عمير\",\"font\":\"rakkas, \\\"rakkas Fallback\\\"\"}],\"fonts\":\"loaded\",\"name\":\"عمير\",\"forbidden\":false,\"previewText\":\"Shop sample · Asma\\n\\nA shop sample. Yours is photographed after you confirm the spelling.\\n\\nDark\\n▷\\nPreview ready\\nStudio\\nThe design\\nPreview ready\\nOn skin\\nOn you\\nPreview ready\\nClose-up\\nThe details\\nPreview ready\\nDark\\nAfter hours\\n✓\"}"
+  }
+}
