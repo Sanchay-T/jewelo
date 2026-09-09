@@ -715,6 +715,8 @@ export const pipelineLimitsSchema = z
      * number rather than the image timeout reused.
      */
     visionRequestTimeoutMs: positiveInt.min(10_000).max(300_000),
+    /** Responses output ceiling, including reasoning tokens, for a name read. */
+    nameReaderMaxOutputTokens: positiveInt.min(64).max(2_048),
     /**
      * Grace added to the bounded provider calls to get the stale window. It
      * covers the work either side of those calls inside one dispatch - the
@@ -861,6 +863,7 @@ export type PipelineLimits = z.infer<typeof pipelineLimitsSchema>;
 export const pipelineLimits: PipelineLimits = pipelineLimitsSchema.parse({
   providerRequestTimeoutMs: 180_000,
   visionRequestTimeoutMs: 60_000,
+  nameReaderMaxOutputTokens: 2_048,
   staleRecoveryMarginMs: 120_000,
   localWorkAllowanceMs: 60_000,
   staleRecoveryLimit: 100,

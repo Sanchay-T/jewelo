@@ -372,6 +372,7 @@ export class OpenAINameReader implements StudioNameReader {
       },
       body: JSON.stringify({
         model: this.model,
+        max_output_tokens: pipelineLimits.nameReaderMaxOutputTokens,
         input: [
           {
             role: "user",
