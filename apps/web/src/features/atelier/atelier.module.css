@@ -941,6 +941,13 @@
   background: none;
   border: 1px solid var(--line);
 }
+.zoomTools .zoomReset {
+  inline-size: max-content;
+  min-inline-size: 44px;
+  flex: 0 0 auto;
+  padding-inline: 12px;
+  white-space: nowrap;
+}
 .zoomCanvas {
   width: 100% !important;
   height: 70dvh !important;

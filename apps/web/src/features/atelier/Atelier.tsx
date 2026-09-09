@@ -2704,7 +2704,7 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                 <button aria-label={t("Zoom out")} onClick={() => zoomOut()}>
                   <Minus />
                 </button>
-                <button onClick={() => resetTransform()}>{t("Reset")}</button>
+                <button className={s.zoomReset} onClick={() => resetTransform()}>{t("Reset")}</button>
               </div>
               <TransformComponent wrapperClass={s.zoomCanvas}>
                 {(showingOwnPhoto || sampleVisible) && heroSource && (
