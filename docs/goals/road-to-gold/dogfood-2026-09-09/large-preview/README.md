@@ -237,3 +237,20 @@ After the pilot opened, a teammate naturally used one run. Read-only metadata sh
 Studio completed at 16:23:55.066542 UTC. The on-skin and dark paid attempts began 3.499s and 3.669s later. Close-up waited for the concurrency-2 slot and began at 16:25:46.776819, 2.893s after Dark completed; it was ready at 16:28:27.662387. These timings include dispatch/queue wait and do not isolate stencil processing or establish a general performance guarantee. The reused immutable identity is now observed in a full live child dispatch, beyond the earlier helper-only check.
 
 The 16:29:43 UTC state has 11/14 global runs used, **three slots remaining**, 100 cents reserved, 280 cents recorded actual and zero active tasks. Limits remain unchanged; the agent initiated no new provider calls or retries. Private sanitized execution evidence: `/tmp/jewelo-staging-plan/p6-11-live-team-reuse-proof.json`.
+
+## P6-13 - restored style inspection
+
+The user requested the hidden choices back to inspect and improve them. Code `e2f0e304372351d90e34d18ef1301b96abffa1ed` restores all four constructions and all six lettering choices in the UI. Previously hidden constructions were Origami ribbon, Framed minimal and Diamond rails; hidden English lettering was Minimal, Diwani, Kufi, Signature and Thuluth inspired. Arabic already exposed all six lettering options.
+
+This is browsing only for choices outside the unchanged sellable sets. Such tiles say Reference only/للاطلاع فقط, and the selected draft is no longer silently reset to Classical/Classic. The shopper can change the selection, inspect existing catalogue photographs and review its specifications. A non-sellable draft cannot confirm a personal request, add to the bag, reveal the personal/contact request section or submit contact; both rendering and relevant handlers are gated. Existing client preflight and backend behavior are unchanged. No server-side sellable allowlist is claimed.
+
+Source inspection found four reference views for each default construction in either script and each English Classical lettering choice. Arabic Diwani currently resolves a sibling reference; its existing mismatch/availability notes remain. Existing font mappings are unchanged; this change does not certify lettering fidelity or replace fonts. Personal-attempt ownership rules remain intact.
+
+Two dictionary keys were added:
+
+| English | Arabic |
+| --- | --- |
+| Reference only | للاطلاع فقط |
+| You can explore this style. Personal previews are not available for it yet. | يمكنك استكشاف هذا الأسلوب. المعاينات الشخصية غير متاحة له بعد. |
+
+Only Atelier.tsx changed; no CSS, identity, configuration, environment, quota or provider changes. Targeted ESLint and whitespace checks passed. Independent reviews, lead browser verification, build and deployment are pending at this checkpoint; no tests or paid calls were made.
