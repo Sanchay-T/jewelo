@@ -181,3 +181,13 @@ Open:
 
 - The parked Claude session on `home-mini` (`hq-claude2:2.1`) is stuck on an out-of-credits prompt with two background agents pending; only Sanchay can answer it.
 - Everything under Open in session 1 still stands.
+
+## Session 3 (continued), 2026-09-09 early morning
+
+- Fix review 3 (`reviews/fix-review-3.md`): BL-1 fixed and applied (`d358b81`, migration `20260909022000`); MJ-1 (note audit), MJ-2 (sweeper env values, 24 h dedupe limit) and seven minors open.
+- Storyline fix 2 committed (`200bcfe`): real-mode spend ceiling gate `spend_ceiling_not_set` (`apps/jobs/src/spend-ceiling.ts`, config `REAL_MODE_MAX_RESERVED_SPEND_CENTS` 800 / `REAL_MODE_MAX_ATTEMPT_BUDGET` 3, `policyCacheMs` 60 s), queue hides retry on `DETERMINISTIC_REFUSAL_CODES`, same-origin without `x-forwarded-host`, three journey events, scoped client state read.
+- Staging deployment `e04b835e` ACTIVE at `f63b3e3` (security fix 3 + storyline fix 1); `d358b81` and `200bcfe` are not yet deployed.
+- P1-5 fix pass 7 is half written and unproven; pushed as `codex/fix-pass-7-wip` (`93c22af`) and left uncommitted in this tree. The matrix has not been run and no stencil has been opened. Next: run the letters and names matrices, open the eight named renders, then adversarial pass 7.
+- The session process exited mid-run; the fix-review-3 implementer (BL-1 staging proof, MJ-1 migration, MN-1..MN-7) and the deploy agent were stopped. Only the migration above landed from that brief.
+- Housekeeping: the laptop disk hit 100%; the 13 GB `.turbo` cache was deleted (9.8 GiB free now). `.tmp/rnd-stills` (2 GB, 4 Sep, untracked) was left alone.
+- Rule recorded: publish prompt releases only from a deployed build (staging broke 22:25-22:56 UTC on 8 Sep when `@v2` prompts were published before `c9265aa` was live).
