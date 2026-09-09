@@ -72,7 +72,7 @@ After the canonical compiler deployment was ACTIVE, four compatible v3 prompt re
 
 Newer pushed source `b5f9758d60feaf7db75a1f66ac57bcc5b2641cf1` caps the paid name reader's response at a validated 2,048 output tokens. Its full build passed 13/13, exit 0, and two independent source reviews were clean. Real-mode deployment `927ac5b1-564a-47f8-bf01-0b6849160d40` reached ACTIVE at 12:04:16 UTC. Deployment exited 0; health and protected readiness passed. The initial staging layout captures above still served the earlier mock source; the real API captures below served `b5f9758`. Private deployment evidence: `/tmp/jewelo-staging-plan/real-deployment-b5f9758.json`.
 
-**Verification boundary:** existing real-mode dependencies deliberately use `MockStudioVerifier` plus a paid `OpenAINameReader`. Human lab scoring checks photograph geometry; the running application's paid gate reads the name. It is not a complete automatic geometry/attachment verifier. The token cap does not add provider-cost reconciliation. No four-photo production readiness is claimed.
+**Verification boundary:** existing real-mode dependencies deliberately use `MockStudioVerifier` plus a paid `OpenAINameReader`. Independent visual review by agents checks photograph geometry; the running application's paid gate reads the name. It is not a complete automatic geometry/attachment verifier. The token cap does not add provider-cost reconciliation. No four-photo production readiness is claimed.
 
 ## First real API photograph - English studio
 
@@ -145,7 +145,7 @@ The two validation runs produced five new images, one attempt each. They booked 
 
 The requested preview/form, shared-prompt transfer and bounded live photo validation scope is complete. This does not establish readiness for unrestricted customer use:
 
-- Real dependencies still use `MockStudioVerifier` plus paid name reading. Human visual acceptance is proven here; a complete automatic geometry/attachment gate remains a pre-existing follow-up.
+- Real dependencies still use `MockStudioVerifier` plus paid name reading. Independent agent visual acceptance is recorded here; a complete automatic geometry/attachment gate remains a pre-existing follow-up.
 - Inngest reported “Unable to reach SDK URL” during the long dependent-view preparation, yet the original handlers completed with one paid attempt per child. No current active task remained in the observation. The cause is not established; stencil preparation and executor connection lifetime need profiling. No out-of-memory diagnosis is claimed.
 - Shop contact delivery and checkout were not exercised in this work.
 - The Arabic Reset label is slightly clipped in enlarged inspection; recorded as a minor UI follow-up.
