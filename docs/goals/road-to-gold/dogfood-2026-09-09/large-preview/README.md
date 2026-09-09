@@ -27,6 +27,11 @@ Each row links the lead's original screenshot and measurement. JSON values are b
 | Built production server 1280x720 - initial | [Screenshot](built-1280x720.png) | [Measurement](built-1280x720.json) |
 | Built production server 1024x768 - initial | [Screenshot](built-1024x768.png) | [Measurement](built-1024x768.json) |
 | Built production server 768x1024 - initial | [Screenshot](built-768x1024.png) | [Measurement](built-768x1024.json) |
+| Built review 390x600 - reduced motion | [Screenshot](built-review-390x600-reduced-motion.png) | [Measurement](built-review-390x600-reduced-motion.json) |
+| Built review 390x600 - compact reminder and controls | [Screenshot](built-review-390x600-controls.png) | [Measurement](built-review-390x600-controls.json) |
+| Built review 390x600 - complete enlarged photograph | [Screenshot](built-review-390x600-enlarged.png) | [Measurement](built-review-390x600-enlarged.json) |
+
+The lead also personally checked the built review step at 390x600: reduced-motion playback stopped, the compact reminder measured 81 px while review controls remained accessible, and enlarged inspection showed the complete photograph in a 390x600 modal. These are local browser observations; the reduced-motion behavior was observed by the lead, while the linked DOM files record geometry and visible text.
 
 ## Build, review and remaining proof
 

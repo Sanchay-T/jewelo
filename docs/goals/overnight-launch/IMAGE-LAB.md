@@ -773,6 +773,23 @@ The two A failures were chain-not-through-ring and unsupported-geometry. Candida
 
 **Boundary:** six passing C pictures qualify only these two names and studio scenes. They do not establish generalisation, dependent-view quality, manufacturability or deployed OpenAI execution. The Runway provider was the `gpt-image-2` alias. The configured Image 2.5 model lookup returned HTTP 404: Image 2.5 is unavailable to this account at this checkpoint and was not verified. Configuration permits an explicit 2.5 snapshot but does not silently substitute it into Runway.
 
-The next frozen holdout consists of Emma, Olivia, Sophia, Amelia, Grace, Hannah and مريم, سارة, هند, ريم, دانية, ياسمين. All 12 calls have been submitted; qualification remains pending until independently scored. The lead observed a 240-credit Runway decrease for these calls, from 304,362 to 304,122. No unscored holdout pass is claimed. P3-5 and P3-6 remain open; no full-grid completion is claimed. Qualification images, reference images, signed URLs and request artifacts stay outside the public repository. No current credit balance or paid API success is inferred from the earlier W2 ledger.
+The fresh frozen holdout is independently scored: **12/12 pass**, meeting the minimum 10/12 studio holdout gate without relaxing spelling, stencil geometry, connected-piece or chain-threading criteria. Names were frozen before rendering and none replaced.
+
+| Script | Exact frozen names | Results |
+| --- | --- | --- |
+| English | Emma, Olivia, Sophia, Amelia, Grace, Hannah | 6/6 pass, one image per name |
+| Arabic | مريم, سارة, هند, ريم, دانية, ياسمين | 6/6 pass, one image per name |
+
+The viewer opened every photograph paired with its actual production stencil. Both i-dot bridges survived in Olivia; all five dots in three attached groups survived in دانية; both ya-dot pairs and the nun dot survived in ياسمين. All twelve retained connected geometry and chain links through both eyelet holes. No failure was replaced or omitted. The lead observed a 240-credit Runway decrease for these calls, from 304,362 to 304,122. This is the observed batch balance change, not a current account balance.
+
+A separate four-call trial used the built-in current image tool with the same actual production Asma/أسماء stencils and frozen A/C prompts. Independent scoring found **A 2/2 and C 2/2**, one English and one Arabic image each. Both variants preserved the name, connected geometry and two threaded eyelets. This small tie provides no reason to revert C: the repeated Runway comparison remains C 6/6 versus A 4/6, followed by C's fresh 12/12 holdout. The built-in tool exposes no model selector or confirmed version; these four successes are not evidence of Image 2.5 or API parity at the provider implementation level.
+
+Private local evidence indexes, deliberately outside this public repository:
+
+- `/tmp/jewelo-current-tool-production-trials/manifest.json` records four output paths and byte hashes; `viewer-independent-scores-private.jsonl` and `viewer-independent-summary-private.json` record all four verdicts.
+- `/tmp/jewelo-c-holdout-preparation/manifest-prepared.json` records the twelve frozen names, production stencil PNG/pixel hashes and complete specification paths/hashes; `report.json` records exact-character preservation, one connected component and two ring holes for every stencil.
+- `/tmp/jewelo-c-holdout-qualification/manifest.json` records twelve output paths/hashes and the unchanged C template SHA-256 `8a55e9d37209257ce557c6a7f00538908794226450077396cf67865903519d90`; `viewer-independent-scores-private.jsonl` and `viewer-independent-summary-private.json` record all twelve verdicts.
+
+These completed checks qualify studio photographs for the named fixtures only. One successful image per holdout name is not a repeatability guarantee; dependent views, the wider P3-5/P3-6 grid and deployed OpenAI execution remain separate proof. Qualification images, reference images, signed URLs and request artifacts stay outside the public repository. No paid API success is inferred from the lab ledger.
 
 Full `corepack pnpm build` passed 13/13, exit 0, on the integrated source, and two final independent source reviews found nothing above minor. Deployment, canonical database publication and live API smoke remain pending. No tests were added or run.
