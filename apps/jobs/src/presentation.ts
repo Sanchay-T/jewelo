@@ -368,7 +368,10 @@ export async function executePresentationTask(
         references: {
           master: Boolean(task.dependency_task_id),
           style: task.presentation_view !== "studio",
-          inspiration: Boolean(revision.specification.referenceAsset),
+          inspiration: Boolean(
+            revision.specification.referenceAsset &&
+              typeof revision.specification.referenceAsset === "object",
+          ),
         },
       });
       compiledPrompt = compiled.compiledPrompt;
