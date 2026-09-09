@@ -1,0 +1,72 @@
+TIME                 CHAT   FROM   ID                    TEXT
+2026-09-08 22:25:33  Umayr  me     3A1DA760147AE5D87926  https://engineering.atspotify.com/2026/9/portal-by-spotify-cut-my-claude-code-token-usage-by-90
+2026-09-08 22:26:53  Umayr  me     3A3D2A3F6038DB31DE1B  https://jewelo-staging-gqumd.ondigitalocean.app/en/design/new
+2026-09-08 22:30:02  Umayr  Umayr  3A96043EE16A05A38197  > https://jewelo-staging-gqumd.ondigitalocean.app/en/design/new Checking
+2026-09-08 22:34:11  Umayr  me     3A9A44CB37938BB83C39  desktop for now
+2026-09-08 22:34:22  Umayr  me     3A5D94FE6CCD332E1476  will make it responsive w sticky thingy for the design
+2026-09-08 22:35:23  Umayr  Umayr  3AA2A7C165271299A4F6  Not too bad on mobile for what it’s worth
+2026-09-08 22:38:27  Umayr  Umayr  3AB2263638F95767B5E3  Sent video
+2026-09-08 22:38:36  Umayr  Umayr  3A70A5E9A4F7F1DF7632  Expects name in Arabic, doesn’t convert anymore
+2026-09-08 22:38:48  Umayr  Umayr  3A414A5C39FB7931288B  Preview images sometimes fail to load
+2026-09-08 22:39:12  Umayr  me     3A6C9B4E23734E8D500C  havent generated for each combo na
+2026-09-08 22:39:46  Umayr  Umayr  3AD735794EC880811734  If I click retry
+2026-09-08 22:39:48  Umayr  Umayr  3A6CAC7C28A29A10D492  It loads
+2026-09-08 22:39:58  Umayr  Umayr  3A81FD0C483B35749E3B  Does that mean it was generating initially
+2026-09-08 22:40:05  Umayr  Umayr  3A267491C45273FB805D  Then on retry when it’s available it shows?
+2026-09-08 22:40:22  Umayr  me     3A106542DCE4D5C38871  this is post generation?
+2026-09-08 22:40:36  Umayr  Umayr  3A9A51224DA3850B56E2  What triggers generation
+2026-09-08 22:41:18  Umayr  Umayr  3AD074FB63A374CA7186  (message)
+2026-09-08 22:41:20  Umayr  Umayr  3AA5FF8186D5F83FDD83  Sent image
+2026-09-08 22:41:20  Umayr  Umayr  3A65CCDF87C97121B2D4  Sent image
+2026-09-08 22:41:26  Umayr  Umayr  3A12617D01A2FA01A449  Put my name it gave me Asma
+2026-09-08 22:41:33  Umayr  me     3ACE488E2278838581D6  preview my piece
+2026-09-08 22:45:26  Umayr  Umayr  3AA69294E148B3768B7F  https://x.com/bcherny/status/2097363234747818070?s=46
+2026-09-08 22:46:39  Umayr  Umayr  3A7FA8E5710131D7AAD2  They really got some beef now with the whole navier-stokes equation thing 😂
+2026-09-08 23:09:07  Umayr  Umayr  3A830E90CF715D85A3AB  https://x.com/openai/status/2097375276384567642?s=46
+2026-09-08 23:09:15  Umayr  Umayr  3AD3BF77306C8D821758  Rip
+2026-09-08 23:09:21  Umayr  Umayr  3A727862F15883FE0380  At least they credited him as well
+2026-09-08 23:27:46  Umayr  me     3A2E19F4690ACE1A91CC  > They really got some beef now with the whole navier-stokes equation thing 😂 lmfao
+2026-09-08 23:27:50  Umayr  me     3A4707191A4FA756D7F1  refresh, button now says review my piece. that takes you to the review, the spelling checkbox there is what starts your photo
+2026-09-08 23:28:00  Umayr  me     3AFBDAFAE25819B14B88  yours only generates after you tick the spelling box on step 2
+2026-09-08 23:32:17  Umayr  Umayr  3A11BD0B10F74960D01E  Just generates Asma again, could be I need to clear cache and try again
+2026-09-08 23:32:35  Umayr  Umayr  3AF3DE5FA6E7530ECF7D  State seemed a bit glitchy
+2026-09-08 23:34:09  Umayr  Umayr  3ADAD1A697190C8EC3D1  > Just generates Asma again, could be I need to clear cache and try again Same on different browser
+2026-09-08 23:34:16  Umayr  Umayr  3A4C90D0BB0259CBFF70  I see the loading bar under the previews
+2026-09-08 23:34:23  Umayr  Umayr  3AE9EA9ADE558505244A  But shows the same old image still
+2026-09-08 23:37:49  Umayr  Umayr  3A59E22ACDFEB58F128F  How has Astra computer use
+2026-09-08 23:37:51  Umayr  Umayr  3A386B3BB38FB1A0ED2E  been for u
+2026-09-08 23:37:54  Umayr  Umayr  3ACED8D844FF4B8DF201  done anything crazy?
+2026-09-09 00:12:54  Umayr  Umayr  3AA8BA75C32CE0F6C867  https://x.com/openai/status/2097394956457623964?s=46
+2026-09-09 00:12:57  Umayr  Umayr  3AC29BA8F35096844ED8  Gg….
+2026-09-09 00:48:35  Umayr  me     3A7BFE153A07741F8CBF  > Just generates Asma again, could be I need to clear cache and try again checking
+2026-09-09 00:50:18  Umayr  me     3A9D1051C4E1D0819991  > How has Astra computer use goated
+2026-09-09 00:50:40  Umayr  me     3A65DA6DD2AFBB4BC0DE  will tell you wait
+2026-09-09 00:50:55  Umayr  me     3A9A2D7C4C91005D3910  > https://x.com/openai/status/2097394956457623964?s=46 WTFF
+2026-09-09 00:50:59  Umayr  me     3A431002A0FA0DB332BB  OMRAN SOLVED
+2026-09-09 00:51:00  Umayr  me     3AA5840829A5E621F7E6  GG
+2026-09-09 00:51:05  Umayr  me     3A83FC06CF6A9DA76C82  API RELEASED?
+2026-09-09 00:51:19  Umayr  me     3A4560D95B93198C8CF3  https://x.com/sama/status/2097404861642137851?s=46
+2026-09-09 01:01:01  Umayr  me     3ACC2E08525196D8C19C  https://opensourceui.in/
+2026-09-09 02:42:50  Umayr  me     3A887D2C16D89FA0156B  i love my mac studio now
+2026-09-09 02:42:51  Umayr  me     3A2D792666807A9C4431  https://x.com/huggingmodels/status/2097273747124437263?s=46
+2026-09-09 02:43:36  Umayr  me     3A6F7136128BDB796FD1  gonna pair it up exo
+2026-09-09 13:39:38  Umayr  Umayr  3BCA3F1BC6771E29C418  Sent image
+2026-09-09 13:39:48  Umayr  Umayr  3B1F15D6C06ADD8E459F  I can't fucking stand
+2026-09-09 13:40:00  Umayr  Umayr  3B505C46D95C0BABAF1B  to look at these models raw UI outputs, text mostly
+2026-09-09 13:40:01  Umayr  Umayr  3BD0AD7ECE0A44AE5DB1  fuck
+2026-09-09 13:40:05  Umayr  Umayr  3BCE2CA84F1E0464B115  it infuriates me
+2026-09-09 13:41:34  Umayr  Umayr  3B678333362A36BA6317  Sent image
+2026-09-09 13:41:46  Umayr  Umayr  3BD7C344222C6DD385B8  Sent image
+2026-09-09 13:41:55  Umayr  me     3B7D2BCD7AE724252C91  > Sent image wait why is it showing like this to you
+2026-09-09 13:42:15  Umayr  Umayr  3BAA5AB9E713254567A8  https://jewelo-staging-gqumd.ondigitalocean.app/en/design/new This link right?
+2026-09-09 13:42:20  Umayr  me     3B383833688D22EF45E2  5) No use of atelier or other braindead RL fried language/terms lmao
+2026-09-09 13:43:02  Umayr  me     3B42E42CCED5BD7E0A90  yea but somethings wrong
+2026-09-09 13:43:03  Umayr  me     3B65F5AB204DF8A04190  caching?
+2026-09-09 13:43:07  Umayr  me     3B9067600DD94EED0A5F  the images are like proper right half
+2026-09-09 13:43:08  Umayr  me     3BFEA552623BF80FCD51  tf
+2026-09-09 13:43:33  Umayr  me     3B7CA96C82FDC8784191  > Sent image w/o the ornament ?
+2026-09-09 13:43:42  Umayr  Umayr  3BE89E629662FDAFF2FC  Sent image
+2026-09-09 13:44:12  Umayr  Umayr  3BA63446099C6686B339  > w/o the ornament ? Sent image
+2026-09-09 13:44:19  Umayr  Umayr  3BDFFF68BB3AA8B68375  as clear/simple as possible
+2026-09-09 13:44:24  Umayr  Umayr  3B269F28EBB51D2A4C7B  maybe even no background
+2026-09-09 13:44:26  Umayr  Umayr  3B97A5E7C4FCD5DA27BB  but whatever works

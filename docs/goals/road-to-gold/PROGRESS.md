@@ -191,3 +191,4 @@ Open:
 - The session process exited mid-run; the fix-review-3 implementer (BL-1 staging proof, MJ-1 migration, MN-1..MN-7) and the deploy agent were stopped. Only the migration above landed from that brief.
 - Housekeeping: the laptop disk hit 100%; the 13 GB `.turbo` cache was deleted (9.8 GiB free now). `.tmp/rnd-stills` (2 GB, 4 Sep, untracked) was left alone.
 - Rule recorded: publish prompt releases only from a deployed build (staging broke 22:25-22:56 UTC on 8 Sep when `@v2` prompts were published before `c9265aa` was live).
+- Umayr's feedback of 8 to 9 Sep read from WhatsApp and stored with his screenshots and a ranked nine-item list at `docs/goals/road-to-gold/feedback/umayr-2026-09-09/README.md`; items 1 to 4 are the next customer-page slice (P6-8, DS-4 env flip), 5 is a new task P6-9, 6 to 8 need Sanchay.
