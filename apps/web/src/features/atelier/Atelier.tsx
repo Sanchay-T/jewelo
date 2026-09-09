@@ -159,16 +159,14 @@ const arabic: Record<string, string> = {
   "Local draft": "مسودة محلية",
   "Zoom image": "تكبير الصورة",
   "Your name": "اسمك",
-  "Asma example": "مثال أسماء",
+  "Shop sample · Asma": "عينة من المتجر · أسماء",
   "Your selected design": "تصميمك المحدد",
   "Sample coming": "العينة قريبًا",
-  "Sample for this look": "عينة لهذا الأسلوب",
   "Not yet photographed": "لم تُصوَّر بعد",
   "Not yet photographed; the shop will confirm this look by hand":
     "لم تُصوَّر بعد؛ سيؤكد المتجر هذا الشكل يدويًا",
-  "Sample look, not your piece": "قطعة نموذجية، ليست قطعتك",
-  "This is a sample look from the shop, not your piece. Your own piece is photographed after you confirm the spelling of your name.":
-    "هذه قطعة نموذجية من المتجر، وليست قطعتك. تُصوَّر قطعتك بعد أن تؤكد تهجئة اسمك.",
+  "A shop sample. Yours is photographed after you confirm the spelling.":
+    "عينة من المتجر. تُصوَّر قطعتك بعد تأكيد التهجئة.",
   Size: "المقاس",
   Delicate: "رقيق",
   Statement: "بارز",
@@ -213,7 +211,7 @@ const arabic: Record<string, string> = {
   "Your piece is in this bag for this session. Image storage is unavailable; keep this tab open.":
     "قطعتك في الحقيبة لهذه الجلسة فقط. تخزين الصور غير متاح؛ أبقِ هذه الصفحة مفتوحة.",
   "Editing a saved piece.": "تعديل قطعة محفوظة.",
-  "This example photo could not load.": "تعذّر تحميل صورة المثال.",
+  "This sample photo could not load.": "تعذّر تحميل صورة العينة.",
   // The bag and the zoom dialog: every label an assistive technology reads.
   "CALEUMS design": "تصميم CALEUMS",
   "Photograph of your pendant": "صورة قلادتك",
@@ -239,7 +237,6 @@ const arabic: Record<string, string> = {
   // the wordmark, the caption over the photograph, the footer. CALEUMS is the
   // brand and stays Latin in both journeys.
   "THE NAME ATELIER": "مشغل الأسماء",
-  "CALEUMS — THE NAME COLLECTION": "CALEUMS — مجموعة الأسماء",
   "◇ 18K GOLD": "◇ ذهب عيار ١٨",
   "✧ PERSONAL BY DESIGN": "✧ قطعة شخصية بتصميمك",
   "CALEUMS · DUBAI": "CALEUMS · دبي",
@@ -339,7 +336,6 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
   const [imageErrors, setImageErrors] = useState<string[]>([]);
   // Once the customer's own photograph exists it is the piece; the illustrated
   // sample moves to the small tile row and is only shown when asked for.
-  const [showSample, setShowSample] = useState(false);
   const [imageAttempt, setImageAttempt] = useState(0);
   /** Handing the tablet on drops kept pieces, so it is asked for once. */
   const [clearing, setClearing] = useState(false);
@@ -406,7 +402,7 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
           unavailable: "We will photograph it in the shop and send it",
         }[status];
   const ownPhoto = own.imageFor(view);
-  const showingOwnPhoto = !!ownPhoto && (!showSample || own.attempted);
+  const showingOwnPhoto = !!ownPhoto;
   // An attempted approval stays the shopper's piece after back, untick or reload.
   // A failed start has no run id, so run existence alone cannot guard samples.
   const ownDesignInProgress = own.attempted && !own.personalized;
@@ -441,12 +437,6 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
   /** The customer's own run covers all four cameras even when the sample does not. */
   const railViews = own.attempted ? views : shownViews;
   const shown = piece.family.anchor.asset?.draft ?? d;
-  /* The illustrated photograph shows the design (Tier 1). Gold, stones, gem,
-     width and chain (Tier 2) are carried into the customer's own preview, so
-     the panel says once, quietly, what this photograph is made of. */
-  const materialNote = locale === "ar"
-    ? `المعروض: ${t(shown.metal)} عيار ١٨ ${shown.coverage === "No stones" ? "بدون أحجار" : `مع ${t(shown.coverage)}`}. لون ذهبك وأحجارك تظهر في معاينتك الشخصية.`
-    : `Shown in 18K ${shown.metal.toLowerCase()} with ${shown.coverage === "No stones" ? "no stones" : shown.coverage.toLowerCase()}. Your gold and stones appear in your personalized preview.`;
   /** What this photograph is, when it is not a photograph of this exact design. */
   const sampleNote = !piece.sampleComing
     ? ""
@@ -457,11 +447,8 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
       : locale === "ar"
         ? `عينة ${t(shown.construction)} ${shown.twoNames === d.twoNames ? `بخط ${t(shown.lettering)}` : shown.twoNames ? "باسمين" : "باسم واحد"}. صورة هذا التصميم قيد التحضير.`
         : `Sample of this ${shown.construction.toLowerCase()} look, ${shown.twoNames === d.twoNames ? `shown in ${shown.lettering} lettering` : shown.twoNames ? "shown with two names" : "shown with one name"}. A photograph of this design is coming.`;
-  const exampleLabel = t(
-    noSample ? "Sample coming" : piece.sampleComing ? "Sample for this look" : "Asma example",
-  );
   /** The exemplar names in the script the photograph actually shows. */
-  const exampleNames = (join: string) =>
+  const sampleNames = (join: string) =>
     shown.script === "Arabic"
       ? shown.twoNames ? `أسماء${join}فاطمة` : "أسماء"
       : shown.twoNames ? `Asma${join}Fatima` : "Asma";
@@ -2014,7 +2001,7 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
               >
                 {(!own.attempted || showingOwnPhoto) && (
                   <span className={s.photoLabel}>
-                    {showingOwnPhoto ? ownPhotoLabel : exampleLabel}
+                    {showingOwnPhoto ? ownPhotoLabel : t("Shop sample · Asma")}
                   </span>
                 )}
                 {showingOwnPhoto ? (
@@ -2045,8 +2032,8 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                     src={source}
                     alt={
                       locale === "ar"
-                        ? `صورة تجريبية لـ${exampleNames(" و")}، ${t(shown.construction)}، ${t(shown.lettering)}، ${t(shown.metal)}، ${t(shown.coverage)}${shown.coverage === "No stones" ? "" : `، ${t(shown.gem)}`}، ${shown.size} مم، سلسلة ${t(shown.chain)}`
-                        : `Photographic ${exampleNames(" and ")} example, ${shown.construction}, ${shown.lettering}, ${shown.metal}, ${shown.coverage}${shown.coverage === "No stones" ? "" : `, ${shown.gem}`}, ${shown.size} mm, ${shown.chain} chain`
+                        ? `صورة تجريبية لـ${sampleNames(" و")}، ${t(shown.construction)}، ${t(shown.lettering)}، ${t(shown.metal)}، ${t(shown.coverage)}${shown.coverage === "No stones" ? "" : `، ${t(shown.gem)}`}، ${shown.size} مم، سلسلة ${t(shown.chain)}`
+                        : `Photographic ${sampleNames(" and ")} sample, ${shown.construction}, ${shown.lettering}, ${shown.metal}, ${shown.coverage}${shown.coverage === "No stones" ? "" : `, ${shown.gem}`}, ${shown.size} mm, ${shown.chain} chain`
                     }
                     data-sample-id={piece.family.assets.find(asset => asset.view === view)?.id}
                     data-sample-exact={piece.family.anchor.exact}
@@ -2072,7 +2059,7 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                       </>
                     ) : imageFailed || piece.status === "failed" ? (
                       <>
-                        <p>{t("This example photo could not load.")}</p>
+                        <p>{t("This sample photo could not load.")}</p>
                         <button onClick={retryImage}>{t("Retry")}</button>
                       </>
                     ) : slot?.status === "unavailable" ? (
@@ -2125,33 +2112,7 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                       <MagnifyingGlassPlus size={21} />
                     </button>
                   )}
-                <div className={s.photoCaption}>
-                  <span>{t("CALEUMS — THE NAME COLLECTION")}</span>
-                  <span dir="auto">
-                    {showingOwnPhoto
-                      ? `${pendantName(d)} · ${ownPhotoLabel}`
-                      : ownDesignInProgress
-                        ? `${pendantName(d)} · ${
-                            ownRunOver
-                              ? locale === "ar"
-                                ? "سنرسل الصورة"
-                                : "we will send the photograph"
-                              : locale === "ar"
-                                ? "قيد التحضير"
-                                : "Being prepared"
-                          }`
-                        : `${exampleNames(shown.script === "Arabic" ? " و" : " & ")} · ${t("Asma example")}`}
-                  </span>
-                  {/* Two shoppers in one day read the shop's example photograph
-                      as their own piece (field test, 8 September). The caption
-                      now says whose piece this is, in the same breath as the
-                      name it shows. */}
-                  {!showingOwnPhoto && sampleVisible && (
-                    <span dir="auto" data-sample-ownership="caption">
-                      {t("Sample look, not your piece")}
-                    </span>
-                  )}
-                </div>
+
               </div>
               <div className={s.previewDock}>
                 {!showingOwnPhoto && sampleVisible && (
@@ -2161,18 +2122,13 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                     data-sample-ownership="panel"
                   >
                     {t(
-                      "This is a sample look from the shop, not your piece. Your own piece is photographed after you confirm the spelling of your name.",
+                      "A shop sample. Yours is photographed after you confirm the spelling.",
                     )}
                   </p>
                 )}
                 {!own.attempted && piece.sampleComing && (
                   <p className={s.previewNote} data-sample-note="look">
                     {sampleNote}
-                  </p>
-                )}
-                {!own.attempted && !noSample && (
-                  <p className={s.previewNote} data-sample-note="material">
-                    {materialNote}
                   </p>
                 )}
                 <div className={s.dockHeading}>
@@ -2321,6 +2277,10 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                           <div className={s.missingAngle} data-own-placeholder="true">
                             <Diamond size={22} aria-hidden="true" />
                           </div>
+                        ) : !own.attempted ? (
+                          <div className={s.missingAngle}>
+                            <Diamond size={22} aria-hidden="true" />
+                          </div>
                         ) : !missing ? (
                           <img
                             src={thumbnail}
@@ -2380,50 +2340,6 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                     );
                   })}
                 </div>
-                {own.personalized && !own.attempted && (
-                  <div
-                    className={s.photoSwitch}
-                    role="group"
-                    aria-label={
-                      locale === "ar" ? "الصورة المعروضة" : "Shown photograph"
-                    }
-                  >
-                    <button
-                      aria-pressed={!showSample}
-                      onClick={() => setShowSample(false)}
-                    >
-                      {ownPhotoLabel}
-                    </button>
-                    <button
-                      aria-pressed={showSample}
-                      onClick={() => setShowSample(true)}
-                      disabled={!source}
-                    >
-                      {!!source && (
-                        <img src={source} alt="" aria-hidden="true" />
-                      )}
-                      {t("Asma example")}
-                    </button>
-                  </div>
-                )}
-                <details className={s.sampleDetails}>
-                  <summary>
-                    {locale === "ar" ? "عن هذا المثال" : "About this example"}
-                    <span>
-                      {exampleLabel}
-                    </span>
-                  </summary>
-                  <p>
-                    {locale === "ar"
-                      ? "صور مرجعية أصلية لقلادة أسماء. نحفظ الاسم والخيارات التي تحددها مع تصميمك."
-                      : noSample ? "All selected options are preserved. The sample photograph for this look is being prepared; your own preview uses your specification." : `This example shows ${shown.script}, ${shown.construction}, ${shown.lettering}, ${shown.metal}, ${shown.coverage}${shown.coverage === "No stones" ? "" : ` · ${shown.gem}`}, ${shown.size} mm and ${shown.chain}. Your selections are saved separately.`}
-                  </p>
-                  <p>
-                    {locale === "ar"
-                      ? "النقش والطلبات الخاصة محفوظة في ملخص التصميم."
-                      : "Engraving and special requests are saved in your design summary; they do not alter this front view."}
-                  </p>
-                </details>
                 {piece.warning && <p role="status">{t(piece.warning)}</p>}
                 <div
                   className={s.selectionSummary}
@@ -2484,8 +2400,8 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                     ? "تصميمك · قيد التحضير"
                     : "Your design · being prepared"
                 : locale === "ar"
-                  ? "مثال التصميم"
-                  : "Design example"}
+                  ? "عينة من المتجر"
+                  : "Shop sample"}
           </span>
         </div>
         {needsPreview ? (
@@ -2685,7 +2601,7 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
       >
         <div className={s.dialogHeader}>
           <span dir="auto">
-            {t(view)} · {showingOwnPhoto ? ownPhotoLabel : t("Asma example")}
+            {t(view)} · {showingOwnPhoto ? ownPhotoLabel : t("Shop sample · Asma")}
           </span>
           <button aria-label={t("Close")} onClick={() => zoom.current?.close()}>
             <X size={22} />

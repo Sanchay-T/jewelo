@@ -438,18 +438,7 @@
   border-radius: 2px;
   max-width: calc(100% - 36px);
 }
-.photoCaption {
-  position: absolute;
-  inset: auto 0 0;
-  background: linear-gradient(transparent, #f7f3ecee);
-  padding: 50px 22px 18px;
-  display: flex;
-  justify-content: space-between;
-  gap: 10px;
-  font-size: 8px;
-  letter-spacing: 1px;
-  pointer-events: none;
-}
+
 .zoomButton {
   position: absolute;
   inset-inline-end: 16px;
@@ -974,9 +963,7 @@
   .visualChoices {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-  .photoCaption {
-    flex-direction: column;
-  }
+
   .previewSummary {
     gap: 10px;
     flex-direction: column;
@@ -1065,11 +1052,7 @@
     font-size: 8px;
     max-width: calc(100% - 24px);
   }
-  .photoCaption {
-    padding: 40px 14px 14px;
-    letter-spacing: 0.5px;
-    font-size: 7px;
-  }
+
   .zoomButton {
     inset-block-end: 42px;
     inset-inline-end: 12px;
@@ -1204,9 +1187,7 @@
   .choice {
     padding-inline: 5px;
   }
-  .photoCaption > span:first-child {
-    display: none;
-  }
+
   .previewSummary {
     gap: 8px;
   }
@@ -1440,26 +1421,10 @@
 .previewNote[data-sample-note="ownership"] {
   color: #3c3a33;
 }
-.sampleDetails {
-  border-block-end: 1px solid #d8d0c0;
-  padding: 0 0 10px;
-  font-size: 11px;
-  color: #59564d;
-}
-.sampleDetails summary {
-  min-height: 44px;
-  cursor: pointer;
-  align-content: center;
-}
-.sampleDetails summary > span {
-  float: inline-end;
-  font-size: 10px;
-  margin-inline-start: 6px;
-}
-.sampleDetails p {
-  margin: 6px 0;
-  line-height: 1.5;
-}
+
+
+
+
 .selectionSummary {
   display: flex;
   gap: 14px;
@@ -1527,13 +1492,8 @@
   .previewDock {
     flex: none;
   }
-  .previewSticky:has(.sampleDetails[open]) {
-    height: auto;
-  }
-  .previewSticky:has(.sampleDetails[open]) .photo {
-    --frame-max-block: 240px;
-    flex: none;
-  }
+
+
 }
 @media (min-width: 768px) and (max-width: 1099px) {
   .previewDock {
@@ -1886,9 +1846,7 @@
   .missingAngle {
     height: 44px;
   }
-  .sampleDetails {
-    padding-bottom: 6px;
-  }
+
   .selectionSummary {
     padding-block-start: 8px;
   }
@@ -1946,7 +1904,6 @@
    change turned from Latin into Arabic are named here; the Latin journey keeps
    its spacing exactly as it was. */
 :global([dir="rtl"]) .headerNote,
-:global([dir="rtl"]) .photoCaption,
 :global([dir="rtl"]) .footer {
   letter-spacing: normal;
 }
