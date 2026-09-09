@@ -689,8 +689,12 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
       setCompactPreview(false);
       const gap = 16;
       const top = Math.max(gap, panel.getBoundingClientRect().top);
-      const budget = Math.max(0, window.innerHeight - top
-        - actions.getBoundingClientRect().height - gap * 2);
+      // Sticky stops at the workspace bottom. Shrink before that boundary
+      // would push the photograph and its ownership label above the viewport.
+      const budget = Math.max(0, Math.min(
+        window.innerHeight - top - actions.getBoundingClientRect().height - gap * 2,
+        root.getBoundingClientRect().bottom - top,
+      ));
       panel.style.setProperty("--preview-budget", `${budget}px`);
     };
     const schedule = () => {

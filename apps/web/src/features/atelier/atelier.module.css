@@ -1914,6 +1914,9 @@
 /* P6-10: give the photograph the page, then keep a small reminder in reach. */
 .compactPreview { display: none; }
 @media (min-width: 768px) {
+  /* Keep the sticky boundary stable when the review form is shorter than the
+     photograph: shrinking the rail must not also shrink its parent. */
+  .workspace { min-block-size: calc(100dvh - 124px); }
   .previewDock { padding: 10px 12px; }
   .previewDock .views { padding-block: 8px 6px; }
   .previewDock .views button img, .previewDock .missingAngle { height: 44px; }
