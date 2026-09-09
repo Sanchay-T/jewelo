@@ -1,6 +1,6 @@
 # Larger preview - local and staging follow-up proof, 9 September 2026
 
-Task P6-10 is complete for the requested preview/form and live-display scope. Current real staging serves `ba06a6605c8882ddb84af5af0a8f569dc44d7883` on `codex/overnight-launch-2026-09-08`: the lead watched a real Arabic four-view result arrive without reload, inspected every view and enlarged it, then checked the completed page at all seven viewport sizes. New requests are currently blocked by the validation quota of 10/10; other product-readiness limits are stated below.
+Task P6-10 is complete for the requested preview/form and live-display scope. Current real staging serves `ba06a6605c8882ddb84af5af0a8f569dc44d7883` on `codex/overnight-launch-2026-09-08`: the lead watched a real Arabic four-view result arrive without reload, inspected every view and checked enlarged inspection, then checked the completed page at all seven viewport sizes. New requests are currently blocked by the validation quota of 10/10; other product-readiness limits are stated below.
 
 The earlier local and mock-staging captures served `57189c5aa53a1ba7f525d1b48898a704629d7ebb`; the first English real image served `b5f9758`. They remain identified separately from the final `ba06a66` real-page evidence.
 
