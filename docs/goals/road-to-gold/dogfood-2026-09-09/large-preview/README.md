@@ -1,8 +1,8 @@
 # Larger preview - local and staging follow-up proof, 9 September 2026
 
-**New P6-11 objective:** prepare four additional internal-team preview runs today, one run per person with manual design review. Pilot code is implemented, independently reviewed and built; deployment and quota opening are pending. The current served code and completed earlier proof remain below.
+**P6-11 internal preview pilot is open:** at 16:10:58.513 UTC on 9 September, four additional full-view runs were available for 3-4 teammates, one each by instruction with manual gold-design review. Real staging serves `48f81a4595d1669bc77cf95cbe83b49359a522ce`; deployment, smoke, registered concurrency 2 and policy readback passed. No agent consumed a team slot. Final pilot proof and limits are below.
 
-Task P6-10 is complete for the requested preview/form and live-display scope. Current real staging serves `ba06a6605c8882ddb84af5af0a8f569dc44d7883` on `codex/overnight-launch-2026-09-08`: the lead watched a real Arabic four-view result arrive without reload, inspected every view and checked enlarged inspection, then checked the completed page at all seven viewport sizes. New requests are currently blocked by the validation quota of 10/10; other product-readiness limits are stated below.
+Task P6-10's earlier preview/form and live-display proof was completed on `ba06a6605c8882ddb84af5af0a8f569dc44d7883`: the lead watched a real Arabic four-view result arrive without reload, inspected every view and checked enlarged inspection, then checked the completed page at all seven viewport sizes. Its 10/10 quota snapshot was the pre-pilot state; P6-11's later opening supersedes it.
 
 The earlier local and mock-staging captures served `57189c5aa53a1ba7f525d1b48898a704629d7ebb`; the first English real image served `b5f9758`. They remain identified separately from the final `ba06a66` real-page evidence.
 
@@ -139,9 +139,9 @@ The final real completed page was personally checked at 1440x900, 1280x720, 1024
 
 Final readback at **13:05:59 UTC** (`/tmp/jewelo-staging-plan/final-live-state.json`) confirmed ACTIVE `ba06a66`, no pending deployment, zero active tasks, exactly five successful new OpenAI attempts and five assets, all attempt 1, and no duplicates. Daily usage remained 10 runs, 100 cents reserved and 200 cents recorded actual. The new-request quota restriction below is inferred from this read-only policy/usage readback; no extra request was submitted to provoke a rejection.
 
-## Current limits and follow-ups
+## Pre-pilot limits and follow-ups - 13:05:59 UTC snapshot
 
-**New photograph requests are currently blocked by the validation quota:** the global daily allowance is 10 and all 10 runs are used on 9 September UTC. It resets with the UTC day; no quota increase or usage reset was made. Existing completed photographs remain available in their owning sessions. `studio_only` was switched to false before the Arabic run; both 800-cent ledger caps, one-attempt budget and per-principal limit 2 remain.
+**At this pre-pilot snapshot, new requests were blocked by the validation quota:** the global daily allowance was 10 and all 10 runs were used on 9 September UTC. No quota increase or usage reset had yet been made. The later P6-11 section supersedes this allowance; usage was preserved. Existing completed photographs remain available in their owning sessions. `studio_only` was switched to false before the Arabic run; both 800-cent ledger caps, one-attempt budget and per-principal limit 2 remain.
 
 The two validation runs produced five new images, one attempt each. They booked 100 cents total at the adapter's 20-cent-per-image estimate. Current daily ledger totals are 10 runs, 100 cents reserved and 200 cents recorded actual, including 100 cents from earlier work. These are estimates recorded by the application, not a provider invoice; paid name-reader usage is not reconciled into those amounts.
 
@@ -150,7 +150,7 @@ The requested preview/form, shared-prompt transfer and bounded live photo valida
 - Real dependencies still use `MockStudioVerifier` plus paid name reading. Independent agent visual acceptance is recorded here; a complete automatic geometry/attachment gate remains a pre-existing follow-up.
 - Inngest reported “Unable to reach SDK URL” during the long dependent-view preparation, yet the original handlers completed with one paid attempt per child. No current active task remained in the observation. The cause is not established; stencil preparation and executor connection lifetime need profiling. No out-of-memory diagnosis is claimed.
 - Shop contact delivery and checkout were not exercised in this work.
-- The Arabic Reset label is slightly clipped in enlarged inspection; recorded as a minor UI follow-up.
+- Before P6-11 the Arabic Reset label was slightly clipped. The fix is now deployed and checked at the four pilot viewports below.
 - The API model is the verified 2026-04-21 Image 2 snapshot. The built-in image tool's version is unexposed; Image 2.5 is not verified.
 
 ## Build, review and remaining proof
@@ -161,9 +161,9 @@ The earlier seven-item UI acceptance, full dictionary changes and broader local 
 
 The separate uncommitted identity-engine and stencil-renderer script work in the original checkout remains excluded. PROGRESS.md and HANDOVER.md are unchanged under the original brief's explicit boundary.
 
-## P6-11 - internal preview pilot prepared, not yet open
+## P6-11 - internal preview pilot open
 
-Candidate source `48f81a4595d1669bc77cf95cbe83b49359a522ce` contains two targeted changes: `1af429f` gives the Arabic Reset label its natural width, and `48f81a4` lets dependent views reuse the verified immutable Studio stencil rather than rerendering it. Both fresh independent reviews were clean above minor. The clean `48f81a4` build passed **13 successful, 13 total**, exit 0 (11 cached, 1m33.618s; `/tmp/jewelo-four-person-pilot-build.log`). Deployment is underway; current verified real staging still serves `ba06a66` and the exhausted 10/10 validation quota still blocks new requests until the new deployment and policy are confirmed.
+Deployed source `48f81a4595d1669bc77cf95cbe83b49359a522ce` contains two targeted changes: `1af429f` gives the Arabic Reset label its natural width, and `48f81a4` lets dependent views reuse the verified immutable Studio stencil rather than rerendering it. Both fresh independent reviews were clean above minor. The clean `48f81a4` build passed **13 successful, 13 total**, exit 0 (11 cached, 1m33.618s; `/tmp/jewelo-four-person-pilot-build.log`). Real deployment `6a6a39e8-b7af-4036-a23f-b58d22519368` is ACTIVE at that exact source, with no pending deployment; deployment and health/protected-readiness smoke exited 0.
 
 The lead personally checked the Reset fix locally at RTL 320x568 and 390x844: the full label measured 90.078 by 44 px, stayed inside the toolbar, and zoom/reset/close worked. The other zoom controls retain their 44 px minimum targets.
 
@@ -174,10 +174,25 @@ The lead personally checked the Reset fix locally at RTL 320x568 and 390x844: th
 
 Read-only reuse proof downloaded the actual existing Arabic Studio identity PNG and ran the new helper against clean identity dependencies in 1,818.28 ms. PNG hash matched stored `aeca9c818776974f5dbae0679753ba92bba9c37cb2c79eaf79121ac76e464e56`; fingerprint and validation metadata passed. This check performed zero database writes and zero provider calls. It did not execute the child identity-binding write or a full child dispatch and is not a measured end-to-end speedup. Evidence: `/tmp/jewelo-staging-plan/p6-11-reuse-read-proof.json`.
 
-The prepared pilot plan opens **four additional runs**, not four total today: global daily limit 10→14 and per-principal daily limit 2→3. A principal that already used two runs can therefore use one more; the one-run-per-person rule is a manual team instruction, not an enforced allocation per person. Keep full four-view mode, one provider attempt, 100-cent reservation per image and the 800-cent per-principal spend cap. Planned global image ledger cap is 1,900 cents: 300 cents already recorded/reserved plus 1,600 cents for four new four-image runs. An additional 100-cent reader allowance makes the selected total allowance US$20. This is not a provider-enforced invoice cap; the adapter still records its fixed image estimate and does not reconcile reader usage.
+The verified pilot policy opens **four additional runs**, not four total today: global daily limit 10→14 and per-principal daily limit 2→3. A principal that already used two runs can therefore use one more; the one-run-per-person rule is a manual team instruction, not an enforced allocation per person. Keep full four-view mode, one provider attempt, 100-cent reservation per image and the 800-cent per-principal spend cap. The global image ledger cap is now 1,900 cents: 300 cents already recorded/reserved plus 1,600 cents for four new four-image runs. An additional 100-cent reader allowance makes the selected total allowance US$20. This is not a provider-enforced invoice cap; the adapter still records its fixed image estimate and does not reconcile reader usage.
 
-Deployment overlay changes only the intended validated settings: `PROVIDER_MODE=real`, `REAL_MODE_MAX_RESERVED_SPEND_CENTS=1900`, `OPENAI_STILL_CONCURRENCY_LIMIT=2`. The concurrency limit applies to actively executing presentation steps, including identity preparation and the provider call inside the same step; it does not limit all queued/sleeping function runs or guarantee latency. Models remain unchanged.
+The deployed overlay uses the intended validated settings: `PROVIDER_MODE=real`, `REAL_MODE_MAX_RESERVED_SPEND_CENTS=1900`, `OPENAI_STILL_CONCURRENCY_LIMIT=2`. The concurrency limit applies to actively executing presentation steps, including identity preparation and the provider call inside the same step; it does not limit all queued/sleeping function runs or guarantee latency. Models remain unchanged.
 
-**Opening sequence, not yet executed:** deploy reviewed/built code while the old 10/10 quota prevents new runs; verify ACTIVE source, smoke and registered presentation concurrency 2; reread current UTC policy/usage/active tasks; then compare-and-set the three policy changes and read back, preserving all usage and other fields. No team test slot is consumed by an agent. The four-slot arithmetic applies to 9 September UTC and must be reassessed across a UTC date change. Prepared evidence: `/tmp/jewelo-staging-plan/pilot-budget-plan.json` and `pilot-concurrency-evidence.json`.
+**Opening sequence completed:** code was deployed while the old 10/10 quota prevented new runs. The first Inngest readback still registered concurrency 4 despite the new environment; an internal `PUT http://web:8080/api/inngest` returned HTTP 200 with `modified: true`, and the live presentation function then registered limit 2. This updated registration only and sent no job event. Future deployments that change function configuration must include this internal SDK resync and verify registration; automating that is a deployment follow-up, not a script change in this task.
+
+Only after ACTIVE/smoke/live-limit verification, one compare-and-set policy update opened the pilot. Readback at **16:10:58.513 UTC** confirmed global runs 14, used 10, **four slots available**, principal limit 3, global image cap 1,900 cents, principal cap 800 cents, reservation 100 cents per image, provider attempts 1 and full four-view mode. Usage remained 100 cents reserved and 200 cents recorded actual; active tasks 0. Usage writes 0, agent provider calls 0, team slots consumed by agents 0, new migrations 0 (38 remain applied). The four-slot calculation applies to 9 September UTC and must be reassessed across a UTC date change.
+
+Final readbacks: `/tmp/jewelo-staging-plan/pilot-live-readback.json`, `jewelo-pilot-deployment-readback-48.json` and `jewelo-pilot-concurrency-readback-48.json`. The earlier prepared arithmetic remains in `pilot-budget-plan.json`.
+
+The lead reloaded the saved Arabic four-photo result on the live pilot deployment, confirmed all four remained ready, and checked zoom/reset/close. Valid new RTL/reduced-motion captures cover **320x568, 390x600, 390x844 and 768x1024 only**. At each, Reset measured 90.078 by 44 px, its full label was visible, and there was no overflow. The attempted new desktop capture was malformed and excluded; the earlier seven-size evidence belongs to the prior deployment and is not claimed as a new full pilot matrix.
+
+| Live pilot check | Screenshot | DOM measurement |
+| --- | --- | --- |
+| RTL 320x568 Reset | [Screenshot](pilot-live-rtl-reset-320x568.png) | [Measurement](pilot-live-rtl-reset-320x568.json) |
+| RTL 390x600 Reset | [Screenshot](pilot-live-rtl-reset-390x600.png) | [Measurement](pilot-live-rtl-reset-390x600.json) |
+| RTL 390x844 Reset | [Screenshot](pilot-live-rtl-reset-390x844.png) | [Measurement](pilot-live-rtl-reset-390x844.json) |
+| RTL 768x1024 Reset | [Screenshot](pilot-live-rtl-reset-768x1024.png) | [Measurement](pilot-live-rtl-reset-768x1024.json) |
+
+**Needs Sanchay:** share the existing preview link internally, ask each teammate to use one new run, and review the photographed spelling and gold connections manually. No billing action is required for this bounded pilot. No invitation or message was sent by the agent.
 
 Pilot scope is preview and manual design review for 3-4 internal teammates. It does not establish shop contact delivery, checkout, a complete automatic geometry gate or unrestricted customer readiness. Existing `MockStudioVerifier` and executor-connection follow-ups remain; stencil reuse has read-only helper evidence, not new live-dispatch performance proof yet.
