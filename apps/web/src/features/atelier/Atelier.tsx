@@ -247,6 +247,7 @@ const arabic: Record<string, string> = {
     "تخزين الصور غير متاح. الصور المحفوظة تبقى متاحة ما دامت هذه الصفحة مفتوحة.",
 };
 import { hasExactSample, samples, visualFields, type VisualField } from "./catalogue";
+import { letteringFont } from "./letteringFonts";
 import { SnapshotImage } from "./SnapshotImage";
 import { usePhotographicPiece } from "./usePhotographicPiece";
 import { assemblyKey } from "./assembly";
@@ -1458,17 +1459,33 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                       offeredLetters(d.script),
                       d.lettering,
                       (x) => change("lettering", x),
-                      (x, i) => (
-                        <span
-                          className={s.letterSample}
-                          style={{
-                            fontStyle: i % 2 ? "normal" : "italic",
-                            fontWeight: i === 3 ? 700 : 400,
-                          }}
-                        >
-                          {d.script === "Arabic" ? "أسماء" : "Asma"}
-                        </span>
-                      ),
+                      (lettering) => {
+                        const name = d.name.trim() || (d.script === "Arabic" ? "أسماء" : "Asma");
+                        const font = letteringFont(d.script, lettering);
+                        return (
+                          <svg
+                            className={s.letterSample}
+                            viewBox="0 0 240 80"
+                            role="img"
+                            aria-label={name}
+                            data-lettering-face={lettering}
+                          >
+                            <text
+                              x="120"
+                              y="51"
+                              textAnchor="middle"
+                              direction={d.script === "Arabic" ? "rtl" : "ltr"}
+                              lang={d.script === "Arabic" ? "ar" : "en"}
+                              style={{
+                                fontFamily: font.style.fontFamily,
+                                fontSize: Math.min(38, 210 / (Array.from(name).length * 0.8)),
+                              }}
+                            >
+                              {name}
+                            </text>
+                          </svg>
+                        );
+                      },
                       undefined,
                       undefined,
                       (x) => notPhotographed({ lettering: x }),
