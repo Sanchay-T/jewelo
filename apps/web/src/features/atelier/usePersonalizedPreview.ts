@@ -228,10 +228,10 @@ export function usePersonalizedPreview(input: {
     const resumed = resumeSubmission(stored, currentSignature);
     if (!stored || !resumed) return;
     written.current = stored;
-    // Marked as started only when a run id survived. Without one the start is
-    // unfinished, and re-confirming has to be able to finish it; the stored
-    // request key makes that a replay of the same approval, never a second run.
-    startedFor.current = resumed.startedFor;
+    // A restored checkbox is not a fresh approval. Even an unfinished start
+    // stays guarded on reload; unticking below permits an explicit retry with
+    // the same durable request key.
+    startedFor.current = stored.signature;
     setSubmission({
       signature: stored.signature,
       requestKey: stored.requestKey,
@@ -269,6 +269,18 @@ export function usePersonalizedPreview(input: {
       clearSubmission();
     }
   }, [currentSignature, submission]);
+
+  // A refused start can be retried by a new checkbox action, but never merely
+  // because hydration restored its old checked value. Existing runs remain
+  // guarded when unticked: they are watched, not bought a second time.
+  useEffect(() => {
+    if (
+      !input.confirmed &&
+      submission?.signature === currentSignature &&
+      !submission.runId &&
+      phase === "degraded"
+    ) startedFor.current = undefined;
+  }, [input.confirmed, currentSignature, submission, phase]);
 
   // Approval is what starts a run, and the database refuses to approve a
   // revision the customer has not confirmed, so the confirmation checkbox is the
