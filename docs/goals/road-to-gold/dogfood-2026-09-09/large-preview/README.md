@@ -196,3 +196,13 @@ The lead reloaded the saved Arabic four-photo result on the live pilot deploymen
 **Needs Sanchay:** share the existing preview link internally, ask each teammate to use one new run, and review the photographed spelling and gold connections manually. No billing action is required for this bounded pilot. No invitation or message was sent by the agent.
 
 Pilot scope is preview and manual design review for 3-4 internal teammates. It does not establish shop contact delivery, checkout, a complete automatic geometry gate or unrestricted customer readiness. Existing `MockStudioVerifier` and executor-connection follow-ups remain; stencil reuse has read-only helper evidence, not new live-dispatch performance proof yet.
+
+## P6-12 - visible reference photographs
+
+The user explicitly requested real reference photographs in the four view tiles before entering/requesting their own pendant, accepting any example name. Source `a610306ea2996a0de95e9ee3c242aef4f2f09cba` removes the unconditional pre-request Diamond tile and shows the available catalogue photograph instead, with visible Sample/عينة and accessible text naming that reference pendant from the per-view catalogue record, never the shopper's input.
+
+`usePhotographicPiece` already fetches every asset in the selected catalogue family; `piece.views` exposes those existing public paths after a successful image response. Read-only selector inspection confirmed four existing files for default English (`/atelier/v1/asma-studio.png`, `asma-worn.png`, `asma-close.png`, `asma-dark.png`) and default Arabic (`/atelier/v1/asma-arabic.png`, `/atelier/v2/arabic-worn.png`, `arabic-close.png`, `arabic-dark.png`). No photograph was generated or copied for this change.
+
+Each tile uses its own source, readiness and fetch/decode failure state. A thumbnail load error removes the broken reference image and marks the tile failed. Once a personal request has been attempted, its pending/failure placeholder takes precedence and no catalogue photograph is substituted. A real ready view takes its own photograph. No CSS, identity engine, provider, quota or dictionary keys changed; accessible English/Arabic reference descriptions now include the reference's catalogue name.
+
+Targeted ESLint and whitespace checks passed. This is implemented source behavior; independent review, root browser verification, build and deployment are pending at this checkpoint. No pilot slots or paid calls were consumed.
