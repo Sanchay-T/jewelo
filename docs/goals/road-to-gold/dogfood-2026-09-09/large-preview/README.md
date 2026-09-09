@@ -1,6 +1,6 @@
 # Larger preview - local and staging follow-up proof, 9 September 2026
 
-**P6-11 internal preview pilot is open:** at 16:10:58.513 UTC on 9 September, four additional full-view runs were available for 3-4 teammates, one each by instruction with manual gold-design review. Real staging serves `48f81a4595d1669bc77cf95cbe83b49359a522ce`; deployment, smoke, registered concurrency 2 and policy readback passed. No agent consumed a team slot. Final pilot proof and limits are below.
+**P6-12 reference-photo tiles are deployed and live-browser verified.** Real staging serves `9d2a699118ed6ea44f5363731dd93a3129e700a6` (reference code `a610306`). Before a personal request, all four tiles show loaded shop examples with Sample/عينة and their reference identity. The lead verified seven English and three Arabic viewport sizes without overflow and checked view switching. At the 16:49:05.488 UTC readback on 9 September, three pilot slots remained (11/14 used), zero tasks were active, and all operating limits were preserved. No agent consumed a slot for this change.
 
 Task P6-10's earlier preview/form and live-display proof was completed on `ba06a6605c8882ddb84af5af0a8f569dc44d7883`: the lead watched a real Arabic four-view result arrive without reload, inspected every view and checked enlarged inspection, then checked the completed page at all seven viewport sizes. Its 10/10 quota snapshot was the pre-pilot state; P6-11's later opening supersedes it.
 
@@ -92,7 +92,7 @@ The asset identifies exact model `gpt-image-2-2026-04-21`, canonical studio rele
 
 Pushed correction `ba06a6605c8882ddb84af5af0a8f569dc44d7883` adds migration `20260909030000_complete_presentation_atomically.sql` and changes only jobs presentation completion and the state route. A service-role-only transaction validates the current attempt, cancellation fence, ownership, checkpoint and identity lineage, then publishes the immutable asset, settles the attempt once, marks ready, releases dependents and records the ready audit together. Reconciliation keeps its existing booking-date calculations and gains matching task/run lock order. The state route reads assets after tasks, closing the mixed-snapshot window without weakening the UI's real-provider rule. No identity-engine files or acceptance gates changed.
 
-Full build passed **13 successful, 13 total**, exit 0, on `ba06a66`; two fresh independent source reviews were clean above minor. Migration `20260909030000` was applied and read back (38 applied migrations), and real deployment `12e1be30-154e-4845-b02a-2cac87c27b54` is ACTIVE at `ba06a6605c8882ddb84af5af0a8f569dc44d7883`; deploy and health/protected-readiness smoke passed. The following Arabic run demonstrated the studio and all three dependent photographs arriving without a page reload. The existing `MockStudioVerifier` limitation described above remains open; this transaction change does not add a geometry verifier.
+Full build passed **13 successful, 13 total**, exit 0, on `ba06a66`; two fresh independent source reviews were clean above minor. Migration `20260909030000` was applied and read back (38 applied migrations), and real deployment `12e1be30-154e-4845-b02a-2cac87c27b54` reached ACTIVE at `ba06a6605c8882ddb84af5af0a8f569dc44d7883`; deploy and health/protected-readiness smoke passed. The following Arabic run demonstrated the studio and all three dependent photographs arriving without a page reload. The existing `MockStudioVerifier` limitation described above remains open; this transaction change does not add a geometry verifier.
 
 | Real API browser state | Screenshot | DOM measurement |
 | --- | --- | --- |
@@ -163,7 +163,7 @@ The separate uncommitted identity-engine and stencil-renderer script work in the
 
 ## P6-11 - internal preview pilot open
 
-Deployed source `48f81a4595d1669bc77cf95cbe83b49359a522ce` contains two targeted changes: `1af429f` gives the Arabic Reset label its natural width, and `48f81a4` lets dependent views reuse the verified immutable Studio stencil rather than rerendering it. Both fresh independent reviews were clean above minor. The clean `48f81a4` build passed **13 successful, 13 total**, exit 0 (11 cached, 1m33.618s; `/tmp/jewelo-four-person-pilot-build.log`). Real deployment `6a6a39e8-b7af-4036-a23f-b58d22519368` is ACTIVE at that exact source, with no pending deployment; deployment and health/protected-readiness smoke exited 0.
+Deployed source `48f81a4595d1669bc77cf95cbe83b49359a522ce` contains two targeted changes: `1af429f` gives the Arabic Reset label its natural width, and `48f81a4` lets dependent views reuse the verified immutable Studio stencil rather than rerendering it. Both fresh independent reviews were clean above minor. The clean `48f81a4` build passed **13 successful, 13 total**, exit 0 (11 cached, 1m33.618s; `/tmp/jewelo-four-person-pilot-build.log`). Real deployment `6a6a39e8-b7af-4036-a23f-b58d22519368` reached ACTIVE at that exact source, with no pending deployment; deployment and health/protected-readiness smoke exited 0.
 
 The lead personally checked the Reset fix locally at RTL 320x568 and 390x844: the full label measured 90.078 by 44 px, stayed inside the toolbar, and zoom/reset/close worked. The other zoom controls retain their 44 px minimum targets.
 
@@ -195,7 +195,7 @@ The lead reloaded the saved Arabic four-photo result on the live pilot deploymen
 
 **Needs Sanchay:** share the existing preview link internally, ask each teammate to use one new run, and review the photographed spelling and gold connections manually. No billing action is required for this bounded pilot. No invitation or message was sent by the agent.
 
-Pilot scope is preview and manual design review for 3-4 internal teammates. It does not establish shop contact delivery, checkout, a complete automatic geometry gate or unrestricted customer readiness. Existing `MockStudioVerifier` and executor-connection follow-ups remain; stencil reuse has read-only helper evidence, not new live-dispatch performance proof yet.
+Pilot scope is preview and manual design review for 3-4 internal teammates. It does not establish shop contact delivery, checkout, a complete automatic geometry gate or unrestricted customer readiness. Existing `MockStudioVerifier` and executor-connection follow-ups remain; the initial stencil-reuse check was read-only helper evidence; the subsequent natural team-run metadata below provides live reuse proof without claiming a benchmark.
 
 ## P6-12 - visible reference photographs
 
@@ -205,4 +205,35 @@ The user explicitly requested real reference photographs in the four view tiles 
 
 Each tile uses its own source, readiness and fetch/decode failure state. A thumbnail load error removes the broken reference image and marks the tile failed. Once a personal request has been attempted, its pending/failure placeholder takes precedence and no catalogue photograph is substituted. A real ready view takes its own photograph. No CSS, identity engine, provider, quota or dictionary keys changed; accessible English/Arabic reference descriptions now include the reference's catalogue name.
 
-Targeted ESLint and whitespace checks passed. This is implemented source behavior; independent review, root browser verification, build and deployment are pending at this checkpoint. No pilot slots or paid calls were consumed.
+Targeted ESLint and whitespace checks passed, and two independent reviews were clean. The lead personally checked local source `a610306` at English 1440x900 and 390x844 and Arabic 320x568: all four reference images loaded with Sample/عينة labels, no overflow, correct Arabic reference identity, and selecting Dark changed the hero. Reduced motion was enabled in the Arabic check. The clean `a610306` build passed **13 successful, 13 total**, exit 0 (12 cached, 30.86s; `/tmp/jewelo-reference-thumbnails-build.log`). Deployment `600b580e-70f3-4e62-953f-3bb3259ba108` is ACTIVE at source `9d2a699118ed6ea44f5363731dd93a3129e700a6` (same code plus documentation), with no pending deployment; health and protected-readiness smoke passed, exit 0. The pilot environment was preserved (`DEPLOY_ENV_SYNC=0`). No pilot slot or provider call was used for these checks.
+
+| Local reference check | Screenshot | DOM measurement |
+| --- | --- | --- |
+| English 1440x900 | [Screenshot](references-local-en-1440x900.png) | [Measurement](references-local-en-1440x900.json) |
+| English 390x844 | [Screenshot](references-local-en-390x844.png) | [Measurement](references-local-en-390x844.json) |
+| Arabic 320x568 | [Screenshot](references-local-ar-320x568.png) | [Measurement](references-local-ar-320x568.json) |
+
+Live acceptance on the deployed URL covered English 1440x900, 1280x720, 1024x768, 768x1024, 390x844, 390x600 and 320x568, plus Arabic 1440x900, 390x844 and 320x568 with reduced motion. All four labelled reference thumbnails were loaded, reference identity was correct, and no overflow was observed. Selecting On skin, Close-up or Dark changed the large photograph. These are pre-personal-request reference checks; the lead did not buy another personal run for this change. Personal pending/failure/ready precedence is source-reviewed, with earlier live-personal proof recorded separately above.
+
+| Live reference check | Screenshot | DOM measurement |
+| --- | --- | --- |
+| en 1440x900 | [Screenshot](references-live-en-1440x900.png) | [Measurement](references-live-en-1440x900.json) |
+| en 1280x720 | [Screenshot](references-live-en-1280x720.png) | [Measurement](references-live-en-1280x720.json) |
+| en 1024x768 | [Screenshot](references-live-en-1024x768.png) | [Measurement](references-live-en-1024x768.json) |
+| en 768x1024 | [Screenshot](references-live-en-768x1024.png) | [Measurement](references-live-en-768x1024.json) |
+| en 390x844 | [Screenshot](references-live-en-390x844.png) | [Measurement](references-live-en-390x844.json) |
+| en 390x600 | [Screenshot](references-live-en-390x600.png) | [Measurement](references-live-en-390x600.json) |
+| en 320x568 | [Screenshot](references-live-en-320x568.png) | [Measurement](references-live-en-320x568.json) |
+| ar 1440x900 | [Screenshot](references-live-ar-1440x900.png) | [Measurement](references-live-ar-1440x900.json) |
+| ar 390x844 | [Screenshot](references-live-ar-390x844.png) | [Measurement](references-live-ar-390x844.json) |
+| ar 320x568 | [Screenshot](references-live-ar-320x568.png) | [Measurement](references-live-ar-320x568.json) |
+
+Final platform readback at **16:49:05.488 UTC** confirmed the new source/ACTIVE deployment, no pending deployment, real mode, registered presentation concurrency 2, model `gpt-image-2-2026-04-21`, 38 migrations and unchanged policy. Global runs 14/used 11 leave **three slots**, principal limit 3, full views, one attempt, 100-cent image reservation, global ledger cap 1,900/principal 800; usage remains 100 cents reserved and 280 recorded actual, active tasks 0. Deployment made no environment, policy or usage changes and no provider calls. Sanitized proof: `/tmp/jewelo-staging-plan/p6-12-deployment-proof.json`.
+
+## Natural team-run follow-up - 16:29 UTC
+
+After the pilot opened, a teammate naturally used one run. Read-only metadata showed all four tasks ready, each with one succeeded paid attempt and one asset, all sharing the same Studio identity artifact/PNG hash. No customer name, owner identifier or media was read or exported for this follow-up. It is execution/lineage proof, not visual acceptance of that teammate's photographs.
+
+Studio completed at 16:23:55.066542 UTC. The on-skin and dark paid attempts began 3.499s and 3.669s later. Close-up waited for the concurrency-2 slot and began at 16:25:46.776819, 2.893s after Dark completed; it was ready at 16:28:27.662387. These timings include dispatch/queue wait and do not isolate stencil processing or establish a general performance guarantee. The reused immutable identity is now observed in a full live child dispatch, beyond the earlier helper-only check.
+
+The 16:29:43 UTC state has 11/14 global runs used, **three slots remaining**, 100 cents reserved, 280 cents recorded actual and zero active tasks. Limits remain unchanged; the agent initiated no new provider calls or retries. Private sanitized execution evidence: `/tmp/jewelo-staging-plan/p6-11-live-team-reuse-proof.json`.
