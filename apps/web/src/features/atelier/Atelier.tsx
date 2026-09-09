@@ -8,6 +8,7 @@ import {
   type ReactNode,
   type KeyboardEvent,
 } from "react";
+import { sellableLooks } from "@jewelo/config/sellable";
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 import {
   ArrowRight,
@@ -163,8 +164,6 @@ const arabic: Record<string, string> = {
   "Your selected design": "تصميمك المحدد",
   "Sample coming": "العينة قريبًا",
   "Not yet photographed": "لم تُصوَّر بعد",
-  "Not yet photographed; the shop will confirm this look by hand":
-    "لم تُصوَّر بعد؛ سيؤكد المتجر هذا الشكل يدويًا",
   "A shop sample. Yours is photographed after you confirm the spelling.":
     "عينة من المتجر. تُصوَّر قطعتك بعد تأكيد التهجئة.",
   Size: "المقاس",
@@ -255,7 +254,7 @@ import type { Run } from "./model";
 import { buildPersonalizedPreviewRequest, runMockPersonalizedPreview } from "./previewHandoff";
 import { fixturePipelineDeps } from "./previewPipeline";
 import { usePersonalizedPreview } from "./usePersonalizedPreview";
-import { preflightRefusal, type CustomerViewStatus } from "./personalizedRun";
+import type { CustomerViewStatus } from "./personalizedRun";
 
 /**
  * The longest name the shop can cast, and the sentence that says so. The number
@@ -265,6 +264,24 @@ import { preflightRefusal, type CustomerViewStatus } from "./personalizedRun";
 const NAME_LIMIT_NOTICE = `This is the longest name we can make: ${NAME_MAX} characters.`;
 /** True once the field is holding all the characters it will accept. */
 const atLimit = (value: string) => value.length >= NAME_MAX;
+
+const sellable = sellableLooks({
+  NEXT_PUBLIC_SELLABLE_CONSTRUCTIONS: process.env.NEXT_PUBLIC_SELLABLE_CONSTRUCTIONS,
+  NEXT_PUBLIC_SELLABLE_ENGLISH_LETTERING: process.env.NEXT_PUBLIC_SELLABLE_ENGLISH_LETTERING,
+  NEXT_PUBLIC_SELLABLE_ARABIC_LETTERING: process.env.NEXT_PUBLIC_SELLABLE_ARABIC_LETTERING,
+});
+const offeredConstructions = constructions.filter((option) => sellable.constructions.has(option));
+const offeredLetters = (script: Draft["script"]) => letters.filter((option) =>
+  (script === "Arabic" ? sellable.arabicLettering : sellable.englishLettering).has(option),
+);
+function sellableDraft(draft: Draft): Draft {
+  const construction = offeredConstructions.includes(draft.construction)
+    ? draft.construction : offeredConstructions[0]!;
+  const options = offeredLetters(draft.script);
+  const lettering = options.includes(draft.lettering) ? draft.lettering : options[0]!;
+  return construction === draft.construction && lettering === draft.lettering
+    ? draft : { ...draft, construction, lettering };
+}
 
 const icons = ["Aa", "◇", "▱", "≋"];
 const gemColors = [
@@ -343,7 +360,12 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
   const bag = useRef<HTMLDialogElement>(null);
   const zoom = useRef<HTMLDialogElement>(null);
   const title = useRef<HTMLHeadingElement>(null);
-  const d = state.draft;
+  const d = sellableDraft(state.draft);
+  useEffect(() => {
+    if (d === state.draft) return;
+    setConfirmed(false);
+    setState((old) => ({ ...old, draft: sellableDraft(old.draft) }));
+  }, [d, state.draft]);
   /**
    * The draft checked on every render, not only when "Review my piece" was
    * pressed. Step 02 stays reachable - a shopper can switch to two names from
@@ -643,7 +665,7 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
     setErrors({});
     setState((old) => ({
       ...old,
-      draft: { ...old.draft, [key]: value },
+      draft: sellableDraft({ ...old.draft, [key]: value }),
       sampleFocus: (visualFields as readonly string[]).includes(key) ? key as VisualField : old.sampleFocus,
     }));
   }
@@ -1036,32 +1058,9 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
   function comingNote(patch: Partial<Draft>) {
     return hasExactSample({ ...d, ...patch }) ? undefined : t("Sample coming");
   }
-  /**
-   * Whether this option is one the pipeline refuses to photograph, asked of the
-   * same predicate the run itself asks (`preflightRefusal`); the design stage
-   * never keeps its own list of what is renderable.
-   *
-   * The name is deliberately reduced to a single one here: two Arabic names are
-   * refused as well, but that is a fact about the name field, not about this
-   * construction or this lettering, and it would otherwise mark every option.
-   *
-   * `reason` keeps each field to its own refusal. `preflightRefusal` reports the
-   * first thing it finds, so an Origami construction would otherwise mark every
-   * lettering tile too; the shopper is told once, on the control that causes it.
-   */
-  function notPhotographed(
-    patch: Partial<Draft>,
-    reason: "unsupported_construction" | "unsupported_lettering",
-  ) {
-    const next = { ...d, ...patch };
-    return (
-      preflightRefusal({
-        script: next.script,
-        names: [next.name],
-        construction: next.construction,
-        lettering: next.lettering,
-      }) === reason
-    );
+  /** Sellable choices without a matching shop photograph stay honestly marked. */
+  function notPhotographed(patch: Partial<Draft>) {
+    return !hasExactSample({ ...d, ...patch });
   }
   /**
    * Two Arabic names are refused before anything is reserved
@@ -1152,11 +1151,6 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
             );
           })}
         </div>
-        {unphotographed?.(value) && (
-          <p className={s.fieldNote} data-not-photographed="selected">
-            {t("Not yet photographed; the shop will confirm this look by hand")}
-          </p>
-        )}
         {!unphotographed?.(value) && advisory?.(value) && (
           <p className={s.fieldNote} data-advisory="selected">
             {advisory(value)!.note}
@@ -1447,24 +1441,21 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                   <>
                     {choices(
                       "Pendant construction",
-                      constructions,
+                      offeredConstructions,
                       d.construction,
                       (x) => change("construction", x),
-                      (x, i) => (
-                        <span className={s.construction}>{icons[i]}</span>
+                      (x) => (
+                        <span className={s.construction}>{icons[constructions.indexOf(x)]}</span>
                       ),
                       undefined,
                       (x) => comingNote({ construction: x }),
                       (x) =>
-                        notPhotographed(
-                          { construction: x },
-                          "unsupported_construction",
-                        ),
+                        notPhotographed({ construction: x }),
                     )}
 
                     {choices(
                       "Lettering style",
-                      letters,
+                      offeredLetters(d.script),
                       d.lettering,
                       (x) => change("lettering", x),
                       (x, i) => (
@@ -1479,9 +1470,8 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                         </span>
                       ),
                       undefined,
-                      (x) => comingNote({ lettering: x }),
-                      (x) =>
-                        notPhotographed({ lettering: x }, "unsupported_lettering"),
+                      undefined,
+                      (x) => notPhotographed({ lettering: x }),
                     )}
 
                     {d.twoNames && (
