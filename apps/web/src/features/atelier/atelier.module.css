@@ -421,7 +421,7 @@
 .previewSticky {
   display: grid;
   grid-template-rows: minmax(0, 1fr) auto;
-  block-size: min(760px, var(--preview-budget));
+  block-size: var(--preview-budget);
   max-block-size: calc(100dvh - var(--preview-reserved));
   min-block-size: 0;
   overflow: hidden;
@@ -1909,4 +1909,61 @@
 :global([dir="rtl"]) .headerNote,
 :global([dir="rtl"]) .footer {
   letter-spacing: normal;
+}
+
+/* P6-10: give the photograph the page, then keep a small reminder in reach. */
+.compactPreview { display: none; }
+@media (min-width: 768px) {
+  .previewDock { padding: 10px 12px; }
+  .previewDock .views { padding-block: 8px 6px; }
+  .previewDock .views button img, .previewDock .missingAngle { height: 44px; }
+  .previewNote { margin-bottom: 6px !important; }
+  .previewSticky .photo > img { object-position: center; }
+}
+@media (max-width: 767px) {
+  .preview { position: static; }
+  .previewSticky {
+    block-size: auto;
+    max-block-size: none;
+    grid-template-rows: auto auto;
+  }
+  .previewSticky .photo {
+    block-size: min(112vw, 64svh);
+    min-block-size: 240px;
+  }
+  .preview[data-has-photograph="false"] .photo {
+    block-size: 180px;
+    min-block-size: 180px;
+  }
+  .previewSticky .photo > img { object-position: center; }
+  .zoomButton { inset-block-end: 12px; min-width: 44px; min-height: 44px; }
+  .compactPreview {
+    display: block;
+    position: fixed;
+    z-index: 20;
+    inset-block-start: 0;
+    inset-inline: 0;
+    padding: 8px 16px;
+    background: var(--paper);
+    border-bottom: 1px solid var(--line);
+    box-shadow: 0 4px 18px #30271a0d;
+  }
+  .compactPreview > button, .compactPreview > div {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    min-height: 64px;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    text-align: start;
+    padding: 0;
+  }
+  .compactPreview img { width: 52px; height: 64px; object-fit: contain; background: #eee7dc; border-radius: 3px; }
+  .compactPreview span { flex: 1; min-width: 0; font-size: 13px; line-height: 1.4; }
+  .compactPreview strong, .compactPreview small { display: block; }
+  .compactPreview small { color: var(--muted); margin-top: 3px; }
+  .compactPreview svg { flex-shrink: 0; }
+  .zoomCanvas, .zoomCanvas img { height: calc(100dvh - 150px) !important; }
 }

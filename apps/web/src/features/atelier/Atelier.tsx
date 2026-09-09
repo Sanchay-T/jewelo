@@ -314,6 +314,7 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
   const [state, setState] = useState<State>(initialState);
   const [desktop, setDesktop] = useState(false);
   const [editingText, setEditingText] = useState(false);
+  const [compactPreview, setCompactPreview] = useState(false);
   const blurTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [notice, setNotice] = useState("");
@@ -668,45 +669,47 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
     };
   }, []);
 
-  // The initial document position matters as well as the sticky position:
-  // the complete rail must fit before the shopper has scrolled at all.
+  // Keep the desktop rail inside the currently visible space. Mobile gets a
+  // full photograph in the page and a small reminder only after it scrolls away.
   useEffect(() => {
     const root = workspace.current;
     const panel = previewPanel.current;
     const actions = actionBar.current;
     if (!root || !panel || !actions) return;
+    let frame = 0;
     const update = () => {
-      // The keyboard gets the screen while typing. Preserve the last complete
-      // panel size; the non-sticky preview can scroll away above the field.
-      if (editingText && window.matchMedia("(max-width: 767px)").matches) return;
-      const styles = getComputedStyle(panel);
-      const gap = parseFloat(styles.getPropertyValue("--preview-gap"));
-      const reserved = parseFloat(styles.getPropertyValue("--preview-reserved"));
-      const initialTop = root.getBoundingClientRect().top + window.scrollY;
-      const viewportHeight = window.innerHeight;
-      const budget = Math.max(0, Math.min(
-        viewportHeight - reserved,
-        viewportHeight - Math.max(initialTop, gap)
-          - actions.getBoundingClientRect().height - gap,
-      ));
+      const mobile = window.matchMedia("(max-width: 767px)").matches;
+      if (mobile) {
+        setCompactPreview(panel.getBoundingClientRect().bottom <= 8);
+        root.style.setProperty("--preview-scroll-clearance", "108px");
+        return;
+      }
+      setCompactPreview(false);
+      const gap = 16;
+      const top = Math.max(gap, panel.getBoundingClientRect().top);
+      const budget = Math.max(0, window.innerHeight - top
+        - actions.getBoundingClientRect().height - gap * 2);
       panel.style.setProperty("--preview-budget", `${budget}px`);
-      root.style.setProperty(
-        "--preview-scroll-clearance",
-        `${panel.getBoundingClientRect().height + gap * 2}px`,
-      );
+    };
+    const schedule = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(update);
     };
     update();
-    const observer = new ResizeObserver(update);
-    observer.observe(root);
+    const observer = new ResizeObserver(schedule);
     observer.observe(actions);
-    window.addEventListener("resize", update);
-    window.visualViewport?.addEventListener("resize", update);
+    observer.observe(root);
+    window.addEventListener("scroll", schedule, { passive: true });
+    window.addEventListener("resize", schedule);
+    window.visualViewport?.addEventListener("resize", schedule);
     return () => {
+      cancelAnimationFrame(frame);
       observer.disconnect();
-      window.removeEventListener("resize", update);
-      window.visualViewport?.removeEventListener("resize", update);
+      window.removeEventListener("scroll", schedule);
+      window.removeEventListener("resize", schedule);
+      window.visualViewport?.removeEventListener("resize", schedule);
     };
-  }, [locale, state.stage, editingText]);
+  }, [locale, state.stage]);
 
   function change<K extends keyof Draft>(key: K, value: Draft[K]) {
     if (d[key] === value) return;
@@ -2048,6 +2051,7 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
           <aside
             ref={previewPanel}
             className={s.preview}
+            data-has-photograph={showingOwnPhoto || sampleVisible}
             aria-label={t("Jewelry preview")}
             aria-roledescription={t("carousel")}
             onMouseEnter={() => {
@@ -2648,15 +2652,28 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
           )}
         </div>
       </dialog>
+      {compactPreview && !editingText && (
+        <div className={s.compactPreview} data-compact-preview="true">
+          {(showingOwnPhoto || sampleVisible) && heroSource ? (
+            <button onClick={() => zoom.current?.showModal()} aria-label={t("Zoom image")}>
+              <img src={heroSource} alt="" />
+              <span><strong>{showingOwnPhoto ? ownPhotoLabel : t("Shop sample · Asma")}</strong><small>{t(view)}</small></span>
+              <MagnifyingGlassPlus size={22} aria-hidden="true" />
+            </button>
+          ) : (
+            <div role="status"><Diamond size={24} aria-hidden="true" /><span>{own.attempted ? ownPlaceholderText : t("Updating preview")}</span></div>
+          )}
+        </div>
+      )}
       <dialog
         ref={zoom}
         onKeyDown={trapFocus}
         className={s.zoomDialog}
-        aria-label={t("Inspect sample jewelry")}
+        aria-label={showingOwnPhoto ? t("Enlarged photograph of your pendant") : t("Inspect sample jewelry")}
       >
         <div className={s.dialogHeader}>
           <span dir="auto">
-            {t(view)} · {showingOwnPhoto ? ownPhotoLabel : t("Shop sample · Asma")}
+            {showingOwnPhoto ? `${t(view)} · ${ownPhotoLabel}` : own.attempted ? ownPlaceholderText : `${t(view)} · ${t("Shop sample · Asma")}`}
           </span>
           <button aria-label={t("Close")} onClick={() => zoom.current?.close()}>
             <X size={22} />
@@ -2675,7 +2692,7 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                 <button onClick={() => resetTransform()}>{t("Reset")}</button>
               </div>
               <TransformComponent wrapperClass={s.zoomCanvas}>
-                {heroSource && (
+                {(showingOwnPhoto || sampleVisible) && heroSource && (
                   <img
                     src={heroSource}
                     alt={
