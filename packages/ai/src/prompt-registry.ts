@@ -470,10 +470,11 @@ export function compileStillPrompt(input: {
       ? "Only @inspiration is approved as customer inspiration; never copy its identity or text."
       : "No customer inspiration input is approved for this task.",
   };
-  const compiled = compilePrompt({ ...input, variables });
-  // A legacy release's image positions must not silently acquire new meaning.
-  if (/\bimage\s+\d|\b(first|second|third|fourth)\s+(supplied\s+)?(image|input)|IMAGE ROLES/iu.test(compiled.compiledPrompt))
+  // Inspect the release prose before interpolation: an approved customer name
+  // such as "First Image" is data, not a legacy reference instruction.
+  if (/\bimage\s+\d|\b(first|second|third|fourth)\s+(supplied\s+)?(image|input)|IMAGE ROLES/iu.test(input.template))
     throw new Error("still_legacy_reference_roles_require_new_release");
+  const compiled = compilePrompt({ ...input, variables });
   const references = buildStillReferences({
     identityImageUrl: "stencil",
     referenceImageUrl: input.references.master ? "master" : undefined,
