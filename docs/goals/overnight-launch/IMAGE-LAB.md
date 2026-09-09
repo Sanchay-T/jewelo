@@ -748,3 +748,31 @@ That averages 20 credits per image against a documented rate of 20; one Stage 5 
 
 The 50-tasks-in-flight cap was never approached; the largest batch submitted at once was 12. The three-paid-attempts-per-cell cap was never exceeded.
 
+
+
+## 9 September follow-up - shared still compiler and studio candidate C
+
+Task P3-8, source `57189c5aa53a1ba7f525d1b48898a704629d7ebb`. This section is a new bounded qualification; earlier W2 findings and balances above are historical, not a statement of the current provider or spend.
+
+The lab canonical-request path and deployed worker now share prompt compilation and transport preparation. References are ordered master (when present), stencil, style (when present), then approved inspiration (when present). Studio excludes master/style references; dependent stills require both. The OpenAI adapter and Runway request preparer consume the same client prompt bytes and reference order. This proves client-side parity, not identical provider internals or identical outputs. Existing saved snapshots remain unchanged; incompatible legacy templates are refused at creation/publication and again at execution. Deploy the compiler before publishing canonical releases.
+
+An independent viewer inspected all 12 original studio stills and both production stencils against the existing viewer rubric. Candidate C puts chain threading first; candidate A is the preceding canonical baseline.
+
+| Candidate | English studio | Arabic studio | Total |
+| --- | --- | --- | --- |
+| A | 3/3 pass | 1/3 pass | 4/6 pass |
+| C | 3/3 pass | 3/3 pass | 6/6 pass |
+
+The two A failures were chain-not-through-ring and unsupported-geometry. Candidate C was promoted to the studio baseline only; all nine other profile templates were unchanged. The promotion artifact confirmed exact frozen-template bytes and exact compiled hashes for both qualification scripts:
+
+| Artifact | SHA-256 |
+| --- | --- |
+| C template | `8a55e9d37209257ce557c6a7f00538908794226450077396cf67865903519d90` |
+| English compiled prompt | `04ee836ea3df77b420d26728ff6b4741e0044ce9cf93d85ee2eae17725d9011c` |
+| Arabic compiled prompt | `faa714b789764e17b81d54b401def343f2405346daac2902650a5743b57883c6` |
+
+**Boundary:** six passing C pictures qualify only these two names and studio scenes. They do not establish generalisation, dependent-view quality, manufacturability or deployed OpenAI execution. The Runway provider was the `gpt-image-2` alias. The configured Image 2.5 model lookup returned HTTP 404: Image 2.5 is unavailable to this account at this checkpoint and was not verified. Configuration permits an explicit 2.5 snapshot but does not silently substitute it into Runway.
+
+The next frozen holdout consists of Emma, Olivia, Sophia, Amelia, Grace, Hannah and مريم, سارة, هند, ريم, دانية, ياسمين. All 12 calls have been submitted; qualification remains pending until independently scored. The lead observed a 240-credit Runway decrease for these calls, from 304,362 to 304,122. No unscored holdout pass is claimed. P3-5 and P3-6 remain open; no full-grid completion is claimed. Qualification images, reference images, signed URLs and request artifacts stay outside the public repository. No current credit balance or paid API success is inferred from the earlier W2 ledger.
+
+Full `corepack pnpm build` passed 13/13, exit 0, on the integrated source, and two final independent source reviews found nothing above minor. Deployment, canonical database publication and live API smoke remain pending. No tests were added or run.
