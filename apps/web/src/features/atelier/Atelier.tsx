@@ -2319,27 +2319,33 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                           ? "pending"
                           : (run?.slots.find((x) => x.view === v)?.status ??
                             "ready");
-                    const photo = { asset: { src: piece.views[v] ?? "" } };
+                    const reference = piece.family.assets.find((sample) => sample.view === v);
+                    const referenceSource = piece.views[v] ?? "";
+                    const referenceName = reference
+                      ? [reference.draft.name, ...(reference.draft.twoNames ? [reference.draft.secondName] : [])]
+                          .filter(Boolean).join(locale === "ar" ? " و" : " & ")
+                      : "";
                     // The customer's own photograph of this camera, when it exists.
                     const ownView = own.imageFor(v);
                     const ownStatus = own.statusFor(v);
                     const placeholder = own.attempted && !ownView;
                     const placeholderText = ownPlaceholderFor(v);
-                    const thumbnail = ownView ?? (own.attempted ? "" : photo.asset.src);
+                    const sampleFailed = !own.attempted && (
+                      status === "failed" || !!piece.errors[v] || imageErrors.includes(referenceSource)
+                    );
+                    // Each reference owns its readiness; the selected hero is
+                    // unrelated. An attempted personal run never falls back to it.
+                    const referenceReady = !own.attempted && status === "ready" &&
+                      !sampleFailed && !!referenceSource;
+                    const thumbnail = ownView ?? (referenceReady ? referenceSource : "");
                     const missing = !thumbnail;
-                    /* Once the shopper's own photographs exist, the rail is
-                       read as "my four views". Any tile still showing the
-                       illustrated catalogue must say so, in words. */
-                    const sampleTile = own.personalized && !ownView && !missing;
+                    const sampleTile = !own.attempted && !ownView && referenceReady;
+                    const tileStatus = placeholder ? "placeholder" : ownView ? "ready" : sampleFailed ? "failed" : status;
                     return (
                       <button
                         key={v}
                         aria-label={t(v)}
-                        data-preview-status={
-                          placeholder ? "placeholder" : imageErrors.includes(photo.asset.src)
-                            ? "failed"
-                            : (status ?? "ready")
-                        }
+                        data-preview-status={tileStatus}
                         data-personalized-status={ownStatus}
                         aria-describedby={`view-status-${index}`}
                         aria-pressed={v === view}
@@ -2350,24 +2356,21 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                               the sample marker has to travel with the status
                               this describes it by. */}
                           {sampleTile
-                            ? (locale === "ar" ? "عينة. " : "Sample. ")
+                            ? (locale === "ar" ? `عينة من المتجر باسم ${referenceName}. ` : `Shop sample named ${referenceName}. `)
                             : ""}
                           {placeholder
                             ? placeholderText
                             : ownStatus
                             ? ownStatusText(ownStatus)
+                            : sampleFailed
+                              ? t("Preview failed")
                             : status === "unavailable"
                               ? t("Not photographed for this look")
                               : missing
                             ? locale === "ar"
                               ? "جار التحضير"
                               : "Preparing preview"
-                            : status === "failed" ||
-                                imageErrors.includes(photo.asset.src)
-                              ? locale === "ar"
-                                ? "فشلت المعاينة"
-                                : "Preview failed"
-                              : status === "pending"
+                            : status === "pending"
                                 ? locale === "ar"
                                   ? "جار التحضير"
                                   : "Preparing preview"
@@ -2379,22 +2382,22 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                           <div className={s.missingAngle} data-own-placeholder="true">
                             <Diamond size={22} aria-hidden="true" />
                           </div>
-                        ) : !own.attempted ? (
-                          <div className={s.missingAngle}>
-                            <Diamond size={22} aria-hidden="true" />
-                          </div>
                         ) : !missing ? (
                           <img
                             src={thumbnail}
                             alt={
                               sampleTile
                                 ? locale === "ar"
-                                  ? `صورة عينة لزاوية ${t(v)}، وليست قطعتك`
-                                  : `Sample photograph of the ${v} view, not your piece`
+                                  ? `صورة قلادة عينة باسم ${referenceName} لزاوية ${t(v)}، وليست قطعتك`
+                                  : `Sample pendant named ${referenceName}, ${v} view, not your piece`
                                 : ""
                             }
                             aria-hidden={sampleTile ? undefined : "true"}
                             data-caleums-photo={ownView ? "personalized" : "sample"}
+                            data-sample-id={sampleTile ? reference?.id : undefined}
+                            onError={sampleTile ? () => setImageErrors((old) =>
+                              Array.from(new Set([...old, referenceSource])),
+                            ) : undefined}
                           />
                         ) : (
                           <div className={s.missingAngle}>—</div>
@@ -2403,6 +2406,8 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                         <em aria-hidden="true" data-sample-tile={sampleTile || undefined}>
                           {placeholder
                             ? placeholderText
+                            : sampleFailed
+                            ? t("Preview failed")
                             : sampleTile
                             ? locale === "ar"
                               ? "عينة"
@@ -2426,14 +2431,14 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                                   "After hours",
                                 ][index]}
                         </em>
-                        {!placeholder && status !== "unavailable" &&
+                        {!placeholder && tileStatus !== "unavailable" &&
                           (v === view ||
-                            status === "pending" ||
-                            status === "failed") && (
+                            tileStatus === "pending" ||
+                            tileStatus === "failed") && (
                             <small aria-hidden="true">
-                              {status === "pending"
+                              {tileStatus === "pending"
                                 ? "◌"
-                                : status === "failed"
+                                : tileStatus === "failed"
                                   ? "!"
                                   : "✓"}
                             </small>
