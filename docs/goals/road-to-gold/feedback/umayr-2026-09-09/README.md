@@ -59,8 +59,10 @@ The frames also show the "Updating preview / Loading the On skin sample photo" o
    Owner `implementer`, P6-8.
 3. **Copy strip.** "THE NAME ATELIER" goes; "Language / script" becomes "Language"; the "YOUR SPELLING · TEXT ONLY" echo box goes (the input is the spelling); the name appears once in the selections summary. Rule for the dictionary: no atelier, no filler adjectives, nothing a shop assistant would not say out loud.
    Owner `implementer`, P6-8, then `ux-verifier`.
-4. **Hide unproven looks (DS-4 default).** Set `NEXT_PUBLIC_SELLABLE_CONSTRUCTIONS=Classical` and the English lettering set to `Classic` on the staging app so three "Not yet photographed" tiles and five "Sample coming" tiles disappear; the code paths stay for P3-5.
-   Owner `platform`, one env change and a redeploy; Sanchay or Omran can widen it later.
+4. **Keep all looks available.** Remove the custom deployment allowlist so all
+   four constructions and six lettering choices remain selectable; identity and
+   verifier gates still protect each personal request.
+   Owner `agent`, completed 10 September 2026.
 5. **The shopper's own name in every lettering tile.** The HarfBuzz engine already renders any name in every face deterministically; a small server-rendered SVG per tile replaces `أسماء` six times.
    Owner `implementer`, new task P6-9 (uses `packages/identity` shaping, no rings, no bridging), medium.
 6. **Plain sample and plain photographs.** Umayr wants the pendant alone on a clean ground. The style anchors and the v4.3 prompts were proven on satin; a "plain" variant is a prompt lab run (P3-5) and a product call for Omran.

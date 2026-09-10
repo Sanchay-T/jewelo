@@ -25,7 +25,7 @@ Self-contained. Read nothing else first except the two files named under "Before
 - `usePersonalizedPreview.ts`: the run state the tiles read (`ready`, in flight, `unavailable`).
 - `personalizedRun.ts`: read-side of a run; `readPersonalizedRun` decides `presentable`. Read only.
 - `sample-assets*.json`: the shop sample images and which option combinations have one.
-- `packages/config/src/sellable.ts`: `NEXT_PUBLIC_SELLABLE_CONSTRUCTIONS`, `NEXT_PUBLIC_SELLABLE_ENGLISH_LETTERING`, `NEXT_PUBLIC_SELLABLE_ARABIC_LETTERING`, defaults `Classical`, `Classic`, all six Arabic. Today a non-sellable option is only marked "Not yet photographed" (`notPhotographed()` at `Atelier.tsx:1073`, `data-not-photographed`), not hidden.
+- `packages/config/src/sellable.ts`: all four constructions and six lettering styles are selectable; the identity solver/verifier remains the safety gate for a specific name.
 
 ## Items, in order. Each has its acceptance check.
 
@@ -68,7 +68,7 @@ Today three of four construction tiles say "Not yet photographed" and five of si
 
 Change: an option outside the sellable set (`packages/config/src/sellable.ts`) is not rendered at all in the design step. Keep `notPhotographed()` and `data-not-photographed` for an option that is sellable but has no sample yet. If the current selection (restored from the device record) is no longer sellable, reset it to the first sellable option and say nothing. Remove the "Not yet photographed; the shop will confirm this look by hand" field note. Delete the "Sample coming" small text on lettering tiles; a tile either shows a sample or the name rendering from item 5.
 
-Accept: with the default env, the design step shows one construction tile (Classical), one English lettering tile (Classic), six Arabic lettering tiles; `NEXT_PUBLIC_SELLABLE_CONSTRUCTIONS="Classical,Framed minimal"` shows two.
+Accept: the design step shows all four construction tiles and all six lettering tiles in either script. No deployment value can hide or widen the set; a reviewed identity/verifier change is the only way to alter support.
 
 ### 5. The shopper's own name in every lettering tile (P6-9)
 

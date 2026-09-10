@@ -419,29 +419,11 @@ export type PreflightRefusal =
   | "unsupported_lettering";
 
 /**
- * M1 / D-022. What the shop sells is configuration, not a literal.
- *
- * The two names above used to be `RENDERABLE_CONSTRUCTION = "Classical"` and
- * `RENDERABLE_ENGLISH_LETTERING = "Classic"`, written here from what the
- * deterministic stencil can draw. Which looks are good enough to sell is
- * phase 3's measurement, so it is read from validated configuration and filled
- * from P3-5's result before P5-2. The defaults are exactly the two literals
- * that were here, so nothing on the page moves until that result exists.
- *
- * The three variables are written out in full because Next inlines
- * `process.env.NEXT_PUBLIC_*` into the browser bundle only where the whole
- * member expression appears in application code; `sellableLooks` validates them
- * against the contract's own option lists. Read once at module load: the values
- * are fixed for the life of a build.
+ * D-022. The shop's current sellable set is deterministic and code-owned.
+ * Unsupported looks stay blocked before request capture or any run starts, so
+ * a prompt can never photograph one design and label it as another.
  */
-const SELLABLE = sellableLooks({
-  NEXT_PUBLIC_SELLABLE_CONSTRUCTIONS:
-    process.env.NEXT_PUBLIC_SELLABLE_CONSTRUCTIONS,
-  NEXT_PUBLIC_SELLABLE_ENGLISH_LETTERING:
-    process.env.NEXT_PUBLIC_SELLABLE_ENGLISH_LETTERING,
-  NEXT_PUBLIC_SELLABLE_ARABIC_LETTERING:
-    process.env.NEXT_PUBLIC_SELLABLE_ARABIC_LETTERING,
-});
+const SELLABLE = sellableLooks();
 
 export function preflightRefusal(specification: {
   script: string;

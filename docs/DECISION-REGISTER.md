@@ -25,20 +25,17 @@
 | D-019 | The identity engine opens the pinned font file bytes and shapes them with HarfBuzz (`harfbuzzjs` in `packages/identity/src/shaping.ts`); no rendering library is ever asked for a font family name. The engine release identifier moves from `caleums-arabic-v3` to `caleums-identity-v4` | accepted 8 Sep 2026, DS-3 default B in `docs/TASKS.md` | HarfBuzz stops shaping a script the shop sells, or a measured stencil regression traces to the WASM build rather than to the fonts |
 | D-020 | Jump-ring anchors are chosen at the outline level, before rasterisation: the left ring anchors on the largest contour of the first base glyph and the right ring on the largest contour of the last base glyph, at the outer top corner; marks and small contours (dots, tittles, hamza) are excluded by the font's own glyph data, never by a pixel-area threshold. The raster ruler stays as the independent check that ring metal touches no other ink. Both rings are chosen together, so the piece hangs level and neither end is cantilevered; when no pair of seats meets the level, overhang and span gates the run is routed to operator review with `identity_no_ring_seat` rather than shipped as a piece nobody would wear | accepted 8 Sep 2026 by Sanchay after adversarial reviews 2 and 3 showed the pixel heuristics fail outside their tuning corpus (Noor, Ali) | a font whose base glyphs carry dots as separate glyphs rather than contours, or a style whose first or last glyph has no contour wide enough for a ring |
 | D-021 | The stencil is the truth for the whole physical piece, not only for the name. The construction the shopper approved is a shape input to the identity engine and part of the fingerprint: `framed-minimal` draws its rectangular frame and `diamond-rails` its two rails, from validated engine constants, with the two jump rings welded onto that structure and the name welded into it in two places per rail; `classical` and `origami-ribbon` stay the lettering alone, and the ribbon's folded facets are a finish the stencil never claims. `ringPlacement` gains `frame`, with `carrier.kind` as the detail | accepted 9 Sep 2026, P2-2b default decision in `docs/TASKS.md`, after the P2-2 contact sheet showed the registration comparing a bare name with a photograph of a framed pendant | Omran changes what a construction is, or a fifth construction is sold |
-| D-022 | The shop sells only what phase 3 proved. Which pendant constructions and which lettering a shopper may buy is validated configuration (`sellableLooks` in `packages/config/src/sellable.ts`, read by `preflightRefusal` through `NEXT_PUBLIC_SELLABLE_CONSTRUCTIONS`, `NEXT_PUBLIC_SELLABLE_ENGLISH_LETTERING` and `NEXT_PUBLIC_SELLABLE_ARABIC_LETTERING`), filled from P3-5's measured result before P5-2. Today's default is the stencil-renderable set - `Classical`, English `Classic`, every Arabic lettering - which is not yet lab evidence and must not be read as it | accepted 9 Sep 2026, storyline review 1 M1 | P3-5 publishes a measured sellable set, or a construction the shop sells stops photographing |
+| D-022 | The atelier exposes every contract construction and lettering style without a deployment allowlist. `packages/config/src/sellable.ts` keeps that set deterministic and code-owned; the identity solver and verifier remain the authority for exact spelling and safe geometry on each name. | user override 10 Sep 2026; removed the custom deployment restriction while preserving the identity gates | a requested name cannot pass its identity gates, or a style/construction is removed from the contract |
 
 ## D-022 detail
 
-The two literals this replaces (`RENDERABLE_CONSTRUCTION = "Classical"` and `RENDERABLE_ENGLISH_LETTERING = "Classic"` in `apps/web/src/features/atelier/personalizedRun.ts`) were reasoned from what the deterministic stencil can draw, not from a photograph anyone scored.
-Storyline review 1 (M1) recorded the gap: phase 3's own best look at the time was `framed-minimal` at v4.3, which those literals refuse.
-Which looks are good enough to sell is a measurement, so it is configuration with a validated schema and it changes without a code change.
-
-The values are the customer-facing option labels, validated against `PREVIEW_REQUEST_CONSTRUCTIONS` and `PREVIEW_REQUEST_LETTERING` in `packages/contracts`, so a name outside the shop's own option list fails `parseBrowserEnv` at build time rather than silently selling nothing.
-All three variables are unset in every environment today and the defaults reproduce the previous behaviour exactly, so this decision moves no tile on the page until P3-5's result is written into them.
-
-Arabic lettering is deliberately unrestricted by default and is not marked refused.
-`arabicStyle` is threaded through the specification into both the compiled prompt and the identity engine, which fails closed on its own for a style it has not certified; a second refusal in the browser would take options away from the shopper without adding a guarantee.
-The variable exists so P3-5 can restrict it on evidence, not so today's build can.
+The set mirrors `PREVIEW_REQUEST_CONSTRUCTIONS` and
+`PREVIEW_REQUEST_LETTERING`, so all four constructions and six lettering styles
+are available in both locales. There is no deployment override to get out of
+sync with the prompt or identity engine. The solver still fails closed on a
+name whose spelling, glyph connectivity, ring seats, or component geometry
+does not pass, and the verifier must accept the encoded bytes before a run is
+ready.
 
 ## D-021 detail
 

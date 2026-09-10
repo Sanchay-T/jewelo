@@ -1,11 +1,6 @@
 export * from "./load-env";
 export * from "./observability";
 export * from "./sellable";
-import {
-  sellableArabicLetteringSchema,
-  sellableConstructionsSchema,
-  sellableEnglishLetteringSchema,
-} from "./sellable";
 import { z } from "zod";
 
 /**
@@ -224,12 +219,6 @@ export const browserEnvSchema = z
     NEXT_PUBLIC_POSTHOG_KEY: optionalNonEmpty,
     NEXT_PUBLIC_POSTHOG_HOST: optionalUrl,
     NEXT_PUBLIC_SENTRY_DSN: optionalUrl,
-    // M1 / D-022. Which looks the shop sells, validated against the contract's
-    // own option lists in `./sellable`. Listed here so a bad entry fails the
-    // build (`next.config.ts` calls `parseBrowserEnv`) rather than the page.
-    NEXT_PUBLIC_SELLABLE_CONSTRUCTIONS: sellableConstructionsSchema,
-    NEXT_PUBLIC_SELLABLE_ENGLISH_LETTERING: sellableEnglishLetteringSchema,
-    NEXT_PUBLIC_SELLABLE_ARABIC_LETTERING: sellableArabicLetteringSchema,
   })
   .superRefine((value, context) => {
     const hasUrl = value.NEXT_PUBLIC_SUPABASE_URL !== undefined;

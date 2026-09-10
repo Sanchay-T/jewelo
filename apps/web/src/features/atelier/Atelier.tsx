@@ -271,11 +271,7 @@ const NAME_LIMIT_NOTICE = `This is the longest name we can make: ${NAME_MAX} cha
 /** True once the field is holding all the characters it will accept. */
 const atLimit = (value: string) => value.length >= NAME_MAX;
 
-const sellable = sellableLooks({
-  NEXT_PUBLIC_SELLABLE_CONSTRUCTIONS: process.env.NEXT_PUBLIC_SELLABLE_CONSTRUCTIONS,
-  NEXT_PUBLIC_SELLABLE_ENGLISH_LETTERING: process.env.NEXT_PUBLIC_SELLABLE_ENGLISH_LETTERING,
-  NEXT_PUBLIC_SELLABLE_ARABIC_LETTERING: process.env.NEXT_PUBLIC_SELLABLE_ARABIC_LETTERING,
-});
+const sellable = sellableLooks();
 function isSellableDraft(draft: Draft) {
   return sellable.constructions.has(draft.construction) &&
     (draft.script === "Arabic" ? sellable.arabicLettering : sellable.englishLettering)
