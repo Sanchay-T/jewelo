@@ -28,7 +28,7 @@ These are pointers. Open the one your task needs; do not read all of them.
 - Build gate: `corepack pnpm build`. This is the only mechanical gate.
 - Deploy: `bash scripts/digitalocean/deploy.sh staging <branch>` then `bash scripts/digitalocean/smoke.sh <url>`. `doctl` is authenticated on `home-mini` (ssh, `export PATH=/opt/homebrew/bin:$PATH`, `source scripts/digitalocean/common.sh; load_digitalocean_token`), not on the laptop.
 - Database: `corepack pnpm db:push` and `corepack pnpm db:types` (both read `.env`). Migrations in `supabase/migrations/` are the schema source of truth; never add an ORM migration source.
-- Git: push goes through the `Sanchay-T` account (set in this repo's local git config). For `gh` commands run `export GH_TOKEN=$(gh auth token -u Sanchay-T)` first; the active `gh` account is a different user and gets 403 here. Work on the current branch, push it, never push `main`, never merge.
+- Git: push goes through the `Sanchay-T` account (set in this repo's local git config). For `gh` commands run `export GH_TOKEN=$(gh auth token -u Sanchay-T)` first; the active `gh` account is a different user and gets 403 here. Work on the current branch, push it, never push `main`, and merge only through the reviewed pull request when explicitly requested.
 - Secrets live in `.env` at the repo root (gitignored, copied from `home-mini`). Never print a value; confirm by name.
 
 ## Environment facts that bite
