@@ -38,12 +38,12 @@ occurred.
 | --- | --- |
 | Live URL | https://jewelo-staging-gqumd.ondigitalocean.app/en/design/new |
 | Active deployed commit | `eba96fd6edcdecc92e9133dbfa5c449e18156a25` (`eba96fd`), DigitalOcean deployment `84f54bd8-927f-48cd-b871-071e7fc78923` (ACTIVE) |
-| Branch head | `main` at merged commit `abd137110f68ac20679d4e98f1c91587ffaa4b91` (`abd1371`); source branch `codex/overnight-launch-2026-09-08` remains at `b734e57` |
+| Branch head | `main` at merged commit `4cd8f2df65ede74bd1c4e5494b58886405ef7a90` (`4cd8f2d`); source branch `codex/overnight-launch-2026-09-08` remains at `b734e57` |
 | Provider mode | Production runtime: `real` selected from `NODE_ENV=production`; protected readiness reports `provider: real`. Local development/test defaults remain mock unless explicitly set otherwise. |
 | Live readiness | HTTP 200: Supabase configured; Inngest configured, self-hosted, `keyEnvironment=prod`, crons registered; OpenAI configured; trusted client IP header valid. |
 | Deployment scope | Production intentionally skipped; one DigitalOcean staging instance only. |
 | Build/lint | `corepack pnpm build`: 13/13; `corepack pnpm lint`: 13/13. |
-| Phase / next task | Phase 0 closed; P1-5 identity proof, then P2-3/P2-7 and P5-2/P5-3 remain. The cloud provider guard and all-look cleanup are deployed; no paid run was made. |
+| Phase / next task | Phase 0 closed; P1-5 identity proof, then P2-3/P2-7 and P5-2/P5-3 remain. The cloud provider guard and all-look cleanup are deployed; two bounded paid validation runs completed, but the latest prompt wording fix is not deployed. |
 | Merge | PR #12 merged 10 September 2026 at `ebea6d06a87107e85b0dc205ea8665f29c466f5d`; prompt wording fix PR #14 merged at `abd1371`; no direct `main` push was used. |
 | Sessions | 8 (7–10 September 2026) |
 
@@ -96,6 +96,16 @@ using the local design page.
 - The prompt compatibility slot was corrected in PR #14 so English prompts say
   `lettering style` rather than `Arabic style`; the existing `arabic_style` key
   remains stable for stored releases and Arabic runs.
+- Two bounded staging validations used synthetic names and the active staging
+  runtime: English `Layla` (Diamond rails, Minimal, 22 mm, yellow gold, no
+  stones) and Arabic `ريم` (Framed minimal, Kufi, 32 mm, rose gold, accent ruby).
+  Each produced Studio, On skin, Close-up and Dark OpenAI assets with the
+  customer-visible fields `passed=true`, `exactText=true`, and
+  `identityScore=1`. Actual ledger spend was 160 cents ($1.60) across eight
+  attempts; the 800-cent reservation was not fully used. Raw files remain in
+  `/tmp/jewelo-paid-validation/` and were inspected visually. These runs used
+  the active staging source `eba96fd`; deployment of the wording fix remains
+  deferred until local approval.
 
 ## Evidence
 
@@ -133,8 +143,9 @@ using the local design page.
 
 ## Needs Sanchay
 
-1. Approve the first paid OpenAI run after P1-5 identity proof; this is the only
-   action that authorizes provider spend.
+1. Review the two local visual outputs and approve or reject redeploying the
+   prompt wording fix. No further paid run is needed for this representative
+   bilingual proof unless a different option matrix is requested.
 2. Resolve Supabase billing before 29 September 2026 (upgrade Devonel or move
    the project), or the app will receive 402 responses after the grace period.
 3. Provide `NOTIFICATION_TO` and an SMTP sending account if the shop should get
@@ -180,7 +191,8 @@ using the local design page.
 
 ## Spend
 
-- OpenAI: USD 0 this session; no provider/image-generation call was made.
+- OpenAI: USD 1.60 this session across eight successful still attempts; the
+  two runs were synthetic-name validation only and did not deploy code.
 - Runway: 0 credits used in this session; anchors remain outside git.
 - Automatic real-mode ceilings remain enforced by configuration and the worker.
 - DigitalOcean: one staging app; the current and follow-up deployments are
@@ -217,3 +229,17 @@ using the local design page.
   prompt registry, style-anchor publication, operator queue, and deployment
   boundary. The open release gates are recorded above; no paid provider call
   was made.
+
+### Session 10 bounded bilingual paid validation (2026-09-10)
+
+- Used the existing staging runtime without deploying new code. The English
+  `Layla` / Diamond rails / Minimal / no-stones run and Arabic `ريم` / Framed
+  minimal / Kufi / accent-ruby run each completed all four OpenAI views.
+- All eight attempts were `succeeded`; the customer-facing projection reported
+  `passed=true`, `exactText=true`, and `identityScore=1` for every asset. The
+  ledger records 160 cents actual spend against 800 cents estimated reserve.
+- Lead visually inspected the eight downloaded PNGs. The pendant remained one
+  connected object with the requested construction, chain, material, and scene
+  treatment in both scripts. This is useful transfer evidence, not closure of
+  P1-5 or P2-3–P2-7 because the current staging worker still uses the mock
+  photographic verifier.
