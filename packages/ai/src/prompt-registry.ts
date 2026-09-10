@@ -37,7 +37,7 @@ export const MAX_CONSTRUCTION_VALUE_LENGTH = 2_400;
 export const PROMPT_VARIABLES = {
   approved_name: "Exact approved pendant name",
   language: "Approved language/script",
-  arabic_style: "Approved Arabic lettering style",
+  arabic_style: "Approved lettering style (Arabic when applicable)",
   layout: "Pendant name layout",
   metal_karat: "Metal karat",
   metal_color: "Metal color",
@@ -199,7 +199,7 @@ export const BASELINE_PROMPT_TEMPLATES: Readonly<
   Record<PromptProfile, string>
 > = {
   "image.studio": [
-    "Create one refined {{presentation_view}} product photograph of the supplied immutable name-pendant identity for {{approved_name}} ({{language}}; Arabic style: {{arabic_style}}).",
+    "Create one refined {{presentation_view}} product photograph of the supplied immutable name-pendant identity for {{approved_name}} ({{language}}; lettering style: {{arabic_style}}).",
     "Preserve the exact spelling, glyph order, {{layout}} geometry and attachments.",
     "Use {{metal_karat}} {{metal_color}} metal with a {{finish}} finish, {{stone_coverage}} {{gemstone}}, {{size_profile}} scale, and approved dimensions {{dimensions}}.",
     "Show the pendant on its {{chain_style}} chain at {{chain_length}}. Do not invent, remove, or reshape identity details.",
@@ -215,19 +215,19 @@ export const BASELINE_PROMPT_TEMPLATES: Readonly<
     "Campaign photograph of the necklace toward the right of a matte-black paper sweep, lit by one narrow warm spotlight with subtle metal rim light and calm empty darkness to the left.",
   ),
   "video.preview": [
-    "Create a restrained silent {{presentation_view}} motion preview from the approved still for {{approved_name}} ({{language}}; Arabic style: {{arabic_style}}).",
+    "Create a restrained silent {{presentation_view}} motion preview from the approved still for {{approved_name}} ({{language}}; lettering style: {{arabic_style}}).",
     "Keep {{layout}} geometry, spelling and attachments unchanged throughout every frame.",
     "Preserve {{metal_karat}} {{metal_color}} metal, {{finish}} finish, {{stone_coverage}} {{gemstone}}, {{size_profile}} scale, {{dimensions}}, and the {{chain_style}} chain at {{chain_length}}.",
     "Use only subtle product-camera movement and controlled specular light; no morphing or new objects. {{inspiration_rule}}",
   ].join(" "),
   "video.final": [
-    "Create a polished silent {{presentation_view}} final product film from the approved still for {{approved_name}} ({{language}}; Arabic style: {{arabic_style}}).",
+    "Create a polished silent {{presentation_view}} final product film from the approved still for {{approved_name}} ({{language}}; lettering style: {{arabic_style}}).",
     "Keep exact spelling, {{layout}} geometry and attachments stable for the full shot.",
     "Preserve {{metal_karat}} {{metal_color}} metal, {{finish}} finish, {{stone_coverage}} {{gemstone}}, {{size_profile}} scale, {{dimensions}}, and the {{chain_style}} chain at {{chain_length}}.",
     "Use elegant, restrained camera motion and realistic light only; do not morph the pendant or introduce unapproved details. {{inspiration_rule}}",
   ].join(" "),
   "verification.image": [
-    "Verify the supplied generated image against the immutable silhouette and approved configuration for {{approved_name}} ({{language}}; Arabic style: {{arabic_style}}).",
+    "Verify the supplied generated image against the immutable silhouette and approved configuration for {{approved_name}} ({{language}}; lettering style: {{arabic_style}}).",
     "Require exact spelling and script, the same identity and {{layout}} geometry, exactly two connected jump rings with coherent {{chain_style}} chain attachment at {{chain_length}}, {{metal_karat}} {{metal_color}} {{finish}} metal, {{stone_coverage}} {{gemstone}}, {{size_profile}} dimensions {{dimensions}}, and the requested {{presentation_view}} shot.",
     "Reject any added letters, names, charms, duplicate pendants, missing or third rings, malformed chain attachment, incoherent pendant, or wrong shot. {{inspiration_rule}}",
   ].join(" "),
@@ -651,7 +651,7 @@ function stillTemplate(view: keyof typeof STILL_VIEW_BRIEFS): string {
 At each of the two stencil eyelets, the chain's terminal link physically passes THROUGH the open aperture. Show the link's front arc crossing the hole and its back arc behind the eyelet: interlocking metal, with daylight visible on both sides of the link inside the hole. Never show an empty hole with chain behind it, a link merely touching the rim, or chain resting beside the eyelet. Keep each eyelet fused into the pendant exactly as @stencil draws it. No extra eyelet, bail or hardware substitutes. One {{chain_style}} chain, {{chain_length}}, same gold, attached at both ends; no clasp in frame, no chain crossing any letter.
 
 IDENTITY AND OBJECT
-Photograph ONE finished physical name pendant. Approved name: "{{approved_name}}"; script {{language}} (en left-to-right Latin, ar right-to-left Arabic), Arabic lettering {{arabic_style}}, layout {{layout}}. Preserve every stencil glyph, dot, mark, outline, bridge, spacing and ring hole exactly. Do not redesign, mirror, rotate, duplicate, add or remove anything. The complete pendant is one continuous piece of cast gold: all letters and marks physically fused by the stencil bridges, no disconnected islands. No second spelling anywhere.
+Photograph ONE finished physical name pendant. Approved name: "{{approved_name}}"; script {{language}} (en left-to-right Latin, ar right-to-left Arabic), lettering style {{arabic_style}}, layout {{layout}}. Preserve every stencil glyph, dot, mark, outline, bridge, spacing and ring hole exactly. Do not redesign, mirror, rotate, duplicate, add or remove anything. The complete pendant is one continuous piece of cast gold: all letters and marks physically fused by the stencil bridges, no disconnected islands. No second spelling anywhere.
 {{construction}}
 {{inspiration_rule}}
 
@@ -704,7 +704,7 @@ function imageTemplate(scene: string): string {
     scene,
     "The first supplied image is the ONE AND ONLY geometry law: reproduce its exact black pendant silhouette, character order, fused marks and two hollow jump rings without adding, removing, separating or redrawing anything.",
     "The second supplied image is a style reference only: match its framing, light, palette, setting and mood, but never copy its pendant, name, letterforms, text or objects.",
-    "The piece is a personalised pendant for {{approved_name}} ({{language}}; Arabic style {{arabic_style}}), preserving {{layout}} geometry. Render {{metal_karat}} {{metal_color}} metal with a {{finish}} finish, {{stone_coverage}} {{gemstone}}, {{size_profile}} scale and approved dimensions {{dimensions}}. Use its {{chain_style}} chain at {{chain_length}}.",
+    "The piece is a personalised pendant for {{approved_name}} ({{language}}; lettering style {{arabic_style}}), preserving {{layout}} geometry. Render {{metal_karat}} {{metal_color}} metal with a {{finish}} finish, {{stone_coverage}} {{gemstone}}, {{size_profile}} scale and approved dimensions {{dimensions}}. Use its {{chain_style}} chain at {{chain_length}}.",
     "Requested presentation view: {{presentation_view}}. The pendant is the sharpest visual hero. Stones are placed into approved stroke areas, never coated over letterform boundaries. The chain threads into both jump rings with no gap. Real unretouched photograph with faint grain; no artificial glow, text, logos, watermarks, extra jewellery, charms, letters, names or duplicate pendants. {{inspiration_rule}}",
   ].join(" ");
 }
