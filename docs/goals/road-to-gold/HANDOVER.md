@@ -34,7 +34,7 @@ occurred.
 | --- | --- |
 | Live URL | https://jewelo-staging-gqumd.ondigitalocean.app/en/design/new |
 | Active deployed commit | `eba96fd6edcdecc92e9133dbfa5c449e18156a25` (`eba96fd`), DigitalOcean deployment `84f54bd8-927f-48cd-b871-071e7fc78923` (ACTIVE) |
-| Branch head | `codex/overnight-launch-2026-09-08` at `eba96fd6edcdecc92e9133dbfa5c449e18156a25` |
+| Branch head | `codex/overnight-launch-2026-09-08` at `c08f39d` (documentation-only handover update after the active deployment) |
 | Provider mode | Production runtime: `real` selected from `NODE_ENV=production`; protected readiness reports `provider: real`. Local development/test defaults remain mock unless explicitly set otherwise. |
 | Live readiness | HTTP 200: Supabase configured; Inngest configured, self-hosted, `keyEnvironment=prod`, crons registered; OpenAI configured; trusted client IP header valid. |
 | Deployment scope | Production intentionally skipped; one DigitalOcean staging instance only. |
