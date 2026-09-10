@@ -30,7 +30,8 @@ Phase 7 is the shop side: an operator queue with contacted, fulfilled, cancelled
 
 Right now staging runs in mock mode: the whole pipeline completes, the fake photographs are refused by the page, and the shopper is told the shop will send the real one.
 Two review rounds tonight (a security review and a storyline review, then a review of those fixes) closed twenty findings and found one live blocker: a permissions tightening had silently broken the request capture for every shopper on staging for about two hours.
-That is fixed at the database and the staging proof is the first thing the next session does.
+That is fixed at the database, but the anonymous request/replay proof still remains open.
+This session also closed a Mac mini-only development failure: requests through `127.0.0.1:3011` and the Tailscale address were server-rendered but did not hydrate because Next rejected their dev HMR origins; the port-3011 service now has explicit origins and its own Turbopack cache/lock.
 After that the order is: deploy the four pushed commits, finish fix pass 7 and run adversarial pass 7, close the remaining review minors, drive the seven-viewport ladder with screenshots, and then, on Sanchay's yes, the first real photograph.
 
 ## Status
@@ -38,16 +39,16 @@ After that the order is: deploy the four pushed commits, finish fix pass 7 and r
 | | |
 | --- | --- |
 | Live URL | https://jewelo-staging-gqumd.ondigitalocean.app/en/design/new |
-| Deployed commit | `f63b3e3` (DigitalOcean deployment `e04b835e`, ACTIVE 8 Sep 23:16 UTC). Three later commits (`d358b81`, `200bcfe`, `5753ae7`) are pushed and not yet deployed. |
-| Branch head | `codex/overnight-launch-2026-09-08`; build `corepack pnpm build` 13 of 13 on the handed-over tree |
+| Deployed commit | `f63b3e3` (DigitalOcean deployment `e04b835e`, ACTIVE 8 Sep 23:16 UTC). Later product commits remain pushed and not yet deployed; `8852445` is local development plumbing only. |
+| Branch head | `codex/overnight-launch-2026-09-08` at `8852445`; `JEWELO_DEV_DIST_DIR=.next-build-verify corepack pnpm build` passed 13 of 13 |
 | Side branch | `codex/fix-pass-7-wip` (`93c22af`): P1-5 fix pass 7, half written, unproven, do not deploy |
 | Provider mode | mock. Runs complete with fake stills the UI refuses to show; the shopper is told the shop will send the photograph. |
 | Phase | 0 closed; 40 of 56 task rows done, 36 of 56 storyline steps proved (65%). Next task ids: `P1-5` (fix pass 7 then adversarial pass 7), then `P2-3`. |
-| Sessions | 3 (7, 8 and 9 September 2026) |
+| Sessions | 4 (7, 8, 9 and 10 September 2026) |
 
 ## What a shopper gets today
 
-Seen in the lead's own browser on staging this session.
+Seen in the lead's own browser on staging in the prior dogfood session.
 `/` and `/en` land on the design page.
 The shopper types a name in English or Arabic, picks a look, sees a catalogue sample marked as the shop's sample and not their piece, gets a one-line note when two Arabic names are typed, confirms the spelling, and is told the shop will send the photograph.
 The request lands in the operator queue at `/en/operator` with the exact specification, a phone or WhatsApp link, and the commands contacted, fulfilled, cancelled and note.
@@ -83,15 +84,16 @@ Session 3 (8 to 9 September). Session 2's rows and shas are in `docs/TASKS.md` a
 - P2-2b framed-minimal and diamond-rails carriers in the stencil, D-021 (`f0bb7cd`).
 - Security review 2 fixed, 13 findings (`ec45a3e`); storyline review 1 fixed (`7789d31`); fix review 3 BL-1 fixed (`d358b81`); storyline fix 2 (`200bcfe`).
 - Three staging deployments proved by hand: `b1ea4b6d`, `7db85045`, `f19f6b0c`; `e04b835e` is live now.
+- Session 4 local hydration fix (`8852445`): development HMR origins explicitly allow `localhost`, `127.0.0.1` and `100.102.144.100`; port 3011 uses `.next-3011` so it cannot share the Turbopack lock with the unrelated port-3001 process. Local health was 200 on loopback and Tailscale, React fibers were present after restart, the 390x844 `02 Style` accordion changed from collapsed/hidden to expanded/visible, and the isolated build passed 13/13. This was not deployed because it only affects the local development service.
 
 ## Evidence
 
 - `docs/goals/road-to-gold/dogfood-2026-09-08/staging-journey.md`: every staging deployment this session with the probes run against it.
+- Session 4 local development proof is recorded in `docs/goals/road-to-gold/PROGRESS.md` and commit `8852445`; the LaunchAgent change is outside the repository at `/Users/sanchay/Library/LaunchAgents/com.jewelo.dev-web.plist`.
 - `docs/goals/road-to-gold/reviews/`: `identity-engine-adversarial-4` to `-6`, `security-review-2`, `storyline-review-1`, `fix-review-3`, `fix-2-review-1`, `fix-3-review-1`, `security-tooling-fix-review-1`, `ux-review-1`.
 - `docs/goals/overnight-launch/IMAGE-LAB.md`: the v4.3 prompts and the construction slot.
 - Session log: `docs/goals/road-to-gold/PROGRESS.md`.
-- The viewport ladder (1440x900 to 320x568, RTL, reduced motion) with screenshots is not recorded for this session: the Browser pane became unreachable from the session in its last hour.
-  The journeys were driven at the pane's default size only.
+- The viewport ladder (1440x900 to 320x568, RTL, reduced motion) with screenshots is not recorded for this session: the Browser pane became unreachable from the session in its last hour. The local hydration proof used the pane's default desktop size plus a 390x844 viewport check; no staging ladder was run.
 
 ## Decisions taken by default
 
