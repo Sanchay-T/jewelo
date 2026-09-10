@@ -1,7 +1,8 @@
 # CALEUMS handover
 
 This file is the handover. Its content is mirrored into the description of
-https://github.com/Sanchay-T/jewelo/pull/12; that pull request is the deliverable.
+https://github.com/Sanchay-T/jewelo/pull/12; that pull request is merged into
+`main` and remains the durable delivery record.
 
 ## The whole story, in plain paragraphs
 
@@ -15,10 +16,13 @@ The identity engine, prompt registry, anchors, operator queue, spend ledger,
 Inngest runner, security fixes, and the shopper's honest mock-degrade path are
 implemented. The atelier now exposes every construction and lettering style in
 the request contract; the identity and verifier gates still decide whether a
-specific name can be made. P1-5 remains open because the last two adversarial
-identity passes must still find nothing above minor. P5-2/P5-3 remain open
-because the first paid OpenAI run needs Sanchay's explicit spend decision and
-the measured identity gate must be complete.
+specific name can be made. P1-5 remains open because the latest pass-7 work
+still needs its full matrix, named-render inspection, and two consecutive clean
+adversarial reviews. P2-3 through P2-7 remain open because the live real-provider
+branch still uses `MockStudioVerifier` and the deterministic photographic gate
+has not yet been wired and proved. P5-2/P5-3 remain open because the first paid
+OpenAI run needs Sanchay's explicit spend decision and the measured identity
+gate must be complete.
 
 This session closed the cloud-provider ambiguity. Local development may use the
 mock adapter. Any `NODE_ENV=production` process selects the real provider and
@@ -34,13 +38,14 @@ occurred.
 | --- | --- |
 | Live URL | https://jewelo-staging-gqumd.ondigitalocean.app/en/design/new |
 | Active deployed commit | `eba96fd6edcdecc92e9133dbfa5c449e18156a25` (`eba96fd`), DigitalOcean deployment `84f54bd8-927f-48cd-b871-071e7fc78923` (ACTIVE) |
-| Branch head | `codex/overnight-launch-2026-09-08` at the final pushed documentation-only handover tip after the active deployment |
+| Branch head | `main` at merged commit `ebea6d06a87107e85b0dc205ea8665f29c466f5d` (`ebea6d0`); source branch `codex/overnight-launch-2026-09-08` remains at `b734e57` |
 | Provider mode | Production runtime: `real` selected from `NODE_ENV=production`; protected readiness reports `provider: real`. Local development/test defaults remain mock unless explicitly set otherwise. |
 | Live readiness | HTTP 200: Supabase configured; Inngest configured, self-hosted, `keyEnvironment=prod`, crons registered; OpenAI configured; trusted client IP header valid. |
 | Deployment scope | Production intentionally skipped; one DigitalOcean staging instance only. |
 | Build/lint | `corepack pnpm build`: 13/13; `corepack pnpm lint`: 13/13. |
-| Phase / next task | Phase 0 closed; P1-5 identity proof, then P2-3/P5-2 remain. The cloud provider guard and all-look cleanup are deployed; no paid run was made. |
-| Sessions | 7 (7–10 September 2026) |
+| Phase / next task | Phase 0 closed; P1-5 identity proof, then P2-3/P2-7 and P5-2/P5-3 remain. The cloud provider guard and all-look cleanup are deployed; no paid run was made. |
+| Merge | PR #12 merged 10 September 2026 at `ebea6d06a87107e85b0dc205ea8665f29c466f5d`; no direct `main` push was used. |
+| Sessions | 8 (7–10 September 2026) |
 
 ## What a shopper gets today
 
@@ -51,8 +56,8 @@ normal flow; there is no deployment allowlist and no Reference-only lockout.
 The page still uses the honest mock-degrade path until a paid real run is
 authorized: fake assets are refused by the UI and the customer is told the shop
 will send the photograph. No customer-facing real image was generated in this
-session. The browser viewport ladder, RTL, and reduced-motion staging pass are
-still open.
+session. The full shopper flow is coherent through request capture, but the
+seven-viewport, RTL, and reduced-motion staging ladder is still open.
 
 The local app is open in the Codex in-app Browser at
 `http://localhost:3011/en/design/new`. Its local Next dev server returns HTTP
@@ -85,10 +90,13 @@ using the local design page.
   was deployed as `84f54bd8-927f-48cd-b871-071e7fc78923` and smoke-tested live.
 - `corepack pnpm build`, `corepack pnpm lint`, shell/module syntax, and diff
   checks passed. No provider or image-generation call occurred.
+- PR #12 was marked ready and merged with squash commit
+  `ebea6d06a87107e85b0dc205ea8665f29c466f5d`; local `main` was fast-forwarded
+  to that exact commit and the tracked worktree is clean.
 
 ## Evidence
 
-- `docs/goals/road-to-gold/PROGRESS.md`, Session 5 entry.
+- `docs/goals/road-to-gold/PROGRESS.md`, Sessions 5–8 entries.
 - `scripts/digitalocean/smoke.sh` against the live URL: health and protected
   readiness both passed; protected readiness returned `provider=real`,
   `keyEnvironment=prod`, configured Supabase/OpenAI, self-hosted Inngest and a
@@ -104,6 +112,10 @@ using the local design page.
   `JEWELO_CLOUD_TARGET`, or `NEXT_PUBLIC_SELLABLE_*`.
 - Existing identity adversarial reviews and the prompt/style-anchor lab remain
   in `docs/goals/road-to-gold/reviews/` and `docs/goals/overnight-launch/`.
+- The all-look browser proof is in
+  `docs/goals/road-to-gold/dogfood-2026-09-10/declutter-styles-390x844.png`
+  and `declutter-styles-expanded-390x844.png`; the merge proof is PR #12 and
+  the `main`/`origin/main` equality at `ebea6d0`.
 
 ## Decisions taken by default
 
@@ -147,6 +159,12 @@ using the local design page.
    treated as a gate.
 6. P3-6, P3-5, P2-3–P2-7, P5-2/P5-3, P7-4/P7-8, and L-1–L-4 remain in the
    ordered task list.
+7. Styles are selectable but not all visually distinct in the deterministic
+   identity layer: Arabic classic, diwani, and signature currently share the
+   Naskh face; P3-5 owns the broader style-quality proof.
+8. The real presentation branch currently combines `OpenAIStillAdapter` with
+   `MockStudioVerifier` and `OpenAINameReader`; the photographic verifier and
+   exact name/attachment reader acceptance remain P2 work.
 
 ## Rollback
 
@@ -182,3 +200,17 @@ using the local design page.
   `declutter-styles-expanded-390x844.png`; live staging proof and smoke used
   deployment `84f54bd8-927f-48cd-b871-071e7fc78923`. Build and lint were both
   13/13; no paid provider call was made.
+
+### Session 8 merge and status refresh (2026-09-10)
+
+- Removed the old no-merge instruction from `CLAUDE.md`, committed as
+  `b734e57`, marked PR #12 ready, and merged it through GitHub as squash commit
+  `ebea6d06a87107e85b0dc205ea8665f29c466f5d`.
+- Fetched `origin/main`, fast-forwarded local `main` to the merge commit, and
+  confirmed `main...origin/main` is clean. The generated Next type declaration
+  remains ignored/local-only; no customer media, style anchors, or secrets were
+  added.
+- Read-only audits confirm the journey, all-look selection, identity chain,
+  prompt registry, style-anchor publication, operator queue, and deployment
+  boundary. The open release gates are recorded above; no paid provider call
+  was made.

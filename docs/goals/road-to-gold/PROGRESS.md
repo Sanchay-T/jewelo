@@ -286,3 +286,17 @@ Open:
   `Framed minimal` + `Kufi`. Staging deployment `84f54bd8-927f-48cd-b871-071e7fc78923`
   is ACTIVE at branch head `eba96fd`; smoke and protected readiness passed with
   `provider=real`. No paid provider call.
+
+### Session 8 merge and status refresh (2026-09-10)
+
+- Removed the old no-merge clause from `CLAUDE.md` in `b734e57`, marked PR #12
+  ready, and merged it through GitHub as squash commit
+  `ebea6d06a87107e85b0dc205ea8665f29c466f5d`. Local `main` was fast-forwarded
+  to that commit and `main...origin/main` is clean.
+- Read-only feature/style/prompt audits confirm that the four-stage shopper
+  flow and all four constructions × six lettering choices are implemented and
+  live on staging. They also confirm the remaining release gates: P1-5 pass-7
+  proof, P2-3–P2-7 verifier/reader wiring and replay, P3-5/P3-6 style/dependent
+  view proof, P5-2/P5-3 paid real run, and the lead-owned browser ladder.
+- No files other than this documentation refresh were changed after the merge;
+  no provider call or paid spend occurred.
