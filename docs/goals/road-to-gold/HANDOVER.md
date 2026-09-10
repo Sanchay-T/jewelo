@@ -38,13 +38,13 @@ occurred.
 | --- | --- |
 | Live URL | https://jewelo-staging-gqumd.ondigitalocean.app/en/design/new |
 | Active deployed commit | `eba96fd6edcdecc92e9133dbfa5c449e18156a25` (`eba96fd`), DigitalOcean deployment `84f54bd8-927f-48cd-b871-071e7fc78923` (ACTIVE) |
-| Branch head | `main` at merged commit `ebea6d06a87107e85b0dc205ea8665f29c466f5d` (`ebea6d0`); source branch `codex/overnight-launch-2026-09-08` remains at `b734e57` |
+| Branch head | `main` at merged commit `abd137110f68ac20679d4e98f1c91587ffaa4b91` (`abd1371`); source branch `codex/overnight-launch-2026-09-08` remains at `b734e57` |
 | Provider mode | Production runtime: `real` selected from `NODE_ENV=production`; protected readiness reports `provider: real`. Local development/test defaults remain mock unless explicitly set otherwise. |
 | Live readiness | HTTP 200: Supabase configured; Inngest configured, self-hosted, `keyEnvironment=prod`, crons registered; OpenAI configured; trusted client IP header valid. |
 | Deployment scope | Production intentionally skipped; one DigitalOcean staging instance only. |
 | Build/lint | `corepack pnpm build`: 13/13; `corepack pnpm lint`: 13/13. |
 | Phase / next task | Phase 0 closed; P1-5 identity proof, then P2-3/P2-7 and P5-2/P5-3 remain. The cloud provider guard and all-look cleanup are deployed; no paid run was made. |
-| Merge | PR #12 merged 10 September 2026 at `ebea6d06a87107e85b0dc205ea8665f29c466f5d`; no direct `main` push was used. |
+| Merge | PR #12 merged 10 September 2026 at `ebea6d06a87107e85b0dc205ea8665f29c466f5d`; prompt wording fix PR #14 merged at `abd1371`; no direct `main` push was used. |
 | Sessions | 8 (7–10 September 2026) |
 
 ## What a shopper gets today
@@ -93,6 +93,9 @@ using the local design page.
 - PR #12 was marked ready and merged with squash commit
   `ebea6d06a87107e85b0dc205ea8665f29c466f5d`; local `main` was fast-forwarded
   to that exact commit and the tracked worktree is clean.
+- The prompt compatibility slot was corrected in PR #14 so English prompts say
+  `lettering style` rather than `Arabic style`; the existing `arabic_style` key
+  remains stable for stored releases and Arabic runs.
 
 ## Evidence
 

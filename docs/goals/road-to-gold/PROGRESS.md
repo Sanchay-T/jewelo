@@ -300,3 +300,13 @@ Open:
   view proof, P5-2/P5-3 paid real run, and the lead-owned browser ladder.
 - No files other than this documentation refresh were changed after the merge;
   no provider call or paid spend occurred.
+
+### Session 9 prompt wording correction (2026-09-10)
+
+- The canonical prompt registry previously labelled the shared compatibility
+  slot as `Arabic style` even for English pieces. Updated the prompt prose and
+  variable description to `lettering style` while preserving the existing
+  `arabic_style` key and release shape. Build passed 13/13; no provider call was
+  made.
+- Merged through PR #14 as `abd137110f68ac20679d4e98f1c91587ffaa4b91`; local
+  `main` and `origin/main` now point at that commit.
