@@ -13,10 +13,12 @@ it, and verification refuses drift.
 
 The identity engine, prompt registry, anchors, operator queue, spend ledger,
 Inngest runner, security fixes, and the shopper's honest mock-degrade path are
-implemented. P1-5 remains open because the last two adversarial identity passes
-must still find nothing above minor. P5-2/P5-3 remain open because the first
-paid OpenAI run needs Sanchay's explicit spend decision and the measured
-identity gate must be complete.
+implemented. The atelier now exposes every construction and lettering style in
+the request contract; the identity and verifier gates still decide whether a
+specific name can be made. P1-5 remains open because the last two adversarial
+identity passes must still find nothing above minor. P5-2/P5-3 remain open
+because the first paid OpenAI run needs Sanchay's explicit spend decision and
+the measured identity gate must be complete.
 
 This session closed the cloud-provider ambiguity. Local development may use the
 mock adapter. Any `NODE_ENV=production` process selects the real provider and
@@ -31,24 +33,26 @@ occurred.
 | | |
 | --- | --- |
 | Live URL | https://jewelo-staging-gqumd.ondigitalocean.app/en/design/new |
-| Active deployed commit | `cc9fb01c8153d1c562a50da281f9137605eda5b0` (`cc9fb01`), DigitalOcean deployment `b50be520-f728-4234-870e-7141dbea3cfa` (ACTIVE, 9/9) |
-| Branch head | `codex/overnight-launch-2026-09-08` at the handover commit recorded below |
+| Active deployed commit | `eba96fd6edcdecc92e9133dbfa5c449e18156a25` (`eba96fd`), DigitalOcean deployment `84f54bd8-927f-48cd-b871-071e7fc78923` (ACTIVE) |
+| Branch head | `codex/overnight-launch-2026-09-08` at `eba96fd6edcdecc92e9133dbfa5c449e18156a25` |
 | Provider mode | Production runtime: `real` selected from `NODE_ENV=production`; protected readiness reports `provider: real`. Local development/test defaults remain mock unless explicitly set otherwise. |
 | Live readiness | HTTP 200: Supabase configured; Inngest configured, self-hosted, `keyEnvironment=prod`, crons registered; OpenAI configured; trusted client IP header valid. |
 | Deployment scope | Production intentionally skipped; one DigitalOcean staging instance only. |
 | Build/lint | `corepack pnpm build`: 13/13; `corepack pnpm lint`: 13/13. |
-| Phase / next task | Phase 0 closed; P1-5 identity proof, then P2-3/P5-2 remain. The cloud provider guard is deployed; no paid run was made. |
-| Sessions | 6 (7–10 September 2026) |
+| Phase / next task | Phase 0 closed; P1-5 identity proof, then P2-3/P5-2 remain. The cloud provider guard and all-look cleanup are deployed; no paid run was made. |
+| Sessions | 7 (7–10 September 2026) |
 
 ## What a shopper gets today
 
 The staging URL is live and its public health endpoint returns HTTP 200. The
 protected readiness probe is also HTTP 200 with the production dependency proof
-above. The page still uses the honest non-sellable/mock path for any run that is
-not authorized to spend: fake assets are refused by the UI and the customer is
-told the shop will send the photograph. No customer-facing real image was
-generated in this session. The browser viewport ladder, RTL, and reduced-motion
-staging pass are still open.
+above. All four constructions and six lettering styles are selectable in the
+normal flow; there is no deployment allowlist and no Reference-only lockout.
+The page still uses the honest mock-degrade path until a paid real run is
+authorized: fake assets are refused by the UI and the customer is told the shop
+will send the photograph. No customer-facing real image was generated in this
+session. The browser viewport ladder, RTL, and reduced-motion staging pass are
+still open.
 
 The local app is open in the Codex in-app Browser at
 `http://localhost:3011/en/design/new`. Its local Next dev server returns HTTP
@@ -74,6 +78,11 @@ using the local design page.
   the env-spec cleanup, not used as the active rollback target.
 - Removed legacy cloud activation/build flags from deploy and bootstrap; pushed
   as `cc9fb01` and deployed ACTIVE as `b50be520-f728-4234-870e-7141dbea3cfa`.
+- Removed the custom `NEXT_PUBLIC_SELLABLE_*` look allowlist and made the
+  request-contract set code-owned (`f9dcdc1`, followed by documentation/comment
+  cleanup in `eba96fd`). All four constructions and six lettering styles remain
+  selectable; stale allowlist keys are deleted during deploy sync. The branch
+  was deployed as `84f54bd8-927f-48cd-b871-071e7fc78923` and smoke-tested live.
 - `corepack pnpm build`, `corepack pnpm lint`, shell/module syntax, and diff
   checks passed. No provider or image-generation call occurred.
 
@@ -81,14 +90,18 @@ using the local design page.
 
 - `docs/goals/road-to-gold/PROGRESS.md`, Session 5 entry.
 - `scripts/digitalocean/smoke.sh` against the live URL: health and protected
-  readiness both passed; readiness JSON was inspected without printing secrets.
-- In-app Browser proof: `http://localhost:3011/en/design/new`, title `Create your
-  piece · CALEUMS`, interactive Design steps visible, zero browser error/warning
-  logs.
-- DigitalOcean deployment record `b50be520-f728-4234-870e-7141dbea3cfa` shows
-  source hash `cc9fb01c8153d1c562a50da281f9137605eda5b0`, `pnpm start`, and
-  ACTIVE 9/9. The final web env key list contains none of
-  `PROVIDER_MODE`, `JEWELO_CLOUD_BUILD`, or `JEWELO_CLOUD_TARGET`.
+  readiness both passed; protected readiness returned `provider=real`,
+  `keyEnvironment=prod`, configured Supabase/OpenAI, self-hosted Inngest and a
+  valid trusted IP header. Secrets were not printed.
+- In-app Browser proof: local `http://localhost:3011/en/design/new` and live
+  staging `/en/design/new` both show all four constructions and six lettering
+  styles; Framed minimal + Kufi selects without a Reference-only label, and the
+  staging browser recorded zero console errors.
+- DigitalOcean deployment record `84f54bd8-927f-48cd-b871-071e7fc78923` is
+  ACTIVE from branch `codex/overnight-launch-2026-09-08` at
+  `eba96fd6edcdecc92e9133dbfa5c449e18156a25`. The live web env key list
+  contains none of `PROVIDER_MODE`, `JEWELO_CLOUD_BUILD`,
+  `JEWELO_CLOUD_TARGET`, or `NEXT_PUBLIC_SELLABLE_*`.
 - Existing identity adversarial reviews and the prompt/style-anchor lab remain
   in `docs/goals/road-to-gold/reviews/` and `docs/goals/overnight-launch/`.
 
@@ -98,8 +111,8 @@ using the local design page.
   `PROVIDER_MODE` convenience is not a cloud control.
 - The existing spend ceiling remains the automatic guard: no real dispatch
   without the configured daily reservation and attempt ceilings.
-- Existing defaults remain: HarfBuzz identity engine (DS-3/D-019), configured
-  sellable set (DS-4/D-022), studio-only smoke (DS-6), dependency-free SMTP/log
+- Existing defaults remain: HarfBuzz identity engine (DS-3/D-019), the full
+  request-contract look set (D-022), studio-only smoke (DS-6), dependency-free SMTP/log
   notification (DS-8), empty-key observability (DS-9), and the Inngest sweeper
   recovery model (DS-10).
 
@@ -146,3 +159,21 @@ using the local design page.
 - Automatic real-mode ceilings remain enforced by configuration and the worker.
 - DigitalOcean: one staging app; the current and follow-up deployments are
   ordinary App Platform updates.
+
+### Session 7 custom restriction cleanup (2026-09-10)
+
+- Removed the deployment-time `NEXT_PUBLIC_SELLABLE_*` allowlist and the
+  customer-facing Reference-only gate. `sellableLooks()` now mirrors the
+  request contract directly: four constructions and six lettering styles in
+  either script. Missing catalogue photographs may still be labelled honestly,
+  but they no longer make a contract option non-sellable.
+- Preserved the safety boundaries that are independent of presentation:
+  exact spelling and script rules, Arabic one-name support, deterministic
+  geometry, provider verification, auth, idempotency, spend reservation and
+  rollback/state gates. Invalid or future values outside the contract still
+  fail closed before a run starts.
+- Local browser proof was captured at
+  `docs/goals/road-to-gold/dogfood-2026-09-10/declutter-styles-390x844.png` and
+  `declutter-styles-expanded-390x844.png`; live staging proof and smoke used
+  deployment `84f54bd8-927f-48cd-b871-071e7fc78923`. Build and lint were both
+  13/13; no paid provider call was made.

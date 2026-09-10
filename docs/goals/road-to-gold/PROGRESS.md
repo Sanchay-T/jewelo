@@ -277,10 +277,12 @@ Open:
   gates remain unchanged.
 - Removed the override from the local environment and deployment contract;
   deploy sync also deletes stale copies from an existing app spec. Decision and
-  feedback docs now record the user-directed all-look behavior. No deploy or
-  provider call. Local browser proof at
+  feedback docs now record the user-directed all-look behavior. Local browser
+  proof at
   `dogfood-2026-09-10/declutter-styles-expanded-390x844.png` (and the full-page
   `declutter-styles-390x844.png`): 1440×900, 390×844, and
   Arabic RTL all render without reference-only labels, browser errors, or
   horizontal overflow; the review confirmation remains enabled for
-  `Framed minimal` + `Kufi`.
+  `Framed minimal` + `Kufi`. Staging deployment `84f54bd8-927f-48cd-b871-071e7fc78923`
+  is ACTIVE at branch head `eba96fd`; smoke and protected readiness passed with
+  `provider=real`. No paid provider call.
