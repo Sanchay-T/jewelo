@@ -62,11 +62,11 @@ Accept: `grep -c "example" apps/web/src/features/atelier/Atelier.tsx` drops to t
 
 Accept: the strings "THE NAME ATELIER", "Language / script", "YOUR SPELLING" no longer exist in `apps/web/src`; the rendered page shows the typed name exactly twice on the design step (input and selections heading).
 
-### 4. Hide unproven looks instead of marking them (DS-4 default)
+### 4. Hide unproven looks instead of marking them (historical DS-4 proposal)
 
-Today three of four construction tiles say "Not yet photographed" and five of six lettering tiles say "Sample coming"; the page looks three-quarters unfinished.
+At the time of this brief, three of four construction tiles said "Not yet photographed" and five of six lettering tiles said "Sample coming"; the page looked three-quarters unfinished. This item was superseded by the 10 September user direction to remove the custom sellable restriction.
 
-Change: an option outside the sellable set (`packages/config/src/sellable.ts`) is not rendered at all in the design step. Keep `notPhotographed()` and `data-not-photographed` for an option that is sellable but has no sample yet. If the current selection (restored from the device record) is no longer sellable, reset it to the first sellable option and say nothing. Remove the "Not yet photographed; the shop will confirm this look by hand" field note. Delete the "Sample coming" small text on lettering tiles; a tile either shows a sample or the name rendering from item 5.
+Change (not applied): an option outside the sellable set (`packages/config/src/sellable.ts`) would not be rendered at all in the design step. Keep `notPhotographed()` and `data-not-photographed` for an option that is sellable but has no sample yet. The current implementation instead makes the contract itself the sellable set; it may still label a missing catalogue sample, but it does not disable or hide that look.
 
 Accept: the design step shows all four construction tiles and all six lettering tiles in either script. No deployment value can hide or widen the set; a reviewed identity/verifier change is the only way to alter support.
 

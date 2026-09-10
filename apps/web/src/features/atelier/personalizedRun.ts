@@ -398,18 +398,14 @@ export function pastCeiling(
  * - `arabic_two_name`: the Arabic identity engine solves exactly one name
  *   (`unsupported_arabic_two_name`), so a two-name Arabic pendant would burn a
  *   run, a reservation and a slot of the daily allowance only to end blocked.
- * - `unsupported_construction` and `unsupported_lettering`: the pendant
- *   construction and the English lettering style are recorded on the draft and
- *   the immutable revision, but neither the compiled prompt nor the identity
- *   stencil carries them - `create_prompt_release` pins a fixed 14-variable set
- *   with no construction slot (packages/ai/src/prompt-registry.ts), and the
- *   Latin stencil is hard-coded to Playfair Display
- *   (apps/jobs/src/identity-anchor.ts). A run for Origami ribbon or for
- *   Signature English would therefore photograph a Classical, Playfair pendant
- *   and label it "Your piece": a picture of a different design. Arabic
- *   lettering is unrestricted by default because `arabicStyle` IS threaded
- *   through the specification into both the prompt and the identity engine,
- *   which then fails closed on its own for a style it has not certified.
+ * - `unsupported_construction` and `unsupported_lettering`: a value outside
+ *   the request contract is refused before a draft can reserve a run. The
+ *   contract currently contains every construction and lettering style shown
+ *   by the atelier; `sellableLooks()` mirrors that vocabulary so there is no
+ *   second deployment allowlist that can drift from the prompt or stencil.
+ *   These refusal codes remain as a defensive boundary for stale clients,
+ *   malformed requests, or a future option that has not been wired through the
+ *   identity/prompt path.
  *
  * Each of these goes straight to request capture instead of a run.
  */
@@ -419,9 +415,10 @@ export type PreflightRefusal =
   | "unsupported_lettering";
 
 /**
- * D-022. The shop's current sellable set is deterministic and code-owned.
- * Unsupported looks stay blocked before request capture or any run starts, so
- * a prompt can never photograph one design and label it as another.
+ * D-022. The shop's current option set is deterministic and code-owned.
+ * Contract options are available without a deployment override; values outside
+ * that set stay blocked before request capture or any run starts, so a prompt
+ * can never photograph one design and label it as another.
  */
 const SELLABLE = sellableLooks();
 

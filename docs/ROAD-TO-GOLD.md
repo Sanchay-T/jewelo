@@ -114,12 +114,15 @@ Phase 4 is therefore a publication job, not a generation job.
 They are classified `private-brand-reference` and must never be committed: **the GitHub repository `Sanchay-T/jewelo` is public.**
 Their durable home is private Supabase Storage as immutable `style_anchor_releases`, which is what phase 4 does.
 
-### 5. The interface over-promises
+### 5. The interface over-promised (resolved 10 September 2026)
 
-`preflightRefusal` in `apps/web/src/features/atelier/personalizedRun.ts:344-360` skips the run for two-name Arabic, any construction other than Classical, and any English lettering other than Classic.
-That is 3 of 4 constructions and 5 of 6 letterings.
-The design stage presents all of them as equal choices.
-The shopper discovers the refusal only after ticking the confirm box.
+The temporary deployment allowlist that limited the run to Classical and Classic
+has been removed. The design stage now presents all four contract constructions
+and all six lettering styles, and `sellableLooks()` is code-owned rather than
+controlled by `NEXT_PUBLIC_SELLABLE_*` environment values. `preflightRefusal`
+still refuses two-name Arabic and any malformed or future option outside the
+request contract before a run or spend reservation; the identity solver and
+verifier remain the authority for whether a specific name is safe to make.
 
 ### 6. The primary button does not do what it says
 
