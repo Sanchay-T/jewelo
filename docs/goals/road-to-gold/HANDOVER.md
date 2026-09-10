@@ -32,12 +32,13 @@ occurred.
 | --- | --- |
 | Live URL | https://jewelo-staging-gqumd.ondigitalocean.app/en/design/new |
 | Active deployed commit | `cc9fb01c8153d1c562a50da281f9137605eda5b0` (`cc9fb01`), DigitalOcean deployment `b50be520-f728-4234-870e-7141dbea3cfa` (ACTIVE, 9/9) |
-| Branch head | `codex/overnight-launch-2026-09-08` at `a9915baaba1137a40b184bea3536cf9f958052f0` |
+| Branch head | `codex/overnight-launch-2026-09-08` at the handover commit recorded below |
 | Provider mode | Production runtime: `real` selected from `NODE_ENV=production`; protected readiness reports `provider: real`. Local development/test defaults remain mock unless explicitly set otherwise. |
 | Live readiness | HTTP 200: Supabase configured; Inngest configured, self-hosted, `keyEnvironment=prod`, crons registered; OpenAI configured; trusted client IP header valid. |
+| Deployment scope | Production intentionally skipped; one DigitalOcean staging instance only. |
 | Build/lint | `corepack pnpm build`: 13/13; `corepack pnpm lint`: 13/13. |
 | Phase / next task | Phase 0 closed; P1-5 identity proof, then P2-3/P5-2 remain. The cloud provider guard is deployed; no paid run was made. |
-| Sessions | 5 (7–10 September 2026) |
+| Sessions | 6 (7–10 September 2026) |
 
 ## What a shopper gets today
 
@@ -59,11 +60,18 @@ for local rendering. Runway is intentionally the prompt-lab bench, not a
 production runtime dependency: the app's production socket is OpenAI, and no
 Runway or OpenAI generation was invoked.
 
+Fal is present only as the optional Seedance video adapter. The local runtime
+defaults `VIDEO_ENABLED` to off, so the active API path is still-image logic,
+not Fal video submission. Local development also defaults provider selection to
+mock; hosted Supabase is real, but no provider spend occurs from opening or
+using the local design page.
+
 ## Done this session
 
 - Production provider invariant and readiness/smoke proof (`32404c7`).
 - Staging deployment of the invariant: `9439c0a6-0810-4d9b-96c7-58d55dfb7791`,
-  ACTIVE, source `32404c70a04fabbd981fdb74f2720e60b747838e`.
+  source `32404c70a04fabbd981fdb74f2720e60b747838e`; it was superseded after
+  the env-spec cleanup, not used as the active rollback target.
 - Removed legacy cloud activation/build flags from deploy and bootstrap; pushed
   as `cc9fb01` and deployed ACTIVE as `b50be520-f728-4234-870e-7141dbea3cfa`.
 - `corepack pnpm build`, `corepack pnpm lint`, shell/module syntax, and diff
@@ -125,7 +133,7 @@ Runway or OpenAI generation was invoked.
 ## Rollback
 
 - App rollback from `home-mini`: `bash scripts/digitalocean/rollback.sh staging
-  9439c0a6-0810-4d9b-96c7-58d55dfb7791`; verify the current list first with
+  b50be520-f728-4234-870e-7141dbea3cfa`; verify the current list first with
   `doctl apps list-deployments`.
 - Database migrations are additive; use the migration-specific rollback notes
   in `docs/DIGITALOCEAN-DEPLOYMENT.md` and do not roll past the active `@v2`

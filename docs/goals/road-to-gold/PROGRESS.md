@@ -216,12 +216,15 @@ Open:
   `JEWELO_CLOUD_TARGET` are not cloud activation controls; deploy/bootstrap
   remove stale copies from existing specs and no longer create them.
 - Commit `32404c7` deployed as DigitalOcean deployment
-  `9439c0a6-0810-4d9b-96c7-58d55dfb7791` (ACTIVE). The deployment source hash
-  is `32404c70a04fabbd981fdb74f2720e60b747838e`; App Platform ran
-  `pnpm start`/`next start` and the rollout completed 9/9. Live protected
-  readiness returned `status=ready`, Inngest `keyEnvironment=prod`, OpenAI
-  `configured`, `provider=real`, and a valid trusted IP header. The live smoke
-  script passed health and readiness. No provider/image call was made.
+  `9439c0a6-0810-4d9b-96c7-58d55dfb7791` (source
+  `32404c70a04fabbd981fdb74f2720e60b747838e`); that deployment was superseded
+  by the env-spec cleanup below. The active deployment is
+  `b50be520-f728-4234-870e-7141dbea3cfa`, source
+  `cc9fb01c8153d1c562a50da281f9137605eda5b0`, with App Platform rollout 9/9.
+  Live protected readiness returned `status=ready`, Inngest
+  `keyEnvironment=prod`, OpenAI `configured`, `provider=real`, and a valid
+  trusted IP header. The live smoke script passed health and readiness. No
+  provider/image call was made.
 - The app spec still carried a legacy `JEWELO_CLOUD_BUILD` key after that
   deploy, so deploy/bootstrap cleanup was committed and pushed as `cc9fb01`.
   Follow-up deployment `b50be520-f728-4234-870e-7141dbea3cfa` is ACTIVE at
@@ -233,3 +236,34 @@ Open:
   for deploy/smoke, and `git diff --check` passed. The build still emits the
   existing Next Edge warnings for the Node-only config loader but compiles and
   starts successfully.
+- Deployment timing was recorded for the runbook: the source deploy took about
+  15 minutes (roughly 9m50s build plus 5m rollout) on the shared staging
+  instance; a restart-only deployment took about 63 seconds. Config-only spec
+  changes should use `doctl apps update --spec ... --wait` without
+  `--update-sources`, while source changes continue to use the full deploy and
+  its immutable deployment record.
+
+### Session 6 local-first path (2026-09-10)
+
+- Scope is local development plus one staging instance; production is
+  intentionally skipped. The local web app is `apps/web` (Next.js 16, `next
+  dev`, port 3011) and the local job runner is Inngest Dev on port 8288,
+  posting to the local `/api/inngest` route. Both health endpoints return 200.
+- The local API uses the hosted Supabase project from `.env` for durable data
+  and storage: `SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_URL` both point at the
+  `jggalwuvpcqoenhirmnl.supabase.co` project. The local `.env` contains an
+  OpenAI key and a Fal key, but the dev runtime defaults to mock provider mode;
+  no provider call is made unless a real-provider run is explicitly authorized.
+- Provider boundaries are deliberate: OpenAI is the production still-image
+  adapter; Fal is only the optional Seedance video adapter and remains off when
+  `VIDEO_ENABLED` is unset/default `0`; Runway is the prompt-lab bench, not an
+  application runtime dependency.
+- The local page is open and marked as the deliverable in the Codex in-app
+  Browser at `http://localhost:3011/en/design/new`; the page exposes the name
+  control and design steps with no browser error/warning logs.
+- Not implemented / still open: P1-5 identity pass 7 plus two clean
+  adversarial passes; BL-1 anonymous request/replay proof; fix-review-3 MJ-1
+  and minors 1–7; the viewport/RTL/reduced-motion ladder; P2-3 through P2-7;
+  the paid P5-2/P5-3 real run; P3-5/P3-6; P7-4/P7-8; and L-1 through L-4.
+  These remain documented in the task list rather than being silently treated
+  as shipped.

@@ -505,10 +505,18 @@ It builds the stale `review/sample-images-board`, which W5 retargets later.
 spec.
 Its key is present and its value was not touched, so it still holds whatever it held before (`remote`).
 
-### Env keys the app still lacks
+### Env keys the app still lacked at this historical snapshot
+
+The following bullets describe the app before the Session 5 provider/deployment
+cleanup. They are retained as W0 evidence, not as the current runbook. The
+current staging spec has OpenAI configured and contains neither
+`PROVIDER_MODE` nor either retired cloud activation flag; see the Session 5
+deployment proof in `docs/goals/road-to-gold/PROGRESS.md`.
 
 - `PROVIDER_MODE` is **not set on the DigitalOcean app at all**.
-  W4 needs `PROVIDER_MODE=real` there before any personalized preview can be generated in production.
+  At that time W4 still treated it as a required activation step; production
+  now derives the real provider from `NODE_ENV=production` and fails closed if
+  the OpenAI credential is absent.
 - `INNGEST_EVENT_KEY`, `INNGEST_SIGNING_KEY` and optionally `INNGEST_BASE_URL` still have to be added by the
   Inngest workstream.
 

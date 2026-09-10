@@ -23,8 +23,10 @@ a customer request handler: it runs in an Inngest function served at
 | Components | `web` (git `https://github.com/Sanchay-T/jewelo.git`, no `deploy_on_push`, Node buildpack, public `/`) and `inngest` (Docker Hub `inngest/inngest:v1.44.0-amd64`, `internal_ports: [8288]`, no public route) |
 | Job engine | Self-hosted Inngest. `web` reaches it at `${inngest.PRIVATE_URL}`; it reaches `web` at `${web.PRIVATE_URL}/api/inngest` |
 
-The active staging deployment is `77c680bb-b6ee-46db-bcf8-dc8d774711bf`, phase
-`ACTIVE`, built from commit `594d378` of that branch.
+The active staging deployment is `b50be520-f728-4234-870e-7141dbea3cfa`, phase
+`ACTIVE`, built from commit `cc9fb01c8153d1c562a50da281f9137605eda5b0` of that
+branch. The follow-up deployment `9439c0a6-0810-4d9b-96c7-58d55dfb7791` was
+superseded during the final env-spec cleanup; it is not the rollback target.
 This is staging evidence, not production acceptance. A production URL does not
 exist until the manual promotion succeeds.
 
@@ -88,6 +90,25 @@ complete spec back out of that historical deployment with
 That restores the source ref and the environment configuration of that
 deployment, so a rollback caused by a credential incident must be followed by a
 deliberate rotation.
+
+### Deployment timing and the fast path
+
+Measured staging deployments on this one shared 1-vCPU/1-GiB App Platform
+component have two very different costs:
+
+| Change | App Platform work | Measured wall time |
+| --- | --- | --- |
+| Source-code deploy (`deploy.sh`, `--update-sources`) | Git checkout, Node buildpack install/build, image save/upload, then rollout | about 15 minutes (the `b50be520` rollout took roughly 9m50s to build and 5m to roll out) |
+| Restart-only change | restart existing image and wait for health | about 63 seconds (`7fbb8f4`) |
+| Config-only change | `doctl apps update --spec ... --wait` without `--update-sources` | use when only the app spec changes; it avoids a source rebuild, but still waits for rollout |
+
+Use the normal source deploy for code changes. For a config-only correction,
+prepare and inspect the same merged spec, then update it without
+`--update-sources`; for a process restart with no code or config change, use
+`doctl apps restart <app-id> --components web --wait`. Always run the smoke
+check after either path and record the deployment id. Do not optimize by
+reusing a mutable image for a source release: the source commit and immutable
+deployment record are the rollback evidence.
 
 Production is not automated either, and no `jewelo-production` app exists yet.
 It is the same three scripts pointed at the production environment name, run
