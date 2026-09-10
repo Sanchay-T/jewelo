@@ -38,13 +38,13 @@ occurred.
 | --- | --- |
 | Live URL | https://jewelo-staging-gqumd.ondigitalocean.app/en/design/new |
 | Active deployed commit | `eba96fd6edcdecc92e9133dbfa5c449e18156a25` (`eba96fd`), DigitalOcean deployment `84f54bd8-927f-48cd-b871-071e7fc78923` (ACTIVE) |
-| Branch head | `main` at merged commit `4cd8f2df65ede74bd1c4e5494b58886405ef7a90` (`4cd8f2d`); source branch `codex/overnight-launch-2026-09-08` remains at `b734e57` |
+| Branch head | `main` at merged commit `bbeed032c13c39836ef4cca5ff5d8c5ea5dc9f13` (`bbeed03`); source branch `codex/overnight-launch-2026-09-08` remains at `b734e57` |
 | Provider mode | Production runtime: `real` selected from `NODE_ENV=production`; protected readiness reports `provider: real`. Local development/test defaults remain mock unless explicitly set otherwise. |
 | Live readiness | HTTP 200: Supabase configured; Inngest configured, self-hosted, `keyEnvironment=prod`, crons registered; OpenAI configured; trusted client IP header valid. |
 | Deployment scope | Production intentionally skipped; one DigitalOcean staging instance only. |
 | Build/lint | `corepack pnpm build`: 13/13; `corepack pnpm lint`: 13/13. |
 | Phase / next task | Phase 0 closed; P1-5 identity proof, then P2-3/P2-7 and P5-2/P5-3 remain. The cloud provider guard and all-look cleanup are deployed; two bounded paid validation runs completed, but the latest prompt wording fix is not deployed. |
-| Merge | PR #12 merged 10 September 2026 at `ebea6d06a87107e85b0dc205ea8665f29c466f5d`; prompt wording fix PR #14 merged at `abd1371`; no direct `main` push was used. |
+| Merge | PR #12 merged 10 September 2026 at `ebea6d06a87107e85b0dc205ea8665f29c466f5d`; prompt wording fix PR #14 merged at `abd1371`; paid-run identifiers PR #17 merged at `bbeed03`; no direct `main` push was used. |
 | Sessions | 8 (7–10 September 2026) |
 
 ## What a shopper gets today
@@ -106,6 +106,9 @@ using the local design page.
   `/tmp/jewelo-paid-validation/` and were inspected visually. These runs used
   the active staging source `eba96fd`; deployment of the wording fix remains
   deferred until local approval.
+- The exact design and run identifiers were added in PR #17 and mirrored into
+  this handover so the paid evidence is directly traceable from the delivery
+  record.
 
 ## Evidence
 
