@@ -7,10 +7,9 @@ import type { RealModeSpendCeilings } from "@jewelo/config";
  * `public.runtime_policy` is a single row an operator can edit from the
  * database, and it is what every SQL gate spends against: the day's reserved
  * ceiling and the paid attempts one task may make. P5-1 tightened it; the
- * review found it back at 6000 cents and 100 attempts, which means a
- * `PROVIDER_MODE=real` flip would reserve 400 cents a run against six thousand
- * with a hundred paid attempts per task, and nothing in the worker would
- * notice.
+ * review found it back at 6000 cents and 100 attempts, which would reserve 400
+ * cents a run with a hundred paid attempts per task, and nothing in the worker
+ * would notice before a production-provider dispatch.
  *
  * The deployment says here what it will tolerate in that row
  * (`REAL_MODE_MAX_RESERVED_SPEND_CENTS`, `REAL_MODE_MAX_ATTEMPT_BUDGET` in

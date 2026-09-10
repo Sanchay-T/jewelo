@@ -26,8 +26,8 @@ env_sync=1
 #
 # One `.env` served both environments and nothing compared it with the app being
 # deployed, so `deploy.sh production main` from a laptop would have overwritten
-# production's PROVIDER_MODE, SUPABASE_URL, OPENAI_API_KEY and
-# OPERATOR_PASSPHRASE with staging values. The file must now declare
+# production's database, provider credentials and operator passphrase with
+# staging values. The file must now declare
 # `JEWELO_DEPLOY_TARGET=<environment>` and it must equal the environment
 # argument; otherwise this refuses with exit 2 rather than shipping the wrong
 # values. Deploying a branch into an environment whose file you do not have is
@@ -59,6 +59,24 @@ elif (( env_sync )); then
   if [[ "$declared_target" != "$environment" ]]; then
     echo "refusing to sync $env_file into $environment: JEWELO_DEPLOY_TARGET is $declared_target" >&2
     echo "point JEWELO_ENV_FILE at the file that belongs to $environment, or set DEPLOY_ENV_SYNC=0 to deploy the branch only" >&2
+    exit 2
+  fi
+  env_errors="$(
+    CONTRACT="$contract" ENV_FILE="$env_file" node -e '
+      (async () => {
+        const contract = await import(process.env.CONTRACT);
+        const values = contract.readEnvFiles([process.env.ENV_FILE]);
+        const errors = contract.validateWebEnv(values);
+        if (errors.length) process.stdout.write(errors.join("\n"));
+      })().catch((error) => {
+        process.stderr.write(`${error.message}\n`);
+        process.exit(1);
+      });
+    '
+  )"
+  if [[ -n "$env_errors" ]]; then
+    echo "refusing to sync $env_file into $environment:" >&2
+    printf '%s\n' "$env_errors" >&2
     exit 2
   fi
 fi
@@ -166,6 +184,11 @@ doctl apps get "$app_id" --output json |
       );
       const merged = new Map((web.envs ?? []).map((env) => [env.key, env]));
       for (const env of desired) merged.set(env.key, { ...merged.get(env.key), ...env });
+      // `PROVIDER_MODE` was the old human activation toggle. It is no longer
+      // part of the cloud contract: production derives real-provider mode from
+      // NODE_ENV, so remove a stale copy from an existing app spec instead of
+      // allowing it to shadow the runtime invariant.
+      merged.delete("PROVIDER_MODE");
       web.envs = [...merged.values()];
       process.stderr.write(`env sync: ${desired.map((env) => env.key).join(", ")}\n`);
     }

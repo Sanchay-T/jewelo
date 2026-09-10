@@ -507,8 +507,9 @@ export async function executePresentationTask(
   // an attempt at all while `runtime_policy` is looser than the ceilings this
   // deployment set. `provider` is `mock` exactly when the generator is the mock
   // one, which `productionPresentationDependencies` selects exactly when
-  // `PROVIDER_MODE=mock`, so this reads "real mode" without a second copy of
-  // the environment in here. It sits above `reserveAttempt` because
+  // production derives the real generator from NODE_ENV; local `PROVIDER_MODE`
+  // is resolved once at the config boundary, so this reads "real mode" without
+  // a second copy of the environment in here. It sits above `reserveAttempt` because
   // `mark_task_pre_spend_blocked` only takes a task at attempt 0, and because a
   // reservation is already spend.
   if (provider !== "mock" && repository.spendPolicy) {

@@ -543,6 +543,25 @@ export const ciEnvSchema = z.object({
   PROVIDER_MODE: z.literal("mock").default("mock"),
 });
 
+/**
+ * Production is the trusted cloud boundary. DigitalOcean runs Next with
+ * NODE_ENV=production, so a deployed process cannot be switched to the mock
+ * adapters by leaving an old human-set provider variable in its app spec.
+ * Local development and test harnesses may still use PROVIDER_MODE explicitly.
+ */
+export function isProductionProviderRuntime(
+  input: Record<string, string | undefined> = process.env,
+): boolean {
+  return input.NODE_ENV === "production";
+}
+
+export function providerMode(
+  input: Record<string, string | undefined> = process.env,
+): "mock" | "real" {
+  if (isProductionProviderRuntime(input)) return "real";
+  return input.PROVIDER_MODE === "real" ? "real" : "mock";
+}
+
 export function parseBrowserEnv(input: Record<string, string | undefined>) {
   const exposed = Object.fromEntries(
     Object.entries(input).filter(([key]) => key.startsWith("NEXT_PUBLIC_")),
@@ -551,7 +570,24 @@ export function parseBrowserEnv(input: Record<string, string | undefined>) {
 }
 
 export function parseJobsEnv(input: Record<string, string | undefined>) {
-  return jobsEnvSchema.parse(input);
+  if (isProductionProviderRuntime(input) && input.PROVIDER_MODE === "mock")
+    throw new Error(
+      "PROVIDER_MODE=mock is not allowed in production; remove the local-only provider setting",
+    );
+  return jobsEnvSchema.parse({
+    ...input,
+    // Production derives the real adapters from NODE_ENV. The explicit value
+    // remains a local/test escape hatch only and is never needed in a cloud
+    // app spec.
+    PROVIDER_MODE: providerMode(input),
+  });
+}
+
+/** Fail startup when a production runtime cannot prove its real provider. */
+export function assertProductionProviderConfiguration(
+  input: Record<string, string | undefined> = process.env,
+): void {
+  if (isProductionProviderRuntime(input)) parseJobsEnv(input);
 }
 
 export function assertBrowserSafeEnv(

@@ -12,12 +12,14 @@
  * loaded and nothing is sent.
  */
 
+import { assertProductionProviderConfiguration } from "@jewelo/config";
 import {
   initServerObservability,
   reportRequestError,
 } from "@jewelo/observability/server";
 
 export async function register(): Promise<void> {
+  assertProductionProviderConfiguration();
   await initServerObservability();
 }
 

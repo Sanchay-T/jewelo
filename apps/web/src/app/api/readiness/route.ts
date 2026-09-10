@@ -1,6 +1,10 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 
-import { trustedClientIpHeader } from "@jewelo/config";
+import {
+  isProductionProviderRuntime,
+  providerMode,
+  trustedClientIpHeader,
+} from "@jewelo/config";
 import { hasOperatorSession } from "../../../lib/backend/operator-session";
 
 /**
@@ -50,6 +54,10 @@ export function GET(request: Request) {
         ? "branch"
         : "prod";
   const configured = Boolean(eventKey && signingKey);
+  const productionProvider = isProductionProviderRuntime(process.env);
+  const selectedProvider = providerMode(process.env);
+  const providerConfigured =
+    !productionProvider || Boolean(process.env.OPENAI_API_KEY);
   // Fix-3 review minor 9: `TRUSTED_CLIENT_IP_HEADER` is parsed at module scope
   // in `request-guard.ts`, which Next only evaluates on the first request to a
   // route that imports it, so a typo used to leave this probe green and 500 the
@@ -66,7 +74,8 @@ export function GET(request: Request) {
       return false;
     }
   })();
-  const ready = supabaseConfigured && configured && trustedHeaderValid;
+  const ready =
+    supabaseConfigured && configured && trustedHeaderValid && providerConfigured;
 
   // A readiness probe must answer, always. Both checks read configuration that
   // can be absent - `hasOperatorSession` throws when `OPERATOR_SESSION_SECRET`
@@ -99,6 +108,7 @@ export function GET(request: Request) {
           cronsRegistered: process.env.INNGEST_CRON_ENABLED === "1",
         },
         openai: process.env.OPENAI_API_KEY ? "configured" : "missing",
+        provider: selectedProvider,
         trustedClientIpHeader: trustedHeaderValid ? "valid" : "invalid",
       },
     },

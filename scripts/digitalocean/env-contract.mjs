@@ -68,10 +68,6 @@ export const optionalRuntimeConfig = [
   "OPENAI_VERIFIER_MODEL",
   "REAL_MODE_MAX_RESERVED_SPEND_CENTS",
   "REAL_MODE_MAX_ATTEMPT_BUDGET",
-  // Defaults to "mock" in the config schema, so it is not required; shipped
-  // explicitly so the deployed provider mode is visible in the app spec
-  // instead of implied.
-  "PROVIDER_MODE",
   // Optional because `/api/readiness` still answers the bare public `status`
   // without it; shipped when present so `smoke.sh` can read the dependency
   // block and assert the deploy is bound to a prod Inngest signing key.
@@ -189,6 +185,19 @@ export function validateWebEnv(values) {
   const dataMode = values.get("NEXT_PUBLIC_JEWELO_DATA_MODE");
   if (dataMode && dataMode !== "remote") {
     errors.push("NEXT_PUBLIC_JEWELO_DATA_MODE must select the remote data client");
+  }
+
+  // Provider selection is derived from NODE_ENV at runtime. Keeping this
+  // local-only toggle in a deployment file is an unsafe footgun: production
+  // must never be configured as mock, and deploy.sh removes any stale copy
+  // from the live app spec.
+  const providerMode = values.get("PROVIDER_MODE");
+  if (providerMode === "mock") {
+    errors.push(
+      "PROVIDER_MODE=mock is local-only; remove it before syncing a DigitalOcean environment",
+    );
+  } else if (providerMode !== undefined && providerMode !== "real") {
+    errors.push("PROVIDER_MODE must be real when present in a deployment file");
   }
 
   // Match jobsEnvSchema before shipping configuration, without logging values.

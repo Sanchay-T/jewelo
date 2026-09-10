@@ -15,7 +15,7 @@ import {
   clientIp,
   createRateLimitStore,
 } from "../../../lib/backend/request-guard";
-import { webGuardLimits } from "@jewelo/config";
+import { providerMode, webGuardLimits } from "@jewelo/config";
 
 const MAX_BODY_BYTES = 1024;
 const WINDOW_MS = webGuardLimits.transliterateWindowMs;
@@ -93,12 +93,12 @@ function validLatinName(value: unknown): value is string {
  * It is a customer route and carries the same authenticated anonymous principal
  * as every other one: an unauthenticated caller could otherwise drive provider
  * spend that no run, reservation or daily cap accounts for. And it refuses
- * outright unless the deployment is in real provider mode, so a mock or preview
- * environment - which has no spend ceiling of its own - can never reach OpenAI
- * through it.
+ * outright unless the runtime selects real provider mode, so a local mock or
+ * preview environment - which has no spend ceiling of its own - can never
+ * reach OpenAI through it. Production selects real mode from NODE_ENV.
  */
 function assertRealProviderMode() {
-  if (process.env.PROVIDER_MODE !== "real")
+  if (providerMode(process.env) !== "real")
     throw new Response(
       "transliteration_unavailable:Arabic name refinement is unavailable here.",
       { status: 503 },

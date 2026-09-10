@@ -215,9 +215,17 @@ Every file used for a sync declares `JEWELO_DEPLOY_TARGET=<environment>` -
 file - and `deploy.sh` refuses with exit 2 when the key is missing or names a
 different environment than the one on the command line.
 Without that check one `.env` served both apps, and `deploy.sh production main`
-run from a laptop would have overwritten production's `PROVIDER_MODE`,
-`SUPABASE_URL`, `OPENAI_API_KEY` and `OPERATOR_PASSPHRASE` with staging values.
+run from a laptop would have overwritten production's database, provider
+credentials and operator passphrase with staging values.
 `JEWELO_DEPLOY_TARGET` is read from the file and never shipped to the app.
+
+Provider selection is not a DigitalOcean setting. `NODE_ENV=production` is the
+runtime invariant and always selects the real OpenAI adapter; local development
+defaults to the mock adapter. `PROVIDER_MODE` is therefore local/test-only and
+is rejected by the deployment env contract. `deploy.sh` also removes a stale
+copy from an existing app spec. Production startup parses the complete jobs
+environment before serving requests and fails if the required real credentials
+are absent.
 
 To deploy production, point `JEWELO_ENV_FILE` at the production file, which is
 the only file that may carry `JEWELO_DEPLOY_TARGET=production`:
@@ -318,7 +326,8 @@ approved style anchors exist as published releases in that project's private
 `style-anchors` bucket.
 The migrations only seed six `missing` placeholders, so a fresh project, a restored
 project, or a new environment needs one run of
-`node scripts/style-anchors/publish.mjs` against it before `PROVIDER_MODE=real`.
+`node scripts/style-anchors/publish.mjs` against it before the first production
+run.
 It is a database and storage change, not a deploy: nothing needs redeploying after it.
 The PNGs are private brand reference and are never in git; the script is pointed at
 them with `STYLE_ANCHORS_DIR`, and `scripts/style-anchors/README.md` has the command,
@@ -348,8 +357,9 @@ The order for P5-2, first real-provider smoke on staging:
    `daily_generation_limit 2`.
    This step is not optional and is no longer a matter of remembering it.
    Storyline review 1 M2 found the row back at `6000` cents and `100` attempts, one
-   `PROVIDER_MODE` flip away from spending four hundred cents a run against a six
-   thousand cent ceiling, so the worker now refuses the flip itself: in real mode
+   real-provider startup would otherwise spend four hundred cents a run against
+   a six thousand cent ceiling, so the worker refuses the dispatch itself: in
+   production mode
    every dispatch reads `public.runtime_policy` once (cached for
    `pipelineLimits.policyCacheMs`, 60 s) and blocks the task pre-spend with
    `terminal_error_code = 'spend_ceiling_not_set:cap=<cents>,max=<cents>'` while
@@ -361,7 +371,8 @@ The order for P5-2, first real-provider smoke on staging:
    run spend more. Mock mode never reads the row.
 2. `update public.runtime_policy set studio_only = true, updated_at = now() where id = true;`
    and read the row back.
-3. Ship `PROVIDER_MODE=real` (spec update plus deploy) and smoke it.
+3. Deploy the branch and smoke it. Production automatically selects the real
+   provider from `NODE_ENV=production`; no provider-mode env toggle is shipped.
 4. Once DS-6 is satisfied - a real studio still has been produced, inspected and
    accepted - `update public.runtime_policy set studio_only = false, updated_at = now() where id = true;`
    to re-enable the other three views, then restore the caps per P5-3.
@@ -464,7 +475,7 @@ Measured on 8 September 2026 against staging deployment `8b8aa87a-820d-4194-884a
 - A response that writes one byte every 10 s survived to 900 s, the probe's own cap, so the 600 s is an idle timer that each chunk resets, not a total-request wall.
 - The app spec has no timeout field; the only `timeout_seconds` is the health check's own 5 s. The 600 s is a platform constant that can change without notice, so the executor cap stays well below it rather than tuned to it.
 
-The executor cap of 360 s (`pipelineLimits.executorRequestCapSeconds`) is therefore inside the bound with 240 s to spare, and no worker component or heartbeat is needed before `PROVIDER_MODE=real`.
+The executor cap of 360 s (`pipelineLimits.executorRequestCapSeconds`) is therefore inside the bound with 240 s to spare, and no worker component or heartbeat is needed before the first production-provider run.
 If a step ever needs more than 600 s of silence, a streaming heartbeat is the mechanism, and this section must be re-measured first.
 
 ## Inngest component (added 7 September 2026)

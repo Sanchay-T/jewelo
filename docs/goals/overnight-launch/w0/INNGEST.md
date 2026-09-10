@@ -357,9 +357,14 @@ A web instance whose clock lags Postgres - routine after a laptop sleep/wake, po
 `packages/data/src/outbox-dispatch.ts` now reads with a 30 s skew tolerance and lets the database stay authoritative: `claim_outbox_event` re-checks `available_at <= now()` inside Postgres, so an event that is genuinely still backing off is refused there and skipped.
 The 200 was not reproducible afterwards; step 38 returned 201 `accepted` on both subsequent runs.
 
-### `PROVIDER_MODE` on the DigitalOcean web component
+### Provider selection on the DigitalOcean web component
 
-It was absent. Added from a fresh `doctl apps spec get`, as `GENERAL` / `RUN_TIME` with value `mock`, and added to `optionalRuntimeConfig` in `scripts/digitalocean/env-contract.mjs` (the config schema defaults it to `mock`, so it is optional, but the deployed mode should be visible in the spec rather than implied).
+The old `PROVIDER_MODE` app-spec toggle was removed in Session 5. Production
+provider selection now derives from `NODE_ENV=production`, and startup fails if
+the real credentials cannot be parsed. `deploy.sh` removes a stale
+`PROVIDER_MODE` key while merging the current contract, so the app spec cannot
+silently retain the former mock activation switch. Local development/test
+processes may still use the config schema's `PROVIDER_MODE` convenience.
 
 Env key **names** on the `web` component after the update:
 
@@ -367,7 +372,7 @@ Env key **names** on the `web` component after the update:
 NEXT_PUBLIC_JEWELO_DATA_MODE  NEXT_PUBLIC_SUPABASE_URL  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
 SUPABASE_URL  SUPABASE_SERVICE_ROLE_KEY  OPENAI_API_KEY  OPERATOR_EMAIL  OPERATOR_PASSPHRASE
 OPERATOR_SESSION_SECRET  NEXT_PUBLIC_APP_URL  JEWELO_CLOUD_BUILD  INNGEST_EVENT_KEY
-INNGEST_SIGNING_KEY  INNGEST_BASE_URL  INNGEST_CRON_ENABLED  PROVIDER_MODE
+INNGEST_SIGNING_KEY  INNGEST_BASE_URL  INNGEST_CRON_ENABLED
 ```
 
 `node scripts/digitalocean/check-env.mjs staging .env` -> `staging web environment is valid`.
@@ -387,4 +392,3 @@ jewelo-caleums connected=True count=5
 ```
 
 `INNGEST_CRON_ENABLED` remains commented out in `.env`; only this process has it.
-
