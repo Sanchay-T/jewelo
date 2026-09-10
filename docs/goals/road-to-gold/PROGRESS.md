@@ -310,3 +310,19 @@ Open:
   made.
 - Merged through PR #14 as `abd137110f68ac20679d4e98f1c91587ffaa4b91`; local
   `main` and `origin/main` now point at that commit.
+
+### Session 10 bounded bilingual paid validation (2026-09-10)
+
+- Authorized by Sanchay, two synthetic-name staging runs were completed without
+  deploying the newer local prompt wording fix: English `Layla` / Diamond rails
+  / Minimal / yellow gold / no stones, and Arabic `ريم` / Framed minimal / Kufi
+  / rose gold / accent ruby. Each run completed Studio, On skin, Close-up and
+  Dark through the OpenAI adapter.
+- All eight provider attempts succeeded. The customer-facing state projection
+  reported `passed=true`, `exactText=true`, and `identityScore=1` for every
+  asset. Actual ledger spend was 160 cents ($1.60); estimated reservations were
+  800 cents. Downloaded outputs were visually inspected from
+  `/tmp/jewelo-paid-validation/`.
+- This is representative bilingual transfer evidence, not final acceptance:
+  P1-5 pass-7 proof and the deterministic photographic verifier/reader work in
+  P2-3–P2-7 remain open. Deployment remains deferred pending local approval.
