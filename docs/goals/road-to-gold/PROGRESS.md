@@ -206,3 +206,30 @@ Open:
 - `PROVIDER_MODE` was removed from the DigitalOcean env contract. `deploy.sh` validates the environment before syncing, removes any stale provider-mode key from the live app spec, and the readiness response now reports `provider: real`; `smoke.sh` asserts that field. The ignored local `.env` no longer carries the unnecessary mock toggle, so local development still defaults to mock without exporting a cloud activation flag.
 - `JEWELO_DEV_DIST_DIR=.next-build-verify corepack pnpm build` passed 13/13. Shell syntax, env-contract syntax and a no-value deployment dry run passed; the dry run listed 18 merged keys and no `PROVIDER_MODE`, and made no DigitalOcean call or provider call.
 - No paid image generation was performed. Staging deployment and live readiness/runtime proof remain the next actions in this session.
+
+### Session 5 deployment proof (2026-09-10)
+
+- Provider selection is now runtime-derived: `NODE_ENV=production` selects the
+  real OpenAI adapter; local development/test may still use `PROVIDER_MODE`.
+  Production startup parses the jobs environment and fails closed when the
+  OpenAI credential is absent. `PROVIDER_MODE`, `JEWELO_CLOUD_BUILD`, and
+  `JEWELO_CLOUD_TARGET` are not cloud activation controls; deploy/bootstrap
+  remove stale copies from existing specs and no longer create them.
+- Commit `32404c7` deployed as DigitalOcean deployment
+  `9439c0a6-0810-4d9b-96c7-58d55dfb7791` (ACTIVE). The deployment source hash
+  is `32404c70a04fabbd981fdb74f2720e60b747838e`; App Platform ran
+  `pnpm start`/`next start` and the rollout completed 9/9. Live protected
+  readiness returned `status=ready`, Inngest `keyEnvironment=prod`, OpenAI
+  `configured`, `provider=real`, and a valid trusted IP header. The live smoke
+  script passed health and readiness. No provider/image call was made.
+- The app spec still carried a legacy `JEWELO_CLOUD_BUILD` key after that
+  deploy, so deploy/bootstrap cleanup was committed and pushed as `cc9fb01`.
+  Follow-up deployment `b50be520-f728-4234-870e-7141dbea3cfa` is ACTIVE at
+  source hash `cc9fb01c8153d1c562a50da281f9137605eda5b0`; its web env key list
+  contains none of `PROVIDER_MODE`, `JEWELO_CLOUD_BUILD`, or
+  `JEWELO_CLOUD_TARGET`.
+- Verification: `corepack pnpm build` passed 13/13; `corepack pnpm lint`
+  passed 13/13; `node --check` for deploy/bootstrap/env-contract, `bash -n`
+  for deploy/smoke, and `git diff --check` passed. The build still emits the
+  existing Next Edge warnings for the Node-only config loader but compiles and
+  starts successfully.
