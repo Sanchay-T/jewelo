@@ -6,7 +6,7 @@
 
 **Pipeline brief:** final v5, 27 August 2026
 
-**Pipeline release:** `caleums-final-media-v1`
+**Pipeline release:** `caleums-final-media-v2`
 
 **Applies to:** final Caleums implementation, verification, and release work
 
@@ -42,19 +42,111 @@ the deterministic validation report, and be stored privately before any model
 call. Models render and verify that identity; they never decide or silently
 alter it.
 
-`caleums-arabic-v3` is the versioned Arabic identity engine. It preserves the
-exact approved NFC characters and uses Pango/Fribidi/HarfBuzz/FreeType shaping,
-the checksum-pinned ZIP font, fused marks/groups, two physically connected
-hollow jump rings, and a hard exactly-one-connected-component mask gate. It
-stores an immutable PNG, checksum, solver/font/runtime report, and fingerprint
-before provider-attempt reservation.
+`caleums-identity-v4` is the versioned identity engine (D-019; it replaces the
+release identifier `caleums-arabic-v3`). It preserves the exact approved NFC
+characters and shapes them with HarfBuzz over the bytes of the pinned font file,
+opened directly and hashed into `fontSha256Measured`, never resolved by family
+name; fused marks/groups, two physically connected hollow jump rings, and a hard
+exactly-one-connected-component mask gate follow. `exactCharactersPreserved` is
+the measurement "no glyph id 0 in the shaped buffer and every NFC code point
+covered by a cluster", not an assertion. It stores an immutable PNG, checksum,
+solver/font/runtime report, and fingerprint before provider-attempt reservation.
 
-Only one-name Arabic `classic`/Amiri and `minimal`/Scheherazade New are live.
-Signature, Kufi, Contemporary, Diwani, Thuluth-inspired, every unapproved font,
-and all two-name Arabic layouts enter explicit operator review before spend.
-The customer-facing Contemporary selection is the UI alias for certified
-`classic`; all other unsupported selections are visibly review-only. English
-retains the existing deterministic renderer.
+Jump-ring anchors are chosen at the outline level, before rasterisation (D-020).
+For each end of the name the engine takes the outermost base glyph on the canvas
+and the largest contour of that glyph's outline; a glyph the font's GDEF table
+classes as a mark, and any contour too small against its own glyph or too short
+against the tallest base glyph of the run, is never a carrier. That contour is
+rasterised on its own to find its anchor ladder - the columns of its
+load-bearing metal and the top of each, from the outer edge of the stroke
+inward - and a ring is seated above a rung, lifting and shifting until its hole
+punches no name ink out and no name ink lies under its metal outside the weld.
+
+The weld exempts less than the weld metal: a pixel under the fillet is excused
+only when it is metal of the carrier contour the ring is being welded to, so a
+fillet that runs a stem across a madda, a hamza or a damma is refused where
+before it swallowed the mark and reported the piece clean.
+
+The two rings are chosen together, because a pendant hangs from both. The left
+ring is sought from the leftmost base glyph inward and the right ring from the
+rightmost inward, the two may never settle on the same glyph while another
+eligible base glyph exists, and the left glyph must sit left of the right glyph
+on the canvas. Every allowed pair of carriers and rungs is scored on the shape
+it makes - whether it breaks a gate, then how far off level the two holes sit,
+then how much of the piece hangs outboard of the nearer ring on the worse side,
+then how much metal is lifted off the letters - and the best pair is the one
+that is drawn.
+
+Three measurements on the encoded bytes say whether that worked, and none of
+them asks the search what it believed. `identity_ring_span_too_narrow`: the two
+hole centroids sit at least a validated fraction of the finished ink width
+apart. `identity_ring_tilt_too_steep`: the line through the two holes, which is
+the line the chain makes, is within a validated angle of horizontal, so the name
+does not read sideways on the neck. `identity_ring_overhang_too_wide`: the ink
+outside the nearer hole on either side is within a validated fraction of the ink
+width, so no end of the piece is cantilevered.
+
+When no pair of carriers meets those gates the engine raises
+`identity_no_ring_seat`. That is a terminal pre-spend block with a code and no
+customer text, and the run goes to the shop rather than to a provider.
+`ringPlacement` has three values, `welded`, `frame` and `none`; `none` means a
+construction that carries its own suspension and the caller asked for no rings.
+The rail that used to catch this case is gone: measured, it touched `قق` along
+11% of its span and the pendant hung from two nuqta through a 24 px bridge, so
+it was a picture of a suspension rather than one.
+
+The stencil is the whole physical piece, not only the name (D-021, P2-2b). The
+construction the shopper chose is a shape input to the engine and part of the
+fingerprint. `classical` and `origami-ribbon` are the lettering alone - the
+ribbon's folded facets are a finish, so the stencil says nothing about them and
+no gate claims them. `framed-minimal` draws a rectangular frame with softly
+rounded corners around the name, welded at the baseline in two places, with the
+two rings in its top corners; `diamond-rails` draws a straight rail above and
+below the name, welded to each in two places, with the two rings at the outer
+ends of the top rail. Both are drawn from validated engine constants with the
+same capsule primitive as the bridges, the name is resampled to make room for
+its structure and refused with `identity_carrier_no_room` if the structure
+cannot fit, and the structure may only add metal
+(`identity_carrier_moved_ink`). `ringPlacement` is then `frame` and
+`carrier.kind` says which structure; the report carries the rail centrelines,
+the outer box, the name box, the welds and the ring anchors in pixels, so a
+verifier registers the pendant the shopper chose rather than a bare name against
+a photograph of a framed piece. Every ring gate above still runs on the encoded
+bytes: the two rings are level by construction and the tilt is measured anyway.
+
+The measured ring gates (`identity_ring_punched_ink`,
+`identity_ring_welded_to_glyph`, `identity_ring_hole_too_small`,
+`identity_ring_span_too_narrow`, `identity_ring_tilt_too_steep`,
+`identity_ring_overhang_too_wide`) stay as post-draw measurements that must be
+zero, or in range, for the piece that was drawn.
+`identity_stencil_pinhole` is the same statement for the piece itself: an
+enclosed region of a few pixels is a casting pinhole rather than a counter or a
+ring hole, and the gate refuses any that survive into the encoded bytes. A
+counter is never filled to get past it: every small region is traced back
+through the recentre transform to the raster as the rasteriser painted it, and
+one that still holds a validated fraction of the counter it came from is left
+open, so a name whose counters did not cast is refused rather than welded solid.
+
+The ring rule is not a fingerprint input. The fingerprint hashes the engine
+release, the pipeline release, the script, the approved text, the style, the
+layout, the connector, the measured font sha and the sha of the encoded PNG, so
+any change to how a ring is seated already moves the fingerprint through the PNG
+sha, and `caleums-identity-v4` continues to name this engine.
+
+All six styles are live in both scripts since 2026-08-27: `classic` and
+`diwani` and `signature` on Noto Naskh Arabic, `minimal` on Scheherazade New,
+`kufi` on Noto Kufi Arabic with Cairo for its Latin column, and
+`thuluth-inspired` on Rakkas, with Playfair Display SemiBold as the Latin face
+for everything but Kufi. `LIVE_IDENTITY_STYLES` in
+`packages/identity/src/caleums-arabic-v3.ts` is the source of truth and
+`engines/caleums-arabic-v3/manifest.json` mirrors it. Amiri was retired for
+`classic` on 2026-08-27 because it stacks lam-ya under HarfBuzz while the
+approved renders were flat. `classic`, `diwani` and `signature` pin one face, so
+their stencils are byte-identical and no verifier can tell a delivered Naskh
+from a delivered diwani; DS-4 limits what the shop sells to what phase 3 proves.
+Two-name Arabic layouts still enter explicit operator review before spend. The
+customer-facing Contemporary selection is the UI alias for certified `classic`.
+English goes through the same solver, not a separate renderer.
 
 ## Independent still graph
 
@@ -112,6 +204,14 @@ Managed immutable profiles are `image.packshot`, `image.worn`,
 `verification.image`. `image.studio` remains readable only for legacy seeded
 tasks. Draft/validate/publish/rollback/history reject unknown, malformed, or
 missing `{{variables}}`; publication affects only new tasks.
+
+The four customer-facing still profiles are published at `@v2` (P3-7): the image
+lab's measured prompt family `caleums-universal-v4.3`, one release per view,
+with the shot brief baked in and the pendant construction carried by the
+`construction` variable. `construction` is the sixteenth prompt variable and is
+allowed but never required, so every earlier release still validates.
+`image.studio_hero`, `image.billboard`, `video.preview`, `video.final` and
+`verification.image` stay on their earlier releases.
 
 Every run pins the pipeline, identity engine/font, provider model, prompt and
 style releases. Every task pins its ratio, dependency/input asset IDs, compiled

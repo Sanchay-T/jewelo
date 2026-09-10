@@ -1,0 +1,330 @@
+import "server-only";
+
+import {
+  executePresentationTask,
+  productionPresentationDependencies,
+} from "@jewelo/jobs/presentation";
+import { dispatchPendingOutbox } from "@jewelo/jobs/outbox";
+import {
+  markVideoPollTimeout,
+  pollVideoTask,
+  submitVideoTask,
+} from "@jewelo/jobs/video";
+
+import { concurrencyLimitSchema, pipelineLimits } from "@jewelo/config";
+
+import { reportError } from "@jewelo/observability/server";
+
+import { sendJobEvent } from "../lib/backend/job-dispatch";
+import { cronFunctionsEnabled, inngest, JOB_EVENTS } from "./client";
+import {
+  previewRequestNotification,
+  previewRequestNotificationSweep,
+} from "./preview-request-notification";
+
+/**
+ * A provider concurrency limit, validated by `packages/config` rather than
+ * clamped here: integer, 1..32, default 2.
+ */
+function concurrencyLimit(name: string): number {
+  return concurrencyLimitSchema.parse(process.env[name]) as number;
+}
+
+/**
+ * P7-5 / DS-9. The one seam where a durable job's failure is reported.
+ *
+ * Inngest calls `onFailure` once a function has exhausted its retries, so this
+ * is exactly "this piece of work is not going to happen" and never a step that
+ * is about to be retried, and it cannot see Inngest's own control-flow
+ * signals. Only the function id and the run's ids travel with it - never the
+ * shopper's name, which lives in the design record and not in the event.
+ *
+ * With `SENTRY_DSN` empty this is a call that returns immediately; the failure
+ * is still in the task row and the runtime log, as it was before.
+ */
+function reportFunctionFailure(functionId: string) {
+  return ({ error }: { error: Error }): void => {
+    reportError(error, { functionId });
+  };
+}
+
+/** Mirrors the old `openai-image` Trigger queue: one shared, keyed sub-queue. */
+const openAIImageConcurrency = {
+  key: '"openai-image"',
+  limit: concurrencyLimit("OPENAI_STILL_CONCURRENCY_LIMIT"),
+} as const;
+
+/** Mirrors the old `fal-video` Trigger queue. */
+const falVideoConcurrency = {
+  key: '"fal-video"',
+  limit: concurrencyLimit("FAL_VIDEO_CONCURRENCY_LIMIT"),
+} as const;
+
+/**
+ * Next narrows `process.env`, so the service-role pair is read explicitly.
+ * These credentials only ever exist in this server runtime.
+ */
+function jobEnvironment(): Record<string, string | undefined> {
+  return {
+    SUPABASE_URL: process.env.SUPABASE_URL,
+    SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
+  };
+}
+
+/**
+ * One paid still.
+ *
+ * `retries: 0` on purpose: a process-level retry cannot prove whether OpenAI
+ * accepted and charged for the interrupted attempt. Paid retries are owned by
+ * durable attempt state in Postgres (`reserveAttempt`, whose budget is
+ * `runtime_policy.provider_attempt_budget`) and
+ * re-dispatched by `stale-media-recovery`.
+ *
+ * There is deliberately NO function-level `idempotency` key. The outbox
+ * re-dispatches the same `taskId` legitimately - an operator retry and the
+ * stale sweeper both write a fresh `dispatch_idempotency_key` - and
+ * a function-level key on `event.data.taskId` would silently swallow those for
+ * 24 hours. Exactly-once is carried by the event `id`, which is that durable
+ * dispatch key (see `sendJobEvent`).
+ *
+ * The provider call stays inside a single `step.run`. `executePresentationTask`
+ * is one closure over a reservation, an attempt counter and a regeneration
+ * loop; splitting it across steps would require serialising `GeneratedMedia`
+ * (the raw provider image bytes) into Inngest step state, which both bloats the
+ * run and puts customer media outside private Supabase Storage.
+ */
+/**
+ * The subset of the Inngest step tooling this body uses. Deliberately untyped
+ * in its return: `step.run` answers `Jsonify<T>`, which is the same JSON this
+ * function already returns, and pinning the generic here would only fight it.
+ */
+interface StepRunner {
+  run(id: string, handler: () => unknown): Promise<unknown>;
+}
+
+type PresentationOutcome = Awaited<ReturnType<typeof executePresentationTask>>;
+
+/**
+ * The body, exported so the outbox scoping below is unit-testable without a
+ * live Inngest run.
+ */
+export async function runPresentationTask(
+  taskId: string,
+  step: StepRunner,
+  overrides: {
+    execute?: (taskId: string) => Promise<PresentationOutcome>;
+    dispatch?: typeof dispatchPendingOutbox;
+  } = {},
+) {
+  const execute =
+    overrides.execute ??
+    ((id: string) => {
+      const dependencies = productionPresentationDependencies();
+      return executePresentationTask(
+        id,
+        dependencies.repository,
+        dependencies.generator,
+        dependencies.verifier,
+        dependencies.nameReader,
+      );
+    });
+  const dispatch = overrides.dispatch ?? dispatchPendingOutbox;
+  const result = (await step.run("execute-presentation-task", () =>
+    execute(taskId),
+  )) as PresentationOutcome;
+  // A ready still releases its dependent views through the same outbox.
+  // Scoped to this run: an unscoped sweep claims other principals' pending rows
+  // from inside a customer-triggered function, which both bypasses the
+  // INNGEST_CRON_ENABLED guard on the recovery crons and races them.
+  if (result.status === "ready" && result.runId) {
+    const runId = result.runId;
+    await step.run("dispatch-dependent-outbox", () =>
+      dispatch(jobEnvironment(), sendJobEvent, fetch, { aggregateId: runId }),
+    );
+  }
+  return result;
+}
+
+export const presentationTask = inngest.createFunction(
+  {
+    id: "presentation-task",
+    name: "Presentation still",
+    onFailure: reportFunctionFailure("presentation-task"),
+    triggers: [{ event: JOB_EVENTS.still_execute }],
+    concurrency: [openAIImageConcurrency],
+    retries: 0,
+  },
+  async ({ event, step }) =>
+    runPresentationTask(String(event.data.taskId), step),
+);
+
+/**
+ * Reconciles the "database committed but the dispatch never landed" window.
+ * Concurrency 1 so two ticks can never race for the same outbox lease.
+ */
+export const outboxRecovery = inngest.createFunction(
+  {
+    id: "outbox-recovery",
+    name: "Outbox recovery",
+    onFailure: reportFunctionFailure("outbox-recovery"),
+    triggers: [{ cron: "* * * * *" }],
+    concurrency: 1,
+    retries: 3,
+  },
+  async ({ step }) =>
+    step.run("dispatch-pending-outbox", () =>
+      dispatchPendingOutbox(jobEnvironment(), sendJobEvent),
+    ),
+);
+
+/**
+ * Re-dispatches tasks whose worker died mid-flight. Same cadence as the
+ * Trigger schedule it replaces.
+ */
+export const staleMediaRecovery = inngest.createFunction(
+  {
+    id: "stale-media-recovery",
+    name: "Stale media recovery",
+    onFailure: reportFunctionFailure("stale-media-recovery"),
+    triggers: [{ cron: "*/2 * * * *" }],
+    concurrency: 1,
+    retries: 0,
+  },
+  async ({ step }) => {
+    const recovered = await step.run("recover-stale-tasks", () =>
+      recoverStaleTasks(jobEnvironment()),
+    );
+    const dispatched = await step.run("dispatch-pending-outbox", () =>
+      dispatchPendingOutbox(jobEnvironment(), sendJobEvent),
+    );
+    return { recovered, dispatched };
+  },
+);
+
+/**
+ * `retries: 0` for the same reason as the still: a retried submission cannot
+ * prove whether fal already accepted a paid request.
+ */
+export const videoSubmit = inngest.createFunction(
+  {
+    id: "video-submit",
+    name: "Video submit",
+    onFailure: reportFunctionFailure("video-submit"),
+    triggers: [{ event: JOB_EVENTS.video_submit }],
+    concurrency: [falVideoConcurrency],
+    retries: 0,
+  },
+  async ({ event, step }) => {
+    const taskId = String(event.data.taskId);
+    const result = await step.run("submit-video", () =>
+      submitVideoTask(taskId),
+    );
+    if (result.status === "submitted")
+      await step.sendEvent("start-video-poll", {
+        name: JOB_EVENTS.video_poll,
+        data: { taskId, pollCount: 0 },
+      });
+    return result;
+  },
+);
+
+/**
+ * One durable run polls to completion with `step.sleep` between attempts,
+ * instead of re-triggering itself once per poll.
+ *
+ * It carries no fal concurrency key: the rate-limited resource is submission,
+ * not status reads, and a sleeping run would otherwise hold a submission slot
+ * for the full ten-minute poll window.
+ */
+export const videoPoll = inngest.createFunction(
+  {
+    id: "video-poll",
+    name: "Video poll",
+    onFailure: reportFunctionFailure("video-poll"),
+    triggers: [{ event: JOB_EVENTS.video_poll }],
+    retries: 3,
+  },
+  async ({ event, step }) => {
+    const taskId = String(event.data.taskId);
+    const start = Number(event.data.pollCount ?? 0);
+    for (
+      let pollCount = start;
+      pollCount < pipelineLimits.videoPollMaxAttempts;
+      pollCount += 1
+    ) {
+      const result = await step.run(`poll-video-${pollCount}`, () =>
+        pollVideoTask(taskId),
+      );
+      if (result.status !== "pending") return result;
+      await step.sleep(
+        `wait-${pollCount}`,
+        `${pipelineLimits.videoPollIntervalSeconds}s`,
+      );
+    }
+    return step.run("mark-video-poll-timeout", () =>
+      markVideoPollTimeout(taskId),
+    );
+  },
+);
+
+/**
+ * Cron functions claim work from the shared outbox with service-role
+ * credentials. Registering them from a developer's machine would let a local
+ * `inngest dev` steal a live shopper's task, so they are opt-in per
+ * environment through `INNGEST_CRON_ENABLED=1`.
+ */
+export const functions = [
+  presentationTask,
+  videoSubmit,
+  videoPoll,
+  // P7-3. Not a cron and not an outbox consumer: it is registered in every
+  // environment, because the shop must be told about a request captured on that
+  // environment and nothing else claims shared work.
+  previewRequestNotification,
+  ...(cronFunctionsEnabled()
+    ? [
+        outboxRecovery,
+        staleMediaRecovery,
+        // B3. A cron like the other two: it reads the shared `preview_requests`
+        // table with service-role credentials, so exactly one environment may
+        // run it or two deployments announce the same request twice over.
+        previewRequestNotificationSweep,
+      ]
+    : []),
+];
+
+async function recoverStaleTasks(
+  environment: Record<string, string | undefined>,
+) {
+  const url = environment.SUPABASE_URL;
+  const key = environment.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) throw new Error("Supabase jobs configuration missing");
+  // Derived from the executor's request cap, never a standalone number: a task
+  // is stale only once no dispatch could still hold its request, which is that
+  // cap plus the margin (pipeline review 1 finding 2, fix-2 review M6). The cap
+  // itself is asserted against the route's `maxDuration` literal at boot in
+  // `apps/web/src/app/api/inngest/route.ts`, so the two cannot drift.
+  const staleBefore = new Date(
+    Date.now() - pipelineLimits.staleRecoveryWindowMs,
+  ).toISOString();
+  const response = await fetch(
+    `${url}/rest/v1/rpc/recover_stale_generation_tasks`,
+    {
+      method: "POST",
+      headers: {
+        apikey: key,
+        authorization: `Bearer ${key}`,
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        p_stale_before: staleBefore,
+        p_limit: pipelineLimits.staleRecoveryLimit,
+      }),
+    },
+  );
+  if (!response.ok)
+    throw new Error(`Stale task recovery failed:${response.status}`);
+  return response.json() as Promise<
+    Array<{ task_id: string; recovery_action: string; outbox_id?: string }>
+  >;
+}

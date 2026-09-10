@@ -1,5 +1,9 @@
 .app {
   --serif: "Playfair Display", Georgia, serif;
+  /* The fixed action bar is 16px + a 50px button + 16px + a 1px border = 83px,
+     reserved as 86px. Every element that must stay clear of it subtracts or
+     adds this one number instead of guessing its own. */
+  --action-bar-block: 86px;
   background: var(--paper);
   min-height: 100dvh;
   color: var(--ink);
@@ -129,7 +133,9 @@
 .main {
   max-width: 1440px;
   margin: auto;
-  padding: 8px 5% 40px;
+  /* The last control in the left column must end above the fixed bar, not
+     under it, at the very end of the scroll. */
+  padding: 8px 5% calc(40px + var(--action-bar-block));
 }
 .intro {
   padding: 12px 0 32px;
@@ -252,6 +258,17 @@
   font-size: 9px;
   color: var(--muted);
 }
+/* An option the shop cannot photograph yet: offered, selectable, and honest
+   about it before the shopper reaches the confirmation. */
+.choice[data-not-photographed] small {
+  color: #8a6a2f;
+}
+.fieldNote {
+  margin: 8px 0 0;
+  font-size: 11px;
+  line-height: 1.5;
+  color: #59564d;
+}
 .selectedTick {
   position: absolute;
   inset-block-start: 6px;
@@ -314,7 +331,10 @@
   color: var(--gold);
 }
 .letterSample {
-  font: 26px var(--serif);
+  display: block;
+  width: 100%;
+  height: 56px;
+  fill: currentColor;
   color: #96703a;
 }
 .layoutSample {
@@ -388,13 +408,37 @@
   display: block;
 }
 .preview {
+  --preview-gap: 16px;
+  --preview-reserved: 124px;
+  --preview-budget: calc(100dvh - 300px);
+  position: sticky;
+  top: var(--preview-gap);
   min-width: 0;
-  align-self: stretch;
+  align-self: start;
+  z-index: 2;
+  background: var(--paper);
 }
 .previewSticky {
-  position: sticky;
-  top: 24px;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  block-size: var(--preview-budget);
+  max-block-size: calc(100dvh - var(--preview-reserved));
+  min-block-size: 0;
+  overflow: hidden;
 }
+.previewSticky .photo {
+  min-block-size: 0;
+  block-size: 100%;
+  inline-size: 100%;
+  aspect-ratio: auto;
+  margin: 0;
+  align-self: start;
+}
+.previewSticky .photo > img {
+  object-fit: contain;
+  object-position: center top;
+}
+
 .photo {
   position: relative;
   aspect-ratio: 4/4.5;
@@ -421,18 +465,7 @@
   border-radius: 2px;
   max-width: calc(100% - 36px);
 }
-.photoCaption {
-  position: absolute;
-  inset: auto 0 0;
-  background: linear-gradient(transparent, #f7f3ecee);
-  padding: 50px 22px 18px;
-  display: flex;
-  justify-content: space-between;
-  gap: 10px;
-  font-size: 8px;
-  letter-spacing: 1px;
-  pointer-events: none;
-}
+
 .zoomButton {
   position: absolute;
   inset-inline-end: 16px;
@@ -841,6 +874,23 @@
   color: var(--muted);
   margin-block: 15px;
 }
+.clearConfirm {
+  margin-block: 15px;
+}
+.clearConfirm p {
+  margin-block: 0 10px;
+}
+.clearConfirm > div {
+  display: flex;
+  gap: 10px;
+}
+.clearConfirm > div button {
+  flex: 1;
+  border: 1px solid var(--line);
+  background: none;
+  padding: 10px 12px;
+  font-size: 12px;
+}
 .bagFooter .primary {
   width: 100%;
   justify-content: center;
@@ -891,6 +941,13 @@
   background: none;
   border: 1px solid var(--line);
 }
+.zoomTools .zoomReset {
+  inline-size: max-content;
+  min-inline-size: 44px;
+  flex: 0 0 auto;
+  padding-inline: 12px;
+  white-space: nowrap;
+}
 .zoomCanvas {
   width: 100% !important;
   height: 70dvh !important;
@@ -931,18 +988,11 @@
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     gap: 24px;
   }
-  .photo {
-    aspect-ratio: 3/4;
-  }
-  .previewSticky {
-    top: 20px;
-  }
+
   .visualChoices {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-  .photoCaption {
-    flex-direction: column;
-  }
+
   .previewSummary {
     gap: 10px;
     flex-direction: column;
@@ -1012,15 +1062,37 @@
   .preview {
     order: -1;
     width: 100%;
+    align-self: auto;
+    --preview-gap: 8px;
   }
   .previewSticky {
-    position: static;
+    block-size: min(340px, var(--preview-budget));
   }
-  .photo {
-    aspect-ratio: 1.16;
+  .previewSticky .previewState {
+    padding: 8px;
+    gap: 6px;
   }
+  .previewSticky .previewState h2 {
+    font-size: 15px;
+    line-height: 1.3;
+  }
+  .previewSticky .previewState svg {
+    width: 22px;
+    height: 22px;
+    flex-shrink: 0;
+  }
+  .controls :is(input, textarea, button),
+  .controls .intro h1,
+  .controls .section {
+    scroll-margin-block-start: var(--preview-scroll-clearance, 360px);
+  }
+
+  /* Same frame and same containment as the desktop preview: a 9:16 dark still
+     was cropped to roughly half by the old 1.16 landscape frame with a cover
+     fit. The catalogue photographs are exactly 4:5, so they still fill it. */
+
   .photo > img {
-    object-position: 50% 60%;
+    object-fit: contain;
   }
   .photoLabel {
     inset-block-start: 12px;
@@ -1028,11 +1100,7 @@
     font-size: 8px;
     max-width: calc(100% - 24px);
   }
-  .photoCaption {
-    padding: 40px 14px 14px;
-    letter-spacing: 0.5px;
-    font-size: 7px;
-  }
+
   .zoomButton {
     inset-block-end: 42px;
     inset-inline-end: 12px;
@@ -1167,9 +1235,7 @@
   .choice {
     padding-inline: 5px;
   }
-  .photoCaption > span:first-child {
-    display: none;
-  }
+
   .previewSummary {
     gap: 8px;
   }
@@ -1202,17 +1268,25 @@
   .app[data-text-entry="true"] .actionBar {
     display: none;
   }
+  .app[data-text-entry="true"] .preview {
+    position: static;
+  }
+  .app[data-text-entry="true"] .previewSticky {
+    max-block-size: none;
+  }
+  .app[data-text-entry="true"] .controls :is(input, textarea, button) {
+    scroll-margin-block-start: 16px;
+  }
   .app[data-text-entry="true"] {
     padding-bottom: 140px;
   }
 }
 @media (min-width: 768px) {
-  .photo {
-    height: clamp(340px, 56vh, 620px);
-    aspect-ratio: auto;
-  }
-  .photo > img {
-    object-position: 50% 65%;
+  /* Keep the complete pendant visible in every frame. */
+  .photo > img,
+  .previousPhoto {
+    object-fit: contain;
+    object-position: 50% 50%;
   }
 }
 .app button,
@@ -1228,9 +1302,7 @@
 :global(body):has(.app) {
   overflow-x: clip;
 }
-.previewSticky {
-  top: 16px;
-}
+
 .views {
   gap: 10px;
   border: 0;
@@ -1281,9 +1353,7 @@
   border-color: var(--ink);
 }
 @media (min-width: 768px) {
-  .photo {
-    height: clamp(220px, calc(100dvh - 340px), 560px);
-  }
+
   .previewSummary {
     padding-block: 12px 8px;
   }
@@ -1297,11 +1367,6 @@
   }
   .views button img {
     height: 54px;
-  }
-}
-@media (min-width: 768px) and (max-width: 1099px) {
-  .photo {
-    height: clamp(200px, calc(100dvh - 440px), 460px);
   }
 }
 
@@ -1376,26 +1441,18 @@
   transform: translateY(-2px);
   border-color: #9a875c;
 }
-.sampleDetails {
-  border-block-end: 1px solid #d8d0c0;
-  padding: 0 0 10px;
+.previewNote {
   font-size: 11px;
-  color: #59564d;
-}
-.sampleDetails summary {
-  min-height: 44px;
-  cursor: pointer;
-  align-content: center;
-}
-.sampleDetails summary > span {
-  float: inline-end;
-  font-size: 10px;
-  margin-inline-start: 6px;
-}
-.sampleDetails p {
-  margin: 6px 0;
   line-height: 1.5;
+  color: #59564d;
+  margin: 0 0 10px !important;
 }
+/* Whose piece the photograph is. Two shoppers read the shop's example as their
+   own result, so this one line is darker than the other dock notes. */
+.previewNote[data-sample-note="ownership"] {
+  color: #3c3a33;
+}
+
 .selectionSummary {
   display: flex;
   gap: 14px;
@@ -1443,28 +1500,6 @@
   border-radius: 50%;
   margin-inline-end: 5px;
 }
-@media (min-width: 768px) {
-  .previewSticky {
-    display: flex;
-    flex-direction: column;
-    height: min(940px, calc(100dvh - 124px));
-  }
-  .previewSticky .photo {
-    height: auto;
-    flex: 1 1 auto;
-    min-height: 160px;
-  }
-  .previewDock {
-    flex: none;
-  }
-  .previewSticky:has(.sampleDetails[open]) {
-    height: auto;
-  }
-  .previewSticky:has(.sampleDetails[open]) .photo {
-    height: 240px;
-    flex: none;
-  }
-}
 @media (min-width: 768px) and (max-width: 1099px) {
   .previewDock {
     padding: 12px;
@@ -1501,7 +1536,35 @@
 }
 @media (max-width: 767px) {
   .previewDock {
-    padding: 12px;
+    padding: 8px;
+  }
+  .previewDock .previewNote {
+    margin-bottom: 4px !important;
+    font-size: 10px;
+    line-height: 1.3;
+  }
+  .previewDock .dockHeading small {
+    display: none;
+  }
+  .previewDock .dockHeading h2 {
+    margin: 0;
+    font-size: 17px;
+  }
+  .previewDock .carouselProgress {
+    margin-block: 2px;
+  }
+  .previewDock .views {
+    padding-block: 4px;
+  }
+  .previewDock .views button span {
+    padding-block: 2px;
+  }
+  .previewDock .views button em {
+    line-height: 1.25;
+  }
+  .previewDock .views button img,
+  .previewDock .missingAngle {
+    height: 32px;
   }
   .dockHeading h2 {
     font-size: 22px;
@@ -1513,11 +1576,9 @@
     font-size: 11px;
     padding: 3px 3px 7px;
   }
-  .previewDock .views button img {
-    height: 52px;
-  }
+
   .previewDock .views button em {
-    font-size: 8px;
+    font-size: 10px;
   }
   .selectionSummary {
     display: block;
@@ -1534,16 +1595,7 @@
     margin: 0;
   }
 }
-@media (min-width: 768px) and (max-height: 700px) {
-  .previewSticky {
-    position: static;
-    height: auto;
-  }
-  .previewSticky .photo {
-    height: 280px;
-    flex: none;
-  }
-}
+
 .srOnly {
   position: absolute;
   width: 1px;
@@ -1677,11 +1729,7 @@
 .photo > img {
   object-position: 50% 50%;
 }
-@media (min-width: 768px) {
-  .previewSticky .photo {
-    min-height: 280px;
-  }
-}
+
 :global(html):has(.app) {
   scroll-padding-block: 24px 112px;
 }
@@ -1690,17 +1738,242 @@
 .controls textarea {
   scroll-margin-block: 110px;
 }
-/* Tall two-name assemblies must retain both complete words in short windows. */
-.photo[data-fit="full"] > img {
-  object-fit: contain;
-}
-.photo[data-fit="full"][data-carousel-view="Dark"] {
-  background: #171614;
-}
-
 /* Original portrait photography: keep the pendant in the main preview crop. */
 .photo > img { object-position: 50% 65%; }
 .photo[data-carousel-view="On skin"] > img { object-position: 50% 55%; }
 
 .previousPhoto { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 65%; opacity: .28; pointer-events: none; }
 .previewState > :not(.previousPhoto) { position: relative; z-index: 1; }
+
+/* W4 - the customer's own preview: added states only, existing palette,
+   typography and spacing scale. Nothing above is restyled. */
+.ownPreview {
+  background: #f6f2eb;
+  border-inline-start: 2px solid var(--gold);
+  padding: 16px 18px;
+  margin-block: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow-wrap: anywhere;
+}
+.ownPreview > small {
+  font-size: 8px;
+  letter-spacing: 1.2px;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+.ownPreview p {
+  font-size: 12px;
+  line-height: 1.7;
+}
+.ownHeadline {
+  font: 19px var(--serif);
+  line-height: 1.45 !important;
+}
+.ownStatusRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 6px;
+}
+.ownStatusRow b {
+  font-weight: 500;
+}
+.ownStatusRow span {
+  color: var(--muted);
+}
+.ownStatusRow[data-status="ready"] span {
+  color: #6c6a2f;
+}
+.channelPicker {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.channelPicker button {
+  border: 1px solid var(--line);
+  background: var(--paper);
+  padding: 10px 14px;
+  font-size: 11px;
+  min-height: 44px;
+}
+.channelPicker button[aria-pressed="true"] {
+  border-color: var(--ink);
+}
+.photoSwitch {
+  display: flex;
+  gap: 8px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line);
+}
+.photoSwitch button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--line);
+  background: var(--paper);
+  padding: 8px 12px;
+  font-size: 11px;
+  min-height: 44px;
+}
+.photoSwitch button[aria-pressed="true"] {
+  border-color: var(--ink);
+}
+.photoSwitch img {
+  width: 28px;
+  height: 28px;
+  object-fit: cover;
+}
+
+/* P6-1 - a short desktop window holds the photograph, the dock and the fixed
+   action bar at once. Below 820px of viewport height the dock gives back its
+   optional whitespace first, and only then does the photograph give back
+   height. Everything here is spacing; no control and no label is removed. */
+@media (min-width: 768px) and (max-height: 820px) {
+  .previewDock {
+    padding: 10px 12px;
+  }
+  .previewNote {
+    margin-bottom: 6px !important;
+  }
+  .dockHeading h2 {
+    font-size: 19px;
+  }
+  .carouselProgress {
+    margin-bottom: 8px;
+  }
+  .previewDock .views {
+    gap: 6px;
+    padding: 8px 0 6px;
+  }
+  .previewDock .views button img {
+    height: 44px;
+  }
+  .previewDock .views button span {
+    padding: 5px 0 1px;
+  }
+  .missingAngle {
+    height: 44px;
+  }
+
+  .selectionSummary {
+    padding-block-start: 8px;
+  }
+  .selectionName b {
+    font-size: 20px;
+  }
+  .previewDock .specChips > span {
+    padding: 3px 6px;
+  }
+
+}
+
+/* A directional arrow follows the reading direction. Icons that are not
+   directional - the bag, the close cross - must not flip, so this names the
+   two arrow icons rather than every svg. */
+:global([dir="rtl"]) .app :global(.lucide-arrow-left),
+:global([dir="rtl"]) .app :global(.lucide-arrow-right) {
+  transform: scaleX(-1);
+}
+
+/* Reduced motion removes every animation above, which left the "photographing"
+   indicator as a static broken ring saying nothing. A fade carries the same
+   "still working" message without moving anything across the screen. */
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation: spinnerBreath 1.8s ease-in-out infinite !important;
+    border-top-color: #bda982;
+  }
+}
+@keyframes spinnerBreath {
+  50% {
+    opacity: 0.3;
+  }
+}
+
+/* The Arabic journey's web face. "Playfair Display" and "Instrument Sans" have
+   no Arabic glyphs, so before this rule every Arabic word on the page fell
+   through to whatever Naskh the device shipped and the shop looked different on
+   every tablet. `--font-arabic` is set by `next/font` in the `[locale]` layout
+   and only exists on the `ar` tree, so the Latin pages are untouched: the
+   serif variable and the body stack are re-pointed here, not replaced. */
+:global([dir="rtl"]) .app {
+  --serif: var(--font-arabic), Georgia, serif;
+  font-family: var(--font-arabic), "Instrument Sans", Arial, sans-serif;
+}
+:global([dir="rtl"]) .app input,
+:global([dir="rtl"]) .app select,
+:global([dir="rtl"]) .app textarea {
+  font-family: inherit;
+}
+/* Three micro-labels are tracked out for Latin small caps. Arabic is cursive:
+   the same tracking pulls the joined letters apart. Only the three that this
+   change turned from Latin into Arabic are named here; the Latin journey keeps
+   its spacing exactly as it was. */
+:global([dir="rtl"]) .headerNote,
+:global([dir="rtl"]) .footer {
+  letter-spacing: normal;
+}
+
+/* P6-10: give the photograph the page, then keep a small reminder in reach. */
+.compactPreview { display: none; }
+@media (min-width: 768px) {
+  /* Keep the sticky boundary stable when the review form is shorter than the
+     photograph: shrinking the rail must not also shrink its parent. */
+  .workspace { min-block-size: calc(100dvh - 124px); }
+  .previewDock { padding: 10px 12px; }
+  .previewDock .views { padding-block: 8px 6px; }
+  .previewDock .views button img, .previewDock .missingAngle { height: 44px; }
+  .previewNote { margin-bottom: 6px !important; }
+  .previewSticky .photo > img { object-position: center; }
+}
+@media (max-width: 767px) {
+  .preview { position: static; }
+  .previewSticky {
+    block-size: auto;
+    max-block-size: none;
+    grid-template-rows: auto auto;
+  }
+  .previewSticky .photo {
+    block-size: min(112vw, 64svh);
+    min-block-size: 240px;
+  }
+  .preview[data-has-photograph="false"] .photo {
+    block-size: 180px;
+    min-block-size: 180px;
+  }
+  .previewSticky .photo > img { object-position: center; }
+  .zoomButton { inset-block-end: 12px; min-width: 44px; min-height: 44px; }
+  .compactPreview {
+    display: block;
+    position: fixed;
+    z-index: 20;
+    inset-block-start: 0;
+    inset-inline: 0;
+    padding: 8px 16px;
+    background: var(--paper);
+    border-bottom: 1px solid var(--line);
+    box-shadow: 0 4px 18px #30271a0d;
+  }
+  .compactPreview > button, .compactPreview > div {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    min-height: 64px;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    text-align: start;
+    padding: 0;
+  }
+  .compactPreview img { width: 52px; height: 64px; object-fit: contain; background: #eee7dc; border-radius: 3px; }
+  .compactPreview span { flex: 1; min-width: 0; font-size: 13px; line-height: 1.4; }
+  .compactPreview strong, .compactPreview small { display: block; }
+  .compactPreview small { color: var(--muted); margin-top: 3px; }
+  .compactPreview svg { flex-shrink: 0; }
+  .zoomCanvas, .zoomCanvas img { height: calc(100dvh - 150px) !important; }
+}

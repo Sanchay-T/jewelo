@@ -12,7 +12,7 @@ This branch is the clean-room source of truth for rebuilding Jewelo from first p
 - pnpm workspace + Turborepo
 - DigitalOcean App Platform in Bangalore for staging and production web deployments
 - Supabase Mumbai for Postgres, Auth, Realtime, and private Storage
-- Trigger.dev Cloud for durable, parallel AI workflows
+- Inngest (self-hosted on App Platform) for durable, parallel AI workflows
 - direct OpenAI `gpt-image-2-2026-04-21` for product and worn stills
 - fal.ai for video inference
 - Seedance 2.0 Fast for four 4-second motion previews
@@ -37,13 +37,13 @@ Provider quotas remain honest:
 
 - OpenAI concurrency/IPM is validated before real launch;
 - fal preview-all mode requires a verified account concurrency limit of at least four;
-- below a provider limit, Trigger queues excess work and the UI shows `queued` rather than fake progress.
+- below a provider limit, Inngest queues excess work and the UI shows `queued` rather than fake progress.
 
 ## Open-source framework decision
 
-No autonomous media-agent framework sits in the production path. Genblaze was the strongest open-source pipeline candidate reviewed, but it would add Python and duplicate Trigger.dev’s durable workflow responsibilities. Jewelo keeps deterministic typed workflows and borrows only provenance ideas.
+No autonomous media-agent framework sits in the production path. Genblaze was the strongest open-source pipeline candidate reviewed, but it would add Python and duplicate the job engine’s durable workflow responsibilities. Jewelo keeps deterministic typed workflows and borrows only provenance ideas.
 
-fal.ai is the managed inference gateway for Seedance—not the business workflow engine. Trigger.dev owns fan-out, retries, idempotency, fairness, cancellation, and recovery. Supabase owns durable customer-visible truth.
+fal.ai is the managed inference gateway for Seedance—not the business workflow engine. Inngest owns fan-out, retries, idempotency, fairness, cancellation, and recovery. Supabase owns durable customer-visible truth.
 
 ## Start
 

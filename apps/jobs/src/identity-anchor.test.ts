@@ -99,6 +99,9 @@ describe("deterministic identity anchor", () => {
   });
 
   it("routes unsupported Arabic styles and two-name layouts before spend", async () => {
+    // Commit d2bfe4e opened every named customer style (classic, minimal,
+    // diwani, signature, kufi, thuluth-inspired) on the certified Naskh face,
+    // so only a style the registry does not know still fails closed.
     const anchor = {
       approvedText: "ليلى & نور",
       language: "ar" as const,
@@ -119,7 +122,7 @@ describe("deterministic identity anchor", () => {
         { ...anchor, approvedText: "ليلى" },
         {
           names: [{ approvedArabicText: "ليلى" }],
-          arabicStyle: "signature",
+          arabicStyle: "art-deco-neon",
           layout: "single-name",
           connector: "none",
           dimensions: { widthMm: 30, heightMm: 12, thicknessMm: 1.2 },

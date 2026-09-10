@@ -2,12 +2,21 @@ import "server-only";
 
 import { createHmac, timingSafeEqual } from "node:crypto";
 
+import { configuredAppHost } from "@jewelo/config";
+
 const COOKIE_NAME = "caleums_operator";
 const SESSION_SECONDS = 8 * 60 * 60;
 const MOCK_SESSION = "mock-development-session";
 
-function mockMode() {
+/**
+ * The development shortcut that accepts any address with an `@` and four
+ * characters. It is an explicit opt-in: `OPERATOR_MOCK_AUTH=1` has to be set as
+ * well as the environment being non-production and non-remote, so a build that
+ * merely forgets `NODE_ENV=production` cannot open the operator console.
+ */
+export function operatorMockMode() {
   return (
+    process.env.OPERATOR_MOCK_AUTH === "1" &&
     process.env.NODE_ENV !== "production" &&
     process.env.NEXT_PUBLIC_JEWELO_DATA_MODE !== "remote"
   );
@@ -36,7 +45,7 @@ function signature(expiresAt: string) {
 }
 
 export function authenticateOperator(email: string, passphrase: string) {
-  if (mockMode()) return email.includes("@") && passphrase.length >= 4;
+  if (operatorMockMode()) return email.includes("@") && passphrase.length >= 4;
   return (
     equal(
       email.trim().toLowerCase(),
@@ -46,7 +55,7 @@ export function authenticateOperator(email: string, passphrase: string) {
 }
 
 export function operatorSessionCookie() {
-  if (mockMode())
+  if (operatorMockMode())
     return `${COOKIE_NAME}=${MOCK_SESSION}.${crypto.randomUUID()}; Path=/; HttpOnly; SameSite=Strict; Max-Age=${SESSION_SECONDS}`;
   const expiresAt = String(Math.floor(Date.now() / 1000) + SESSION_SECONDS);
   return `${COOKIE_NAME}=${expiresAt}.${signature(expiresAt)}; Path=/; HttpOnly; SameSite=Strict; Max-Age=${SESSION_SECONDS}${process.env.NODE_ENV === "production" ? "; Secure" : ""}`;
@@ -64,7 +73,7 @@ export function hasOperatorSession(request: Request) {
     .find((part) => part.startsWith(`${COOKIE_NAME}=`))
     ?.slice(COOKIE_NAME.length + 1);
   if (!raw) return false;
-  if (mockMode() && raw.startsWith(`${MOCK_SESSION}.`)) return true;
+  if (operatorMockMode() && raw.startsWith(`${MOCK_SESSION}.`)) return true;
   const [expiresAt, provided] = raw.split(".");
   if (!expiresAt || !provided || Number(expiresAt) <= Date.now() / 1000)
     return false;
@@ -75,6 +84,59 @@ export function hasOperatorSession(request: Request) {
 export function requireOperatorSession(request: Request) {
   if (!hasOperatorSession(request))
     throw new Response("Operator authentication required", { status: 401 });
+}
+
+/**
+ * A browser page on another origin must not be able to drive an operator route
+ * with the operator's own cookie.
+ *
+ * Security review 2 L-1: this used to be a private copy in the commands route
+ * and another in the prompts route, so the two operator GETs that never got a
+ * copy - `review-runs` and `preview-requests` - answered a cross-site read with
+ * the queue and every shopper's contact detail in it. One helper, called by
+ * every operator route, is the only version of this rule that cannot drift.
+ *
+ * `mutation` adds the `Origin` check: a request that changes something must
+ * name this host, and a missing header is a refusal rather than a pass.
+ */
+export function assertSameOrigin(request: Request, mutation = false) {
+  if (request.headers.get("sec-fetch-site") === "cross-site")
+    throw new Response("Cross-site request rejected", { status: 403 });
+  if (!mutation) return;
+  const origin = request.headers.get("origin");
+  const originHost = (() => {
+    try {
+      return origin ? new URL(origin).host : "";
+    } catch {
+      return "";
+    }
+  })();
+  // Storyline review 1, CSRF minor: this used to compare `Origin` with
+  // `x-forwarded-host`, and a caller who sends one sends both, so the check
+  // compared an attacker's value with the attacker's other value and passed.
+  // `x-forwarded-host` is gone from this decision entirely.
+  //
+  // The configured app host comes first because `NEXT_PUBLIC_APP_URL` is set by
+  // the deployment and nothing a request carries can change it. `Host` is kept
+  // as a second accepted value rather than a fallback used only when the
+  // configuration is absent, for two reasons: behind DigitalOcean's ingress
+  // `Host` is what routed the request there at all, so a forged one never
+  // reaches this process; and locally the app answers on port 3011 while
+  // `NEXT_PUBLIC_APP_URL` names the default port, so a configured-host-only
+  // rule would refuse every operator mutation made in a developer's own
+  // browser. Neither value is attacker-chosen, which is the property the check
+  // needs.
+  //
+  // `new URL(request.url).host` is deliberately not on the list: the framework
+  // reconstructs that URL from the forwarded headers, so trusting it would put
+  // `x-forwarded-host` back into the comparison through the back door.
+  const allowed = new Set(
+    [configuredAppHost(), request.headers.get("host")].filter(
+      (host): host is string => Boolean(host),
+    ),
+  );
+  if (!originHost || !allowed.has(originHost))
+    throw new Response("Same-origin request required", { status: 403 });
 }
 
 export function operatorSessionScope(request: Request) {

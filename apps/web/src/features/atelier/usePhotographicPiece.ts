@@ -3,15 +3,18 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { resolveOptionFamily } from "./catalogue";
 import { views, type Draft, type View, type VisualField } from "./model";
-import { assemblyKey } from "./renderer/assembly";
-import type { Capture } from "./renderer/usePiece";
-import { saveSnapshotRecord } from "./renderer/storage";
+import { assemblyKey } from "./assembly";
+import type { Capture } from "./capture";
+import { saveSnapshotRecord, SNAPSHOT_VERSION } from "./snapshotStore";
 
 export function usePhotographicPiece(draft: Draft, enabled: boolean, focus?: VisualField, activeView: View = "Studio") {
   const family = resolveOptionFamily(draft, focus);
   const familyKey = family.assets.map(asset => asset.id).join("|");
   const key = assemblyKey(draft);
-  const identity = key + familyKey;
+  // The illustrated photograph is keyed on the design (Tier 1) alone, so a gold,
+  // stone, gem, size or chain click neither reloads it nor flashes a loading
+  // state over a pendant that has not changed.
+  const identity = familyKey || "sample-coming:" + family.tier1Key;
   const current = useRef({ key, enabled, identity, assets: family.assets });
   current.current = { key, enabled, identity, assets: family.assets };
   const [publishedIdentity, setPublishedIdentity] = useState("");
@@ -28,6 +31,7 @@ export function usePhotographicPiece(draft: Draft, enabled: boolean, focus?: Vis
     alive.current = true;
     return () => { alive.current = false; revision.current++; };
   }, []);
+  const shownViews = useCallback(() => current.current.assets.map(asset => asset.view), []);
   const capture = useCallback(async (requested: View[], failDark = false): Promise<Capture> => {
     const target = current.current.key;
     const targetIdentity = current.current.identity;
@@ -78,40 +82,45 @@ export function usePhotographicPiece(draft: Draft, enabled: boolean, focus?: Vis
     return result.current;
   }, []);
   useEffect(() => {
-    if (enabled) void capture([...views]).catch(() => {});
+    // Only the views this family actually has: an absent camera is hidden, not failed.
+    if (enabled) void capture(shownViews()).catch(() => {});
   }, [identity, enabled, capture]);
   const retry = useCallback((view?: View) => {
     const targetIdentity = current.current.identity;
     const work = retryQueue.current.catch(() => {}).then(() => {
       if (current.current.identity !== targetIdentity) throw new Error("The selection changed. Preview the current design.");
-      return capture(view ? [view] : [...views]);
+      return capture(view ? [view] : shownViews());
     });
     retryQueue.current = work;
     return work;
   }, [capture]);
-  const captureReview = useCallback((failDark = false) => capture([...views], failDark), [capture]);
+  const captureReview = useCallback((failDark = false) => capture(shownViews(), failDark), [capture]);
   const saveSnapshot = useCallback(async (id: string) => {
     const imageSet = result.current;
     const target = current.current.key;
     const targetIdentity = current.current.identity;
     const availableViews = views.filter((view) => imageSet.views[view] && !imageSet.errors[view]);
-    if (imageSet.key !== target || resultIdentity.current !== targetIdentity || !availableViews.length) throw new Error("Load the preview before saving.");
+    // The saved record carries the customer's complete assembly; the images it
+    // stores are the illustrated design, which depends on Tier 1 only.
+    if (resultIdentity.current !== targetIdentity || !availableViews.length) throw new Error("Load the preview before saving.");
     const descriptor = await saveSnapshotRecord({
-      id, key: target, rendererVersion: "photographic-v1", availableViews,
+      id, key: target, rendererVersion: SNAPSHOT_VERSION, availableViews,
       blobs: Object.fromEntries(availableViews.map((view) => [view, imageSet.views[view]!.blob])),
     });
     if (!alive.current || current.current.identity !== targetIdentity) throw new Error("The selection changed while saving.");
     if (!descriptor.persistent) setWarning("Image storage is unavailable. Saved photos are available only while this tab stays open.");
     return descriptor;
   }, []);
-  const active = enabled && state.key === key && publishedIdentity === identity;
+  const active = enabled && publishedIdentity === identity;
   const previous = lastImages.current[activeView];
-  const hasSuccess = views.some(view => state.views[view] && !state.errors[view]);
-  const unsettled = views.some(view => !state.views[view] && !state.errors[view]);
+  const available = family.assets.map(asset => asset.view);
+  const hasSuccess = available.some(view => state.views[view] && !state.errors[view]);
+  const unsettled = available.some(view => !state.views[view] && !state.errors[view]);
   return {
     previousImage: previous && previous.identity !== identity ? { src: previous.src, alt: previous.alt } : undefined,
-    family, missing: family.missing, availableViews: family.assets.map(asset => asset.view),
-    key, status: family.missing ? "missing" as const : !active || (!hasSuccess && unsettled) ? "pending" as const : hasSuccess ? "ready" as const : "failed" as const,
+    /** No photograph of this exact design yet: the option reads "sample coming". */
+    family, missing: family.missing, sampleComing: family.missing, availableViews: available,
+    key, status: !family.assets.length ? "missing" as const : !active || (!hasSuccess && unsettled) ? "pending" as const : hasSuccess ? "ready" as const : "failed" as const,
     views: active ? Object.fromEntries(Object.entries(state.views).map(([view, photo]) => [view, photo.url])) as Partial<Record<View, string>> : {},
     errors: active ? state.errors : {}, retry, captureReview, saveSnapshot, warning,
   };

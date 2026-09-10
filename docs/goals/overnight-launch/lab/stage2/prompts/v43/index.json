@@ -1,0 +1,74 @@
+[
+  {
+    "cell": "framed-minimal-noor-en",
+    "look": "framed-minimal",
+    "script": "en",
+    "name": "Noor",
+    "view": "studio",
+    "ratio": "1:1",
+    "intendedName": "Noor",
+    "stencilKey": "noor-en-classic-norings",
+    "promptPath": "docs/goals/overnight-launch/lab/stage2/prompts/v43/framed-minimal-noor-en.txt",
+    "promptSha256": "0252cd8aefc42caa04eea25b25c72694a7a801df6b7b421414bb8179f8b27ece"
+  },
+  {
+    "cell": "framed-minimal-noor-ar",
+    "look": "framed-minimal",
+    "script": "ar",
+    "name": "نور",
+    "view": "studio",
+    "ratio": "1:1",
+    "intendedName": "نور",
+    "stencilKey": "noor-ar-classic-norings",
+    "promptPath": "docs/goals/overnight-launch/lab/stage2/prompts/v43/framed-minimal-noor-ar.txt",
+    "promptSha256": "e38110d3760864a934324b0127b9dcf8f9a5c06f89b65ae18cae78a39cddf428"
+  },
+  {
+    "cell": "framed-minimal-layla-en",
+    "look": "framed-minimal",
+    "script": "en",
+    "name": "Layla",
+    "view": "studio",
+    "ratio": "1:1",
+    "intendedName": "Layla",
+    "stencilKey": "layla-en-classic-norings",
+    "promptPath": "docs/goals/overnight-launch/lab/stage2/prompts/v43/framed-minimal-layla-en.txt",
+    "promptSha256": "d069d7b3143b39df1280d5eeca01661afa4dab3be3695795d41eaae474250ad4"
+  },
+  {
+    "cell": "framed-minimal-layla-ar",
+    "look": "framed-minimal",
+    "script": "ar",
+    "name": "ليلى",
+    "view": "studio",
+    "ratio": "1:1",
+    "intendedName": "ليلى",
+    "stencilKey": "layla-ar-classic-norings",
+    "promptPath": "docs/goals/overnight-launch/lab/stage2/prompts/v43/framed-minimal-layla-ar.txt",
+    "promptSha256": "210973037b03b0b75925400d369a1056fbf22c48978e834de020322d0efb85eb"
+  },
+  {
+    "cell": "framed-minimal-muhammad-en",
+    "look": "framed-minimal",
+    "script": "en",
+    "name": "Muhammad",
+    "view": "studio",
+    "ratio": "1:1",
+    "intendedName": "Muhammad",
+    "stencilKey": "muhammad-en-classic-norings",
+    "promptPath": "docs/goals/overnight-launch/lab/stage2/prompts/v43/framed-minimal-muhammad-en.txt",
+    "promptSha256": "501269bd415024f42913ff94e1689e1f44629ca75fafb7d2e2070fcc6d6f8b6f"
+  },
+  {
+    "cell": "framed-minimal-muhammad-ar",
+    "look": "framed-minimal",
+    "script": "ar",
+    "name": "محمد",
+    "view": "studio",
+    "ratio": "1:1",
+    "intendedName": "محمد",
+    "stencilKey": "muhammad-ar-classic-norings",
+    "promptPath": "docs/goals/overnight-launch/lab/stage2/prompts/v43/framed-minimal-muhammad-ar.txt",
+    "promptSha256": "df44a292f11d27c02bf51a94c93f82c4932fba3714edc9783ad883d02de9dd3e"
+  }
+]

@@ -1,5 +1,11 @@
-import { isPromptProfile, validatePromptTemplate } from "@jewelo/ai";
 import {
+  assertStillTemplateCompatibility,
+  isPromptProfile,
+  validatePromptTemplate,
+} from "@jewelo/ai";
+import {
+  assertSameOrigin,
+  operatorMockMode,
   operatorSessionScope,
   requireOperatorSession,
 } from "../../../../lib/backend/operator-session";
@@ -16,35 +22,18 @@ import {
 } from "../../../../lib/backend/operator-prompt-store";
 
 const MAX_BODY_BYTES = 32 * 1024;
-const mockMode = () =>
-  process.env.NODE_ENV !== "production" &&
-  process.env.NEXT_PUBLIC_JEWELO_DATA_MODE !== "remote";
+/**
+ * One definition of "this deployment is a mock", shared with the operator
+ * session it is gated by. Its own looser copy meant a non-production build
+ * without `OPERATOR_MOCK_AUTH` served prompt releases from an in-memory store
+ * while the session helper considered the same deployment real.
+ */
+const mockMode = operatorMockMode;
 
 function requestId(request: Request) {
   return (
     request.headers.get("x-request-id")?.slice(0, 100) ?? crypto.randomUUID()
   );
-}
-
-function assertSameOrigin(request: Request, mutation = false) {
-  if (request.headers.get("sec-fetch-site") === "cross-site")
-    throw new Response("Cross-site request rejected", { status: 403 });
-  if (mutation) {
-    const origin = request.headers.get("origin");
-    const targetHost =
-      request.headers.get("x-forwarded-host") ??
-      request.headers.get("host") ??
-      new URL(request.url).host;
-    const originHost = (() => {
-      try {
-        return origin ? new URL(origin).host : "";
-      } catch {
-        return "";
-      }
-    })();
-    if (!originHost || originHost !== targetHost)
-      throw new Response("Same-origin request required", { status: 403 });
-  }
 }
 
 function releaseDto(release: StoredPromptRelease) {
@@ -179,6 +168,7 @@ export async function POST(request: Request) {
       if (!input.changeNote.trim() || input.changeNote.length > 500)
         throw new Error("Change note must be 1–500 characters");
       const parsed = validatePromptTemplate(input.profile, input.template);
+      assertStillTemplateCompatibility(input.profile, input.template);
       let release: StoredPromptRelease;
       if (mockMode())
         release = createMockPromptRelease({
@@ -225,9 +215,18 @@ export async function POST(request: Request) {
           releaseId: input.releaseId,
           expectedCurrentReleaseId: input.expectedCurrentReleaseId,
         });
-      else
+      else {
+        const admin = adminConfig();
+        const releases = await supabaseRequest<StoredPromptRelease[]>(
+          admin,
+          `/rest/v1/prompt_releases?id=eq.${encodeURIComponent(input.releaseId)}&select=id,profile,template&limit=1`,
+        );
+        const release = releases[0];
+        if (!release) throw new Error("Prompt release not found");
+        validatePromptTemplate(release.profile, release.template);
+        assertStillTemplateCompatibility(release.profile, release.template);
         await supabaseRequest(
-          adminConfig(),
+          admin,
           "/rest/v1/rpc/publish_prompt_release",
           {
             method: "POST",
@@ -238,6 +237,7 @@ export async function POST(request: Request) {
             }),
           },
         );
+      }
       return Response.json(
         { requestId: id },
         { headers: { "cache-control": "no-store", "x-request-id": id } },

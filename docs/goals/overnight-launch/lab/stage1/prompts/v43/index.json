@@ -1,0 +1,24 @@
+[
+  {
+    "cell": "framed-minimal-ar",
+    "look": "framed-minimal",
+    "script": "ar",
+    "view": "studio",
+    "ratio": "1:1",
+    "intendedName": "أسماء",
+    "stencilKey": "asma-ar-classic-norings",
+    "promptPath": "docs/goals/overnight-launch/lab/stage1/prompts/v43/framed-minimal-ar.txt",
+    "promptSha256": "a2d2c1035bfc1e4656b57242b61e3d4f448113036e3da8684013d787aa398624"
+  },
+  {
+    "cell": "framed-minimal-en",
+    "look": "framed-minimal",
+    "script": "en",
+    "view": "studio",
+    "ratio": "1:1",
+    "intendedName": "Asma",
+    "stencilKey": "asma-en-classic-norings",
+    "promptPath": "docs/goals/overnight-launch/lab/stage1/prompts/v43/framed-minimal-en.txt",
+    "promptSha256": "0a5a009a3b41651c8af707f3a776ad3bd5239c9b3f9a56724f86b229693bd29b"
+  }
+]

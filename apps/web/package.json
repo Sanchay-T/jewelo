@@ -4,14 +4,12 @@
   "private": true,
   "scripts": {
     "build": "next build",
-    "dev": "next dev",
+    "dev": "next dev -p 3001",
     "lint": "eslint src next.config.ts postcss.config.mjs",
     "start": "next start",
     "test": "vitest run",
-    "test:e2e": "playwright test",
     "typecheck": "tsc --noEmit",
-    "test:atelier": "vitest run src/features/atelier",
-    "test:atelier:e2e": "playwright test -c playwright.customer.config.ts"
+    "test:atelier": "vitest run src/features/atelier"
   },
   "dependencies": {
     "@fontsource/inter": "5.2.8",
@@ -20,24 +18,25 @@
     "@jewelo/config": "workspace:*",
     "@jewelo/contracts": "workspace:*",
     "@jewelo/data": "workspace:*",
+    "@jewelo/identity": "workspace:*",
+    "@jewelo/jobs": "workspace:*",
+    "@jewelo/observability": "workspace:*",
     "@phosphor-icons/react": "2.1.10",
     "embla-carousel-react": "8.6.0",
+    "inngest": "4.20.0",
     "motion": "12.23.24",
     "next": "16.2.12",
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "react-dropzone": "14.3.8",
-    "react-zoom-pan-pinch": "3.7.0",
-    "three": "0.185.1"
+    "react-zoom-pan-pinch": "3.7.0"
   },
   "devDependencies": {
-    "@playwright/test": "1.58.2",
     "@tailwindcss/postcss": "4.3.3",
     "@testing-library/jest-dom": "6.9.1",
     "@testing-library/react": "16.3.2",
     "@types/react": "19.2.18",
     "@types/react-dom": "19.2.5",
-    "@types/three": "0.185.4",
     "tailwindcss": "4.3.3"
   }
 }

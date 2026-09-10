@@ -1,5 +1,8 @@
 import "server-only";
 
+import { pipelineLimits } from "@jewelo/config";
+import { reportError } from "@jewelo/observability/server";
+
 interface SupabaseConfig {
   url: string;
   key: string;
@@ -139,14 +142,29 @@ function errorResponse(error: string, status: number, code: string): Response {
   );
 }
 
+/**
+ * P7-5 / DS-9. Every route's last line, so it is also where a failure is
+ * reported from.
+ *
+ * Only the failures nobody expected are reported: a 5xx, or a throw that
+ * matched no rule and became `internal`. A 404 for a design that is gone and a
+ * 422 for a name that is too long are the API working, and an error tracker
+ * full of them is an error tracker nobody reads. The report is queued before
+ * the response is built and never awaited, so the shopper's answer is not one
+ * millisecond slower for it; with `SENTRY_DSN` empty it does nothing at all.
+ */
 export function jsonError(error: unknown): Response {
   if (error instanceof Response) return error;
-  if (error instanceof ApiError)
+  if (error instanceof ApiError) {
+    if (error.status >= 500)
+      reportError(error, { code: error.code, status: error.status });
     return errorResponse(error.message, error.status, error.code);
+  }
   const message = error instanceof Error ? error.message : "Unexpected error";
   const rule = PLAIN_ERROR_RULES.find(([pattern]) => pattern.test(message));
   if (!rule) {
     console.error("api_route_failed", message);
+    reportError(error, { code: "internal", status: 500 });
     return errorResponse("Internal error", 500, "internal");
   }
   return errorResponse(message, rule[1], rule[2]);
@@ -156,6 +174,13 @@ export async function readJson<T extends Record<string, unknown>>(
   request: Request,
   required: Array<keyof T & string> = [],
 ): Promise<T> {
+  // Security review 2 L-6: the body used to be buffered whole before any bound
+  // applied, so a route that reads JSON had no size of its own. The declared
+  // length is refused first, from validated configuration rather than a literal
+  // here; a caller that lies about it still meets the schema on the far side.
+  const declared = Number(request.headers.get("content-length") ?? 0);
+  if (Number.isFinite(declared) && declared > pipelineLimits.requestBodyMaxBytes)
+    throw new ApiError("Request body is too large", 413, "payload_too_large");
   const body = (await request.json().catch(() => {
     throw new Error("malformed body");
   })) as T;
@@ -163,4 +188,38 @@ export async function readJson<T extends Record<string, unknown>>(
     if (body[field] === undefined || body[field] === null || body[field] === "")
       throw new Error(`${field} required`);
   return body;
+}
+
+/**
+ * Runtime validation at the edge of a route.
+ *
+ * Structural, not a `zod` import: the schemas live in `@jewelo/contracts` and
+ * the web app has no direct provider or library dependency of its own. A
+ * failure is the existing `invalid_input` 422, with the first field path and
+ * message so the client can point at the field, and never the raw input.
+ */
+type ValidationResult<T> =
+  | { success: true; data: T }
+  | {
+      success: false;
+      error: { issues: Array<{ path: PropertyKey[]; message: string }> };
+    };
+export interface Validator<T> {
+  safeParse(value: unknown): ValidationResult<T>;
+}
+
+export function validated<T>(
+  schema: Validator<T>,
+  value: unknown,
+  label = "specification",
+): T {
+  const result = schema.safeParse(value);
+  if (result.success) return result.data;
+  const issue = result.error.issues[0];
+  const path = [label, ...(issue?.path ?? [])].map(String).join(".");
+  throw new ApiError(
+    `Invalid ${path}: ${issue?.message ?? "invalid value"}`,
+    422,
+    "invalid_input",
+  );
 }

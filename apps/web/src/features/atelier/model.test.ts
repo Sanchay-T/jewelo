@@ -9,6 +9,7 @@ import {
   putInBag,
   restore,
   sampleSource,
+  savedExampleSource,
   beginBagEdit,
   cancelBagEdit,
 } from "./model";
@@ -23,6 +24,35 @@ describe("local atelier", () => {
       "/atelier/v1/asma-fatima.png",
     );
     expect(sampleSource("Dark", draft)).toBe("/atelier/v1/asma-dark.png");
+  });
+  it("gives a saved bag row an example only when that example is its design", () => {
+    const draft = { ...emptyDraft, name: "Asma" };
+    expect(savedExampleSource("Studio", draft)).toBe(
+      "/atelier/v1/asma-studio.png",
+    );
+    expect(
+      savedExampleSource("Studio", { ...draft, script: "Arabic", name: "أسماء" }),
+    ).toBe("/atelier/v1/asma-arabic.png");
+    // The two-name photograph is English: it may not stand in for two Arabic names.
+    expect(
+      savedExampleSource("Studio", { ...draft, twoNames: true }),
+    ).toBe("/atelier/v1/asma-fatima.png");
+    expect(
+      savedExampleSource("Studio", {
+        ...draft,
+        script: "Arabic",
+        name: "أسماء",
+        twoNames: true,
+      }),
+    ).toBeUndefined();
+    // Every v1 example is the default construction and lettering.
+    for (const off of [
+      { construction: "Diamond rails" as const },
+      { construction: "Origami ribbon" as const },
+      { lettering: "Kufi" as const },
+      { lettering: "Signature" as const },
+    ])
+      expect(savedExampleSource("Studio", { ...draft, ...off })).toBeUndefined();
   });
   it("uses the approved defaults and validates spelling", () => {
     expect(emptyDraft).toMatchObject({

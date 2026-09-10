@@ -9,6 +9,7 @@ import type {
   TaskState,
   UpdateDraftInput,
 } from "@jewelo/contracts";
+import { allowedFulfillmentTransitions } from "@jewelo/contracts";
 import {
   createSupabaseDataClient,
   type RealtimeChannel,
@@ -26,6 +27,7 @@ import type {
   Representation,
   RepresentationKind,
 } from "./legacy-direction-compat";
+import { readSignedUrlRefreshWindow } from "../features/atelier/previewPipeline";
 import type { DesignInput } from "./types";
 import { loadReferenceUrl } from "./reference-store";
 
@@ -54,12 +56,16 @@ function text(value: unknown, fallback = "") {
   return typeof value === "string" ? value : fallback;
 }
 
-// /api/state mints a fresh 5-minute signed URL for every asset on every call,
-// and subscribeToRun re-loads state every 3s. Handing the browser a new src on
-// each poll restarts every <Image> download, so cards that are not `priority`
-// never finish decoding on iOS Safari. Reuse one URL per asset and rotate it a
-// minute before the 300s signature expires.
-const SIGNED_URL_TTL_MS = 240_000;
+// /api/state mints a fresh signed URL for every asset on every call, and
+// subscribeToRun re-loads state every 3s. Handing the browser a new src on each
+// poll restarts every <Image> download, so cards that are not `priority` never
+// finish decoding on iOS Safari. Reuse one URL per asset and rotate it before
+// the signature expires.
+//
+// Fix-3 review minor 7: this held its own literal 240 000 while the atelier had
+// already moved to the published window, so the operator console was the one
+// surface a lowered `signedUrlExpirySeconds` would have left showing expired
+// URLs. It reads the same number the same way now, through the same reader.
 
 function estimateFromSnapshot(row: Row, directionId: string): LegacyEstimate {
   return {
@@ -398,11 +404,13 @@ export class SupabaseJeweloClient implements LegacyJeweloClient {
     const onVisible = () => {
       if (document.visibilityState === "visible") refresh();
     };
-    document.addEventListener("visibilitychange", onVisible);
+    const hasDocument = typeof document !== "undefined";
+    if (hasDocument) document.addEventListener("visibilitychange", onVisible);
     return () => {
       stopped = true;
       window.clearInterval(pollingFallback);
-      document.removeEventListener("visibilitychange", onVisible);
+      if (hasDocument)
+        document.removeEventListener("visibilitychange", onVisible);
       if (channel) void this.#ensureSupabase().removeChannel(channel);
     };
   }
@@ -482,26 +490,16 @@ export class SupabaseJeweloClient implements LegacyJeweloClient {
     return structuredClone(this.#requireDesign(designId));
   }
 
-  async issueQuote(designId: string) {
-    const design = this.#requireDesign(designId);
-    const quote = design.quote;
-    if (!quote || quote.status !== "requested")
-      throw new Error("Quote request required");
-    await this.#request("/api/operator/commands", {
-      method: "POST",
-      body: JSON.stringify({
-        command: "issue_quote",
-        designId,
-        targetId: quote.id,
-        idempotencyKey: this.#idempotency("issue-quote", quote.id),
-        payload: {
-          total: quote.total || 2290,
-          expiresAt: new Date(Date.now() + 7 * 86400_000).toISOString(),
-        },
-      }),
-    });
-    await this.#loadState(designId);
-    return structuredClone(this.#requireDesign(designId));
+  /**
+   * Pricing is not part of the request-only launch. There is no operator
+   * surface that issues a price, and there is no agreed price list to send,
+   * so this fails closed instead of inventing a total. It stays on the client
+   * because the port declares it; it becomes real when Omran gives us a price
+   * list and a checkout.
+   */
+  async issueQuote(designId: string): Promise<never> {
+    this.#requireDesign(designId);
+    throw new Error("Pricing is handled in the shop, not in this app");
   }
 
   async acceptQuote(designId: string) {
@@ -538,12 +536,13 @@ export class SupabaseJeweloClient implements LegacyJeweloClient {
   async updateFulfillment(designId: string) {
     const design = this.#requireDesign(designId);
     if (!design.order) throw new Error("Order required");
-    const next = {
-      confirmed: "in-production",
-      "in-production": "quality-check",
-      "quality-check": "ready",
-      ready: "ready",
-    } as const;
+    // Fix review 3, MN-3. The ladder used to be a second copy of the transition
+    // table living here, and its `ready: "ready"` entry asked the server to move
+    // a finished order to the status it is already in. The table is one thing in
+    // `@jewelo/contracts` now, and the route refuses anything off it, so a
+    // finished order is simply not asked about.
+    const [next] = allowedFulfillmentTransitions(design.order.status);
+    if (!next) return structuredClone(design);
     await this.#request("/api/operator/commands", {
       method: "POST",
       body: JSON.stringify({
@@ -554,7 +553,7 @@ export class SupabaseJeweloClient implements LegacyJeweloClient {
           "fulfillment",
           `${design.order.id}:${design.order.status}`,
         ),
-        payload: { status: next[design.order.status] },
+        payload: { status: next },
       }),
     });
     await this.#loadState(designId);
@@ -575,14 +574,15 @@ export class SupabaseJeweloClient implements LegacyJeweloClient {
     return this.getState();
   }
 
-  #stabiliseSignedUrls(assets: Row[] = []) {
+  #stabiliseSignedUrls(assets: Row[] = [], payload?: unknown) {
     const now = Date.now();
+    const window = readSignedUrlRefreshWindow(payload);
     for (const asset of assets) {
       const id = text(asset.id);
       const fresh = text(asset.signed_url);
       if (!id || !fresh) continue;
       const cached = this.#signedUrls.get(id);
-      if (cached && now - cached.issuedAt < SIGNED_URL_TTL_MS) {
+      if (cached && now - cached.issuedAt < window) {
         asset.signed_url = cached.url;
         continue;
       }
@@ -591,9 +591,33 @@ export class SupabaseJeweloClient implements LegacyJeweloClient {
   }
 
   async #loadState(activeDesignId = this.#state.activeDesignId) {
-    const payload = await this.#request<StatePayload>("/api/state");
-    this.#stabiliseSignedUrls(payload.assets);
-    this.#drafts.clear();
+    /*
+     * Storyline review 1 follow-up. This asked `/api/state` for everything the
+     * caller could see and then used one design out of the answer, which on the
+     * customer branch is one shopper's own rows (RLS) but is a whole-shop read
+     * with a freshly signed URL per asset on the operator branch - which is why
+     * `/api/state` now refuses an operator read with no `designId` (422,
+     * security review 2 H-2). Every call that knows which piece it is reading
+     * for now says so, so the browser asks for the design it is about to show
+     * and the server scopes the query to it.
+     *
+     * The list call - the first load, before any design is active - stays
+     * unscoped, because listing the shopper's own pieces is what it is for.
+     * That is the customer branch by construction: an operator cookie in the
+     * same browser gets 422 there, and that is deliberate. The operator console
+     * has its own client (`operator-preview-request-client.ts`), which always
+     * names a design.
+     */
+    const scoped = activeDesignId
+      ? `?designId=${encodeURIComponent(activeDesignId)}`
+      : "";
+    const payload = await this.#request<StatePayload>(`/api/state${scoped}`);
+    this.#stabiliseSignedUrls(payload.assets, payload);
+    // A scoped read only answers about one design, so it upserts that design's
+    // drafts and leaves the map alone; clearing it would drop the drafts of
+    // every other piece this browser has loaded. Only the list call, which does
+    // answer about everything, may replace the map.
+    if (!scoped) this.#drafts.clear();
     for (const row of payload.design_drafts)
       this.#rememberDraft(
         row,
@@ -703,14 +727,28 @@ export class SupabaseJeweloClient implements LegacyJeweloClient {
         audit,
       } satisfies LegacyDesign;
     });
-    const resumeDesign = designs.find((design) => design.id === activeDesignId);
+    /*
+     * A scoped read answers about one design, so it replaces that design and
+     * leaves the rest of the list alone; an unscoped read is the whole list and
+     * replaces it. Without this, asking for one piece would empty the bag of
+     * every other piece the shopper had already loaded.
+     */
+    const merged = scoped
+      ? [
+          ...this.#state.designs.filter(
+            (existing) => !designs.some((design) => design.id === existing.id),
+          ),
+          ...designs,
+        ].sort((left, right) => left.createdAt.localeCompare(right.createdAt))
+      : designs;
+    const resumeDesign = merged.find((design) => design.id === activeDesignId);
     const persistedResume = payload.designs.find((row) =>
       Boolean(row.resume_path),
     );
     const selectedDesign =
       resumeDesign ??
-      designs.find((design) => design.id === persistedResume?.id) ??
-      designs.at(-1);
+      merged.find((design) => design.id === persistedResume?.id) ??
+      merged.at(-1);
     this.#state = {
       ...this.#state,
       principal: {
@@ -718,7 +756,7 @@ export class SupabaseJeweloClient implements LegacyJeweloClient {
         name: payload.role === "operator" ? "Caleums Operator" : "Guest",
         role: payload.role,
       },
-      designs,
+      designs: merged,
       activeDesignId: selectedDesign?.id,
       resumePath:
         text(

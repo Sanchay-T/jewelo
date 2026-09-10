@@ -1,3 +1,6 @@
+import { pipelineLimits } from "@jewelo/config";
+import { prepareOpenAIStillRequest } from "./prompt-registry";
+
 export interface StudioGenerationInput {
   idempotencyKey: string;
   prompt: string;
@@ -97,25 +100,14 @@ export class OpenAIStillAdapter implements StudioGenerator {
   ) {}
 
   async generate(input: StudioGenerationInput): Promise<GeneratedMedia> {
+    const request = prepareOpenAIStillRequest(input, this.model);
     const form = new FormData();
-    form.set("model", this.model);
-    form.set("prompt", input.prompt);
-    form.set("size", OPENAI_SIZE_BY_RATIO[input.aspectRatio]);
-    form.set("quality", "high");
-    form.set("output_format", "png");
-    const references = [
-      ...(input.referenceImageUrl
-        ? ([[input.referenceImageUrl, "reference.png"]] as const)
-        : []),
-      [input.identityImageUrl, "identity.png"],
-      ...(input.styleAnchorUrl
-        ? ([[input.styleAnchorUrl, "style-anchor.png"]] as const)
-        : []),
-      ...(input.inspirationImageUrl
-        ? ([[input.inspirationImageUrl, "inspiration.png"]] as const)
-        : []),
-    ] as const;
-    for (const [url, fileName] of references) {
+    form.set("model", request.model);
+    form.set("prompt", request.prompt);
+    form.set("size", request.size);
+    form.set("quality", request.quality);
+    form.set("output_format", request.output_format);
+    for (const { url, fileName } of request.references) {
       const response = await this.fetcher(url);
       if (!response.ok)
         throw new Error(`OpenAI input download failed:${response.status}`);
@@ -136,7 +128,7 @@ export class OpenAIStillAdapter implements StudioGenerator {
           "Idempotency-Key": input.idempotencyKey,
         },
         body: form,
-        signal: AbortSignal.timeout(180_000),
+        signal: AbortSignal.timeout(pipelineLimits.providerRequestTimeoutMs),
       },
     );
     if (!response.ok)
@@ -158,13 +150,6 @@ export class OpenAIStillAdapter implements StudioGenerator {
     };
   }
 }
-
-const OPENAI_SIZE_BY_RATIO = {
-  "1:1": "1024x1024",
-  "4:5": "1024x1280",
-  "9:16": "1024x1824",
-  "16:9": "1536x864",
-} as const;
 
 export class OpenAIStudioVerifier implements StudioVerifier {
   constructor(
@@ -247,6 +232,10 @@ export class OpenAIStudioVerifier implements StudioVerifier {
           },
         },
       }),
+      // Pipeline fix review 1 finding 2: without this the call could outlive
+      // the stale window, a second worker would take the task, and the two
+      // would race to complete or fail it.
+      signal: AbortSignal.timeout(pipelineLimits.visionRequestTimeoutMs),
     });
     if (!response.ok)
       throw new Error(`OpenAI verification failed:${response.status}`);
@@ -286,16 +275,57 @@ export function normalizeIdentityText(value: string): string {
 }
 
 /**
+ * The comparison form of a name: `normalizeIdentityText` after an NFKC fold.
+ *
+ * NFKC folds the Arabic presentation forms (U+FB50-U+FDFF, U+FE70-U+FEFF) back
+ * onto the letters they render: a reader that answers with U+FEE7 U+FEEC U+FEAE
+ * is describing the same three letters as U+0646 U+0648 U+0631, and refusing it
+ * would burn three paid stills on a pendant that is actually correct.
+ *
+ * Fix-2 review minor 7: both sides are folded, but only here, and only to
+ * compare. `nameSchema` in `@jewelo/contracts` accepts Arabic presentation
+ * forms as approved text, so a customer whose name arrived as U+FEE7 U+FEEC
+ * U+FEAE had every reading of it - including a perfectly correct one in the
+ * ordinary letters - refused, three paid stills spent and the piece stuck in
+ * "preparing" for ever. Folding is what makes the two spellings of one name
+ * comparable.
+ *
+ * It is never applied where the approved text is used as the truth: the stencil
+ * is still shaped from the confirmed string and the identity fingerprint still
+ * hashes it, so the shopper's own spelling is what the pendant is cut from and
+ * what the anchor is pinned to. This function only interprets two strings for a
+ * verdict; nothing it returns is stored, shaped or hashed.
+ */
+function normalizeComparisonText(value: string): string {
+  return normalizeIdentityText(value.normalize("NFKC"));
+}
+
+/**
  * A serif Latin render can lose or swap a single glyph to the reader without
  * being a different name, so a five-letter-or-longer Latin name passes within
  * one Damerau-Levenshtein edit. Arabic identity stays exact.
+ *
+ * Pipeline fix review 1 finding 1: an empty comparison form on either side is
+ * a refusal, never a match. A name with no letters ("-", "1234") normalises to
+ * `""`, and `"" === ""` used to pass any still at all, whatever was engraved
+ * on it. There is nothing to compare, so there is nothing that can pass.
+ *
+ * Fix-3 review minor 12: folding the approved side too widened the comparison
+ * in both directions, so a modifier letter in the approved text now compares
+ * equal to its base letter - `identityTextMatches("Halima", "ʰalima")` is
+ * true. What keeps that unreachable is not this function: it is the shaping
+ * coverage gate, which refuses to cut any approved string containing a
+ * character the identity engine has no glyph for, `\p{Lm}` included, before a
+ * run can exist. The strictness lives there; if that gate is ever relaxed, this
+ * comparison stops being safe and has to be tightened with it.
  */
 export function identityTextMatches(
   readText: string,
   approvedText: string,
 ): boolean {
-  const read = normalizeIdentityText(readText);
-  const approved = normalizeIdentityText(approvedText);
+  const read = normalizeComparisonText(readText);
+  const approved = normalizeComparisonText(approvedText);
+  if (!read || !approved) return false;
   if (read === approved) return true;
   if (approved.length < 5 || !/^[a-z]+$/.test(approved)) return false;
   return damerauLevenshteinDistance(read, approved) <= 1;
@@ -342,6 +372,7 @@ export class OpenAINameReader implements StudioNameReader {
       },
       body: JSON.stringify({
         model: this.model,
+        max_output_tokens: pipelineLimits.nameReaderMaxOutputTokens,
         input: [
           {
             role: "user",
@@ -374,6 +405,10 @@ export class OpenAINameReader implements StudioNameReader {
           },
         },
       }),
+      // The name read is the longest un-bumped gap in a dispatch: the task
+      // sits in `verifying` while it runs. Bounded by the same vision timeout
+      // the stale window is derived from.
+      signal: AbortSignal.timeout(pipelineLimits.visionRequestTimeoutMs),
     });
     if (!response.ok)
       throw new Error(`OpenAI name read failed:${response.status}`);

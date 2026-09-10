@@ -3,15 +3,11 @@
 Run from the repository root. These tools author or inspect local example assets; the customer app never calls them.
 
 - `build-geometry.py` reproducibly builds 24 shaped SVG outlines using pinned OFL fonts and records lineage. Read its command help and the geometry manifest before rebuilding immutable v1 assets.
-- `render-sweep.mjs` starts an isolated local Vite harness for the production renderer and captures 288 base assemblies in four cameras. It does not use or change the customer's draft.
-- `SWEEP_MODE=materials node scripts/atelier/render-sweep.mjs` checks nested stone coverage, gemstone appearance, and metal/chain combinations.
-- `renderer-lifecycle-proof.mjs` exercises renderer reuse, overlapping apply, capture, and disposal.
-- `review-renderer.py` exercises representative actual app choices and writes visual evidence; `--short` checks tall layouts in short desktop windows.
-- `render-contact-sheets.mjs` assembles camera evidence for inspection.
 
-Customer journey: `pnpm --filter @jewelo/web test:atelier:e2e` (localhost:3001 must be running).
 
-Model/geometry/storage tests: `pnpm --filter @jewelo/web test:atelier`.
+Model/assembly/storage tests: `pnpm --filter @jewelo/web test:atelier`.
+
+The procedural Three.js renderer and its sweep, lifecycle and review harnesses were removed on 8 September 2026: the customer preview is photographic only. `build-geometry.py` remains because the shaped SVG outlines are still the naming source for the assembly identity key.
 
 Current evidence lives in `docs/RESPONSIVE-UI-PROOF.md` and its linked proof directories. File counts and successful capture alone do not certify every image's visual quality; inspect the contact sheets and read the bounded visual-review report.
 

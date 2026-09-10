@@ -1,0 +1,242 @@
+[
+  {
+    "cell": "classical-noor-en",
+    "look": "classical",
+    "slug": "noor",
+    "script": "en",
+    "intendedName": "Noor",
+    "ringless": false,
+    "stencilKey": "noor-en-classic",
+    "promptSha256": "abd7163474bccdce4bae836b53c2d532f7e99f991e3e66eb6a35104ac3a34104"
+  },
+  {
+    "cell": "classical-noor-ar",
+    "look": "classical",
+    "slug": "noor",
+    "script": "ar",
+    "intendedName": "نور",
+    "ringless": false,
+    "stencilKey": "noor-ar-classic",
+    "promptSha256": "846182627c2bcad1a354976484804a7704b6da6f75a673c2d90a4523d71af687"
+  },
+  {
+    "cell": "classical-layla-en",
+    "look": "classical",
+    "slug": "layla",
+    "script": "en",
+    "intendedName": "Layla",
+    "ringless": false,
+    "stencilKey": "layla-en-classic",
+    "promptSha256": "078abd79f19bc20f85c7c9d2aec2654e9c8b5c11d48ea0a3fd26c2d7e8330299"
+  },
+  {
+    "cell": "classical-layla-ar",
+    "look": "classical",
+    "slug": "layla",
+    "script": "ar",
+    "intendedName": "ليلى",
+    "ringless": false,
+    "stencilKey": "layla-ar-classic",
+    "promptSha256": "9b27457b539b4ccb91227bc5352b18bd70b5cd9207ae748d2dde380f019e0d6e"
+  },
+  {
+    "cell": "classical-muhammad-en",
+    "look": "classical",
+    "slug": "muhammad",
+    "script": "en",
+    "intendedName": "Muhammad",
+    "ringless": false,
+    "stencilKey": "muhammad-en-classic",
+    "promptSha256": "bcd21e0bbcc7fe51edaad7d874e433c88bd1084ea16cd11d329841c7e40f7f80"
+  },
+  {
+    "cell": "classical-muhammad-ar",
+    "look": "classical",
+    "slug": "muhammad",
+    "script": "ar",
+    "intendedName": "محمد",
+    "ringless": false,
+    "stencilKey": "muhammad-ar-classic",
+    "promptSha256": "d637b1e8eb4565d0632ccb1f4ec69824fd20638205710b7aac62f944f385faaf"
+  },
+  {
+    "cell": "origami-ribbon-noor-en",
+    "look": "origami-ribbon",
+    "slug": "noor",
+    "script": "en",
+    "intendedName": "Noor",
+    "ringless": false,
+    "stencilKey": "noor-en-classic",
+    "promptSha256": "718d95c28ae66d4b3eb6920072198f99099129bc643d1d88fc5ed2f8d4cee48d"
+  },
+  {
+    "cell": "origami-ribbon-noor-ar",
+    "look": "origami-ribbon",
+    "slug": "noor",
+    "script": "ar",
+    "intendedName": "نور",
+    "ringless": false,
+    "stencilKey": "noor-ar-classic",
+    "promptSha256": "c98e29f0e4205786083a131b8183564f4f04fc25ed3e21cd715454f2ebde6308"
+  },
+  {
+    "cell": "origami-ribbon-layla-en",
+    "look": "origami-ribbon",
+    "slug": "layla",
+    "script": "en",
+    "intendedName": "Layla",
+    "ringless": false,
+    "stencilKey": "layla-en-classic",
+    "promptSha256": "0f49f701be75e485455816879586f1c7435d667f81b39a05259ebf696f7bb4f5"
+  },
+  {
+    "cell": "origami-ribbon-layla-ar",
+    "look": "origami-ribbon",
+    "slug": "layla",
+    "script": "ar",
+    "intendedName": "ليلى",
+    "ringless": false,
+    "stencilKey": "layla-ar-classic",
+    "promptSha256": "c4f24a8174f3d7f14cedcf4b2aebb80bd7c91afdd31213a4f08a35a825bfa6d2"
+  },
+  {
+    "cell": "origami-ribbon-muhammad-en",
+    "look": "origami-ribbon",
+    "slug": "muhammad",
+    "script": "en",
+    "intendedName": "Muhammad",
+    "ringless": false,
+    "stencilKey": "muhammad-en-classic",
+    "promptSha256": "976d4bf8e0f5539a8857682adf2524045385b11b43696c0a36e3845c93be0485"
+  },
+  {
+    "cell": "origami-ribbon-muhammad-ar",
+    "look": "origami-ribbon",
+    "slug": "muhammad",
+    "script": "ar",
+    "intendedName": "محمد",
+    "ringless": false,
+    "stencilKey": "muhammad-ar-classic",
+    "promptSha256": "78549c291e6fd05c407febedd9079d0e448a7e0e50c1521809c0dd3d78215b25"
+  },
+  {
+    "cell": "framed-minimal-noor-en",
+    "look": "framed-minimal",
+    "slug": "noor",
+    "script": "en",
+    "intendedName": "Noor",
+    "ringless": true,
+    "stencilKey": "noor-en-classic-norings",
+    "promptSha256": "681e107906235da1ccece0e871ac8b3eb9c4bace9cd45a5bee8d3cc4db35b806"
+  },
+  {
+    "cell": "framed-minimal-noor-ar",
+    "look": "framed-minimal",
+    "slug": "noor",
+    "script": "ar",
+    "intendedName": "نور",
+    "ringless": true,
+    "stencilKey": "noor-ar-classic-norings",
+    "promptSha256": "f59e6f4847963f9136ca46dcc588fde0d0530f474396e4ad16bf7c5bb13885f1"
+  },
+  {
+    "cell": "framed-minimal-layla-en",
+    "look": "framed-minimal",
+    "slug": "layla",
+    "script": "en",
+    "intendedName": "Layla",
+    "ringless": true,
+    "stencilKey": "layla-en-classic-norings",
+    "promptSha256": "8026d2c94913222021fac6b52c3586d9f6b8686a5ac166899f6649358eef9116"
+  },
+  {
+    "cell": "framed-minimal-layla-ar",
+    "look": "framed-minimal",
+    "slug": "layla",
+    "script": "ar",
+    "intendedName": "ليلى",
+    "ringless": true,
+    "stencilKey": "layla-ar-classic-norings",
+    "promptSha256": "9c6a75e43c8721a4c4e86faa18a18e72061b089cfb70a97300dfa97880bec911"
+  },
+  {
+    "cell": "framed-minimal-muhammad-en",
+    "look": "framed-minimal",
+    "slug": "muhammad",
+    "script": "en",
+    "intendedName": "Muhammad",
+    "ringless": true,
+    "stencilKey": "muhammad-en-classic-norings",
+    "promptSha256": "ce9845fd6bffc4a25f79757107eff25b2725ce8c4953f0db081038a9d3e0adb1"
+  },
+  {
+    "cell": "framed-minimal-muhammad-ar",
+    "look": "framed-minimal",
+    "slug": "muhammad",
+    "script": "ar",
+    "intendedName": "محمد",
+    "ringless": true,
+    "stencilKey": "muhammad-ar-classic-norings",
+    "promptSha256": "921af511dcf1e8023bcda423a1cf43ec858835524b52e0e955d11764220bf862"
+  },
+  {
+    "cell": "diamond-rails-noor-en",
+    "look": "diamond-rails",
+    "slug": "noor",
+    "script": "en",
+    "intendedName": "Noor",
+    "ringless": true,
+    "stencilKey": "noor-en-classic-norings",
+    "promptSha256": "a404940a3bef24d7eccdbfbbd136d3eb571ec481fa6d44b56cdedf9d63393db1"
+  },
+  {
+    "cell": "diamond-rails-noor-ar",
+    "look": "diamond-rails",
+    "slug": "noor",
+    "script": "ar",
+    "intendedName": "نور",
+    "ringless": true,
+    "stencilKey": "noor-ar-classic-norings",
+    "promptSha256": "9b1663537c650c595e8005538743ca14cbcb9d989c8f30792b95269995f60b5d"
+  },
+  {
+    "cell": "diamond-rails-layla-en",
+    "look": "diamond-rails",
+    "slug": "layla",
+    "script": "en",
+    "intendedName": "Layla",
+    "ringless": true,
+    "stencilKey": "layla-en-classic-norings",
+    "promptSha256": "cfea1a44655369357c6a1d5c0d58d885a9eac4a157e3c5c96bd185ba94260c45"
+  },
+  {
+    "cell": "diamond-rails-layla-ar",
+    "look": "diamond-rails",
+    "slug": "layla",
+    "script": "ar",
+    "intendedName": "ليلى",
+    "ringless": true,
+    "stencilKey": "layla-ar-classic-norings",
+    "promptSha256": "4e45c86c1dc66caa81ede5af90e6824b6fa9de6a53271bb1f364bce02a8788f8"
+  },
+  {
+    "cell": "diamond-rails-muhammad-en",
+    "look": "diamond-rails",
+    "slug": "muhammad",
+    "script": "en",
+    "intendedName": "Muhammad",
+    "ringless": true,
+    "stencilKey": "muhammad-en-classic-norings",
+    "promptSha256": "870617e6a0d8e5119144231b94c1de89e50ee33480c98fa49bac1aba5c8c4c10"
+  },
+  {
+    "cell": "diamond-rails-muhammad-ar",
+    "look": "diamond-rails",
+    "slug": "muhammad",
+    "script": "ar",
+    "intendedName": "محمد",
+    "ringless": true,
+    "stencilKey": "muhammad-ar-classic-norings",
+    "promptSha256": "d0f523d04b6719239ac5293bfd78703e89207888604d95e06076582577ff4cf0"
+  }
+]

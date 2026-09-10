@@ -1,0 +1,15 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "web",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": [
+        "-lc",
+        "export PATH=$HOME/.local/share/mise/installs/node/24.18.1/bin:$PATH && cd apps/web && corepack pnpm exec next dev --port ${PORT:-3011}"
+      ],
+      "port": 3011,
+      "autoPort": true
+    }
+  ]
+}

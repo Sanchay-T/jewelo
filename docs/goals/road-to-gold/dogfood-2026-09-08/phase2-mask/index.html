@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>P2-2 photograph pendant masks</title>
+<style>
+  :root { color-scheme: light; }
+  body { margin: 0; padding: 24px; background: #f6f4f0; color: #1c1a17;
+         font: 13px/1.45 ui-sans-serif, system-ui, sans-serif; }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  h2 { font-size: 16px; margin: 28px 0 4px; text-transform: capitalize; }
+  h3 { font-size: 13px; margin: 14px 0 6px; font-weight: 600; color: #6b6257; }
+  p.note { max-width: 78ch; color: #4a443c; }
+  .grid { display: grid; gap: 12px;
+          grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
+  figure { margin: 0; background: #fff; border: 1px solid #e2ddd4; border-radius: 6px;
+           overflow: hidden; }
+  figure.registration_failed { border-color: #c0392b; }
+  img { display: block; width: 100%; height: auto; }
+  figcaption { padding: 6px 8px; font-size: 11px; line-height: 1.35; color: #4a443c; }
+  details { margin-top: 18px; }
+  code, pre.summary { font-family: ui-monospace, monospace; }
+  pre.summary { background: #fff; border: 1px solid #e2ddd4; border-radius: 6px;
+                padding: 12px 14px; font-size: 11px; overflow-x: auto; }
+</style>
+<h1>P2-2 photograph pendant masks and stencil registration</h1>
+<pre class="summary">
+P2-2 mask contact sheet: 91 overlays
+out: /Users/sanchay/hq/projects/devonel/jewelo/docs/goals/road-to-gold/dogfood-2026-09-08/phase2-mask
+percentile rule: nearest rank, index = floor(fraction * (n - 1))
+
+studio human passes: count=31 min=0.276 p05=0.290 median=0.336 max=0.450
+on_skin human passes (reported, not claimed): none
+close_up human passes (reported, not claimed): count=7 min=0.320 p05=0.320 median=0.366 max=0.410
+dark human passes (reported, not claimed): count=8 min=0.191 p05=0.191 median=0.231 max=0.284
+
+studio human passes by look - the stencil is the whole piece only for `classical`;
+  every other look adds a frame, a rail or a ribbon that no stencil in this corpus carries:
+  classical: count=10 min=0.330 p05=0.330 median=0.342 max=0.400
+  diamond-rails: count=6 min=0.296 p05=0.296 median=0.323 max=0.398
+  framed-minimal: count=13 min=0.276 p05=0.276 median=0.318 max=0.450
+  origami-ribbon: count=2 min=0.383 p05=0.383 median=0.383 max=0.394
+
+defect rows by tag (studio only):
+  cgi-look: count=2 min=0.400 p05=0.400 median=0.400 max=0.410
+  chain-not-through-ring: count=5 min=0.383 p05=0.383 median=0.390 max=0.403
+  disconnected-component: count=2 min=0.367 p05=0.367 median=0.367 max=0.427
+  extra-ring: count=3 min=0.329 p05=0.329 median=0.358 max=0.383
+  floating-mark: count=1 min=0.427 p05=0.427 median=0.427 max=0.427
+  floating-stone: count=1 min=0.399 p05=0.399 median=0.399 max=0.399
+  missing-glyph: count=1 min=0.409 p05=0.409 median=0.409 max=0.409
+  missing-ring: count=1 min=0.390 p05=0.390 median=0.390 max=0.390
+  unsupported-geometry: count=2 min=0.273 p05=0.273 median=0.273 max=0.389
+  wrong-display: count=2 min=0.303 p05=0.303 median=0.303 max=0.310
+  wrong-look: count=4 min=0.362 p05=0.362 median=0.397 max=0.415
+  wrong-stones: count=4 min=0.310 p05=0.310 median=0.328 max=0.356
+
+studio geometry-defect rows (the five tags a gate owns): count=7 min=0.329 p05=0.329 median=0.383 max=0.427
+
+studio pass p05 = 0.290; highest geometry-defect IoU = 0.427
+P2-3 threshold candidate (p05 rounded down to two decimals) = 0.28
+separation: NOT achieved - at least one geometry-defect row scores at or above the pass p05
+
+registration failures: 9 of 91
+  classical-en-on-skin-a1 (on_skin, pass): photo mask empty
+  classical-ar-on-skin-a1 (on_skin, pass): photo mask empty
+  origami-ribbon-en-on-skin-a1 (on_skin, pass): photo mask empty
+  origami-ribbon-ar-on-skin-a1 (on_skin, pass): photo mask empty
+  origami-ribbon-ar-close-up-a1 (close_up, pass): photo mask empty
+  framed-minimal-en-on-skin-a1 (on_skin, pass): photo mask empty
+  framed-minimal-ar-on-skin-a1 (on_skin, pass): photo mask empty
+  diamond-rails-en-on-skin-a1 (on_skin, pass): photo mask empty
+  diamond-rails-ar-on-skin-a1 (on_skin, pass): photo mask empty
+
+five lowest studio passes:
+  framed-minimal-layla-ar-a1: IoU 0.276 registered cover 19.8% parts 1 stroke 14 close 4
+  framed-minimal-noor-ar-a2: IoU 0.290 registered cover 19.3% parts 1 stroke 11 close 4
+  diamond-rails-en-a2: IoU 0.296 registered cover 20.2% parts 1 stroke 2 close 1
+  framed-minimal-noor-en-a2: IoU 0.298 registered cover 21.8% parts 1 stroke 4 close 2
+  framed-minimal-en-a3: IoU 0.302 registered cover 19.1% parts 1 stroke 5 close 3</pre>
+<p class="note">Cyan is the measured pendant mask. The magenta line is the outline of the
+deterministic stencil after a similarity registration (uniform scale, in-plane rotation,
+translation) initialised from image moments and refined by a bounded IoU search. A cell with a
+red border is <code>registration_failed</code>: the transform left its configured bounds, which
+is a different event from a low IoU and must not be read as one. The studio packshot group is
+the only one the P2-3 threshold is taken from.</p>
+<section><h2>studio (66)</h2>
+<h3>pass (31)</h3>
+<div class="grid">
+<figure class="cell registered"><img src="overlays/classical-en-a1.jpg" alt="classical-en-a1" loading="lazy"><figcaption>classical-en-a1<br>pass<br>no tags<br>IoU 0.400<br>registered<br>scale 0.99 rot -0.5 deg<br>cover 18.3% parts 1<br>stroke 15 close 4</figcaption></figure>
+<figure class="cell registered"><img src="overlays/diamond-rails-en-a1.jpg" alt="diamond-rails-en-a1" loading="lazy"><figcaption>diamond-rails-en-a1<br>pass<br>no tags<br>IoU 0.339<br>registered<br>scale 0.99 rot 0.0 deg<br>cover 19.0% parts 1<br>stroke 15 close 4</figcaption></figure>
+<figure class="cell registered"><img src="overlays/classical-en-a2.jpg" alt="classical-en-a2" loading="lazy"><figcaption>classical-en-a2<br>pass<br>no tags<br>IoU 0.342<br>registered<br>scale 0.92 rot 0.0 deg<br>cover 17.4% parts 1<br>stroke 15 close 4</figcaption></figure>
+<figure class="cell registered"><img src="overlays/origami-ribbon-ar-a2.jpg" alt="origami-ribbon-ar-a2" loading="lazy"><figcaption>origami-ribbon-ar-a2<br>pass<br>no tags<br>IoU 0.383<br>registered<br>scale 2.39 rot 0.0 deg<br>cover 14.9% parts 1<br>stroke 16 close 4</figcaption></figure>
+<figure class="cell registered"><img src="overlays/framed-minimal-en-a2.jpg" alt="framed-minimal-en-a2" loading="lazy"><figcaption>framed-minimal-en-a2<br>pass<br>no tags<br>IoU 0.328<br>registered<br>scale 1.69 rot 0.0 deg<br>cover 18.9% parts 1<br>stroke 5 close 3</figcaption></figure>
+<figure class="cell registered"><img src="overlays/framed-minimal-ar-a2.jpg" alt="framed-minimal-ar-a2" loading="lazy"><figcaption>framed-minimal-ar-a2<br>pass<br>no tags<br>IoU 0.372<br>registered<br>scale 2.62 rot -0.1 deg<br>cover 19.6% parts 3<br>stroke 4 close 2</figcaption></figure>
+<figure class="cell registered"><img src="overlays/diamond-rails-en-a2.jpg" alt="diamond-rails-en-a2" loading="lazy"><figcaption>diamond-rails-en-a2<br>pass<br>no tags<br>IoU 0.296<br>registered<br>scale 2.21 rot 0.0 deg<br>cover 20.2% parts 1<br>stroke 2 close 1</figcaption></figure>
+<figure class="cell registered"><img src="overlays/diamond-rails-ar-a2.jpg" alt="diamond-rails-ar-a2" loading="lazy"><figcaption>diamond-rails-ar-a2<br>pass<br>no tags<br>IoU 0.398<br>registered<br>scale 2.15 rot 0.0 deg<br>cover 21.0% parts 1<br>stroke 14 close 4</figcaption></figure>
+<figure class="cell registered"><img src="overlays/classical-en-a3.jpg" alt="classical-en-a3" loading="lazy"><figcaption>classical-en-a3<br>pass<br>no tags<br>IoU 0.392<br>registered<br>scale 0.95 rot -1.3 deg<br>cover 17.1% parts 1<br>stroke 12 close 4</figcaption></figure>
+<figure class="cell registered"><img src="overlays/origami-ribbon-en-a3.jpg" alt="origami-ribbon-en-a3" loading="lazy"><figcaption>origami-ribbon-en-a3<br>pass<br>no tags<br>IoU 0.394<br>registered<br>scale 0.97 rot 0.0 deg<br>cover 18.0% parts 1<br>stroke 14 close 4</figcaption></figure>
+<figure class="cell registered"><img src="overlays/framed-minimal-en-a3.jpg" alt="framed-minimal-en-a3" loading="lazy"><figcaption>framed-minimal-en-a3<br>pass<br>no tags<br>IoU 0.302<br>registered<br>scale 2.73 rot 0.0 deg<br>cover 19.1% parts 1<br>stroke 5 close 3</figcaption></figure>
+<figure class="cell registered"><img src="overlays/framed-minimal-ar-a3.jpg" alt="framed-minimal-ar-a3" loading="lazy"><figcaption>framed-minimal-ar-a3<br>pass<br>no tags<br>IoU 0.363<br>registered<br>scale 2.44 rot 0.0 deg<br>cover 17.1% parts 1<br>stroke 12 close 4</figcaption></figure>
+<figure class="cell registered"><img src="overlays/diamond-rails-en-a3.jpg" alt="diamond-rails-en-a3" loading="lazy"><figcaption>diamond-rails-en-a3<br>pass<br>no tags<br>IoU 0.333<br>registered<br>scale 1.44 rot 0.0 deg<br>cover 21.7% parts 1<br>stroke 15 close 4</figcaption></figure>
+<figure class="cell registered"><img src="overlays/classical-ar-a4.jpg" alt="classical-ar-a4" loading="lazy"><figcaption>classical-ar-a4<br>pass<br>no tags<br>IoU 0.336<br>registered<br>scale 1.19 rot 0.0 deg<br>cover 14.9% parts 1<br>stroke 5 close 3</figcaption></figure>
+<figure class="cell registered"><img src="overlays/framed-minimal-en-a4.jpg" alt="framed-minimal-en-a4" loading="lazy"><figcaption>framed-minimal-en-a4<br>pass<br>no tags<br>IoU 0.316<br>registered<br>scale 2.75 rot 0.0 deg<br>cover 19.1% parts 1<br>stroke 2 close 1</figcaption></figure>
+<figure class="cell registered"><img src="overlays/diamond-rails-en-a4.jpg" alt="diamond-rails-en-a4" loading="lazy"><figcaption>diamond-rails-en-a4<br>pass<br>no tags<br>IoU 0.323<br>registered<br>scale 1.40 rot 0.0 deg<br>cover 20.5% parts 1<br>stroke 4 close 2</figcaption></figure>
+<figure class="cell registered"><img src="overlays/classical-en-white-a1.jpg" alt="classical-en-white-a1" loading="lazy"><figcaption>classical-en-white-a1<br>pass<br>no tags<br>IoU 0.340<br>registered<br>scale 0.95 rot 0.0 deg<br>cover 17.2% parts 1<br>stroke 7 close 4</figcaption></figure>
+<figure class="cell registered"><img src="overlays/classical-en-rose-a1.jpg" alt="classical-en-rose-a1" loading="lazy"><figcaption>classical-en-rose-a1<br>pass<br>no tags<br>IoU 0.345<br>registered<br>scale 0.93 rot 0.0 deg<br>cover 17.0% parts 1<br>stroke 15 close 4</figcaption></figure>
+<figure class="cell registered"><img src="overlays/classical-en-full-pave-a1.jpg" alt="classical-en-full-pave-a1" loading="lazy"><figcaption>classical-en-full-pave-a1<br>pass<br>no tags<br>IoU 0.356<br>registered<br>scale 0.93 rot 0.0 deg<br>cover 16.4% parts 1<br>stroke 14 close 4</figcaption></figure>
+<figure class="cell registered"><img src="overlays/classical-en-white-accent-a1.jpg" alt="classical-en-white-accent-a1" loading="lazy"><figcaption>classical-en-white-accent-a1<br>pass<br>no tags<br>IoU 0.343<br>registered<br>scale 0.92 rot 0.0 deg<br>cover 16.6% parts 1<br>stroke 6 close 3</figcaption></figure>
+<figure class="cell registered"><img src="overlays/classical-ar-white-a1.jpg" alt="classical-ar-white-a1" loading="lazy"><figcaption>classical-ar-white-a1<br>pass<br>no tags<br>IoU 0.330<br>registered<br>scale 1.19 rot 0.0 deg<br>cover 15.1% parts 1<br>stroke 6 close 3</figcaption></figure>
+<figure class="cell registered"><img src="overlays/classical-ar-rose-a1.jpg" alt="classical-ar-rose-a1" loading="lazy"><figcaption>classical-ar-rose-a1<br>pass<br>no tags<br>IoU 0.335<br>registered<br>scale 1.19 rot 0.0 deg<br>cover 15.0% parts 1<br>stroke 5 close 3</figcaption></figure>
+<figure class="cell registered"><img src="overlays/framed-minimal-en-kufi-a1.jpg" alt="framed-minimal-en-kufi-a1" loading="lazy"><figcaption>framed-minimal-en-kufi-a1<br>pass<br>no tags<br>IoU 0.320<br>registered<br>scale 1.30 rot 0.0 deg<br>cover 20.8% parts 1<br>stroke 12 close 4</figcaption></figure>
+<figure class="cell registered"><img src="overlays/framed-minimal-ar-kufi-a1.jpg" alt="framed-minimal-ar-kufi-a1" loading="lazy"><figcaption>framed-minimal-ar-kufi-a1<br>pass<br>no tags<br>IoU 0.434<br>registered<br>scale 2.14 rot 0.0 deg<br>cover 21.7% parts 1<br>stroke 13 close 4</figcaption></figure>
+<figure class="cell registered"><img src="overlays/diamond-rails-en-kufi-a1.jpg" alt="diamond-rails-en-kufi-a1" loading="lazy"><figcaption>diamond-rails-en-kufi-a1<br>pass<br>no tags<br>IoU 0.322<br>registered<br>scale 1.69 rot 0.0 deg<br>cover 21.8% parts 1<br>stroke 16 close 4</figcaption></figure>
+<figure class="cell registered"><img src="overlays/framed-minimal-ar-a5.jpg" alt="framed-minimal-ar-a5" loading="lazy"><figcaption>framed-minimal-ar-a5<br>pass<br>no tags<br>IoU 0.450<br>registered<br>scale 2.80 rot 0.0 deg<br>cover 22.2% parts 1<br>stroke 10 close 4</figcaption></figure>
+<figure class="cell registered"><img src="overlays/framed-minimal-noor-en-a1.jpg" alt="framed-minimal-noor-en-a1" loading="lazy"><figcaption>framed-minimal-noor-en-a1<br>pass<br>no tags<br>IoU 0.318<br>registered<br>scale 1.84 rot -0.1 deg<br>cover 24.9% parts 1<br>stroke 12 close 4</figcaption></figure>
+<figure class="cell registered"><img src="overlays/framed-minimal-noor-en-a2.jpg" alt="framed-minimal-noor-en-a2" loading="lazy"><figcaption>framed-minimal-noor-en-a2<br>pass<br>no tags<br>IoU 0.298<br>registered<br>scale 2.19 rot -6.6 deg<br>cover 21.8% parts 1<br>stroke 4 close 2</figcaption></figure>
+<figure class="cell registered"><img src="overlays/framed-minimal-noor-ar-a1.jpg" alt="framed-minimal-noor-ar-a1" loading="lazy"><figcaption>framed-minimal-noor-ar-a1<br>pass<br>no tags<br>IoU 0.317<br>registered<br>scale 2.21 rot 7.9 deg<br>cover 22.8% parts 1<br>stroke 12 close 4</figcaption></figure>
+<figure class="cell registered"><img src="overlays/framed-minimal-noor-ar-a2.jpg" alt="framed-minimal-noor-ar-a2" loading="lazy"><figcaption>framed-minimal-noor-ar-a2<br>pass<br>no tags<br>IoU 0.290<br>registered<br>scale 1.26 rot 23.3 deg<br>cover 19.3% parts 1<br>stroke 11 close 4</figcaption></figure>
+<figure class="cell registered"><img src="overlays/framed-minimal-layla-ar-a1.jpg" alt="framed-minimal-layla-ar-a1" loading="lazy"><figcaption>framed-minimal-layla-ar-a1<br>pass<br>no tags<br>IoU 0.276<br>registered<br>scale 0.94 rot 0.0 deg<br>cover 19.8% parts 1<br>stroke 14 close 4</figcaption></figure>
+</div>
+<h3>tweak (11)</h3>
+<div class="grid">
+<figure class="cell registered"><img src="overlays/origami-ribbon-en-a1.jpg" alt="origami-ribbon-en-a1" loading="lazy"><figcaption>origami-ribbon-en-a1<br>tweak<br>wrong-look<br>IoU 0.415<br>registered<br>scale 0.99 rot 0.0 deg<br>cover 17.4% parts 1<br>stroke 13 close 4</figcaption></figure>
+<figure class="cell registered"><img src="overlays/origami-ribbon-ar-a1.jpg" alt="origami-ribbon-ar-a1" loading="lazy"><figcaption>origami-ribbon-ar-a1<br>tweak<br>wrong-look<br>IoU 0.362<br>registered<br>scale 3.07 rot 0.0 deg<br>cover 15.3% parts 1<br>stroke 17 close 4</figcaption></figure>
+<figure class="cell registered"><img src="overlays/diamond-rails-ar-a1.jpg" alt="diamond-rails-ar-a1" loading="lazy"><figcaption>diamond-rails-ar-a1<br>tweak<br>wrong-look<br>IoU 0.397<br>registered<br>scale 3.32 rot -1.6 deg<br>cover 17.9% parts 1<br>stroke 9 close 4</figcaption></figure>
+<figure class="cell registered"><img src="overlays/origami-ribbon-en-a2.jpg" alt="origami-ribbon-en-a2" loading="lazy"><figcaption>origami-ribbon-en-a2<br>tweak<br>cgi-look<br>IoU 0.410<br>registered<br>scale 1.00 rot 0.0 deg<br>cover 18.0% parts 1<br>stroke 14 close 4</figcaption></figure>
+<figure class="cell registered"><img src="overlays/origami-ribbon-ar-a4.jpg" alt="origami-ribbon-ar-a4" loading="lazy"><figcaption>origami-ribbon-ar-a4<br>tweak<br>cgi-look<br>IoU 0.400<br>registered<br>scale 1.13 rot -2.0 deg<br>cover 13.2% parts 1<br>stroke 9 close 4</figcaption></figure>
+<figure class="cell registered"><img src="overlays/framed-minimal-ar-a4.jpg" alt="framed-minimal-ar-a4" loading="lazy"><figcaption>framed-minimal-ar-a4<br>tweak<br>unsupported-geometry<br>IoU 0.389<br>registered<br>scale 2.51 rot 0.0 deg<br>cover 18.1% parts 1<br>stroke 11 close 4</figcaption></figure>
+<figure class="cell registered"><img src="overlays/classical-en-accent-a1.jpg" alt="classical-en-accent-a1" loading="lazy"><figcaption>classical-en-accent-a1<br>tweak<br>wrong-display<br>IoU 0.303<br>registered<br>scale 2.38 rot 0.0 deg<br>cover 16.4% parts 1<br>stroke 15 close 4</figcaption></figure>
+<figure class="cell registered"><img src="overlays/classical-ar-accent-a1.jpg" alt="classical-ar-accent-a1" loading="lazy"><figcaption>classical-ar-accent-a1<br>tweak<br>wrong-stones<br>IoU 0.328<br>registered<br>scale 1.18 rot 0.0 deg<br>cover 15.3% parts 1<br>stroke 5 close 3</figcaption></figure>
+<figure class="cell registered"><img src="overlays/classical-ar-full-pave-a1.jpg" alt="classical-ar-full-pave-a1" loading="lazy"><figcaption>classical-ar-full-pave-a1<br>tweak<br>wrong-stones<br>IoU 0.356<br>registered<br>scale 1.23 rot 0.1 deg<br>cover 15.7% parts 1<br>stroke 5 close 3</figcaption></figure>
+<figure class="cell registered"><img src="overlays/diamond-rails-ar-kufi-a1.jpg" alt="diamond-rails-ar-kufi-a1" loading="lazy"><figcaption>diamond-rails-ar-kufi-a1<br>tweak<br>wrong-look<br>IoU 0.407<br>registered<br>scale 1.55 rot 0.0 deg<br>cover 18.5% parts 1<br>stroke 2 close 1</figcaption></figure>
+<figure class="cell registered"><img src="overlays/framed-minimal-layla-en-a1.jpg" alt="framed-minimal-layla-en-a1" loading="lazy"><figcaption>framed-minimal-layla-en-a1<br>tweak<br>unsupported-geometry<br>IoU 0.273<br>registered<br>scale 0.99 rot 0.7 deg<br>cover 21.5% parts 1<br>stroke 7 close 4</figcaption></figure>
+</div>
+<h3>fail (13)</h3>
+<div class="grid">
+<figure class="cell registered"><img src="overlays/classical-ar-a1.jpg" alt="classical-ar-a1" loading="lazy"><figcaption>classical-ar-a1<br>fail<br>chain-not-through-ring<br>IoU 0.390<br>registered<br>scale 1.25 rot -5.9 deg<br>cover 16.6% parts 1<br>stroke 5 close 3</figcaption></figure>
+<figure class="cell registered"><img src="overlays/framed-minimal-en-a1.jpg" alt="framed-minimal-en-a1" loading="lazy"><figcaption>framed-minimal-en-a1<br>fail<br>extra-ring<br>IoU 0.358<br>registered<br>scale 1.88 rot 0.0 deg<br>cover 26.5% parts 1<br>stroke 4 close 2</figcaption></figure>
+<figure class="cell registered"><img src="overlays/framed-minimal-ar-a1.jpg" alt="framed-minimal-ar-a1" loading="lazy"><figcaption>framed-minimal-ar-a1<br>fail<br>extra-ring<br>IoU 0.329<br>registered<br>scale 3.48 rot 2.4 deg<br>cover 19.6% parts 1<br>stroke 2 close 1</figcaption></figure>
+<figure class="cell registered"><img src="overlays/classical-ar-a2.jpg" alt="classical-ar-a2" loading="lazy"><figcaption>classical-ar-a2<br>fail<br>chain-not-through-ring<br>IoU 0.398<br>registered<br>scale 1.95 rot 0.0 deg<br>cover 15.8% parts 1<br>stroke 7 close 4</figcaption></figure>
+<figure class="cell registered"><img src="overlays/classical-ar-a3.jpg" alt="classical-ar-a3" loading="lazy"><figcaption>classical-ar-a3<br>fail<br>chain-not-through-ring, extra-ring<br>IoU 0.383<br>registered<br>scale 2.97 rot 0.0 deg<br>cover 14.3% parts 1<br>stroke 8 close 4</figcaption></figure>
+<figure class="cell registered"><img src="overlays/origami-ribbon-ar-a3.jpg" alt="origami-ribbon-ar-a3" loading="lazy"><figcaption>origami-ribbon-ar-a3<br>fail<br>chain-not-through-ring<br>IoU 0.403<br>registered<br>scale 1.76 rot 0.0 deg<br>cover 12.8% parts 1<br>stroke 13 close 4</figcaption></figure>
+<figure class="cell registered"><img src="overlays/diamond-rails-ar-a3.jpg" alt="diamond-rails-ar-a3" loading="lazy"><figcaption>diamond-rails-ar-a3<br>fail<br>missing-ring, chain-not-through-ring<br>IoU 0.390<br>registered<br>scale 2.31 rot -7.9 deg<br>cover 15.4% parts 1<br>stroke 12 close 4</figcaption></figure>
+<figure class="cell registered"><img src="overlays/classical-en-a4.jpg" alt="classical-en-a4" loading="lazy"><figcaption>classical-en-a4<br>fail<br>disconnected-component<br>IoU 0.367<br>registered<br>scale 0.94 rot 1.8 deg<br>cover 17.1% parts 1<br>stroke 14 close 4</figcaption></figure>
+<figure class="cell registered"><img src="overlays/origami-ribbon-en-a4.jpg" alt="origami-ribbon-en-a4" loading="lazy"><figcaption>origami-ribbon-en-a4<br>fail<br>disconnected-component, floating-mark<br>IoU 0.427<br>registered<br>scale 0.93 rot 0.0 deg<br>cover 15.2% parts 1<br>stroke 11 close 4</figcaption></figure>
+<figure class="cell registered"><img src="overlays/diamond-rails-ar-a4.jpg" alt="diamond-rails-ar-a4" loading="lazy"><figcaption>diamond-rails-ar-a4<br>fail<br>missing-glyph<br>IoU 0.409<br>registered<br>scale 2.56 rot -0.4 deg<br>cover 18.8% parts 1<br>stroke 14 close 4</figcaption></figure>
+<figure class="cell registered"><img src="overlays/classical-en-partial-pave-a1.jpg" alt="classical-en-partial-pave-a1" loading="lazy"><figcaption>classical-en-partial-pave-a1<br>fail<br>wrong-stones<br>IoU 0.346<br>registered<br>scale 0.93 rot 0.0 deg<br>cover 17.1% parts 1<br>stroke 14 close 4</figcaption></figure>
+<figure class="cell registered"><img src="overlays/classical-ar-partial-pave-a1.jpg" alt="classical-ar-partial-pave-a1" loading="lazy"><figcaption>classical-ar-partial-pave-a1<br>fail<br>wrong-stones, wrong-display<br>IoU 0.310<br>registered<br>scale 3.03 rot 0.0 deg<br>cover 14.9% parts 1<br>stroke 5 close 3</figcaption></figure>
+<figure class="cell registered"><img src="overlays/classical-ar-white-accent-a1.jpg" alt="classical-ar-white-accent-a1" loading="lazy"><figcaption>classical-ar-white-accent-a1<br>fail<br>floating-stone<br>IoU 0.399<br>registered<br>scale 3.21 rot 0.0 deg<br>cover 16.7% parts 1<br>stroke 7 close 4</figcaption></figure>
+</div>
+<h3>unscored (11)</h3>
+<div class="grid">
+<figure class="cell registered"><img src="overlays/framed-minimal-ar-a6.jpg" alt="framed-minimal-ar-a6" loading="lazy"><figcaption>framed-minimal-ar-a6<br>unscored<br>no tags<br>IoU 0.384<br>registered<br>scale 2.69 rot 0.0 deg<br>cover 20.6% parts 1<br>stroke 13 close 4</figcaption></figure>
+<figure class="cell registered"><img src="overlays/framed-minimal-ar-a7.jpg" alt="framed-minimal-ar-a7" loading="lazy"><figcaption>framed-minimal-ar-a7<br>unscored<br>no tags<br>IoU 0.364<br>registered<br>scale 2.60 rot 0.0 deg<br>cover 19.1% parts 1<br>stroke 10 close 4</figcaption></figure>
+<figure class="cell registered"><img src="overlays/framed-minimal-en-a7.jpg" alt="framed-minimal-en-a7" loading="lazy"><figcaption>framed-minimal-en-a7<br>unscored<br>no tags<br>IoU 0.331<br>registered<br>scale 1.77 rot 0.0 deg<br>cover 20.8% parts 1<br>stroke 12 close 4</figcaption></figure>
+<figure class="cell registered"><img src="overlays/framed-minimal-layla-en-a2.jpg" alt="framed-minimal-layla-en-a2" loading="lazy"><figcaption>framed-minimal-layla-en-a2<br>unscored<br>no tags<br>IoU 0.307<br>registered<br>scale 1.75 rot -0.4 deg<br>cover 22.9% parts 1<br>stroke 13 close 4</figcaption></figure>
+<figure class="cell registered"><img src="overlays/framed-minimal-layla-ar-a2.jpg" alt="framed-minimal-layla-ar-a2" loading="lazy"><figcaption>framed-minimal-layla-ar-a2<br>unscored<br>no tags<br>IoU 0.286<br>registered<br>scale 1.25 rot 15.6 deg<br>cover 19.5% parts 1<br>stroke 12 close 4</figcaption></figure>
+<figure class="cell registered"><img src="overlays/framed-minimal-muhammad-en-a1.jpg" alt="framed-minimal-muhammad-en-a1" loading="lazy"><figcaption>framed-minimal-muhammad-en-a1<br>unscored<br>no tags<br>IoU 0.387<br>registered<br>scale 2.68 rot 0.0 deg<br>cover 19.1% parts 1<br>stroke 4 close 2</figcaption></figure>
+<figure class="cell registered"><img src="overlays/framed-minimal-muhammad-en-a2.jpg" alt="framed-minimal-muhammad-en-a2" loading="lazy"><figcaption>framed-minimal-muhammad-en-a2<br>unscored<br>no tags<br>IoU 0.397<br>registered<br>scale 1.98 rot 0.0 deg<br>cover 16.6% parts 1<br>stroke 10 close 4</figcaption></figure>
+<figure class="cell registered"><img src="overlays/framed-minimal-muhammad-ar-a1.jpg" alt="framed-minimal-muhammad-ar-a1" loading="lazy"><figcaption>framed-minimal-muhammad-ar-a1<br>unscored<br>no tags<br>IoU 0.402<br>registered<br>scale 1.60 rot 0.0 deg<br>cover 20.9% parts 1<br>stroke 16 close 4</figcaption></figure>
+<figure class="cell registered"><img src="overlays/framed-minimal-muhammad-ar-a2.jpg" alt="framed-minimal-muhammad-ar-a2" loading="lazy"><figcaption>framed-minimal-muhammad-ar-a2<br>unscored<br>no tags<br>IoU 0.387<br>registered<br>scale 1.47 rot 0.0 deg<br>cover 17.5% parts 1<br>stroke 12 close 4</figcaption></figure>
+<figure class="cell registered"><img src="overlays/framed-minimal-en-a5.jpg" alt="framed-minimal-en-a5" loading="lazy"><figcaption>framed-minimal-en-a5<br>unscored<br>no tags<br>IoU 0.320<br>registered<br>scale 1.46 rot -2.2 deg<br>cover 22.6% parts 1<br>stroke 13 close 4</figcaption></figure>
+<figure class="cell registered"><img src="overlays/framed-minimal-en-a6.jpg" alt="framed-minimal-en-a6" loading="lazy"><figcaption>framed-minimal-en-a6<br>unscored<br>no tags<br>IoU 0.341<br>registered<br>scale 2.84 rot 0.0 deg<br>cover 20.7% parts 1<br>stroke 13 close 4</figcaption></figure>
+</div>
+</section>
+<section><h2>on_skin (8)</h2>
+<h3>pass (8)</h3>
+<div class="grid">
+<figure class="cell registration_failed"><img src="overlays/classical-en-on-skin-a1.jpg" alt="classical-en-on-skin-a1" loading="lazy"><figcaption>classical-en-on-skin-a1<br>pass<br>no tags<br>IoU 0.000<br>registration_failed<br>scale 0.00 rot 0.0 deg<br>cover 0.0% parts 0<br>stroke 1 close 1<br>photo mask empty</figcaption></figure>
+<figure class="cell registration_failed"><img src="overlays/classical-ar-on-skin-a1.jpg" alt="classical-ar-on-skin-a1" loading="lazy"><figcaption>classical-ar-on-skin-a1<br>pass<br>no tags<br>IoU 0.000<br>registration_failed<br>scale 0.00 rot 0.0 deg<br>cover 0.0% parts 0<br>stroke 1 close 1<br>photo mask empty</figcaption></figure>
+<figure class="cell registration_failed"><img src="overlays/origami-ribbon-en-on-skin-a1.jpg" alt="origami-ribbon-en-on-skin-a1" loading="lazy"><figcaption>origami-ribbon-en-on-skin-a1<br>pass<br>no tags<br>IoU 0.000<br>registration_failed<br>scale 0.00 rot 0.0 deg<br>cover 0.0% parts 0<br>stroke 1 close 1<br>photo mask empty</figcaption></figure>
+<figure class="cell registration_failed"><img src="overlays/origami-ribbon-ar-on-skin-a1.jpg" alt="origami-ribbon-ar-on-skin-a1" loading="lazy"><figcaption>origami-ribbon-ar-on-skin-a1<br>pass<br>no tags<br>IoU 0.000<br>registration_failed<br>scale 0.00 rot 0.0 deg<br>cover 0.0% parts 0<br>stroke 1 close 1<br>photo mask empty</figcaption></figure>
+<figure class="cell registration_failed"><img src="overlays/framed-minimal-en-on-skin-a1.jpg" alt="framed-minimal-en-on-skin-a1" loading="lazy"><figcaption>framed-minimal-en-on-skin-a1<br>pass<br>no tags<br>IoU 0.000<br>registration_failed<br>scale 0.00 rot 0.0 deg<br>cover 0.0% parts 0<br>stroke 1 close 1<br>photo mask empty</figcaption></figure>
+<figure class="cell registration_failed"><img src="overlays/framed-minimal-ar-on-skin-a1.jpg" alt="framed-minimal-ar-on-skin-a1" loading="lazy"><figcaption>framed-minimal-ar-on-skin-a1<br>pass<br>no tags<br>IoU 0.000<br>registration_failed<br>scale 0.00 rot 0.0 deg<br>cover 0.0% parts 0<br>stroke 1 close 1<br>photo mask empty</figcaption></figure>
+<figure class="cell registration_failed"><img src="overlays/diamond-rails-en-on-skin-a1.jpg" alt="diamond-rails-en-on-skin-a1" loading="lazy"><figcaption>diamond-rails-en-on-skin-a1<br>pass<br>no tags<br>IoU 0.000<br>registration_failed<br>scale 0.00 rot 0.0 deg<br>cover 0.0% parts 0<br>stroke 1 close 1<br>photo mask empty</figcaption></figure>
+<figure class="cell registration_failed"><img src="overlays/diamond-rails-ar-on-skin-a1.jpg" alt="diamond-rails-ar-on-skin-a1" loading="lazy"><figcaption>diamond-rails-ar-on-skin-a1<br>pass<br>no tags<br>IoU 0.000<br>registration_failed<br>scale 0.00 rot 0.0 deg<br>cover 0.0% parts 0<br>stroke 1 close 1<br>photo mask empty</figcaption></figure>
+</div>
+</section>
+<section><h2>close_up (9)</h2>
+<h3>pass (8)</h3>
+<div class="grid">
+<figure class="cell registered"><img src="overlays/classical-en-close-up-a1.jpg" alt="classical-en-close-up-a1" loading="lazy"><figcaption>classical-en-close-up-a1<br>pass<br>no tags<br>IoU 0.384<br>registered<br>scale 1.08 rot 0.3 deg<br>cover 22.2% parts 1<br>stroke 5 close 3</figcaption></figure>
+<figure class="cell registered"><img src="overlays/classical-ar-close-up-a1.jpg" alt="classical-ar-close-up-a1" loading="lazy"><figcaption>classical-ar-close-up-a1<br>pass<br>no tags<br>IoU 0.382<br>registered<br>scale 3.78 rot 0.1 deg<br>cover 23.2% parts 2<br>stroke 6 close 3</figcaption></figure>
+<figure class="cell registration_failed"><img src="overlays/origami-ribbon-ar-close-up-a1.jpg" alt="origami-ribbon-ar-close-up-a1" loading="lazy"><figcaption>origami-ribbon-ar-close-up-a1<br>pass<br>no tags<br>IoU 0.000<br>registration_failed<br>scale 0.00 rot 0.0 deg<br>cover 0.0% parts 0<br>stroke 1 close 1<br>photo mask empty</figcaption></figure>
+<figure class="cell registered"><img src="overlays/framed-minimal-en-close-up-a1.jpg" alt="framed-minimal-en-close-up-a1" loading="lazy"><figcaption>framed-minimal-en-close-up-a1<br>pass<br>no tags<br>IoU 0.359<br>registered<br>scale 2.58 rot 14.6 deg<br>cover 27.5% parts 2<br>stroke 6 close 3</figcaption></figure>
+<figure class="cell registered"><img src="overlays/framed-minimal-ar-close-up-a1.jpg" alt="framed-minimal-ar-close-up-a1" loading="lazy"><figcaption>framed-minimal-ar-close-up-a1<br>pass<br>no tags<br>IoU 0.329<br>registered<br>scale 2.78 rot 0.0 deg<br>cover 22.1% parts 2<br>stroke 5 close 3</figcaption></figure>
+<figure class="cell registered"><img src="overlays/diamond-rails-en-close-up-a1.jpg" alt="diamond-rails-en-close-up-a1" loading="lazy"><figcaption>diamond-rails-en-close-up-a1<br>pass<br>no tags<br>IoU 0.366<br>registered<br>scale 1.61 rot -6.2 deg<br>cover 27.4% parts 2<br>stroke 2 close 1</figcaption></figure>
+<figure class="cell registered"><img src="overlays/diamond-rails-ar-close-up-a1.jpg" alt="diamond-rails-ar-close-up-a1" loading="lazy"><figcaption>diamond-rails-ar-close-up-a1<br>pass<br>no tags<br>IoU 0.410<br>registered<br>scale 2.24 rot 0.0 deg<br>cover 23.0% parts 1<br>stroke 4 close 2</figcaption></figure>
+<figure class="cell registered"><img src="overlays/origami-ribbon-en-close-up-a2.jpg" alt="origami-ribbon-en-close-up-a2" loading="lazy"><figcaption>origami-ribbon-en-close-up-a2<br>pass<br>no tags<br>IoU 0.320<br>registered<br>scale 2.83 rot 0.1 deg<br>cover 24.1% parts 1<br>stroke 10 close 4</figcaption></figure>
+</div>
+<h3>tweak (1)</h3>
+<div class="grid">
+<figure class="cell registered"><img src="overlays/origami-ribbon-en-close-up-a1.jpg" alt="origami-ribbon-en-close-up-a1" loading="lazy"><figcaption>origami-ribbon-en-close-up-a1<br>tweak<br>wrong-display<br>IoU 0.374<br>registered<br>scale 3.85 rot 1.2 deg<br>cover 48.7% parts 1<br>stroke 2 close 1</figcaption></figure>
+</div>
+</section>
+<section><h2>dark (8)</h2>
+<h3>pass (8)</h3>
+<div class="grid">
+<figure class="cell registered"><img src="overlays/classical-en-dark-a1.jpg" alt="classical-en-dark-a1" loading="lazy"><figcaption>classical-en-dark-a1<br>pass<br>no tags<br>IoU 0.283<br>registered<br>scale 3.88 rot -0.1 deg<br>cover 59.9% parts 9<br>stroke 1 close 1</figcaption></figure>
+<figure class="cell registered"><img src="overlays/classical-ar-dark-a1.jpg" alt="classical-ar-dark-a1" loading="lazy"><figcaption>classical-ar-dark-a1<br>pass<br>no tags<br>IoU 0.191<br>registered<br>scale 3.59 rot 0.0 deg<br>cover 30.4% parts 10<br>stroke 2 close 1</figcaption></figure>
+<figure class="cell registered"><img src="overlays/origami-ribbon-en-dark-a1.jpg" alt="origami-ribbon-en-dark-a1" loading="lazy"><figcaption>origami-ribbon-en-dark-a1<br>pass<br>no tags<br>IoU 0.224<br>registered<br>scale 3.58 rot 0.0 deg<br>cover 33.7% parts 4<br>stroke 2 close 1</figcaption></figure>
+<figure class="cell registered"><img src="overlays/origami-ribbon-ar-dark-a1.jpg" alt="origami-ribbon-ar-dark-a1" loading="lazy"><figcaption>origami-ribbon-ar-dark-a1<br>pass<br>no tags<br>IoU 0.231<br>registered<br>scale 3.84 rot 0.0 deg<br>cover 28.0% parts 12<br>stroke 2 close 1</figcaption></figure>
+<figure class="cell registered"><img src="overlays/framed-minimal-en-dark-a1.jpg" alt="framed-minimal-en-dark-a1" loading="lazy"><figcaption>framed-minimal-en-dark-a1<br>pass<br>no tags<br>IoU 0.261<br>registered<br>scale 3.66 rot 0.1 deg<br>cover 31.4% parts 7<br>stroke 2 close 1</figcaption></figure>
+<figure class="cell registered"><img src="overlays/framed-minimal-ar-dark-a1.jpg" alt="framed-minimal-ar-dark-a1" loading="lazy"><figcaption>framed-minimal-ar-dark-a1<br>pass<br>no tags<br>IoU 0.284<br>registered<br>scale 3.32 rot 0.0 deg<br>cover 23.1% parts 21<br>stroke 2 close 1</figcaption></figure>
+<figure class="cell registered"><img src="overlays/diamond-rails-en-dark-a1.jpg" alt="diamond-rails-en-dark-a1" loading="lazy"><figcaption>diamond-rails-en-dark-a1<br>pass<br>no tags<br>IoU 0.199<br>registered<br>scale 3.92 rot -8.0 deg<br>cover 35.9% parts 5<br>stroke 2 close 1</figcaption></figure>
+<figure class="cell registered"><img src="overlays/diamond-rails-ar-dark-a1.jpg" alt="diamond-rails-ar-dark-a1" loading="lazy"><figcaption>diamond-rails-ar-dark-a1<br>pass<br>no tags<br>IoU 0.253<br>registered<br>scale 3.95 rot -0.1 deg<br>cover 63.6% parts 8<br>stroke 2 close 1</figcaption></figure>
+</div>
+</section>
+<details><summary>Configuration these masks were measured with</summary><p>PHOTO_MASK_WORK_WIDTH = 384<br>PHOTO_MASK_GRADIENT_HIGH_PERCENTILE = 0.88<br>PHOTO_MASK_HYSTERESIS_LOW_RATIO = 0.5<br>PHOTO_MASK_SEED_CLOSE_FRACTION = 0.003<br>PHOTO_MASK_STROKE_PERCENTILE = 0.1<br>PHOTO_MASK_CLOSE_STROKE_FACTOR = 0.5<br>PHOTO_MASK_CLOSE_RADIUS_MAX_FRACTION = 0.01<br>PHOTO_MASK_MIN_COMPONENT_FRACTION = 0.0005<br>PHOTO_MASK_BACKGROUND_TOLERANCE = 25<br>PHOTO_REGISTRATION_SCALE_MIN = 0.25<br>PHOTO_REGISTRATION_SCALE_MAX = 4<br>PHOTO_REGISTRATION_ROTATION_MAX_DEGREES = 30<br>PHOTO_REGISTRATION_TRANSLATION_MAX_FRACTION = 0.35<br>PHOTO_REGISTRATION_COARSE_WIDTH = 96<br>PHOTO_REGISTRATION_SCALE_STARTS = 5<br>PHOTO_REGISTRATION_SCALE_SPAN = 1.6<br>PHOTO_REGISTRATION_REFINE_ROUNDS = 8<br>PHOTO_REGISTRATION_SCORE_WIDTH = 256</p></details>
+</html>

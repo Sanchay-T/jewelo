@@ -1,0 +1,50 @@
+[
+  {
+    "cell": "framed-minimal-en-kufi",
+    "look": "framed-minimal",
+    "script": "en",
+    "lettering": "Kufi",
+    "view": "studio",
+    "ratio": "1:1",
+    "intendedName": "Asma",
+    "stencilKey": "asma-en-kufi-norings",
+    "promptPath": "docs/goals/overnight-launch/lab/stage5/prompts/framed-minimal-en-kufi.txt",
+    "promptSha256": "170b378ead78d0d26d74f8441d565f3d97333a9345bdf4ae55b038ba135a77ee"
+  },
+  {
+    "cell": "framed-minimal-ar-kufi",
+    "look": "framed-minimal",
+    "script": "ar",
+    "lettering": "Kufi",
+    "view": "studio",
+    "ratio": "1:1",
+    "intendedName": "أسماء",
+    "stencilKey": "asma-ar-kufi-norings",
+    "promptPath": "docs/goals/overnight-launch/lab/stage5/prompts/framed-minimal-ar-kufi.txt",
+    "promptSha256": "6c1259ec6f3b93209d7a162b3d732f0ce59ac62c3c244da9dbea0f0b50d5b17a"
+  },
+  {
+    "cell": "diamond-rails-en-kufi",
+    "look": "diamond-rails",
+    "script": "en",
+    "lettering": "Kufi",
+    "view": "studio",
+    "ratio": "1:1",
+    "intendedName": "Asma",
+    "stencilKey": "asma-en-kufi-norings",
+    "promptPath": "docs/goals/overnight-launch/lab/stage5/prompts/diamond-rails-en-kufi.txt",
+    "promptSha256": "e253e543fed04e84e7deb20a55b1984baf3303ea7edff3201636e82f974692de"
+  },
+  {
+    "cell": "diamond-rails-ar-kufi",
+    "look": "diamond-rails",
+    "script": "ar",
+    "lettering": "Kufi",
+    "view": "studio",
+    "ratio": "1:1",
+    "intendedName": "أسماء",
+    "stencilKey": "asma-ar-kufi-norings",
+    "promptPath": "docs/goals/overnight-launch/lab/stage5/prompts/diamond-rails-ar-kufi.txt",
+    "promptSha256": "ec8c904e8b733296e10fa7cd6195b134bb9f637d7b844dbf163a715073815e30"
+  }
+]

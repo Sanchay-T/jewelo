@@ -2,6 +2,7 @@ import "server-only";
 
 import {
   BASELINE_PROMPT_TEMPLATES,
+  assertStillTemplateCompatibility,
   PROMPT_PROFILE_REGISTRY,
   PROMPT_VARIABLES,
   type PromptProfile,
@@ -83,6 +84,7 @@ export function createMockPromptRelease(input: {
 }) {
   const store = getStore(input.scope);
   const parsed = validatePromptTemplate(input.profile, input.template);
+  assertStillTemplateCompatibility(input.profile, input.template);
   const version =
     Math.max(
       0,
@@ -112,6 +114,8 @@ export function publishMockPromptRelease(input: {
   const store = getStore(input.scope);
   const release = store.releases.find((item) => item.id === input.releaseId);
   if (!release) throw new Error("Prompt release not found");
+  validatePromptTemplate(release.profile, release.template);
+  assertStillTemplateCompatibility(release.profile, release.template);
   const current = store.active.get(release.profile);
   if (current?.id !== input.expectedCurrentReleaseId)
     throw new Error("Prompt publication changed; refresh required");

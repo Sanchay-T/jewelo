@@ -1,20 +1,29 @@
+__pycache__/
+!.env.example
+.do/generated/
 .DS_Store
 .env
 .env.*
-!.env.example
-node_modules/
-.pnpm-store/
-.turbo/
 .next/
-dist/
-coverage/
-test-results/
-playwright-report/
+.next-*/
+.pnpm-store/
+.trigger/
+.turbo/
+.vercel/
+.worktrees/
 *.log
 *.tsbuildinfo
-.vercel/
-.do/generated/
-.trigger/
-supabase/.temp/
+coverage/
+dist/
+node_modules/
 supabase/.branches/
-.worktrees/
+supabase/.temp/
+
+# Agent worktrees created by the Claude Code harness
+.claude/worktrees/
+
+# Private brand reference. The style anchors and their sha manifest live outside
+# this repository (STYLE_ANCHORS_DIR); this only guards an accidental copy in.
+style-anchors-v1/
+scripts/style-anchors/*.png
+scripts/style-anchors/manifest.json

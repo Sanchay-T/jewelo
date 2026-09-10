@@ -1,9 +1,30 @@
 packages:
   - "apps/*"
   - "packages/*"
+overrides:
+  # Security review 1 finding 12: transitive advisories with no direct dependency.
+  postcss: 8.5.28
+  qs: 6.16.0
+  # next 16.2.12 pulls sharp 0.34.5 for image optimisation; 0.35 patches the libvips CVEs.
+  sharp: 0.35.4
+  "@opentelemetry/core": 2.11.0
 allowBuilds:
   "@depot/cli": true
   esbuild: true
+  # P7-5: @sentry/nextjs pulls the Sentry CLI, whose postinstall downloads a
+  # release binary over the network. Nothing needs it until source maps are
+  # uploaded, which happens only when SENTRY_AUTH_TOKEN, SENTRY_ORG and
+  # SENTRY_PROJECT are all set (packages/observability/src/next-config.ts), so
+  # it is denied and every install stays offline. Flip it to true in the same
+  # change that first sets those three variables. Without an entry here a fresh
+  # install - including the App Platform build - fails with
+  # ERR_PNPM_IGNORED_BUILDS.
+  "@sentry/cli": false
+  # A postinstall that only prints a funding banner.
+  core-js: false
+  # Inngest pulls protobufjs in via OpenTelemetry. Its postinstall only
+  # regenerates files that already ship in the published package.
+  protobufjs: false
   sharp: true
 minimumReleaseAgeExclude:
   - "@turbo/darwin-64@2.10.12"

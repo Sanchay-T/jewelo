@@ -1,0 +1,6 @@
+{
+  "result": {
+    "type": "string",
+    "value": "{\"viewport\":[1440,900],\"scrollY\":1781.5,\"dir\":\"rtl\",\"panel\":{\"x\":72,\"y\":-20.3671875,\"width\":703.8046875,\"height\":620,\"top\":-20.3671875,\"right\":775.8046875,\"bottom\":599.6328125,\"left\":72},\"rail\":{\"x\":91,\"y\":430.1328125,\"width\":665.8046875,\"height\":150.5,\"top\":430.1328125,\"right\":756.8046875,\"bottom\":580.6328125,\"left\":91},\"samples\":1,\"exampleInPreview\":false,\"lettering\":[{\"text\":\"عمير\",\"font\":\"naskh, \\\"naskh Fallback\\\"\"},{\"text\":\"عمير\",\"font\":\"scheherazade, \\\"scheherazade Fallback\\\"\"},{\"text\":\"عمير\",\"font\":\"naskh, \\\"naskh Fallback\\\"\"},{\"text\":\"عمير\",\"font\":\"kufi, \\\"kufi Fallback\\\"\"},{\"text\":\"عمير\",\"font\":\"naskh, \\\"naskh Fallback\\\"\"},{\"text\":\"عمير\",\"font\":\"rakkas, \\\"rakkas Fallback\\\"\"}],\"fonts\":\"loaded\",\"name\":\"عمير\",\"forbidden\":false,\"previewText\":\"عينة من المتجر · أسماء\\n\\nعينة من المتجر. تُصوَّر قطعتك بعد تأكيد التهجئة.\\n\\nقطعة واحدة · زوايا مختلفة\\nالاستوديو\\n▷\\nجاهز\\nالاستوديو\\nالتصميم\\n✓\\nجاهز\\nعلى الجسم\\nالمقاس\\nجاهز\\nعن قرب\\nالتفاصيل\\nجاهز\\nخلفية داكنة\\nالإضاءة\"}"
+  }
+}

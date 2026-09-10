@@ -4,7 +4,9 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./observability": "./src/observability.ts",
+    "./sellable": "./src/sellable.ts"
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
@@ -13,6 +15,7 @@
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {
+    "@jewelo/contracts": "workspace:*",
     "zod": "4.4.3"
   }
 }

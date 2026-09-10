@@ -1,10 +1,13 @@
+import { jewelrySpecificationSchema } from "@jewelo/contracts";
+
 import {
   authenticatedUser,
   jsonError,
   readJson,
   supabaseRequest,
+  validated,
 } from "../../../../lib/backend/supabase-rest";
-import { attemptImmediateDispatch } from "../../../../lib/backend/trigger-dispatch";
+import { attemptImmediateDispatch } from "../../../../lib/backend/job-dispatch";
 
 export async function POST(request: Request) {
   try {
@@ -14,6 +17,12 @@ export async function POST(request: Request) {
       specification: Record<string, unknown>;
       idempotencyKey: string;
     }>(request, ["draftId", "specification", "idempotencyKey"]);
+    // The approved specification is immutable once the revision is cut, so it is
+    // validated and normalised here, before the RPC and before any paid prompt.
+    const specification = validated(
+      jewelrySpecificationSchema,
+      input.specification,
+    );
     const result = await supabaseRequest<
       Array<{
         approved_design_id: string;
@@ -28,7 +37,7 @@ export async function POST(request: Request) {
         method: "POST",
         body: JSON.stringify({
           p_draft_id: input.draftId,
-          p_specification: input.specification,
+          p_specification: specification,
           p_approval_key: `approve:${input.idempotencyKey}`,
           p_run_key: `run:${input.idempotencyKey}`,
         }),

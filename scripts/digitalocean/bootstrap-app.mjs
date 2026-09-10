@@ -3,7 +3,12 @@
 import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { appSecretEnvs, readEnvFiles, validateWebEnv } from "./env-contract.mjs";
+import {
+  appSecretEnvs,
+  deployTarget,
+  readEnvFiles,
+  validateWebEnv,
+} from "./env-contract.mjs";
 
 const repositoryRoot = resolve(import.meta.dirname, "../..");
 const contract = JSON.parse(
@@ -21,6 +26,28 @@ if (!contract.environments[environment] || !envFiles.length) {
 }
 
 const values = readEnvFiles(envFiles);
+// Fix-3 review minor 13: `deploy.sh` refuses to merge an env file that does not
+// declare the environment it belongs to, and this script builds a whole app
+// spec out of the same file with no such check, so `do:bootstrap production`
+// from a laptop would have created the production app out of the staging
+// values. The same rule, the same wording, the same exit code. Only environment
+// names are printed, never a value from the file.
+const declaredTarget = deployTarget(values);
+if (!declaredTarget) {
+  console.error(
+    `refusing to build the ${environment} app spec from ${envFiles.join(", ")}: it does not declare JEWELO_DEPLOY_TARGET`,
+  );
+  console.error(
+    `add JEWELO_DEPLOY_TARGET=${environment} to that file, or pass the file that belongs to ${environment}`,
+  );
+  process.exit(2);
+}
+if (declaredTarget !== environment) {
+  console.error(
+    `refusing to build the ${environment} app spec from ${envFiles.join(", ")}: JEWELO_DEPLOY_TARGET is ${declaredTarget}`,
+  );
+  process.exit(2);
+}
 const token = process.env.DIGITALOCEAN_ACCESS_TOKEN ?? values.get("DIGITALOCEAN_ACCESS_TOKEN");
 if (!token) throw new Error("DIGITALOCEAN_ACCESS_TOKEN is required");
 
@@ -36,12 +63,6 @@ secretEnvs.push({
   scope: "RUN_AND_BUILD_TIME",
   type: "GENERAL",
   value: "${APP_URL}",
-});
-secretEnvs.push({
-  key: "JEWELO_CLOUD_BUILD",
-  scope: "BUILD_TIME",
-  type: "GENERAL",
-  value: "1",
 });
 
 const target = contract.environments[environment];
@@ -113,19 +134,28 @@ const apps = JSON.parse(
   }),
 );
 const existing = apps.find((app) => app.spec?.name === target.appName);
-const args = existing
-  ? ["apps", "update", existing.id, "--spec", "-", "--update-sources", "--wait", "--output", "json"]
-  : [
-      "apps",
-      "create",
-      "--spec",
-      "-",
-      "--project-id",
-      contract.projectId,
-      "--wait",
-      "--output",
-      "json",
-    ];
+// Creation only. This script builds `services: [web]` from the contract alone,
+// so applying it to a live app is a full-spec replace: it deletes the
+// image-based `inngest` service, repoints the branch, and wipes every
+// environment variable outside `knownWebConfig`. An update belongs to
+// `pnpm do:deploy`, which edits the existing spec instead of replacing it.
+if (existing) {
+  console.error(
+    `${target.appName} already exists (app id ${existing.id}). Bootstrap creates an app and never updates one: applying this spec would drop the inngest service and every environment variable outside the web contract. Use "pnpm do:deploy <environment> <branch>" to deploy, or delete the app first if you really mean to recreate it.`,
+  );
+  process.exit(1);
+}
+const args = [
+  "apps",
+  "create",
+  "--spec",
+  "-",
+  "--project-id",
+  contract.projectId,
+  "--wait",
+  "--output",
+  "json",
+];
 
 let rawResult;
 try {
@@ -137,12 +167,12 @@ try {
   });
 } catch (error) {
   console.error(
-    `${existing ? "update" : "creation"} of ${target.appName} did not become active; inspect its latest deployment logs`,
+    `creation of ${target.appName} did not become active; inspect its latest deployment logs`,
   );
   process.exit(error.status || 1);
 }
 const result = JSON.parse(rawResult);
 const app = Array.isArray(result) ? result[0] : result;
-console.log(`${existing ? "updated" : "created"} ${target.appName}`);
+console.log(`created ${target.appName}`);
 console.log(`app_id=${app.id}`);
 console.log(`url=${app.default_ingress ?? app.live_url ?? "pending"}`);

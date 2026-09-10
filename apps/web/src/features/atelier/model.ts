@@ -1,3 +1,10 @@
+import {
+  exceedsLatinNameFit,
+  nameProblem,
+  nameProblemMessage,
+  normalizeName,
+} from "@jewelo/contracts";
+
 /** Customer prototype state only. Never sent to backend or manufacturing. */
 export const STORAGE_KEY = "caleums.atelier.v1";
 export const constructions = [
@@ -90,7 +97,13 @@ export const views = ["Studio", "On skin", "Close-up", "Dark"] as const;
 export type View = (typeof views)[number];
 export type Slot = {
   view: View;
-  status: "pending" | "ready" | "failed";
+  /**
+   * `unavailable` is a camera this look was never photographed in. It is not a
+   * failure and it is not in progress: nothing was ever going to arrive, so it
+   * must never show a spinner, and it must never offer a retry that can only
+   * fail again.
+   */
+  status: "pending" | "ready" | "failed" | "unavailable";
   due: number;
   attempt: number;
   fail: boolean;
@@ -101,6 +114,13 @@ export type Run = {
   signature: string;
   draft: Draft;
   slots: Slot[];
+  /**
+   * The customer's own confirmation of their spelling. It belongs to the
+   * approved revision, not to the browser tab, so it is stored with the run:
+   * a shopper who reloads on the review stage must not be told at once that
+   * their request is captured and that they have not confirmed their name.
+   */
+  confirmed?: boolean;
 };
 export type BagItem = {
   version: 1;
@@ -118,6 +138,19 @@ export type BagItem = {
   };
   sampleId?: string;
   sampleFocus?: VisualField;
+  /**
+   * What the shopper actually got from the real pipeline, if anything.
+   * Signed media URLs live five minutes, so only durable identifiers are kept
+   * here and the image is re-read from `/api/state` under the same anonymous
+   * principal. When no personalized photograph exists, `previewRequestId` is the
+   * operator's reference for the captured request instead.
+   */
+  personalized?: {
+    runId: string;
+    designId?: string;
+    assets?: { view: View; assetId: string }[];
+    previewRequestId?: string;
+  };
 };
 export type State = {
   version: 1;
@@ -152,25 +185,41 @@ export function specification(d: Draft): Draft {
   };
 }
 export const signature = (d: Draft) => JSON.stringify(specification(d));
-export const nameLabel = (d: Draft) =>
-  [d.name, ...(d.twoNames ? [d.secondName] : [])].filter(Boolean).join(" & ") ||
-  "Your name";
+/**
+ * The customer's names, checked on the shop's own screen by exactly the rules
+ * the server applies.
+ *
+ * `nameProblem`, `nameProblemMessage` and `exceedsLatinNameFit` all come from
+ * `packages/contracts/src/domain.ts`, which is the reference: the same
+ * functions back `jewelrySpecificationSchema`, so a name this screen accepts
+ * cannot be refused by the approve route, and a name this screen refuses was
+ * never going to be cast. The atelier's older, looser check accepted Arabic
+ * letters as an English name and let two 30-character names through.
+ *
+ * `fit` is not a field: it is the pair of names together being longer than the
+ * identity engine can cast as one pendant.
+ */
 export function validate(
   d: Draft,
-): Partial<Record<"name" | "secondName", string>> {
-  const errors: Partial<Record<"name" | "secondName", string>> = {};
+): Partial<Record<"name" | "secondName" | "fit", string>> {
+  const errors: Partial<Record<"name" | "secondName" | "fit", string>> = {};
+  const script = d.script === "Arabic" ? "arabic" : "latin";
   for (const field of [
     "name",
     ...(d.twoNames ? ["secondName" as const] : []),
   ] as const) {
-    const text = d[field].trim();
-    if (!text || !/\p{L}/u.test(text))
-      errors[field] = "Enter a name containing letters.";
-    else if (text.length > 30 || !/^[\p{L}\p{M}\s'’-]+$/u.test(text))
-      errors[field] = "Use up to 30 letters, spaces, apostrophes or hyphens.";
-    else if (d.script === "Arabic" && !/\p{Script=Arabic}/u.test(text))
-      errors[field] = "Enter the exact Arabic spelling, or choose English.";
+    const problem = nameProblem(normalizeName(d[field]), script);
+    if (problem) errors[field] = nameProblemMessage(problem, script);
   }
+  if (
+    !errors.name &&
+    !errors.secondName &&
+    d.twoNames &&
+    script === "latin" &&
+    exceedsLatinNameFit([normalizeName(d.name), normalizeName(d.secondName)])
+  )
+    errors.fit =
+      "Together these two names are longer than we can make as one pendant. Shorten one of them.";
   return errors;
 }
 /** Replace this port with real generation only in a separately authorized integration. */
@@ -216,13 +265,23 @@ export const mockGeneration: GenerationPort = {
     ),
   }),
 };
-export function canAdd(d: Draft, run: Run | undefined, confirmed: boolean) {
+export function canAdd(
+  d: Draft,
+  run: Run | undefined,
+  confirmed: boolean,
+  /**
+   * A photograph of the customer's own piece, or a captured request the shop
+   * will answer. Either one is a complete reason to keep the piece, even when
+   * the illustrated sample for this combination could not be loaded.
+   */
+  personalized = false,
+) {
   return (
     confirmed &&
     Object.keys(validate(d)).length === 0 &&
     !!run &&
     run.signature === signature(d) &&
-    run.slots.some((s) => s.status === "ready")
+    (personalized || run.slots.some((s) => s.status === "ready"))
   );
 }
 export function putInBag(
@@ -230,9 +289,10 @@ export function putInBag(
   confirmed: boolean,
   id: string,
   sampleId?: string,
+  personalized?: BagItem["personalized"],
 ): State {
   const run = state.runs.at(-1);
-  if (!canAdd(state.draft, run, confirmed) || !run) return state;
+  if (!canAdd(state.draft, run, confirmed, !!personalized) || !run) return state;
   const existing = state.bag.find((item) => item.id === state.editing);
   const item: BagItem = {
     version: 1,
@@ -243,6 +303,7 @@ export function putInBag(
     confirmed: true,
     ...(sampleId ? { sampleId } : {}),
     ...(state.sampleFocus ? { sampleFocus: state.sampleFocus } : {}),
+    ...(personalized ? { personalized } : {}),
   };
   return {
     ...state,
@@ -328,14 +389,17 @@ function runValid(x: unknown): x is Run {
       (s, i) =>
         record(s) &&
         s.view === views[i] &&
-        ["pending", "ready", "failed"].includes(s.status as string) &&
+        ["pending", "ready", "failed", "unavailable"].includes(
+          s.status as string,
+        ) &&
         typeof s.due === "number" &&
         Number.isFinite(s.due) &&
         typeof s.attempt === "number" &&
         Number.isInteger(s.attempt) &&
         s.attempt > 0 &&
         typeof s.fail === "boolean",
-    )
+    ) &&
+    (x.confirmed === undefined || typeof x.confirmed === "boolean")
   );
 }
 export function restore(raw: string | null): State {
@@ -381,6 +445,23 @@ export function restore(raw: string | null): State {
             b.snapshot.availableViews.every((v) =>
               (views as readonly unknown[]).includes(v),
             ))) &&
+        (b.personalized === undefined ||
+          (record(b.personalized) &&
+            typeof b.personalized.runId === "string" &&
+            b.personalized.runId.length <= 100 &&
+            (b.personalized.designId === undefined ||
+              typeof b.personalized.designId === "string") &&
+            (b.personalized.previewRequestId === undefined ||
+              typeof b.personalized.previewRequestId === "string") &&
+            (b.personalized.assets === undefined ||
+              (Array.isArray(b.personalized.assets) &&
+                b.personalized.assets.every(
+                  (a) =>
+                    record(a) &&
+                    (views as readonly unknown[]).includes(a.view) &&
+                    typeof a.assetId === "string" &&
+                    a.assetId.length <= 100,
+                ))))) &&
         (b.sampleId === undefined ||
           (typeof b.sampleId === "string" && b.sampleId.length <= 100)) &&
         Number.isInteger(b.quantity) &&
@@ -399,6 +480,29 @@ export function restore(raw: string | null): State {
       ? recovered.editing
       : null,
   };
+}
+/**
+ * The example photograph for a saved bag row, or nothing.
+ *
+ * `sampleSource` returns one of exactly three v1 photographs, and all of them
+ * are the default construction and the default lettering: one English name, one
+ * Arabic name, two English names. Handing any other design one of them would
+ * show a saved piece as a design it is not - a different look, or an Arabic
+ * piece illustrated by an English photograph. A row outside that set gets no
+ * image at all and keeps its "Previously saved example pendant" label.
+ */
+export function savedExampleSource(view: View, draft: Draft): string | undefined {
+  if (
+    draft.construction !== emptyDraft.construction ||
+    draft.lettering !== emptyDraft.lettering
+  )
+    return undefined;
+  const src = sampleSource(view, draft);
+  const depictedScript = src.includes("arabic") ? "Arabic" : "English";
+  const depictsTwoNames = src.includes("fatima");
+  return depictedScript === draft.script && depictsTwoNames === draft.twoNames
+    ? src
+    : undefined;
 }
 export const sampleSource = (view: View, draft?: Draft) =>
   view === "Studio" && draft?.twoNames

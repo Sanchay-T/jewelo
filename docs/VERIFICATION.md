@@ -1,5 +1,7 @@
 # Verification contract
 
+> **7 September 2026:** tests and CI are off until Sanchay turns them on. The only mechanical gate is `pnpm build`; everything else below that names `pnpm test`, Playwright or CI is suspended, not deleted. Rendered work is verified by the lead agent in its own in-app browser per `docs/MINDSET.md`.
+
 Completion means observable proof, not plausible code.
 
 ## Every goal

@@ -1,0 +1,6 @@
+{
+  "result": {
+    "type": "string",
+    "value": "{\"viewport\":[390,844],\"scrollY\":618,\"dir\":\"rtl\",\"panel\":{\"x\":20,\"y\":-486,\"width\":350,\"height\":340,\"top\":-486,\"right\":370,\"bottom\":-146,\"left\":20},\"rail\":{\"x\":29,\"y\":-240,\"width\":332,\"height\":85,\"top\":-240,\"right\":361,\"bottom\":-155,\"left\":29},\"samples\":1,\"exampleInPreview\":false,\"lettering\":[{\"text\":\"U\",\"font\":\"naskh, \\\"naskh Fallback\\\"\"},{\"text\":\"U\",\"font\":\"scheherazade, \\\"scheherazade Fallback\\\"\"},{\"text\":\"U\",\"font\":\"naskh, \\\"naskh Fallback\\\"\"},{\"text\":\"U\",\"font\":\"kufi, \\\"kufi Fallback\\\"\"},{\"text\":\"U\",\"font\":\"naskh, \\\"naskh Fallback\\\"\"},{\"text\":\"U\",\"font\":\"rakkas, \\\"rakkas Fallback\\\"\"}],\"fonts\":\"loaded\",\"name\":\"U\",\"forbidden\":false,\"previewText\":\"عينة من المتجر · أسماء\\n\\nعينة من المتجر. تُصوَّر قطعتك بعد تأكيد التهجئة.\\n\\nالاستوديو\\n▷\\nجاهز\\nالاستوديو\\nالتصميم\\n✓\\nجاهز\\nعلى الجسم\\nالمقاس\\nجاهز\\nعن قرب\\nالتفاصيل\\nجاهز\\nخلفية داكنة\\nالإضاءة\"}"
+  }
+}

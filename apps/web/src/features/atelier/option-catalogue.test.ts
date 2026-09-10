@@ -1,24 +1,32 @@
 import { expect, it } from 'vitest';
-import { configurations, differences, resolveOptionFamily, sampleKey, samples } from './catalogue';
-import { emptyDraft, visualFields } from './model';
+import { configurations, hasExactSample, resolveOptionFamily, samples, tier1Differences, tier1Key } from './catalogue';
+import { chains, coverages, emptyDraft, gems, metals, visualFields } from './model';
 
-it('only publishes photos that match every active selected visual attribute', () => {
-  const indexed = new Map<string, typeof samples>();
-  for (const sample of samples) {
-    const key = sampleKey(sample.draft, "Studio");
-    indexed.set(key, [...(indexed.get(key) ?? []), sample]);
-  }
+it('publishes only photographs of the selected design, across every configuration', () => {
+  // Tier 1 (script, names and layout, construction, lettering) must match the
+  // photograph exactly. Tier 2 (gold, stones, gem, width, chain) belongs to the
+  // customer's own preview and may never select or change the photograph.
+  const byDesign = new Map<string, string>();
   let count = 0;
   for (const draft of configurations()) {
     count++;
-    const expected = indexed.get(sampleKey(draft, 'Studio')) ?? [];
     const family = resolveOptionFamily(draft);
-    expect(family.missing).toBe(!expected.some(s => s.view === 'Studio'));
-    for (const photo of family.assets) expect(differences(draft, photo.draft)).toEqual([]);
-    if (family.missing) expect(family.assets).toEqual([]);
-    else expect(family.assets.map(s => s.id).sort()).toEqual(expected.map(s => s.id).sort());
+    const design = tier1Key(draft);
+    const published = family.assets.map(photo => photo.id).join('|') + '/' + family.basis;
+    const first = byDesign.get(design);
+    if (first === undefined) byDesign.set(design, published);
+    else expect(published).toBe(first);
+    expect(family.missing).toBe(!hasExactSample(draft));
+    for (const photo of family.assets) {
+      // Every published photo belongs to the one design being illustrated,
+      // and never to another construction.
+      expect(tier1Differences(photo.draft, family.shown!)).toEqual([]);
+      expect(photo.draft.construction).toBe(draft.construction);
+      if (!family.missing) expect(tier1Differences(draft, photo.draft)).toEqual([]);
+    }
   }
   expect(count).toBe(131328);
+  expect(byDesign.size).toBe(288);
 }, 60000);
 
 it('click order cannot override the complete configuration', () => {
@@ -34,15 +42,25 @@ it('click order cannot override the complete configuration', () => {
 });
 
 it('never replaces Arabic rails Kufi with English origami or classical when changing metals or stones', () => {
-  for (const metal of ['Yellow gold', 'White gold', 'Rose gold'] as const)
-    for (const coverage of ['No stones', 'Accent', 'Partial pavé', 'Full pavé'] as const) {
-      const draft = {...emptyDraft, script:'Arabic' as const, construction:'Diamond rails' as const, lettering:'Kufi' as const, chain:'Rolo' as const, metal, coverage};
-      for (const focus of ['metal','coverage'] as const) {
-        const family = resolveOptionFamily(draft,focus);
-        for (const photo of family.assets) expect(differences(draft,photo.draft)).toEqual([]);
-        if (!family.anchor.exact) expect(family.assets).toEqual([]);
-      }
-    }
+  const design = {...emptyDraft, script:'Arabic' as const, name:'أسماء', construction:'Diamond rails' as const, lettering:'Kufi' as const, chain:'Rolo' as const};
+  const baseline = resolveOptionFamily(design);
+  expect(baseline.anchor.exact).toBe(true);
+  expect(baseline.assets.length).toBe(4);
+  for (const metal of metals)
+    for (const coverage of coverages)
+      for (const gem of gems)
+        for (const size of [22, 32] as const)
+          for (const chain of chains)
+            for (const focus of ['metal','coverage','gem','size','chain'] as const) {
+              const family = resolveOptionFamily({...design, metal, coverage, gem, size, chain}, focus);
+              expect(family.assets.map(photo => photo.id)).toEqual(baseline.assets.map(photo => photo.id));
+              expect(family.anchor.asset?.id).toBe(baseline.anchor.asset?.id);
+              for (const photo of family.assets) {
+                expect(photo.draft.script).toBe('Arabic');
+                expect(photo.draft.construction).toBe('Diamond rails');
+                expect(photo.draft.lettering).toBe('Kufi');
+              }
+            }
 });
 
 it('customer spelling and inactive layout or gemstone do not change sample identity', () => {

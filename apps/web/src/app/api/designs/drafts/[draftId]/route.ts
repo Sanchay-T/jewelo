@@ -1,8 +1,11 @@
+import { jewelryDraftSpecificationSchema } from "@jewelo/contracts";
+
 import {
   authenticatedUser,
   jsonError,
   readJson,
   supabaseRequest,
+  validated,
 } from "../../../../../lib/backend/supabase-rest";
 
 export async function PATCH(
@@ -13,6 +16,12 @@ export async function PATCH(
     const { draftId } = await context.params;
     const { bearer, config } = await authenticatedUser(request);
     const input = await readJson<Record<string, unknown>>(request);
+    // The client patches by sending the whole merged specification, so the same
+    // schema that guards creation guards the edit.
+    const specification =
+      input.specification === undefined
+        ? undefined
+        : validated(jewelryDraftSpecificationSchema, input.specification);
     const rows = await supabaseRequest<Array<Record<string, unknown>>>(
       config,
       `/rest/v1/design_drafts?id=eq.${encodeURIComponent(draftId)}`,
@@ -20,7 +29,7 @@ export async function PATCH(
         method: "PATCH",
         headers: { prefer: "return=representation" },
         body: JSON.stringify({
-          specification: input.specification,
+          specification,
           spelling_confirmed: input.spellingConfirmed,
           revision_token: input.revisionToken,
         }),

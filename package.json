@@ -24,13 +24,10 @@
     "e2e": "bash scripts/e2e-backend.sh",
     "format": "prettier --write package.json pnpm-workspace.yaml turbo.json tsconfig.base.json eslint.config.mjs vercel.json apps packages scripts/digitalocean",
     "format:check": "prettier --check package.json pnpm-workspace.yaml turbo.json tsconfig.base.json eslint.config.mjs vercel.json apps packages scripts/digitalocean",
-    "jobs:deploy": "bash scripts/trigger-remote.sh deploy",
-    "jobs:dev": "bash scripts/trigger-remote.sh dev",
     "lint": "turbo run lint",
     "secret:scan": "bash scripts/scan-secrets.sh",
     "start": "pnpm --filter @jewelo/web start",
     "test": "turbo run test",
-    "test:e2e": "pnpm --filter @jewelo/web test:e2e",
     "typecheck": "turbo run typecheck"
   },
   "devDependencies": {

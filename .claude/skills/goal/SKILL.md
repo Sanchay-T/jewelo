@@ -41,7 +41,7 @@ Locked provider roles:
 
 ```text
 Supabase      durable data, auth, realtime, private media
-Trigger.dev   durable orchestration, queues, retries, concurrency, recovery
+Inngest       durable orchestration, queues, retries, concurrency, recovery
 OpenAI        direct GPT Image 2 still generation and configured verification
 fal.ai        Seedance inference and agent-facing model MCP
 ```

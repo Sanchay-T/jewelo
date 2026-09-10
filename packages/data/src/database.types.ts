@@ -563,6 +563,7 @@ export type Database = {
           provider_response_url: string | null
           provider_status_url: string | null
           reservation_cents: number
+          reservation_usage_date: string | null
           run_id: string
           status: Database["public"]["Enums"]["task_status"]
           style_anchor_release_id: string | null
@@ -591,6 +592,7 @@ export type Database = {
           provider_response_url?: string | null
           provider_status_url?: string | null
           reservation_cents?: number
+          reservation_usage_date?: string | null
           run_id: string
           status?: Database["public"]["Enums"]["task_status"]
           style_anchor_release_id?: string | null
@@ -619,6 +621,7 @@ export type Database = {
           provider_response_url?: string | null
           provider_status_url?: string | null
           reservation_cents?: number
+          reservation_usage_date?: string | null
           run_id?: string
           status?: Database["public"]["Enums"]["task_status"]
           style_anchor_release_id?: string | null
@@ -901,6 +904,85 @@ export type Database = {
         }
         Relationships: []
       }
+      preview_requests: {
+        Row: {
+          contact: Json
+          contacted_at: string | null
+          created_at: string
+          design_id: string | null
+          design_revision_id: string | null
+          generation_run_id: string | null
+          id: string
+          locale: string
+          notified_at: string | null
+          operator_note: string | null
+          principal_id: string
+          request_key: string | null
+          sample_reference: Json | null
+          specification: Json
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          contact: Json
+          contacted_at?: string | null
+          created_at?: string
+          design_id?: string | null
+          design_revision_id?: string | null
+          generation_run_id?: string | null
+          id?: string
+          locale: string
+          notified_at?: string | null
+          operator_note?: string | null
+          principal_id: string
+          request_key?: string | null
+          sample_reference?: Json | null
+          specification: Json
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          contact?: Json
+          contacted_at?: string | null
+          created_at?: string
+          design_id?: string | null
+          design_revision_id?: string | null
+          generation_run_id?: string | null
+          id?: string
+          locale?: string
+          notified_at?: string | null
+          operator_note?: string | null
+          principal_id?: string
+          request_key?: string | null
+          sample_reference?: Json | null
+          specification?: Json
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "preview_requests_design_id_fkey"
+            columns: ["design_id"]
+            isOneToOne: false
+            referencedRelation: "designs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "preview_requests_design_revision_id_fkey"
+            columns: ["design_revision_id"]
+            isOneToOne: false
+            referencedRelation: "design_revisions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "preview_requests_generation_run_id_fkey"
+            columns: ["generation_run_id"]
+            isOneToOne: false
+            referencedRelation: "generation_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       price_snapshots: {
         Row: {
           assumptions: Json
@@ -1114,6 +1196,7 @@ export type Database = {
           provider_request_id: string | null
           status: string
           task_id: string
+          usage_date: string
         }
         Insert: {
           actual_cost_cents?: number | null
@@ -1131,6 +1214,7 @@ export type Database = {
           provider_request_id?: string | null
           status: string
           task_id: string
+          usage_date?: string
         }
         Update: {
           actual_cost_cents?: number | null
@@ -1148,6 +1232,7 @@ export type Database = {
           provider_request_id?: string | null
           status?: string
           task_id?: string
+          usage_date?: string
         }
         Relationships: [
           {
@@ -1313,8 +1398,12 @@ export type Database = {
         Row: {
           daily_generation_limit: number
           environment: string
+          global_daily_generation_limit: number
+          global_max_reserved_spend_cents: number
           id: boolean
           max_reserved_spend_cents: number
+          provider_attempt_budget: number
+          studio_only: boolean
           studio_reservation_cents: number
           supabase_region: string
           updated_at: string
@@ -1323,8 +1412,12 @@ export type Database = {
         Insert: {
           daily_generation_limit?: number
           environment?: string
+          global_daily_generation_limit?: number
+          global_max_reserved_spend_cents?: number
           id?: boolean
           max_reserved_spend_cents?: number
+          provider_attempt_budget?: number
+          studio_only?: boolean
           studio_reservation_cents?: number
           supabase_region?: string
           updated_at?: string
@@ -1333,8 +1426,12 @@ export type Database = {
         Update: {
           daily_generation_limit?: number
           environment?: string
+          global_daily_generation_limit?: number
+          global_max_reserved_spend_cents?: number
           id?: boolean
           max_reserved_spend_cents?: number
+          provider_attempt_budget?: number
+          studio_only?: boolean
           studio_reservation_cents?: number
           supabase_region?: string
           updated_at?: string
@@ -1594,6 +1691,7 @@ export type Database = {
           provider_response_url: string | null
           provider_status_url: string | null
           reservation_cents: number
+          reservation_usage_date: string | null
           run_id: string
           status: Database["public"]["Enums"]["task_status"]
           style_anchor_release_id: string | null
@@ -1787,6 +1885,7 @@ export type Database = {
           provider_response_url: string | null
           provider_status_url: string | null
           reservation_cents: number
+          reservation_usage_date: string | null
           run_id: string
           status: Database["public"]["Enums"]["task_status"]
           style_anchor_release_id: string | null
@@ -1858,6 +1957,7 @@ export type Database = {
           provider_response_url: string | null
           provider_status_url: string | null
           reservation_cents: number
+          reservation_usage_date: string | null
           run_id: string
           status: Database["public"]["Enums"]["task_status"]
           style_anchor_release_id: string | null
@@ -1968,6 +2068,7 @@ export type Database = {
           provider_response_url: string | null
           provider_status_url: string | null
           reservation_cents: number
+          reservation_usage_date: string | null
           run_id: string
           status: Database["public"]["Enums"]["task_status"]
           style_anchor_release_id: string | null
@@ -2025,6 +2126,7 @@ export type Database = {
           provider_response_url: string | null
           provider_status_url: string | null
           reservation_cents: number
+          reservation_usage_date: string | null
           run_id: string
           status: Database["public"]["Enums"]["task_status"]
           style_anchor_release_id: string | null
@@ -2104,6 +2206,7 @@ export type Database = {
           provider_response_url: string | null
           provider_status_url: string | null
           reservation_cents: number
+          reservation_usage_date: string | null
           run_id: string
           status: Database["public"]["Enums"]["task_status"]
           style_anchor_release_id: string | null

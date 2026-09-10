@@ -1,0 +1,1 @@
+$ eslint src next.config.ts postcss.config.mjs

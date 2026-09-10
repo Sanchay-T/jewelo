@@ -6,8 +6,9 @@ import {
   OpenAIStillAdapter,
   PRESENTATION_ASPECT_RATIO,
   buildPromptVariableSnapshot,
-  compilePrompt,
+  compileStillPrompt,
   identityTextMatches,
+  normalizeIdentityText,
   type GeneratedMedia,
   type PromptProfile,
   type PromptVariableSnapshot,
@@ -15,10 +16,31 @@ import {
   type StudioNameReader,
   type StudioVerifier,
 } from "@jewelo/ai";
-import { parseJobsEnv } from "@jewelo/config";
+import { parseJobsEnv, pipelineLimits } from "@jewelo/config";
+// Pipeline fix review 1 finding 5. The one definition of a reference-asset id -
+// the opaque identifier the upload route mints, and nothing that can traverse a
+// path - is the one the upload route validates against, so this job cannot
+// drift from it.
+import { REFERENCE_ASSET_ID } from "@jewelo/contracts";
 import { isDuplicateObject } from "@jewelo/media";
 import sharp from "sharp";
-import { renderIdentityAnchor } from "./identity-anchor";
+// Fix-3 review M1: `errorClass` used to be private to this file, so the video
+// job wrote fal's raw refusal into the same customer-visible columns. It is a
+// shared jobs module now and every category write in `apps/jobs` goes through
+// it.
+import { errorClass, nameMismatchCode } from "./error-class";
+import {
+  renderIdentityAnchor,
+  validateStoredIdentityAnchor,
+  type StoredIdentityAnchor,
+} from "./identity-anchor";
+// Storyline review 1 M2: what the day's money is allowed to be before a
+// real-mode dispatch spends any of it.
+import {
+  readSpendPolicy,
+  spendCeilingRefusal,
+  type RuntimeSpendPolicy,
+} from "./spend-ceiling";
 
 interface TaskRow {
   id: string;
@@ -37,6 +59,7 @@ interface TaskRow {
   cancel_requested_at?: string;
   /** Set on the three model views: the studio still they must reproduce. */
   dependency_task_id?: string | null;
+  identity_artifact_id?: string | null;
 }
 interface RunRow {
   id: string;
@@ -152,13 +175,23 @@ export interface PresentationRepository {
   signedIdentityUrl(
     revision: RevisionRow,
     ownerId: string,
-    taskId: string,
-  ): Promise<{ url: string; fingerprint: string; artifactId: string }>;
+    task: TaskRow,
+  ): Promise<{
+    url: string;
+    fingerprint: string;
+    artifactId: string;
+  }>;
   signedStyleAnchorUrl(task: TaskRow): Promise<string>;
   /** Ready still of `dependency_task_id`; undefined while it is not ready yet. */
   signedDependencyStillUrl?(
     task: TaskRow,
   ): Promise<{ url: string; assetId: string } | undefined>;
+  /**
+   * Terminal status of `dependency_task_id`, or undefined while it can still
+   * produce a still. A dependent view whose parent is terminal can never
+   * become dispatchable, so it must stop instead of deferring forever.
+   */
+  dependencyTerminalStatus?(task: TaskRow): Promise<string | undefined>;
   signedInspirationUrl(
     revision: RevisionRow,
     ownerId: string,
@@ -168,15 +201,95 @@ export interface PresentationRepository {
     run: RunRow;
     error: unknown;
   }): Promise<void>;
+  /**
+   * Paid attempts this task may make, read from the same row the SQL gates
+   * read (`runtime_policy.provider_attempt_budget`).
+   *
+   * Optional so a repository that has no policy to read - the in-memory one in
+   * a harness - can leave it out, and only then is the validated default in
+   * `packages/config` used.
+   *
+   * Pipeline fix review 1 finding 8: this used to promise that same fallback
+   * when the policy read failed, which the Supabase implementation does not do
+   * and should not do. A read that errors leaves this job unable to say how
+   * many paid attempts the SQL gates will allow, and guessing that number is
+   * how a task either wastes a still or is declared retryable when
+   * `reserve_provider_attempt` will never serve it again. It throws instead,
+   * the dispatch stops before any provider call, and the stale sweeper brings
+   * the task back when the database answers again. The config default applies
+   * only to a policy row that answered with a missing or invalid value.
+   */
+  providerAttemptBudget?(): Promise<number>;
+  /**
+   * The two `runtime_policy` numbers a real-mode dispatch refuses to spend
+   * against when they are looser than the deployment's ceilings
+   * (`./spend-ceiling`). One row, one query, cached per process.
+   *
+   * Optional for the same reason as `providerAttemptBudget`: an in-memory
+   * repository in a harness has no policy row. A repository that has one and
+   * cannot read it throws rather than guessing; the dispatch then stops before
+   * the provider and the stale sweeper brings the task back.
+   */
+  spendPolicy?(): Promise<RuntimeSpendPolicy>;
 }
 
 /**
- * The three model views edit the approved studio still, so the compiled prompt
- * has to name the extra first image before the published template's own
- * "first image is the only source for the pendant" rule is read.
+ * The deterministic refusals `materialize_prompt_snapshot` raises
+ * (`supabase/migrations/20260827060000_caleums_prompt_registry.sql:284-289`),
+ * each mapped to a reason class.
+ *
+ * The message text is the RPC's own; the class is what this job is allowed to
+ * write into `terminal_error_code`. Neither the compiled prompt nor the
+ * customer's name ever appears in one.
  */
-export const DEPENDENT_REFERENCE_RULE =
-  "REFERENCE: the first supplied image is the finished pendant photographed in the studio; reproduce this exact object - same letterforms, same metal, same stones, same chain - in the new scene. The second image is its black stencil (identical shape). The third image is style only.";
+const PROMPT_SNAPSHOT_REJECTIONS: readonly (readonly [string, string])[] = [
+  ["prompt release does not match task pin", "release_pin"],
+  ["invalid prompt variable snapshot", "variables"],
+  ["invalid compiled prompt length", "length"],
+  ["compiled prompt checksum mismatch", "checksum"],
+];
+
+/**
+ * Whether a failed `materialize_prompt_snapshot` call is a property of the task
+ * rather than of the moment, and if so which one.
+ *
+ * Adversarial review 3: the call used to be left to the stale sweeper on every
+ * failure. That is right for a transport fault or a 5xx, which the next
+ * dispatch will not see. It is wrong for the four `raise exception`s the RPC
+ * carries, because they depend only on rows that a re-dispatch cannot change -
+ * and `recover_stale_generation_tasks`
+ * (`supabase/migrations/20260907020000_dependent_view_terminal_gate.sql:150-172`)
+ * has no attempt cap on `attempt = 0 and status = 'queued'` and bumps
+ * `updated_at`, so one deterministic raise becomes an outbox row every two
+ * minutes for ever.
+ *
+ * PostgREST answers a raise with a 4xx whose body carries the SQLSTATE and the
+ * message. `SupabasePresentationRepository.#request` folds both into its error
+ * message and truncates the body at 300 characters, so the body is matched as
+ * text rather than parsed: a truncated JSON object still carries the code and
+ * the message, which are the first fields PostgREST writes. Anything else -
+ * a 5xx, a fetch that never answered, a `P0001` this job does not recognise -
+ * returns undefined and keeps the sweeper path.
+ */
+export function promptSnapshotRejectionClass(
+  error: unknown,
+): string | undefined {
+  const message = error instanceof Error ? error.message : String(error);
+  const status = /Supabase job request (\d{3}):/.exec(message);
+  if (!status) return undefined;
+  const code = Number(status[1]);
+  if (!Number.isFinite(code) || code < 400 || code >= 500) return undefined;
+  const body = message.slice(status.index + status[0].length);
+  const sqlState = /"code"\s*:\s*"([0-9A-Za-z]{5})"/.exec(body)?.[1];
+  if (sqlState !== "P0001" && sqlState !== "22023") return undefined;
+  for (const [raised, reason] of PROMPT_SNAPSHOT_REJECTIONS)
+    if (body.includes(raised)) return reason;
+  // `22023` is invalid_parameter_value: the argument itself is wrong, so the
+  // next dispatch sends the same wrong argument. A `P0001` with a message this
+  // job does not know is not classified, because an unrecognised raise may yet
+  // be about the moment rather than the row.
+  return sqlState === "22023" ? "invalid_argument" : undefined;
+}
 
 export async function executePresentationTask(
   taskId: string,
@@ -195,33 +308,122 @@ export async function executePresentationTask(
   if (task.status === "ready") return { status: "deduplicated" as const };
   if (task.status === "cancelled" || task.cancel_requested_at)
     return { status: "cancelled" as const };
+  /**
+   * The one way out of a pre-spend failure, used by every pre-spend gate below.
+   *
+   * Adversarial review 1 finding 3: `mark_task_pre_spend_blocked` raises for a
+   * task whose attempt is not 0, because the pre-spend gate cannot follow a
+   * provider reservation. Adversarial review 2 finding 4: only one of the call
+   * sites carried that fallback, and the gates that simply threw carried none,
+   * so on a retry the throw escaped `executePresentationTask` (the Inngest
+   * function runs with `retries: 0`), the task stayed `retrying` with no
+   * `terminal_error_code`, and the stale sweeper re-dispatched it for ever.
+   * (The sweeper runs every two minutes but only claims tasks older than
+   * `pipelineLimits.staleRecoveryWindowMs`; the cadence is not the window.) Every deterministic pre-spend refusal now ends the same way:
+   * block if the RPC will take it, terminal `fail` with the same message if it
+   * will not, and `operator_review` either way. The messages are category
+   * strings; a customer name never appears in one.
+   */
+  const blockPreSpendTerminally = async (error: unknown) => {
+    try {
+      await repository.blockPreSpend({ task, run, error });
+    } catch (blockError) {
+      // Pipeline review 1 finding 8: the bare catch discarded why the RPC
+      // refused, so an operator saw the gate's reason and no trace of the
+      // second failure. Both causes are recorded as their class only.
+      //
+      // Pipeline fix review 1 finding 7: the gate's own message used to be
+      // concatenated in raw. Most gate messages are category strings, but this
+      // path also carries whatever `signedIdentityUrl`, the anchor read or the
+      // inspiration read threw, including a PostgREST body with row values in
+      // it, and `fail` writes this string into the customer-visible
+      // `terminal_error_code`. Two classes, no free text.
+      await repository.fail({
+        task,
+        run,
+        attempt: task.attempt,
+        error: new Error(
+          `${errorClass(error)}|pre_spend_block_failed|${errorClass(blockError)}`,
+        ),
+        terminal: true,
+        actualCostCents: 0,
+      });
+    }
+    return { status: "operator_review" as const, attempt: task.attempt };
+  };
+  // The release row the job loaded is not the release the task is pinned to.
+  // That is a property of the two rows, so re-dispatching cannot change it.
   if (release.id !== task.prompt_release_id)
-    throw new Error("task_prompt_release_mismatch");
+    return blockPreSpendTerminally(new Error("task_prompt_release_mismatch"));
   let snapshot = existingSnapshot;
   if (!snapshot) {
-    const variables = buildPromptVariableSnapshot({
-      approvedName: revision.identity_anchor.approvedText,
-      language: revision.identity_anchor.language,
-      specification: revision.specification,
-      presentationView: task.presentation_view,
-    });
-    const compiled = compilePrompt({
-      profile: release.profile,
-      template: release.template,
-      variables,
-    });
-    const compiledPrompt = task.dependency_task_id
-      ? `${DEPENDENT_REFERENCE_RULE} ${compiled.compiledPrompt}`
-      : compiled.compiledPrompt;
-    snapshot = await repository.materializePromptSnapshot({
-      task,
-      release,
-      variables: compiled.variableSnapshot,
-      compiledPrompt,
-      compilerVersion: compiled.compilerVersion,
-      sha256: createHash("sha256").update(compiledPrompt, "utf8").digest("hex"),
-    });
+    let compiled: ReturnType<typeof compileStillPrompt>;
+    let compiledPrompt: string;
+    try {
+      const variables = buildPromptVariableSnapshot({
+        approvedName: revision.identity_anchor.approvedText,
+        language: revision.identity_anchor.language,
+        specification: revision.specification,
+        presentationView: task.presentation_view,
+      });
+      compiled = compileStillPrompt({
+        profile: release.profile,
+        template: release.template,
+        variables,
+        references: {
+          master: Boolean(task.dependency_task_id),
+          style: task.presentation_view !== "studio",
+          inspiration: Boolean(
+            revision.specification.referenceAsset &&
+              typeof revision.specification.referenceAsset === "object",
+          ),
+        },
+      });
+      compiledPrompt = compiled.compiledPrompt;
+    } catch (error) {
+      // A revision whose specification cannot fill the release's pinned
+      // variable set can never compile, however often it is re-dispatched.
+      // Left to throw, the task stays `queued` at attempt 0 and the stale
+      // sweeper re-queues it once per stale window for ever. This is a pre-spend gate like the
+      // identity and anchor gates: block once, release the reservation, and
+      // send it to operator review.
+      return blockPreSpendTerminally(
+        new Error(
+          `prompt_compile_failed:${
+            error instanceof Error ? error.message : "unknown"
+          }`,
+        ),
+      );
+    }
+    try {
+      snapshot = await repository.materializePromptSnapshot({
+        task,
+        release,
+        variables: compiled.variableSnapshot,
+        compiledPrompt,
+        compilerVersion: compiled.compilerVersion,
+        sha256: createHash("sha256")
+          .update(compiledPrompt, "utf8")
+          .digest("hex"),
+      });
+    } catch (error) {
+      // A write against Supabase fails in two different ways and they need
+      // opposite answers. A transport fault or a 5xx is about the moment: the
+      // same task succeeds on the next dispatch, so it is rethrown and the
+      // stale sweeper recovers it. A deterministic raise from the RPC is about
+      // the rows, so re-dispatching it turns one bad row into an outbox event
+      // once per stale window for ever; it is refused once, pre-spend, like
+      // the other gates here.
+      const reason = promptSnapshotRejectionClass(error);
+      if (reason === undefined) throw error;
+      return blockPreSpendTerminally(
+        new Error(`prompt_snapshot_rejected:${reason}`),
+      );
+    }
   }
+  // A stored snapshot that belongs to another task, another release or another
+  // prompt text is wrong in the row, not in this attempt: the same comparison
+  // fails on every redispatch, so it is a pre-spend refusal like the others.
   if (
     snapshot.task_id !== task.id ||
     snapshot.prompt_release_id !== task.prompt_release_id ||
@@ -229,23 +431,35 @@ export async function executePresentationTask(
       .update(snapshot.compiled_prompt, "utf8")
       .digest("hex") !== snapshot.sha256
   )
-    throw new Error("prompt_snapshot_lineage_mismatch");
-  let identity: { url: string; fingerprint: string; artifactId: string };
+    return blockPreSpendTerminally(
+      new Error("prompt_snapshot_lineage_mismatch"),
+    );
+  let identity: Awaited<
+    ReturnType<PresentationRepository["signedIdentityUrl"]>
+  >;
   let styleAnchorUrl: string | undefined;
   let inspirationImageUrl: string | undefined;
   let reference: { url: string; assetId: string } | undefined;
   try {
     if (task.dependency_task_id) {
       reference = await repository.signedDependencyStillUrl?.(task);
-      // A recovery dispatch can arrive before the studio still exists; wait for
-      // the release instead of spending on a scene with no pendant to copy.
-      if (!reference) return { status: "deferred" as const };
+      if (!reference) {
+        // A dependent view whose studio still is terminal can never get a
+        // pendant to copy. Deferring would let the stale sweeper re-queue it
+        // once per stale window forever; block it once instead, which also
+        // releases its reservation through the pre-spend path below.
+        const terminal = await repository.dependencyTerminalStatus?.(task);
+        if (terminal) throw new Error(`dependency_${terminal}`);
+        // Otherwise a recovery dispatch simply arrived before the studio still
+        // existed: wait for the release rather than spend on an empty scene.
+        return { status: "deferred" as const };
+      }
     }
     // Identity and exact style release existence are hard pre-spend gates.
     identity = await repository.signedIdentityUrl(
       revision,
       task.owner_principal_id,
-      task.id,
+      task,
     );
     // The studio still gets NO style photo: every wrong name today was copied
     // from the anchor. Dependent views inherit the studio still as reference.
@@ -258,15 +472,51 @@ export async function executePresentationTask(
       task.owner_principal_id,
     );
   } catch (error) {
-    await repository.blockPreSpend({ task, run, error });
-    return { status: "operator_review" as const, attempt: task.attempt };
+    return blockPreSpendTerminally(error);
   }
+  // D-020, fix pass 6: there is no bar rail any more and no flag that lets one
+  // through. `ringPlacement` is `welded`, `frame` (P2-2b: the construction the
+  // shopper chose carries the rings on its own frame or rails, and the solver
+  // gates that piece exactly as it gates a welded one) or `none`, and this file
+  // branches on none of them: every refusal is an `IdentitySolverError` raised
+  // inside the render. A name whose lettering
+  // offers no ring seat makes the solver throw `identity_no_ring_seat` inside
+  // the identity render above - which is inside this same try, so it lands in
+  // `blockPreSpendTerminally` before the attempt budget is read, before any
+  // reservation and before any provider call, and the shop sees the piece
+  // instead of the shopper. The seat is a property of the name and the style,
+  // so a redispatch would decide the same thing: terminal, a code, no customer
+  // text.
+  //
+  // The attempt budget is the database's, not this file's: `reserve_provider_attempt`,
+  // `retry_generation_task` and `operator_retry_generation_task` all refuse past
+  // the same `runtime_policy.provider_attempt_budget`, so a job that stopped one
+  // attempt earlier or later than the RPC would either waste a paid attempt or
+  // leave a task the RPC will never serve again looking retryable.
+  const attemptBudget =
+    (await repository.providerAttemptBudget?.()) ??
+    pipelineLimits.providerAttemptBudget;
   const checkpoint = await repository.loadStoredOutput(task);
   const provider = generator instanceof MockStudioGenerator ? "mock" : "openai";
   const model =
     generator instanceof OpenAIStillAdapter
       ? generator.model
       : "mock-openai-still-v1";
+  // Storyline review 1 M2. The last pre-spend gate, and the only one that is
+  // about the shop rather than the piece: a real-mode dispatch refuses to book
+  // an attempt at all while `runtime_policy` is looser than the ceilings this
+  // deployment set. `provider` is `mock` exactly when the generator is the mock
+  // one, which `productionPresentationDependencies` selects exactly when
+  // production derives the real generator from NODE_ENV; local `PROVIDER_MODE`
+  // is resolved once at the config boundary, so this reads "real mode" without
+  // a second copy of the environment in here. It sits above `reserveAttempt` because
+  // `mark_task_pre_spend_blocked` only takes a task at attempt 0, and because a
+  // reservation is already spend.
+  if (provider !== "mock" && repository.spendPolicy) {
+    const readPolicy = repository.spendPolicy.bind(repository);
+    const refusal = spendCeilingRefusal(await readSpendPolicy(readPolicy));
+    if (refusal) return blockPreSpendTerminally(new Error(refusal));
+  }
   let reservation: {
     attempt: number;
     idempotencyKey: string;
@@ -363,16 +613,46 @@ export async function executePresentationTask(
         const expected = revision.identity_anchor.approvedText;
         const reading = await nameReader.read(media, expected);
         const readText = reading.text;
-        const latinExpected = /^[\p{Script=Latin}\s'-]+$/u.test(expected);
-        const scriptOk = latinExpected
-          ? !/\p{Script=Arabic}/u.test(readText)
-          : /\p{Script=Arabic}/u.test(readText);
-        const passed =
-          scriptOk &&
-          (reading.matches || identityTextMatches(readText, expected));
-        record.nameCheck = { passed, readText, expected };
+        // Pipeline review 1 finding 1. The script of a name is decided by its
+        // letters. The old class required the whole approved text to be Latin
+        // letters, spaces, `'` and `-`, so the two-name join
+        // `canonical_identity_anchor` writes ("SARA & OMAR"), a typographic
+        // apostrophe ("O’Neill") and any combining mark made the name
+        // "not Latin" - and the still was then required to contain Arabic,
+        // which it never did. Every attempt failed, three paid stills per view
+        // were spent, and the shopper was told the piece was unavailable.
+        const expectedLetters = expected.replaceAll(/\P{L}/gu, "");
+        // Pipeline fix review 1 finding 1. An approved text with no letters
+        // ("1234", "-", "'") normalises to `""`, which made `latinExpected`
+        // true, the script test vacuous and `identityTextMatches` compare `""`
+        // to `""` - so the gate passed whatever the model had engraved. It is
+        // a property of the approved row, not of this attempt: no regeneration
+        // can give a letterless name letters, so it fails closed at once
+        // instead of spending two more stills first.
+        const letterlessApproved = normalizeIdentityText(expected).length === 0;
+        const scriptOk =
+          !letterlessApproved &&
+          (!/\p{Script=Arabic}/u.test(expectedLetters)
+            ? !/\p{Script=Arabic}/u.test(readText)
+            : /\p{Script=Arabic}/u.test(readText));
+        // Pipeline review 1 finding 3. The deterministic comparison is the only
+        // thing that can pass a still. The model's own `matches` is kept in the
+        // decision as evidence of what it claimed, and is never sufficient: a
+        // self-report was exactly what let wrong names through in August.
+        const passed = scriptOk && identityTextMatches(readText, expected);
+        record.nameCheck = {
+          passed,
+          readText,
+          expected,
+          scriptOk,
+          letterlessApproved,
+          modelReportedMatch: reading.matches,
+        };
         if (!passed) {
-          const terminal = regeneration >= 2 || reservation.attempt >= 3;
+          const terminal =
+            letterlessApproved ||
+            regeneration >= 2 ||
+            reservation.attempt >= attemptBudget;
           if (repository.storeRejectedOutput)
             rejectedObjectPaths.push(
               await repository.storeRejectedOutput({
@@ -387,7 +667,11 @@ export async function executePresentationTask(
             task,
             run,
             attempt: reservation.attempt,
-            error: new Error(`name_mismatch:${readText}`),
+            error: new Error(
+              letterlessApproved
+                ? "approved_text_has_no_letters"
+                : nameMismatchCode(readText),
+            ),
             terminal,
             actualCostCents: actualCostCents ?? 0,
             rejectedObjectPaths,
@@ -422,11 +706,18 @@ export async function executePresentationTask(
         inputAssetIds,
       });
       if (completed === "cancelled") return { status: "cancelled" as const };
-      return { status: "ready" as const, attempt: reservation.attempt };
+      // The run id travels with the result so the caller can scope its
+      // dependent-outbox dispatch to this run instead of claiming every
+      // principal's pending rows.
+      return {
+        status: "ready" as const,
+        attempt: reservation.attempt,
+        runId: task.run_id,
+      };
     }
   } catch (error) {
     if (isTaskCancelled(error)) return { status: "cancelled" as const };
-    const terminal = reservation.attempt >= 3;
+    const terminal = reservation.attempt >= attemptBudget;
     await repository.fail({
       task,
       run,
@@ -446,6 +737,17 @@ export class SupabasePresentationRepository implements PresentationRepository {
     private readonly url: string,
     private readonly key: string,
     private readonly allowMockAnchors = false,
+    // Motion is opt-in (VIDEO_ENABLED). Off means a ready studio still never
+    // asks fal for a preview, so no run spends video cents.
+    private readonly videoEnabled = false,
+    // P1-5. Constructions that carry their own suspension and so want no jump
+    // rings welded on. Read once from the validated environment; the identity
+    // package never reads an environment variable itself.
+    private readonly ringlessConstructions: ReadonlySet<string> = new Set<string>(),
+    // P1-6. The pipeline release every identity artifact and task is pinned to,
+    // validated in `@jewelo/config` (PIPELINE_RELEASE_ID) rather than written
+    // here as a literal, so a release bump is a configuration change.
+    private readonly pipelineReleaseId = "caleums-final-media-v2",
   ) {}
   async #request<T>(path: string, init: RequestInit = {}): Promise<T> {
     const response = await fetch(`${this.url}${path}`, {
@@ -619,8 +921,23 @@ export class SupabasePresentationRepository implements PresentationRepository {
   async signedIdentityUrl(
     revision: RevisionRow,
     ownerId: string,
-    taskId: string,
+    task: TaskRow,
   ) {
+    // Adversarial review 1 finding 1: the release the engine stamps into the
+    // artifact has to be the release the task is pinned to. Two releases in one
+    // run mean media from two different identity engines under one order, and
+    // nothing downstream would say which pendant the customer is looking at.
+    // Both values are release ids from the registry, never customer text.
+    // Review 2 finding 7: the comparison used to run after the stencil had been
+    // shaped, rasterised, measured and encoded, so a mismatch cost a full
+    // render before it refused. The release the engine will stamp is the one
+    // handed to it, so the comparison belongs here, where it costs nothing.
+    if (this.pipelineReleaseId !== task.pipeline_release)
+      throw new Error(
+        `identity_pipeline_release_mismatch:task=${task.pipeline_release},report=${this.pipelineReleaseId}`,
+      );
+    if (task.dependency_task_id)
+      return this.#reuseDependencyIdentity(revision, ownerId, task);
     const rendered = await renderIdentityAnchor(
       {
         approvedText: revision.identity_anchor.approvedText,
@@ -629,35 +946,41 @@ export class SupabasePresentationRepository implements PresentationRepository {
         fingerprint: revision.identity_anchor.fingerprint,
       },
       revision.specification,
-      "caleums-final-media-v1",
+      this.pipelineReleaseId,
+      this.ringlessConstructions,
     );
-    const basePath = `principal/${ownerId}/revision/${revision.id}/identity-${rendered.fingerprint}`;
-    const bodies: Array<[string, Buffer, string]> = [
-      ["png", rendered.png, "image/png"],
-    ];
-    if (rendered.svg) bodies.unshift(["svg", rendered.svg, "image/svg+xml"]);
-    for (const [extension, body, contentType] of bodies) {
-      const uploadBody = body.buffer.slice(
-        body.byteOffset,
-        body.byteOffset + body.byteLength,
-      ) as ArrayBuffer;
-      const upload = await fetch(
-        `${this.url}/storage/v1/object/identity-anchors/${basePath}.${extension}`,
-        {
-          method: "POST",
-          headers: {
-            apikey: this.key,
-            authorization: `Bearer ${this.key}`,
-            "content-type": contentType,
-            "x-upsert": "false",
-          },
-          body: uploadBody,
-        },
+    // And the same statement about what the engine actually stamped, which is
+    // cheap now that the report exists and keeps the check honest if the solver
+    // ever stops echoing the release it was given.
+    if (rendered.report.pipelineRelease !== task.pipeline_release)
+      throw new Error(
+        `identity_pipeline_release_mismatch:task=${task.pipeline_release},report=${rendered.report.pipelineRelease}`,
       );
-      const uploadDetail = await upload.text();
-      if (!upload.ok && !isDuplicateObject(upload, uploadDetail))
-        throw new Error(`identity anchor upload failed:${upload.status}`);
-    }
+    const basePath = `principal/${ownerId}/revision/${revision.id}/identity-${rendered.fingerprint}`;
+    // The engine renders a PNG and only a PNG: the stencil is rasterised from
+    // its own path data and the SVG never leaves `identityStencilSvg`. The
+    // upload loop used to branch on an `svg` field the renderer never sets, so
+    // it promised a second artifact that no run has ever written.
+    const uploadBody = rendered.png.buffer.slice(
+      rendered.png.byteOffset,
+      rendered.png.byteOffset + rendered.png.byteLength,
+    ) as ArrayBuffer;
+    const upload = await fetch(
+      `${this.url}/storage/v1/object/identity-anchors/${basePath}.png`,
+      {
+        method: "POST",
+        headers: {
+          apikey: this.key,
+          authorization: `Bearer ${this.key}`,
+          "content-type": "image/png",
+          "x-upsert": "false",
+        },
+        body: uploadBody,
+      },
+    );
+    const uploadDetail = await upload.text();
+    if (!upload.ok && !isDuplicateObject(upload, uploadDetail))
+      throw new Error(`identity anchor upload failed:${upload.status}`);
     // Four sibling tasks race to insert the same artifact; a loser can hit the
     // (bucket_id, object_path) unique key instead of the on_conflict target.
     try {
@@ -670,9 +993,10 @@ export class SupabasePresentationRepository implements PresentationRepository {
             revision_id: revision.id,
             owner_principal_id: ownerId,
             engine_release: String(rendered.report.engineRelease),
-            font_release: String(
-              rendered.report.fontSha256 ?? "existing-latin",
-            ),
+            // P1-6: the sha of the bytes HarfBuzz actually shaped with, never
+            // a placeholder. `existing-latin` used to stand in for the Latin
+            // path, which no longer exists: both scripts go through the solver.
+            font_release: rendered.report.fontSha256Measured,
             approved_text: revision.identity_anchor.approvedText,
             script: revision.identity_anchor.language,
             fingerprint: rendered.fingerprint,
@@ -691,24 +1015,92 @@ export class SupabasePresentationRepository implements PresentationRepository {
     );
     const artifactId = artifacts[0]?.id;
     if (!artifactId) throw new Error("identity_artifact_lineage_missing");
-    await this.#request(`/rest/v1/generation_tasks?id=eq.${taskId}`, {
+    await this.#request(`/rest/v1/generation_tasks?id=eq.${task.id}`, {
       method: "PATCH",
       body: JSON.stringify({ identity_artifact_id: artifactId }),
     });
-    const path = `${basePath}.png`;
-    const result = await this.#request<{
-      signedURL?: string;
-      signedUrl?: string;
-    }>(`/storage/v1/object/sign/identity-anchors/${path}`, {
-      method: "POST",
-      body: JSON.stringify({ expiresIn: 300 }),
+    // Through the shared signer so this path is percent-encoded segment by
+    // segment like every other one.
+    const url = await this.signedStorageUrl(
+      "identity-anchors",
+      `${basePath}.png`,
+    );
+    return {
+      url,
+      fingerprint: rendered.fingerprint,
+      artifactId,
+    };
+  }
+  async #reuseDependencyIdentity(revision: RevisionRow, ownerId: string, task: TaskRow) {
+    const parents = await this.#request<TaskRow[]>(
+      `/rest/v1/generation_tasks?id=eq.${encodeURIComponent(task.dependency_task_id!)}&select=id,run_id,owner_principal_id,presentation_view,status,attempt,cancel_requested_at,pipeline_release,identity_artifact_id`,
+    );
+    const parent = parents[0];
+    if (
+      !parent || parent.id !== task.dependency_task_id || parent.run_id !== task.run_id ||
+      parent.owner_principal_id !== ownerId || task.owner_principal_id !== ownerId ||
+      parent.presentation_view !== "studio" || parent.status !== "ready" ||
+      parent.cancel_requested_at || parent.pipeline_release !== task.pipeline_release ||
+      !parent.identity_artifact_id
+    ) throw new Error("identity_reuse_source_task_mismatch");
+    const runs = await this.#request<RunRow[]>(
+      `/rest/v1/generation_runs?id=eq.${encodeURIComponent(task.run_id)}&select=id,revision_id,owner_principal_id`,
+    );
+    if (runs[0]?.revision_id !== revision.id || runs[0]?.owner_principal_id !== ownerId)
+      throw new Error("identity_reuse_revision_mismatch");
+    const assets = await this.#request<Array<{
+      owner_principal_id: string; run_id: string; revision_id: string;
+      identity_artifact_id: string; identity_fingerprint: string;
+      presentation_view: string; pipeline_release: string; provider: string;
+      verification_result: Record<string, unknown>;
+    }>>(
+      `/rest/v1/assets?task_id=eq.${encodeURIComponent(parent.id)}&attempt=eq.${parent.attempt}&select=owner_principal_id,run_id,revision_id,identity_artifact_id,identity_fingerprint,presentation_view,pipeline_release,provider,verification_result`,
+    );
+    const asset = assets[0];
+    const verification = asset?.verification_result;
+    const nameCheck = verification?.nameCheck as Record<string, unknown> | undefined;
+    if (
+      assets.length !== 1 || !asset || asset.owner_principal_id !== ownerId ||
+      asset.run_id !== task.run_id || asset.revision_id !== revision.id ||
+      asset.identity_artifact_id !== parent.identity_artifact_id ||
+      !["openai", "mock"].includes(asset.provider) ||
+      asset.presentation_view !== "studio" || asset.pipeline_release !== task.pipeline_release ||
+      !verification || verification.passed !== true || verification.exactText !== true ||
+      verification.exactScript !== true || verification.exactlyTwoConnectedRings !== true ||
+      verification.correctShot !== true || verification.noAddedIdentityElements !== true ||
+      (asset.provider === "openai" && nameCheck?.passed !== true)
+    ) throw new Error("identity_reuse_source_asset_mismatch");
+    const artifacts = await this.#request<StoredIdentityAnchor[]>(
+      `/rest/v1/identity_artifacts?id=eq.${encodeURIComponent(parent.identity_artifact_id)}`,
+    );
+    const artifact = artifacts[0];
+    if (
+      !artifact || artifact.id !== parent.identity_artifact_id ||
+      artifact.revision_id !== revision.id || artifact.owner_principal_id !== ownerId ||
+      artifact.fingerprint !== asset.identity_fingerprint ||
+      artifact.bucket_id !== "identity-anchors" ||
+      artifact.object_path !== `principal/${ownerId}/revision/${revision.id}/identity-${artifact.fingerprint}.png`
+    ) throw new Error("identity_reuse_artifact_mismatch");
+    const signed = await this.signedStorageUrl(artifact.bucket_id, artifact.object_path);
+    const response = await fetch(signed, {
+      signal: AbortSignal.timeout(pipelineLimits.visionRequestTimeoutMs),
     });
-    const signed = result.signedURL ?? result.signedUrl;
-    if (!signed) throw new Error("identity_anchor_missing");
-    const url = signed.startsWith("http")
-      ? signed
-      : `${this.url}/storage/v1${signed}`;
-    return { url, fingerprint: rendered.fingerprint, artifactId };
+    if (!response.ok) throw new Error(`identity_reuse_download_failed:${response.status}`);
+    const png = new Uint8Array(await response.arrayBuffer());
+    await validateStoredIdentityAnchor(
+      artifact, png, revision.identity_anchor, revision.specification,
+      task.pipeline_release, this.ringlessConstructions,
+    );
+    await this.#request(`/rest/v1/generation_tasks?id=eq.${task.id}`, {
+      method: "PATCH",
+      body: JSON.stringify({ identity_artifact_id: artifact.id }),
+    });
+    // Feed the checked bytes to the adapter, not a URL fetched again later.
+    return {
+      url: `data:image/png;base64,${Buffer.from(png).toString("base64")}`,
+      fingerprint: artifact.fingerprint,
+      artifactId: artifact.id,
+    };
   }
   async signedStyleAnchorUrl(task: TaskRow) {
     if (!task.style_anchor_release_id)
@@ -769,6 +1161,13 @@ export class SupabasePresentationRepository implements PresentationRepository {
       assetId: asset.id,
     };
   }
+  async dependencyTerminalStatus(task: TaskRow) {
+    if (!task.dependency_task_id) return undefined;
+    const rows = await this.#request<Array<{ status: string }>>(
+      `/rest/v1/generation_tasks?id=eq.${task.dependency_task_id}&status=in.(blocked,failed,cancelled)&select=status&limit=1`,
+    );
+    return rows[0]?.status;
+  }
   async signedInspirationUrl(revision: RevisionRow, ownerId: string) {
     const reference = revision.specification.referenceAsset;
     if (!reference || typeof reference !== "object") return undefined;
@@ -777,6 +1176,14 @@ export class SupabasePresentationRepository implements PresentationRepository {
       (reference as Record<string, unknown>).fileName ?? "reference",
     ).replaceAll(/[^a-zA-Z0-9._-]/g, "_");
     if (!id) throw new Error("inspiration_reference_missing");
+    // Pipeline review 1 finding 5 / security review 1 finding 3. The
+    // specification is customer-supplied and, until the draft schema lands,
+    // unvalidated: this id was interpolated straight into a service-role
+    // storage path, where `..` segments normalise before the request and can
+    // read another principal's object. The id is an opaque identifier, so it
+    // is matched against its own shape rather than escaped.
+    if (!REFERENCE_ASSET_ID.test(id))
+      throw new Error("inspiration_reference_invalid");
     return this.signedStorageUrl(
       "references",
       `principal/${ownerId}/${id}/${fileName}`,
@@ -785,12 +1192,30 @@ export class SupabasePresentationRepository implements PresentationRepository {
     });
   }
   async signedStorageUrl(bucket: string, path: string) {
+    // Pipeline fix review 1 finding 4. Each segment is encoded on its own so a
+    // `/` inside a name stays part of the name rather than a new segment. That
+    // is all the encoding does: `encodeURIComponent` leaves `.` and `-`
+    // untouched, so `..` survives it unchanged and a dot segment would still
+    // be resolved by whatever normalises the path. The traversal is refused
+    // here instead, before anything is signed.
+    const segments = path.split("/");
+    if (
+      segments.some(
+        (segment) => !segment || segment === "." || segment === "..",
+      )
+    )
+      throw new Error("signed_storage_path_invalid");
+    const encodedPath = segments
+      .map((segment) => encodeURIComponent(segment))
+      .join("/");
     const result = await this.#request<{
       signedURL?: string;
       signedUrl?: string;
-    }>(`/storage/v1/object/sign/${bucket}/${path}`, {
+    }>(`/storage/v1/object/sign/${encodeURIComponent(bucket)}/${encodedPath}`, {
       method: "POST",
-      body: JSON.stringify({ expiresIn: 300 }),
+      body: JSON.stringify({
+        expiresIn: pipelineLimits.signedUrlExpirySeconds,
+      }),
     });
     const signed = result.signedURL ?? result.signedUrl;
     if (!signed) throw new Error("signed_storage_url_missing");
@@ -798,18 +1223,94 @@ export class SupabasePresentationRepository implements PresentationRepository {
       ? signed
       : `${this.url}/storage/v1${signed}`;
   }
+  async providerAttemptBudget() {
+    const rows = await this.#request<
+      Array<{ provider_attempt_budget: number | null }>
+    >("/rest/v1/runtime_policy?id=eq.true&select=provider_attempt_budget");
+    const budget = rows[0]?.provider_attempt_budget;
+    return typeof budget === "number" && Number.isInteger(budget) && budget > 0
+      ? budget
+      : pipelineLimits.providerAttemptBudget;
+  }
+  /**
+   * The spend ceiling gate's one read: the same single row, both numbers, with
+   * the service key. A value the row does not hold, or holds as null, is read
+   * as the largest number rather than the smallest - an unreadable policy is
+   * not evidence that the day is capped, and this gate exists to refuse exactly
+   * that. `Number.MAX_SAFE_INTEGER` is above every configurable ceiling, so a
+   * missing column refuses pre-spend instead of passing.
+   */
+  async spendPolicy(): Promise<RuntimeSpendPolicy> {
+    const rows = await this.#request<
+      Array<{
+        global_max_reserved_spend_cents: number | null;
+        provider_attempt_budget: number | null;
+      }>
+    >(
+      "/rest/v1/runtime_policy?id=eq.true&select=global_max_reserved_spend_cents,provider_attempt_budget",
+    );
+    const row = rows[0];
+    const number = (value: number | null | undefined) =>
+      typeof value === "number" && Number.isFinite(value)
+        ? value
+        : Number.MAX_SAFE_INTEGER;
+    return {
+      globalMaxReservedSpendCents: number(row?.global_max_reserved_spend_cents),
+      providerAttemptBudget: number(row?.provider_attempt_budget),
+    };
+  }
+  /**
+   * Fix-2 review M1: `mark_task_pre_spend_blocked` writes `p_reason` straight
+   * into `terminal_error_code`, which `/api/state` selects on every poll, and
+   * the reason here can be whatever `signedIdentityUrl`, the anchor read or
+   * the inspiration read threw - including a PostgREST body carrying row
+   * values. Only the class goes to the RPC; the full message is recorded once
+   * in an audit event, which no customer-facing route reads.
+   *
+   * Fix-3 review M2: that audit insert used to run first and unguarded, so a
+   * failed logging write threw before `mark_task_pre_spend_blocked` ever ran.
+   * The caller's fallback then reached `fail` at attempt 0, where
+   * `reconcile_provider_attempt` finds no attempt row and returns, and the
+   * run-start reservation stayed booked for the rest of the day. The RPC that
+   * blocks the task and releases the reservation goes first now, and the
+   * detail is written after it and cannot propagate: an explanation is never
+   * allowed to be a prerequisite for releasing money.
+   */
   async blockPreSpend(input: { task: TaskRow; run: RunRow; error: unknown }) {
     const message =
       input.error instanceof Error
         ? input.error.message
         : "pre_spend_gate_failed";
+    const code = errorClass(input.error);
     await this.#request("/rest/v1/rpc/mark_task_pre_spend_blocked", {
       method: "POST",
       body: JSON.stringify({
         p_task_id: input.task.id,
-        p_reason: message.slice(0, 300),
+        p_reason: code,
       }),
     });
+    try {
+      await this.#request("/rest/v1/audit_events", {
+        method: "POST",
+        body: JSON.stringify({
+          design_id: input.run.design_id,
+          principal_id: input.task.owner_principal_id,
+          actor_type: "job",
+          action: "task.pre_spend_block_detail",
+          detail: {
+            taskId: input.task.id,
+            errorClass: code,
+            error: message.slice(0, 300),
+          },
+        }),
+      });
+    } catch (auditError) {
+      console.error("pre_spend_block_detail_write_failed", {
+        taskId: input.task.id,
+        errorClass: code,
+        auditErrorClass: errorClass(auditError),
+      });
+    }
   }
   async storeProviderOutput(input: {
     task: TaskRow;
@@ -909,59 +1410,48 @@ export class SupabasePresentationRepository implements PresentationRepository {
     identityArtifactId: string;
     inputAssetIds?: readonly string[];
   }): Promise<TransitionOutcome> {
-    // Claim `ready` first: a task cancelled mid-verification must not gain an
-    // asset, a motion request, or a `task.ready` audit event.
-    const ready = await this.transitionTask(
-      input.task.id,
-      ["generating", "verifying"],
-      "ready",
-    );
-    if (ready === "cancelled") return "cancelled";
-    await this.#request("/rest/v1/assets", {
-      method: "POST",
-      headers: { prefer: "resolution=ignore-duplicates" },
-      body: JSON.stringify({
-        design_id: input.run.design_id,
-        revision_id: input.revision.id,
-        run_id: input.run.id,
-        task_id: input.task.id,
-        owner_principal_id: input.task.owner_principal_id,
-        presentation_view: input.task.presentation_view,
-        bucket_id: input.stored.bucket,
-        object_path: input.stored.path,
-        mime_type: input.media.mimeType,
-        byte_size: input.media.bytes.byteLength,
-        checksum_sha256: input.stored.checksum,
-        provider: input.media.provider,
-        model: input.media.model,
-        prompt_release: input.task.prompt_release,
-        prompt_release_id: input.task.prompt_release_id,
-        identity_fingerprint: input.identityFingerprint,
-        identity_artifact_id: input.identityArtifactId,
-        attempt: input.attempt,
-        verification_result: input.verification,
-        pipeline_release: input.task.pipeline_release,
-        style_anchor_release_id: input.task.style_anchor_release_id,
-        input_asset_ids: input.inputAssetIds ?? [],
-      }),
-    });
-    await this.#request("/rest/v1/rpc/reconcile_provider_attempt", {
-      method: "POST",
-      body: JSON.stringify({
-        p_task_id: input.task.id,
-        p_attempt: input.attempt,
-        p_status: "succeeded",
-        p_actual_cost_cents: input.media.estimatedCostCents,
-        p_terminal: true,
-      }),
-    });
-    let motionPreview = "not_applicable";
-    if (input.task.presentation_view === "studio") {
-      // The three model views only become dispatchable once this still exists.
-      await this.#request("/rest/v1/rpc/release_dependent_tasks", {
+    // The database owns the cancellation fence and publishes asset + ready +
+    // accounting together. A replay cannot charge or create the asset twice.
+    try {
+      await this.#request("/rest/v1/rpc/complete_presentation_task", {
         method: "POST",
-        body: JSON.stringify({ p_source_task_id: input.task.id }),
+        body: JSON.stringify({
+          p_task_id: input.task.id,
+          p_attempt: input.attempt,
+          p_actual_cost_cents: input.media.estimatedCostCents,
+          p_asset: {
+            design_id: input.run.design_id,
+            revision_id: input.revision.id,
+            run_id: input.run.id,
+            task_id: input.task.id,
+            owner_principal_id: input.task.owner_principal_id,
+            presentation_view: input.task.presentation_view,
+            bucket_id: input.stored.bucket,
+            object_path: input.stored.path,
+            mime_type: input.media.mimeType,
+            byte_size: input.media.bytes.byteLength,
+            checksum_sha256: input.stored.checksum,
+            provider: input.media.provider,
+            model: input.media.model,
+            prompt_release: input.task.prompt_release,
+            prompt_release_id: input.task.prompt_release_id,
+            identity_fingerprint: input.identityFingerprint,
+            identity_artifact_id: input.identityArtifactId,
+            attempt: input.attempt,
+            verification_result: input.verification,
+            pipeline_release: input.task.pipeline_release,
+            style_anchor_release_id: input.task.style_anchor_release_id,
+            input_asset_ids: input.inputAssetIds ?? [],
+          },
+        }),
       });
+    } catch (error) {
+      if (isTaskCancelled(error)) return "cancelled";
+      throw error;
+    }
+    if (input.task.presentation_view === "studio" && this.videoEnabled) {
+      // Still completion and dependent dispatch are already committed. Motion
+      // remains opt-in and uses its existing idempotent request key.
       try {
         await this.#request("/rest/v1/rpc/request_video_task", {
           method: "POST",
@@ -972,9 +1462,7 @@ export class SupabasePresentationRepository implements PresentationRepository {
             p_request_key: `auto-preview:${input.run.id}:${input.task.id}`,
           }),
         });
-        motionPreview = "requested";
       } catch (error) {
-        motionPreview = "operator_review";
         const reason = String(
           error instanceof Error ? error.message : "unknown",
         ).slice(0, 120);
@@ -989,31 +1477,20 @@ export class SupabasePresentationRepository implements PresentationRepository {
           }),
         });
         // The still stays ready; only the run carries the visible motion failure.
-        await this.#request(`/rest/v1/generation_runs?id=eq.${input.run.id}`, {
-          method: "PATCH",
-          body: JSON.stringify({
-            operator_review_reason: `video_request_failed:${reason}`.slice(
-              0,
-              300,
-            ),
-          }),
-        });
+        await this.#request(
+          `/rest/v1/generation_runs?id=eq.${input.run.id}`,
+          {
+            method: "PATCH",
+            body: JSON.stringify({
+              operator_review_reason: `video_request_failed:${reason}`.slice(
+                0,
+                300,
+              ),
+            }),
+          },
+        );
       }
     }
-    await this.#request("/rest/v1/audit_events", {
-      method: "POST",
-      body: JSON.stringify({
-        design_id: input.run.design_id,
-        principal_id: input.task.owner_principal_id,
-        actor_type: "job",
-        action: "task.ready",
-        detail: {
-          taskId: input.task.id,
-          attempt: input.attempt,
-          motionPreview,
-        },
-      }),
-    });
     return "applied";
   }
   async fail(input: {
@@ -1027,6 +1504,13 @@ export class SupabasePresentationRepository implements PresentationRepository {
   }) {
     const message =
       input.error instanceof Error ? input.error.message : "unknown";
+    // Fix-2 review M1: the outer catch of `runPresentationTask` reaches here
+    // with whatever the run threw, and `#request` folds a PostgREST status and
+    // body into its message, so row values used to land in the
+    // customer-visible `terminal_error_code`. The class is what both the
+    // ledger row and the task column get; the full message is kept only in the
+    // audit event below, which no customer-facing route reads.
+    const errorCode = errorClass(input.error);
     await this.#request("/rest/v1/rpc/reconcile_provider_attempt", {
       method: "POST",
       body: JSON.stringify({
@@ -1034,7 +1518,7 @@ export class SupabasePresentationRepository implements PresentationRepository {
         p_attempt: input.attempt,
         p_status: "failed",
         p_actual_cost_cents: input.actualCostCents,
-        p_error_class: message.slice(0, 120),
+        p_error_class: errorCode,
         p_terminal: input.terminal,
       }),
     });
@@ -1042,7 +1526,7 @@ export class SupabasePresentationRepository implements PresentationRepository {
       input.task.id,
       ["queued", "generating", "verifying", "retrying"],
       input.terminal ? "blocked" : "retrying",
-      input.terminal ? { terminal_error_code: message.slice(0, 120) } : {},
+      input.terminal ? { terminal_error_code: errorCode } : {},
     );
     await this.#request("/rest/v1/audit_events", {
       method: "POST",
@@ -1054,7 +1538,8 @@ export class SupabasePresentationRepository implements PresentationRepository {
         detail: {
           taskId: input.task.id,
           attempt: input.attempt,
-          error: message.slice(0, 120),
+          errorClass: errorCode,
+          error: message.slice(0, 300),
           ...(input.rejectedObjectPaths?.length
             ? { rejectedObjectPaths: input.rejectedObjectPaths }
             : {}),
@@ -1072,6 +1557,9 @@ export function productionPresentationDependencies(
     config.SUPABASE_URL,
     config.SUPABASE_SERVICE_ROLE_KEY,
     config.PROVIDER_MODE === "mock",
+    config.VIDEO_ENABLED,
+    config.IDENTITY_RINGLESS_CONSTRUCTIONS,
+    config.PIPELINE_RELEASE_ID,
   );
   if (config.PROVIDER_MODE === "mock")
     return {

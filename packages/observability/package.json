@@ -4,11 +4,22 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./client": "./src/client.ts",
+    "./next-config": "./src/next-config.ts",
+    "./server": "./src/server.ts"
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "lint": "eslint src",
     "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@jewelo/config": "workspace:*",
+    "@sentry/nextjs": "10.73.0",
+    "posthog-js": "1.422.5"
+  },
+  "devDependencies": {
+    "next": "16.2.12"
   }
 }

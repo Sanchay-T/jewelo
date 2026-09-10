@@ -2,19 +2,14 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useSearchParams } from "next/navigation";
 import type { FormEvent } from "react";
-import {
-  ArrowRight,
-  CheckCircle,
-  Clock,
-  SignOut,
-  Tag,
-} from "@phosphor-icons/react";
+import { SignOut } from "@phosphor-icons/react";
 import { CaleumsWordmark } from "@/components/app-shell";
 import { useJewelo } from "@/lib/jewelo-provider";
 import { PromptLibrary } from "./PromptLibrary";
+import { PreviewRequestQueue } from "./PreviewRequestQueue";
 import {
   arabicStyleLabel,
   isProviderSupportedArabicStyle,
@@ -29,7 +24,7 @@ export function OperatorExperience({ locale }: { locale: Locale }) {
       ? {
           operations: "عمليات المشغل",
           queue: "قائمة عمل المشغل",
-          intro: "راجع عروض القطع المخصصة وتابع الطلبات المعتمدة حتى التسليم.",
+          intro: "تابع طلبات العملاء من الأستوديو حتى تسليم القطعة.",
           email: "البريد الإلكتروني للموظف",
           phrase: "عبارة الدخول",
           opening: "جارٍ الفتح…",
@@ -39,27 +34,12 @@ export function OperatorExperience({ locale }: { locale: Locale }) {
           signed: "تم تسجيل الدخول كمشغل",
           close: "إغلاق القائمة",
           workQueue: "قائمة العمل",
-          prompts: "مكتبة التعليمات",
-          today: "عمل اليوم",
-          heading: "عروض الأسعار والمهام والطلبات.",
-          subheading: "عرض واضح للإجراءات التي تحتاج إلى تدخل المشغل.",
-          quoteRequests: "طلبات التسعير",
-          progress: "قيد التنفيذ",
-          ready: "جاهز",
-          all: "الكل",
-          quotes: "عروض الأسعار",
-          orders: "الطلبات",
-          empty: "لا توجد مهام في هذا العرض",
-          emptyBody: "ستظهر هنا طلبات التسعير والطلبات المعتمدة.",
-          issue: "إصدار السعر",
-          advance: "تحديث المهمة",
-          customerView: "عرض العميل",
+          prompts: "وصفات التصوير",
         }
       : {
           operations: "Atelier operations",
           queue: "Operator queue",
-          intro:
-            "Review custom quotes and move approved pieces through fulfillment.",
+          intro: "Follow customer requests from the studio through to the shop.",
           email: "Staff email",
           phrase: "Access phrase",
           opening: "Opening…",
@@ -69,22 +49,7 @@ export function OperatorExperience({ locale }: { locale: Locale }) {
           signed: "Signed in as operator",
           close: "Close queue",
           workQueue: "Work queue",
-          prompts: "Prompt Library",
-          today: "Today’s work",
-          heading: "Quotes, tasks and orders.",
-          subheading: "A restrained view of the actions that need an operator.",
-          quoteRequests: "Quote requests",
-          progress: "In progress",
-          ready: "Ready",
-          all: "All",
-          quotes: "Quotes",
-          orders: "Orders",
-          empty: "No work in this view",
-          emptyBody:
-            "Customer quote requests and approved orders will appear here.",
-          issue: "Issue quote",
-          advance: "Advance task",
-          customerView: "Customer view",
+          prompts: "Photograph recipes",
         };
   const { client, state, refresh } = useJewelo();
   const searchParams = useSearchParams();
@@ -95,19 +60,8 @@ export function OperatorExperience({ locale }: { locale: Locale }) {
       : null;
   const [email, setEmail] = useState("");
   const [passphrase, setPassphrase] = useState("");
-  const [filter, setFilter] = useState<"all" | "quotes" | "orders">("all");
   const [busy, setBusy] = useState<string>();
   const [message, setMessage] = useState("");
-  const queue = useMemo(
-    () =>
-      state.designs.filter((design) => {
-        if (!design.quote && !design.order) return false;
-        if (filter === "quotes") return Boolean(design.quote && !design.order);
-        if (filter === "orders") return Boolean(design.order);
-        return true;
-      }),
-    [filter, state.designs],
-  );
   const reviewDrafts = client.listDrafts().filter((draft) => {
     const spec = draft.specification;
     if (spec.arabicStyle === "none") return false;
@@ -204,12 +158,6 @@ export function OperatorExperience({ locale }: { locale: Locale }) {
       </main>
     );
 
-  const quoteCount = state.designs.filter(
-    (item) => item.quote?.status === "requested",
-  ).length;
-  const orderCount = state.designs.filter(
-    (item) => item.order && item.order.status !== "ready",
-  ).length;
   return (
     <main className="clm-operator" dir={locale === "ar" ? "rtl" : "ltr"}>
       <header>
@@ -267,6 +215,7 @@ export function OperatorExperience({ locale }: { locale: Locale }) {
                 </span>
               </section>
             )}
+            <PreviewRequestQueue />
             {reviewDrafts.length > 0 && (
               <section
                 className="clm-review-handoff"
@@ -292,137 +241,11 @@ export function OperatorExperience({ locale }: { locale: Locale }) {
                 </ul>
               </section>
             )}
-            <section className="clm-operator-heading">
-              <div>
-                <p className="clm-kicker">{copy.today}</p>
-                <h1>{copy.heading}</h1>
-                <p>{copy.subheading}</p>
-              </div>
-              <div className="clm-operator-stats">
-                <div>
-                  <Tag size={19} />
-                  <strong>{quoteCount}</strong>
-                  <span>{copy.quoteRequests}</span>
-                </div>
-                <div>
-                  <Clock size={19} />
-                  <strong>{orderCount}</strong>
-                  <span>{copy.progress}</span>
-                </div>
-                <div>
-                  <CheckCircle size={19} />
-                  <strong>
-                    {
-                      state.designs.filter(
-                        (item) => item.order?.status === "ready",
-                      ).length
-                    }
-                  </strong>
-                  <span>{copy.ready}</span>
-                </div>
-              </div>
-            </section>
-            <div className="clm-queue-tabs">
-              {(["all", "quotes", "orders"] as const).map((item) => (
-                <button
-                  key={item}
-                  aria-pressed={filter === item}
-                  onClick={() => setFilter(item)}
-                >
-                  {copy[item]}
-                </button>
-              ))}
-            </div>
             {message && (
               <p className="clm-status" role="status">
                 {message}
               </p>
             )}
-            <section className="clm-queue" aria-label="Operator work queue">
-              {queue.length === 0 ? (
-                <div className="clm-queue-empty">
-                  <CheckCircle size={28} />
-                  <h2>{copy.empty}</h2>
-                  <p>{copy.emptyBody}</p>
-                </div>
-              ) : (
-                queue.map((design) => {
-                  const revision = design.revisions.at(-1);
-                  const spec = revision?.specification;
-                  const image =
-                    design.runs.at(-1)?.directions[0]?.representations.product
-                      .assetUrl;
-                  return (
-                    <article key={design.id}>
-                      <div className="clm-queue-thumb">
-                        {image && (
-                          <Image src={image} alt="" fill sizes="96px" />
-                        )}
-                      </div>
-                      <div className="clm-queue-main">
-                        <div>
-                          <span
-                            className="clm-state"
-                            data-state={
-                              design.order?.status ?? design.quote?.status
-                            }
-                          >
-                            {design.order
-                              ? `Order · ${design.order.status.replaceAll("-", " ")}`
-                              : `Quote · ${design.quote?.status}`}
-                          </span>
-                          <h2>{design.name}</h2>
-                          <p>
-                            {spec
-                              ? `18K ${spec.metalColor} gold · ${spec.stoneCoverage.replaceAll("-", " ")} · ${spec.chain.lengthCm} cm`
-                              : design.id}
-                          </p>
-                        </div>
-                        <div className="clm-queue-actions">
-                          {design.quote?.status === "requested" && (
-                            <button
-                              className="clm-primary"
-                              disabled={Boolean(busy)}
-                              onClick={() =>
-                                void action(
-                                  `quote-${design.id}`,
-                                  () => client.issueQuote(design.id),
-                                  `Quote issued for ${design.name}.`,
-                                )
-                              }
-                            >
-                              {copy.issue}
-                            </button>
-                          )}
-                          {design.order && design.order.status !== "ready" && (
-                            <button
-                              className="clm-primary"
-                              disabled={Boolean(busy)}
-                              onClick={() =>
-                                void action(
-                                  `order-${design.id}`,
-                                  () => client.updateFulfillment(design.id),
-                                  `Fulfillment advanced for ${design.name}.`,
-                                )
-                              }
-                            >
-                              {copy.advance}
-                            </button>
-                          )}
-                          <Link
-                            className="clm-secondary"
-                            href={`/${locale}/commerce/${design.id}`}
-                            onClick={() => void client.setRole("customer")}
-                          >
-                            {copy.customerView} <ArrowRight size={16} />
-                          </Link>
-                        </div>
-                      </div>
-                    </article>
-                  );
-                })
-              )}
-            </section>
           </>
         )}
       </div>

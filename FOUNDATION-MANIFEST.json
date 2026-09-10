@@ -7,7 +7,7 @@
     "nextjs-16.2",
     "digitalocean-app-platform",
     "supabase-postgres-auth-storage-realtime",
-    "trigger-dev-v4",
+    "inngest-self-hosted-v1.44",
     "gpt-image-2-2026-04-21-direct-openai",
     "fal-seedance-2-fast-and-standard"
   ],

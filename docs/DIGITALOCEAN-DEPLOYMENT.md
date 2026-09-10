@@ -1,9 +1,11 @@
 # DigitalOcean deployment
 
 This is the operating runbook for Jewelo's Next.js web unit. DigitalOcean App
-Platform hosts the web process; Supabase remains the system of record and
-Trigger.dev continues to run OpenAI and fal jobs. Do not move long-running AI
-work into App Platform request handlers.
+Platform hosts the web process and, since 7 September 2026, a second
+self-hosted `inngest` service component that is the durable job engine.
+Supabase remains the system of record. Long-running AI work still never runs in
+a customer request handler: it runs in an Inngest function served at
+`/api/inngest`, which Inngest calls over the app's private network.
 
 ## Current state
 
@@ -13,15 +15,20 @@ work into App Platform request handlers.
 | Region | Bangalore (`blr`) |
 | Live staging app | `jewelo-staging` (`ec09c9fd-84e4-45c5-b60a-fd62277af322`) |
 | Live staging URL | <https://jewelo-staging-gqumd.ondigitalocean.app> |
-| Authoritative deployment source | `rebuild/v2-first-principles` after reviewed integration |
+| Authoritative deployment source | `codex/overnight-launch-2026-09-08`, the branch on the live `web` service's `git.branch` |
 | Production app | `jewelo-production` (created only at approved cutover) |
-| Production deployment configuration | Repository workflows, scripts, and `infra/digitalocean/spec-contract.json`; not yet production-accepted |
+| Production deployment configuration | `scripts/digitalocean/*` and `infra/digitalocean/spec-contract.json`; no workflows, and not yet production-accepted |
 | Runtime | Node.js 24, pnpm 11.23.0, DigitalOcean Node buildpack |
-| Compute | One fixed shared 1-vCPU/1-GiB instance per app |
+| Compute | One fixed shared 1-vCPU/1-GiB instance per component |
+| Components | `web` (git `https://github.com/Sanchay-T/jewelo.git`, no `deploy_on_push`, Node buildpack, public `/`) and `inngest` (Docker Hub `inngest/inngest:v1.44.0-amd64`, `internal_ports: [8288]`, no public route) |
+| Job engine | Self-hosted Inngest. `web` reaches it at `${inngest.PRIVATE_URL}`; it reaches `web` at `${web.PRIVATE_URL}/api/inngest` |
 
-The staging URL and `/api/health` have returned HTTP 200 for deployed commit
-`a842443`. This is staging evidence, not production acceptance. A production URL
-does not exist until the manual promotion succeeds.
+The active staging deployment is `b50be520-f728-4234-870e-7141dbea3cfa`, phase
+`ACTIVE`, built from commit `cc9fb01c8153d1c562a50da281f9137605eda5b0` of that
+branch. The follow-up deployment `9439c0a6-0810-4d9b-96c7-58d55dfb7791` was
+superseded during the final env-spec cleanup; it is not the rollback target.
+This is staging evidence, not production acceptance. A production URL does not
+exist until the manual promotion succeeds.
 
 Inactivity sleep is unavailable for this DigitalOcean account, so staging is a
 fixed instance rather than scale-to-zero. The predictable base compute price is
@@ -30,44 +37,104 @@ evidence and approval for the higher possible spend.
 
 ## What happens from push to URL
 
-```text
-developer branch
-  -> reviewed merge into rebuild/v2-first-principles
-  -> GitHub staging workflow verifies a clean checkout
-  -> immutable jewelo-staging-<full SHA> Git tag
-  -> App Platform builds that tag with Node 24 + pnpm
-  -> existing encrypted app environment is retained
-  -> /api/health smoke test
-  -> workflow summary publishes URL + deployment ID + SHA
+There is no CI workflow and no GitHub Actions in this repository.
+`.github/workflows` does not exist, and nothing may be added there: tests and CI
+are suspended by Sanchay's instruction of 7 September 2026.
+Every deployment is a deliberate, operator-run command.
+`deploy_on_push` is not set on the live app spec, so a push to the branch does
+nothing on its own.
 
-tested staging SHA + deployment ID + human production dispatch
-  -> GitHub verifies both refer to an ACTIVE staging deployment
-  -> immutable jewelo-production-<full SHA> Git tag
-  -> production deploy + /api/health smoke test
-  -> workflow summary publishes production URL and rollback command
+Deployment runs from `home-mini`, the only machine where `doctl` is
+authenticated:
+
+```bash
+ssh home-mini
+export PATH=/opt/homebrew/bin:$PATH
+cd ~/hq/projects/devonel/jewelo
+bash scripts/digitalocean/deploy.sh staging codex/overnight-launch-2026-09-08
+bash scripts/digitalocean/smoke.sh https://jewelo-staging-gqumd.ondigitalocean.app
 ```
 
-The staging workflow runs on pushes to `rebuild/v2-first-principles` only when
-the GitHub `Preview` environment variable `DIGITALOCEAN_DEPLOY_ENABLED` is
-`true`; it can also be dispatched manually. Code-only deployments change the
-Git source ref and preserve the app's encrypted environment.
+`deploy.sh <environment> <source ref>` does exactly this, per its source:
 
-Production never follows a branch automatically. The production workflow
-requires an exact 40-character commit SHA and the successful staging deployment
-ID for that same SHA. It rejects commits outside the integration branch,
-non-active staging deployments, and mismatched deployment evidence.
+```text
+validate the environment name and the source ref characters
+  -> load the scoped DigitalOcean token from the ignored .env
+  -> resolve the app id by app name (jewelo-staging / jewelo-production)
+  -> doctl apps get, then select the service named "web", never services[0],
+     because the image-based inngest component has no git source
+  -> rewrite web.git.branch to the requested source ref
+  -> merge appSecretEnvs from env-contract.mjs into that service's envs:
+     add a key the app never had, overwrite a rotated one, keep every key the
+     contract does not know, print the merged key names and no value
+  -> doctl apps update --spec <mode 0600 temp file> --update-sources --wait
+  -> print service_url and deployment_id
+```
+
+Because the script edits the live spec in place and changes only the branch and
+the contract's own environment keys, the `inngest` component, the ingress rule,
+the instance sizes and every environment key outside the contract are all
+carried through untouched.
+The temp spec file is created mode `0600` and deleted on exit; never print,
+diff, or keep it, because it contains secret material.
+The deployment id it prints is the evidence to record before any later change.
+
+`smoke.sh <https URL>` is the acceptance check that follows a deploy.
+It requires HTTP 200 and a JSON body from `/api/health`, then HTTP 200 from
+`/api/readiness` with `"keyEnvironment":"prod"`, and it retries transient
+connection failures on the health call only.
+
+`rollback.sh <environment> <deployment id>` reverses a bad deploy: it reads the
+complete spec back out of that historical deployment with
+`doctl apps get-deployment` and applies it with `--update-sources --wait`.
+That restores the source ref and the environment configuration of that
+deployment, so a rollback caused by a credential incident must be followed by a
+deliberate rotation.
+
+### Deployment timing and the fast path
+
+Measured staging deployments on this one shared 1-vCPU/1-GiB App Platform
+component have two very different costs:
+
+| Change | App Platform work | Measured wall time |
+| --- | --- | --- |
+| Source-code deploy (`deploy.sh`, `--update-sources`) | Git checkout, Node buildpack install/build, image save/upload, then rollout | about 15 minutes (the `b50be520` rollout took roughly 9m50s to build and 5m to roll out) |
+| Restart-only change | restart existing image and wait for health | about 63 seconds (`7fbb8f4`) |
+| Config-only change | `doctl apps update --spec ... --wait` without `--update-sources` | use when only the app spec changes; it avoids a source rebuild, but still waits for rollout |
+
+Use the normal source deploy for code changes. For a config-only correction,
+prepare and inspect the same merged spec, then update it without
+`--update-sources`; for a process restart with no code or config change, use
+`doctl apps restart <app-id> --components web --wait`. Always run the smoke
+check after either path and record the deployment id. Do not optimize by
+reusing a mutable image for a source release: the source commit and immutable
+deployment record are the rollback evidence.
+
+Production is not automated either, and no `jewelo-production` app exists yet.
+It is the same three scripts pointed at the production environment name, run
+only under the cutover procedure below.
 
 ## Secret and environment model
 
-Environment input is layered in command order. The normal local order is the
-ignored shared `.env` followed by the ignored `.env.local`, so the latter wins:
+The repository-root `.env` is the single source of local environment input, for
+these scripts and for the app: `loadRootEnv()` in `packages/config` loads that
+one file and no other.
+Pass it and nothing else:
 
 ```bash
-pnpm do:check-env -- staging /absolute/path/to/.env /absolute/path/to/.env.local
-pnpm do:bootstrap -- staging /absolute/path/to/.env /absolute/path/to/.env.local
+pnpm do:check-env -- staging /absolute/path/to/.env
+pnpm do:bootstrap -- staging /absolute/path/to/.env
 ```
 
-Both local files must stay ignored and mode `0600`. The checker reports names
+The scripts still accept several files and apply them in command order, with
+later files winning. Do not use that. A second file such as `.env.local` is what
+shipped the retired Supabase project ref and the dead `TRIGGER_*` keys into a
+bootstrap: it overrode correct `.env` values while nothing in the app read it,
+so the mistake was invisible locally and only visible in the deployed app. There
+is no `.env.local` in this repository; if one appears, delete it rather than
+correct it.
+
+That file must stay ignored and mode `0600`. The checker reports names
 and feature status only. The bootstrap process builds the app spec in memory and
 sends allowlisted web values directly to App Platform as encrypted `SECRET`
 environment variables; it does not write a plaintext spec to disk.
@@ -86,28 +153,149 @@ Optional values cover PostHog and Sentry. Shopify and temporary
 operator/session configuration are complete groups, so partial groups fail
 validation; a PostHog key also requires its host. `NEXT_PUBLIC_APP_URL` is the
 `${APP_URL}` App Platform binding.
+
+The four observability values (P7-5 / DS-9) are all optional and all empty
+today, because the accounts do not exist yet:
+
+```text
+SENTRY_DSN                server-side error reports
+NEXT_PUBLIC_SENTRY_DSN    browser error reports
+NEXT_PUBLIC_POSTHOG_KEY   journey analytics
+NEXT_PUBLIC_POSTHOG_HOST  where those events go
+```
+
+Empty is a working configuration and not a degraded one: `packages/observability`
+imports a vendor SDK only inside a credential check, so an app with these unset
+loads no Sentry or PostHog code, opens no connection to `sentry.io` or a PostHog
+host, and behaves exactly as it did before this task. `do:check-env` is
+unchanged when they are absent. A PostHog key requires its host, since a key
+with nowhere to send is analytics that looks configured and silently is not; a
+host with no key is fine and is what this repository's `.env` already carries. The three `NEXT_PUBLIC_` values ship as
+`RUN_AND_BUILD_TIME`, because Next inlines them into the browser bundle at build
+time - a public key that arrives at run time only is a key the bundle was
+compiled without. `SENTRY_DSN` is a server value and is never exposed to the
+browser.
+
+Source map upload is a separate decision. It happens only when
+`SENTRY_AUTH_TOKEN`, `SENTRY_ORG` and `SENTRY_PROJECT` are all present in the
+build environment (`packages/observability/src/next-config.ts`); none of the
+three is in the app contract, because they belong to the machine that builds and
+not to the app that runs. Enabling upload also means flipping `"@sentry/cli"` to
+`true` under `allowBuilds` in `pnpm-workspace.yaml`: it is denied today so that
+no install reaches out to download a release binary.
 `NEXT_PUBLIC_*` values are encrypted at rest but intentionally become public in
 the Next.js browser bundle; never place privileged credentials under that
 prefix.
 
-The upload allowlist excludes Trigger.dev, OpenAI, fal, database passwords, and
-other job-only credentials. Keep those in the job platform that executes the
-work. The GitHub `Preview` and `Production` environments contain the scoped
-`DIGITALOCEAN_ACCESS_TOKEN`; do not put application configuration in workflow
-YAML or GitHub output.
+The upload allowlist covers the web component's own configuration, including
+`INNGEST_EVENT_KEY` and `INNGEST_SIGNING_KEY`, because the Inngest functions run
+inside this component. `INNGEST_BASE_URL` and `INNGEST_CRON_ENABLED` are shipped
+only when present. The Inngest server component's own configuration
+(`INNGEST_POSTGRES_URI`) is set on that component, never on `web`.
+The scoped `DIGITALOCEAN_ACCESS_TOKEN` lives only in the ignored `.env` on
+`home-mini`; there is no workflow and no GitHub environment in the deploy path
+that could hold it.
 
 Environment changes are configuration deployments, not ordinary code pushes:
 
 ```bash
-pnpm do:check-env -- production /absolute/path/to/.env /absolute/path/to/.env.local
+pnpm do:check-env -- production /absolute/path/to/.env
 JEWELO_ALLOW_PRODUCTION_BOOTSTRAP=yes \
-  pnpm do:bootstrap -- production /absolute/path/to/.env /absolute/path/to/.env.local
+  pnpm do:bootstrap -- production /absolute/path/to/.env
 ```
 
-Re-running bootstrap updates the encrypted environment and creates a new
-deployment. Record the previous deployment ID first so the change is
-reversible. Never print, diff, or capture the resulting app spec because it may
+Bootstrap creates an app and never updates one. Re-running it against an app
+that already exists prints the app id and exits 1, because `bootstrap-app.mjs`
+builds `services: [web]` from the contract alone: applying that spec to a live
+app is a full replace that would drop the `inngest` component, repoint the
+branch, and wipe every environment variable outside the web contract. Deploy a
+new revision with `pnpm do:deploy` (`scripts/digitalocean/deploy.sh`), which
+edits the existing spec, and restore with `rollback.sh` if a deployment goes
+wrong. Never print, diff, or capture the resulting app spec because it may
 contain secret material.
+
+`deploy.sh` is therefore also the way to add or rotate an app environment
+variable. Write the value into the ignored `.env` on `home-mini`, add its name
+to `env-contract.mjs` if it is new, then deploy: the script merges the contract
+into the live spec, so the variable ships with the next revision. Prove the
+merge first without touching DigitalOcean:
+
+```bash
+DEPLOY_DRY_RUN=1 bash scripts/digitalocean/deploy.sh staging <branch>
+```
+
+That prints the merged key names, their scopes and whether each is set or set
+empty, never a value, calls no DigitalOcean API and exits 0. A key the contract
+does not name is never removed from the live app, and a key absent from `.env`
+is left exactly as the platform holds it, so a partial local environment cannot
+wipe a deployed secret.
+
+The environment file must say which app it may configure.
+Every file used for a sync declares `JEWELO_DEPLOY_TARGET=<environment>` -
+`staging` in the laptop and `home-mini` `.env`, `production` in the production
+file - and `deploy.sh` refuses with exit 2 when the key is missing or names a
+different environment than the one on the command line.
+Without that check one `.env` served both apps, and `deploy.sh production main`
+run from a laptop would have overwritten production's database, provider
+credentials and operator passphrase with staging values.
+`JEWELO_DEPLOY_TARGET` is read from the file and never shipped to the app.
+
+Provider selection is not a DigitalOcean setting. `NODE_ENV=production` is the
+runtime invariant and always selects the real OpenAI adapter; local development
+defaults to the mock adapter. `PROVIDER_MODE` is therefore local/test-only and
+is rejected by the deployment env contract. `deploy.sh` also removes a stale
+copy from an existing app spec. Production startup parses the complete jobs
+environment before serving requests and fails if the required real credentials
+are absent.
+
+To deploy production, point `JEWELO_ENV_FILE` at the production file, which is
+the only file that may carry `JEWELO_DEPLOY_TARGET=production`:
+
+```bash
+JEWELO_ENV_FILE=/absolute/path/to/production.env \
+  bash scripts/digitalocean/deploy.sh production main
+```
+
+To deploy a branch into an environment whose file you do not have, set
+`DEPLOY_ENV_SYNC=0`: the script ships the branch and leaves the app's
+environment exactly as the platform has it, and says so on stderr.
+
+`TRUSTED_CLIENT_IP_HEADER` is one of those optional keys: it names the header
+the request guards believe as the client address, defaulting to
+`do-connecting-ip`, which App Platform sets and overwrites, and set to the empty
+string on any host that does not, where the last `x-forwarded-for` hop is used
+instead.
+An empty value is a decision, not an absence: it is shipped explicitly as an
+empty variable and the dry run reports it as `set (empty)`.
+
+## Alerts (added 9 September 2026, P7-5 / DS-9)
+
+The alerts live in `infra/digitalocean/spec-contract.json` under `alerts`, and
+`deploy.sh` merges them into the live spec on every deploy, so an alert is a
+committed decision rather than something a person once clicked:
+
+```text
+app  DEPLOYMENT_FAILED
+app  DOMAIN_FAILED
+web  CPU_UTILIZATION   > 80  over TEN_MINUTES
+web  MEM_UTILIZATION   > 85  over FIVE_MINUTES
+web  RESTART_COUNT     > 3   over FIVE_MINUTES
+```
+
+`RESTART_COUNT` is the one that matters most on a 1 GB instance: a Next.js
+server being OOM-killed restarts silently, and without this the only symptom is
+a shopper whose request never answers. The merge is keyed by rule, so an alert
+added in the console with its own notification channel is left alone, while a
+rule the contract names keeps its identity and takes the contract's threshold,
+window and enabled state.
+
+Where the e-mail goes is DigitalOcean's own setting on the app, which is why no
+address appears here. `DEPLOY_DRY_RUN=1` prints the alerts a deploy would write
+along with the environment keys.
+
+`bootstrap-app.mjs` still creates an app with the two app-level alerts written
+inline; a newly created app therefore picks up the component alerts on its first
+`pnpm do:deploy`, which is the same command that gives it its branch.
 
 ## First-time workstation check
 
@@ -122,38 +310,96 @@ pnpm doctl -- apps list
 The token has create/read/update access for the relevant DigitalOcean resources
 but no delete scope. Rotate it before its current 25 November 2026 expiry.
 
-With explicit authorization to update the repository environments, run:
-
-```bash
-pnpm do:github
-```
-
-That command configures environment-scoped GitHub deployment secrets and
-non-secret project/app variables. Token rotation must replace both GitHub
-environment secrets without printing the value.
+`scripts/digitalocean/configure-github.sh` (`pnpm do:github`) is left over from
+the retired workflow era.
+It writes the token into GitHub `Preview` and `Production` environment secrets
+that nothing now reads, so do not run it; rotate the token in `.env` on
+`home-mini` instead, without printing the value.
 
 ## Staging operation
 
-Staging follows the reviewed `rebuild/v2-first-principles` integration branch
-after its deployment gate is enabled. Verify and smoke it with:
+Staging tracks whatever branch the last `deploy.sh` run wrote to
+`web.git.branch`, today `codex/overnight-launch-2026-09-08`.
+Nothing follows a branch on its own, so staging is only as new as the last
+deliberate deploy.
+The local gate before deploying is `corepack pnpm build`; there is no test or
+verify step. Then:
 
 ```bash
-pnpm install --frozen-lockfile
-pnpm verify
-pnpm do:build
-pnpm do:smoke -- https://jewelo-staging-gqumd.ondigitalocean.app
+bash scripts/digitalocean/deploy.sh staging <branch>
+bash scripts/digitalocean/smoke.sh https://jewelo-staging-gqumd.ondigitalocean.app
 ```
 
 The Node buildpack does not always expose the same version behavior as a local
-shell. Bootstrap injects `JEWELO_CLOUD_BUILD=1` at build time, and foundation
-verification uses that compatibility marker to require Node 24 without
-misclassifying unrelated local negative-proof checks.
+shell. The buildpack receives the normal build command from the app contract,
+and foundation verification uses the repository's Node 24 pin without a
+second cloud-only activation flag.
 
-For a manual staging deployment, use GitHub Actions' `digitalocean-staging`
-workflow. Prefer it over a local deploy because it proves a fresh checkout and
-records the source tag, deployment ID, commit, health result, and URL together.
-Dispatch it only when the user has authorized a staging update in the current
-request.
+A deploy is an external mutation.
+Run it only when the current task authorizes a staging update, record the
+printed deployment id as the rollback target, and stop after one failed retry
+rather than redeploying blindly.
+
+### Style anchors (run once per Supabase project)
+
+Real mode fails closed with `style_anchor_missing:<sourceTaskId>` until the six
+approved style anchors exist as published releases in that project's private
+`style-anchors` bucket.
+The migrations only seed six `missing` placeholders, so a fresh project, a restored
+project, or a new environment needs one run of
+`node scripts/style-anchors/publish.mjs` against it before the first production
+run.
+It is a database and storage change, not a deploy: nothing needs redeploying after it.
+The PNGs are private brand reference and are never in git; the script is pointed at
+them with `STYLE_ANCHORS_DIR`, and `scripts/style-anchors/README.md` has the command,
+the checks it refuses on, and the SQL readback.
+It is idempotent, so rerunning it on a project that already has them re-hashes the
+stored bytes and creates no new version.
+
+### Studio-only switch for the first real-provider run (added 9 September 2026, P5-2 / DS-6)
+
+`public.runtime_policy.studio_only` decides how many images a run can bill.
+It is false everywhere by default, and with it false nothing about a run changes:
+`expand_final_media_run` creates the studio still plus the three dependent views,
+books 100 cents for each and lets the dependents run once the studio still is ready.
+Set it true and the same run is created with one dispatchable task: the three
+dependents are written `cancelled` with `reservation_cents = 0` and
+`terminal_error_code = 'studio_only_policy'`, no reservation is booked for them,
+`release_dependent_tasks` never picks them up, and the atelier shows those three
+views as unavailable, which is the shop's own honest sentence about them.
+One run then bills one image instead of four, or three instead of twelve once
+`provider_attempt_budget = 3` retries are counted.
+
+The order for P5-2, first real-provider smoke on staging:
+
+1. Apply the launch caps recorded in
+   `docs/goals/road-to-gold/dogfood-2026-09-08/staging-journey.md` (`P5-1 caps`):
+   `global_max_reserved_spend_cents 800`, `global_daily_generation_limit 2`,
+   `daily_generation_limit 2`.
+   This step is not optional and is no longer a matter of remembering it.
+   Storyline review 1 M2 found the row back at `6000` cents and `100` attempts, one
+   real-provider startup would otherwise spend four hundred cents a run against
+   a six thousand cent ceiling, so the worker refuses the dispatch itself: in
+   production mode
+   every dispatch reads `public.runtime_policy` once (cached for
+   `pipelineLimits.policyCacheMs`, 60 s) and blocks the task pre-spend with
+   `terminal_error_code = 'spend_ceiling_not_set:cap=<cents>,max=<cents>'` while
+   `global_max_reserved_spend_cents` is above `REAL_MODE_MAX_RESERVED_SPEND_CENTS`
+   (default 800) or `provider_attempt_budget` is above
+   `REAL_MODE_MAX_ATTEMPT_BUDGET` (default 3). No reservation is booked and no
+   provider is called. Both ceilings are optional app-spec variables in
+   `@jewelo/config`; raising one only permits a looser policy row, it never lets a
+   run spend more. Mock mode never reads the row.
+2. `update public.runtime_policy set studio_only = true, updated_at = now() where id = true;`
+   and read the row back.
+3. Deploy the branch and smoke it. Production automatically selects the real
+   provider from `NODE_ENV=production`; no provider-mode env toggle is shipped.
+4. Once DS-6 is satisfied - a real studio still has been produced, inspected and
+   accepted - `update public.runtime_policy set studio_only = false, updated_at = now() where id = true;`
+   to re-enable the other three views, then restore the caps per P5-3.
+
+The flag is read once, at expansion time, so flipping it never leaves a run half
+booked: every run keeps the shape of the policy it was created under.
 
 ## Production cutover
 
@@ -161,20 +407,20 @@ Production cutover is a controlled transition, not another preview push:
 
 1. Complete and review the final E2E application on its integration seed and
    feature branches; do not merge them automatically.
-2. After human-approved integration into `rebuild/v2-first-principles`, confirm
-   `infra/digitalocean/spec-contract.json` and both workflows target that exact
-   integration branch.
-3. Update staging with `pnpm do:bootstrap` only with explicit authorization.
+2. After human-approved integration, confirm
+   `infra/digitalocean/spec-contract.json` names that exact integration branch,
+   since it is the only place the branch is declared.
+3. Update staging with `pnpm do:deploy`; `pnpm do:bootstrap` refuses to run
+   against the existing app.
 4. Confirm the staging app still has the expected encrypted configuration; run
-   `pnpm verify`, `pnpm do:build`, health smoke, browser smoke, and the app's
+   `corepack pnpm build`, health smoke, browser smoke, and the app's
    customer/operator acceptance flow.
-5. Set the GitHub `Preview` variable `DIGITALOCEAN_DEPLOY_ENABLED=true` only
-   after the integrated branch is the authoritative deploy source.
-6. Record the full tested commit SHA and its ACTIVE staging deployment ID.
-7. With explicit production approval, bootstrap `jewelo-production` using the
-   production environment files.
-8. Dispatch `digitalocean-production` with that SHA and staging deployment ID.
-9. Verify the published production URL, `/api/health`, browser flows,
+5. Record the full tested commit SHA and its ACTIVE staging deployment ID.
+6. With explicit production approval, bootstrap `jewelo-production` using the
+   root `.env`.
+7. Run `bash scripts/digitalocean/deploy.sh production <that ref>` and
+   `bash scripts/digitalocean/smoke.sh <production URL>` from `home-mini`.
+8. Verify the published production URL, `/api/health`, browser flows,
    monitoring, and the recorded rollback deployment before any DNS change.
 
 Custom domain attachment and DNS cutover remain separate human-approved launch
@@ -189,8 +435,13 @@ requires HTTP 200 from `/api/health`, and checks that the response is JSON:
 pnpm do:smoke -- https://APP.ondigitalocean.app
 ```
 
+It also requires HTTP 200 from `/api/readiness` with
+`"keyEnvironment":"prod"`, which is true only when `INNGEST_SIGNING_KEY` is set
+and `INNGEST_DEV` is not, so a deployment that would silently skip signature
+verification fails the smoke test.
+
 The smoke test is liveness evidence only. Release acceptance must also exercise
-the relevant browser, Supabase authorization/RLS/Storage/Realtime, Trigger
+the relevant browser, Supabase authorization/RLS/Storage/Realtime, Inngest
 dispatch, and provider flows.
 
 Rollback restores the complete spec and immutable source ref from a known-good
@@ -212,10 +463,10 @@ credential incident.
 | Symptom | Cause seen in this setup | Resolution |
 | --- | --- | --- |
 | Spec validation rejects staging sleep | Inactivity sleep is not enabled for this account | Keep one fixed `apps-s-1vcpu-1gb` instance; do not claim scale-to-zero |
-| Cloud build reports the wrong Node version | Buildpack version behavior differed from local verification | Preserve the Node 24 pins and `JEWELO_CLOUD_BUILD=1` compatibility marker; inspect deployment build logs |
+| Cloud build reports the wrong Node version | Buildpack version behavior differed from local verification | Preserve the Node 24 pins and inspect deployment build logs; no cloud-only activation marker is required |
 | Bootstrap exits after creating/updating an app | The deployment did not become ACTIVE | Inspect the latest App Platform build/deploy logs; do not keep retrying blindly or report a URL as healthy |
-| Push does not deploy staging | Deployment gate is off or push was not to the integration branch | Check `DIGITALOCEAN_DEPLOY_ENABLED` and branch routing; use manual dispatch only for an intentional test |
-| Production dispatch rejects a SHA | SHA is not full length, is not in the integration branch, or does not match the ACTIVE staging deployment | Use the exact SHA and deployment ID from the successful staging workflow summary |
+| Push does not deploy staging | Expected: no workflow and no `deploy_on_push` exist, so a push never deploys | Run `deploy.sh` from `home-mini` when a staging update is authorized |
+| Staging serves an old commit | The last `deploy.sh` predates the pushed commit | Redeploy the branch; `--update-sources` re-resolves the ref to its current head |
 | App starts but health smoke fails | Build/start command, `PORT`, health route, or required environment is wrong | Inspect runtime logs, verify `pnpm start` honors injected `PORT`, validate environment names, then redeploy |
 | `doctl` wrapper cannot authenticate | Token is missing, expired, or absent from the current worktree's ignored `.env` | Restore/rotate the scoped token without printing it; update Preview and Production GitHub secrets |
 
@@ -223,3 +474,149 @@ Stop after one failed externally mutating retry unless the failure is clearly
 transient and the next action is safe. Preserve deployment IDs and logs as
 evidence; never solve deployment failures by weakening verification or exposing
 credentials.
+
+## Request timeout at the edge
+
+How long a single HTTP request to the app may run before DigitalOcean's own
+ingress cuts it, which is the only request bound this deployment actually
+enforces.
+
+`maxDuration` in `apps/web/src/app/api/inngest/route.ts` is not that bound.
+App Platform serves the app with a standalone `next start`, which has no
+request-path consumer of that export: it is build metadata a serverless host
+reads, plus the executor cap `pipelineLimits.staleRecoveryWindowMs` is derived
+from.
+A still that runs past the edge timeout is killed with the image already paid
+for, so this number is what the executor cap has to be checked against.
+
+Measured on 8 September 2026 against staging deployment `8b8aa87a-820d-4194-884a-287b7cf4c563` (a throwaway branch with a token-gated hold route, deleted afterwards):
+
+- The app is fronted by Cloudflare (`server: cloudflare`).
+- A request that sends nothing is cut at 600 s with HTTP 524 (`error code: 524`), whatever hold was asked for: 400 s answered 200, 600 s raced the cut, 800 s and 900 s were cut at 600 s.
+- A response that writes one byte every 10 s survived to 900 s, the probe's own cap, so the 600 s is an idle timer that each chunk resets, not a total-request wall.
+- The app spec has no timeout field; the only `timeout_seconds` is the health check's own 5 s. The 600 s is a platform constant that can change without notice, so the executor cap stays well below it rather than tuned to it.
+
+The executor cap of 360 s (`pipelineLimits.executorRequestCapSeconds`) is therefore inside the bound with 240 s to spare, and no worker component or heartbeat is needed before the first production-provider run.
+If a step ever needs more than 600 s of silence, a streaming heartbeat is the mechanism, and this section must be re-measured first.
+
+## Inngest component (added 7 September 2026)
+
+Trigger.dev was removed. The durable job engine is a self-hosted Inngest server
+running as a second App Platform service component in the same app.
+
+```text
+inngest (image inngest/inngest:v1.44.0-amd64, run_command "inngest start")
+  internal_ports: [8288]        no public ingress rule; the dashboard is private
+  instance_count: 1             the queue lives in the process, never scale out
+  health_check: TCP 8288
+  INNGEST_EVENT_KEY             shared with web
+  INNGEST_SIGNING_KEY           shared with web, BARE 64-char hex
+  INNGEST_POSTGRES_URI          IPv4 session pooler, search_path=inngest
+  INNGEST_SDK_URL               ${web.PRIVATE_URL}/api/inngest
+  INNGEST_PORT / INNGEST_HOST   8288 / 0.0.0.0
+
+web
+  INNGEST_BASE_URL              ${inngest.PRIVATE_URL}
+  INNGEST_CRON_ENABLED          1   (only this environment registers the crons)
+```
+
+Every `inngest start` flag is also an `INNGEST_<FLAG>` environment variable, so
+the component needs no argument list beyond `inngest start`.
+
+Two hard constraints discovered on 7 September:
+
+- Supabase's direct database host (`db.<ref>.supabase.co`) resolves to IPv6
+  only, and App Platform has no IPv6 egress. `INNGEST_POSTGRES_URI` must use the
+  IPv4 **session** pooler on port 5432
+  (`postgres.<ref>@aws-0-ap-south-1.pooler.supabase.com:5432`), not the
+  transaction pooler on 6543 that the dashboard offers by default.
+- A second service with `http_port` makes App Platform generate an ingress rule
+  that collides with `web`'s `/` prefix. Use `internal_ports` instead: the
+  component is then reachable only on the app's private network.
+- `inngest start` rejects a prefixed signing key
+  (`signing-key must be hex string with even number of chars`). Use bare hex
+  from `openssl rand -hex 32`. The SDK accepts bare hex and also strips the
+  `signkey-<env>-` prefix that Inngest Cloud issues, so one value serves both.
+
+Inngest's own tables are kept out of the Supabase migration surface with
+`?options=-c search_path=inngest` on the pooler URI and a pre-created `inngest`
+schema, so `supabase db diff` stays clean.
+
+`scripts/digitalocean/deploy.sh` selects the git-backed service by name (`web`),
+never by index, because `services[0]` is no longer guaranteed to be the web app.
+
+### Switching to Inngest Cloud
+
+Cloud is a one-variable switch. Remove `INNGEST_BASE_URL` from `web`, replace
+`INNGEST_EVENT_KEY` and `INNGEST_SIGNING_KEY` with the Cloud values, delete the
+`inngest` component, and sync `https://APP.ondigitalocean.app/api/inngest` from
+the Inngest dashboard. No application code changes.
+
+## New-request notification (added 9 September 2026, P7-3 / DS-8)
+
+When a shopper's request is captured, `POST /api/preview-requests` sends the
+Inngest event `preview-request/created` carrying the request id and nothing
+else.
+The function `preview-request-notification` loads the row with the service role,
+composes one plain-text message and hands it to the notification port in
+`packages/ai/src/notification.ts`.
+
+Idempotence is a database claim, not an engine feature.
+The function updates `preview_requests.notified_at` where it is still null and
+only continues if that update returned a row, so a re-delivered event, an
+Inngest retry and a manual replay announce the request exactly once.
+A failed send releases the claim, so the next attempt announces it rather than
+swallowing it.
+
+The announcement is not left to one send.
+`POST /api/preview-requests` emits the event on all three of its answers - the row it inserts, the replay of an existing `request_key`, and the loser of the unique-index race - and the cron function `preview-request-notification-sweep` runs every two minutes as the backstop.
+The sweep reads up to `notificationSweepBatch` (50, `packages/config/src/index.ts`) rows whose `notified_at` is still null, which are older than `notificationSweepMinAgeMs` (60 s) and which were captured no earlier than `NOTIFICATION_SWEEP_FLOOR`, oldest first, over the `preview_requests_unnotified` index, and re-emits `preview-request/created` with the same event id the route uses, so the claim in the database still makes it exactly one message.
+Because that event id is byte-identical to the route's, Inngest's 24 h event deduplication applies: the sweep covers "the event never got in", not "the send kept failing".
+A request whose send failed its three attempts has already spent its event id, so the sweep cannot re-announce it for 24 hours; that one is the operator queue's job, not the sweeper's.
+It reads the shared table with service-role credentials, so like the other crons it is registered only where `INNGEST_CRON_ENABLED=1`.
+With `NOTIFICATION_TO` unset it stops before the read and reports `not_configured`, because every event it could send would end there anyway.
+A tick that announces rows logs one `preview_request_notification_swept` line with the count and no ids.
+
+Storyline review 1 (B3) found this the hard way: 13 captured requests were sitting unannounced because the create-path send is best effort and nothing ever looked at them again.
+Those 13 rows are still unannounced by choice - they are old test requests, and the deployment has no shop address, so the sweep stops on `not_configured`.
+`NOTIFICATION_SWEEP_FLOOR` is what keeps them that way (fix review 3, MN-7): the sweep only announces captures at or after it, and the default `2026-09-09T00:00:00Z` is the morning the sweep was written, so the first tick after `NOTIFICATION_TO` is set announces the shop's real requests and not the backlog.
+The manual override is still there when a specific old row should stay silent for good, or when the floor is lowered on purpose: set `notified_at = now()` on the rows the shop should not receive.
+
+Staging has neither `INNGEST_CRON_ENABLED=1` nor `NOTIFICATION_TO`, so the sweeper is not registered there and would report `not_configured` if it were.
+The backstop is code and configuration that is proven in the tree and dormant in the deployment until Sanchay sets both values (see Needs Sanchay in the handover); nothing about the 13 rows changes until then.
+
+Which transport runs is `NOTIFICATION_TRANSPORT`:
+
+```text
+NOTIFICATION_TRANSPORT   log | smtp    default log
+NOTIFICATION_TO          the shop's address; unset means nothing is composed
+NOTIFICATION_FROM        envelope and header sender, required when smtp
+NOTIFICATION_SMTP_HOST   required when smtp
+NOTIFICATION_SMTP_PORT   default 587
+NOTIFICATION_SMTP_SECURITY   starttls | implicit-tls   default starttls
+NOTIFICATION_SMTP_USER       required when smtp
+NOTIFICATION_SMTP_PASSWORD   required when smtp
+NOTIFICATION_SMTP_TIMEOUT_MS default 15000
+NOTIFICATION_SWEEP_FLOOR     oldest capture the sweep may announce (ISO 8601)
+                             default 2026-09-09T00:00:00Z
+```
+
+All ten are optional in the app spec and ship only when present.
+`NOTIFICATION_TRANSPORT=smtp` without the four SMTP keys and the shop address
+fails `pnpm do:check-env` rather than the first shopper's request; the same rule
+is `assertNotificationConfigured` in `packages/config/src/index.ts`.
+
+`log` is the shipped default and is not a silent drop: the DigitalOcean runtime
+log carries one `notification_logged` line naming the transport and the request
+id, and the operator reads the message itself - the contact detail and the
+shopper's own words - in the queue row that P7-1 renders. The contact detail is
+deliberately not in the log line (security review 2 H-1): a runtime log has no
+retention bound and no deletion path. With `NOTIFICATION_TO` unset the job returns `not_configured` and
+logs `preview_request_notification_not_configured` instead of retrying.
+
+There is no mail account yet. The Supabase project has no custom SMTP host
+configured (Management API `config/auth`, 9 September 2026: `smtp_host`,
+`smtp_user`, `smtp_pass`, `smtp_port` and `smtp_admin_email` are all null), and
+Supabase's built-in sender only delivers auth mail to project members, so it
+cannot carry a shop notification. Turning the transport on needs a sending
+account and the shop's address from Sanchay; nothing in the code changes.

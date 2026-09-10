@@ -1,0 +1,6 @@
+{
+  "result": {
+    "type": "string",
+    "value": "{\"viewport\":[390,600],\"dir\":\"rtl\",\"overflow\":false,\"reducedMotion\":true,\"controls\":[{\"text\":\"\",\"aria\":\"إغلاق\",\"rect\":{\"x\":20,\"y\":14,\"width\":44,\"height\":44,\"top\":14,\"right\":64,\"bottom\":58,\"left\":20},\"client\":44,\"scroll\":44},{\"text\":\"\",\"aria\":\"تكبير\",\"rect\":{\"x\":326,\"y\":81,\"width\":44,\"height\":44,\"top\":81,\"right\":370,\"bottom\":125,\"left\":326},\"client\":42,\"scroll\":42},{\"text\":\"\",\"aria\":\"تصغير\",\"rect\":{\"x\":274,\"y\":81,\"width\":44,\"height\":44,\"top\":81,\"right\":318,\"bottom\":125,\"left\":274},\"client\":42,\"scroll\":42},{\"text\":\"إعادة الضبط\",\"aria\":null,\"rect\":{\"x\":175.921875,\"y\":81,\"width\":90.078125,\"height\":44,\"top\":81,\"right\":266,\"bottom\":125,\"left\":175.921875},\"client\":88,\"scroll\":88}]}"
+  }
+}

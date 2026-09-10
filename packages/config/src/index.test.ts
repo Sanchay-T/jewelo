@@ -4,10 +4,27 @@ import {
   assertBrowserSafeEnv,
   jobsEnvSchema,
   parseBrowserEnv,
-  parseTriggerConfigEnv,
 } from "./index";
 
 describe("environment boundaries", () => {
+  it("treats an empty optional URL or key as unset", () => {
+    const parsed = parseBrowserEnv({
+      NEXT_PUBLIC_SENTRY_DSN: "",
+      NEXT_PUBLIC_POSTHOG_KEY: "   ",
+      NEXT_PUBLIC_POSTHOG_HOST: "",
+    });
+    expect(parsed.NEXT_PUBLIC_SENTRY_DSN).toBeUndefined();
+    expect(parsed.NEXT_PUBLIC_POSTHOG_KEY).toBeUndefined();
+    expect(parsed.NEXT_PUBLIC_POSTHOG_HOST).toBeUndefined();
+    const jobs = jobsEnvSchema.safeParse({
+      SUPABASE_URL: "https://example.supabase.co",
+      SUPABASE_SERVICE_ROLE_KEY: "service-role",
+      OPENAI_API_KEY: "",
+    });
+    expect(jobs.success).toBe(true);
+    if (jobs.success) expect(jobs.data.OPENAI_API_KEY).toBeUndefined();
+  });
+
   it("builds with a safe local browser default", () => {
     expect(parseBrowserEnv({}).NEXT_PUBLIC_APP_URL).toBe(
       "http://localhost:3000",
@@ -41,13 +58,30 @@ describe("environment boundaries", () => {
     }
   });
 
-  it("requires a Trigger project before loading its config", () => {
-    expect(() => parseTriggerConfigEnv({})).toThrow(/TRIGGER_PROJECT_REF/);
-    expect(
-      parseTriggerConfigEnv({ TRIGGER_PROJECT_REF: "proj_development" }),
-    ).toEqual({
-      TRIGGER_PROJECT_REF: "proj_development",
+  it("keeps the Inngest keys optional but blank-safe", () => {
+    const parsed = jobsEnvSchema.safeParse({
+      SUPABASE_URL: "https://example.supabase.co",
+      SUPABASE_SERVICE_ROLE_KEY: "service-role",
+      INNGEST_EVENT_KEY: "",
+      INNGEST_BASE_URL: "",
+      INNGEST_CRON_ENABLED: "",
     });
+    expect(parsed.success).toBe(true);
+    if (parsed.success) {
+      expect(parsed.data.INNGEST_EVENT_KEY).toBeUndefined();
+      expect(parsed.data.INNGEST_BASE_URL).toBeUndefined();
+      expect(parsed.data.INNGEST_CRON_ENABLED).toBeUndefined();
+    }
+    const selfHosted = jobsEnvSchema.safeParse({
+      SUPABASE_URL: "https://example.supabase.co",
+      SUPABASE_SERVICE_ROLE_KEY: "service-role",
+      INNGEST_EVENT_KEY: "event-key",
+      // `inngest start` requires bare hex; Inngest Cloud adds a signkey- prefix.
+      INNGEST_SIGNING_KEY: "deadbeefdeadbeef",
+      INNGEST_BASE_URL: "http://inngest:8288",
+      INNGEST_CRON_ENABLED: "1",
+    });
+    expect(selfHosted.success).toBe(true);
   });
 
   it("accepts real mode only when provider credentials are server-side", () => {

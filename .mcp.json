@@ -4,26 +4,22 @@
       "type": "http",
       "url": "https://mcp.supabase.com/mcp?features=docs%2Caccount%2Cdatabase%2Cdebugging%2Cdevelopment%2Cfunctions%2Cbranching"
     },
-    "trigger": {
-      "command": "npx",
-      "args": [
-        "trigger.dev@latest",
-        "mcp",
-        "--dev-only",
-        "--project-ref",
-        "proj_xlvgghocsckjlnkuaibo"
-      ]
-    },
     "digitalocean": {
       "command": "npx",
-      "args": ["-y", "@digitalocean/mcp"],
+      "args": [
+        "-y",
+        "@digitalocean/mcp"
+      ],
       "env": {
         "DIGITALOCEAN_API_TOKEN": "${DIGITALOCEAN_API_TOKEN:-not-configured}"
       }
     },
     "shopify-dev": {
       "command": "npx",
-      "args": ["-y", "@shopify/dev-mcp@latest"]
+      "args": [
+        "-y",
+        "@shopify/dev-mcp@latest"
+      ]
     }
   }
 }

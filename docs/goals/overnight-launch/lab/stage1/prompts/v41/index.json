@@ -1,0 +1,50 @@
+[
+  {
+    "cell": "classical-en",
+    "script": "en",
+    "ringless": false,
+    "promptSha256": "72b9d5aa574e4ba2129128dec33d615a27228cd2441064f1c2669274bbe15438"
+  },
+  {
+    "cell": "classical-ar",
+    "script": "ar",
+    "ringless": false,
+    "promptSha256": "bacc7a7dbe4104d1adb070b617fa7a0d7f9dafe4233a5c18efd0169aee3e1d07"
+  },
+  {
+    "cell": "origami-ribbon-en",
+    "script": "en",
+    "ringless": false,
+    "promptSha256": "aac5e529c577a250e65aead38ca3e25ae61e4c8998e37880bd3946e00ae77997"
+  },
+  {
+    "cell": "origami-ribbon-ar",
+    "script": "ar",
+    "ringless": false,
+    "promptSha256": "c2685a77e57d7f1fdee8d4e2f135f8d12d8f61318357a33f0eb174ae9d275e17"
+  },
+  {
+    "cell": "framed-minimal-en",
+    "script": "en",
+    "ringless": true,
+    "promptSha256": "0cc867ed9743f42a4d04632d8205b0cba1e2bf025fe0127375c6838543000af9"
+  },
+  {
+    "cell": "framed-minimal-ar",
+    "script": "ar",
+    "ringless": true,
+    "promptSha256": "153ff7b7de536c6cc6d8bdac6c2fbd6d6b85a1420f73c785034b68cd5ab2d3cd"
+  },
+  {
+    "cell": "diamond-rails-en",
+    "script": "en",
+    "ringless": true,
+    "promptSha256": "ac722c708add198f64c2dfe571abb74dc84f386b84231cfe0ee15903606c50c1"
+  },
+  {
+    "cell": "diamond-rails-ar",
+    "script": "ar",
+    "ringless": true,
+    "promptSha256": "d2fbf4e2e6926c7885fc3b5ac051025785bac8d6cf50cfa7777d4c6f6f7ee4ff"
+  }
+]

@@ -3,12 +3,19 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
+  "exports": {
+    "./presentation": "./src/presentation.ts",
+    "./outbox": "./src/outbox.ts",
+    "./video": "./src/video.ts"
+  },
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "lint": "eslint src trigger.config.ts",
+    "lint": "eslint src",
+    "mask-contact-sheet": "tsx scripts/mask-contact-sheet.mts",
+    "measure-stencils": "tsx scripts/measure-stencils.mts",
+    "render-stencils": "tsx scripts/render-stencils.mts",
+    "replay-lab": "tsx scripts/replay-lab.mts",
     "test": "vitest run",
-    "trigger:deploy:preview": "trigger deploy --env preview",
-    "trigger:dev": "trigger dev start",
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {
@@ -18,11 +25,9 @@
     "@jewelo/data": "workspace:*",
     "@jewelo/identity": "workspace:*",
     "@jewelo/media": "workspace:*",
-    "@trigger.dev/sdk": "4.5.12",
-    "sharp": "0.34.5"
+    "sharp": "0.35.4"
   },
   "devDependencies": {
-    "@trigger.dev/build": "4.5.12",
-    "trigger.dev": "4.5.12"
+    "tsx": "4.23.13"
   }
 }
