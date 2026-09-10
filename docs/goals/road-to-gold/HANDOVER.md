@@ -140,7 +140,12 @@ using the local design page.
    notification sweep floor, and chunked-body bound (implementer).
 4. Run the lead-owned seven-viewport/RTL/reduced-motion staging ladder and save
    screenshots under the next `docs/goals/road-to-gold/dogfood-*` directory.
-5. P3-6, P3-5, P2-3–P2-7, P5-2/P5-3, P7-4/P7-8, and L-1–L-4 remain in the
+5. `apps/web/src/features/atelier/personalizedRun.test.ts` still contains
+   historical expectations for the removed Classical/Classic restriction. The
+   repository instruction keeps existing Vitest files untouched and unrun;
+   those assertions need a dedicated test-maintenance pass before the suite is
+   treated as a gate.
+6. P3-6, P3-5, P2-3–P2-7, P5-2/P5-3, P7-4/P7-8, and L-1–L-4 remain in the
    ordered task list.
 
 ## Rollback
