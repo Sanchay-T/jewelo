@@ -43,6 +43,7 @@ const observabilityOrigins = observabilityConnectOrigins();
 const observabilityConnectSrc = observabilityOrigins.length
   ? ` ${observabilityOrigins.join(" ")}`
   : "";
+const devDistDir = process.env.JEWELO_DEV_DIST_DIR;
 
 /**
  * Security headers.
@@ -93,6 +94,19 @@ const documentSecurityHeaders = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // The Mac mini also has an older port-3001 checkout running from this app
+  // directory. Keep the port-3011 LaunchAgent's Turbopack lock and cache
+  // separate so restarting this primary dev service never touches that
+  // unrelated process.
+  distDir: devDistDir ?? ".next",
+  // The Mac mini is reached through loopback by the in-app browser and
+  // through its Tailscale address when another device dogfoods it. Next's
+  // development HMR endpoint rejects those host origins unless they are
+  // explicit, and the rejected dev resource leaves the App Router's client
+  // hydration waiting behind a server-rendered page.
+  allowedDevOrigins: isProduction
+    ? undefined
+    : ["localhost", "127.0.0.1", "100.102.144.100"],
   // `/api/inngest` and `/api/shopify` answer machine callers - the Inngest
   // dashboard also renders its own signed page there - so they keep the
   // transport headers and stay out of the document policy.

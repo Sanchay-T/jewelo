@@ -5,6 +5,7 @@ __pycache__/
 .env
 .env.*
 .next/
+.next-*/
 .pnpm-store/
 .trigger/
 .turbo/

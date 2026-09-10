@@ -192,3 +192,10 @@ Open:
 - Housekeeping: the laptop disk hit 100%; the 13 GB `.turbo` cache was deleted (9.8 GiB free now). `.tmp/rnd-stills` (2 GB, 4 Sep, untracked) was left alone.
 - Rule recorded: publish prompt releases only from a deployed build (staging broke 22:25-22:56 UTC on 8 Sep when `@v2` prompts were published before `c9265aa` was live).
 - Umayr's feedback of 8 to 9 Sep read from WhatsApp and stored with his screenshots and a ranked nine-item list at `docs/goals/road-to-gold/feedback/umayr-2026-09-09/README.md`; items 1 to 4 are the next customer-page slice (P6-8, DS-4 env flip), 5 is a new task P6-9, 6 to 8 need Sanchay.
+
+## Session 4, 2026-09-10
+
+- Local hydration investigation closed. At `http://127.0.0.1:3011/en/design/new`, the page was server-rendered but had no React root/fiber; mobile accordion clicks left `aria-expanded`, `data-expanded`, and body display unchanged. The same build hydrated and responded at `http://localhost:3011` and on staging, so this was a Mac mini dev-origin/runtime issue, not an Atelier state bug. Next dev logged blocked HMR requests for `127.0.0.1` (and the Mac mini Tailscale address), and the in-app browser recorded the failed WebSocket handshakes.
+- `apps/web/next.config.ts` now allows `localhost`, `127.0.0.1`, and `100.102.144.100` in development. The port-3011 LaunchAgent now sets `JEWELO_DEV_DIST_DIR=.next-3011`; the unrelated port-3001 process was not killed or changed, and the two dev servers no longer share the Turbopack lock.
+- Proof after restart: `/api/health` 200 on loopback and Tailscale; the 127.0.0.1 page has a React fiber and all desktop sections report `aria-expanded=true`; at 390x844, clicking `02 Style` changes it from collapsed/`display:none` to expanded/`display:block`; Tailscale page also has a React fiber and no browser console errors. `corepack pnpm build` with `JEWELO_DEV_DIST_DIR=.next-build-verify` passed 13/13.
+- Existing uncommitted `apps/web/next-env.d.ts` and tool/playwright artifacts remain untouched. The dev-origin fix is not yet committed or deployed; it is local-machine development plumbing, not a staging product change.
