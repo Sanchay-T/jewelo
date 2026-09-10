@@ -53,8 +53,11 @@ The local app is open in the Codex in-app Browser at
 `http://localhost:3011/en/design/new`. Its local Next dev server returns HTTP
 200 from `/api/health`, the interactive studio controls and name textbox are
 visible, and the browser recorded no console errors. It uses the existing
-cloud-backed environment for Supabase and other external services; it does not
-use the DigitalOcean process for local rendering.
+cloud-backed environment for Supabase/OpenAI and the local Inngest dev server
+(`127.0.0.1:8288/health` returns 200); it does not use the DigitalOcean process
+for local rendering. Runway is intentionally the prompt-lab bench, not a
+production runtime dependency: the app's production socket is OpenAI, and no
+Runway or OpenAI generation was invoked.
 
 ## Done this session
 
