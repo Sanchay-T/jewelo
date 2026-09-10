@@ -235,6 +235,10 @@ using the local design page.
 - Used the existing staging runtime without deploying new code. The English
   `Layla` / Diamond rails / Minimal / no-stones run and Arabic `ريم` / Framed
   minimal / Kufi / accent-ruby run each completed all four OpenAI views.
+- Run identifiers: English design `8cbde9cd-4c0d-42e8-acc1-f9dc1dc3e331`,
+  run `43d18594-fa58-49a2-9cc6-6f3067144fc3`; Arabic design
+  `7e28acb4-1ab2-4f43-a57e-4ff94425e365`, run
+  `783f615a-8afa-4651-a12b-2ad7a6750bd5`.
 - All eight attempts were `succeeded`; the customer-facing projection reported
   `passed=true`, `exactText=true`, and `identityScore=1` for every asset. The
   ledger records 160 cents actual spend against 800 cents estimated reserve.

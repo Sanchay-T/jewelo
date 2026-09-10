@@ -323,6 +323,10 @@ Open:
   asset. Actual ledger spend was 160 cents ($1.60); estimated reservations were
   800 cents. Downloaded outputs were visually inspected from
   `/tmp/jewelo-paid-validation/`.
+- Run identifiers: English design `8cbde9cd-4c0d-42e8-acc1-f9dc1dc3e331`,
+  run `43d18594-fa58-49a2-9cc6-6f3067144fc3`; Arabic design
+  `7e28acb4-1ab2-4f43-a57e-4ff94425e365`, run
+  `783f615a-8afa-4651-a12b-2ad7a6750bd5`.
 - This is representative bilingual transfer evidence, not final acceptance:
   P1-5 pass-7 proof and the deterministic photographic verifier/reader work in
   P2-3–P2-7 remain open. Deployment remains deferred pending local approval.
