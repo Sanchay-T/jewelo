@@ -64,12 +64,6 @@ secretEnvs.push({
   type: "GENERAL",
   value: "${APP_URL}",
 });
-secretEnvs.push({
-  key: "JEWELO_CLOUD_BUILD",
-  scope: "BUILD_TIME",
-  type: "GENERAL",
-  value: "1",
-});
 
 const target = contract.environments[environment];
 const service = {

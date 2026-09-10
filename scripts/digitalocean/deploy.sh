@@ -184,11 +184,13 @@ doctl apps get "$app_id" --output json |
       );
       const merged = new Map((web.envs ?? []).map((env) => [env.key, env]));
       for (const env of desired) merged.set(env.key, { ...merged.get(env.key), ...env });
-      // `PROVIDER_MODE` was the old human activation toggle. It is no longer
-      // part of the cloud contract: production derives real-provider mode from
-      // NODE_ENV, so remove a stale copy from an existing app spec instead of
-      // allowing it to shadow the runtime invariant.
-      merged.delete("PROVIDER_MODE");
+      // These were old human activation/build toggles. They are no longer part
+      // of the cloud contract: production derives real-provider mode from
+      // NODE_ENV and the buildpack already knows how to build this app. Remove
+      // stale copies from existing app specs instead of allowing legacy flags
+      // to shadow the runtime invariant or imply a second cloud mode.
+      for (const key of ["PROVIDER_MODE", "JEWELO_CLOUD_BUILD", "JEWELO_CLOUD_TARGET"])
+        merged.delete(key);
       web.envs = [...merged.values()];
       process.stderr.write(`env sync: ${desired.map((env) => env.key).join(", ")}\n`);
     }

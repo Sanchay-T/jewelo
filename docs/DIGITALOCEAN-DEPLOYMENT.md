@@ -310,9 +310,9 @@ bash scripts/digitalocean/smoke.sh https://jewelo-staging-gqumd.ondigitalocean.a
 ```
 
 The Node buildpack does not always expose the same version behavior as a local
-shell. Bootstrap injects `JEWELO_CLOUD_BUILD=1` at build time, and foundation
-verification uses that compatibility marker to require Node 24 without
-misclassifying unrelated local negative-proof checks.
+shell. The buildpack receives the normal build command from the app contract,
+and foundation verification uses the repository's Node 24 pin without a
+second cloud-only activation flag.
 
 A deploy is an external mutation.
 Run it only when the current task authorizes a staging update, record the
@@ -442,7 +442,7 @@ credential incident.
 | Symptom | Cause seen in this setup | Resolution |
 | --- | --- | --- |
 | Spec validation rejects staging sleep | Inactivity sleep is not enabled for this account | Keep one fixed `apps-s-1vcpu-1gb` instance; do not claim scale-to-zero |
-| Cloud build reports the wrong Node version | Buildpack version behavior differed from local verification | Preserve the Node 24 pins and `JEWELO_CLOUD_BUILD=1` compatibility marker; inspect deployment build logs |
+| Cloud build reports the wrong Node version | Buildpack version behavior differed from local verification | Preserve the Node 24 pins and inspect deployment build logs; no cloud-only activation marker is required |
 | Bootstrap exits after creating/updating an app | The deployment did not become ACTIVE | Inspect the latest App Platform build/deploy logs; do not keep retrying blindly or report a URL as healthy |
 | Push does not deploy staging | Expected: no workflow and no `deploy_on_push` exist, so a push never deploys | Run `deploy.sh` from `home-mini` when a staging update is authorized |
 | Staging serves an old commit | The last `deploy.sh` predates the pushed commit | Redeploy the branch; `--update-sources` re-resolves the ref to its current head |

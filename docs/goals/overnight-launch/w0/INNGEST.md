@@ -176,7 +176,7 @@ web      NEXT_PUBLIC_JEWELO_DATA_MODE  NEXT_PUBLIC_SUPABASE_URL
          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY  SUPABASE_URL
          SUPABASE_SERVICE_ROLE_KEY  OPENAI_API_KEY  OPERATOR_EMAIL
          OPERATOR_PASSPHRASE  OPERATOR_SESSION_SECRET  NEXT_PUBLIC_APP_URL
-         JEWELO_CLOUD_BUILD  INNGEST_EVENT_KEY  INNGEST_SIGNING_KEY
+         INNGEST_EVENT_KEY  INNGEST_SIGNING_KEY
          INNGEST_BASE_URL  INNGEST_CRON_ENABLED
 inngest  INNGEST_EVENT_KEY  INNGEST_SIGNING_KEY  INNGEST_POSTGRES_URI
          INNGEST_SDK_URL  INNGEST_PORT  INNGEST_HOST
@@ -362,8 +362,9 @@ The 200 was not reproducible afterwards; step 38 returned 201 `accepted` on both
 The old `PROVIDER_MODE` app-spec toggle was removed in Session 5. Production
 provider selection now derives from `NODE_ENV=production`, and startup fails if
 the real credentials cannot be parsed. `deploy.sh` removes a stale
-`PROVIDER_MODE` key while merging the current contract, so the app spec cannot
-silently retain the former mock activation switch. Local development/test
+`PROVIDER_MODE`, `JEWELO_CLOUD_BUILD`, or `JEWELO_CLOUD_TARGET` key while
+merging the current contract, so the app spec cannot silently retain a former
+mock or cloud-build activation switch. Local development/test
 processes may still use the config schema's `PROVIDER_MODE` convenience.
 
 Env key **names** on the `web` component after the update:
@@ -371,7 +372,7 @@ Env key **names** on the `web` component after the update:
 ```text
 NEXT_PUBLIC_JEWELO_DATA_MODE  NEXT_PUBLIC_SUPABASE_URL  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
 SUPABASE_URL  SUPABASE_SERVICE_ROLE_KEY  OPENAI_API_KEY  OPERATOR_EMAIL  OPERATOR_PASSPHRASE
-OPERATOR_SESSION_SECRET  NEXT_PUBLIC_APP_URL  JEWELO_CLOUD_BUILD  INNGEST_EVENT_KEY
+OPERATOR_SESSION_SECRET  NEXT_PUBLIC_APP_URL  INNGEST_EVENT_KEY
 INNGEST_SIGNING_KEY  INNGEST_BASE_URL  INNGEST_CRON_ENABLED
 ```
 
