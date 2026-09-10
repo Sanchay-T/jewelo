@@ -40,7 +40,7 @@ After that the order is: deploy the four pushed commits, finish fix pass 7 and r
 | --- | --- |
 | Live URL | https://jewelo-staging-gqumd.ondigitalocean.app/en/design/new |
 | Deployed commit | `f63b3e3` (DigitalOcean deployment `e04b835e`, ACTIVE 8 Sep 23:16 UTC). Later product commits remain pushed and not yet deployed; `8852445` is local development plumbing only. |
-| Branch head | `codex/overnight-launch-2026-09-08` at `8852445`; `JEWELO_DEV_DIST_DIR=.next-build-verify corepack pnpm build` passed 13 of 13 |
+| Branch head | `codex/overnight-launch-2026-09-08` at `a5b955c`; the code tip `8852445` passed `JEWELO_DEV_DIST_DIR=.next-build-verify corepack pnpm build` 13 of 13 |
 | Side branch | `codex/fix-pass-7-wip` (`93c22af`): P1-5 fix pass 7, half written, unproven, do not deploy |
 | Provider mode | mock. Runs complete with fake stills the UI refuses to show; the shopper is told the shop will send the photograph. |
 | Phase | 0 closed; 40 of 56 task rows done, 36 of 56 storyline steps proved (65%). Next task ids: `P1-5` (fix pass 7 then adversarial pass 7), then `P2-3`. |
