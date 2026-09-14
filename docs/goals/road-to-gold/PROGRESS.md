@@ -330,3 +330,14 @@ Open:
 - This is representative bilingual transfer evidence, not final acceptance:
   P1-5 pass-7 proof and the deterministic photographic verifier/reader work in
   P2-3–P2-7 remain open. Deployment remains deferred pending local approval.
+
+### Session 11 environment template convention (2026-09-14)
+
+- The pasted older environment/branch/DigitalOcean plan was superseded by the
+  current monorepo and deployment contract. Updated the repository-root
+  `.env.example` for the current deploy-target, readiness probe, notification,
+  trusted client IP, still-concurrency, and Sentry settings. It now names all
+  35/35 keys in the DigitalOcean web and local-only environment contract.
+- Full `corepack pnpm build` passed 13/13. Two consecutive final review passes
+  were clean. No staging deployment or paid provider call was
+  made because this change does not alter the running app.
