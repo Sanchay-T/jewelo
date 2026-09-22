@@ -27,3 +27,8 @@ supabase/.temp/
 style-anchors-v1/
 scripts/style-anchors/*.png
 scripts/style-anchors/manifest.json
+
+# Private client material and local scratch; never commit (public repo)
+context/
+.tmp/
+/test-content-img-1.png
