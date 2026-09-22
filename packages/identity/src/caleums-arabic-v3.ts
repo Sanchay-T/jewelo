@@ -573,7 +573,7 @@ export interface IdentityArtifact {
   construction: IdentityConstructionMeasurement;
 }
 
-interface PinnedFace {
+export interface PinnedFace {
   readonly fontFile: IdentityFontFile;
   /** Sha of the bytes this style pins; shaping must load exactly these. */
   readonly fontSha256: string;
@@ -764,6 +764,42 @@ export const CONSTRUCTION_LETTERING: Readonly<
 export const IDENTITY_LETTERING_MAX_TRACKING = 120;
 export const IDENTITY_LETTERING_TRACKING_STEP = 30;
 
+/**
+ * The text the stencil actually cuts, and the one place that decides it.
+ *
+ * Capitals are a drawing transform, never an edit of the approved name, so the
+ * transform may not change what the name is made of. `toLocaleUpperCase` is not
+ * length-preserving: "Weiß" becomes "WEISS" and the ligature "ﬁ" becomes "FI",
+ * which is a different piece of metal from the one the shopper approved - an
+ * extra letterform to cut, to bridge and to read back. When the uppercase form
+ * has a different code-point count, the approved text is drawn as typed in the
+ * same face instead. Everything that names the drawn text - the stencil, the
+ * report, the anchor reuse check and the prompt's Name line - reads this
+ * function, so none of them can disagree.
+ */
+export function identityDrawnText(
+  approvedText: string,
+  lettering?: Pick<IdentityLettering, "uppercase">,
+): string {
+  if (!lettering?.uppercase) return approvedText;
+  const upper = approvedText.toLocaleUpperCase("en");
+  return [...upper].length === [...approvedText].length ? upper : approvedText;
+}
+
+/**
+ * The face the stencil is drawn in: the construction's pinned lettering when it
+ * overrides one, otherwise the style's face for that script. `solveIdentity`
+ * and the anchor reuse check read the same function, so a reused stencil is
+ * compared against the face this name would be cut in today.
+ */
+export function identityPinnedFace(
+  style: CaleumsArabicStyle,
+  language: IdentityScript,
+  lettering?: IdentityLettering,
+): PinnedFace {
+  return lettering ?? LIVE_STYLES[style][language];
+}
+
 export function classifyArabicIdentityInput(
   input: IdentitySolverInput,
 ):
@@ -784,7 +820,6 @@ export async function solveIdentity(
   if (!support.supported) throw new IdentitySolverError(support.code);
   const approvedText = input.approvedNames[0]?.normalize("NFC").trim();
   if (!approvedText) throw new IdentitySolverError("approved_text_missing");
-  const style = LIVE_STYLES[support.style];
   // P2-2b/D-023: the construction is read before anything is drawn, because it
   // decides the lettering as well as the structure.
   const constructionId = (input.construction ?? "")
@@ -792,14 +827,17 @@ export async function solveIdentity(
     .trim()
     .toLowerCase();
   const lettering = CONSTRUCTION_LETTERING[constructionId]?.[input.language];
-  const face: PinnedFace = lettering ?? style[input.language];
+  const face: PinnedFace = identityPinnedFace(
+    support.style,
+    input.language,
+    lettering,
+  );
   // Capitals are a drawing transform, never an edit of the approved name: the
   // shopper's text is what was approved and what the name reader compares
   // against, and `drawnText` is what the metal spells. They differ only in
-  // case, so a later comparison is case-insensitive.
-  const drawnText = lettering?.uppercase
-    ? approvedText.toLocaleUpperCase("en")
-    : approvedText;
+  // case - `identityDrawnText` refuses any uppercase form that would differ in
+  // more than that - so a later comparison is case-insensitive.
+  const drawnText = identityDrawnText(approvedText, lettering);
   // The tracking the letters were actually drawn at. It starts at the table's
   // value and is tightened, in steps and only while the raster is more than one
   // island, up to `IDENTITY_LETTERING_MAX_TRACKING`: at the table's 60 units a

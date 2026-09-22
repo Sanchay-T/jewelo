@@ -5,6 +5,7 @@ import {
   OpenAINameReader,
   OpenAIStillAdapter,
   PRESENTATION_ASPECT_RATIO,
+  STILL_COMPILER_VERSION,
   buildPromptVariableSnapshot,
   compileStillPrompt,
   identityTextMatches,
@@ -449,6 +450,18 @@ export async function executePresentationTask(
   )
     return blockPreSpendTerminally(
       new Error("prompt_snapshot_lineage_mismatch"),
+    );
+  // A snapshot compiled by an older compiler is sent verbatim - that is the
+  // point of a snapshot - but the images beside it are rebuilt on every
+  // attempt. v2 added the `look` reference, so a v1 snapshot's IMAGE ROLES
+  // block numbers the inputs one way while the request carries another, and
+  // the model is told the style photograph is the stencil. `materialize` is
+  // `on conflict do nothing`, so this task can never get a fresh snapshot;
+  // refusing is the only correct answer, and it is the same answer on every
+  // redispatch, so it is a pre-spend refusal like the others.
+  if (snapshot.compiler_version !== STILL_COMPILER_VERSION)
+    return blockPreSpendTerminally(
+      new Error("prompt_snapshot_compiler_stale"),
     );
   let identity: Awaited<
     ReturnType<PresentationRepository["signedIdentityUrl"]>

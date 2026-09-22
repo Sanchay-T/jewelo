@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 // The one place that says which constructions draw Latin in capitals and in
 // which face; `solveIdentity` reads the same table to decide what it cuts.
-import { CONSTRUCTION_LETTERING } from "@jewelo/identity";
+import { CONSTRUCTION_LETTERING, identityDrawnText } from "@jewelo/identity";
 import {
   STILL_SIZE_BY_RATIO,
   stillImageOptions,
@@ -48,7 +48,7 @@ export const MAX_PROMPT_VALUE_LENGTH = 512;
 export const MAX_CONSTRUCTION_VALUE_LENGTH = 2_400;
 
 export const PROMPT_VARIABLES = {
-  approved_name: "Exact approved pendant name",
+  approved_name: "Approved pendant name, in the casing the stencil draws it",
   language: "Approved language/script",
   arabic_style: "Approved Arabic lettering style",
   layout: "Pendant name layout",
@@ -249,6 +249,50 @@ export const PENDANT_STONES_PROSE: Readonly<Record<string, string>> = {
     "at the centre of the bottom rail. No other stones.",
 };
 
+/**
+ * The same seating, said one seat at a time, for a piece that carries two or
+ * three different stones.
+ *
+ * Runway, 22 September: `framed-minimal` with ruby, emerald and blue sapphire
+ * compiled to "one small round ruby, emerald and blue sapphire ... at each of
+ * the frame's four corners", which names three stones for one seat and leaves
+ * the fourth corner unsaid; the photograph duplicated the ruby wherever it
+ * liked. The head sentence is the measured one with the stone left unnamed, and
+ * every seat is then named in order, the chosen stones cycling through them, so
+ * a four-corner piece with three stones has one stone per corner and no seat
+ * the model has to invent. A piece with one stone or none keeps the measured
+ * sentence exactly as the lab shot it.
+ */
+const PENDANT_STONES_PROSE_MULTI: Readonly<
+  Record<
+    string,
+    { readonly head: string; readonly seats: readonly string[]; readonly tail?: string }
+  >
+> = {
+  classical: {
+    head: "Stones: one small round stone set flush into the flat face of a letter, at each of two places",
+    seats: ["the first letter", "the last letter"],
+    tail: "The rings stay open.",
+  },
+  "origami-ribbon": {
+    head: "Stones: one small round stone set flush into the flat face of a letter where two strokes meet, at each of three places",
+    seats: ["the first letter", "a middle letter", "the last letter"],
+    tail: "The outline does not change.",
+  },
+  "framed-minimal": {
+    head: "Stones: one small round stone in a small square raised gold bezel at each of the frame's four corners",
+    seats: ["top left", "top right", "bottom right", "bottom left"],
+  },
+  "diamond-rails": {
+    head: "Stones: one small round stone in a raised round gold bezel, at each of three places",
+    seats: [
+      "the left end of the top rail",
+      "the right end of the top rail",
+      "the centre of the bottom rail",
+    ],
+  },
+};
+
 /** Singular and plural of a stone, as a jeweller would say it in a sentence. */
 const GEMSTONE_STONE_NAME: Readonly<Record<string, readonly [string, string]>> = {
   "lab-diamond": ["lab-diamond", "lab-diamonds"],
@@ -398,8 +442,17 @@ export function buildPromptVariableSnapshot(input: {
   const dimensions = asObject(specification.dimensions);
   const chain = asObject(specification.chain);
   const connector = scalar(specification.connector);
+  // Every template names the piece by the text the stencil cuts, never by the
+  // shopper's casing: the older scene families interpolate `{{approved_name}}`
+  // into their IDENTITY block, and under a construction that draws capitals
+  // that line told the model "Asma" while the stencil beside it said "ASMA".
+  // `identityDrawnText` is the same function `solveIdentity` draws with, so the
+  // prompt cannot name a piece the stencil does not cut. The approved text
+  // itself is unchanged where it is the truth: the anchor is still shaped from
+  // it and the name reader still compares against it.
+  const drawnName = drawnNameFor(input.approvedName, input.language, specification);
   const pieceSpec = [
-    `name=${scalar(input.approvedName)}`,
+    `name=${drawnName}`,
     `language=${scalar(input.language)}`,
     `arabic_style=${prose(ARABIC_STYLE_PROSE, specification.arabicStyle)}`,
     `layout=${prose(LAYOUT_PROSE, specification.layout)}`,
@@ -417,7 +470,7 @@ export function buildPromptVariableSnapshot(input: {
     `chain=${prose(CHAIN_PROSE, chain.style)}; length=${scalar(chain.lengthCm)} cm`,
   ].join("; ");
   return {
-    approved_name: scalar(input.approvedName),
+    approved_name: drawnName,
     language: scalar(input.language),
     arabic_style: letteringStyle(specification),
     layout: scalar(specification.layout),
@@ -446,16 +499,31 @@ export function buildPromptVariableSnapshot(input: {
       PENDANT_CONSTRUCTION_FALLBACK,
     // How the name is read, which is a property of the script and of the face
     // the stencil draws it in, so it cannot be a slot in one template.
-    name_spelling: nameSpelling(
-      scalar(input.approvedName),
-      scalar(input.language),
-      specification,
-    ),
+    name_spelling: nameSpelling(drawnName, scalar(input.language), specification),
     stones_rule: stonesRule(specification),
     look_rule:
       PENDANT_LOOK_PROSE[scalar(specification.construction)] ??
       PENDANT_LOOK_PROSE.classical!,
   };
+}
+
+/**
+ * The text the stencil cuts for this piece, from the one helper in
+ * `@jewelo/identity` that decides it. Every place a template names the piece -
+ * the minimal sheet's Name line, the scene families' IDENTITY block, the
+ * verification brief, `piece_spec` - reads this one value, so no two of them
+ * can name the piece differently and none of them can disagree with the metal.
+ */
+function drawnNameFor(
+  approvedName: unknown,
+  language: unknown,
+  specification: Readonly<Record<string, unknown>>,
+): string {
+  const script = scalar(language) === "ar" ? "ar" : "en";
+  return identityDrawnText(
+    scalar(approvedName),
+    CONSTRUCTION_LETTERING[scalar(specification.construction)]?.[script],
+  );
 }
 
 /**
@@ -475,7 +543,7 @@ export function buildPromptVariableSnapshot(input: {
  * rather than mislabelled.
  */
 function nameSpelling(
-  approvedName: string,
+  drawn: string,
   language: string,
   specification: Readonly<Record<string, unknown>>,
 ): string {
@@ -484,11 +552,8 @@ function nameSpelling(
     const kufi =
       /kufi/i.test(lettering?.ar?.fontFile ?? "") ||
       letteringStyle(specification) === "kufi";
-    return `"${approvedName}" in connected Arabic${kufi ? " Kufi" : ""} letters, right to left, spelled exactly as @stencil, every dot and mark in place.`;
+    return `"${drawn}" in connected Arabic${kufi ? " Kufi" : ""} letters, right to left, spelled exactly as @stencil, every dot and mark in place.`;
   }
-  const drawn = lettering?.en?.uppercase
-    ? approvedName.toLocaleUpperCase("en")
-    : approvedName;
   const capitals =
     /\p{Lu}/u.test(drawn) && drawn === drawn.toLocaleUpperCase("en");
   return capitals
@@ -508,9 +573,18 @@ function stonesRule(specification: Readonly<Record<string, unknown>>): string {
   const names = gemstones.map(
     (gem) => GEMSTONE_STONE_NAME[gem] ?? [gem, `${gem}s`],
   );
+  const construction = scalar(specification.construction);
+  if (names.length > 1) {
+    const { head, seats, tail } =
+      PENDANT_STONES_PROSE_MULTI[construction] ??
+      PENDANT_STONES_PROSE_MULTI.classical!;
+    const placed = seats.map(
+      (seat, index) => `${names[index % names.length]![0]} at ${seat}`,
+    );
+    return `${head}: ${placed.join(", ")}.${tail ? ` ${tail}` : ""} No other stones.`;
+  }
   const sentence =
-    PENDANT_STONES_PROSE[scalar(specification.construction)] ??
-    PENDANT_STONES_PROSE.classical!;
+    PENDANT_STONES_PROSE[construction] ?? PENDANT_STONES_PROSE.classical!;
   return sentence
     .replaceAll("{gems}", joinStones(names.map(([, plural]) => plural!)))
     .replaceAll("{gem}", joinStones(names.map(([singular]) => singular!)));

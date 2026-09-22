@@ -486,6 +486,28 @@ const stillImageFields = {
   ),
 } as const;
 
+/**
+ * The least a still can cost at a given quality and canvas, in cents, from the
+ * prices in the comment above.
+ *
+ * `OPENAI_STILL_ESTIMATED_COST_CENTS` is what the worker reserves against the
+ * run's budget before it calls the provider, so an estimate below the real
+ * price lets a run spend more than the ceiling it was given - the 20-cent
+ * default against `max` at 2K is half the true 43. Only the qualities with a
+ * published number are floored; the rest keep the schema's own minimum,
+ * because a guessed floor would refuse a deployment that is priced correctly.
+ */
+const STILL_COST_FLOOR_CENTS: Readonly<
+  Partial<
+    Record<
+      (typeof STILL_IMAGE_QUALITIES)[number],
+      Readonly<Record<"standard" | "2k", number>>
+    >
+  >
+> = {
+  max: { standard: 21, "2k": 43 },
+};
+
 export const stillImageOptionsSchema = z
   .object(stillImageFields)
   .transform((value) => ({
@@ -621,6 +643,19 @@ export const jobsEnvSchema = trustedWebEnvSchema
   })
   .superRefine((value, context) => {
     assertNotificationConfigured(value, context);
+    // The estimate is the reservation, so it may not sit below what the chosen
+    // quality and canvas actually cost; a deployment that raises the quality
+    // and forgets the estimate fails at boot instead of overspending its cap.
+    const floor =
+      STILL_COST_FLOOR_CENTS[value.OPENAI_IMAGE_QUALITY]?.[
+        value.OPENAI_IMAGE_SIZE_PROFILE
+      ];
+    if (floor !== undefined && value.OPENAI_STILL_ESTIMATED_COST_CENTS < floor)
+      context.addIssue({
+        code: "custom",
+        path: ["OPENAI_STILL_ESTIMATED_COST_CENTS"],
+        message: `OPENAI_STILL_ESTIMATED_COST_CENTS must be at least ${floor} for OPENAI_IMAGE_QUALITY=${value.OPENAI_IMAGE_QUALITY} at OPENAI_IMAGE_SIZE_PROFILE=${value.OPENAI_IMAGE_SIZE_PROFILE}`,
+      });
     if (
       value.IDENTITY_RINGLESS_CONSTRUCTIONS.size > 0 &&
       !value.IDENTITY_RINGLESS_PROMPTS_READY

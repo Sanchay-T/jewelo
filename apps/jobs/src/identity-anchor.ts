@@ -6,7 +6,9 @@ import {
   IDENTITY_CANVAS,
   IDENTITY_LETTERING_MAX_TRACKING,
   classifyArabicIdentityInput,
+  identityDrawnText,
   identityFontUrl,
+  identityPinnedFace,
   identityStencilSvg,
   INK_LUMINANCE_THRESHOLD,
   shapeText,
@@ -112,17 +114,26 @@ export async function validateStoredIdentityAnchor(
   // off the report, so a stencil drawn in the wrong weight, tracking or case
   // cannot be reused for a name that is now drawn in another.
   const lettering = CONSTRUCTION_LETTERING[construction]?.[anchor.language];
-  const drawnText = lettering?.uppercase
-    ? approvedText?.toLocaleUpperCase("en")
-    : approvedText;
+  const drawnText = identityDrawnText(approvedText ?? "", lettering);
   if (
     report?.drawnText !== drawnText ||
     report.claimed?.letteringWeight !== (lettering?.weight ?? 0) ||
     report.claimed.letteringTrackingUnits < (lettering?.trackingUnits ?? 0) ||
+    // The adaptive tightening stops at the row's own ceiling when it has one
+    // (`diamond-rails` caps at a lower value than the global maximum), so a
+    // stencil tightened past it was drawn under a rule this construction no
+    // longer has and cannot be reused.
     report.claimed.letteringTrackingUnits >
-      (lettering ? IDENTITY_LETTERING_MAX_TRACKING : 0) ||
+      (lettering
+        ? (lettering.trackingMax ?? IDENTITY_LETTERING_MAX_TRACKING)
+        : 0) ||
     report.claimed.letteringUppercase !== (lettering?.uppercase ?? false) ||
-    report.fontFile !== (lettering?.fontFile ?? report.fontFile)
+    // The face the construction pins, not the face the report claims: comparing
+    // `report.fontFile` against `report.fontFile` passed anything at all for a
+    // construction with no lettering override (classical), so a stencil cut in
+    // the other style's face could be reused for this one.
+    report.fontFile !==
+      identityPinnedFace(support.style, anchor.language, lettering).fontFile
   ) throw new Error("identity_reuse_lettering_mismatch");
   const fontSha = createHash("sha256").update(fontBytes(report.fontFile)).digest("hex");
   if (

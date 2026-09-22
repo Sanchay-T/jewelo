@@ -348,7 +348,12 @@ export async function shapeText(input: ShapeTextInput): Promise<ShapedText> {
     // The tracking is taken off the advance, never off the outline: the letter
     // keeps the shape the font drew and only the pen moves less, so tightening
     // makes neighbours touch without distorting a single glyph.
-    xAdvance: (glyph.xAdvance ?? 0) - tracking,
+    //
+    // A zero-advance glyph is a mark sitting on its base, not a letter that
+    // moved the pen. Subtracting tracking from it would push it left of the
+    // letter it belongs to - an Arabic nuqta or a combining accent drifting off
+    // its own stroke - so only glyphs that actually advance are tightened.
+    xAdvance: glyph.xAdvance ? glyph.xAdvance - tracking : (glyph.xAdvance ?? 0),
     yAdvance: glyph.yAdvance ?? 0,
     xOffset: glyph.xOffset ?? 0,
     yOffset: glyph.yOffset ?? 0,

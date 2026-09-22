@@ -273,9 +273,19 @@ async function main() {
   if (!verifyOnly && verified !== results.length) process.exitCode = 1;
 }
 
+// A raw error object prints whatever the thrower attached - a fetch failure
+// carries the request URL, and the URLs this script handles are signed storage
+// links whose query string is a bearer token. Only the class and the message
+// are printed, with the query string of any URL in them removed, so a failure
+// can never leave a usable link in a terminal or a log.
 main().catch((error) => {
+  const message =
+    error instanceof Error
+      ? `${error.name}: ${error.message}`
+      : String(error);
   console.error(
-    error instanceof PublishError ? `refused: ${error.message}` : error,
+    (error instanceof PublishError ? `refused: ${error.message}` : message)
+      .replaceAll(/(https?:\/\/\S+?)\?\S*/gu, "$1?[redacted]"),
   );
   process.exitCode = 1;
 });

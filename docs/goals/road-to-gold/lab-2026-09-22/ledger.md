@@ -97,3 +97,7 @@ The exact promptText of each final passing generation is in `final/<style>-<vari
 Contact sheets of the final generations are in `sheets/<style>-final.png` (generated images only).
 
 | lead-1 | classical | plain | Asma (Playfair classic, as typed) | pass-7 engine, classic lettering | production-compiled minimal prompt (name line without capitals) | look-framed-33 | PASS: calm polished nameplate, spelling exact, both rings threaded; right ring tab sits on the a like an accent (stencil) | task 41e6b8d9 |
+
+## v5 engine proof (23 Sep, sunburst, production-compiled prompts)
+
+10/10 generated (180 credits). Pass: rails MUHAMMAD/ASMA/NOOR/أسماء, framed MUHAMMAD/أسماء, origami MUHAMMAD, rails 3 stones (one of each). Minor: classical Asma right ring tab still reads like an accent (engine seat, lab decision). Fail: framed 3 stones doubled the ruby - corner wording sent to fix. Sheet: sheets/v5-engine-proof.png.
