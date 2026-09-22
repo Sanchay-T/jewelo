@@ -7,6 +7,8 @@ export interface StudioGenerationInput {
   /** Verified sibling still whose pendant the new scene must reproduce. */
   referenceImageUrl?: string;
   identityImageUrl: string;
+  /** Texture-only crop for the chosen construction; no letters, no layout. */
+  lookReferenceUrl?: string;
   styleAnchorUrl?: string;
   inspirationImageUrl?: string;
   identityFingerprint: string;
@@ -318,6 +320,11 @@ function normalizeComparisonText(value: string): string {
  * character the identity engine has no glyph for, `\p{Lm}` included, before a
  * run can exist. The strictness lives there; if that gate is ever relaxed, this
  * comparison stops being safe and has to be tightened with it.
+ *
+ * Case is already folded, on both sides, by `normalizeIdentityText`: a
+ * construction whose stencil draws capitals - "SARA" cut in caps and read back
+ * as "Sara" - passes here without a per-construction rule, and dropping the
+ * fold would burn three paid stills on a pendant that is correct.
  */
 export function identityTextMatches(
   readText: string,

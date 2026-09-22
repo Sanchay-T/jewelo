@@ -160,6 +160,9 @@ importers:
       '@jewelo/contracts':
         specifier: workspace:*
         version: link:../contracts
+      '@jewelo/identity':
+        specifier: workspace:*
+        version: link:../identity
 
   packages/config:
     dependencies:

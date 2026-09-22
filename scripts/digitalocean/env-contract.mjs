@@ -65,6 +65,16 @@ export const optionalRuntimeConfig = [
   // Preserve explicit model snapshots and the worker's policy ceilings across
   // deploys. Omission retains the validated defaults in @jewelo/config.
   "OPENAI_IMAGE_MODEL",
+  // Quality label and canvas table for a still. Both default in @jewelo/config
+  // (high, the shipped sizes); a Sunburst deployment sets quality to max,
+  // because Sunburst's "high" is about gpt-image-2's "medium".
+  "OPENAI_IMAGE_QUALITY",
+  "OPENAI_IMAGE_SIZE_PROFILE",
+  // Which constructions have an approved look reference published, as
+  // "<construction>:<sha256>" pairs. Empty until the lab picks its crops; a
+  // construction that needs a look and is not named here is refused before
+  // spend rather than generated flat.
+  "LOOK_REFERENCES",
   "OPENAI_VERIFIER_MODEL",
   "REAL_MODE_MAX_RESERVED_SPEND_CENTS",
   "REAL_MODE_MAX_ATTEMPT_BUDGET",
@@ -193,6 +203,27 @@ export function validateWebEnv(values) {
   const imageModel = values.get("OPENAI_IMAGE_MODEL");
   if (imageModel && !["gpt-image-2-2026-04-21", "gpt-image-2.5-sunburst-2026-09-08"].includes(imageModel)) {
     errors.push("OPENAI_IMAGE_MODEL must select an approved exact model snapshot");
+  }
+  const quality = values.get("OPENAI_IMAGE_QUALITY");
+  if (quality && !["low", "medium", "high", "xhigh", "max", "auto"].includes(quality)) {
+    errors.push("OPENAI_IMAGE_QUALITY must be one of low, medium, high, xhigh, max, auto");
+  }
+  const sizeProfile = values.get("OPENAI_IMAGE_SIZE_PROFILE");
+  if (sizeProfile && !["standard", "2k"].includes(sizeProfile)) {
+    errors.push("OPENAI_IMAGE_SIZE_PROFILE must be standard or 2k");
+  }
+  // Same rule as `LOOK_REFERENCES` in packages/config. Checksums only, no path
+  // and no byte of a private asset is ever printed.
+  const lookReferences = values.get("LOOK_REFERENCES");
+  if (
+    lookReferences &&
+    lookReferences
+      .split(",")
+      .map((entry) => entry.trim())
+      .filter(Boolean)
+      .some((entry) => !/^[a-z0-9]+(?:-[a-z0-9]+)*:[0-9a-f]{64}$/u.test(entry))
+  ) {
+    errors.push('LOOK_REFERENCES entries must be "<construction-id>:<sha256>", comma separated');
   }
   const verifierModel = values.get("OPENAI_VERIFIER_MODEL");
   if (verifierModel && !verifierModel.trim()) {

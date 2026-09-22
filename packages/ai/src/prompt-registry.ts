@@ -1,4 +1,13 @@
 import { createHash } from "node:crypto";
+// The one place that says which constructions draw Latin in capitals and in
+// which face; `solveIdentity` reads the same table to decide what it cuts.
+import { CONSTRUCTION_LETTERING } from "@jewelo/identity";
+import {
+  STILL_SIZE_BY_RATIO,
+  stillImageOptions,
+  type StillAspectRatio,
+  type StillImageOptions,
+} from "@jewelo/config";
 
 export const PROMPT_PROFILES = [
   "image.studio",
@@ -15,7 +24,11 @@ export const PROMPT_PROFILES = [
 export type PromptProfile = (typeof PROMPT_PROFILES)[number];
 
 export const PROMPT_COMPILER_VERSION = "caleums-prompt-compiler-v2";
-export const STILL_COMPILER_VERSION = "caleums-still-compiler-v1";
+// v2 (22 Sep 2026): the optional `look` reference role, and `@tag` rendered as
+// "Image N (role)" in the compiled text, because OpenAI receives ordered files
+// and never sees a tag. Stored snapshots are never recompiled, so every
+// historical prompt stays exactly the bytes that were paid for.
+export const STILL_COMPILER_VERSION = "caleums-still-compiler-v2";
 export const MAX_PROMPT_TEMPLATE_LENGTH = 12_000;
 export const MAX_COMPILED_PROMPT_LENGTH = 16_000;
 /**
@@ -53,6 +66,13 @@ export const PROMPT_VARIABLES = {
   piece_spec: "Complete immutable pendant specification",
   drape: "Approved worn-view chain drape",
   construction: "Approved pendant construction, as the brief the stencil draws",
+  // The minimal style-first family (lab, 22 September 2026). Each is composed
+  // in `buildPromptVariableSnapshot` from the approved revision, because the
+  // sentence differs by script or by construction and a template cannot branch.
+  name_spelling: "How the approved name is spelled and read, by script",
+  stones_rule: "Where this construction seats its stones, or that it has none",
+  look_rule:
+    "The finish the look reference shows; used by the compiler's Image 2 line",
 } as const;
 export type PromptVariable = keyof typeof PROMPT_VARIABLES;
 export type PromptVariableSnapshot = Record<PromptVariable, string>;
@@ -64,7 +84,21 @@ const OPTIONAL_VARIABLES: readonly PromptVariable[] = Object.freeze([
   "piece_spec",
   "drape",
   "construction",
+  "name_spelling",
+  "stones_rule",
+  "look_rule",
 ]);
+
+/**
+ * The minimal style-first sheet, measured on gpt-image-2.5-sunburst on
+ * 22 September 2026 (`docs/goals/road-to-gold/lab-2026-09-22/`). It names the
+ * name, the construction and the stones as three composed sentences instead of
+ * the fifteen immutable fields, and it passed for all four constructions at
+ * about 40% of the old prompt's length. A release that carries
+ * `name_spelling` is one of these and is validated against this set.
+ */
+const MINIMAL_STILL_REQUIRED_VARIABLES: readonly PromptVariable[] =
+  Object.freeze(["name_spelling", "construction", "stones_rule"]);
 const PRODUCT_VARIABLES = Object.freeze(
   (Object.keys(PROMPT_VARIABLES) as PromptVariable[]).filter(
     (variable) => !OPTIONAL_VARIABLES.includes(variable),
@@ -141,58 +175,88 @@ const STILL_VIEW_BRIEFS: Readonly<Record<string, string>> = {
 };
 
 /**
- * The `construction` slot: the lab's `LOOKS[*].brief`, rewritten only where the
- * lab told the model that the stencil was lettering alone.
+ * The `construction` slot: the lab's measured STYLE paragraph per construction,
+ * verbatim from `docs/goals/road-to-gold/lab-2026-09-22/` (the minimal
+ * style-first family, 22 September 2026), with the one reference to the
+ * silhouette written as `@stencil` so the compiler numbers it.
  *
- * P2-2b makes `solveIdentity` draw the frame, the rails, their welds and the
- * two jump rings into the stencil itself, so for `framed-minimal` and
- * `diamond-rails` the brief now says the structure is already in Image 1 and
- * must be reproduced, never invented. `classical` and `origami-ribbon` are the
- * lettering alone in both the lab and production, and the ribbon's folded
- * facets stay what the lab called them: a finish, not a shape the stencil
- * claims.
+ * These are the whole description of the piece in the minimal family: the
+ * sheet names the style, the name, the chain, the material and the shot and
+ * nothing else, so anything not in the lab text does not belong here.
  *
  * The empty-string key is the fallback for a revision approved before
- * constructions existed (`JewelrySpecification.construction` is optional). It
- * asserts nothing the stencil does not already show, so it can never contradict
- * the geometry law.
+ * constructions existed (`JewelrySpecification.construction` is optional): the
+ * classical paragraph, which is the lettering alone and so asserts nothing the
+ * stencil does not already show.
  */
-export const PENDANT_CONSTRUCTION_FALLBACK =
-  "The pendant is exactly the piece drawn in @stencil and nothing more. No frame, no plate, no rail and no " +
-  "border is added, and no part of the outline is redrawn. Stroke weight is even, edges are softly rounded " +
-  "where a polishing wheel would reach, and the metal has a single consistent thickness.";
-
 export const PENDANT_CONSTRUCTION_PROSE: Readonly<Record<string, string>> = {
-  "": PENDANT_CONSTRUCTION_FALLBACK,
   classical:
-    "Classical. The letters themselves are the entire pendant. There is no frame, no plate, no rail and no " +
-    "border. The outline of the piece is exactly the outline in @stencil. Stroke weight is even, edges are " +
-    "softly rounded where a polishing wheel would reach, and the metal has a single consistent thickness.",
+    "Classical nameplate. The letters alone are the pendant: no frame, plate or rail. Each letter has one " +
+    "flat mirror-polished face and straight square side walls of even depth, with crisp edges. No bevels, " +
+    "facets, texture or engraving.",
   "origami-ribbon":
-    "Origami ribbon. The outline is exactly @stencil, but the gold is a flat strip that has been FOLDED into " +
-    "the shape of the name, the way a paper ribbon is folded. Every curve is replaced by a run of straight " +
-    "flat facets that meet at sharp visible crease lines, so each stroke shows two or three separate planes " +
-    "tilted at slightly different angles. Because the planes are tilted, each one returns a different amount " +
-    "of light: one facet is bright, the facet next to it is clearly darker, and the crease between them reads " +
-    "as a hard bright line. Where a stroke changes direction there is a crisp mitred crease, never a smooth " +
-    "rounded bend. A plain nameplate has one continuous polished surface; this piece is visibly built from " +
-    "angled planes. The ribbon keeps a constant width and never doubles back over itself. The folds are a " +
-    "finish on the metal, not a change of shape: the outline stays exactly as @stencil draws it.",
+    "Origami fold. Each letter stroke is a folded gold sheet: two or three large flat planes per stroke, " +
+    "meeting at straight crisp creases where strokes join or turn. The plane facing the light is bright; the " +
+    "plane beside it is a darker tone of the same gold. Faces are flat and mirror polished, side walls " +
+    "straight and square. No small facets, texture or engraving.",
   "framed-minimal":
-    "Framed minimal. The lettering sits inside one thin plain rectangular gold frame with softly rounded " +
-    "corners, cast as a single piece with the letters and joined to them where the strokes reach the frame. " +
-    "The frame is a simple even bar with no ornament, no engraving and no second border. @stencil already " +
-    "draws that frame, the welds where the word meets it and the two jump rings on its top bar: reproduce " +
-    "them exactly as drawn and add nothing to them. The word is continuous metal into the frame at more than " +
-    "one place, no letter, foot, tail or terminal ends in mid-air inside the frame, and the letters keep " +
-    "exactly the shapes and spacing of @stencil.",
+    "Framed minimal. The letters sit inside one slim rectangular gold frame, joined to it only where @stencil " +
+    "joins them. The frame is a slim square bar with a flat polished top and crisp right-angle corners. The " +
+    "letters have flat mirror-polished faces and straight square side walls and stand slightly above the " +
+    "frame. No bevels, facets, texture or engraving.",
   "diamond-rails":
-    "Diamond rails. The lettering is held between two straight parallel gold rails, one running along the top " +
-    "and one along the bottom, cast as a single piece with the letters that touch them. The rails are narrow, " +
-    "flat and perfectly straight, the same metal as the letters. @stencil already draws both rails, the welds " +
-    "where the word meets them and the two jump rings at the outer ends of the top rail: reproduce them " +
-    "exactly as drawn and add nothing to them. The letters between the rails keep exactly the shapes and " +
-    "spacing of @stencil.",
+    "Rails. The letters sit between two straight parallel gold rails, one above and one below, joined only " +
+    "where @stencil joins them; the rings are at the ends of the top rail. The rails are slim straight " +
+    "polished bars with a flat top and square ends. The letters have flat mirror-polished faces and straight " +
+    "square side walls. No bevels, facets, texture or engraving.",
+};
+
+export const PENDANT_CONSTRUCTION_FALLBACK = PENDANT_CONSTRUCTION_PROSE.classical!;
+
+/**
+ * The finish each construction's look crop shows, dropped into the compiler's
+ * Image 2 sentence. Lab text, verbatim.
+ */
+export const PENDANT_LOOK_PROSE: Readonly<Record<string, string>> = {
+  classical: "flat mirror-polished letter faces and crisp square side walls",
+  "origami-ribbon":
+    "large flat folded planes, crisp straight creases and mirror polish",
+  "framed-minimal":
+    "flat mirror-polished letter faces, crisp square side walls and a slim square frame bar",
+  "diamond-rails":
+    "slim crisp polished bars and flat mirror-polished letter faces",
+};
+
+/**
+ * Where each construction seats its stones. Lab text, verbatim, with the
+ * gemstone itself as `{gem}` / `{gems}` so the customer's approved stone is the
+ * one named. Used only when the approved coverage is not "none"; otherwise the
+ * sheet says "No stones."
+ */
+export const PENDANT_STONES_PROSE: Readonly<Record<string, string>> = {
+  classical:
+    "Stones: one small round {gem} set flush into the flat face of the first letter and one into the face of " +
+    "the last letter; the rings stay open. No other stones.",
+  "origami-ribbon":
+    "Stones: three small round {gems} set flush into the flat face of the letters where two strokes meet - " +
+    "one in the first letter, one in a middle letter, one in the last letter. The outline does not change. " +
+    "No other stones.",
+  "framed-minimal":
+    "Stones: one small round {gem} in a small square raised gold bezel at each of the frame's four corners. " +
+    "No other stones.",
+  "diamond-rails":
+    "Stones: three small round {gems} in raised round gold bezels - two on the top rail near its ends, one " +
+    "at the centre of the bottom rail. No other stones.",
+};
+
+/** Singular and plural of a stone, as a jeweller would say it in a sentence. */
+const GEMSTONE_STONE_NAME: Readonly<Record<string, readonly [string, string]>> = {
+  "lab-diamond": ["lab-diamond", "lab-diamonds"],
+  "natural-diamond": ["diamond", "diamonds"],
+  ruby: ["ruby", "rubies"],
+  emerald: ["emerald", "emeralds"],
+  "blue-sapphire": ["blue sapphire", "blue sapphires"],
+  "pink-sapphire": ["pink sapphire", "pink sapphires"],
 };
 
 export const BASELINE_PROMPT_TEMPLATES: Readonly<
@@ -315,7 +379,9 @@ export function validatePromptTemplate(
   // by-field contract so accidentally dropping one still fails publication.
   const required = variables.includes("piece_spec")
     ? (["piece_spec"] as const)
-    : PROMPT_PROFILE_REGISTRY[profile].requiredVariables;
+    : variables.includes("name_spelling")
+      ? MINIMAL_STILL_REQUIRED_VARIABLES
+      : PROMPT_PROFILE_REGISTRY[profile].requiredVariables;
   const missing = required.filter((variable) => !variables.includes(variable));
   if (missing.length)
     throw new Error(`Missing required prompt variables: ${missing.join(", ")}`);
@@ -341,7 +407,12 @@ export function buildPromptVariableSnapshot(input: {
       ? [`connector=${prose(CONNECTOR_PROSE, connector)}`]
       : []),
     `metal=${scalar(specification.metalKarat)} ${scalar(specification.metalColor)} gold, ${prose(FINISH_PROSE, specification.finish)}`,
-    `stones=${stonePhrase(scalar(specification.stoneCoverage), prose(GEMSTONE_PROSE, specification.gemstone))}`,
+    `stones=${stonePhrase(
+      scalar(specification.stoneCoverage),
+      joinStones(
+        gemstoneList(specification).map((gem) => prose(GEMSTONE_PROSE, gem)),
+      ),
+    )}`,
     `size=${scalar(specification.sizeProfile)}; dimensions=${scalar(dimensions.widthMm)} × ${scalar(dimensions.heightMm)} × ${scalar(dimensions.thicknessMm)} mm`,
     `chain=${prose(CHAIN_PROSE, chain.style)}; length=${scalar(chain.lengthCm)} cm`,
   ].join("; ");
@@ -354,9 +425,12 @@ export function buildPromptVariableSnapshot(input: {
     metal_color: scalar(specification.metalColor),
     finish: scalar(specification.finish),
     stone_coverage: scalar(specification.stoneCoverage),
-    gemstone: scalar(specification.gemstone),
+    // Up to three chosen stones (22 Sep 2026); `gemstone` stays the first.
+    gemstone: joinStones(gemstoneList(specification)),
     size_profile: scalar(specification.sizeProfile),
-    dimensions: `${scalar(dimensions.widthMm)} × ${scalar(dimensions.heightMm)} × ${scalar(dimensions.thicknessMm)} mm`,
+    // ASCII "x", as the lab's measured sheet writes it; the multiplication
+    // sign was the only non-ASCII character in an English prompt.
+    dimensions: `${scalar(dimensions.widthMm)} x ${scalar(dimensions.heightMm)} x ${scalar(dimensions.thicknessMm)} mm`,
     chain_style: scalar(chain.style),
     chain_length: `${scalar(chain.lengthCm)} cm`,
     presentation_view: scalar(input.presentationView),
@@ -370,7 +444,99 @@ export function buildPromptVariableSnapshot(input: {
     construction:
       PENDANT_CONSTRUCTION_PROSE[scalar(specification.construction)] ??
       PENDANT_CONSTRUCTION_FALLBACK,
+    // How the name is read, which is a property of the script and of the face
+    // the stencil draws it in, so it cannot be a slot in one template.
+    name_spelling: nameSpelling(
+      scalar(input.approvedName),
+      scalar(input.language),
+      specification,
+    ),
+    stones_rule: stonesRule(specification),
+    look_rule:
+      PENDANT_LOOK_PROSE[scalar(specification.construction)] ??
+      PENDANT_LOOK_PROSE.classical!,
   };
+}
+
+/**
+ * The sheet's Name sentence: the name as the metal spells it, and how to read
+ * it.
+ *
+ * Latin: `CONSTRUCTION_LETTERING` in `@jewelo/identity` is the one place that
+ * says whether a construction's stencil is drawn in capitals, and
+ * `solveIdentity` applies exactly this transform to get its `drawnText`. The
+ * prompt quotes the drawn text, never a second casing of its own, and it claims
+ * capitals only when what is drawn really is in capitals - which is also true
+ * of a shopper who typed "ASMA" under a construction that does not uppercase.
+ *
+ * Arabic: the face is named only when it really is Kufi, either because the
+ * construction overrides the face with the boxy Kufi row or because the
+ * approved lettering is `kufi`. Any other face is described without a name
+ * rather than mislabelled.
+ */
+function nameSpelling(
+  approvedName: string,
+  language: string,
+  specification: Readonly<Record<string, unknown>>,
+): string {
+  const lettering = CONSTRUCTION_LETTERING[scalar(specification.construction)];
+  if (language === "ar") {
+    const kufi =
+      /kufi/i.test(lettering?.ar?.fontFile ?? "") ||
+      letteringStyle(specification) === "kufi";
+    return `"${approvedName}" in connected Arabic${kufi ? " Kufi" : ""} letters, right to left, spelled exactly as @stencil, every dot and mark in place.`;
+  }
+  const drawn = lettering?.en?.uppercase
+    ? approvedName.toLocaleUpperCase("en")
+    : approvedName;
+  const capitals =
+    /\p{Lu}/u.test(drawn) && drawn === drawn.toLocaleUpperCase("en");
+  return capitals
+    ? `"${drawn}" in capital letters, spelled exactly as @stencil.`
+    : `"${drawn}", spelled exactly as @stencil.`;
+}
+
+/**
+ * The sheet's stones sentence: where this construction seats them, with the
+ * approved stone named, or that the piece has none. A coverage of "none", or no
+ * stone chosen, is "No stones." - the piece the shopper approved.
+ */
+function stonesRule(specification: Readonly<Record<string, unknown>>): string {
+  const coverage = scalar(specification.stoneCoverage);
+  const gemstones = gemstoneList(specification).filter((gem) => gem !== "none");
+  if (!coverage || coverage === "none" || !gemstones.length) return "No stones.";
+  const names = gemstones.map(
+    (gem) => GEMSTONE_STONE_NAME[gem] ?? [gem, `${gem}s`],
+  );
+  const sentence =
+    PENDANT_STONES_PROSE[scalar(specification.construction)] ??
+    PENDANT_STONES_PROSE.classical!;
+  return sentence
+    .replaceAll("{gems}", joinStones(names.map(([, plural]) => plural!)))
+    .replaceAll("{gem}", joinStones(names.map(([singular]) => singular!)));
+}
+
+/**
+ * The approved stones, up to three since 22 Sep 2026. `gemstones` is the full
+ * chosen list and its first entry is the legacy single `gemstone`, so a piece
+ * that carries only the old field reads exactly as it always did.
+ */
+function gemstoneList(
+  specification: Readonly<Record<string, unknown>>,
+): string[] {
+  const chosen = Array.isArray(specification.gemstones)
+    ? specification.gemstones.map(scalar).filter(Boolean)
+    : [];
+  return chosen.length
+    ? chosen
+    : [scalar(specification.gemstone)].filter(Boolean);
+}
+
+/** "a", "a and b", "a, b and c"; one stone is returned untouched. */
+function joinStones(parts: readonly string[]): string {
+  const kept = parts.filter(Boolean);
+  if (kept.length < 2) return kept[0] ?? "";
+  return `${kept.slice(0, -1).join(", ")} and ${kept[kept.length - 1]}`;
 }
 
 export function compilePrompt(input: {
@@ -418,6 +584,7 @@ export function compilePrompt(input: {
 export function buildStillReferences(input: {
   identityImageUrl: string;
   referenceImageUrl?: string;
+  lookReferenceUrl?: string;
   styleAnchorUrl?: string;
   inspirationImageUrl?: string;
 }) {
@@ -427,6 +594,12 @@ export function buildStillReferences(input: {
       ? [{ role: "master" as const, url: input.referenceImageUrl, fileName: "reference.png" }]
       : []),
     { role: "stencil" as const, url: input.identityImageUrl, fileName: "identity.png" },
+    // Lab, 22 September 2026: on gpt-image-2.5-sunburst the folded ribbon look
+    // only appears when a text-free crop of the shop's own reference photo is
+    // supplied as its own texture-only input. Wording alone gives a flat plate.
+    ...(input.lookReferenceUrl
+      ? [{ role: "look" as const, url: input.lookReferenceUrl, fileName: "look-reference.png" }]
+      : []),
     ...(input.styleAnchorUrl
       ? [{ role: "style" as const, url: input.styleAnchorUrl, fileName: "style-anchor.png" }]
       : []),
@@ -436,8 +609,28 @@ export function buildStillReferences(input: {
   ];
 }
 
+/**
+ * Constructions whose measured look needs a texture reference of its own.
+ *
+ * A construction named here is refused before spend when its look asset is
+ * missing (`look_reference_missing:<construction>`), because generating without
+ * it produces a flat plate the shopper did not choose and nothing downstream
+ * catches that.
+ */
+export const LOOK_REFERENCE_CONSTRUCTIONS: ReadonlySet<string> = new Set([
+  "classical",
+  "origami-ribbon",
+  "framed-minimal",
+  "diamond-rails",
+]);
+
+export function stillLookReferenceRequired(construction: unknown): boolean {
+  return LOOK_REFERENCE_CONSTRUCTIONS.has(scalar(construction));
+}
+
 export type StillReferencePresence = {
   master: boolean;
+  look?: boolean;
   style: boolean;
   inspiration: boolean;
 };
@@ -445,9 +638,21 @@ export type StillReferencePresence = {
 const STILL_ROLE_RULES = {
   master: "is an approved photograph of this exact pendant. Preserve the same physical object, metal, stones, thickness and chain, changing only the requested scene. It never overrides @stencil geometry or spelling.",
   stencil: "is the sole authority for geometry and spelling: the exact black silhouette of the whole physical pendant, including all letters, joins, marks and two hollow rings. Reproduce it as gold without redesigning, adding, removing, mirroring or separating anything.",
+  look: "supplies only the surface treatment of the metal - the size and number of flat planes, crease crispness, edge depth and polish; never its letters, name, outline, frame, stones, rings, chain or layout; apply it inside the stencil's silhouette.",
   style: "is style only: use framing, light, palette, setting and mood; never copy its pendant, name, letterforms, text or objects.",
   inspiration: "is optional customer inspiration only; never copy text, identity, branding or unapproved objects from it.",
 } as const;
+
+/**
+ * The minimal style-first sheet (lab, 22 September 2026). Such a release names
+ * its own two opening image lines through the compiler, carries no IMAGE ROLES
+ * block, and refers to an input as a bare "Image N" because that is the text
+ * that was measured. `name_spelling` is the marker: only the minimal family
+ * has it.
+ */
+function isMinimalStillTemplate(template: string): boolean {
+  return template.includes("{{name_spelling}}");
+}
 
 /** Reject legacy role numbering before a release can become active. */
 export function assertStillTemplateCompatibility(
@@ -456,6 +661,9 @@ export function assertStillTemplateCompatibility(
 ) {
   if (!["image.packshot", "image.worn", "image.macro_gift", "image.dark_editorial"].includes(profile))
     return;
+  // The minimal family writes @stencil like every other release; the compiler
+  // still owns the numbering, so the legacy check below has nothing to catch.
+  if (isMinimalStillTemplate(template)) return;
   // Check template prose, not interpolated customer names or saved snapshots.
   if (/\bimage\s+\d|\b(first|second|third|fourth)\s+(supplied\s+)?(image|input)|IMAGE ROLES/iu.test(template))
     throw new Error(
@@ -474,6 +682,9 @@ export function compileStillPrompt(input: {
     throw new Error("unsupported_canonical_still_profile");
   if (input.profile !== "image.packshot" && !input.references.master)
     throw new Error("still_master_required");
+  // The studio packshot still gets no sibling still and no style photo - every
+  // wrong name came from one of those - but it may carry the look reference,
+  // which has no letters in it at all.
   if (input.profile === "image.packshot" && (input.references.master || input.references.style))
     throw new Error("studio_extra_reference_not_approved");
   if (input.profile !== "image.packshot" && !input.references.style)
@@ -491,13 +702,39 @@ export function compileStillPrompt(input: {
   const references = buildStillReferences({
     identityImageUrl: "stencil",
     referenceImageUrl: input.references.master ? "master" : undefined,
+    lookReferenceUrl: input.references.look ? "look" : undefined,
     styleAnchorUrl: input.references.style ? "style" : undefined,
     inspirationImageUrl: input.references.inspiration ? "inspiration" : undefined,
   });
-  const roles = references.map(({ role }, index) =>
-    `Image ${index + 1}, tagged @${role}, ${STILL_ROLE_RULES[role]}`,
-  );
-  const compiledPrompt = ["IMAGE ROLES", ...roles, "", compiled.compiledPrompt].join("\n");
+  const position = new Map(references.map(({ role }, index) => [role, index + 1]));
+  const minimal = isMinimalStillTemplate(input.template);
+  // Templates are authored with @tags because the order is not theirs to know.
+  // OpenAI receives ordered files and no tags, so the text it reads names each
+  // input by the position it is actually sent in. A tag for a role this task
+  // has no file for is left as written rather than pointed at another image.
+  // The minimal family says "Image 1" bare, because its opening lines have
+  // already said which image is which; the older families repeat the role.
+  let body = compiled.compiledPrompt;
+  for (const [role, index] of position)
+    body = body.replaceAll(
+      `@${role}`,
+      minimal ? `Image ${index}` : `Image ${index} (${role})`,
+    );
+  const compiledPrompt = minimal
+    ? [
+        ...minimalOpeningLines(position, variables),
+        "",
+        body,
+      ].join("\n")
+    : [
+        "IMAGE ROLES",
+        ...references.map(
+          ({ role }) =>
+            `Image ${position.get(role)} (${role}) ${STILL_ROLE_RULES[role]}`,
+        ),
+        "",
+        body,
+      ].join("\n");
   if (compiledPrompt.length > MAX_COMPILED_PROMPT_LENGTH)
     throw new Error("Canonical still prompt exceeds maximum length");
   return {
@@ -508,19 +745,40 @@ export function compileStillPrompt(input: {
   };
 }
 
-export const STILL_API_SIZE_BY_RATIO = {
-  "1:1": "1024x1024",
-  "4:5": "1024x1280",
-  "9:16": "1024x1824",
-  "16:9": "1536x864",
-} as const;
+/**
+ * The minimal family's opening: one line saying what the photograph is, then
+ * one line per supplied image. Lab text, verbatim; only the numbers are
+ * computed, from the same ordered references the transport sends.
+ *
+ * It replaces the IMAGE ROLES block for this family rather than joining it:
+ * what the lab measured has no header, and a header is prompt text the model
+ * reads.
+ */
+function minimalOpeningLines(
+  position: ReadonlyMap<string, number>,
+  variables: PromptVariableSnapshot,
+): string[] {
+  const lines = [
+    "Photorealistic photograph of one real gold name pendant on a chain.",
+    `Image ${position.get("stencil")} (stencil) is the exact silhouette of the pendant: every letter, join and both rings. Make it in gold exactly as drawn; add, remove or move nothing.`,
+  ];
+  const look = position.get("look");
+  if (look)
+    lines.push(
+      `Image ${look} (look) shows the gold finish to copy: ${variables.look_rule}. Copy only the finish, not its letters, outline, stones, rings or chain.`,
+    );
+  return lines;
+}
+
+export const STILL_API_SIZE_BY_RATIO = STILL_SIZE_BY_RATIO.standard;
 
 /** Both transport preparers consume this artifact without rewriting its prompt. */
 export function prepareStillRequest(input: {
   prompt: string;
-  aspectRatio: keyof typeof STILL_API_SIZE_BY_RATIO;
+  aspectRatio: StillAspectRatio;
   identityImageUrl: string;
   referenceImageUrl?: string;
+  lookReferenceUrl?: string;
   styleAnchorUrl?: string;
   inspirationImageUrl?: string;
 }) {
@@ -535,18 +793,34 @@ export function prepareStillRequest(input: {
   };
 }
 
+/**
+ * Quality and canvas come from validated configuration, never from a literal:
+ * on Sunburst the quality label maps differently (its `high` is about
+ * gpt-image-2's `medium`), so the model snapshot and the quality a deployment
+ * asks for have to be settable together. See `stillImageOptions`.
+ */
 export function prepareOpenAIStillRequest(
   input: Parameters<typeof prepareStillRequest>[0], model: string,
+  options: StillImageOptions = stillImageOptions(),
 ) {
   if (!model.trim()) throw new Error("still_model_required");
-  return { ...prepareStillRequest(input), model, quality: "high", output_format: "png" };
+  const size = options.sizeByRatio[input.aspectRatio];
+  if (!size) throw new Error("unsupported_still_aspect_ratio");
+  return {
+    ...prepareStillRequest(input),
+    model,
+    size,
+    quality: options.quality,
+    output_format: "png",
+  };
 }
 
-/** Runway's current callable model list exposes only this GPT image alias. */
+/** The two GPT image models Runway's callable list exposes. */
 export function prepareRunwayStillRequest(
   input: Parameters<typeof prepareStillRequest>[0], model: string,
 ) {
-  if (model !== "gpt-image-2") throw new Error("runway_model_unavailable");
+  if (!["gpt-image-2", "gpt-image-2.5-sunburst"].includes(model))
+    throw new Error("runway_model_unavailable");
   const request = prepareStillRequest(input);
   return {
     model, promptText: request.prompt, ratio: request.aspectRatio, count: 1,
@@ -647,19 +921,20 @@ function scalar(value: unknown): string {
  */
 function stillTemplate(view: keyof typeof STILL_VIEW_BRIEFS): string {
   // Frozen studio candidate C; other scene templates retain their own prose.
-  if (view === "studio") return `CHAIN THREADING — BOTH SIDES
-At each of the two stencil eyelets, the chain's terminal link physically passes THROUGH the open aperture. Show the link's front arc crossing the hole and its back arc behind the eyelet: interlocking metal, with daylight visible on both sides of the link inside the hole. Never show an empty hole with chain behind it, a link merely touching the rim, or chain resting beside the eyelet. Keep each eyelet fused into the pendant exactly as @stencil draws it. No extra eyelet, bail or hardware substitutes. One {{chain_style}} chain, {{chain_length}}, same gold, attached at both ends; no clasp in frame, no chain crossing any letter.
-
-IDENTITY AND OBJECT
-Photograph ONE finished physical name pendant. Approved name: "{{approved_name}}"; script {{language}} (en left-to-right Latin, ar right-to-left Arabic), Arabic lettering {{arabic_style}}, layout {{layout}}. Preserve every stencil glyph, dot, mark, outline, bridge, spacing and ring hole exactly. Do not redesign, mirror, rotate, duplicate, add or remove anything. The complete pendant is one continuous piece of cast gold: all letters and marks physically fused by the stencil bridges, no disconnected islands. No second spelling anywhere.
-{{construction}}
-{{inspiration_rule}}
-
-MATERIAL
-Solid {{metal_karat}} {{metal_color}} gold, {{finish}}, {{size_profile}} scale; dimensions {{dimensions}} with visible real edge depth. Stone coverage {{stone_coverage}}, gemstone {{gemstone}}; none means no stones, sparkle points or settings anywhere. Softly polished edges, consistent metal thickness, no ornament.
-
-STUDIO PHOTOGRAPH
-{{presentation_view}} catalogue packshot, nearly straight-on with slight off-axis depth. Whole pendant and both eyelets sharp and inside the square frame with a small even margin. Chain runs away from the rings and rests in relaxed curves. Plain warm off-white matte paper sweep, no props, wearer or other jewellery. Full-frame macro photography: broad diffused softbox key, white bounce fill, one small harder source for a defined specular streak, neutral 5000K balance. Gold has warm highlights, true gold midtones and darker reflected surroundings, never uniformly bright. True contact shadow, gentle ambient occlusion in corners, believable matte paper texture and finite depth of field; pendant stays sharp. No CGI, plastic, glow, bloom, flare, neon lighting, watermark, logo, caption or extra text.`;
+  // The minimal style-first sheet measured on gpt-image-2.5-sunburst,
+  // 22 September 2026: `docs/goals/road-to-gold/lab-2026-09-22/final/*.txt` are
+  // the exact prompts that passed for all four constructions. The two opening
+  // image lines are the compiler's (`minimalOpeningLines`), because the look
+  // line exists only when a look reference is sent. The trailing newline is
+  // part of the measured text.
+  if (view === "studio")
+    return [
+      "Style: {{construction}}",
+      'Name: {{name_spelling}} The whole pendant is one piece of gold. No other text anywhere.',
+      "Chain: one gold {{chain_style}} chain. Its end link passes through each ring's hole, looped through it, never lying behind or beside it. No clasp in view, no chain over the letters, no extra rings or bails.",
+      "Material: {{finish}} {{metal_karat}} {{metal_color}} gold, {{dimensions}}, visible edge depth. {{stones_rule}}",
+      "Photo: studio catalogue packshot, nearly straight-on. Whole pendant and both rings sharp and centred with an even margin; chain in relaxed curves. Warm off-white matte paper, no props. Soft diffused light with one defined highlight streak, neutral white balance; the gold shows bright highlights and darker reflections. Real contact shadow. No text, logo or watermark.\n",
+    ].join("\n\n");
   const label = STILL_VIEW_LABELS[view];
   return [
     `Photograph one real, physical, finished {{metal_karat}} gold name pendant necklace. ${label} shot.`,

@@ -8,6 +8,7 @@ import {
   buildPromptVariableSnapshot,
   compileStillPrompt,
   identityTextMatches,
+  stillLookReferenceRequired,
   normalizeIdentityText,
   type GeneratedMedia,
   type PromptProfile,
@@ -182,6 +183,16 @@ export interface PresentationRepository {
     artifactId: string;
   }>;
   signedStyleAnchorUrl(task: TaskRow): Promise<string>;
+  /**
+   * The approved look reference for a construction that requires one, proved
+   * against its configured sha256. Throws `look_reference_missing:<id>` or
+   * `look_reference_checksum_mismatch:<id>` - both pre-spend refusals.
+   *
+   * Optional like the other reference readers, and its absence is a refusal
+   * rather than a silent generation: a repository with no way to fetch the
+   * look cannot draw a construction that needs one.
+   */
+  signedLookReferenceUrl?(construction: string): Promise<string>;
   /** Ready still of `dependency_task_id`; undefined while it is not ready yet. */
   signedDependencyStillUrl?(
     task: TaskRow,
@@ -372,6 +383,11 @@ export async function executePresentationTask(
         variables,
         references: {
           master: Boolean(task.dependency_task_id),
+          // Same predicate the reference resolution below uses, so the prompt
+          // can never name an image the request does not carry.
+          look: stillLookReferenceRequired(
+            revision.specification.construction,
+          ),
           style: task.presentation_view !== "studio",
           inspiration: Boolean(
             revision.specification.referenceAsset &&
@@ -438,6 +454,7 @@ export async function executePresentationTask(
     ReturnType<PresentationRepository["signedIdentityUrl"]>
   >;
   let styleAnchorUrl: string | undefined;
+  let lookReferenceUrl: string | undefined;
   let inspirationImageUrl: string | undefined;
   let reference: { url: string; assetId: string } | undefined;
   try {
@@ -467,6 +484,15 @@ export async function executePresentationTask(
       task.presentation_view === "studio"
         ? undefined
         : await repository.signedStyleAnchorUrl(task);
+    // A construction whose look the model only reaches with a texture
+    // reference never generates without it: no asset, no spend.
+    if (stillLookReferenceRequired(revision.specification.construction)) {
+      const construction = String(revision.specification.construction);
+      if (!repository.signedLookReferenceUrl)
+        throw new Error(`look_reference_missing:${construction}`);
+      lookReferenceUrl =
+        await repository.signedLookReferenceUrl(construction);
+    }
     inspirationImageUrl = await repository.signedInspirationUrl(
       revision,
       task.owner_principal_id,
@@ -567,6 +593,7 @@ export async function executePresentationTask(
           prompt: snapshot.compiled_prompt,
           referenceImageUrl: reference?.url,
           identityImageUrl: identity.url,
+          lookReferenceUrl,
           styleAnchorUrl,
           inspirationImageUrl,
           identityFingerprint: identity.fingerprint,
@@ -748,6 +775,10 @@ export class SupabasePresentationRepository implements PresentationRepository {
     // validated in `@jewelo/config` (PIPELINE_RELEASE_ID) rather than written
     // here as a literal, so a release bump is a configuration change.
     private readonly pipelineReleaseId = "caleums-final-media-v2",
+    // Construction id -> sha256 of its approved look reference, validated in
+    // `@jewelo/config` (LOOK_REFERENCES). A construction that needs a look and
+    // is not in this map is refused before any spend.
+    private readonly lookReferences: ReadonlyMap<string, string> = new Map(),
   ) {}
   async #request<T>(path: string, init: RequestInit = {}): Promise<T> {
     const response = await fetch(`${this.url}${path}`, {
@@ -1146,6 +1177,33 @@ export class SupabasePresentationRepository implements PresentationRepository {
       .png()
       .toBuffer();
     return `data:image/png;base64,${lowPassed.toString("base64")}`;
+  }
+  /**
+   * The look reference for a construction, as bytes proved against the sha256
+   * the deployment configured. The object is private brand reference and is
+   * never in git: `scripts/look-references/publish.mjs` puts it in the
+   * `look-references` bucket at `<construction>/v1.png` from a local directory.
+   */
+  async signedLookReferenceUrl(construction: string) {
+    const checksum = this.lookReferences.get(construction);
+    if (!checksum) {
+      // Mock mode draws nothing real, so it takes the same 1x1 the style
+      // anchors take rather than blocking a zero-cost staging run.
+      if (this.allowMockAnchors)
+        return "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=";
+      throw new Error(`look_reference_missing:${construction}`);
+    }
+    const signed = await this.signedStorageUrl(
+      "look-references",
+      `${construction}/v1.png`,
+    );
+    const response = await fetch(signed);
+    if (!response.ok)
+      throw new Error(`look_reference_unreadable:${construction}`);
+    const bytes = Buffer.from(await response.arrayBuffer());
+    if (createHash("sha256").update(bytes).digest("hex") !== checksum)
+      throw new Error(`look_reference_checksum_mismatch:${construction}`);
+    return `data:image/png;base64,${bytes.toString("base64")}`;
   }
   async signedDependencyStillUrl(task: TaskRow) {
     if (!task.dependency_task_id) return undefined;
@@ -1560,6 +1618,7 @@ export function productionPresentationDependencies(
     config.VIDEO_ENABLED,
     config.IDENTITY_RINGLESS_CONSTRUCTIONS,
     config.PIPELINE_RELEASE_ID,
+    config.LOOK_REFERENCES,
   );
   if (config.PROVIDER_MODE === "mock")
     return {

@@ -415,6 +415,126 @@ export function realModeSpendCeilings(
   return realModeSpendCeilingSchema.parse(env);
 }
 
+/* ------------------------------------------------------------------------- */
+/* What a still costs to draw: quality label and canvas.                      */
+/*                                                                            */
+/* OpenAI's image guide maps the quality label differently per model:         */
+/* Sunburst's `high` is about gpt-image-2's `medium`, so a deployment that     */
+/* pins the Sunburst snapshot should also ask for `max`. Sizes may be any     */
+/* multiple of 16 up to 2560x1440 (non-experimental), so the 2K table is a    */
+/* published option rather than a code change. Cost at the time of writing:   */
+/* Sunburst at `max` is about $0.21 at 1024 square and about $0.43 at 2048    */
+/* square, against the 20-cent estimate in                                    */
+/* OPENAI_STILL_ESTIMATED_COST_CENTS - raise that with the profile.           */
+/* ------------------------------------------------------------------------- */
+
+export const STILL_IMAGE_QUALITIES = [
+  "low",
+  "medium",
+  "high",
+  "xhigh",
+  "max",
+  "auto",
+] as const;
+
+export const STILL_ASPECT_RATIOS = ["1:1", "4:5", "9:16", "16:9"] as const;
+export type StillAspectRatio = (typeof STILL_ASPECT_RATIOS)[number];
+
+/** A canvas the API accepts: both sides a multiple of 16, neither above 2560. */
+const stillSizeSchema = z
+  .string()
+  .regex(/^\d{3,4}x\d{3,4}$/u, "must be <width>x<height> in pixels")
+  .refine((value) => {
+    return value
+      .split("x")
+      .map(Number)
+      .every((side) => side >= 256 && side <= 2560 && side % 16 === 0);
+  }, "each side must be a multiple of 16 between 256 and 2560");
+
+const stillSizeTableSchema = z.object(
+  Object.fromEntries(
+    STILL_ASPECT_RATIOS.map((ratio) => [ratio, stillSizeSchema]),
+  ) as Record<StillAspectRatio, typeof stillSizeSchema>,
+);
+
+/** Validated at import: a bad table is a boot failure, not a refused request. */
+export const STILL_SIZE_BY_RATIO = {
+  /** What every published still has been drawn at so far. */
+  standard: stillSizeTableSchema.parse({
+    "1:1": "1024x1024",
+    "4:5": "1024x1280",
+    "9:16": "1024x1824",
+    "16:9": "1536x864",
+  }),
+  /** The 2K canvases Sunburst allows, once a paid gate has proved them. */
+  "2k": stillSizeTableSchema.parse({
+    "1:1": "1920x1920",
+    "4:5": "1664x2080",
+    "9:16": "1440x2560",
+    "16:9": "2560x1440",
+  }),
+} as const;
+
+const stillImageFields = {
+  OPENAI_IMAGE_QUALITY: z.preprocess(
+    blankToUndefined,
+    z.enum(STILL_IMAGE_QUALITIES).default("high"),
+  ),
+  OPENAI_IMAGE_SIZE_PROFILE: z.preprocess(
+    blankToUndefined,
+    z.enum(["standard", "2k"]).default("standard"),
+  ),
+} as const;
+
+export const stillImageOptionsSchema = z
+  .object(stillImageFields)
+  .transform((value) => ({
+    quality: value.OPENAI_IMAGE_QUALITY,
+    sizeProfile: value.OPENAI_IMAGE_SIZE_PROFILE,
+    sizeByRatio: STILL_SIZE_BY_RATIO[value.OPENAI_IMAGE_SIZE_PROFILE],
+  }));
+export type StillImageOptions = z.infer<typeof stillImageOptionsSchema>;
+
+export function stillImageOptions(
+  env: NodeJS.ProcessEnv | Record<string, string | undefined> = process.env,
+): StillImageOptions {
+  return stillImageOptionsSchema.parse(env);
+}
+
+/**
+ * Which pendant constructions have an approved look reference published, and
+ * the sha256 of the exact PNG each one must receive.
+ *
+ * `construction:sha256`, comma separated, empty by default. The bytes are
+ * private brand reference and live in the `look-references` bucket, never in
+ * git; the checksum here is what the job compares the downloaded object
+ * against, so a swapped or half-written object fails closed before spend.
+ */
+const lookReferencesField = z
+  .preprocess(blankToUndefined, z.string().default(""))
+  .transform((value, context) => {
+    const entries = new Map<string, string>();
+    for (const raw of value.split(",")) {
+      const entry = raw.trim();
+      if (!entry) continue;
+      const [construction, checksum] = entry.split(":").map((part) => part?.trim());
+      if (
+        !construction ||
+        !IDENTITY_CONSTRUCTION_ID.test(construction) ||
+        !/^[0-9a-f]{64}$/.test(checksum ?? "")
+      ) {
+        context.addIssue({
+          code: "custom",
+          message:
+            'LOOK_REFERENCES entries are "<construction-id>:<sha256>", comma separated',
+        });
+        continue;
+      }
+      entries.set(construction, checksum!);
+    }
+    return entries as ReadonlyMap<string, string>;
+  });
+
 export const jobsEnvSchema = trustedWebEnvSchema
   .extend({
     ...photoMaskFields,
@@ -427,6 +547,8 @@ export const jobsEnvSchema = trustedWebEnvSchema
       // until the same stencil, prompt and verifier pass its paid gate.
       .enum(["gpt-image-2-2026-04-21", "gpt-image-2.5-sunburst-2026-09-08"])
       .default("gpt-image-2-2026-04-21"),
+    ...stillImageFields,
+    LOOK_REFERENCES: lookReferencesField,
     OPENAI_VERIFIER_MODEL: nonEmpty.default("gpt-5.6-luna"),
     OPENAI_STILL_CONCURRENCY_LIMIT: z.coerce
       .number()
