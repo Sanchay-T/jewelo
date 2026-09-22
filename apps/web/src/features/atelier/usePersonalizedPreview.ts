@@ -174,6 +174,16 @@ export function usePersonalizedPreview(input: {
   const [capturedRequestId, setCapturedRequestId] = useState<
     string | undefined
   >();
+  /**
+   * The specification the live capture was made for.
+   *
+   * A capture can exist without a submission - the shopper can leave contact
+   * details on a deployment where no run was ever started - so the submission's
+   * signature cannot be what decides whether the capture still belongs to the
+   * piece on screen. Keying the reset on this instead is what stops a contact
+   * captured for design A being filed against design B.
+   */
+  const [capturedFor, setCapturedFor] = useState<string | undefined>();
   /** Deliberately survives a specification change; see `previousRequestId`. */
   const [previousRequestId, setPreviousRequestId] = useState<
     string | undefined
@@ -251,6 +261,9 @@ export function usePersonalizedPreview(input: {
       setCapturedRequestId(stored.previewRequestId);
       setPreviousRequestId(stored.previewRequestId);
       setCaptureStatus("captured");
+      // `resumeSubmission` already refused a stored signature that is not the
+      // piece on screen, so this capture is for the current specification.
+      setCapturedFor(stored.signature);
     }
     // Without a run id there is nothing to watch: the previous start was
     // interrupted or refused. Keep the capture path open after reload while
@@ -269,13 +282,24 @@ export function usePersonalizedPreview(input: {
       setPhase("idle");
       setCeilingReached(false);
       setWatchWindowClosed(false);
-      setCaptureStatus("idle");
-      setCapturedRequestId(undefined);
       startedFor.current = undefined;
       written.current = undefined;
       clearSubmission();
     }
   }, [currentSignature, submission]);
+
+  // The specification changed under the capture. The shop is holding a request
+  // for the old piece, so the new one needs its own: the panel stops saying the
+  // team has this design, and adding to the bag captures again. The request id
+  // itself stays visible as `previousRequestId` so the two can be reconciled.
+  useEffect(() => {
+    if (capturedFor && capturedFor !== currentSignature) {
+      setCaptureStatus("idle");
+      setCaptureError(undefined);
+      setCapturedRequestId(undefined);
+      setCapturedFor(undefined);
+    }
+  }, [capturedFor, currentSignature]);
 
   // A refused start can be retried by a new checkbox action, but never merely
   // because hydration restored its old checked value. Existing runs remain
@@ -464,10 +488,14 @@ export function usePersonalizedPreview(input: {
   /**
    * Every design a shopper keeps is a request the shop can answer (Omran, 22
    * September 2026), so the way to reach them is asked for on the whole review
-   * stage - not only when the personalized run degraded, and not only on a
-   * deployment where personalized runs exist at all.
+   * stage - not only when the personalized run degraded.
+   *
+   * It does still need a backend to write the request to: in the mock data mode
+   * there is no Supabase project behind the route, so every capture would fail
+   * and the shopper could not keep a piece at all. There the atelier stays the
+   * purely local illustrated experience and the bag is filled without a request.
    */
-  const capturing = input.stage === "review";
+  const capturing = enabled && input.stage === "review";
 
   const imageFor = useCallback(
     (view: View) => {
@@ -532,6 +560,7 @@ export function usePersonalizedPreview(input: {
       setCapturedRequestId(record.id);
       setPreviousRequestId(record.id);
       setCaptureStatus("captured");
+      setCapturedFor(currentSignature);
       remember(
         {
           signature: currentSignature,

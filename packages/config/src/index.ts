@@ -490,11 +490,19 @@ const stillImageFields = {
  * The least a still can cost at a given quality and canvas, in cents, from the
  * prices in the comment above.
  *
- * `OPENAI_STILL_ESTIMATED_COST_CENTS` is what the worker reserves against the
- * run's budget before it calls the provider, so an estimate below the real
- * price lets a run spend more than the ceiling it was given - the 20-cent
- * default against `max` at 2K is half the true 43. Only the qualities with a
- * published number are floored; the rest keep the schema's own minimum,
+ * What is actually reserved against the day's budget is the database's own
+ * number: `approve_and_start_studio` writes `runtime_policy`.`studio_reservation_cents`
+ * into `generation_tasks.reservation_cents` and `.estimated_cost_cents` for all
+ * four stills. `OPENAI_STILL_ESTIMATED_COST_CENTS` is the deployment's estimate
+ * of the same still, used for the worker's own accounting, so both numbers are
+ * held to this floor: below the real price, a run spends more than the ceiling
+ * it was given - the 20-cent default against `max` at 2K is half the true 43.
+ * The runtime-policy side is enforced by `spendCeilingRefusal` in `apps/jobs`,
+ * which reads the floor from `stillImageOptions().costFloorCents`, because that
+ * row is edited in the database and cannot be validated at boot.
+ *
+ * Only the qualities with a published number are floored; the rest keep the
+ * schema's own minimum,
  * because a guessed floor would refuse a deployment that is priced correctly.
  */
 const STILL_COST_FLOOR_CENTS: Readonly<
@@ -518,6 +526,16 @@ export const stillImageOptionsSchema = z
     quality: value.OPENAI_IMAGE_QUALITY,
     sizeProfile: value.OPENAI_IMAGE_SIZE_PROFILE,
     sizeByRatio: STILL_SIZE_BY_RATIO[value.OPENAI_IMAGE_SIZE_PROFILE],
+    /**
+     * The least one still may be reserved at for this quality and canvas, or 0
+     * where no price is published. Both the environment check below and the
+     * worker's runtime-policy gate read the floor from here, so there is one
+     * table and it cannot drift between them.
+     */
+    costFloorCents:
+      STILL_COST_FLOOR_CENTS[value.OPENAI_IMAGE_QUALITY]?.[
+        value.OPENAI_IMAGE_SIZE_PROFILE
+      ] ?? 0,
   }));
 export type StillImageOptions = z.infer<typeof stillImageOptionsSchema>;
 

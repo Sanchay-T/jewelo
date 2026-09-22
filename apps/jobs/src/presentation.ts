@@ -1304,21 +1304,23 @@ export class SupabasePresentationRepository implements PresentationRepository {
       : pipelineLimits.providerAttemptBudget;
   }
   /**
-   * The spend ceiling gate's one read: the same single row, both numbers, with
-   * the service key. A value the row does not hold, or holds as null, is read
-   * as the largest number rather than the smallest - an unreadable policy is
-   * not evidence that the day is capped, and this gate exists to refuse exactly
-   * that. `Number.MAX_SAFE_INTEGER` is above every configurable ceiling, so a
-   * missing column refuses pre-spend instead of passing.
+   * The spend ceiling gate's one read: the same single row, all three numbers,
+   * with the service key. A value the row does not hold, or holds as null, is
+   * read as whichever end refuses - an unreadable policy is not evidence that
+   * the day is capped, and this gate exists to refuse exactly that. The two
+   * ceilings read as `Number.MAX_SAFE_INTEGER`, above every configurable cap;
+   * the reservation reads as 0, below every floor. Either way a missing column
+   * refuses pre-spend instead of passing.
    */
   async spendPolicy(): Promise<RuntimeSpendPolicy> {
     const rows = await this.#request<
       Array<{
         global_max_reserved_spend_cents: number | null;
         provider_attempt_budget: number | null;
+        studio_reservation_cents: number | null;
       }>
     >(
-      "/rest/v1/runtime_policy?id=eq.true&select=global_max_reserved_spend_cents,provider_attempt_budget",
+      "/rest/v1/runtime_policy?id=eq.true&select=global_max_reserved_spend_cents,provider_attempt_budget,studio_reservation_cents",
     );
     const row = rows[0];
     const number = (value: number | null | undefined) =>
@@ -1328,6 +1330,13 @@ export class SupabasePresentationRepository implements PresentationRepository {
     return {
       globalMaxReservedSpendCents: number(row?.global_max_reserved_spend_cents),
       providerAttemptBudget: number(row?.provider_attempt_budget),
+      // The reservation is refused for being too small, so an unreadable value
+      // is the smallest number and not the largest: same rule, opposite end.
+      studioReservationCents:
+        typeof row?.studio_reservation_cents === "number" &&
+        Number.isFinite(row.studio_reservation_cents)
+          ? row.studio_reservation_cents
+          : 0,
     };
   }
   /**

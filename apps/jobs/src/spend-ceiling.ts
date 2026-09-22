@@ -1,4 +1,8 @@
-import { pipelineLimits, realModeSpendCeilings } from "@jewelo/config";
+import {
+  pipelineLimits,
+  realModeSpendCeilings,
+  stillImageOptions,
+} from "@jewelo/config";
 import type { RealModeSpendCeilings } from "@jewelo/config";
 
 /**
@@ -17,6 +21,11 @@ import type { RealModeSpendCeilings } from "@jewelo/config";
  * looser than that. The flip is then refused by the worker itself until the
  * caps are set, rather than by whoever remembers to run the UPDATE.
  *
+ * The same row also decides how much each still books against that ceiling
+ * (`studio_reservation_cents`), and a ceiling is only as real as the number
+ * charged against it, so it is refused from below when it is under the
+ * published price of the quality and canvas this deployment renders at.
+ *
  * Mock mode never reaches this file: there is no money to protect and a mock
  * run must keep working with whatever the row happens to say.
  */
@@ -25,6 +34,17 @@ export interface RuntimeSpendPolicy {
   readonly globalMaxReservedSpendCents: number;
   /** `runtime_policy.provider_attempt_budget`. */
   readonly providerAttemptBudget: number;
+  /**
+   * `runtime_policy.studio_reservation_cents`: what the database actually holds
+   * back per still. `approve_and_start_studio` copies it into every task's
+   * `reservation_cents` and `estimated_cost_cents`, so a row left at the
+   * 20-cent default while the deployment renders at `max` on a 2K canvas books
+   * half of what the run will spend and the day's ceiling stops meaning
+   * anything. The floor is the published price for the effective
+   * `OPENAI_IMAGE_QUALITY` and `OPENAI_IMAGE_SIZE_PROFILE`, read from
+   * `@jewelo/config` so there is one price table.
+   */
+  readonly studioReservationCents: number;
 }
 
 /**
@@ -37,7 +57,10 @@ export interface RuntimeSpendPolicy {
 export function spendCeilingRefusal(
   policy: RuntimeSpendPolicy,
   ceilings: RealModeSpendCeilings = realModeSpendCeilings(),
+  reservationFloorCents: number = stillImageOptions().costFloorCents,
 ): string | undefined {
+  if (policy.studioReservationCents < reservationFloorCents)
+    return `spend_ceiling_not_set:reservation=${policy.studioReservationCents},min=${reservationFloorCents}`;
   if (
     policy.globalMaxReservedSpendCents >
     ceilings.REAL_MODE_MAX_RESERVED_SPEND_CENTS

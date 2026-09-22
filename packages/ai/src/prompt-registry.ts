@@ -717,6 +717,10 @@ export function buildStillReferences(input: {
  * missing (`look_reference_missing:<construction>`), because generating without
  * it produces a flat plate the shopper did not choose and nothing downstream
  * catches that.
+ *
+ * Adding or removing a construction here changes whether a look reference is
+ * sent, which shifts the "Image N (role)" numbering in the compiled text, so
+ * bump `STILL_COMPILER_VERSION` with any edit to this set.
  */
 export const LOOK_REFERENCE_CONSTRUCTIONS: ReadonlySet<string> = new Set([
   "classical",
