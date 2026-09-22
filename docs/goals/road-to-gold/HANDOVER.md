@@ -1,184 +1,114 @@
 # CALEUMS handover
 
 This file is the handover. Its content is mirrored into the description of
-https://github.com/Sanchay-T/jewelo/pull/12; that pull request is the deliverable.
+https://github.com/Sanchay-T/jewelo/pull/21 (draft, base `main`); that pull request is the deliverable.
+Pull request #12 was merged into `main` on 11 September; everything below is new since then.
 
 ## The whole story, in plain paragraphs
 
-CALEUMS is a pendant studio for Omran's jewelry shop in the UAE. A shopper types
-an English or Arabic name, chooses a look and metal, and should receive four
-photographs of that exact pendant: studio, on skin, close up, and dark. The
-deterministic stencil owns the name and geometry; the image model only dresses
-it, and verification refuses drift.
+CALEUMS is a pendant studio for Omran's jewelry shop in the UAE.
+A shopper types an English or Arabic name, chooses a look and metal, and should receive four photographs of that exact pendant: studio, on skin, close up, and dark.
+The deterministic stencil owns the name and geometry; the image model only dresses it, and verification refuses drift.
 
-The identity engine, prompt registry, anchors, operator queue, spend ledger,
-Inngest runner, security fixes, and the shopper's honest mock-degrade path are
-implemented. The atelier now exposes every construction and lettering style in
-the request contract; the identity and verifier gates still decide whether a
-specific name can be made. P1-5 remains open because the last two adversarial
-identity passes must still find nothing above minor. P5-2/P5-3 remain open
-because the first paid OpenAI run needs Sanchay's explicit spend decision and
-the measured identity gate must be complete.
+On the 22 September call Omran asked for calmer, less stylized pieces that match his own reference photographs, sharp folded edges on origami, a boxy capitals look, and a list of site changes.
+This session answered all of it.
+The styles were re-proven on the Runway MCP with `gpt-image-2.5-sunburst`, the same model production calls: one short style-first prompt, where styles differ only by swapped parameters, plus a text-free crop of Omran's photo sent as a texture-only reference.
+The boxy look comes from the stencil, not the words: origami, framed and diamond-rails now draw Cairo capitals (weight 800, rails 500) and the identity engine was reworked so ring posts and rail welds never read as letters.
+Production compiles the exact lab prompt byte for byte (20/20), so what passed on Runway is what production sends.
+The site changes are live on staging and I drove them myself.
 
-This session closed the cloud-provider ambiguity. Local development may use the
-mock adapter. Any `NODE_ENV=production` process selects the real provider and
-fails startup without the required credential; DigitalOcean deploy/bootstrap no
-longer creates or preserves `PROVIDER_MODE`, `JEWELO_CLOUD_BUILD`, or
-`JEWELO_CLOUD_TARGET`. Staging is now running the production runtime with
-OpenAI configured, but no image generation was requested and no paid spend has
-occurred.
+No OpenAI API call was made; all image proof ran on Runway credits.
+Staging runs the real provider but every dispatch is refused before spend by the runtime spend cap, so no customer photograph is produced there yet.
 
 ## Status
 
 | | |
 | --- | --- |
 | Live URL | https://jewelo-staging-gqumd.ondigitalocean.app/en/design/new |
-| Active deployed commit | `eba96fd6edcdecc92e9133dbfa5c449e18156a25` (`eba96fd`), DigitalOcean deployment `84f54bd8-927f-48cd-b871-071e7fc78923` (ACTIVE) |
-| Branch head | `codex/overnight-launch-2026-09-08` at the final pushed documentation-only handover tip after the active deployment |
-| Provider mode | Production runtime: `real` selected from `NODE_ENV=production`; protected readiness reports `provider: real`. Local development/test defaults remain mock unless explicitly set otherwise. |
-| Live readiness | HTTP 200: Supabase configured; Inngest configured, self-hosted, `keyEnvironment=prod`, crons registered; OpenAI configured; trusted client IP header valid. |
-| Deployment scope | Production intentionally skipped; one DigitalOcean staging instance only. |
-| Build/lint | `corepack pnpm build`: 13/13; `corepack pnpm lint`: 13/13. |
-| Phase / next task | Phase 0 closed; P1-5 identity proof, then P2-3/P5-2 remain. The cloud provider guard and all-look cleanup are deployed; no paid run was made. |
-| Sessions | 7 (7–10 September 2026) |
+| Active deployed commit | `dff61022cefc2fba205e6214f20cf0ce9a5cdf16` (`dff6102`), DigitalOcean deployment `d4d3f1b8-5144-4e6e-8a7b-f983f0061846` (ACTIVE); smoke health and readiness passed |
+| Branch head | `codex/overnight-launch-2026-09-08`, the `Handover:` commit after `dff6102` (docs only) |
+| Provider mode | Staging `real` (forced by `NODE_ENV=production`); spend blocked pre-dispatch by `runtime_policy` (`global_max_reserved_spend_cents` 1900 above the 800 real-mode ceiling). Local stays mock. |
+| Build | `corepack pnpm build` exit 0, 13/13, on the handed-over tree |
+| Prompt proof | `lab-diff.mts`: 20/20 production-compiled studio prompts byte-identical to the Runway lab prompts |
+| Reviews | Seven fresh-context review rounds; rounds 6 and 7 found nothing above minor, and their minors are fixed |
+| Database | Migrations `20260922000000` and `20260922010000` applied; private `look-references` bucket holds 4 checksum-verified crops |
+| Sessions | 8 (this one: 22 to 23 September 2026) |
 
 ## What a shopper gets today
 
-The staging URL is live and its public health endpoint returns HTTP 200. The
-protected readiness probe is also HTTP 200 with the production dependency proof
-above. All four constructions and six lettering styles are selectable in the
-normal flow; there is no deployment allowlist and no Reference-only lockout.
-The page still uses the honest mock-degrade path until a paid real run is
-authorized: fake assets are refused by the UI and the customer is told the shop
-will send the photograph. No customer-facing real image was generated in this
-session. The browser viewport ladder, RTL, and reduced-motion staging pass are
-still open.
+Seen in my own agent-browser session on staging (`dff6102`), screenshots in `docs/goals/road-to-gold/dogfood-2026-09-23/`:
 
-The local app is open in the Codex in-app Browser at
-`http://localhost:3011/en/design/new`. Its local Next dev server returns HTTP
-200 from `/api/health`, the interactive studio controls and name textbox are
-visible, and the browser recorded no console errors. It uses the existing
-cloud-backed environment for Supabase/OpenAI and the local Inngest dev server
-(`127.0.0.1:8288/health` returns 200); it does not use the DigitalOcean process
-for local rendering. Runway is intentionally the prompt-lab bench, not a
-production runtime dependency: the app's production socket is OpenAI, and no
-Runway or OpenAI generation was invoked.
-
-Fal is present only as the optional Seedance video adapter. The local runtime
-defaults `VIDEO_ENABLED` to off, so the active API path is still-image logic,
-not Fal video submission. Local development also defaults provider selection to
-mock; hosted Supabase is real, but no provider spend occurs from opening or
-using the local design page.
+- Sections read Size, Name, Style, Gold and stones; no italic text anywhere (0 italic elements measured).
+- No chain picker; every piece is cable 45 cm.
+- Up to three stones; a fourth is disabled, with the note "Choose up to 3 stones." / "اختر حتى ٣ أحجار.".
+- The review step photo is larger than on the design step: 857 vs 704 px wide at 1440, 643 vs 459 at 1024, 478 vs 341 at 768; on phones the photo comes first at full width.
+- Add to bag asks for contact first (email is the default channel); from the design step it moves to review, focuses the contact box and says "Where should we send it?".
+- Final pass: contact for design A, edit to design B, add from the design step, double click: two database rows (one per design), one bag item, carrying B's reference; A shows as "Your earlier request".
+- Saved designs list newest first.
+- No horizontal scroll at 1440x900, 1280x720, 1024x768, 768x1024, 390x844, 390x600, 320x568; Arabic RTL and reduced motion pass.
+- The photographs shown are labelled shop samples; the personalized run is refused before spend on staging, and the panel asks where to send the piece.
 
 ## Done this session
 
-- Production provider invariant and readiness/smoke proof (`32404c7`).
-- Staging deployment of the invariant: `9439c0a6-0810-4d9b-96c7-58d55dfb7791`,
-  source `32404c70a04fabbd981fdb74f2720e60b747838e`; it was superseded after
-  the env-spec cleanup, not used as the active rollback target.
-- Removed legacy cloud activation/build flags from deploy and bootstrap; pushed
-  as `cc9fb01` and deployed ACTIVE as `b50be520-f728-4234-870e-7141dbea3cfa`.
-- Removed the custom `NEXT_PUBLIC_SELLABLE_*` look allowlist and made the
-  request-contract set code-owned (`f9dcdc1`, followed by documentation/comment
-  cleanup in `eba96fd`). All four constructions and six lettering styles remain
-  selectable; stale allowlist keys are deleted during deploy sync. The branch
-  was deployed as `84f54bd8-927f-48cd-b871-071e7fc78923` and smoke-tested live.
-- `corepack pnpm build`, `corepack pnpm lint`, shell/module syntax, and diff
-  checks passed. No provider or image-generation call occurred.
+- Omran's site feedback: upright type, size first, one chain, up to three stones, newest first, email-first capture, larger results (`b1268fc`).
+- Add from design step and duplicate saves (`6c0189d`).
+- Identity engine v5: per-construction lettering (boxy capitals), ring post cap 0.45 of height and 120 px, rail welds only on real stems; D-023 (`a1a7d87`).
+- Minimal style-first still prompt v2, look references, quality and size as config, two migrations (`834505d`).
+- Runway lab record, origami variants, v5 proof sheets (`04fdf18` and later).
+- Private client folder ignored; reviewer agents no longer create worktrees (`f6e777b`).
+- Stencil-cased name in every template, stale-snapshot refusal, uppercase length guard, cost floor, stone placement (`bbf7e7a`).
+- Staging record and generated types (`469ba4b`); staging-found double-click fix (`353b99d`).
+- Every chosen stone kept, contact headline, deployable cost floor, compiler v3 (`b1ae140`, `2c1f59b`).
+- Capture tied to its design, reservation floor on the booked `studio_reservation_cents` (`706e274`, `a6cf1b6`).
+- Contact panel edges (`f5edcd1`, `d29e0fc`); close-out notes (`dff6102`).
+- Look references published (4/4, re-hashed from signed URLs) and `LOOK_REFERENCES` set on staging; runbook section added.
 
 ## Evidence
 
-- `docs/goals/road-to-gold/PROGRESS.md`, Session 5 entry.
-- `scripts/digitalocean/smoke.sh` against the live URL: health and protected
-  readiness both passed; protected readiness returned `provider=real`,
-  `keyEnvironment=prod`, configured Supabase/OpenAI, self-hosted Inngest and a
-  valid trusted IP header. Secrets were not printed.
-- In-app Browser proof: local `http://localhost:3011/en/design/new` and live
-  staging `/en/design/new` both show all four constructions and six lettering
-  styles; Framed minimal + Kufi selects without a Reference-only label, and the
-  staging browser recorded zero console errors.
-- DigitalOcean deployment record `84f54bd8-927f-48cd-b871-071e7fc78923` is
-  ACTIVE from branch `codex/overnight-launch-2026-09-08` at
-  `eba96fd6edcdecc92e9133dbfa5c449e18156a25`. The live web env key list
-  contains none of `PROVIDER_MODE`, `JEWELO_CLOUD_BUILD`,
-  `JEWELO_CLOUD_TARGET`, or `NEXT_PUBLIC_SELLABLE_*`.
-- Existing identity adversarial reviews and the prompt/style-anchor lab remain
-  in `docs/goals/road-to-gold/reviews/` and `docs/goals/overnight-launch/`.
+- Lab: `docs/goals/road-to-gold/lab-2026-09-22/` - `ledger.md`, `final/*.txt` (the 20 proven prompts), `sheets/` including `v5-engine-proof.png` (10/10 on the new stencils, sunburst) and `origami-boxy-variants.png` (variants A, B, C).
+- Browser: `docs/goals/road-to-gold/dogfood-2026-09-22/` and `dogfood-2026-09-23/` (viewport sweep, RTL, final save flow).
+- Engine sweeps (scratchpad, not in git): framed-minimal and diamond-rails 576/576 clean with no refusals, classical 547/576, letters 411/624; refusals are the refuse-rather-than-rod trade.
+- Reviews: findings and fixes are in the commit messages listed above.
 
 ## Decisions taken by default
 
-- Production provider selection is derived from `NODE_ENV`; the local
-  `PROVIDER_MODE` convenience is not a cloud control.
-- The existing spend ceiling remains the automatic guard: no real dispatch
-  without the configured daily reservation and attempt ceilings.
-- Existing defaults remain: HarfBuzz identity engine (DS-3/D-019), the full
-  request-contract look set (D-022), studio-only smoke (DS-6), dependency-free SMTP/log
-  notification (DS-8), empty-key observability (DS-9), and the Inngest sweeper
-  recovery model (DS-10).
+- Origami boxy variant A (Cairo 800) is the default; variant B (950, heavier) is Omran's call. C (one crease per stroke) was indistinguishable from A.
+- Classical keeps its own lettering (Playfair), not capitals; classical and framed share the framed look crop, as proven in the lab.
+- Ring posts capped at 120 px: five of 48 lab names (mostly ليلى) now go to operator review instead of hanging on a rod.
+- A name whose capitals would change its letter count (Weiß) is drawn as typed.
+- Framed with three stones fills four corners, so the first stone repeats at bottom left.
+- Cable 45 cm is the house chain.
+- Earlier defaults still stand: DS-3/D-019 HarfBuzz engine, D-022 full contract look set, DS-6 studio-only smoke, DS-8 SMTP/log notification, DS-9 observability, DS-10 sweeper.
 
 ## Needs Sanchay
 
-1. Approve the first paid OpenAI run after P1-5 identity proof; this is the only
-   action that authorizes provider spend.
-2. Resolve Supabase billing before 29 September 2026 (upgrade Devonel or move
-   the project), or the app will receive 402 responses after the grace period.
-3. Provide `NOTIFICATION_TO` and an SMTP sending account if the shop should get
-   email notifications; set `INNGEST_CRON_ENABLED=1` for the sweeper.
-4. Create Sentry/PostHog projects and a DigitalOcean alert recipient if those
-   operational integrations are wanted.
-5. Decide whether the public GitHub repository should become private and make
-   the product calls on long-post Latin names and refused-name hand review.
+1. Rotate `DIGITALOCEAN_ACCESS_TOKEN` in home-mini's `.env`: it returns 401, so `deploy.sh` fails for anyone without doctl's own login (tonight's deploys used that).
+2. Resolve Supabase billing before 29 September 2026 (upgrade Devonel or move the project), or the app gets 402 responses.
+3. SMTP account and `NOTIFICATION_TO` so saved-design emails reach the shop; until then captures are stored but nobody is emailed.
+4. Remove the skin-tone titles in the Shopify theme; they are not in this repository.
+5. Show Omran `lab-2026-09-22/sheets/origami-boxy-variants.png` and ask A or B; confirm cable as the chain; confirm the Studio photo first is what he meant by "hover shows the piece first".
+6. Approve the first paid real run when ready: it needs the spend cap in `runtime_policy` set on purpose; nothing here raises it.
+7. Free laptop disk space (about 5 GB free of 460 GB); a tool call already failed with no space left.
 
 ## Open findings
 
-1. P1-5 fix pass 7: run the identity matrices, inspect the named renders, and
-   complete two consecutive clean adversarial passes (implementer/reviewer).
-2. BL-1: post an anonymous request on staging and prove replay returns the same
-   row (lead/platform).
-3. Fix-review-3 MJ-1 and minors 1–7 remain: operator-note audit, scope-mismatch
-   clearing, unknown-order 404 gate, same-origin login, DOM breadcrumbs,
-   notification sweep floor, and chunked-body bound (implementer).
-4. Run the lead-owned seven-viewport/RTL/reduced-motion staging ladder and save
-   screenshots under the next `docs/goals/road-to-gold/dogfood-*` directory.
-5. `apps/web/src/features/atelier/personalizedRun.test.ts` still contains
-   historical expectations for the removed Classical/Classic restriction. The
-   repository instruction keeps existing Vitest files untouched and unrun;
-   those assertions need a dedicated test-maintenance pass before the suite is
-   treated as a gate.
-6. P3-6, P3-5, P2-3–P2-7, P5-2/P5-3, P7-4/P7-8, and L-1–L-4 remain in the
-   ordered task list.
+1. Major, pre-existing: a bag row can show a substitute sample photograph (another construction or script) under "YOUR DESIGN" with no substitution label (`Atelier.tsx` bag row, from `7b76e5a`). Owner: implementer.
+2. Minor: origami shop sample photos still show the old stylized mixed-case look. Owner: image-lab, then implementer.
+3. Minor: classical ring tab on "Asma" and "Sara" still reads like an accent; fixing it means seating the ring outside the name (wider piece). Owner: lab decision.
+4. Minor: stones prose safe only up to `GEMSTONE_MAX=3`; classical "a middle letter" for two-letter names; `visualFields` stale (chain, gems); `look_rule` not in the variable snapshot. Owner: implementer.
+5. Minor: the reservation floor only applies at quality max, xhigh or auto; at the default `high` the spend cap is the only guard. Owner: platform, when quality is raised.
+6. Observed once: a `/api/preview-requests` POST returned 504 on staging with nothing in the logs; the retry succeeded without a duplicate row. Owner: platform, watch.
+7. Carried over: P1-5 identity proof sign-off, fix-review-3 MJ-1 and minors, Vitest literals (frozen by repo rule), P2-3 to P2-7, P3-5, P3-6, P5-2, P5-3, P7-4, P7-8, L-1 to L-4.
 
 ## Rollback
 
-- App rollback from `home-mini`: `bash scripts/digitalocean/rollback.sh staging
-  b50be520-f728-4234-870e-7141dbea3cfa`; verify the current list first with
-  `doctl apps list-deployments`.
-- Database migrations are additive; use the migration-specific rollback notes
-  in `docs/DIGITALOCEAN-DEPLOYMENT.md` and do not roll past the active `@v2`
-  prompt release without the matching worker.
+- App, from home-mini: `bash scripts/digitalocean/rollback.sh staging 5e0b190b-a25d-4985-8b25-500b317a7c04` (`f5edcd1`); the pre-session target is `c7193dc3-f0f5-4402-bf9b-0f75ac34b708` (`b734e57`). Check `doctl apps list-deployments ec09c9fd-84e4-45c5-b60a-fd62277af322` first.
+- Database: both new migrations are additive (a private bucket and two `create or replace function` bodies); no rollback is needed to run older code.
+- Look references: remove `LOOK_REFERENCES` from the env file and redeploy; the bucket objects can stay.
 
 ## Spend
 
-- OpenAI: USD 0 this session; no provider/image-generation call was made.
-- Runway: 0 credits used in this session; anchors remain outside git.
-- Automatic real-mode ceilings remain enforced by configuration and the worker.
-- DigitalOcean: one staging app; the current and follow-up deployments are
-  ordinary App Platform updates.
-
-### Session 7 custom restriction cleanup (2026-09-10)
-
-- Removed the deployment-time `NEXT_PUBLIC_SELLABLE_*` allowlist and the
-  customer-facing Reference-only gate. `sellableLooks()` now mirrors the
-  request contract directly: four constructions and six lettering styles in
-  either script. Missing catalogue photographs may still be labelled honestly,
-  but they no longer make a contract option non-sellable.
-- Preserved the safety boundaries that are independent of presentation:
-  exact spelling and script rules, Arabic one-name support, deterministic
-  geometry, provider verification, auth, idempotency, spend reservation and
-  rollback/state gates. Invalid or future values outside the contract still
-  fail closed before a run starts.
-- Local browser proof was captured at
-  `docs/goals/road-to-gold/dogfood-2026-09-10/declutter-styles-390x844.png` and
-  `declutter-styles-expanded-390x844.png`; live staging proof and smoke used
-  deployment `84f54bd8-927f-48cd-b871-071e7fc78923`. Build and lint were both
-  13/13; no paid provider call was made.
+- OpenAI API: USD 0; no API image call was made.
+- Runway: 342 credits in the metered batches (162 for the origami variants, 180 for the v5 proof); the earlier 49-generation lab and single proofs were not metered separately. Balance 209,845.
+- DigitalOcean: six staging deployments of the one app; no new resources.
+- Supabase: two migrations and four storage objects in the existing project.
