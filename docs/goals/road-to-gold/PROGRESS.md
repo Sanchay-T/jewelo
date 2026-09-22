@@ -302,3 +302,12 @@ Undone: unrequested edits by two viewer agents (carrier constants, construction 
 In flight: site feedback (implementer), stencil per-construction lettering + fix pass 7 proof (implementer), look reference role / quality config / sunburst lineage (implementer), four-style lab on sunburst (`docs/goals/road-to-gold/lab-2026-09-22/`).
 
 - Review of de584ed (site feedback): blocker multi-stone missing from piece_spec/stones prose, major dead Add-to-bag on design stage, major double submit / unstable requestKey, minor Arabic stone-cap key drift - all sent to an implementer. Follow-up only: bags saved before 22 Sep with a non-Cable chain re-run once because the chain is now forced to Cable 45 (self-healing, no data loss).
+
+### Session 4 close-out, 23 Sep 2026
+
+- Reviews: seven rounds on the branch; rounds 6 and 7 found nothing above minor, and their minors are fixed through d29e0fc.
+- Follow-up (pre-existing, from 7b76e5a, outside this branch): a bag row falls back to `item.sampleId`, which for a design with no exact photograph is a sibling or cross-script substitute, and shows it under "NAME PENDANT · YOUR DESIGN" with no substitution label (`Atelier.tsx` bag row). Closest standing risk to never-borrow-a-design; needs the sample note or the guarded example path.
+- Follow-up: origami shop sample photos still show the old stylized mixed-case look, not the boxy capitals Omran chose.
+- Follow-up: stones prose is safe only up to GEMSTONE_MAX=3; classical "a middle letter" for two-letter names; `visualFields` stale (chain, gems); `look_rule` not in the variable snapshot.
+- Known: the still reservation floor only bites at quality max/xhigh/auto; at the default high it checks nothing, and the runtime_policy spend cap is what stops staging spending.
+- Known: `DIGITALOCEAN_ACCESS_TOKEN` in `.env` returns 401; deploys used doctl's own credential on home-mini.
