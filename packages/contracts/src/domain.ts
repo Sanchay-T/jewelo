@@ -715,13 +715,25 @@ const withNameCount = <T extends { nameCount: number; names: unknown[] }>(
   value: T,
 ) => value.nameCount === value.names.length;
 
+/**
+ * `gemstone` is the first of the chosen stones, exactly as the preview request
+ * requires, so the single-stone field and the list can never name two different
+ * first stones.
+ */
+const withFirstGemstone = <
+  T extends { gemstone: string; gemstones?: readonly string[] },
+>(
+  value: T,
+) => value.gemstones === undefined || value.gemstones[0] === value.gemstone;
+
 /** The draft specification: the shopper has not confirmed the spelling yet. */
 export const jewelryDraftSpecificationSchema = z
   .object({
     ...specificationShape,
     spellingConfirmed: z.boolean().optional(),
   })
-  .refine(withNameCount, "nameCount must match the number of names.");
+  .refine(withNameCount, "nameCount must match the number of names.")
+  .refine(withFirstGemstone, "The first chosen stone must be the gemstone.");
 
 /** The approved specification a revision is cut from; spelling is confirmed. */
 export const jewelrySpecificationSchema = z
@@ -729,7 +741,8 @@ export const jewelrySpecificationSchema = z
     ...specificationShape,
     spellingConfirmed: z.literal(true),
   })
-  .refine(withNameCount, "nameCount must match the number of names.");
+  .refine(withNameCount, "nameCount must match the number of names.")
+  .refine(withFirstGemstone, "The first chosen stone must be the gemstone.");
 
 /* ------------------------------------------------------------------------- */
 /* Storyline review 1 M7. The refusals that will never change their mind.     */

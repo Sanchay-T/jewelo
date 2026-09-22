@@ -55,6 +55,9 @@ import { GEMSTONE_MAX, NAME_MAX } from "@jewelo/contracts";
 import { captureJourneyEvent } from "@jewelo/observability/client";
 import s from "./atelier.module.css";
 
+/** How many stones one pendant may carry, said to the shopper. */
+const STONE_LIMIT_NOTICE = `Choose up to ${GEMSTONE_MAX} stones.`;
+
 const arabic: Record<string, string> = {
   Design: "التصميم",
   Review: "المراجعة",
@@ -99,9 +102,9 @@ const arabic: Record<string, string> = {
   "18K gold": "ذهب عيار ١٨",
   "Stone setting": "ترصيع الأحجار",
   "Choose your stones": "اختر أحجارك",
-  // Keyed on the sentence `STONE_LIMIT_NOTICE` builds from `GEMSTONE_MAX`, the
-  // same way the name cap is keyed on its own sentence.
-  "Choose up to 3 stones.": "اختر حتى ٣ أحجار.",
+  // Both sides are built from `GEMSTONE_MAX`, so raising the cap cannot leave
+  // the Arabic sentence keyed on a number the English one no longer says.
+  [STONE_LIMIT_NOTICE]: `اختر حتى ${GEMSTONE_MAX.toLocaleString("ar-EG")} أحجار.`,
   "Pendant width": "عرض القلادة",
   Engraving: "النقش",
   "Special requests": "طلبات خاصة",
@@ -267,8 +270,6 @@ import type { CustomerViewStatus } from "./personalizedRun";
  * the input stops there, so the shopper is told rather than quietly trimmed.
  */
 const NAME_LIMIT_NOTICE = `This is the longest name we can make: ${NAME_MAX} characters.`;
-/** How many stones one pendant may carry, said to the shopper. */
-const STONE_LIMIT_NOTICE = `Choose up to ${GEMSTONE_MAX} stones.`;
 /** True once the field is holding all the characters it will accept. */
 const atLimit = (value: string) => value.length >= NAME_MAX;
 
@@ -966,21 +967,36 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
     setClearing(false);
     bag.current?.showModal();
   }
+  function focusContact() {
+    requestAnimationFrame(() => {
+      const field = document.getElementById("preview-contact");
+      field?.scrollIntoView({ block: "center" });
+      field?.focus();
+    });
+  }
   async function add() {
     if (!eligible || saving) return;
     // Every design the shopper keeps is a request the shop can answer (Omran,
     // 22 September 2026). If they have not left a way to be reached yet, that
     // is taken first and a refusal - an empty box, a mistyped address, a
     // failed write - stops the save with the reason already on the form.
+    // The box itself only exists on the review step, so a shopper still on the
+    // design step is carried to it and put in the box instead of clicking into
+    // nothing.
     let reference = own.capturedRequestId ?? own.previousRequestId;
     if (own.captureStatus !== "captured") {
+      if (state.stage !== "review") {
+        go("review");
+        focusContact();
+        return;
+      }
+      // Held from here so a second click on a slow write cannot start a second
+      // save; every path below releases it.
+      setSaving(true);
       reference = await own.submitContact();
       if (!reference) {
-        requestAnimationFrame(() => {
-          const field = document.getElementById("preview-contact");
-          field?.scrollIntoView({ block: "center" });
-          field?.focus();
-        });
+        setSaving(false);
+        focusContact();
         return;
       }
     }

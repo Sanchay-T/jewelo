@@ -497,8 +497,17 @@ export function usePersonalizedPreview(input: {
     }
     setCaptureStatus("sending");
     setCaptureError(undefined);
-    const key = submission?.requestKey ?? crypto.randomUUID();
-    const startedAtValue = submission?.startedAt ?? Date.now();
+    // The request key is what makes a capture idempotent: the route replays the
+    // row that already carries it instead of writing a second one. With the
+    // personalized preview off there is no submission in state to read it from,
+    // so the key this browser already used for the same design is taken from
+    // durable state; a different design gets a fresh key, as it must.
+    const durable = written.current ?? loadSubmission();
+    const previous =
+      submission ??
+      (durable && durable.signature === currentSignature ? durable : undefined);
+    const key = previous?.requestKey ?? crypto.randomUUID();
+    const startedAtValue = previous?.startedAt ?? Date.now();
     try {
       const preview = buildRequest(crypto.randomUUID());
       const record = await capturePreviewRequest({
