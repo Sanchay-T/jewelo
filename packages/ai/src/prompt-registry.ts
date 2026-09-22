@@ -28,7 +28,11 @@ export const PROMPT_COMPILER_VERSION = "caleums-prompt-compiler-v2";
 // "Image N (role)" in the compiled text, because OpenAI receives ordered files
 // and never sees a tag. Stored snapshots are never recompiled, so every
 // historical prompt stays exactly the bytes that were paid for.
-export const STILL_COMPILER_VERSION = "caleums-still-compiler-v2";
+// v3 (23 Sep 2026): the sheet names the piece by the text the stencil cuts, the
+// stones sentence names every chosen stone, and a stale prompt is refused
+// before spend - all three change the compiled bytes, so stored snapshots stay
+// distinguishable from the v2 text that was paid for.
+export const STILL_COMPILER_VERSION = "caleums-still-compiler-v3";
 export const MAX_PROMPT_TEMPLATE_LENGTH = 12_000;
 export const MAX_COMPILED_PROMPT_LENGTH = 16_000;
 /**
@@ -266,16 +270,24 @@ export const PENDANT_STONES_PROSE: Readonly<Record<string, string>> = {
 const PENDANT_STONES_PROSE_MULTI: Readonly<
   Record<
     string,
-    { readonly head: string; readonly seats: readonly string[]; readonly tail?: string }
+    {
+      readonly head: string;
+      readonly seats: readonly string[];
+      /** Further natural places, used only when more stones were chosen than
+       *  the construction has seats, so no chosen stone is ever dropped. */
+      readonly extraSeats?: readonly string[];
+      readonly tail?: string;
+    }
   >
 > = {
   classical: {
-    head: "Stones: one small round stone set flush into the flat face of a letter, at each of two places",
+    head: "Stones: one small round stone set flush into the flat face of a letter, at each of {places} places",
     seats: ["the first letter", "the last letter"],
+    extraSeats: ["a middle letter"],
     tail: "The rings stay open.",
   },
   "origami-ribbon": {
-    head: "Stones: one small round stone set flush into the flat face of a letter where two strokes meet, at each of three places",
+    head: "Stones: one small round stone set flush into the flat face of a letter where two strokes meet, at each of {places} places",
     seats: ["the first letter", "a middle letter", "the last letter"],
     tail: "The outline does not change.",
   },
@@ -284,7 +296,7 @@ const PENDANT_STONES_PROSE_MULTI: Readonly<
     seats: ["top left", "top right", "bottom right", "bottom left"],
   },
   "diamond-rails": {
-    head: "Stones: one small round stone in a raised round gold bezel, at each of three places",
+    head: "Stones: one small round stone in a raised round gold bezel, at each of {places} places",
     seats: [
       "the left end of the top rail",
       "the right end of the top rail",
@@ -292,6 +304,9 @@ const PENDANT_STONES_PROSE_MULTI: Readonly<
     ],
   },
 };
+
+/** How many places the sentence names, in words. At most four are ever used. */
+const PLACE_COUNT_WORD = ["zero", "one", "two", "three", "four"] as const;
 
 /** Singular and plural of a stone, as a jeweller would say it in a sentence. */
 const GEMSTONE_STONE_NAME: Readonly<Record<string, readonly [string, string]>> = {
@@ -575,13 +590,25 @@ function stonesRule(specification: Readonly<Record<string, unknown>>): string {
   );
   const construction = scalar(specification.construction);
   if (names.length > 1) {
-    const { head, seats, tail } =
+    const { head, seats, extraSeats, tail } =
       PENDANT_STONES_PROSE_MULTI[construction] ??
       PENDANT_STONES_PROSE_MULTI.classical!;
-    const placed = seats.map(
-      (seat, index) => `${names[index % names.length]![0]} at ${seat}`,
+    // Driven by the chosen stones as well as the seats: a construction with
+    // fewer seats than stones opens its further natural places rather than
+    // dropping a stone the shopper picked and then claiming "No other stones".
+    const places =
+      names.length > seats.length ? [...seats, ...(extraSeats ?? [])] : seats;
+    const count = Math.max(places.length, names.length);
+    const placed = Array.from(
+      { length: count },
+      (_, index) =>
+        `${names[index % names.length]![0]} at ${places[index % places.length]}`,
     );
-    return `${head}: ${placed.join(", ")}.${tail ? ` ${tail}` : ""} No other stones.`;
+    const sentenceHead = head.replaceAll(
+      "{places}",
+      PLACE_COUNT_WORD[count] ?? String(count),
+    );
+    return `${sentenceHead}: ${placed.join(", ")}.${tail ? ` ${tail}` : ""} No other stones.`;
   }
   const sentence =
     PENDANT_STONES_PROSE[construction] ?? PENDANT_STONES_PROSE.classical!;

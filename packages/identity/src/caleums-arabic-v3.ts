@@ -781,9 +781,13 @@ export function identityDrawnText(
   approvedText: string,
   lettering?: Pick<IdentityLettering, "uppercase">,
 ): string {
-  if (!lettering?.uppercase) return approvedText;
-  const upper = approvedText.toLocaleUpperCase("en");
-  return [...upper].length === [...approvedText].length ? upper : approvedText;
+  // The one normalisation: NFC and trimmed, the form the stencil is cut from,
+  // so a caller that hands over raw approved text cannot name a piece by a
+  // different sequence of code points than the metal is drawn from.
+  const text = approvedText.normalize("NFC").trim();
+  if (!lettering?.uppercase) return text;
+  const upper = text.toLocaleUpperCase("en");
+  return [...upper].length === [...text].length ? upper : text;
 }
 
 /**

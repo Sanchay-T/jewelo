@@ -442,12 +442,7 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
   const ownDesignInProgress = own.attempted && !own.personalized;
   const ownRunOver = own.unavailable;
   const ownPlaceholderFor = (camera: View) => t(
-    // With the personalized preview switched off an approval is never
-    // photographed here, so the tiles must not promise two minutes while the
-    // panel beside them asks where to send it.
-    ownRunOver ||
-      (!own.enabled && own.attempted) ||
-      (own.personalized && own.statusFor(camera) === "unavailable")
+    ownRunOver || (own.personalized && own.statusFor(camera) === "unavailable")
       ? "The shop will photograph it and send it to you."
       : "Your photograph is being made. About two minutes.",
   );
@@ -1939,9 +1934,10 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                     )}
                     {own.capturing && own.captureStatus !== "captured" && (
                       <>
-                        {/* Before a contact is captured nothing is being
-                            prepared yet, so the headline says what actually
-                            happened and asks for the one thing that changes it.
+                        {/* The headline may only say the piece was not
+                            photographed once the run is actually over, the same
+                            signal the tiles read; while it is still running the
+                            neutral question stands beside "about two minutes".
                             The daily allowance is per anonymous principal, and
                             one shop tablet is one principal, so it is the
                             device's limit and not this shopper's. */}
@@ -1950,13 +1946,13 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                             ? locale === "ar"
                               ? "وصل هذا الجهاز إلى حدّ المعاينات اليوم. من فضلك حاول مرة أخرى غدًا."
                               : "This device has reached today's preview limit. Please try again tomorrow."
-                            : own.personalized || !own.attempted
+                            : ownRunOver
                               ? locale === "ar"
-                                ? "أين نرسل قطعتك؟"
-                                : "Where should we send it?"
-                              : locale === "ar"
                                 ? "لم نتمكن من تصوير قطعتك هنا. اترك طريقة للتواصل معك وسنرسلها إليك."
-                                : "We could not photograph your piece here. Leave one way to reach you and we will send it."}
+                                : "We could not photograph your piece here. Leave one way to reach you and we will send it."
+                              : locale === "ar"
+                                ? "أين نرسل قطعتك؟"
+                                : "Where should we send it?"}
                         </p>
                         <div
                           className={s.channelPicker}

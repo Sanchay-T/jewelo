@@ -70,6 +70,11 @@ export const optionalRuntimeConfig = [
   // because Sunburst's "high" is about gpt-image-2's "medium".
   "OPENAI_IMAGE_QUALITY",
   "OPENAI_IMAGE_SIZE_PROFILE",
+  // What the worker reserves against a run's budget before it calls the
+  // provider. Defaults to 20 in @jewelo/config, which is below the real price
+  // of `max`; a deployment that raises the quality must raise this with it or
+  // the app refuses to boot, so it has to be shippable from the env file.
+  "OPENAI_STILL_ESTIMATED_COST_CENTS",
   // Which constructions have an approved look reference published, as
   // "<construction>:<sha256>" pairs. Empty until the lab picks its crops; a
   // construction that needs a look and is not named here is refused before
@@ -211,6 +216,30 @@ export function validateWebEnv(values) {
   const sizeProfile = values.get("OPENAI_IMAGE_SIZE_PROFILE");
   if (sizeProfile && !["standard", "2k"].includes(sizeProfile)) {
     errors.push("OPENAI_IMAGE_SIZE_PROFILE must be standard or 2k");
+  }
+  // The reservation may not sit below what the chosen quality and canvas
+  // actually cost, or a run spends past the ceiling it was given. Duplicated
+  // from `STILL_COST_FLOOR_CENTS` in packages/config/src/index.ts, together
+  // with the schema defaults quality=high and size profile=standard, because
+  // this script runs under plain node with no TypeScript build step. Keep the
+  // two tables in step; the config schema is the source.
+  const stillCostFloorCents = { max: { standard: 21, "2k": 43 } };
+  const estimate = values.get("OPENAI_STILL_ESTIMATED_COST_CENTS");
+  const estimateSet = estimate !== undefined && estimate.trim() !== "";
+  // An absent key is the schema's default of 20, which is itself below the max
+  // floors, so the check runs on the effective value rather than only on a
+  // value that was written down.
+  const cents = estimateSet ? Number(estimate) : 20;
+  if (estimateSet && (!Number.isInteger(cents) || cents < 1)) {
+    errors.push("OPENAI_STILL_ESTIMATED_COST_CENTS must be a positive integer");
+  } else {
+    const effectiveQuality = quality || "high";
+    const effectiveProfile = sizeProfile || "standard";
+    const floor = stillCostFloorCents[effectiveQuality]?.[effectiveProfile];
+    if (floor !== undefined && cents < floor)
+      errors.push(
+        `OPENAI_STILL_ESTIMATED_COST_CENTS must be at least ${floor} for OPENAI_IMAGE_QUALITY=${effectiveQuality} at OPENAI_IMAGE_SIZE_PROFILE=${effectiveProfile}`,
+      );
   }
   // Same rule as `LOOK_REFERENCES` in packages/config. Checksums only, no path
   // and no byte of a private asset is ever printed.
