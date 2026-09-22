@@ -442,7 +442,12 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
   const ownDesignInProgress = own.attempted && !own.personalized;
   const ownRunOver = own.unavailable;
   const ownPlaceholderFor = (camera: View) => t(
-    ownRunOver || (own.personalized && own.statusFor(camera) === "unavailable")
+    // With the personalized preview switched off an approval is never
+    // photographed here, so the tiles must not promise two minutes while the
+    // panel beside them asks where to send it.
+    ownRunOver ||
+      (!own.enabled && own.attempted) ||
+      (own.personalized && own.statusFor(camera) === "unavailable")
       ? "The shop will photograph it and send it to you."
       : "Your photograph is being made. About two minutes.",
   );
@@ -974,7 +979,19 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
       field?.focus();
     });
   }
+  // React state only locks after a render, so two clicks in one frame would
+  // both pass `saving`; this ref closes that gap.
+  const adding = useRef(false);
   async function add() {
+    if (adding.current) return;
+    adding.current = true;
+    try {
+      await addPiece();
+    } finally {
+      adding.current = false;
+    }
+  }
+  async function addPiece() {
     if (!eligible || saving) return;
     // Every design the shopper keeps is a request the shop can answer (Omran,
     // 22 September 2026). If they have not left a way to be reached yet, that
