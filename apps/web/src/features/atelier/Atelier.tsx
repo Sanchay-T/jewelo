@@ -1076,6 +1076,8 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
           ),
         };
       });
+      // Clears the design-step "Where should we send it?" once it is answered.
+      setNotice("");
       if (snapshot && !snapshot.persistent)
         setNotice(
           "Your piece is in this bag for this session. Image storage is unavailable; keep this tab open.",
@@ -1878,10 +1880,10 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                 {/* The shop wants the way to reach the shopper on every design
                     it can make, so the block is the request the shop answers by
                     hand as much as it is the preview. It still needs a backend
-                    to write that request to: in the mock data mode `own.capturing`
+                    to write that request to: in the mock data mode `own.enabled`
                     is false and nothing inside here renders, so the panel itself
                     is off rather than a headline over an empty box. */}
-                {isSellable && (own.enabled || own.capturing) && (
+                {isSellable && own.enabled && (
                   <section
                     className={s.ownPreview}
                     aria-live="polite"

@@ -358,7 +358,10 @@ export function usePersonalizedPreview(input: {
       preview = buildRequest(crypto.randomUUID());
     } catch {
       setSubmission({ signature: currentSignature, requestKey, startedAt });
-      remember({ signature: currentSignature, requestKey, startedAt });
+      remember(
+        { signature: currentSignature, requestKey, startedAt },
+        capturedIdFor(currentSignature),
+      );
       setReason("invalid");
       setPhase("degraded");
       startedFor.current = undefined;
@@ -369,7 +372,10 @@ export function usePersonalizedPreview(input: {
       // Proved unmakeable before a single cent is reserved: this goes straight
       // to the shop instead of a blocked run.
       setSubmission({ signature: currentSignature, requestKey, startedAt });
-      remember({ signature: currentSignature, requestKey, startedAt });
+      remember(
+        { signature: currentSignature, requestKey, startedAt },
+        capturedIdFor(currentSignature),
+      );
       setReason("unsupported");
       setPhase("degraded");
       return;
@@ -379,7 +385,10 @@ export function usePersonalizedPreview(input: {
     // Write-ahead: persisted BEFORE the first request, so a reload between the
     // approval and its answer still finds this submission and refuses to start
     // a second run for the same piece.
-    remember({ signature: currentSignature, requestKey, startedAt });
+    remember(
+      { signature: currentSignature, requestKey, startedAt },
+      capturedIdFor(currentSignature),
+    );
     let cancelled = false;
     void startPersonalizedRun({
       request: preview,
