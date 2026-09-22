@@ -995,10 +995,12 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
     // The box itself only exists on the review step, so a shopper still on the
     // design step is carried to it and put in the box instead of clicking into
     // nothing.
-    // `capturing` is false in the mock data mode, where there is no backend to
+    // `enabled` is false in the mock data mode, where there is no backend to
     // write the request to; the piece is kept locally without one, as before.
+    // Not `capturing`: that is also false on the design step, where this click
+    // must still ask for contact.
     let reference = own.capturedRequestId ?? own.previousRequestId;
-    if (own.capturing && own.captureStatus !== "captured") {
+    if (own.enabled && own.captureStatus !== "captured") {
       if (state.stage !== "review") {
         go("review");
         focusContact();

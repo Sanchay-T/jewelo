@@ -1309,8 +1309,9 @@ export class SupabasePresentationRepository implements PresentationRepository {
    * read as whichever end refuses - an unreadable policy is not evidence that
    * the day is capped, and this gate exists to refuse exactly that. The two
    * ceilings read as `Number.MAX_SAFE_INTEGER`, above every configurable cap;
-   * the reservation reads as 0, below every floor. Either way a missing column
-   * refuses pre-spend instead of passing.
+   * the reservation reads as 0, below every published floor. A missing column
+   * therefore refuses pre-spend for a priced quality (max, xhigh, auto); for an
+   * unpriced one the floor is 0 and the reservation check passes.
    */
   async spendPolicy(): Promise<RuntimeSpendPolicy> {
     const rows = await this.#request<
