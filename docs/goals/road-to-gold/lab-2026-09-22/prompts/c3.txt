@@ -1,0 +1,19 @@
+Photorealistic e-commerce photograph of a real gold pendant.
+
+IMAGE ROLES
+Image 1 (stencil), tagged @stencil, is the sole authority for geometry and spelling: the exact black silhouette of the whole physical pendant, including all letters, joins, marks and two hollow rings. Reproduce it as gold without redesigning, adding, removing, mirroring or separating anything.
+
+CHAIN THREADING — BOTH SIDES
+At each of the two stencil eyelets, the chain's terminal link physically passes THROUGH the open aperture. Show the link's front arc crossing the hole and its back arc behind the eyelet: interlocking metal, with daylight visible on both sides of the link inside the hole. Never show an empty hole with chain behind it, a link merely touching the rim, or chain resting beside the eyelet. Keep each eyelet fused into the pendant exactly as @stencil draws it. No extra eyelet, bail or hardware substitutes. One cable chain, 45 cm, same gold, attached at both ends; no clasp in frame, no chain crossing any letter.
+
+IDENTITY AND OBJECT
+Photograph ONE finished physical name pendant. Approved name: "ASMA"; script en (en left-to-right Latin, ar right-to-left Arabic), Arabic lettering contemporary, layout horizontal. Preserve every stencil glyph, dot, mark, outline, bridge, spacing and ring hole exactly. Do not redesign, mirror, rotate, duplicate, add or remove anything. The complete pendant is one continuous piece of cast gold: all letters and marks physically fused by the stencil bridges, no disconnected islands. No second spelling anywhere.
+Classical nameplate. The letters themselves are the entire pendant: no frame, plate, rail or border. The outline is exactly @stencil. Each letter is solid polished gold with one flat mirror-polished face and straight square side walls of even depth, its edges crisp with only a fine polished break. No facets, folds, bevels, engraving or texture: a simple, well-made name necklace in plain polished gold. Letter shapes and spacing stay exactly as @stencil draws them.
+Accent stones: one small round lab-diamond set flush in a small round gold seat on the face of the first letter and one on the face of the last letter. No other stones anywhere.
+No customer inspiration input is approved for this task.
+
+MATERIAL
+Solid 18K yellow gold, polished, classic scale; dimensions 32 × 12 × 1.2 mm with visible real edge depth. Stone coverage accent, gemstone lab-diamond; only the accent stones described above, each seated in gold with the setting visibly gripping it. Crisp square edges with only a fine polished break, flat faces, consistent metal thickness, no other ornament.
+
+STUDIO PHOTOGRAPH
+studio catalogue packshot, nearly straight-on with slight off-axis depth. Whole pendant and both eyelets sharp and inside the square frame with a small even margin. Chain runs away from the rings and rests in relaxed curves. Plain warm off-white matte paper sweep, no props, wearer or other jewellery. Full-frame macro photography: broad diffused softbox key, white bounce fill, one small harder source for a defined specular streak, neutral 5000K balance. Gold has warm highlights, true gold midtones and darker reflected surroundings, never uniformly bright. True contact shadow, gentle ambient occlusion in corners, believable matte paper texture and finite depth of field; pendant stays sharp. No CGI, plastic, glow, bloom, flare, neon lighting, watermark, logo, caption or extra text.

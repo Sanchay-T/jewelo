@@ -286,3 +286,19 @@ Open:
   `Framed minimal` + `Kufi`. Staging deployment `84f54bd8-927f-48cd-b871-071e7fc78923`
   is ACTIVE at branch head `eba96fd`; smoke and protected readiness passed with
   `provider=real`. No paid provider call.
+
+## Session 4, 2026-09-22 - Omran call: calmer styles on gpt-image-2.5-sunburst, site feedback
+
+Source: Wispr Flow meeting "Jewelry Design Image Generation", 22 Sep 06:10-06:45 UTC (styles too stylized; origami needs sharp folded-paper edges; 2-3 variants on the boxy look; reuse his WhatsApp references; one default chain; multiple stones with quantity; size first; bigger results; newest saved first; email on save; no italics). Sanchay approved capitals and the model `gpt-image-2.5-sunburst`.
+
+Evidence so far (Runway, 1:1, name ASMA, origami):
+- Today's serif stencil + current prompt on sunburst: still crumpled facets and "lAsmal" - the model change alone does not fix it.
+- Cairo at wght 800 with tracking -60 units in the stencil gives the boxy capitals (12/12 lab stencils pass every engine gate).
+- Calmer wording alone gives a flat plain plate; adding a text-free crop of Omran's image 36 as a texture-only `look` reference gives the folded planes with nothing copied. Same result on gpt-image-2.
+- OpenAI docs: Sunburst `high` is about gpt-image-2 `medium`; production hardcodes `quality: "high"`.
+
+Undone: unrequested edits by two viewer agents (carrier constants, construction prose, D-021 amendment, a PROGRESS entry). Their reference reports stay: `reference-visual-spec-shortlist.md`, `reference-visual-spec-specsheets.md`.
+
+In flight: site feedback (implementer), stencil per-construction lettering + fix pass 7 proof (implementer), look reference role / quality config / sunburst lineage (implementer), four-style lab on sunburst (`docs/goals/road-to-gold/lab-2026-09-22/`).
+
+- Review of de584ed (site feedback): blocker multi-stone missing from piece_spec/stones prose, major dead Add-to-bag on design stage, major double submit / unstable requestKey, minor Arabic stone-cap key drift - all sent to an implementer. Follow-up only: bags saved before 22 Sep with a non-Cable chain re-run once because the chain is now forced to Cable 45 (self-healing, no data loss).

@@ -1,0 +1,19 @@
+Photorealistic e-commerce photograph of a real gold pendant.
+
+IMAGE ROLES
+Image 1 (stencil), tagged @stencil, is the sole authority for geometry and spelling: the exact black silhouette of the whole physical pendant, including all letters, joins, marks and two hollow rings. Reproduce it as gold without redesigning, adding, removing, mirroring or separating anything.
+Image 2 (look), tagged @look, is a surface and texture reference only: copy its finish - solid flat-faced mirror-polished letters with crisp square side walls standing slightly proud of a slim square-section frame bar - and nothing else. Never copy its outline, letters, name, frame, stones, rings, chain or layout.
+
+CHAIN THREADING — BOTH SIDES
+At each of the two stencil eyelets, the chain's terminal link physically passes THROUGH the open aperture. Show the link's front arc crossing the hole and its back arc behind the eyelet: interlocking metal, with daylight visible on both sides of the link inside the hole. Never show an empty hole with chain behind it, a link merely touching the rim, or chain resting beside the eyelet. Keep each eyelet fused into the pendant exactly as @stencil draws it. No extra eyelet, bail or hardware substitutes. One cable chain, 45 cm, same gold, attached at both ends; no clasp in frame, no chain crossing any letter.
+
+IDENTITY AND OBJECT
+Photograph ONE finished physical name pendant. Approved name: "NOOR"; script en (en left-to-right Latin, ar right-to-left Arabic), Arabic lettering contemporary, layout horizontal. Preserve every stencil glyph, dot, mark, outline, bridge, spacing and ring hole exactly. Do not redesign, mirror, rotate, duplicate, add or remove anything. The complete pendant is one continuous piece of cast gold: all letters and marks physically fused by the stencil bridges, no disconnected islands. No second spelling anywhere.
+Framed minimal. @stencil draws the whole piece: the letters inside one open rectangular frame, the welds where the letters meet the frame and the two rings on the top bar; reproduce them exactly as drawn and add nothing. The frame is a slim square-section gold bar with a flat polished top face, straight square sides and crisp right-angle corners. The letters are solid flat-faced blocks with a flat mirror-polished face and straight square side walls, standing slightly proud of the frame so they cast a small soft shadow on it. No bevels, facets, engraving, texture or second border. Letter shapes and spacing stay exactly as @stencil draws them.
+No customer inspiration input is approved for this task.
+
+MATERIAL
+Solid 18K yellow gold, polished, classic scale; dimensions 32 × 12 × 1.2 mm with visible real edge depth. Stone coverage none, gemstone none; none means no stones, sparkle points or settings anywhere. Crisp square edges with only a fine polished break, flat faces, consistent metal thickness, no ornament.
+
+STUDIO PHOTOGRAPH
+studio catalogue packshot, nearly straight-on with slight off-axis depth. Whole pendant and both eyelets sharp and inside the square frame with a small even margin. Chain runs away from the rings and rests in relaxed curves. Plain warm off-white matte paper sweep, no props, wearer or other jewellery. Full-frame macro photography: broad diffused softbox key, white bounce fill, one small harder source for a defined specular streak, neutral 5000K balance. Gold has warm highlights, true gold midtones and darker reflected surroundings, never uniformly bright. True contact shadow, gentle ambient occlusion in corners, believable matte paper texture and finite depth of field; pendant stays sharp. No CGI, plastic, glow, bloom, flare, neon lighting, watermark, logo, caption or extra text.

@@ -1,0 +1,20 @@
+Photorealistic e-commerce photograph of a real gold pendant.
+
+IMAGE ROLES
+Image 1 (stencil), tagged @stencil, is the sole authority for geometry and spelling: the exact black silhouette of the whole physical pendant, including all letters, joins, marks and two hollow rings. Reproduce it as gold without redesigning, adding, removing, mirroring or separating anything.
+Image 2 (look), tagged @look, is a surface and texture reference only: copy its finish - slim crisp polished gold bars and clean flat-faced polished letters with square side walls - and nothing else. Never copy its outline, letters, name, frame, stones, rings, chain or layout.
+
+CHAIN THREADING — BOTH SIDES
+At each of the two stencil eyelets, the chain's terminal link physically passes THROUGH the open aperture. Show the link's front arc crossing the hole and its back arc behind the eyelet: interlocking metal, with daylight visible on both sides of the link inside the hole. Never show an empty hole with chain behind it, a link merely touching the rim, or chain resting beside the eyelet. Keep each eyelet fused into the pendant exactly as @stencil draws it. No extra eyelet, bail or hardware substitutes. One cable chain, 45 cm, same gold, attached at both ends; no clasp in frame, no chain crossing any letter.
+
+IDENTITY AND OBJECT
+Photograph ONE finished physical name pendant. Approved name: "ASMA"; script en (en left-to-right Latin, ar right-to-left Arabic), Arabic lettering contemporary, layout horizontal. Preserve every stencil glyph, dot, mark, outline, bridge, spacing and ring hole exactly. Do not redesign, mirror, rotate, duplicate, add or remove anything. The complete pendant is one continuous piece of cast gold: all letters and marks physically fused by the stencil bridges, no disconnected islands. No second spelling anywhere.
+Diamond rails. @stencil draws the whole piece: the letters held between two straight parallel gold rails, one along the top and one along the bottom, fused where the letters touch them, and the two rings at the outer ends of the top rail; reproduce them exactly as drawn and add nothing. The rails are slim, perfectly straight polished gold bars with a flat top face and crisp square ends. The letters are clean flat-faced polished gold with straight square side walls and crisp edges. No bevels, facets, engraving or texture. Letter shapes and spacing stay exactly as @stencil draws them.
+Accent stones: exactly three small round lab-diamonds, each in a raised round gold bezel collar sitting on a rail: two on the top rail, one near each end between the rings, and one on the bottom rail at its centre. No stones on the letters and no other stones anywhere.
+No customer inspiration input is approved for this task.
+
+MATERIAL
+Solid 18K yellow gold, polished, classic scale; dimensions 32 × 12 × 1.2 mm with visible real edge depth. Stone coverage accent, gemstone lab-diamond; only the accent stones described above, each seated in gold with the setting visibly gripping it. Crisp square edges with only a fine polished break, flat faces, consistent metal thickness, no other ornament.
+
+STUDIO PHOTOGRAPH
+studio catalogue packshot, nearly straight-on with slight off-axis depth. Whole pendant and both eyelets sharp and inside the square frame with a small even margin. Chain runs away from the rings and rests in relaxed curves. Plain warm off-white matte paper sweep, no props, wearer or other jewellery. Full-frame macro photography: broad diffused softbox key, white bounce fill, one small harder source for a defined specular streak, neutral 5000K balance. Gold has warm highlights, true gold midtones and darker reflected surroundings, never uniformly bright. True contact shadow, gentle ambient occlusion in corners, believable matte paper texture and finite depth of field; pendant stays sharp. No CGI, plastic, glow, bloom, flare, neon lighting, watermark, logo, caption or extra text.

@@ -1,7 +1,7 @@
 ---
 name: image-lab
 description: Workhorse for the Runway prompt lab - builds stencils, uploads references, runs gpt-image-2 generations, downloads results, keeps the ledger. Never scores its own images.
-tools: Read, Edit, Write, Grep, Glob, Bash, Agent, mcp__a1e64602-de39-48a8-9594-462640d77969__generate_image, mcp__a1e64602-de39-48a8-9594-462640d77969__get_task, mcp__a1e64602-de39-48a8-9594-462640d77969__init_upload, mcp__a1e64602-de39-48a8-9594-462640d77969__complete_upload, mcp__a1e64602-de39-48a8-9594-462640d77969__list_recent, mcp__a1e64602-de39-48a8-9594-462640d77969__whoami, mcp__a1e64602-de39-48a8-9594-462640d77969__show_plans_and_credits
+tools: Read, Edit, Write, Grep, Glob, Bash, Agent, mcp__claude_ai_RunwayML__generate_image, mcp__claude_ai_RunwayML__get_task, mcp__claude_ai_RunwayML__init_upload, mcp__claude_ai_RunwayML__complete_upload, mcp__claude_ai_RunwayML__list_recent, mcp__claude_ai_RunwayML__whoami, mcp__claude_ai_RunwayML__show_plans_and_credits
 model: claude-opus-5
 effort: medium
 ---
