@@ -217,6 +217,12 @@ export interface JewelrySpecification {
   finish: "polished" | "matte" | "satin";
   stoneCoverage: StoneCoverage;
   gemstone: Gemstone;
+  /**
+   * Every stone the piece is set with, when it is set with more than one.
+   * Optional and additive: `gemstone` stays the first of them, so a revision
+   * approved before 22 September 2026 reads back unchanged.
+   */
+  gemstones?: readonly Gemstone[];
   connector: ConnectorStyle;
   /** Optional: absent on every revision approved before 7 September 2026. */
   construction?: PendantConstruction;
@@ -431,6 +437,12 @@ export interface JeweloClient {
 /* ------------------------------------------------------------------------- */
 
 export const NAME_MAX = 30;
+/**
+ * How many different stones one pendant may be set with. The shop asked for
+ * several stones on one piece (Omran, 22 September 2026) and named three as the
+ * most a single name pendant carries without the setting losing its reading.
+ */
+export const GEMSTONE_MAX = 3;
 /**
  * How many Latin characters the identity engine can actually cast as one
  * pendant, measured rather than guessed.
@@ -674,6 +686,7 @@ const specificationShape = {
   finish: z.enum(["polished", "matte", "satin"]),
   stoneCoverage: z.enum(["none", "accent", "partial-pave", "full-pave"]),
   gemstone: gemstoneSchema,
+  gemstones: z.array(gemstoneSchema).min(1).max(GEMSTONE_MAX).optional(),
   connector: connectorSchema,
   construction: constructionSchema.optional(),
   lettering: letteringSchema.optional(),

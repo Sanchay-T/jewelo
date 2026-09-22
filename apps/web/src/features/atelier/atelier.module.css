@@ -369,11 +369,6 @@
   font: 10px Arial;
   margin-top: 3px;
 }
-.chain {
-  font: 25px Georgia;
-  color: #9b783e;
-  letter-spacing: -3px;
-}
 .inspiration {
   display: flex;
   background: #f5f0e8;
@@ -1929,6 +1924,18 @@
   .previewDock .views button img, .previewDock .missingAngle { height: 44px; }
   .previewNote { margin-bottom: 6px !important; }
   .previewSticky .photo > img { object-position: center; }
+  /* The review is where the shopper judges the photographs, so the piece is
+     given most of the page there: a narrower column of details, a wider frame,
+     and a taller floor under the photograph than the design stage needs. */
+  .workspace[data-stage="review"] {
+    grid-template-columns: minmax(0, 0.6fr) minmax(0, 1.4fr);
+  }
+  .workspace[data-stage="review"] .preview {
+    --preview-reserved: 84px;
+  }
+  .workspace[data-stage="review"] .previewSticky {
+    min-block-size: min(560px, calc(100dvh - 150px));
+  }
 }
 @media (max-width: 767px) {
   .preview { position: static; }
@@ -1940,6 +1947,12 @@
   .previewSticky .photo {
     block-size: min(112vw, 64svh);
     min-block-size: 240px;
+  }
+  /* Taller on the review for the same reason as on desktop. It grows downwards
+     only: the frame is never wider than the column, so no width of screen can
+     be made to scroll sideways by it. */
+  .workspace[data-stage="review"] .previewSticky .photo {
+    block-size: min(124vw, 72svh);
   }
   .preview[data-has-photograph="false"] .photo {
     block-size: 180px;

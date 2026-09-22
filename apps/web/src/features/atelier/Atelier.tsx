@@ -37,7 +37,6 @@ import {
   metals,
   coverages,
   gems,
-  chains,
   views,
   type Draft,
   type State,
@@ -48,7 +47,7 @@ import {
   loadDeviceState,
   saveDeviceState,
 } from "./deviceState";
-import { NAME_MAX } from "@jewelo/contracts";
+import { GEMSTONE_MAX, NAME_MAX } from "@jewelo/contracts";
 // P7-5 / DS-9. The three moments the shop wants counted, through the port:
 // a step was reached, the spelling was confirmed, the request arrived. Ids and
 // enumerated values only, and with `NEXT_PUBLIC_POSTHOG_KEY` empty - which is
@@ -66,7 +65,6 @@ const arabic: Record<string, string> = {
   Name: "الاسم",
   "Style & Arrangement": "الأسلوب والتنسيق",
   "Gold & Stones": "الذهب والأحجار",
-  "Size & Chain": "المقاس والسلسلة",
   "Personal touches": "لمسات شخصية",
   // The step-01 button carries the shopper to the review, where confirming the
   // spelling is what buys the run. It is named for what it does; the key had to
@@ -101,9 +99,10 @@ const arabic: Record<string, string> = {
   "18K gold": "ذهب عيار ١٨",
   "Stone setting": "ترصيع الأحجار",
   "Choose your stones": "اختر أحجارك",
+  // Keyed on the sentence `STONE_LIMIT_NOTICE` builds from `GEMSTONE_MAX`, the
+  // same way the name cap is keyed on its own sentence.
+  "Choose up to 3 stones.": "اختر حتى ٣ أحجار.",
   "Pendant width": "عرض القلادة",
-  "Chain style": "نوع السلسلة",
-  "Chain length": "طول السلسلة",
   Engraving: "النقش",
   "Special requests": "طلبات خاصة",
   Optional: "اختياري",
@@ -268,6 +267,8 @@ import type { CustomerViewStatus } from "./personalizedRun";
  * the input stops there, so the shopper is told rather than quietly trimmed.
  */
 const NAME_LIMIT_NOTICE = `This is the longest name we can make: ${NAME_MAX} characters.`;
+/** How many stones one pendant may carry, said to the shopper. */
+const STONE_LIMIT_NOTICE = `Choose up to ${GEMSTONE_MAX} stones.`;
 /** True once the field is holding all the characters it will accept. */
 const atLimit = (value: string) => value.length >= NAME_MAX;
 
@@ -303,6 +304,17 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
    */
   const goldLabel = (metal: string) =>
     locale === "ar" ? `${t(metal)} عيار ١٨` : `18K ${t(metal)}`;
+  /**
+   * Every stone this piece is set with. A draft saved before the shop offered
+   * several stones carries only `gem`, and that is exactly one stone.
+   */
+  const chosenStones = (draft: Draft) =>
+    draft.gems?.length ? [...draft.gems] : [draft.gem];
+  /** Those stones as one line, in the shopper's language. */
+  const stoneLabel = (draft: Draft) =>
+    chosenStones(draft)
+      .map((gem) => t(gem))
+      .join(" + ");
   const [state, setState] = useState<State>(initialState);
   const [desktop, setDesktop] = useState(false);
   const [editingText, setEditingText] = useState(false);
@@ -312,7 +324,7 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
   const [notice, setNotice] = useState("");
   const [errors, setErrors] = useState<ReturnType<typeof validate>>({});
   const [confirmed, setConfirmed] = useState(false);
-  const [expanded, setExpanded] = useState<string[]>(["name"]);
+  const [expanded, setExpanded] = useState<string[]>(["size", "name"]);
   const [view, setView] = useState<View>("Studio");
   const [autoplay, setAutoplay] = useState(false);
   const [playRequested, setPlayRequested] = useState(false);
@@ -956,14 +968,30 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
   }
   async function add() {
     if (!eligible || saving) return;
+    // Every design the shopper keeps is a request the shop can answer (Omran,
+    // 22 September 2026). If they have not left a way to be reached yet, that
+    // is taken first and a refusal - an empty box, a mistyped address, a
+    // failed write - stops the save with the reason already on the form.
+    let reference = own.capturedRequestId ?? own.previousRequestId;
+    if (own.captureStatus !== "captured") {
+      reference = await own.submitContact();
+      if (!reference) {
+        requestAnimationFrame(() => {
+          const field = document.getElementById("preview-contact");
+          field?.scrollIntoView({ block: "center" });
+          field?.focus();
+        });
+        return;
+      }
+    }
     const draftSignature = signature(d);
     setSaving(true);
     // Durable identifiers only: a signed media URL lives five minutes, so the bag
     // keeps the run and asset ids and re-reads the photograph from /api/state.
-    // The reference of the request the shop is holding for this shopper. An
-    // edit starts a new specification and clears the live capture, but the
-    // operator still has to be able to reconcile the two.
-    const requestReference = own.capturedRequestId ?? own.previousRequestId;
+    // The reference of the request the shop is holding for this shopper, taken
+    // from the capture above. An edit starts a new specification and clears the
+    // live capture, but the operator still has to be able to reconcile the two.
+    const requestReference = reference;
     const personalized = own.runId
       ? {
           runId: own.runId,
@@ -1044,7 +1072,7 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
     setAutoplay(false);
     setPlayRequested(false);
     setView("Studio");
-    setExpanded(["name"]);
+    setExpanded(["size", "name"]);
     // A reload is the only honest way to drop the request reference and the run
     // this tab is watching: both outlive a specification change on purpose, so
     // the shopper who edits a piece keeps the reference the shop is holding.
@@ -1059,7 +1087,7 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
     setView("Studio");
     setState((old) => beginBagEdit(old, id));
     confirmSpelling(false);
-    setExpanded(["name"]);
+    setExpanded(["size", "name"]);
     focusDesign();
   }
   function section(
@@ -1215,7 +1243,76 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
       </fieldset>
     );
   }
+  /**
+   * The stones on this piece. The shop asked for several stones on one pendant
+   * (Omran, 22 September 2026): up to `GEMSTONE_MAX` of them, with the stone
+   * setting above still saying how much of the piece is set. The first stone
+   * chosen stays `gem`, which is what every older reader of a draft understands.
+   */
+  function toggleStone(gem: (typeof gems)[number]) {
+    const current = chosenStones(d);
+    const next = current.includes(gem)
+      ? current.filter((x) => x !== gem)
+      : [...current, gem].slice(0, GEMSTONE_MAX);
+    // A piece with stones is always set with at least one of them, so the last
+    // stone cannot be unpicked; "No stones" above is how a shopper removes them.
+    if (!next.length) return;
+    setAutoplay(false);
+    setPlayRequested(false);
+    confirmSpelling(false);
+    setErrors({});
+    setState((old) => ({
+      ...old,
+      draft: { ...old.draft, gem: next[0]!, gems: next },
+      sampleFocus: "gem",
+    }));
+  }
+  function stonePicker() {
+    const selected = chosenStones(d);
+    return (
+      <fieldset className={s.field}>
+        <legend>{t("Choose your stones")}</legend>
+        <div className={s.visualChoices}>
+          {gems.map((gem, i) => {
+            const chosen = selected.includes(gem);
+            return (
+              <button
+                key={gem}
+                type="button"
+                aria-label={t(gem)}
+                aria-pressed={chosen}
+                disabled={!chosen && selected.length >= GEMSTONE_MAX}
+                onClick={() => toggleStone(gem)}
+                className={s.choice}
+              >
+                <span
+                  className={s.gem}
+                  style={{ background: gemColors[i] }}
+                />
+                <span>{t(gem)}</span>
+                {chosen && <Check className={s.selectedTick} size={12} />}
+              </button>
+            );
+          })}
+        </div>
+        <p className={s.fieldNote}>{t(STONE_LIMIT_NOTICE)}</p>
+      </fieldset>
+    );
+  }
+  /**
+   * The design steps in the order the shop asked for them on 22 September 2026:
+   * the pendant size is chosen first, then the name. The review rows and the
+   * numbered sections both read this one list, so the order lives here alone.
+   */
   const summaries = [
+    {
+      id: "size",
+      label: "Size",
+      // The unit is translated here for the same reason it is on the size tile:
+      // a Latin "mm" standing in the middle of an Arabic summary line was the
+      // one word of the size heading that stayed English (storyline review 1).
+      value: `${d.size} ${t("mm")}`,
+    },
     { id: "name", label: "Name", value: t(d.script) },
     {
       id: "style",
@@ -1225,15 +1322,7 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
     {
       id: "gold",
       label: "Gold & Stones",
-      value: `${goldLabel(d.metal)} · ${t(d.coverage)}${d.coverage !== "No stones" ? " · " + t(d.gem) : ""}`,
-    },
-    {
-      id: "size",
-      label: "Size & Chain",
-      // The unit is translated here for the same reason it is on the size tile:
-      // a Latin "mm" standing in the middle of an Arabic summary line was the
-      // one word of the step 04 heading that stayed English (storyline review 1).
-      value: `${d.size} ${t("mm")} · ${t(d.chain)}`,
+      value: `${goldLabel(d.metal)} · ${t(d.coverage)}${d.coverage !== "No stones" ? " · " + stoneLabel(d) : ""}`,
     },
     {
       id: "personal",
@@ -1242,6 +1331,9 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
         [d.engraving, d.requests].filter(Boolean).join(" · ") || t("Optional"),
     },
   ];
+  /** The summary line of one section, read by id so the order can move freely. */
+  const summaryFor = (id: string) =>
+    summaries.find((row) => row.id === id)?.value ?? "";
   return (
     <div
       className={s.app}
@@ -1349,7 +1441,9 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
         </div>
       )}
       <main className={s.main}>
-        <div ref={workspace} className={s.workspace}>
+        {/* The review is where the shopper looks at the photographs, so the
+            preview column is given more of the page there. */}
+        <div ref={workspace} className={s.workspace} data-stage={state.stage}>
           <div className={s.controls}>
             <div className={s.intro}>
               <p className={s.eyebrow}>
@@ -1373,11 +1467,31 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
 
             {state.stage === "design" ? (
               <>
+                {/* The shop asked for the pendant size to be the first thing a
+                    shopper chooses (Omran, 22 September 2026). */}
+                {section(
+                  "size",
+                  "01",
+                  "Size",
+                  summaryFor("size"),
+                  choices(
+                    "Pendant width",
+                    [22, 32] as const,
+                    d.size,
+                    (x) => change("size", x),
+                    (x) => (
+                      <span className={s.measure}>
+                        {t(x === 22 ? "Delicate" : "Statement")}
+                        <small>{t("mm")}</small>
+                      </span>
+                    ),
+                  ),
+                )}
                 {section(
                   "name",
-                  "01",
+                  "02",
                   "Name",
-                  summaries[0]!.value,
+                  summaryFor("name"),
                   <>
                     {choices(
                       "Language",
@@ -1499,9 +1613,9 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                 )}
                 {section(
                   "style",
-                  "02",
+                  "03",
                   "Style & Arrangement",
-                  summaries[1]!.value,
+                  summaryFor("style"),
                   <>
                     {choices(
                       "Pendant construction",
@@ -1583,9 +1697,9 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                 )}
                 {section(
                   "gold",
-                  "03",
+                  "04",
                   "Gold & Stones",
-                  summaries[2]!.value,
+                  summaryFor("gold"),
                   <>
                     {choices(
                       "18K gold",
@@ -1616,57 +1730,14 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                         </span>
                       ),
                     )}
-                    {d.coverage !== "No stones" &&
-                      choices(
-                        "Choose your stones",
-                        gems,
-                        d.gem,
-                        (x) => change("gem", x),
-                        (x, i) => (
-                          <span
-                            className={s.gem}
-                            style={{ background: gemColors[i] }}
-                          />
-                        ),
-                      )}
-                  </>,
-                )}
-                {section(
-                  "size",
-                  "04",
-                  "Size & Chain",
-                  summaries[3]!.value,
-                  <>
-                    {choices(
-                      "Size",
-                      [22, 32] as const,
-                      d.size,
-                      (x) => change("size", x),
-                      (x) => (
-                        <span className={s.measure}>
-                          {t(x === 22 ? "Delicate" : "Statement")}
-                          <small>{t("mm")}</small>
-                        </span>
-                      ),
-                    )}
-                    {choices(
-                      "Chain style",
-                      chains,
-                      d.chain,
-                      (x) => change("chain", x),
-                      (x, i) => (
-                        <span className={s.chain}>
-                          {["∽∽∽", "○○○", "□□□□", "≋≋≋"][i]}
-                        </span>
-                      ),
-                    )}
+                    {d.coverage !== "No stones" && stonePicker()}
                   </>,
                 )}
                 {section(
                   "personal",
                   "+",
                   "Personal touches",
-                  summaries[4]!.value,
+                  summaryFor("personal"),
                   <>
                     <label className={s.inputLabel}>
                       {t("Engraving")} · {t("Optional")}
@@ -1766,7 +1837,11 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                     {t("You can explore this style. Personal previews are not available for it yet.")}
                   </p>
                 )}
-                {own.enabled && isSellable && (
+                {/* The shop wants the way to reach the shopper on every design
+                    it can make, so this section is no longer conditional on the
+                    personalized pipeline being on: without it the block is
+                    purely the request the shop will answer by hand. */}
+                {isSellable && (
                   <section
                     className={s.ownPreview}
                     aria-live="polite"
@@ -1774,11 +1849,15 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                     data-own-outcome={own.run?.outcome ?? "none"}
                   >
                     <small>
-                      {locale === "ar"
-                        ? "معاينتك الشخصية"
-                        : "YOUR PERSONALIZED PREVIEW"}
+                      {own.enabled
+                        ? locale === "ar"
+                          ? "معاينتك الشخصية"
+                          : "YOUR PERSONALIZED PREVIEW"
+                        : locale === "ar"
+                          ? "أين نرسلها"
+                          : "WHERE TO SEND IT"}
                     </small>
-                    {own.phase === "idle" && !confirmed && (
+                    {own.enabled && own.phase === "idle" && !confirmed && (
                       <p>
                         {locale === "ar"
                           ? "أكّد كتابة الاسم أعلاه لنبدأ تصوير قطعتك باسمك."
@@ -1838,7 +1917,7 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                             ? locale === "ar"
                               ? "وصل هذا الجهاز إلى حدّ المعاينات اليوم. من فضلك حاول مرة أخرى غدًا."
                               : "This device has reached today's preview limit. Please try again tomorrow."
-                            : own.personalized
+                            : own.personalized || !own.attempted
                               ? locale === "ar"
                                 ? "أين نرسل قطعتك؟"
                                 : "Where should we send it?"
@@ -2035,10 +2114,10 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                 </span>
                 <span>
                   {t(d.coverage)}
-                  {d.coverage !== "No stones" ? " · " + t(d.gem) : ""}
+                  {d.coverage !== "No stones" ? " · " + stoneLabel(d) : ""}
                 </span>
                 <span>
-                  {d.size} {t("mm")} · {t(d.chain)}
+                  {d.size} {t("mm")}
                 </span>
               </div>
             </div>
@@ -2144,8 +2223,8 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                     src={source}
                     alt={
                       locale === "ar"
-                        ? `صورة تجريبية لـ${sampleNames(" و")}، ${t(shown.construction)}، ${t(shown.lettering)}، ${t(shown.metal)}، ${t(shown.coverage)}${shown.coverage === "No stones" ? "" : `، ${t(shown.gem)}`}، ${shown.size} مم، سلسلة ${t(shown.chain)}`
-                        : `Photographic ${sampleNames(" and ")} sample, ${shown.construction}, ${shown.lettering}, ${shown.metal}, ${shown.coverage}${shown.coverage === "No stones" ? "" : `, ${shown.gem}`}, ${shown.size} mm, ${shown.chain} chain`
+                        ? `صورة تجريبية لـ${sampleNames(" و")}، ${t(shown.construction)}، ${t(shown.lettering)}، ${t(shown.metal)}، ${t(shown.coverage)}${shown.coverage === "No stones" ? "" : `، ${stoneLabel(shown)}`}، ${shown.size} مم`
+                        : `Photographic ${sampleNames(" and ")} sample, ${shown.construction}, ${shown.lettering}, ${shown.metal}, ${shown.coverage}${shown.coverage === "No stones" ? "" : `, ${chosenStones(shown).join(" + ")}`}, ${shown.size} mm`
                     }
                     data-sample-id={piece.family.assets.find(asset => asset.view === view)?.id}
                     data-sample-exact={piece.family.anchor.exact}
@@ -2541,7 +2620,10 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
               </button>
             </div>
           ) : (
-            state.bag.map((item) => {
+            /* The piece just saved is the one the shopper is looking for, so
+               the bag reads newest first (Omran, 22 September 2026). The stored
+               order is untouched: only the reading of it is reversed. */
+            [...state.bag].reverse().map((item) => {
               /* The stored sample, or a v1 example only when that example
                  really is this design. `sampleSource` alone can cross script
                  and construction, which would show a saved piece as a design
@@ -2586,11 +2668,9 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                   <p>
                     {goldLabel(item.draft.metal)} · {item.draft.size} {t("mm")}
                     <br />
-                    {t(item.draft.chain)}
-                    <br />
                     {t(item.draft.coverage)}
                     {item.draft.coverage !== "No stones"
-                      ? " · " + t(item.draft.gem)
+                      ? " · " + stoneLabel(item.draft)
                       : ""}
                   </p>
                   <span>{t("Price unconfirmed")}</span>

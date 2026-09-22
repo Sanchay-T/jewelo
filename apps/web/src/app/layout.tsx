@@ -3,7 +3,6 @@ import "@fontsource/inter/500.css";
 import "@fontsource/inter/600.css";
 import "@fontsource/playfair-display/400.css";
 import "@fontsource/playfair-display/600.css";
-import "@fontsource/playfair-display/400-italic.css";
 import "./globals.css";
 import { headers } from "next/headers";
 

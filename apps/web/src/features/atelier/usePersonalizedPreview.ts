@@ -110,7 +110,11 @@ export interface PersonalizedPreview {
   capturing: boolean;
   contact: ContactDraft;
   setContact(next: ContactDraft): void;
-  submitContact(): Promise<void>;
+  /**
+   * Leaves the contact with the shop and answers with the reference the shop
+   * now holds, or nothing at all when the capture was refused.
+   */
+  submitContact(): Promise<string | undefined>;
   captureStatus: "idle" | "sending" | "captured" | "error";
   /**
    * Why the capture was refused. `empty`, `phone_format` and `email_format` are
@@ -154,7 +158,10 @@ export function usePersonalizedPreview(input: {
   /** This page's reading window; see `PERSONALIZED_RUN_WATCH_MS`. */
   const [watchWindowClosed, setWatchWindowClosed] = useState(false);
   const [contact, setContact] = useState<ContactDraft>({
-    channel: "whatsapp",
+    // The shop asked for an email address on every saved design (Omran, 22
+    // September 2026), so email is the door offered first; a shopper who
+    // prefers WhatsApp or a phone call still picks it here.
+    channel: "email",
     value: "",
     name: "",
   });
@@ -454,10 +461,13 @@ export function usePersonalizedPreview(input: {
       },
     });
   }, [watching, runId, designId, deps]);
-  const capturing =
-    enabled &&
-    input.stage === "review" &&
-    (phase === "degraded" || stalled || (personalized && input.confirmed));
+  /**
+   * Every design a shopper keeps is a request the shop can answer (Omran, 22
+   * September 2026), so the way to reach them is asked for on the whole review
+   * stage - not only when the personalized run degraded, and not only on a
+   * deployment where personalized runs exist at all.
+   */
+  const capturing = input.stage === "review";
 
   const imageFor = useCallback(
     (view: View) => {
@@ -483,7 +493,7 @@ export function usePersonalizedPreview(input: {
     if (problem) {
       setCaptureError(problem);
       setCaptureStatus("error");
-      return;
+      return undefined;
     }
     setCaptureStatus("sending");
     setCaptureError(undefined);
@@ -524,16 +534,18 @@ export function usePersonalizedPreview(input: {
         },
         record.id,
       );
+      return record.id;
     } catch (error) {
       setCaptureStatus("error");
       if (!(error instanceof PipelineError) || error.reason !== "invalid") {
         setCaptureError("failed");
-        return;
+        return undefined;
       }
       // A 422 the client did not predict. When the server's sentence is one of
       // the contact rules it is shown as that rule, in the shopper's own
       // language; otherwise the form says only what it can honestly say.
       setCaptureError(contactProblemFromMessage(error.message) ?? "invalid");
+      return undefined;
     }
   }, [contact, deps, submission, buildRequest, remember, currentSignature]);
 

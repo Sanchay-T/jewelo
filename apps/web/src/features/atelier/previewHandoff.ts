@@ -23,6 +23,9 @@ function normalized(input: Draft, validateCustomerNames = true): Draft {
   return specification(checked);
 }
 function customerSpecification(d: Draft) {
+  // Every stone the shopper chose, in the order they chose them. A draft that
+  // predates several stones carries exactly one.
+  const stones = d.gems?.length ? [...d.gems] : [d.gem];
   return {
     names: d.twoNames ? [d.name, d.secondName] : [d.name],
     script: d.script,
@@ -32,7 +35,14 @@ function customerSpecification(d: Draft) {
     gold: { karat: "18K" as const, color: d.metal },
     stones: d.coverage === "No stones"
       ? { coverage: "No stones" as const }
-      : { coverage: d.coverage, gemstone: d.gem },
+      : {
+          coverage: d.coverage,
+          gemstone: stones[0] ?? d.gem,
+          // Several stones on one piece, when the shopper chose several. The
+          // first of them is `gemstone`, so nothing downstream has to know
+          // about this field to read the request correctly.
+          gemstones: stones.length > 1 ? stones : undefined,
+        },
     pendantWidthMm: d.size,
     chainStyle: d.chain,
     ...(d.engraving.trim() ? { engraving: d.engraving.trim() } : {}),
@@ -225,6 +235,9 @@ export function backendSpecification(
     finish: DEFAULT_FINISH,
     stoneCoverage: COVERAGE[d.stones.coverage],
     gemstone: d.stones.gemstone ? GEMSTONE[d.stones.gemstone] : "none",
+    ...(d.stones.gemstones && d.stones.gemstones.length > 1
+      ? { gemstones: d.stones.gemstones.map((gem) => GEMSTONE[gem]) }
+      : {}),
     sizeProfile: SIZE_PROFILE[d.pendantWidthMm],
     dimensions: {
       widthMm: d.pendantWidthMm,

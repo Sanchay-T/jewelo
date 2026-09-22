@@ -1,5 +1,9 @@
 import { z } from "zod";
 
+// How many stones one pendant may carry. Decided once, in `domain.ts`, so the
+// approved specification and this captured request cannot disagree.
+import { GEMSTONE_MAX } from "./domain";
+
 /**
  * Honest-degrade capture contract.
  *
@@ -220,6 +224,16 @@ export const previewRequestSpecificationSchema = z
     stones: z.strictObject({
       coverage: z.enum(PREVIEW_REQUEST_COVERAGES),
       gemstone: z.enum(PREVIEW_REQUEST_GEMS).optional(),
+      /**
+       * Every stone the shopper chose, when they chose more than one.
+       * `gemstone` remains the first of them, so a request captured before the
+       * shop offered several stones is still a valid request.
+       */
+      gemstones: z
+        .array(z.enum(PREVIEW_REQUEST_GEMS))
+        .min(1)
+        .max(GEMSTONE_MAX)
+        .optional(),
     }),
     pendantWidthMm: z.number().int().positive().max(200),
     chainStyle: z.enum(PREVIEW_REQUEST_CHAINS),
@@ -233,9 +247,16 @@ export const previewRequestSpecificationSchema = z
   .refine(
     (value) =>
       value.stones.coverage === "No stones"
-        ? value.stones.gemstone === undefined
+        ? value.stones.gemstone === undefined &&
+          value.stones.gemstones === undefined
         : value.stones.gemstone !== undefined,
     "Stone coverage and gemstone must agree.",
+  )
+  .refine(
+    (value) =>
+      value.stones.gemstones === undefined ||
+      value.stones.gemstones[0] === value.stones.gemstone,
+    "The first chosen stone must be the gemstone.",
   );
 export type PreviewRequestSpecification = z.infer<
   typeof previewRequestSpecificationSchema
@@ -329,7 +350,12 @@ export function summarizePreviewSpecification(
   const stones =
     specification.stones.coverage === "No stones"
       ? "no stones"
-      : `${specification.stones.coverage.toLowerCase()} ${specification.stones.gemstone?.toLowerCase() ?? ""}`.trim();
+      : `${specification.stones.coverage.toLowerCase()} ${(
+          specification.stones.gemstones ??
+          (specification.stones.gemstone ? [specification.stones.gemstone] : [])
+        )
+          .map((gem) => gem.toLowerCase())
+          .join(" + ")}`.trim();
   return [
     specification.names.join(" + "),
     specification.script,

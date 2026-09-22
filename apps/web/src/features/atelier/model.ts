@@ -1,4 +1,5 @@
 import {
+  GEMSTONE_MAX,
   exceedsLatinNameFit,
   nameProblem,
   nameProblemMessage,
@@ -56,6 +57,13 @@ export type Draft = {
   metal: (typeof metals)[number];
   coverage: (typeof coverages)[number];
   gem: (typeof gems)[number];
+  /**
+   * Every stone the shopper picked, in the order they picked them, when that is
+   * more than one. `gem` stays the first of them, so a draft saved before the
+   * shop asked for several stones still loads and still means exactly what it
+   * meant. Absent whenever the piece carries a single stone.
+   */
+  gems?: readonly (typeof gems)[number][];
   size: 22 | 32;
   chain: (typeof chains)[number];
   length: 40 | 45 | 50 | 55;
@@ -176,12 +184,22 @@ export const initialState = (): State => ({
   editing: null,
 });
 export function specification(d: Draft): Draft {
+  const stones = (d.gems?.length ? d.gems : [d.gem]).slice(0, GEMSTONE_MAX);
   return {
     ...d,
     name: d.name.trim().normalize("NFC"),
     secondName: d.twoNames ? d.secondName.trim().normalize("NFC") : "",
     layout: d.twoNames ? d.layout : "Connected heart",
-    gem: d.coverage === "No stones" ? "Lab diamond" : d.gem,
+    gem: d.coverage === "No stones" ? "Lab diamond" : (stones[0] ?? d.gem),
+    // One stone is exactly what `gem` already says, so the list is dropped
+    // there: a single-stone piece keeps the signature it has always had, and a
+    // draft saved before several stones existed still loads.
+    gems: d.coverage === "No stones" || stones.length < 2 ? undefined : stones,
+    // The shop sells one chain with the pendant (Omran, 22 September 2026), so
+    // the chain is no longer a customer choice and every specification carries
+    // the house default.
+    chain: emptyDraft.chain,
+    length: emptyDraft.length,
   };
 }
 export const signature = (d: Draft) => JSON.stringify(specification(d));
@@ -369,6 +387,19 @@ function draftValid(x: unknown): x is Draft {
     chain: chains,
     length: [40, 45, 50, 55],
   };
+  // A draft written before the shop offered several stones has no list at all
+  // and must still load; a list that is present carries one to GEMSTONE_MAX
+  // known stones.
+  if (
+    x.gems !== undefined &&
+    !(
+      Array.isArray(x.gems) &&
+      x.gems.length >= 1 &&
+      x.gems.length <= GEMSTONE_MAX &&
+      x.gems.every((gem) => (gems as readonly unknown[]).includes(gem))
+    )
+  )
+    return false;
   return (
     typeof x.twoNames === "boolean" &&
     Object.entries(sets).every(([key, values]) =>

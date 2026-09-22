@@ -216,12 +216,17 @@ export function previewRequestNotificationMessage(
 ): NotificationMessage {
   const specification = input.specification;
   const names = specification.names.join(" and ");
+  // Every stone the shopper chose, in the order they chose them. A request that
+  // carries one stone reads exactly as it always did.
+  const chosenStones =
+    specification.stones.gemstones ??
+    (specification.stones.gemstone ? [specification.stones.gemstone] : []);
   const stones =
     specification.stones.coverage === "No stones"
       ? "no stones"
       : `${specification.stones.coverage.toLowerCase()}${
-          specification.stones.gemstone
-            ? `, ${specification.stones.gemstone.toLowerCase()}`
+          chosenStones.length
+            ? `, ${chosenStones.map((gem) => gem.toLowerCase()).join(" + ")}`
             : ""
         }`;
   const lines = [
