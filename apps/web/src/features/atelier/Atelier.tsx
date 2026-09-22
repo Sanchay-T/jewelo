@@ -205,7 +205,7 @@ const arabic: Record<string, string> = {
   "This is the longest name we can make: 30 characters.":
     "هذا أطول اسم يمكننا صنعه: ٣٠ حرفًا.",
   "Edit the name": "تعديل الاسم",
-  // The five notices. They are stored in state as their English text and
+  // The notices. They are stored in state as their English text and
   // translated where they are rendered, so the check that reads one of them
   // (`notice.includes("Storage is unavailable")`) still reads one fixed string.
   "Your saved draft could not be read. A fresh draft is ready.":
@@ -217,6 +217,7 @@ const arabic: Record<string, string> = {
   "Your piece is in this bag for this session. Image storage is unavailable; keep this tab open.":
     "قطعتك في الحقيبة لهذه الجلسة فقط. تخزين الصور غير متاح؛ أبقِ هذه الصفحة مفتوحة.",
   "Editing a saved piece.": "تعديل قطعة محفوظة.",
+  "Where should we send it?": "أين نرسل قطعتك؟",
   "This sample photo could not load.": "تعذّر تحميل صورة العينة.",
   // The bag and the zoom dialog: every label an assistive technology reads.
   "CALEUMS design": "تصميم CALEUMS",
@@ -999,9 +1000,12 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
     // write the request to; the piece is kept locally without one, as before.
     // Not `capturing`: that is also false on the design step, where this click
     // must still ask for contact.
-    let reference = own.capturedRequestId ?? own.previousRequestId;
+    let reference = own.capturedRequestId;
     if (own.enabled && own.captureStatus !== "captured") {
       if (state.stage !== "review") {
+        // Carried to the box, and told why: a silent jump reads as the click
+        // having done nothing.
+        setNotice("Where should we send it?");
         go("review");
         focusContact();
         return;
@@ -1047,7 +1051,9 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
         (snapshot && snapshot.key !== assemblyKey(draftRef.current))
       )
         return;
-      if (!snapshot && !ownKept) {
+      // `ownKept` is this render's value, so a capture that just succeeded on
+      // this click is only visible as `reference`.
+      if (!snapshot && !ownKept && !reference) {
         setNotice(
           "The preview could not be saved. Please retry before adding this piece.",
         );
@@ -1870,10 +1876,12 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                   </p>
                 )}
                 {/* The shop wants the way to reach the shopper on every design
-                    it can make, so this section is no longer conditional on the
-                    personalized pipeline being on: without it the block is
-                    purely the request the shop will answer by hand. */}
-                {isSellable && (
+                    it can make, so the block is the request the shop answers by
+                    hand as much as it is the preview. It still needs a backend
+                    to write that request to: in the mock data mode `own.capturing`
+                    is false and nothing inside here renders, so the panel itself
+                    is off rather than a headline over an empty box. */}
+                {isSellable && (own.enabled || own.capturing) && (
                   <section
                     className={s.ownPreview}
                     aria-live="polite"

@@ -528,9 +528,10 @@ export const stillImageOptionsSchema = z
     sizeByRatio: STILL_SIZE_BY_RATIO[value.OPENAI_IMAGE_SIZE_PROFILE],
     /**
      * The least one still may be reserved at for this quality and canvas, or 0
-     * where no price is published. Both the environment check below and the
-     * worker's runtime-policy gate read the floor from here, so there is one
-     * table and it cannot drift between them.
+     * where no price is published. The worker's runtime-policy gate reads the
+     * floor from here. `scripts/digitalocean/env-contract.mjs` cannot import
+     * this module, so it keeps its own copy of the same numbers; change one and
+     * the other has to be changed in the same commit.
      */
     costFloorCents:
       STILL_COST_FLOOR_CENTS[value.OPENAI_IMAGE_QUALITY]?.[

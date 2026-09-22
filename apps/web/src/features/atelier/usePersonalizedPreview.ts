@@ -205,6 +205,16 @@ export function usePersonalizedPreview(input: {
   sampleRef.current = input.sample;
   const draftRef = useRef(input.draft);
   draftRef.current = input.draft;
+  /**
+   * The captured request id, readable from inside the start effect's async
+   * callbacks without re-running that effect and buying another run. Written
+   * back with every submission so a start that lands after a capture cannot
+   * overwrite the stored `previewRequestId` with nothing.
+   */
+  const captured = useRef<{ signature?: string; id?: string }>({});
+  captured.current = { signature: capturedFor, id: capturedRequestId };
+  const capturedIdFor = (signature: string) =>
+    captured.current.signature === signature ? captured.current.id : undefined;
 
   const buildRequest = useCallback(
     (id: string) =>
@@ -388,7 +398,7 @@ export function usePersonalizedPreview(input: {
           runId: handles.runId,
         };
         setSubmission(next);
-        remember(next);
+        remember(next, capturedIdFor(next.signature));
         setPhase("watching");
       })
       .catch((error: unknown) => {
@@ -397,7 +407,10 @@ export function usePersonalizedPreview(input: {
           error instanceof PipelineError ? error.reason : "unavailable";
         setReason(failure);
         setPhase("degraded");
-        remember({ signature: currentSignature, requestKey, startedAt });
+        remember(
+          { signature: currentSignature, requestKey, startedAt },
+          capturedIdFor(currentSignature),
+        );
         // A failed start must be retryable: re-confirming reuses this same
         // request key, so the retry replays one approval rather than buying a
         // second run.
