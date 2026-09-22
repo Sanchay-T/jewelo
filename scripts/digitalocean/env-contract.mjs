@@ -223,7 +223,8 @@ export function validateWebEnv(values) {
   // with the schema defaults quality=high and size profile=standard, because
   // this script runs under plain node with no TypeScript build step. Keep the
   // two tables in step; the config schema is the source.
-  const stillCostFloorCents = { max: { standard: 21, "2k": 43 } };
+  const maxFloor = { standard: 21, "2k": 43 };
+  const stillCostFloorCents = { max: maxFloor, xhigh: maxFloor, auto: maxFloor };
   const estimate = values.get("OPENAI_STILL_ESTIMATED_COST_CENTS");
   const estimateSet = estimate !== undefined && estimate.trim() !== "";
   // An absent key is the schema's default of 20, which is itself below the max

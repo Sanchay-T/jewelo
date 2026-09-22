@@ -1946,7 +1946,7 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                             ? locale === "ar"
                               ? "وصل هذا الجهاز إلى حدّ المعاينات اليوم. من فضلك حاول مرة أخرى غدًا."
                               : "This device has reached today's preview limit. Please try again tomorrow."
-                            : ownRunOver
+                            : ownRunOver && !own.personalized
                               ? locale === "ar"
                                 ? "لم نتمكن من تصوير قطعتك هنا. اترك طريقة للتواصل معك وسنرسلها إليك."
                                 : "We could not photograph your piece here. Leave one way to reach you and we will send it."

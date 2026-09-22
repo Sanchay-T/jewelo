@@ -506,6 +506,10 @@ const STILL_COST_FLOOR_CENTS: Readonly<
   >
 > = {
   max: { standard: 21, "2k": 43 },
+  // No published price for xhigh, and auto may resolve to max, so both
+  // reserve at least the max price rather than the 20-cent default.
+  xhigh: { standard: 21, "2k": 43 },
+  auto: { standard: 21, "2k": 43 },
 };
 
 export const stillImageOptionsSchema = z

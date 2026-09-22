@@ -356,6 +356,15 @@ the checks it refuses on, and the SQL readback.
 It is idempotent, so rerunning it on a project that already has them re-hashes the
 stored bytes and creates no new version.
 
+### Look references (run once per Supabase project, added 23 September 2026)
+
+Real mode also fails closed with `look_reference_missing:<construction>` for every construction until `LOOK_REFERENCES` names a published look reference for it.
+The still compiler requires one for all four constructions (`LOOK_REFERENCE_CONSTRUCTIONS` in `packages/ai/src/prompt-registry.ts`), so with the variable unset a real-provider deploy refuses every still before spend and every shopper falls through to contact capture.
+A look reference is a text-free crop of the shop's reference photo, sent as a texture-only image; it is what makes the folded and framed looks appear on gpt-image-2.5-sunburst (`docs/goals/road-to-gold/lab-2026-09-22/ledger.md`).
+The crops are private brand reference and never enter git: they live at `~/hq/projects/devonel/caleums-private/look-references-v1/` with a `manifest.json` of sha256s.
+Publish them with `LOOK_REFERENCES_DIR=~/hq/projects/devonel/caleums-private/look-references-v1 node scripts/look-references/publish.mjs`, which uploads to the private `look-references` bucket, re-hashes the stored bytes and prints the `LOOK_REFERENCES` value (`construction:sha256` pairs).
+Put that value in the environment file and redeploy; it is not a secret, and `scripts/digitalocean/env-contract.mjs` carries it as optional runtime config.
+
 ### Studio-only switch for the first real-provider run (added 9 September 2026, P5-2 / DS-6)
 
 `public.runtime_policy.studio_only` decides how many images a run can bill.
