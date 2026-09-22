@@ -2,7 +2,9 @@ import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import {
   CALEUMS_ARABIC_ENGINE_RELEASE,
+  CONSTRUCTION_LETTERING,
   IDENTITY_CANVAS,
+  IDENTITY_LETTERING_MAX_TRACKING,
   classifyArabicIdentityInput,
   identityFontUrl,
   identityStencilSvg,
@@ -106,6 +108,22 @@ export async function validateStoredIdentityAnchor(
     !/^[a-f0-9]{64}$/.test(stored.png_sha256) ||
     !/^[a-f0-9]{64}$/.test(stored.fingerprint)
   ) throw new Error("identity_reuse_report_mismatch");
+  // D-023: what this construction is drawn in, restated here rather than read
+  // off the report, so a stencil drawn in the wrong weight, tracking or case
+  // cannot be reused for a name that is now drawn in another.
+  const lettering = CONSTRUCTION_LETTERING[construction]?.[anchor.language];
+  const drawnText = lettering?.uppercase
+    ? approvedText?.toLocaleUpperCase("en")
+    : approvedText;
+  if (
+    report?.drawnText !== drawnText ||
+    report.claimed?.letteringWeight !== (lettering?.weight ?? 0) ||
+    report.claimed.letteringTrackingUnits < (lettering?.trackingUnits ?? 0) ||
+    report.claimed.letteringTrackingUnits >
+      (lettering ? IDENTITY_LETTERING_MAX_TRACKING : 0) ||
+    report.claimed.letteringUppercase !== (lettering?.uppercase ?? false) ||
+    report.fontFile !== (lettering?.fontFile ?? report.fontFile)
+  ) throw new Error("identity_reuse_lettering_mismatch");
   const fontSha = createHash("sha256").update(fontBytes(report.fontFile)).digest("hex");
   if (
     fontSha !== stored.font_release || fontSha !== report.fontSha256Measured ||
@@ -113,10 +131,15 @@ export async function validateStoredIdentityAnchor(
   ) throw new Error("identity_reuse_font_mismatch");
   const pngSha = createHash("sha256").update(png).digest("hex");
   if (pngSha !== stored.png_sha256) throw new Error("identity_reuse_png_mismatch");
+  // D-023: the lettering the construction imposed is part of the drawing, so
+  // the same two terms the engine hashes are restated here from the stored
+  // report; a stencil drawn at another weight, tracking or case fails this.
   const fingerprint = createHash("sha256").update([
     CALEUMS_ARABIC_ENGINE_RELEASE, pipelineRelease, anchor.language, approvedText,
     support.style, construction, String(specification.layout ?? "single-name"),
-    String(specification.connector ?? "none"), fontSha, pngSha,
+    String(specification.connector ?? "none"), fontSha,
+    `${report.fontFile}@${report.claimed.letteringWeight}/${report.claimed.letteringTrackingUnits}`,
+    report.drawnText, pngSha,
   ].join("|")).digest("hex");
   if (fingerprint !== stored.fingerprint) throw new Error("identity_reuse_fingerprint_mismatch");
   const metadata = await sharp(png, { failOn: "error" }).metadata();
@@ -248,14 +271,18 @@ function approvedNames(
  */
 class SharpIdentityRasterizer implements IdentityRasterizer {
   async typeset(input: {
-    approvedText: string;
+    drawnText: string;
     fontFile: IdentityFontFile;
     script: IdentityScript;
+    weight?: number;
+    trackingUnits?: number;
   }): Promise<TypesetResult> {
     const shaped = await shapeText({
       fontBytes: fontBytes(input.fontFile),
-      text: input.approvedText,
+      text: input.drawnText,
       script: input.script,
+      weight: input.weight,
+      trackingUnits: input.trackingUnits,
     });
     const { svg, glyphs } = identityStencilSvg(shaped);
     const { data, info } = await sharp(Buffer.from(svg))

@@ -196,6 +196,21 @@ export interface ShapeTextInput {
   /** Text to shape. Normalised to NFC here, so callers cannot skip it. */
   readonly text: string;
   readonly script: IdentityScript;
+  /**
+   * `wght` axis value to instance a variable face at, or undefined to shape the
+   * face as its default instance. The pinned files are variable fonts: `cairo`
+   * carries `wght` 200-1000 and `NotoKufiArabic` 100-900, so the weight is a
+   * property of the drawing rather than of the file, and two weights of the
+   * same bytes are two different pendants.
+   */
+  readonly weight?: number;
+  /**
+   * Font units taken off every glyph's x advance, so neighbouring letters
+   * touch and the stencil needs no bridge bar between them. Latin only: Arabic
+   * is joined, and tightening a joined script would pull the joining stroke
+   * through the letter before it.
+   */
+  readonly trackingUnits?: number;
 }
 
 type HarfBuzz = typeof HarfBuzzModule;
@@ -220,20 +235,36 @@ interface LoadedFace {
   readonly sha256: string;
 }
 
+/**
+ * Loaded faces, keyed by the sha of the bytes *and* the weight they were
+ * instanced at. The sha alone was the key until the construction lettering
+ * table existed; with it, the same `cairo.ttf` bytes are loaded once at the
+ * default instance and once at `wght=800`, and a cache keyed by sha alone would
+ * have handed the second caller the first caller's outlines.
+ */
 const faceCache = new Map<string, LoadedFace>();
 
-async function loadFace(fontBytes: Uint8Array): Promise<LoadedFace> {
+async function loadFace(
+  fontBytes: Uint8Array,
+  weight?: number,
+): Promise<LoadedFace> {
   const sha256 = createHash("sha256").update(fontBytes).digest("hex");
-  const cached = faceCache.get(sha256);
+  const key = `${sha256}:${weight ?? "default"}`;
+  const cached = faceCache.get(key);
   if (cached) return cached;
   const hb = await loadHarfBuzz();
   const blob = new hb.Blob(fontBytes);
   const face = new hb.Face(blob);
   const font = new hb.Font(face);
+  // A variable face shapes and draws at its default instance until it is told
+  // otherwise; the axis value is set on the font, so it reaches both the
+  // advances HarfBuzz returns and the outlines `glyphToPath` draws.
+  if (weight !== undefined)
+    font.setVariations([new hb.Variation("wght", weight)]);
   // hb_font_create leaves the scale at the face upem, so advances, offsets and
   // outlines all come back in font units and the caller owns the scaling.
   const loaded: LoadedFace = { font, face, upem: face.upem, sha256 };
-  faceCache.set(sha256, loaded);
+  faceCache.set(key, loaded);
   return loaded;
 }
 
@@ -298,7 +329,11 @@ function contributesToShaping(
  */
 export async function shapeText(input: ShapeTextInput): Promise<ShapedText> {
   const hb = await loadHarfBuzz();
-  const { font, face, upem, sha256 } = await loadFace(input.fontBytes);
+  const { font, face, upem, sha256 } = await loadFace(
+    input.fontBytes,
+    input.weight,
+  );
+  const tracking = input.trackingUnits ?? 0;
   const properties = SCRIPT_PROPERTIES[input.script];
   const text = input.text.normalize("NFC");
   const codePoints = [...text].map(
@@ -310,7 +345,10 @@ export async function shapeText(input: ShapeTextInput): Promise<ShapedText> {
   const glyphs: ShapedGlyph[] = shaped.map((glyph) => ({
     gid: glyph.codepoint,
     cluster: glyph.cluster,
-    xAdvance: glyph.xAdvance ?? 0,
+    // The tracking is taken off the advance, never off the outline: the letter
+    // keeps the shape the font drew and only the pen moves less, so tightening
+    // makes neighbours touch without distorting a single glyph.
+    xAdvance: (glyph.xAdvance ?? 0) - tracking,
     yAdvance: glyph.yAdvance ?? 0,
     xOffset: glyph.xOffset ?? 0,
     yOffset: glyph.yOffset ?? 0,
@@ -452,12 +490,6 @@ export const IDENTITY_RING_STEM_WIDTH = 30;
 /** How far the ring body sinks into the stroke it sits on (WELD_OVERLAP). */
 export const IDENTITY_RING_WELD_OVERLAP = 16;
 
-/**
- * The rings the solver welds on: one over each end of the name
- * (`add_rings`, `make_stencil.py:143-178`).
- */
-export const IDENTITY_RING_COUNT = 2;
-
 /* -------------------------------------------------------------------------
  * P2-2b. Construction geometry: the stencil is the whole physical piece.
  *
@@ -521,6 +553,25 @@ export const IDENTITY_CARRIER_RING_END_INSET = 48;
 export const IDENTITY_CARRIER_WELDS_PER_RAIL = 2;
 
 /**
+ * How much of the name's own height a column must carry, unbroken and measured
+ * from the rail the weld goes to, before a weld may leave from it.
+ *
+ * A weld is a stem foot or a stem head joining the rail; anything else is a bar
+ * through the name. The two things that are not stems both misspell the piece.
+ * The bottom of a `U`'s bowl, the vertex of a `V` and the fork of a `Y` carry
+ * one stroke and then counter, and a bar dropped from there runs out of the
+ * middle of the letter: `MUHAMMAD` came out `MΨHAMMAD`. A bridge bar lying in
+ * the gap between two letters carries one bar width and nothing else, and a
+ * weld there is a free-standing upright between two letters.
+ *
+ * 0.8 rather than 1.0 because a capital sits on an optically corrected baseline
+ * and a round letter overshoots it by a few pixels, so an upright is a little
+ * short of the ink box; measured over the boxy corpus the uprights run 0.84 to
+ * 0.99 of the box and no bowl, vertex or bar exceeds 0.35.
+ */
+export const IDENTITY_CARRIER_WELD_MIN_STEM_FRACTION = 0.8;
+
+/**
  * Smallest the name may be scaled to make room for its construction.
  *
  * The name is fitted to the canvas before the construction exists, so a frame
@@ -562,6 +613,73 @@ export const IDENTITY_RING_TOP_CLEARANCE = 2;
 export const IDENTITY_RING_WELD_ANCHOR_DEPTH = 14;
 
 /**
+ * The longest suspension post a jump ring may stand on, as a fraction of the
+ * name's own ink height, and in absolute pixels of the 1024 px canvas.
+ *
+ * The post is the metal between the anchor - the point on the letter the fillet
+ * is welded into - and the centre of the ring hole. On a piece where the ring
+ * sits on the shoulder of the letter it is a weld, about the ring's own radius
+ * long. On the pieces adversarial review 6 measured it was a rod: p50 203 px,
+ * p95 346, and `hasan` in `classic` stood on a 256 px rod against a name 239 px
+ * tall, so the suspension was longer than the pendant. On the 32 mm piece that
+ * is a 1.2 mm wire up to 10.9 mm long, joined to the letter at one point, and
+ * on a Latin face the eye reads it as a stroke of the name: `Sara` in `classic`
+ * came out `iSarai`, upstream of every verifier.
+ *
+ * Two bounds, and the smaller of them applies. The fraction keeps the post in
+ * proportion to the piece - a tall name may carry a slightly longer weld, a
+ * short one may not - and the absolute cap keeps a very tall name from earning
+ * a rod by being tall. They are engine constants rather than validated
+ * configuration for the same reason `IDENTITY_RING_MAX_TILT_DEGREES` is: they
+ * are geometry of the piece, not a knob an operator may turn.
+ *
+ * The fraction is the bound that does the work and the absolute cap is a
+ * ceiling on a very tall name. 0.45 of the ink height is far below anything the
+ * pass-6 corpus produced and well above the weld a shoulder seat needs
+ * (`hypot(IDENTITY_RING_OUTER, IDENTITY_RING_OUTER - IDENTITY_RING_WELD_OVERLAP)`
+ * = 49 px). Fix pass 7 first set them at 2.0 and 400, which left them the outer
+ * bound rather than a bound: over the fix-7 letters matrix the post still ran
+ * to p95 310 px and max 399, and the image lab of 22 September then photographed
+ * exactly what that allows - `أسماء` in the letters-alone constructions hung its
+ * left ring on a 185 px slanted stalk beside the hamza that reads as an extra
+ * stroke of the name, which is 0.8 of that name's own height. The search only
+ * ever spends a rod to buy level, and at 2.0 nothing stopped it; at 0.45 it has
+ * to find a seat pair that is level *and* welded, step inward to a taller
+ * letter, or raise a refusal and let an operator look. That order is the right
+ * one: a refusal costs a review, a rod costs a customer the wrong name.
+ *
+ * The absolute cap is 120 px, about two and a half shoulder welds and 3.7 mm on
+ * the 32 mm piece. It was briefly 240 so that every one of the forty-eight lab
+ * cells rendered; the lead looked at what 240 buys and refused it, because a
+ * 240 px diagonal is a stroke of the name whatever the gates say. Five lab
+ * cells lose their piece to this - `ليلى`, whose lam is tall and whose final ya
+ * sits low, cannot be brought level inside 120 px and is refused for tilt in
+ * four styles - and that is the trade being made on purpose: those names go to
+ * an operator, who can seat the rings by hand, instead of shipping a rod.
+ */
+export const IDENTITY_RING_MAX_POST_FRACTION = 0.45;
+
+/** The absolute post cap, in pixels of the engine canvas. */
+export const IDENTITY_RING_MAX_POST_PX = 120;
+
+/**
+ * How deep into a carrier contour an anchor rung may sit, as a fraction of that
+ * contour's own height.
+ *
+ * D-020 says the anchor is "at the outer top corner" of the carrier. Measured
+ * over the pass-6 matrix, 56% of anchors were in the bottom half of the
+ * lettering and 285 of 1136 in the bottom quarter, because the shoulder ladder
+ * offered every column of the stroke and the score key never charged for the
+ * distance the ring then had to stand off. A rung deeper than this fraction is
+ * the foot of the letter, not its shoulder, and a ring welded there either
+ * hangs the pendant upside down or stands on a rod to reach the top line. The
+ * ladder is cut to the top 35% of the carrier's own height; the lab anchor,
+ * the topmost row of the contour, is at depth 0 and is always in it, so the
+ * ladder is never empty.
+ */
+export const IDENTITY_RING_ANCHOR_MAX_DEPTH_FRACTION = 0.35;
+
+/**
  * How far the ring may be lifted above the position `add_rings` computes, in
  * pixels, to keep the ring hole clear of the name's own ink.
  *
@@ -574,25 +692,20 @@ export const IDENTITY_RING_WELD_ANCHOR_DEPTH = 14;
  * reasoning that the fit reserves exactly that much empty canvas above the
  * lettering. It does, but the lift is measured from the *anchor pixel*, which
  * sits inside the letter, not from the letter top - so `Zoe` with a diaeresis
- * needed 123 px of lift, the cap refused at 110, and all six styles died with
- * `identity_ring_welded_to_glyph`. The real bound is the canvas: a ring lifted
- * past the top edge would have a clipped annulus and no enclosed hole, and the
- * `lowest` clamp in the search already refuses that, so this cap only has to be
- * large enough never to bind before the clamp does.
+ * needed 123 px of lift and the cap refused at 110.
  *
- * Adversarial review 4, minor 4: `IDENTITY_CANVAS` made it unbounded in
- * practice - the search is O(lift x columns x fillet box), about 1.9e8 pixel
- * tests per ring at that cap. The lift a seat actually needs is bounded by the
- * ring band the fit reserves plus the depth of the anchor pixel inside its own
- * stroke; measured over the 576-cell matrix of fix pass 5 the deepest lift any
- * accepted seat used was 144 rows (`zoe-en-kufi`), and 320 is that with more
- * than twice the head-room while still cutting the worst case by two thirds. A
- * seat that would need more lift than this is a seat above the top of the
- * canvas, which the `lowest` clamp refuses anyway. The search reports what it
- * actually spent as `seatSearchSteps`: over the same matrix, 4 to 216080 seats
- * per piece with a mean of 5793.
+ * Adversarial review 6, blocker 1: at 320 the cap was the whole of what bounded
+ * the suspension, and the lift the search spent was free - it was the last term
+ * of the score key and never decided anything. The result was a free-standing
+ * rod: stem p50 203 px, p95 346, 67 of 568 cells with a stem longer than the
+ * whole name was tall, and on Latin faces the rod reads as a letter (`Sara` in
+ * `classic` came out `iSarai`). The lift is now bounded by the same number the
+ * post gate is bounded by (`IDENTITY_RING_MAX_POST_PX`), so no seat the search
+ * can even evaluate carries a rod: at the widest column offset the search
+ * allows, a ring at the top of this band is still inside the post cap. The
+ * gate below it is the independent statement on the encoded piece.
  */
-export const IDENTITY_RING_MAX_LIFT = 320;
+export const IDENTITY_RING_MAX_LIFT = IDENTITY_RING_MAX_POST_PX;
 
 /**
  * Largest enclosed background region, in pixels of the finished PNG, that is a

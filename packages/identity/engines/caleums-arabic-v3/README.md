@@ -5,7 +5,7 @@ This directory is the immutable production extraction of the coordinator-approve
 The Python files are provenance and regression references only; nothing here runs at request time.
 
 The directory name is historical.
-The engine release is `caleums-identity-v4` (D-019): one solver serves Arabic and Latin, so the release identifier is no longer Arabic-only.
+The engine release is `caleums-identity-v5` (D-019, bumped by D-023): one solver serves Arabic and Latin, so the release identifier is no longer Arabic-only.
 The folder keeps its old name so no font file has to move, and `CALEUMS_IDENTITY_FONT_DIRECTORY` in `packages/identity/src/shaping.ts` repeats it as a literal because a bundler cannot follow an interpolated asset path.
 
 ## What actually runs
@@ -29,8 +29,15 @@ A weld fillet may only cover metal of the contour it is welding to.
 Any other contour's pre-ring ink under the fillet is a piece of the name the ring would swallow, and it refuses the piece; before fix pass 5 the whole capsule was exempt and the madda of `آية`, the hamza of `أمير` and the damma of `مُحَمَّدٌ` disappeared into a fillet on a stencil every gate called clean.
 The left ring is sought from the leftmost base glyph inward and the right ring from the rightmost inward, the two may never settle on the same glyph while another eligible base glyph exists, and the ring holes must sit at least a validated fraction of the finished ink width apart on the decoded PNG.
 
-Each carrier offers a ladder of anchors - the columns of its load-bearing metal, from the outer edge of the stroke inward - and the two sides are chosen together: every allowed pair is scored on the shape it makes, gate violations first, then the tilt of the line through the two holes, then the worse side's overhang, then the metal lifted off the letters.
-When no pair meets the level, overhang and span gates, the piece raises `identity_no_ring_seat` and the run is routed to operator review before any spend; `ringPlacement` is `welded` or `none`, and `none` means a construction that carries its own suspension.
+Each carrier offers a ladder of anchors - the outermost columns of its load-bearing metal that lie in the top `IDENTITY_RING_ANCHOR_MAX_DEPTH_FRACTION` of the contour's own height, so a ring is welded at the shoulder of a letter and never at its foot.
+The two sides are chosen together: every allowed pair is scored on the shape it makes, gate violations first, then the tilt to the whole degree, then the balance counted in ring radii, then the length of the two suspension posts, then the exact angle, the distance from the top line of the name and the exact balance.
+A jump ring is soldered onto a pendant, not stood off it: the post - the metal between the anchor and the centre of the hole - is capped at the smaller of `IDENTITY_RING_MAX_POST_FRACTION` of the name's ink height and `IDENTITY_RING_MAX_POST_PX`, the seat search cannot evaluate a seat outside that cap, and `identity_ring_post_too_long` says so again on the finished account (adversarial review 6, blocker 1: the pass-6 posts ran to 346 px and on Latin faces the rod read as a letter, so `Sara` in `classic` came out `iSarai`).
+The preferred ring column is pulled back inside the name's own ink where there is room for it, so the rings cost the piece no width and the recentre stops shrinking the lettering to make room for them (major 4).
+The post bounds are 0.45 of the name's ink height and a 120 px ceiling, against a shoulder weld of 49 px; 120 px costs five of the forty-eight lab cells their piece (`ليلى` cannot be brought level inside it and is refused for tilt in four styles) and that trade is deliberate, because a longer diagonal reads as a stroke of the name whatever the gates say; fix pass 7 first set them at 2.0 and 400, which bound nothing, and the image lab of 22 September photographed `أسماء` hanging its left ring on a 185 px slanted stalk beside the hamza.
+A rail weld leaves from a stem foot or a stem head - a column carrying at least `IDENTITY_CARRIER_WELD_MIN_STEM_FRACTION` of the name's height unbroken from that rail - and never from under a bowl, the vertex of a `V`, the fork of a `Y` or the gap between two letters; `MUHAMMAD` on a rail used to come out `MΨHAMMAD`.
+Each window is scanned from the outer end of the name inward, and the top rail may not use an upright the bottom rail already used, because two rails on one upright build a bar the height of the word (`MIUHAMMIAD`).
+
+When no pair meets the post, level, overhang and span gates, the piece raises `identity_no_ring_seat` and the run is routed to operator review before any spend; `ringPlacement` is `welded`, `frame` or `none`, and `none` means a construction that carries its own suspension.
 The top rail that used to catch this case is gone: measured, it touched `قق` along 11% of its span and the pendant hung from two nuqta (adversarial review 5, major 3).
 That path is reached, not hypothetical: `آية` in `classic`, `diwani` and `signature` is built that way, because the madda covers the whole top of the alef at one end.
 
@@ -56,6 +63,22 @@ Every ring gate stays exactly as it was, measured on the encoded bytes.
 Rings on a rail are level by construction and the tilt is still measured; the plane the punch and swallow gates are taken against is the *name* before any rail was drawn, so "zero name pixels under ring metal" means what it always meant while the ring is free to grip the rail it is welded to.
 `ringPlacement` is `welded`, `frame` or `none`, and `carrier.kind` (`frame` or `rails`) is the detail; a ring welded to a rail hangs from no glyph and carries `glyphIndex -1`, which `carrier.ringAnchors` states positively.
 The report carries the construction id, the rail centrelines, the outer box, the name box, the welds and the ring anchors in pixels, and the construction id is a fingerprint input, so the same name in two constructions is two artifacts.
+
+## The construction also sets the lettering (D-023)
+
+`CONSTRUCTION_LETTERING` in `packages/identity/src/caleums-arabic-v3.ts` is the one table of drawing numbers for the letterform, and the construction id is its key.
+`origami-ribbon`, `framed-minimal` and `diamond-rails` are the boxy capitals look the client approved on 22 September 2026: the Latin name is drawn in `cairo.ttf` instanced at `wght=800` with 60 font units taken off every glyph advance, so neighbouring letters touch and the stencil needs no bridge bar between them, and it is drawn in capitals.
+Their Arabic name is `NotoKufiArabic-Regular.ttf` at `wght=800` with no tracking at all: Arabic joins, and tightening a joined script would pull a joining stroke through the letter before it.
+`classical` is absent from the table and keeps the style's own pinned face at its default instance, which is the customer's chosen lettering and exactly what every pendant was drawn in before this table existed.
+
+`diamond-rails` draws its Latin name at `wght=500`: the two rails already carry a lot of metal, and at 800 the piece closed up.
+The tracking in the table is a floor, not a fixed value: the drawn tracking starts there and is tightened in steps of `IDENTITY_LETTERING_TRACKING_STEP` only while the raster is still more than one island, and never past `IDENTITY_LETTERING_MAX_TRACKING`, because at 60 units a long name still leaves gaps that the bridging pass then joins with a capsule that reads as a bar laid across the word.
+The effective value is what the report carries and what the fingerprint hashes.
+Arabic never enters that loop.
+
+Capitals are a drawing transform, never an edit of the approved name.
+The report carries `approvedCharacters` exactly as the revision recorded it and `drawnText` beside it, so a name reader compares the two case-insensitively instead of being told the approved name was something else; the shaping gates run on `drawnText`, because that is the string that becomes metal.
+The face, the weight, the tracking and the drawn case are fingerprint inputs - the font *bytes* are the same for two weights of a variable face, so the sha alone could not tell two pendants apart - and the HarfBuzz face cache is keyed by the sha and the weight together for the same reason.
 
 ## What is live
 

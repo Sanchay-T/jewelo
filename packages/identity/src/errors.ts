@@ -34,6 +34,7 @@ export class IdentitySolverError extends Error {
       | "identity_ring_span_too_narrow"
       | "identity_ring_tilt_too_steep"
       | "identity_ring_overhang_too_wide"
+      | "identity_ring_post_too_long"
       | "identity_no_ring_seat"
       | "identity_stencil_pinhole"
       | "identity_gate_failed"

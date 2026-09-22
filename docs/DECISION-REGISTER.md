@@ -26,6 +26,36 @@
 | D-020 | Jump-ring anchors are chosen at the outline level, before rasterisation: the left ring anchors on the largest contour of the first base glyph and the right ring on the largest contour of the last base glyph, at the outer top corner; marks and small contours (dots, tittles, hamza) are excluded by the font's own glyph data, never by a pixel-area threshold. The raster ruler stays as the independent check that ring metal touches no other ink. Both rings are chosen together, so the piece hangs level and neither end is cantilevered; when no pair of seats meets the level, overhang and span gates the run is routed to operator review with `identity_no_ring_seat` rather than shipped as a piece nobody would wear | accepted 8 Sep 2026 by Sanchay after adversarial reviews 2 and 3 showed the pixel heuristics fail outside their tuning corpus (Noor, Ali) | a font whose base glyphs carry dots as separate glyphs rather than contours, or a style whose first or last glyph has no contour wide enough for a ring |
 | D-021 | The stencil is the truth for the whole physical piece, not only for the name. The construction the shopper approved is a shape input to the identity engine and part of the fingerprint: `framed-minimal` draws its rectangular frame and `diamond-rails` its two rails, from validated engine constants, with the two jump rings welded onto that structure and the name welded into it in two places per rail; `classical` and `origami-ribbon` stay the lettering alone, and the ribbon's folded facets are a finish the stencil never claims. `ringPlacement` gains `frame`, with `carrier.kind` as the detail | accepted 9 Sep 2026, P2-2b default decision in `docs/TASKS.md`, after the P2-2 contact sheet showed the registration comparing a bare name with a photograph of a framed pendant | Omran changes what a construction is, or a fifth construction is sold |
 | D-022 | The atelier exposes every contract construction and lettering style without a deployment allowlist. `packages/config/src/sellable.ts` keeps that set deterministic and code-owned; the identity solver and verifier remain the authority for exact spelling and safe geometry on each name. | user override 10 Sep 2026; removed the custom deployment restriction while preserving the identity gates | a requested name cannot pass its identity gates, or a style/construction is removed from the contract |
+| D-023 | The construction the shopper approved sets the letterform as well as the structure. `CONSTRUCTION_LETTERING` in `packages/identity/src/caleums-arabic-v3.ts` is the one table: `origami-ribbon`, `framed-minimal` and `diamond-rails` draw the Latin name in `cairo.ttf` at `wght=800`, tightened by 60 font units per advance so the letters touch, and in capitals; their Arabic name is `NotoKufiArabic-Regular.ttf` at `wght=800` with no tracking, because Arabic joins. `classical` keeps the customer's own lettering unchanged. Capitals are a drawing transform: `approvedCharacters` stays exactly as approved and the report carries `drawnText` beside it. The face, the weight, the tracking and the drawn case are fingerprint inputs and the engine release moves to `caleums-identity-v5` | accepted 22 Sep 2026: the client approved the boxy capitals look, and the image lab showed the stencil rather than the prompt sets the letterform | the client approves another letterform, or a lab pass measures a weight or tracking that reads better in metal |
+
+## D-023 detail
+
+Omran approved a boxy capitals look on 22 September 2026.
+The first instinct was to ask the prompt for it, and the lab answered that: a prompt that says "boxy capitals" over a stencil drawn in Playfair lower case returns a photograph of the stencil, because the stencil is the piece and the model only lights it.
+The letterform therefore has to move into the stencil, which is where D-021 already put the frame and the rails.
+
+The numbers are the lab's, measured on a scratch copy of this engine over 12 cells that all passed every gate: `cairo.ttf` instanced at `wght=800`, 60 font units taken off every glyph advance, and the name drawn in capitals.
+The tracking is what makes it one piece of gold rather than a row of letters on a bar: at 60 units the letters touch, so the bridging pass draws no bar between them and no visible bridge survives into the metal.
+Arabic is given the same weight on its Kufi partner face and no tracking at all, because Arabic joins and tightening a joined script pulls a joining stroke through the letter before it.
+
+Three things follow, and each is a gate rather than a convention.
+The HarfBuzz face cache is keyed by the sha of the bytes *and* the weight, because two weights of a variable face are the same file and a cache keyed by the sha alone would have served the first caller's outlines to the second.
+The drawn text is recorded next to the approved text rather than replacing it: the shopper approved their name, the metal spells it in capitals, and the name reader compares the two case-insensitively instead of being told the approved name was something else.
+And the face, the weight, the tracking and the drawn case all enter the fingerprint, because the font sha cannot tell two weights apart, so without them a `classical` stencil and a `framed-minimal` stencil of the same name in the same style could have collided on one id.
+
+`classical` is deliberately absent from the table.
+It is the lettering the customer chose from the style tiles, and this decision changes nothing about it.
+
+The lab of 22 September shot the four constructions against the reference and moved two numbers off the first table.
+`diamond-rails` draws its Latin name at `wght=500` rather than 800: the two rails already carry a lot of metal and at 800 the piece closed up.
+And the tracking is a floor rather than a fixed value.
+At 60 units a long Latin name still leaves gaps - `MUHAMMAD` at `wght=800` leaves four - the bridging pass joins them with a capsule, and the capsule survives as a visible nub on the top edge of the word, which is a bar between two letters on a piece that is supposed to be made without one.
+So the drawn tracking starts at the table's value and is tightened in steps of `IDENTITY_LETTERING_TRACKING_STEP` only while the raster is still more than one island, and never past `IDENTITY_LETTERING_MAX_TRACKING`.
+Measured on the fixed engine: `ASMA` and `SARA` settle at 90, `MUHAMMAD` and `NOOR` at 120, and every one of them renders with zero bridges.
+The effective value, not the table's, is what the report carries and what the fingerprint hashes, because it is what the metal was drawn at.
+Arabic never enters that loop: its tracking is 0 by rule and its islands are nuqta and hamza, which tightening cannot join and must not move.
+
+Two things the lab found are gates rather than lettering, and they are recorded under D-020 and D-021 where they belong: the ring post cap that let `أسماء` hang its left ring on a slanted stalk, and the rail weld that landed inside the bowl of a `U`.
 
 ## D-022 detail
 
@@ -62,6 +92,21 @@ They take part in the fingerprint and they are the drawing, so a frame thickness
 Two costs, recorded rather than hidden.
 The name is laid out before the construction exists, so the structure takes its room from the name: the name is cropped, Lanczos-resampled and re-centred the way `recentre` treats any overflowing piece, `carrier.nameScale` reports the applied scale, and below `IDENTITY_CARRIER_MIN_NAME_SCALE` the piece is refused with `identity_carrier_no_room`.
 And a pendant is now two artifacts where it used to be one: the construction id is a fingerprint input, so the same name in `classical` and in `framed-minimal` no longer collides, and every fingerprint minted before this change differs from the one the same specification mints now.
+
+### The weld goes to a stem foot (image lab, 22 September 2026)
+
+A rail weld used to leave from the most extreme ink of its window, and on `MUHAMMAD` the lowest ink of the left window is the bottom of the `U`'s bowl.
+The bar dropped from there runs out of the middle of the letter, so the `U` reads as a `Ψ`: a misspelling on the stencil, which is upstream of the verifier and of everything else.
+The weld column is now a stem foot or a stem head: the ink at that column, measured unbroken from the rail, has to carry at least `IDENTITY_CARRIER_WELD_MIN_STEM_FRACTION` of the name's own height.
+A column under a bowl, at the vertex of a `V`, in the fork of a `Y` or in the gap between two letters carries one stroke and then counter; a stem carries the whole letter.
+The run length tells them apart without the engine knowing anything about letter shapes.
+
+Two rails made that not enough.
+Welding both rails to one upright builds a bar the full height of the word, and on `diamond-rails` `MUHAMMAD` came out `MIUHAMMIAD` because the `U`'s left stem was carried to both.
+So each window is scanned from the outer end of the name inward, and the top rail may not use an upright the bottom rail already used: four tiers, first that exists wins - a free stem, then the same stem both rails must share (`أسماء` has one alef in each outer window, and an alef taken to both rails is a longer alef), then the longest free run for a name whose outer letters have no upright at all (`ASMA` begins and ends on the diagonals of an `A`), then the longest run so a piece is always held at two points.
+
+`diamond-rails` also caps its tightening at 90 units rather than 120: at `wght=500` the letters are narrower, the loop spent the whole allowance, and the double `M` of `MUHAMMAD` ran together into one block.
+A bar inside a letter body is a finish; two letters run together is a different word.
 
 ## D-020 detail
 
@@ -124,11 +169,38 @@ Adversarial pass 5 measured it: over 547 welded cells the line through the two h
 Three things answer it.
 The anchor is a ladder rather than a point: every rung is a column of the carrier's load-bearing metal and the top of that column, starting at the outer edge of the stroke and walking inward, so a letter with dots above it - the ta marbuta, the final qaf, the shin - is welded on its outer shoulder from above instead of surrendering its ring to the next letter inward.
 A seat search returns not one seat but every row above it that is also clean, so a ring can be raised to meet its partner.
-And the two sides are then chosen jointly: every allowed pair of carriers is scored on the finished shape - gate violations first, then the tilt, then the worse side's overhang, then the metal lifted off the letters - and the best pair wins.
+And the two sides are then chosen jointly: every allowed pair of carriers is scored on the finished shape and the best pair wins.
 
 Two gates measure the result on the encoded bytes, not on what the search believed.
 `identity_ring_tilt_too_steep` is the angle of the line through the two hole centroids, against `IDENTITY_RING_MAX_TILT_DEGREES`; that line is the line the chain makes, so its angle is the angle the name reads at on the neck.
-`identity_ring_overhang_too_wide` is the ink outside the nearer hole on the worse side over the measured ink width, against `IDENTITY_RING_MAX_OVERHANG_FRACTION`; span alone cannot see a piece whose two rings are far apart but both in one half.
+`identity_ring_overhang_too_wide` is the ink outside the nearer hole on the worse side, against `IDENTITY_RING_MAX_OVERHANG_FRACTION`.
+Its ruler is the *name's own* ink box, taken before any ring was drawn and carried into the frame of the encoded piece by the recentre transform (adversarial pass 6, minor 6: the piece box put a ring radius into the numerator and the denominator both, which floored the whole distribution at a constant 0.041 and made every reading a few points lenient).
+Span alone cannot see a piece whose two rings are far apart but both in one half.
+
+### On the shoulder, not on a post
+
+Fix pass 6 answered level and balance and left the suspension unmeasured, and adversarial pass 6 measured it: the post between the anchor and the centre of the ring hole ran p50 203 px, p95 346, with 67 of 568 cells carrying a post longer than the whole name was tall, and 56% of the anchors sat in the bottom half of the lettering against a D-020 that says "at the outer top corner".
+On the 32 mm pendant that is a 1.2 mm wire up to 10.9 mm long joined to the letter at one point, and on a Latin face the eye reads it as a stroke: `Sara` in `classic` came out `iSarai`, upstream of the verifier and of anything that would have caught it.
+
+Three changes, and the first is the point of the other two.
+The anchor ladder is cut to the shoulder of the carrier: the outermost columns of the contour that lie in the top `IDENTITY_RING_ANCHOR_MAX_DEPTH_FRACTION` of the contour's own height, scanned for rather than stepped into, so a face whose outer edge is the middle of a bowl still offers its shoulder instead of collapsing onto the lab anchor in the middle of the letter.
+The post is capped at the smaller of `IDENTITY_RING_MAX_POST_FRACTION` of the name's ink height and `IDENTITY_RING_MAX_POST_PX`: the seat search cannot evaluate a seat outside that cap, and `identity_ring_post_too_long` states it again on the finished account, the way `identity_ring_punched_ink` states the punch the search already avoided.
+And the score key charges for it. The order is: the two gate violations and the post violation; the tilt to the whole degree; the balance counted in ring radii, which is the overhang a ring seated on the end letter cannot avoid; then the post; then the exact angle, the distance from the top line of the name and the exact balance.
+The two quantised terms are there because a tenth of a degree and a fraction of a ring's own width are below what an eye on a neck can resolve and a rod is not: inside those resolutions the shorter post wins, and outside them a pair may not buy level or balance with a rod.
+The pass-6 key put continuous overhang above everything below it and left the lift last, so a pair a fraction of a point better balanced beat a pair whose posts were 300 px shorter.
+
+### The cap has to bind (image lab, 22 September 2026)
+
+Fix pass 7 set the two post bounds at 2.0 of the ink height and 400 px, which on a 1024 px canvas is not a bound at all: over the fix-7 letters matrix the post still ran p95 310 px and max 399, and the image lab then photographed exactly what that allows.
+`أسماء` in the letters-alone constructions hung its left ring on a 185 px slanted stalk beside the hamza, which reads as an extra stroke of the name - the same class of defect as `iSarai`, one script over.
+The search only ever spends a rod to buy level, because `floor(tilt)` sits above the post in the score key, and nothing below 400 px stopped it.
+The bound that does the work is now 0.45 of the name's own ink height, against a shoulder weld of 49 px; the 185 px stalk was 0.8 of `أسماء`'s height, and the fraction refuses it while leaving that name a 103 px cap it comfortably meets.
+The absolute ceiling beside it was measured rather than guessed: over the four lab names in both scripts and all six styles, 120 px refused five cells for tilt - `ليلى` has a tall lam and a low final ya and cannot be brought level inside 120 px - and 240 px refuses none of the forty-eight without loosening a single short name, because the fraction is what binds those.
+So the ceiling only ever catches a name tall enough to earn a rod by being tall.
+A pair that cannot be level *and* welded has to step inward to a taller letter or be refused and looked at, and that order is the right one: a refusal costs a review, a rod costs a customer the wrong name.
+
+The preferred ring column is also pulled back inside the name's own ink where there is room for it, bounded by the ring's radius, by half the overhang gate and by half the post cap.
+A ring whose body stays inside the name's box costs the piece no width, which is what adversarial pass 6 major 4 was about: 450 of 568 pass-6 cells had a ring against the canvas margin, so the piece measured 1020 px against a 912 px recentre box and the lettering was resampled down to 0.894 for nothing.
 
 ### Pinholes
 
