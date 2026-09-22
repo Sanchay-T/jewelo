@@ -33,7 +33,7 @@ These are pointers. Open the one your task needs; do not read all of them.
 
 ## Environment facts that bite
 
-- Staging: `https://jewelo-staging-gqumd.ondigitalocean.app`, DigitalOcean app `ec09c9fd-84e4-45c5-b60a-fd62277af322`, region blr, `PROVIDER_MODE=mock`. Mock runs complete with fake assets that the UI correctly refuses to show; that is honest degrade, not a bug.
+- Staging: `https://jewelo-staging-gqumd.ondigitalocean.app`, DigitalOcean app `ec09c9fd-84e4-45c5-b60a-fd62277af322`, region blr. It runs `provider: real` (`providerMode()` forces real when `NODE_ENV=production`; `deploy.sh` strips `PROVIDER_MODE`). Spend is stopped by `runtime_policy` (no spend ceiling set, every dispatch blocked pre-spend), not by mock; never raise that cap without Sanchay. Locally `PROVIDER_MODE=mock` still works.
 - Supabase project `jggalwuvpcqoenhirmnl` (ap-south-1). The Devonel org is 10x over free egress and every project returns 402 after 29 September 2026 unless Sanchay upgrades or moves it.
 - Runway MCP tool prefix is `mcp__claude_ai_RunwayML__`; it serves `gpt-image-2` and `gpt-image-2.5-sunburst`, the same models production calls, so prompts proven there transfer. OpenAI is wired and fail-closed; it is called only at the phase 5 gate.
 - The six style anchor PNGs are outside git at `~/hq/projects/devonel/caleums-private/style-anchors-v1/` (laptop) and `~/.codex/state/jewelo/caleums-style-anchors/v1/` (home-mini).

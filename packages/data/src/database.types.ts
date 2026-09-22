@@ -1741,6 +1741,15 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      complete_presentation_task: {
+        Args: {
+          p_actual_cost_cents: number
+          p_asset: Json
+          p_attempt: number
+          p_task_id: string
+        }
+        Returns: string
+      }
       complete_shopify_order: {
         Args: {
           p_delivery_id: string
