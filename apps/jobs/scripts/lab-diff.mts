@@ -1,0 +1,219 @@
+// The prompt proof: what production compiles is what the lab measured.
+//
+// Every studio prompt in this repository's Runway labs was approved by eye on
+// gpt-image-2.5-sunburst, the model production calls. A prompt that drifts by
+// one word after that approval is a prompt nobody approved, and nothing else
+// in the pipeline would notice. So this script compiles the production studio
+// sheet - the real `image.packshot` template, the real
+// `buildPromptVariableSnapshot`, the real `compileStillPrompt` - for each lab
+// case and compares it byte for byte with the lab file that was approved.
+//
+// Cases:
+//   `docs/goals/road-to-gold/lab-2026-09-22/final/*.txt`   the minimal
+//     style-first family, all four constructions, 22 September 2026.
+//   `docs/goals/road-to-gold/lab-2026-09-23-origami/prompts/v3-{asma,love}.txt`
+//     the V3 refined folded origami sheet, 23 September 2026, which supersedes
+//     the 22 September origami-ribbon prompts. Those five superseded files are
+//     listed as `superseded` rather than compared: the compiler is expected to
+//     disagree with them.
+//
+// Run it (Node is pinned to 24.18.1):
+//   corepack pnpm --filter @jewelo/jobs lab-diff
+//
+// Exit 0 only when every compared case is byte-identical to its lab file apart
+// from a delta the case declares and explains. Anything else is printed line by
+// line and exits 1. Nothing here is paid, nothing here touches the network or
+// the database.
+import { readFileSync } from "node:fs";
+import { join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+
+import {
+  BASELINE_PROMPT_TEMPLATES,
+  buildPromptVariableSnapshot,
+  compileStillPrompt,
+  STILL_COMPILER_VERSION,
+} from "@jewelo/ai";
+
+const REPO_ROOT = resolve(fileURLToPath(new URL("../../..", import.meta.url)));
+const LAB_0922 = "docs/goals/road-to-gold/lab-2026-09-22/final";
+const LAB_0923 = "docs/goals/road-to-gold/lab-2026-09-23-origami/prompts";
+
+/** The specification fields the lab's own sheets state, and nothing else. */
+const LAB_DIMENSIONS = { widthMm: 32, heightMm: 12, thicknessMm: 1.2 };
+
+type Case = {
+  file: string;
+  construction: string;
+  name: string;
+  language: "en" | "ar";
+  metalColor: string;
+  stones?: string;
+  /**
+   * A lab line production is expected to disagree with, and why. Anything else
+   * that differs is drift and fails the run.
+   */
+  allowedDelta?: { line: RegExp; why: string };
+};
+
+/** The four names the labs drew, by the token their filenames use. */
+const NAMES: Readonly<Record<string, { name: string; language: "en" | "ar" }>> =
+  {
+    asma: { name: "Asma", language: "en" },
+    "asma-ar": { name: "أسماء", language: "ar" },
+    muhammad: { name: "Muhammad", language: "en" },
+    noor: { name: "Noor", language: "en" },
+    love: { name: "Love", language: "en" },
+  };
+
+const CONSTRUCTIONS = [
+  "classical",
+  "origami-ribbon",
+  "framed-minimal",
+  "diamond-rails",
+] as const;
+
+/** The 22 September family: four constructions x five pieces. */
+const LAB_0922_PIECES: readonly {
+  slug: string;
+  name: string;
+  stones?: string;
+}[] = [
+  { slug: "plain-asma", name: "asma" },
+  { slug: "plain-asma-ar", name: "asma-ar" },
+  { slug: "plain-muhammad", name: "muhammad" },
+  { slug: "plain-noor", name: "noor" },
+  { slug: "stones-muhammad", name: "muhammad", stones: "lab-diamond" },
+];
+
+/**
+ * The 22 September origami prompts the V3 sheet replaces. They stay on disk as
+ * the lineage of what was tried; comparing against them would assert the
+ * opposite of what shipped.
+ */
+const SUPERSEDED = new Set(
+  LAB_0922_PIECES.map(
+    (piece) => `${LAB_0922}/origami-ribbon-${piece.slug}.txt`,
+  ),
+);
+
+/**
+ * `classical` draws Playfair italic in the approved casing, not capitals
+ * (`CONSTRUCTION_LETTERING` in `@jewelo/identity`, commit bbf7e7a, 23 Sep
+ * 2026, after this lab was shot). The sheet names the piece by the text the
+ * stencil cuts, so its Name line says "Asma" where the lab file says "ASMA".
+ * Arabic is unaffected, and so is every other line.
+ */
+const CLASSICAL_CASING_DELTA = {
+  line: /^Name: /,
+  why: "classical draws the approved casing, not capitals (bbf7e7a)",
+} as const;
+
+const cases: Case[] = [
+  ...CONSTRUCTIONS.flatMap((construction) =>
+    LAB_0922_PIECES.map((piece) => ({
+      file: `${LAB_0922}/${construction}-${piece.slug}.txt`,
+      construction,
+      ...NAMES[piece.name]!,
+      metalColor: "yellow",
+      stones: piece.stones,
+      ...(construction === "classical" && NAMES[piece.name]!.language === "en"
+        ? { allowedDelta: CLASSICAL_CASING_DELTA }
+        : {}),
+    })),
+  ).filter((testCase) => !SUPERSEDED.has(testCase.file)),
+  {
+    file: `${LAB_0923}/v3-asma.txt`,
+    construction: "origami-ribbon",
+    ...NAMES.asma!,
+    metalColor: "yellow",
+  },
+  {
+    file: `${LAB_0923}/v3-love.txt`,
+    construction: "origami-ribbon",
+    ...NAMES.love!,
+    metalColor: "rose",
+  },
+];
+
+function compile(testCase: Case): string {
+  const variables = buildPromptVariableSnapshot({
+    approvedName: testCase.name,
+    language: testCase.language,
+    specification: {
+      construction: testCase.construction,
+      arabicStyle: testCase.language === "ar" ? "kufi" : "none",
+      layout: "single-name",
+      connector: "none",
+      metalKarat: "18K",
+      metalColor: testCase.metalColor,
+      finish: "polished",
+      stoneCoverage: testCase.stones ? "accent" : "none",
+      gemstone: testCase.stones ?? "none",
+      sizeProfile: "classic",
+      dimensions: LAB_DIMENSIONS,
+      chain: { style: "cable", lengthCm: 45 },
+    },
+    presentationView: "studio",
+  });
+  return compileStillPrompt({
+    profile: "image.packshot",
+    template: BASELINE_PROMPT_TEMPLATES["image.packshot"],
+    variables,
+    references: { master: false, look: true, style: false, inspiration: false },
+  }).compiledPrompt;
+}
+
+/** Every line that differs, so a drift can never hide behind an earlier one. */
+function divergences(
+  expected: string,
+  actual: string,
+): { index: number; lab: string; production: string }[] {
+  const want = expected.split("\n");
+  const got = actual.split("\n");
+  const rows = [];
+  for (let index = 0; index < Math.max(want.length, got.length); index += 1)
+    if (want[index] !== got[index])
+      rows.push({
+        index,
+        lab: want[index] ?? "<end of file>",
+        production: got[index] ?? "<end of file>",
+      });
+  return rows;
+}
+
+let failed = 0;
+console.log(`compiler ${STILL_COMPILER_VERSION}`);
+for (const testCase of cases) {
+  const expected = readFileSync(join(REPO_ROOT, testCase.file), "utf8");
+  const rows = divergences(expected, compile(testCase));
+  const unexpected = rows.filter(
+    (row) => !testCase.allowedDelta?.line.test(row.lab),
+  );
+  if (!rows.length) {
+    console.log(`MATCH  ${testCase.file}`);
+    continue;
+  }
+  if (!unexpected.length) {
+    console.log(
+      `MATCH  ${testCase.file}  (expected delta: ${testCase.allowedDelta!.why})`,
+    );
+    continue;
+  }
+  failed += 1;
+  console.log(`DIFFER ${testCase.file}`);
+  for (const row of unexpected)
+    console.log(
+      [
+        `  line ${row.index + 1}`,
+        `  - lab        ${JSON.stringify(row.lab)}`,
+        `  + production ${JSON.stringify(row.production)}`,
+      ].join("\n"),
+    );
+}
+for (const file of SUPERSEDED)
+  console.log(`superseded (not compared)  ${file}`);
+console.log(
+  `${cases.length - failed}/${cases.length} compiled studio prompts match their lab file, apart from the declared deltas above`,
+);
+if (failed) process.exitCode = 1;

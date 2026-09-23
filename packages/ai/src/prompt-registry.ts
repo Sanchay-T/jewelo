@@ -32,7 +32,14 @@ export const PROMPT_COMPILER_VERSION = "caleums-prompt-compiler-v2";
 // stones sentence names every chosen stone, and a stale prompt is refused
 // before spend - all three change the compiled bytes, so stored snapshots stay
 // distinguishable from the v2 text that was paid for.
-export const STILL_COMPILER_VERSION = "caleums-still-compiler-v3";
+// v4 (24 Sep 2026): the origami-ribbon construction carries the V3 refined
+// folded origami sheet measured on gpt-image-2.5-sunburst
+// (docs/goals/road-to-gold/lab-2026-09-23-origami/prompts/v3-*.txt): a stencil
+// line that gives the fold permission inside a fixed footprint, a look line
+// that names the folded construction and not only the finish, the refined
+// folded Style paragraph, and 2.5 mm of rendered thickness. Every other
+// construction compiles the same bytes as v3.
+export const STILL_COMPILER_VERSION = "caleums-still-compiler-v4";
 export const MAX_PROMPT_TEMPLATE_LENGTH = 12_000;
 export const MAX_COMPILED_PROMPT_LENGTH = 16_000;
 /**
@@ -76,7 +83,9 @@ export const PROMPT_VARIABLES = {
   name_spelling: "How the approved name is spelled and read, by script",
   stones_rule: "Where this construction seats its stones, or that it has none",
   look_rule:
-    "The finish the look reference shows; used by the compiler's Image 2 line",
+    "What the look reference shows and how much of it to copy; the compiler's Image 2 sentence",
+  stencil_rule:
+    "How binding the stencil is for this construction; the compiler's Image 1 sentence",
 } as const;
 export type PromptVariable = keyof typeof PROMPT_VARIABLES;
 export type PromptVariableSnapshot = Record<PromptVariable, string>;
@@ -91,6 +100,7 @@ const OPTIONAL_VARIABLES: readonly PromptVariable[] = Object.freeze([
   "name_spelling",
   "stones_rule",
   "look_rule",
+  "stencil_rule",
 ]);
 
 /**
@@ -198,11 +208,20 @@ export const PENDANT_CONSTRUCTION_PROSE: Readonly<Record<string, string>> = {
     "Classical nameplate. The letters alone are the pendant: no frame, plate or rail. Each letter has one " +
     "flat mirror-polished face and straight square side walls of even depth, with crisp edges. No bevels, " +
     "facets, texture or engraving.",
+  // V3 refined folded origami, measured 23 September 2026
+  // (`docs/goals/road-to-gold/lab-2026-09-23-origami/prompts/v3-*.txt`): the
+  // 22 September paragraph gave two or three large planes per stroke, which the
+  // model read as a flat plate with a crease. Triangular panels that alternate
+  // bright and shadowed, plus an explicit slim stroke width, are what produced
+  // Omran's folded piece.
   "origami-ribbon":
-    "Origami fold. Each letter stroke is a folded gold sheet: two or three large flat planes per stroke, " +
-    "meeting at straight crisp creases where strokes join or turn. The plane facing the light is bright; the " +
-    "plane beside it is a darker tone of the same gold. Faces are flat and mirror polished, side walls " +
-    "straight and square. No small facets, texture or engraving.",
+    "Refined folded origami. Each letter stroke is folded from several flat triangular gold panels, the " +
+    "fold direction changing along the stroke so the panels alternate between a bright face and a darker " +
+    "shadowed face of the same gold. Creases are straight and crisp, panel edges clean and sharp, faces " +
+    "flat and mirror polished. Fine-jewelry proportions: the letter bars are noticeably slim, about one " +
+    "fifth thinner than a standard nameplate, an even 2.0 mm apparent stroke width across the whole name, " +
+    "restrained and elegant, never chunky, heavy or toy-like. Clearly three-dimensional folded metal with " +
+    "visible thickness, not folded paper.",
   "framed-minimal":
     "Framed minimal. The letters sit inside one slim rectangular gold frame, joined to it only where @stencil " +
     "joins them. The frame is a slim square bar with a flat polished top and crisp right-angle corners. The " +
@@ -218,17 +237,66 @@ export const PENDANT_CONSTRUCTION_PROSE: Readonly<Record<string, string>> = {
 export const PENDANT_CONSTRUCTION_FALLBACK = PENDANT_CONSTRUCTION_PROSE.classical!;
 
 /**
- * The finish each construction's look crop shows, dropped into the compiler's
- * Image 2 sentence. Lab text, verbatim.
+ * The compiler's Image 2 sentence, everything after the image number: what this
+ * construction's look crop shows and how much of it to copy. Lab text, verbatim.
+ *
+ * It is the whole sentence rather than the finish alone because the V3 origami
+ * sheet (23 September 2026) asks the model to copy a construction and not only
+ * a polish, and says so in the frame of the sentence as well as its middle.
+ * The other three constructions keep the 22 September wording byte for byte.
  */
 export const PENDANT_LOOK_PROSE: Readonly<Record<string, string>> = {
-  classical: "flat mirror-polished letter faces and crisp square side walls",
+  classical:
+    "shows the gold finish to copy: flat mirror-polished letter faces and crisp square side walls. Copy " +
+    "only the finish, not its letters, outline, stones, rings or chain.",
   "origami-ribbon":
-    "large flat folded planes, crisp straight creases and mirror polish",
+    "shows only the folded construction and the polish to copy: strokes built from triangular folded gold " +
+    "panels with crisp creases and alternating bright and shadowed faces. Copy only that construction and " +
+    "finish, not its letters, outline, stones, rings, bail or chain.",
   "framed-minimal":
-    "flat mirror-polished letter faces, crisp square side walls and a slim square frame bar",
+    "shows the gold finish to copy: flat mirror-polished letter faces, crisp square side walls and a slim " +
+    "square frame bar. Copy only the finish, not its letters, outline, stones, rings or chain.",
   "diamond-rails":
-    "slim crisp polished bars and flat mirror-polished letter faces",
+    "shows the gold finish to copy: slim crisp polished bars and flat mirror-polished letter faces. Copy " +
+    "only the finish, not its letters, outline, stones, rings or chain.",
+};
+
+/**
+ * The compiler's Image 1 sentence, everything after the image number.
+ *
+ * Every construction is held to the stencil's silhouette exactly as drawn.
+ * `origami-ribbon` is the one that cannot be: a folded panel cuts a stroke end
+ * at an angle and turns a round counter into a polygon, so the 22 September
+ * silhouette sentence and the folded Style paragraph contradicted each other
+ * and the model resolved it by not folding. The V3 sheet keeps the footprint,
+ * the letters, their order and both rings binding, and releases only the
+ * geometry inside that footprint.
+ */
+const PENDANT_STENCIL_PROSE_DEFAULT =
+  "is the exact silhouette of the pendant: every letter, join and both rings. Make it in gold exactly as " +
+  "drawn; add, remove or move nothing.";
+export const PENDANT_STENCIL_PROSE: Readonly<Record<string, string>> = {
+  "origami-ribbon":
+    "is the exact layout of the pendant: keep every letter, its order, its position and both rings exactly " +
+    "as drawn, and keep the whole piece inside that footprint. Inside that footprint the geometry may be " +
+    "folded: stroke ends may be cut at an angle and round counters may become polygons. Add nothing, " +
+    "remove nothing, move nothing.",
+};
+
+/**
+ * The thickness the sheet prints for a construction whose measured lab prompt
+ * names one of its own, in millimetres, as the text writes it.
+ *
+ * The approved specification is unchanged - the piece the shop cuts is still
+ * 1.2 mm stock. A folded panel stands off that stock, and the V3 lab sheet
+ * measured on 23 September asks for 2.5 mm of visible edge depth to get folded
+ * metal instead of folded paper. It sits beside the prose it belongs to, and is
+ * pinned by `STILL_COMPILER_VERSION` like the prose, rather than in deployment
+ * configuration: a rendered pendant whose proportions can be retuned from a
+ * console is a pendant nobody verified.
+ */
+const PENDANT_RENDERED_THICKNESS_MM: Readonly<Record<string, string>> = {
+  "origami-ribbon": "2.5",
 };
 
 /**
@@ -456,6 +524,13 @@ export function buildPromptVariableSnapshot(input: {
   const specification = input.specification;
   const dimensions = asObject(specification.dimensions);
   const chain = asObject(specification.chain);
+  // Width and height are the approved specification's. The thickness the sheet
+  // prints is the rendered one, which a folded construction states for itself;
+  // both the Material line and `piece_spec` read this single value so the
+  // prompt and the verifier can never be told different depths.
+  const thicknessMm =
+    PENDANT_RENDERED_THICKNESS_MM[scalar(specification.construction)] ??
+    scalar(dimensions.thicknessMm);
   const connector = scalar(specification.connector);
   // Every template names the piece by the text the stencil cuts, never by the
   // shopper's casing: the older scene families interpolate `{{approved_name}}`
@@ -481,7 +556,7 @@ export function buildPromptVariableSnapshot(input: {
         gemstoneList(specification).map((gem) => prose(GEMSTONE_PROSE, gem)),
       ),
     )}`,
-    `size=${scalar(specification.sizeProfile)}; dimensions=${scalar(dimensions.widthMm)} × ${scalar(dimensions.heightMm)} × ${scalar(dimensions.thicknessMm)} mm`,
+    `size=${scalar(specification.sizeProfile)}; dimensions=${scalar(dimensions.widthMm)} × ${scalar(dimensions.heightMm)} × ${thicknessMm} mm`,
     `chain=${prose(CHAIN_PROSE, chain.style)}; length=${scalar(chain.lengthCm)} cm`,
   ].join("; ");
   return {
@@ -498,7 +573,7 @@ export function buildPromptVariableSnapshot(input: {
     size_profile: scalar(specification.sizeProfile),
     // ASCII "x", as the lab's measured sheet writes it; the multiplication
     // sign was the only non-ASCII character in an English prompt.
-    dimensions: `${scalar(dimensions.widthMm)} x ${scalar(dimensions.heightMm)} x ${scalar(dimensions.thicknessMm)} mm`,
+    dimensions: `${scalar(dimensions.widthMm)} x ${scalar(dimensions.heightMm)} x ${thicknessMm} mm`,
     chain_style: scalar(chain.style),
     chain_length: `${scalar(chain.lengthCm)} cm`,
     presentation_view: scalar(input.presentationView),
@@ -519,6 +594,9 @@ export function buildPromptVariableSnapshot(input: {
     look_rule:
       PENDANT_LOOK_PROSE[scalar(specification.construction)] ??
       PENDANT_LOOK_PROSE.classical!,
+    stencil_rule:
+      PENDANT_STENCIL_PROSE[scalar(specification.construction)] ??
+      PENDANT_STENCIL_PROSE_DEFAULT,
   };
 }
 
@@ -865,13 +943,10 @@ function minimalOpeningLines(
 ): string[] {
   const lines = [
     "Photorealistic photograph of one real gold name pendant on a chain.",
-    `Image ${position.get("stencil")} (stencil) is the exact silhouette of the pendant: every letter, join and both rings. Make it in gold exactly as drawn; add, remove or move nothing.`,
+    `Image ${position.get("stencil")} (stencil) ${variables.stencil_rule}`,
   ];
   const look = position.get("look");
-  if (look)
-    lines.push(
-      `Image ${look} (look) shows the gold finish to copy: ${variables.look_rule}. Copy only the finish, not its letters, outline, stones, rings or chain.`,
-    );
+  if (look) lines.push(`Image ${look} (look) ${variables.look_rule}`);
   return lines;
 }
 
