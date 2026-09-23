@@ -314,3 +314,14 @@ In flight: site feedback (implementer), stencil per-construction lettering + fix
 - 23 Sep: first deploy from the laptop, deployment `6a67f2a7-587c-4185-895b-ddd2137d2cf3` on `a1fb414` (app code identical to `dff6102`), smoke passed. Browser pass in `dogfood-2026-09-23/live-a1fb414/`: sections Size/Name/Style/Gold, 0 italics, no chain picker, no AI/generate/prompt/magic words, Arabic RTL at 390x844 with no overflow. Finding: the first cold load right after the deploy timed out every sample photo at 15 s ("This sample photo could not load"); warm, style switches settle in about 0.5 s. Sample PNGs were about 1.8 MB each; fixed in 76103b9 (WebP, hero first, year cache on images only). Follow-ups: ~400 MB of unreferenced PNGs still ship in public/atelier; no PNG fallback for browsers without WebP (Safari below 14); Vitest literals still name .png.
 - 23 Sep: staging now builds from the Dockerfile (standalone). Deployment `5d810bda-b6eb-4933-8442-a0f86c5f5b68` on `32ce585` went live in 376 s wall clock on its first, uncached build (buildpack deploys were about 870 s). Smoke passed; `/en` and `/ar` 200; `/api/inngest` 401 (route loads); `.webp` and `.jpg` samples 200, old `.png` 404. Inside the live container (`doctl apps console` through `script`), sharp renders with libvips 8.18.6 and the identity fonts are in `.next/server/assets`. First visit on a clean browser: 1.3 MB of images, hero ready in about 1.5 s (was 15.6 MB, 15 s timeouts).
 - Still Sanchay's: authorize the DigitalOcean GitHub app for push-to-deploy; decide on removing about 1.5 GB of proof files from git history (about 2 minutes per deploy).
+
+## 23 Sep 2026 - first paid runs on the live staging link
+
+Spend approved by Sanchay; staging on `gpt-image-2.5-sunburst-2026-09-08` quality max, `runtime_policy` cap 800 cents/day, 3 provider attempts, daily limits 4.
+Evidence in `dogfood-2026-09-23/real-run/`.
+
+- Run 1, English origami "Asma" (studio_only on): studio ready on attempt 1; boxy folded ASMA, chain through both rings (`01-studio-ready.webp`).
+- Run 2, Arabic framed-minimal Kufi "أسماء" (studio_only off): studio, on_skin, close_up and dark all ready on attempt 1; spelling correct and identical in all four, same frame, cable chain (`02-ar-page.webp`, `03-ar-four-photos.webp`).
+- Live form pass: size first, 0 italic elements, no chain picker, third stone disables the rest with "Choose up to 3 stones.", no horizontal scroll at 1440 and 390, review readable on phone (`04`, `05`).
+- Email capture on the live link: "We will send it to you", reference `be5ee13d-...`, row present in `preview_requests`. The shop is not emailed yet (log-only until Resend).
+- Spend: about 5 stills at about 21 cents each, roughly USD 1.05.
