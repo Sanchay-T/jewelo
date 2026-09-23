@@ -25,7 +25,7 @@
   },
   {
     "id": "v10-origami-dark",
-    "file": "origami-dark.webp",
+    "file": "origami-dark45.webp",
     "view": "Dark",
     "patch": {
       "construction": "Origami ribbon"
@@ -57,7 +57,7 @@
   },
   {
     "id": "v10-framed-dark",
-    "file": "framed-dark.webp",
+    "file": "framed-dark45.webp",
     "view": "Dark",
     "patch": {
       "construction": "Framed minimal"
@@ -95,7 +95,7 @@
   },
   {
     "id": "v10-arabic-framed-kufi-dark",
-    "file": "arabic-framed-kufi-dark.webp",
+    "file": "arabic-framed-kufi-dark45.webp",
     "view": "Dark",
     "patch": {
       "script": "Arabic",
@@ -129,7 +129,7 @@
   },
   {
     "id": "v10-rails-dark",
-    "file": "rails-dark.webp",
+    "file": "rails-dark45.webp",
     "view": "Dark",
     "patch": {
       "construction": "Diamond rails"

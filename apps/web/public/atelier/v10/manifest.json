@@ -1,0 +1,64 @@
+{
+  "version": "v10",
+  "made": "2026-09-23",
+  "source": "live staging pipeline (real provider), one approved run per set, four views each",
+  "model": "gpt-image-2.5-sunburst-2026-09-08",
+  "quality": "max",
+  "pipeline_release": "caleums-final-media-v2",
+  "studio_prompt_release": "252ca794-43a5-42fe-b022-bfb53246ee08",
+  "name": {
+    "english": "Asma",
+    "arabic": "أسماء"
+  },
+  "metal": "Yellow gold",
+  "stones": "No stones",
+  "sets": {
+    "classic": {
+      "generation_run": "d59288cb",
+      "files": [
+        "classic-studio.webp",
+        "classic-worn.webp",
+        "classic-close.webp",
+        "classic-dark45.webp"
+      ]
+    },
+    "origami": {
+      "generation_run": "65427f44",
+      "files": [
+        "origami-studio.webp",
+        "origami-worn.webp",
+        "origami-close.webp",
+        "origami-dark45.webp"
+      ]
+    },
+    "framed": {
+      "generation_run": "93a3564d",
+      "files": [
+        "framed-studio.webp",
+        "framed-worn.webp",
+        "framed-close.webp",
+        "framed-dark45.webp"
+      ]
+    },
+    "rails": {
+      "generation_run": "ebc530f6",
+      "files": [
+        "rails-studio.webp",
+        "rails-worn.webp",
+        "rails-close.webp",
+        "rails-dark45.webp"
+      ]
+    },
+    "arabic-framed-kufi": {
+      "generation_run": "50a2d290",
+      "files": [
+        "arabic-framed-kufi-studio.webp",
+        "arabic-framed-kufi-worn.webp",
+        "arabic-framed-kufi-close.webp",
+        "arabic-framed-kufi-dark45.webp"
+      ]
+    }
+  },
+  "processing": "downscaled to fit 1122x1402, WebP q90 plus JPEG twin q86",
+  "checked": "every view read by eye for spelling, construction and chain before connecting (PROGRESS 23 Sep evening)"
+}

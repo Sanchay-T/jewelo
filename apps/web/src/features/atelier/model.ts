@@ -540,4 +540,4 @@ export const sampleSource = (view: View, draft?: Draft) =>
     ? "/atelier/v1/asma-fatima.webp"
     : view === "Studio" && draft?.script === "Arabic"
       ? "/atelier/v1/asma-arabic.webp"
-      : `/atelier/v10/classic-${view === "On skin" ? "worn" : view === "Dark" ? "dark" : view === "Close-up" ? "close" : "studio"}.webp`;
+      : `/atelier/v10/classic-${view === "On skin" ? "worn" : view === "Dark" ? "dark45" : view === "Close-up" ? "close" : "studio"}.webp`;

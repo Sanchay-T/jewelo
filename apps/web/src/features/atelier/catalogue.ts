@@ -20,9 +20,10 @@ import v5 from "./sample-assets-v5.json";
 import v6 from "./sample-assets-v6.json";
 import v8 from "./sample-assets-v8.json";
 import v9 from "./sample-assets-v9.json";
-// The image lab publishes new photographs as v10. The file ships empty so the
-// shop-ready catalogue never depends on work that has not been reviewed yet;
-// entries appear only after a viewer connects them.
+// v10 holds photographs made by the live staging pipeline on the current prompt
+// (23 Sep, Omran's calmer look), each set checked view by view before it was
+// connected; lineage is in public/atelier/v10/manifest.json. The first matching
+// entry wins, so v10 shadows the older family of the same design.
 import v10 from "./sample-assets-v10.json";
 type ManifestEntry = {
   id: string;
@@ -103,7 +104,7 @@ export const samples: Sample[] = [
           ? "worn"
           : view === "Close-up"
             ? "close"
-            : "dark") +
+            : "dark45") +
       ".webp",
   })),
   {
