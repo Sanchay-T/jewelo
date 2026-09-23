@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+# Keeps the repo light so clones and deploys stay fast: no staged file over
+# 2 MB, and evidence images under docs/ must be WebP or small (convert with
+# `python3 scripts/webp.py <files>`). Bypass for a deliberate exception:
+# JEWELO_ALLOW_LARGE=1 git commit ...
+[ "${JEWELO_ALLOW_LARGE:-0}" = "1" ] && exit 0
+fail=0
+while IFS= read -r -d '' f; do
+  [ -f "$f" ] || continue
+  size=$(wc -c < "$f" | tr -d ' ')
+  if [ "$size" -gt 2097152 ]; then echo "blocked: $f is $((size/1024)) KB (limit 2048 KB)"; fail=1; fi
+  case "$f" in docs/*.png|docs/*.jpg|docs/*.jpeg)
+    if [ "$size" -gt 307200 ]; then echo "blocked: $f is $((size/1024)) KB; convert evidence images to WebP (python3 scripts/webp.py $f)"; fail=1; fi;;
+  esac
+done < <(git diff --cached --name-only --diff-filter=AM -z)
+exit $fail

@@ -61,6 +61,11 @@ Edit in place with targeted edits; do not rewrite whole files or create new file
 
 Commit each coherent slice with a message that says what changed and why, in plain hyphens, no attribution trailers. Keep `PROGRESS.md` current as you go, not at the end; a session can die at any minute and that file is what survives. When compacting, preserve the task id you are on, the files you changed, the exact commands run with their results, and every open finding.
 
+## Omran feedback goes live the same day (Sanchay, 23 Sep 2026)
+
+For a site-level feedback item (copy, layout, options, speed): implement, `corepack pnpm build`, commit, push, deploy staging (about 5 min with the Dockerfile build), then drive only the affected screens in agent-browser at 1440x900 and 390x844 plus Arabic, save WebP screenshots, and report the live link. One fresh `reviewer` pass on the diff runs in parallel with the deploy; fix anything above minor and redeploy. The full seven-viewport sweep and two clean adversarial passes stay mandatory for identity engine, prompt, spend, auth and data changes.
+Evidence images go in as WebP (`python3 scripts/webp.py <files>`); the `.githooks/pre-commit` guard (enable with `git config core.hooksPath .githooks`) refuses files over 2 MB and docs images over 300 KB so clones and deploys stay fast.
+
 ## The deliverable is a link
 
 Pull request #12 (`codex/overnight-launch-2026-09-08` → `main`, draft) is the handover. Sanchay reads its description and nothing else. Before you stop for any reason, run `/handover`: it rewrites `docs/goals/road-to-gold/HANDOVER.md` from the real state, mirrors it into the PR, pushes, and prints the link. Your last message is that link, the Status table, and the Needs-Sanchay list.
