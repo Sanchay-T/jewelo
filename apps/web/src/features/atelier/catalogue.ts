@@ -93,8 +93,10 @@ export const samples: Sample[] = [
     id: "classic-" + view,
     view,
     draft: base,
+    // v10: the calmer look Omran asked for on 22 Sep, photographed by the live
+    // pipeline. v1 stays on disk for lineage.
     src:
-      "/atelier/v1/asma-" +
+      "/atelier/v10/classic-" +
       (view === "Studio"
         ? "studio"
         : view === "On skin"

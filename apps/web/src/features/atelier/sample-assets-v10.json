@@ -1,1 +1,138 @@
-[]
+[
+  {
+    "id": "v10-origami-studio",
+    "file": "origami-studio.webp",
+    "view": "Studio",
+    "patch": {
+      "construction": "Origami ribbon"
+    }
+  },
+  {
+    "id": "v10-origami-worn",
+    "file": "origami-worn.webp",
+    "view": "On skin",
+    "patch": {
+      "construction": "Origami ribbon"
+    }
+  },
+  {
+    "id": "v10-origami-close",
+    "file": "origami-close.webp",
+    "view": "Close-up",
+    "patch": {
+      "construction": "Origami ribbon"
+    }
+  },
+  {
+    "id": "v10-origami-dark",
+    "file": "origami-dark.webp",
+    "view": "Dark",
+    "patch": {
+      "construction": "Origami ribbon"
+    }
+  },
+  {
+    "id": "v10-framed-studio",
+    "file": "framed-studio.webp",
+    "view": "Studio",
+    "patch": {
+      "construction": "Framed minimal"
+    }
+  },
+  {
+    "id": "v10-framed-worn",
+    "file": "framed-worn.webp",
+    "view": "On skin",
+    "patch": {
+      "construction": "Framed minimal"
+    }
+  },
+  {
+    "id": "v10-framed-close",
+    "file": "framed-close.webp",
+    "view": "Close-up",
+    "patch": {
+      "construction": "Framed minimal"
+    }
+  },
+  {
+    "id": "v10-framed-dark",
+    "file": "framed-dark.webp",
+    "view": "Dark",
+    "patch": {
+      "construction": "Framed minimal"
+    }
+  },
+  {
+    "id": "v10-arabic-framed-kufi-studio",
+    "file": "arabic-framed-kufi-studio.webp",
+    "view": "Studio",
+    "patch": {
+      "script": "Arabic",
+      "construction": "Framed minimal",
+      "lettering": "Kufi"
+    }
+  },
+  {
+    "id": "v10-arabic-framed-kufi-worn",
+    "file": "arabic-framed-kufi-worn.webp",
+    "view": "On skin",
+    "patch": {
+      "script": "Arabic",
+      "construction": "Framed minimal",
+      "lettering": "Kufi"
+    }
+  },
+  {
+    "id": "v10-arabic-framed-kufi-close",
+    "file": "arabic-framed-kufi-close.webp",
+    "view": "Close-up",
+    "patch": {
+      "script": "Arabic",
+      "construction": "Framed minimal",
+      "lettering": "Kufi"
+    }
+  },
+  {
+    "id": "v10-arabic-framed-kufi-dark",
+    "file": "arabic-framed-kufi-dark.webp",
+    "view": "Dark",
+    "patch": {
+      "script": "Arabic",
+      "construction": "Framed minimal",
+      "lettering": "Kufi"
+    }
+  },
+  {
+    "id": "v10-rails-studio",
+    "file": "rails-studio.webp",
+    "view": "Studio",
+    "patch": {
+      "construction": "Diamond rails"
+    }
+  },
+  {
+    "id": "v10-rails-worn",
+    "file": "rails-worn.webp",
+    "view": "On skin",
+    "patch": {
+      "construction": "Diamond rails"
+    }
+  },
+  {
+    "id": "v10-rails-close",
+    "file": "rails-close.webp",
+    "view": "Close-up",
+    "patch": {
+      "construction": "Diamond rails"
+    }
+  },
+  {
+    "id": "v10-rails-dark",
+    "file": "rails-dark.webp",
+    "view": "Dark",
+    "patch": {
+      "construction": "Diamond rails"
+    }
+  }
+]
