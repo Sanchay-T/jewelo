@@ -113,12 +113,12 @@ The ASMA A-counter roughly doubles at w600 and opens a further 6 percent at w500
 
 | id | change | name | metal | stencil | prompt bytes | Runway task id | verdict |
 |---|---|---|---|---|---|---|---|
-| r3-love-w600 | lighter stencil only | LOVE | 18K rose | love-w600 | 2117 | `635d5384-fdea-4df5-86bb-ead31cf5287b` | see verdicts-round3.md |
-| r3-love-w500 | lighter stencil only | LOVE | 18K rose | love-w500 | 2117 | `50f7a3e3-45bd-4752-b057-5510bdd4425c` | see verdicts-round3.md |
-| r3-asma-w600 | lighter stencil only | ASMA | 18K yellow | asma-w600 | 2119 | `25cd8823-3070-4dc5-88e5-e18268032257` | see verdicts-round3.md |
-| r3-asma-w500 | lighter stencil only | ASMA | 18K yellow | asma-w500 | 2119 | `ebef51d3-857b-4753-9a50-cb3043062678` | see verdicts-round3.md |
-| r3-bail-love-w500 | bail fix | LOVE | 18K rose | love-w500 | 2515 | `8ad2641a-bc9c-4b45-a2a9-6016a54f05a5` | see verdicts-round3.md |
-| r3-bail-asma-w500 | bail fix | ASMA | 18K yellow | asma-w500 | 2517 | `6f57aacb-517a-4c8f-9f53-a7c1a69e5975` | see verdicts-round3.md |
+| r3-love-w600 | lighter stencil only | LOVE | 18K rose | love-w600 | 2117 | `635d5384-fdea-4df5-86bb-ead31cf5287b` | pass - spelling exact, both rings threaded, crisp folds, 0.192 stem/height vs v3 0.267 (-28%) |
+| r3-love-w500 | lighter stencil only | LOVE | 18K rose | love-w500 | 2117 | `50f7a3e3-45bd-4752-b057-5510bdd4425c` | pass - spelling exact, both rings threaded, crispest facets in the lab, 0.178 (-33%) |
+| r3-asma-w600 | lighter stencil only | ASMA | 18K yellow | asma-w600 | 2119 | `25cd8823-3070-4dc5-88e5-e18268032257` | pass - A S M A exact, both A counters open holes for the first time, rings threaded, 0.220 vs v3 0.347 (-37%) |
+| r3-asma-w500 | lighter stencil only | ASMA | 18K yellow | asma-w500 | 2119 | `ebef51d3-857b-4753-9a50-cb3043062678` | pass - exact, both counters open, rings threaded, 0.253 (-27%), no slimmer than w600 |
+| r3-bail-love-w500 | bail fix | LOVE | 18K rose | love-w500 | 2515 | `8ad2641a-bc9c-4b45-a2a9-6016a54f05a5` | tweak (stroke slimness) - exactly one bail grown out of the V, no jump ring, chain level both sides; strokes came back chunky at 0.270 on a w500 stencil |
+| r3-bail-asma-w500 | bail fix | ASMA | 18K yellow | asma-w500 | 2517 | `6f57aacb-517a-4c8f-9f53-a7c1a69e5975` | tweak (ligature fidelity) - one bail, continuous, no stray ring; M right stem merged into the A diagonal so the middle wobbles toward ASNA; 0.297 heavy legs |
 
 `prompts/r3-<name>-w600.txt` and `prompts/r3-<name>-w500.txt` are byte-identical to `prompts/v3-<name>.txt` (sha256 prefix `c2f96e52d13b` for LOVE, `37e73d22b543` for ASMA). Only `referenceImages[0]` changed, so the weight is the only variable in those four cells.
 The material line is unchanged: the engine renders the same 32 x 12 x 1.6 mm specification at every weight, so the prompt's 32 x 12 x 2.5 mm stays as it was.

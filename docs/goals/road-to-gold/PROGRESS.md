@@ -339,3 +339,9 @@ Evidence in `dogfood-2026-09-23/real-run/`.
 - Reviewer on the sample diff: no blockers; "ASMA in capitals" rejected (the capitals are the D-023 construction lettering the customer's own piece gets); comment and lineage minors fixed; dark crop fixed; open: a bag saved before this deploy still shows its old sample thumbnail.
 - WhatsApp "Jewelry AI" group, 22:18 IST: tagged Omran with the staging link (old one "cached"), the Love four-view photo, the feedback list.
 - Spend today: 9 runs, 546 cents actual at the check (about 5 more stills since). `runtime_policy` left at cap 2000 and 16 runs a day so Omran can try names tonight; restore to 800/4 when he is done.
+
+## 24 Sep 2026 early - Omran's folded origami look is live
+
+- Omran replied "Perfect / will start testing" and shared a ChatGPT origami LOVE (triangular folded panels, polygon O, centre bail). Lab `lab-2026-09-23-origami/` (Runway, sunburst): V3 prompt (folds allowed inside the stencil footprint, triangle-panel style, 2.5 mm rendered depth, his crop as look) reads as folded origami on LOVE, ASMA, أسماء; the w600 Latin stencil makes it slim with open A counters; the centre bail works once the prompt forbids a jump ring.
+- Ported V3 to production (`4bf9373`, compiler v4, `lab-diff` 17/17, look reference republished 4/4), deployed `411aac47`. Live run `c3df0628` origami rose gold "Love": all four views ready and correct (`dogfood-2026-09-23/omran-case/09-love-v4-four-views.webp`).
+- In progress: origami Latin stencil weight 800 -> 600 (engine change, needs sweep and two adversarial passes); "free mode" lab (short prompt, no stencil) across all four styles to measure spelling pass rate.
