@@ -345,3 +345,11 @@ Evidence in `dogfood-2026-09-23/real-run/`.
 - Omran replied "Perfect / will start testing" and shared a ChatGPT origami LOVE (triangular folded panels, polygon O, centre bail). Lab `lab-2026-09-23-origami/` (Runway, sunburst): V3 prompt (folds allowed inside the stencil footprint, triangle-panel style, 2.5 mm rendered depth, his crop as look) reads as folded origami on LOVE, ASMA, أسماء; the w600 Latin stencil makes it slim with open A counters; the centre bail works once the prompt forbids a jump ring.
 - Ported V3 to production (`4bf9373`, compiler v4, `lab-diff` 17/17, look reference republished 4/4), deployed `411aac47`. Live run `c3df0628` origami rose gold "Love": all four views ready and correct (`dogfood-2026-09-23/omran-case/09-love-v4-four-views.webp`).
 - In progress: origami Latin stencil weight 800 -> 600 (engine change, needs sweep and two adversarial passes); "free mode" lab (short prompt, no stencil) across all four styles to measure spelling pass rate.
+
+## 24 Sep 2026 - split design lab: free piece, our presentation
+
+- Free-mode lab (`lab-2026-09-24-free/`): a short Omran-style prompt with no stencil spells most names and looks like cast gold; the stencil is what makes our pieces look laser-cut.
+- Split lab (`lab-2026-09-24-split/`, commit `4a391b7`): free piece sentence per style plus fixed real-jewelry-physics and real-photograph blocks; studio first, other three views from it as `@master`. 8 pieces (4 styles x Muhammad, فاطمة), all 32 views pass: spelling exact, Arabic dots fused, real 35 mm scale on skin, same piece across views. Sheets in `sheets/`, prompts and verdicts in `ledger.md`. 1437 Runway credits.
+- Risk: one on-skin call failed provider moderation (`SAFETY.OUTPUT.THIRD_PARTY`); modest wardrobe wording passed.
+- Waiting on Sanchay's review of the sheets before porting the split design into the compiler.
+- Origami Latin weight 600 (implementer, uncommitted in the tree): build exit 0, 576-cell sweep refuses the same 18 Arabic names as before, LOVE/ASMA byte-identical to the lab stencils, other constructions byte-identical. Held uncommitted: if the split design is approved the stencil no longer drives the piece, so review and deploy of this change wait on that decision.
