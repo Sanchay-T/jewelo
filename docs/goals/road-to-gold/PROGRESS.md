@@ -325,3 +325,12 @@ Evidence in `dogfood-2026-09-23/real-run/`.
 - Live form pass: size first, 0 italic elements, no chain picker, third stone disables the rest with "Choose up to 3 stones.", no horizontal scroll at 1440 and 390, review readable on phone (`04`, `05`).
 - Email capture on the live link: "We will send it to you", reference `be5ee13d-...`, row present in `preview_requests`. The shop is not emailed yet (log-only until Resend).
 - Spend: about 5 stills at about 21 cents each, roughly USD 1.05.
+
+## 23 Sep 2026 evening - Omran tested the wrong app; staging database had gone read-only
+
+- Omran's WhatsApp ("Jewelry AI" group, 19:22 UAE): "the design first part is not there", a script pavé "love" in rose gold, "supposed to be origami rose gold", "the link above". The link above is `caleums-xp8xk.ondigitalocean.app`: a different DigitalOcean app (`caleums`, region lon) built from the separate private repo `Sanchay-T/caleums` main `e5d267a` (15 Sep). None of this repository's work has ever been on it.
+- On this repository's staging, a fresh visitor failed at anonymous sign-in: Supabase `POST /auth/v1/signup` 500 "Database error creating anonymous user". Cause: project read-only mode (Management API `/readonly` enabled) because the database was 1571 MB against the 500 MB free limit; `inngest.spans` 939 MB, `traces` 276 MB, `history` 178 MB, `trace_runs` 79 MB. Writes stopped at 13:34 UTC.
+- Fix, with Sanchay's approval: the last 24 hours of those four tables exported, tables truncated, rows reloaded (database 186 MB); read-only lifted via `POST /v1/projects/<ref>/readonly/temporary-disable` after it re-armed once; hourly pg_cron `inngest-log-retention` keeps 24 hours (migration `20260923000000`, commit `26c7795`). Fresh-visitor sign-in then 200 and a run started.
+- The origami, framed, rails and default classical shop samples are still the old stylized mixed-case photographs; being replaced with v10 photographs made by the live pipeline.
+- Spend: `REAL_MODE_MAX_RESERVED_SPEND_CENTS` and `runtime_policy.global_max_reserved_spend_cents` raised to 2000 (each run reserves 400 up front against about 84 actual) and `global_daily_generation_limit` to 12, for the sample runs; to be restored to 800/4 after.
+- Follow-ups: 27,000 Inngest spans a day come from the every-minute outbox and every-two-minute sweeps; the session pooler hit its 15-client cap from Inngest's idle Supavisor connections; the old `caleums` app still serves the old studio to anyone holding its link.
