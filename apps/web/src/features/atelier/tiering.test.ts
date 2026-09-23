@@ -272,7 +272,7 @@ describe("catalogue sources", () => {
       [
         {
           id: "v10-studio",
-          file: "asma-studio.png",
+          file: "asma-studio.webp",
           view: "Studio",
           patch: { construction: "Framed minimal" },
           prompt: "caleums-universal-v4",
@@ -300,7 +300,7 @@ describe("catalogue sources", () => {
       ...samples,
       {
         id: "v10-studio",
-        src: "/atelier/v10/asma-studio.png",
+        src: "/atelier/v10/asma-studio.webp",
         view: "Studio",
         draft: { ...emptyDraft, construction: "Framed minimal", lettering: "Minimal" },
       } satisfies Sample,

@@ -257,7 +257,7 @@ const arabic: Record<string, string> = {
 import { hasExactSample, samples, visualFields, type VisualField } from "./catalogue";
 import { letteringFont } from "./letteringFonts";
 import { SnapshotImage } from "./SnapshotImage";
-import { usePhotographicPiece } from "./usePhotographicPiece";
+import { usePhotographicPiece, useSampleUrl } from "./usePhotographicPiece";
 import { assemblyKey } from "./assembly";
 import type { Run } from "./model";
 import { buildPersonalizedPreviewRequest, runMockPersonalizedPreview } from "./previewHandoff";
@@ -397,6 +397,8 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
   const slot = run?.slots.find((slot) => slot.view === view);
   const pending = run?.slots.some((slot) => slot.status === "pending") ?? false;
   const piece = usePhotographicPiece(d, loaded, state.sampleFocus, view);
+  /** The bag reads its own sample URLs, so it agrees with the preview on WebP or the JPEG twin. */
+  const sampleUrl = useSampleUrl();
   const source = piece.views[view] ?? "";
   const noSample = piece.status === "missing";
   /** The customer's own run: started at confirmation, read from durable state. */
@@ -2681,9 +2683,10 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                  really is this design. `sampleSource` alone can cross script
                  and construction, which would show a saved piece as a design
                  it is not. */
-              const savedExample = item.sampleId
+              const stored = item.sampleId
                 ? samples.find((asset) => asset.id === item.sampleId)?.src
                 : savedExampleSource("Studio", item.draft);
+              const savedExample = stored ? sampleUrl(stored) : stored;
               return (
               <article className={s.bagItem} key={item.id}>
                 {/* Only an asset the current state read still returns is shown as

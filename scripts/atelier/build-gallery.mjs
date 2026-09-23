@@ -1,7 +1,13 @@
-import { readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 const root = resolve('apps/web/public/atelier/v2');
-const manifest = { assets: [2, 3].flatMap(version => JSON.parse(readFileSync(resolve('apps/web/public/atelier/v' + version, 'manifest.json'), 'utf8')).assets.map(asset => ({ ...asset, file: '/atelier/v' + version + '/' + asset.file }))) };
+// The manifests keep the original .png names as the lineage record; the gallery
+// serves the WebP twin wherever one exists and the PNG only where none does.
+const served = (version, file) => {
+  const webp = file.replace(/\.png$/, '.webp');
+  return existsSync(resolve('apps/web/public/atelier/v' + version, webp)) ? webp : file;
+};
+const manifest = { assets: [2, 3].flatMap(version => JSON.parse(readFileSync(resolve('apps/web/public/atelier/v' + version, 'manifest.json'), 'utf8')).assets.map(asset => ({ ...asset, file: '/atelier/v' + version + '/' + served(version, asset.file) }))) };
 const entries = manifest.assets.filter(a => a.review.status === 'accepted-concept').map(a => ({
   id: a.id, file: a.file, view: a.view,
   title: Object.entries(a.patch).filter(([key]) => key !== 'twoNames').map(([key, value]) => key === 'size' ? value + ' mm' : value).join(' · '),

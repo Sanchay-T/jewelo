@@ -16,27 +16,27 @@ import {
 const draft = { ...emptyDraft, name: "Asma" };
 describe("local atelier", () => {
   it("keeps studio samples consistent with the saved design", () => {
-    expect(sampleSource("Studio", draft)).toBe("/atelier/v1/asma-studio.png");
+    expect(sampleSource("Studio", draft)).toBe("/atelier/v1/asma-studio.webp");
     expect(sampleSource("Studio", { ...draft, script: "Arabic" })).toBe(
-      "/atelier/v1/asma-arabic.png",
+      "/atelier/v1/asma-arabic.webp",
     );
     expect(sampleSource("Studio", { ...draft, twoNames: true })).toBe(
-      "/atelier/v1/asma-fatima.png",
+      "/atelier/v1/asma-fatima.webp",
     );
-    expect(sampleSource("Dark", draft)).toBe("/atelier/v1/asma-dark.png");
+    expect(sampleSource("Dark", draft)).toBe("/atelier/v1/asma-dark.webp");
   });
   it("gives a saved bag row an example only when that example is its design", () => {
     const draft = { ...emptyDraft, name: "Asma" };
     expect(savedExampleSource("Studio", draft)).toBe(
-      "/atelier/v1/asma-studio.png",
+      "/atelier/v1/asma-studio.webp",
     );
     expect(
       savedExampleSource("Studio", { ...draft, script: "Arabic", name: "أسماء" }),
-    ).toBe("/atelier/v1/asma-arabic.png");
+    ).toBe("/atelier/v1/asma-arabic.webp");
     // The two-name photograph is English: it may not stand in for two Arabic names.
     expect(
       savedExampleSource("Studio", { ...draft, twoNames: true }),
-    ).toBe("/atelier/v1/asma-fatima.png");
+    ).toBe("/atelier/v1/asma-fatima.webp");
     expect(
       savedExampleSource("Studio", {
         ...draft,

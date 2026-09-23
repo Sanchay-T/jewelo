@@ -1,12 +1,36 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { SAMPLE_PHOTO_TIMEOUT_MS } from "@jewelo/config/sellable";
 import { resolveOptionFamily } from "./catalogue";
 import { views, type Draft, type View, type VisualField } from "./model";
 import { assemblyKey } from "./assembly";
 import type { Capture } from "./capture";
 import { saveSnapshotRecord, SNAPSHOT_VERSION } from "./snapshotStore";
+
+/* Every sample photograph ships twice: the WebP the manifests name and a JPEG
+   twin of the same pixels next to it. A browser without WebP (Safari before 14,
+   an old kiosk) reads the twin. The decision is the client's alone - the server
+   and the hydrating render always say WebP - so the markup React hydrates is
+   the markup the server sent, and the swap arrives in the re-render after. */
+const noSubscribers = () => () => {};
+let clientSupport: "webp" | "jpeg" | undefined;
+const clientFormat = () =>
+  (clientSupport ??= document
+    .createElement("canvas")
+    .toDataURL("image/webp")
+    .startsWith("data:image/webp")
+    ? "webp"
+    : "jpeg");
+const serverFormat = () => "webp" as const;
+const sameUrl = (src: string) => src;
+const jpegTwin = (src: string) => src.replace(/\.webp$/, ".jpg");
+/** The one place a sample URL is resolved: fetch, img, bag, zoom and snapshot all read it. */
+export function useSampleUrl(): (src: string) => string {
+  return useSyncExternalStore(noSubscribers, clientFormat, serverFormat) === "jpeg"
+    ? jpegTwin
+    : sameUrl;
+}
 
 export function usePhotographicPiece(draft: Draft, enabled: boolean, focus?: VisualField, activeView: View = "Studio") {
   const family = resolveOptionFamily(draft, focus);
@@ -16,8 +40,9 @@ export function usePhotographicPiece(draft: Draft, enabled: boolean, focus?: Vis
   // stone, gem, size or chain click neither reloads it nor flashes a loading
   // state over a pendant that has not changed.
   const identity = familyKey || "sample-coming:" + family.tier1Key;
-  const current = useRef({ key, enabled, identity, assets: family.assets, activeView });
-  current.current = { key, enabled, identity, assets: family.assets, activeView };
+  const sampleUrl = useSampleUrl();
+  const current = useRef({ key, enabled, identity, assets: family.assets, activeView, sampleUrl });
+  current.current = { key, enabled, identity, assets: family.assets, activeView, sampleUrl };
   const [publishedIdentity, setPublishedIdentity] = useState("");
   const alive = useRef(false);
   const revision = useRef(0);
@@ -37,6 +62,7 @@ export function usePhotographicPiece(draft: Draft, enabled: boolean, focus?: Vis
     const target = current.current.key;
     const targetIdentity = current.current.identity;
     const assets = current.current.assets;
+    const toUrl = current.current.sampleUrl;
     const token = revision.current;
     const tickets = Object.fromEntries(requested.map(view => {
       const next = (viewRevisions.current[view] ?? 0) + 1;
@@ -51,11 +77,12 @@ export function usePhotographicPiece(draft: Draft, enabled: boolean, focus?: Vis
         if (failDark && view === "Dark") throw new Error("This view failed. Retry Dark.");
         const photo = assets.find((sample) => sample.view === view);
         if (!photo) throw new Error("A matching photo is not available for this selection.");
-        const response = await fetch(photo.src, { signal: AbortSignal.timeout(SAMPLE_PHOTO_TIMEOUT_MS) });
+        const url = toUrl(photo.src);
+        const response = await fetch(url, { signal: AbortSignal.timeout(SAMPLE_PHOTO_TIMEOUT_MS) });
         if (!response.ok) throw new Error("This photo could not load. Please retry.");
         const blob = await response.blob();
         if (!blob.type.startsWith("image/")) throw new Error("This photo is unavailable.");
-        image = { blob, url: photo.src };
+        image = { blob, url };
       } catch (reason) {
         error = reason instanceof Error ? reason.message : "This photo could not load.";
       }
@@ -98,7 +125,9 @@ export function usePhotographicPiece(draft: Draft, enabled: boolean, focus?: Vis
         return rest.length ? capture(rest) : undefined;
       })
       .catch(() => {});
-  }, [identity, enabled, capture]);
+    // `sampleUrl` is in the deps because a browser without WebP only says so in
+    // the render after hydration: that re-fetches the JPEG twin of the same look.
+  }, [identity, enabled, capture, sampleUrl]);
   const retry = useCallback((view?: View) => {
     const targetIdentity = current.current.identity;
     const work = retryQueue.current.catch(() => {}).then(() => {
