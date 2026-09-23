@@ -17,22 +17,25 @@ The boxy look comes from the stencil, not the words: origami, framed and diamond
 Production compiles the exact lab prompt byte for byte (20/20), so what passed on Runway is what production sends.
 The site changes are live on staging and I drove them myself.
 
-No OpenAI API call was made; all image proof ran on Runway credits.
-Staging runs the real provider but every dispatch is refused before spend by the runtime spend cap, so no customer photograph is produced there yet.
+Staging now makes real photographs on `gpt-image-2.5-sunburst` at max quality, with Sanchay's spend approval.
+On 23 Sep evening Omran tested the old `caleums` app (a different repository, `Sanchay-T/caleums`) and got a script pavé piece; he was sent the staging link instead.
+The same evening the staging database had gone read-only (Inngest run logs filled the 500 MB plan), which broke sign-in for every new visitor; it was cleared and an hourly cleanup added.
+The shop sample photographs were still the old stylized look; they are now v10 photographs made by the live pipeline.
 
 ## Status
 
 | | |
 | --- | --- |
 | Live URL | https://jewelo-staging-gqumd.ondigitalocean.app/en/design/new |
-| Active deployed commit | `dff61022cefc2fba205e6214f20cf0ce9a5cdf16` (`dff6102`), DigitalOcean deployment `d4d3f1b8-5144-4e6e-8a7b-f983f0061846` (ACTIVE); smoke health and readiness passed |
-| Branch head | `codex/overnight-launch-2026-09-08`, the `Handover:` commit after `dff6102` (docs only) |
-| Provider mode | Staging `real` (forced by `NODE_ENV=production`); spend blocked pre-dispatch by `runtime_policy` (`global_max_reserved_spend_cents` 1900 above the 800 real-mode ceiling). Local stays mock. |
+| Active deployed commit | `d457eb3`, DigitalOcean deployment `fd6cb4c9-f25d-4422-9f9c-bf08bae12327` (ACTIVE); smoke health and readiness passed |
+| Branch head | `codex/overnight-launch-2026-09-08`, the `Handover:` commit after `731f7a7` (docs only) |
+| Provider mode | Staging `real`, sunburst max; `runtime_policy` cap 2000 cents a day, 16 runs a day, 4 per device, 3 attempts; `REAL_MODE_MAX_RESERVED_SPEND_CENTS=2000` |
 | Build | `corepack pnpm build` exit 0, 13/13, on the handed-over tree |
 | Prompt proof | `lab-diff.mts`: 20/20 production-compiled studio prompts byte-identical to the Runway lab prompts |
 | Reviews | Seven fresh-context review rounds; rounds 6 and 7 found nothing above minor, and their minors are fixed |
 | Database | Migrations `20260922000000` and `20260922010000` applied; private `look-references` bucket holds 4 checksum-verified crops |
 | Sessions | 8 (this one: 22 to 23 September 2026) |
+| Omran | Tagged in the Jewelry AI group 23 Sep 22:18 IST with the staging link and his origami rose gold Love piece |
 
 ## What a shopper gets today
 
@@ -82,16 +85,17 @@ Seen in my own agent-browser session on staging (`dff6102`), screenshots in `doc
 
 ## Needs Sanchay
 
-1. Resolve Supabase billing before 29 September 2026 (upgrade Devonel or move the project), or the app gets 402 responses.
-2. SMTP account and `NOTIFICATION_TO` so saved-design emails reach the shop; until then captures are stored but nobody is emailed.
-3. Remove the skin-tone titles in the Shopify theme; they are not in this repository.
-4. Show Omran `lab-2026-09-22/sheets/origami-boxy-variants.png` and ask A or B; confirm cable as the chain; confirm the Studio photo first is what he meant by "hover shows the piece first".
-5. Approve the first paid real run when ready: it needs the spend cap in `runtime_policy` set on purpose; nothing here raises it.
+1. Supabase billing before 29 September 2026 (upgrade Devonel or move the project). The database also filled once on 23 Sep; the hourly log cleanup keeps it near 200 MB, but Pro removes the read-only risk.
+2. The old `caleums` app (`caleums-xp8xk.ondigitalocean.app`, repo `Sanchay-T/caleums`) still serves the old studio to anyone with that link: redirect it to staging or delete it.
+3. Spend: the cap is 2000 cents and 16 runs a day so Omran can try names; say when to put it back to 800 and 4.
+4. Resend (or SMTP) and `NOTIFICATION_TO` so captured requests email the shop; until then they are stored only.
+5. Remove the skin-tone titles in the Shopify theme; they are not in this repository.
+6. Omran: confirm cable 45 cm as the one chain, and origami variant A versus B (`lab-2026-09-22/sheets/origami-boxy-variants.png`).
 
 ## Open findings
 
 1. Major, pre-existing: a bag row can show a substitute sample photograph (another construction or script) under "YOUR DESIGN" with no substitution label (`Atelier.tsx` bag row, from `7b76e5a`). Owner: implementer.
-2. Minor: origami shop sample photos still show the old stylized mixed-case look. Owner: image-lab, then implementer.
+2. Minor: a bag saved before 23 Sep still shows its old sample thumbnail beside the new v10 family. Owner: implementer.
 3. Minor: classical ring tab on "Asma" and "Sara" still reads like an accent; fixing it means seating the ring outside the name (wider piece). Owner: lab decision.
 4. Minor: stones prose safe only up to `GEMSTONE_MAX=3`; classical "a middle letter" for two-letter names; `visualFields` stale (chain, gems); `look_rule` not in the variable snapshot. Owner: implementer.
 5. Minor: the reservation floor only applies at quality max, xhigh or auto; at the default `high` the spend cap is the only guard. Owner: platform, when quality is raised.
