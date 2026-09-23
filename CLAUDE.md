@@ -26,10 +26,10 @@ These are pointers. Open the one your task needs; do not read all of them.
 - Node is pinned to 24.18.1 and the shell default is 26. Prefix every command with `export PATH=$HOME/.local/share/mise/installs/node/24.18.1/bin:$PATH` and use `corepack pnpm`, never bare `pnpm` (mise cannot install pnpm 11.23.0 on this Mac).
 - Local app: the Browser pane's `preview_start` with config `web` from `.claude/launch.json`. It runs on port 3011; port 3001 belongs to an unrelated two-day-old process, do not kill it.
 - Build gate: `corepack pnpm build`. This is the only mechanical gate.
-- Deploy: `bash scripts/digitalocean/deploy.sh staging <branch>` then `bash scripts/digitalocean/smoke.sh <url>`. `doctl` is authenticated on `home-mini` (ssh, `export PATH=/opt/homebrew/bin:$PATH`, `source scripts/digitalocean/common.sh; load_digitalocean_token`), not on the laptop.
+- Deploy (from the laptop): `JEWELO_ENV_FILE=.env.staging bash scripts/digitalocean/deploy.sh staging <branch>` then `bash scripts/digitalocean/smoke.sh <url>`. `.env.staging` is `.env` without the local-only `PROVIDER_MODE`/`JEWELO_CLOUD_TARGET`; `doctl` and `.env` hold the working DigitalOcean token (the one in `~/hq/projects/localhost/.env`). Add `DEPLOY_DRY_RUN=1` to preview.
 - Database: `corepack pnpm db:push` and `corepack pnpm db:types` (both read `.env`). Migrations in `supabase/migrations/` are the schema source of truth; never add an ORM migration source.
 - Git: push goes through the `Sanchay-T` account (set in this repo's local git config). For `gh` commands run `export GH_TOKEN=$(gh auth token -u Sanchay-T)` first; the active `gh` account is a different user and gets 403 here. Work on the current branch, push it, never push `main`, and merge only through the reviewed pull request when explicitly requested.
-- Secrets live in `.env` at the repo root (gitignored, copied from `home-mini`). Never print a value; confirm by name.
+- Secrets live in `.env` at the repo root (gitignored); `.env.staging` is its deploy copy and must be kept in step. Never print a value; confirm by name.
 
 ## Environment facts that bite
 
@@ -37,7 +37,7 @@ These are pointers. Open the one your task needs; do not read all of them.
 - Supabase project `jggalwuvpcqoenhirmnl` (ap-south-1). The Devonel org is 10x over free egress and every project returns 402 after 29 September 2026 unless Sanchay upgrades or moves it.
 - Runway MCP tool prefix is `mcp__claude_ai_RunwayML__`; it serves `gpt-image-2` and `gpt-image-2.5-sunburst`, the same models production calls, so prompts proven there transfer. OpenAI is wired and fail-closed; it is called only at the phase 5 gate.
 - The six style anchor PNGs are outside git at `~/hq/projects/devonel/caleums-private/style-anchors-v1/` (laptop) and `~/.codex/state/jewelo/caleums-style-anchors/v1/` (home-mini).
-- `home-mini` holds a second checkout at `~/hq/projects/devonel/jewelo` with the same `.env`; its Node 24 lives at the same mise path.
+- `home-mini` holds an older second checkout and `.env` (dead DigitalOcean token); it is no longer needed to deploy.
 
 IMPORTANT: the GitHub repository is public. Never commit a secret, a customer photo, the style anchors, or anything marked private-brand-reference.
 
