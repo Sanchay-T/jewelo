@@ -121,7 +121,9 @@ const nextConfig: NextConfig = {
       // every visit, which is what made a second load pay for the first one
       // again.
       {
-        source: "/atelier/:path*",
+        // Images only: /atelier/v2/index.html and the manifest JSON files are
+        // rewritten in place by scripts, so they keep normal revalidation.
+        source: "/:asset(atelier/.+\\.(?:webp|png|jpe?g))",
         headers: [
           {
             key: "Cache-Control",
