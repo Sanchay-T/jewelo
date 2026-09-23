@@ -82,13 +82,11 @@ Seen in my own agent-browser session on staging (`dff6102`), screenshots in `doc
 
 ## Needs Sanchay
 
-1. Rotate `DIGITALOCEAN_ACCESS_TOKEN` in home-mini's `.env`: it returns 401, so `deploy.sh` fails for anyone without doctl's own login (tonight's deploys used that).
-2. Resolve Supabase billing before 29 September 2026 (upgrade Devonel or move the project), or the app gets 402 responses.
-3. SMTP account and `NOTIFICATION_TO` so saved-design emails reach the shop; until then captures are stored but nobody is emailed.
-4. Remove the skin-tone titles in the Shopify theme; they are not in this repository.
-5. Show Omran `lab-2026-09-22/sheets/origami-boxy-variants.png` and ask A or B; confirm cable as the chain; confirm the Studio photo first is what he meant by "hover shows the piece first".
-6. Approve the first paid real run when ready: it needs the spend cap in `runtime_policy` set on purpose; nothing here raises it.
-7. Free laptop disk space (about 5 GB free of 460 GB); a tool call already failed with no space left.
+1. Resolve Supabase billing before 29 September 2026 (upgrade Devonel or move the project), or the app gets 402 responses.
+2. SMTP account and `NOTIFICATION_TO` so saved-design emails reach the shop; until then captures are stored but nobody is emailed.
+3. Remove the skin-tone titles in the Shopify theme; they are not in this repository.
+4. Show Omran `lab-2026-09-22/sheets/origami-boxy-variants.png` and ask A or B; confirm cable as the chain; confirm the Studio photo first is what he meant by "hover shows the piece first".
+5. Approve the first paid real run when ready: it needs the spend cap in `runtime_policy` set on purpose; nothing here raises it.
 
 ## Open findings
 
@@ -105,6 +103,11 @@ Seen in my own agent-browser session on staging (`dff6102`), screenshots in `doc
 - App, from home-mini: `bash scripts/digitalocean/rollback.sh staging 5e0b190b-a25d-4985-8b25-500b317a7c04` (`f5edcd1`); the pre-session target is `c7193dc3-f0f5-4402-bf9b-0f75ac34b708` (`b734e57`). Check `doctl apps list-deployments ec09c9fd-84e4-45c5-b60a-fd62277af322` first.
 - Database: both new migrations are additive (a private bucket and two `create or replace function` bodies); no rollback is needed to run older code.
 - Look references: remove `LOOK_REFERENCES` from the env file and redeploy; the bucket objects can stay.
+
+## Resolved after the first handover
+
+- Deploys run from the laptop: the working DigitalOcean token (from `~/hq/projects/localhost/.env`) is in `.env` and `doctl`; `.env.staging` is the deploy copy; dry run passes (`4556186`).
+- Laptop disk: `mo clean` and `mo purge` freed about 22 GB (25 GB free).
 
 ## Spend
 
