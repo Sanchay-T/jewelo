@@ -44,14 +44,13 @@ Every deployment is a deliberate, operator-run command.
 `deploy_on_push` is not set on the live app spec, so a push to the branch does
 nothing on its own.
 
-Deployment runs from `home-mini`, the only machine where `doctl` is
-authenticated:
+Deployment runs from the laptop (since 23 September 2026; `home-mini` holds a dead token and is no longer needed).
+`doctl` and `.env` carry the working token, which also lives in `~/hq/projects/localhost/.env`.
+`.env` keeps the local-only `PROVIDER_MODE=mock`, which the sync refuses, so the deploy reads `.env.staging` (gitignored: `.env` without `PROVIDER_MODE` and `JEWELO_CLOUD_TARGET`; keep the two in step):
 
 ```bash
-ssh home-mini
-export PATH=/opt/homebrew/bin:$PATH
 cd ~/hq/projects/devonel/jewelo
-bash scripts/digitalocean/deploy.sh staging codex/overnight-launch-2026-09-08
+JEWELO_ENV_FILE=.env.staging bash scripts/digitalocean/deploy.sh staging codex/overnight-launch-2026-09-08
 bash scripts/digitalocean/smoke.sh https://jewelo-staging-gqumd.ondigitalocean.app
 ```
 
