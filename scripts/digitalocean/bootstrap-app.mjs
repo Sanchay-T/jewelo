@@ -68,25 +68,19 @@ secretEnvs.push({
 const target = contract.environments[environment];
 const service = {
   name: contract.service.name,
-  environment_slug: contract.service.environmentSlug,
   git: {
     repo_clone_url: contract.repositoryCloneUrl,
     branch: contract.integrationBranch,
   },
   source_dir: "/",
-  build_command: contract.service.buildCommand,
-  run_command: contract.service.runCommand,
+  // The root Dockerfile replaced the node-js buildpack. No build_command and no
+  // run_command: the image builds itself and its CMD starts the standalone
+  // server.
+  dockerfile_path: contract.service.dockerfilePath,
   http_port: contract.service.httpPort,
   instance_size_slug: target.instanceSizeSlug,
   routes: [{ path: "/" }],
-  health_check: {
-    http_path: contract.service.healthPath,
-    initial_delay_seconds: 30,
-    period_seconds: 10,
-    timeout_seconds: 5,
-    success_threshold: 1,
-    failure_threshold: 5,
-  },
+  health_check: { ...contract.service.healthCheck },
   envs: secretEnvs,
 };
 
@@ -110,7 +104,6 @@ if (target.autoscaling) {
 const spec = {
   name: target.appName,
   region: contract.region,
-  features: ["buildpack-stack=ubuntu-22"],
   alerts: [{ rule: "DEPLOYMENT_FAILED" }, { rule: "DOMAIN_FAILED" }],
   services: [service],
 };

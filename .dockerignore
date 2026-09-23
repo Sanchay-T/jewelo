@@ -1,0 +1,43 @@
+# What never enters the build context.
+#
+# The node-js buildpack packed the whole checkout, so every deploy compressed,
+# pushed and pulled a multi-GB layer for a 48 second build. docs/ alone is
+# 1.2G and reviews/ 450M and neither is read by `next build`. Keeping the
+# context to the source the build actually compiles is most of the win.
+
+.git
+.github
+
+# Never let a credential reach a layer. The app is configured by the platform
+# at run time and `loadRootEnv()` is a no-op when the file is absent.
+.env
+.env.*
+
+node_modules
+**/node_modules
+.next
+**/.next
+.next-*
+**/.next-*
+.turbo
+**/.turbo
+*.tsbuildinfo
+dist
+**/dist
+coverage
+**/coverage
+.pnpm-store
+
+docs
+reviews
+context
+.tmp
+.vercel
+.claude
+.worktrees
+supabase/.branches
+supabase/.temp
+
+*.zip
+*.log
+.DS_Store

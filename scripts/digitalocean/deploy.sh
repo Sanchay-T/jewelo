@@ -131,6 +131,44 @@ app_id="$(find_app_id "$name")" || {
   exit 1
 }
 
+# One deploy at a time.
+#
+# App Platform accepts a second `apps update` while the first is still building
+# and answers by cancelling the build in flight. Three builds were cancelled in
+# one night that way, each after ten minutes of work, and the operator saw only
+# a deploy that never finished. Refuse instead, and print the id of the
+# deployment that is already running so it can be watched or cancelled on
+# purpose. `DEPLOY_ALLOW_CONCURRENT=1` is the deliberate override.
+if [[ "${DEPLOY_ALLOW_CONCURRENT:-0}" != "1" ]]; then
+  in_flight="$(
+    doctl apps list-deployments "$app_id" --output json | CONTRACT="$contract" node -e '
+      let input = "";
+      process.stdin.on("data", (chunk) => (input += chunk));
+      process.stdin.on("end", () => {
+        run().catch((error) => {
+          process.stderr.write(`${error.message}\n`);
+          process.exit(1);
+        });
+      });
+      async function run() {
+        const contract = await import(process.env.CONTRACT);
+        const deployments = JSON.parse(input || "[]");
+        // doctl does not promise an order, so pick the newest by created_at.
+        const newest = [...deployments].sort((a, b) =>
+          String(b.created_at).localeCompare(String(a.created_at)),
+        )[0];
+        if (newest && contract.activeDeploymentPhases.has(newest.phase))
+          process.stdout.write(`${newest.id} ${newest.phase}`);
+      }
+    '
+  )"
+  if [[ -n "$in_flight" ]]; then
+    echo "refusing to deploy $name: deployment ${in_flight%% *} is still ${in_flight##* }" >&2
+    echo "wait for it, cancel it with \"doctl apps cancel-deployment $app_id ${in_flight%% *}\", or set DEPLOY_ALLOW_CONCURRENT=1 to queue another anyway" >&2
+    exit 2
+  fi
+fi
+
 spec_file="$(mktemp)"
 trap 'rm -f "$spec_file"' EXIT
 chmod 600 "$spec_file"
@@ -162,6 +200,19 @@ doctl apps get "$app_id" --output json |
     }
     web.git.branch = process.env.SOURCE_REF;
     const contract = await import(process.env.CONTRACT);
+    // The build method and the health check travel with the spec for the same
+    // reason the alerts do: this script, not the console, is where a live app
+    // learns that the node-js buildpack was replaced by the root Dockerfile and
+    // that the health check starts probing at 5 seconds rather than 30.
+    contract.applyServiceBuild(web);
+    // Dead config once nothing is built by a buildpack.
+    if (app.spec.features)
+      app.spec.features = app.spec.features.filter(
+        (feature) => !String(feature).startsWith("buildpack-stack="),
+      );
+    process.stderr.write(
+      `build: dockerfile_path=${web.dockerfile_path}, health_check initial_delay=${web.health_check.initial_delay_seconds}s period=${web.health_check.period_seconds}s\n`,
+    );
     // P7-5 / DS-9. The alerts travel with the spec, so a deploy is also how a
     // new alert reaches a live app. App-level rules (deployment, domain) sit on
     // the spec; utilisation and restart rules are properties of a component and
@@ -185,8 +236,8 @@ doctl apps get "$app_id" --output json |
       const merged = new Map((web.envs ?? []).map((env) => [env.key, env]));
       for (const env of desired) merged.set(env.key, { ...merged.get(env.key), ...env });
       // These are retired deployment-only switches. Production derives
-      // provider mode from NODE_ENV, the buildpack already knows how to build
-      // this app, and the customer look set is code-owned. Remove stale copies
+      // provider mode from NODE_ENV, the root Dockerfile already knows how to
+      // build this app, and the customer look set is code-owned. Remove stale copies
       // from existing app specs instead of letting old flags shadow the runtime
       // invariant or hide valid styles in one deployment.
       for (const key of [

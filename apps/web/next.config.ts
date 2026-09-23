@@ -94,6 +94,19 @@ const documentSecurityHeaders = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // The image this repository's root Dockerfile ships is `.next/standalone`
+  // plus `.next/static` and `public`, so the runtime layer carries the server
+  // and the traced node_modules and nothing else - no repository, no build
+  // toolchain, no pnpm store. That is what replaced the node-js buildpack,
+  // whose layer packed the whole checkout and cost ~10 minutes of compress,
+  // push and pull per deploy against a 48 second `next build`.
+  output: "standalone",
+  // Standalone in a pnpm workspace: name the root explicitly rather than let
+  // Next infer it. An inferred root one directory too deep silently drops
+  // `packages/identity/engines/**` and the hoisted `.pnpm` store from the
+  // trace, which is exactly the harfbuzz wasm and the pinned `.ttf` files the
+  // Inngest route needs, and the failure only appears at runtime.
+  outputFileTracingRoot: workspaceRoot,
   // The Mac mini also has an older port-3001 checkout running from this app
   // directory. Keep the port-3011 LaunchAgent's Turbopack lock and cache
   // separate so restarting this primary dev service never touches that
@@ -159,14 +172,24 @@ const nextConfig: NextConfig = {
   // Belt and braces for a traced deploy: the pinned font bytes and the HarfBuzz
   // wasm are data files no import graph points at once they are external, so
   // name them. Globs are relative to this app directory.
+  //
+  // libvips is the same class of file and was measured, not guessed. sharp's
+  // platform package (`@img/sharp-<platform>`) is traced because something
+  // requires it, but the shared library it dlopens through an rpath -
+  // `@img/sharp-libvips-<platform>/lib/libvips-cpp.*` - is reachable from no
+  // import, so a standalone build shipped a 12 KB stub of a 17 MB package and
+  // `/api/inngest` answered 500 with ERR_DLOPEN_FAILED on the first stencil.
+  // `next start` never showed it: it runs against the full node_modules tree.
   outputFileTracingIncludes: {
     "/api/inngest": [
       "../../packages/identity/engines/**/*.ttf",
       "../../node_modules/.pnpm/harfbuzzjs@*/node_modules/harfbuzzjs/dist/*.wasm",
+      "../../node_modules/.pnpm/@img+sharp-libvips-*/node_modules/@img/*/lib/**",
     ],
     "/api/operator/diagnostics/identity": [
       "../../packages/identity/engines/**/*.ttf",
       "../../node_modules/.pnpm/harfbuzzjs@*/node_modules/harfbuzzjs/dist/*.wasm",
+      "../../node_modules/.pnpm/@img+sharp-libvips-*/node_modules/@img/*/lib/**",
     ],
   },
   turbopack: {

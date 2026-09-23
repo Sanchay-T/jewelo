@@ -34,11 +34,17 @@
   },
   "service": {
     "name": "web",
-    "environmentSlug": "node-js",
+    "dockerfilePath": "Dockerfile",
     "httpPort": 8080,
-    "buildCommand": "pnpm do:build",
-    "runCommand": "pnpm start",
-    "healthPath": "/api/health"
+    "healthPath": "/api/health",
+    "healthCheck": {
+      "http_path": "/api/health",
+      "initial_delay_seconds": 5,
+      "period_seconds": 5,
+      "timeout_seconds": 5,
+      "success_threshold": 1,
+      "failure_threshold": 5
+    }
   },
   "environments": {
     "staging": {

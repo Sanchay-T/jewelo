@@ -21,6 +21,47 @@ export const appAlerts = specContract.alerts?.app ?? [];
 export const serviceAlerts = specContract.alerts?.service ?? [];
 
 /**
+ * The shape of the `web` component: how it is built, on which port, and how
+ * App Platform decides it is alive.
+ *
+ * Same reason as the alerts. `bootstrap-app.mjs` creates the app from this and
+ * `deploy.sh` writes it over the live spec on every revision, so the build
+ * method cannot be a Dockerfile in one path and the retired node-js buildpack
+ * in the other. The health check is here rather than inline because its
+ * defaults were the deploy's second cost after the build context: a 30 second
+ * initial delay and a 10 second period on a server that answers `/api/health`
+ * half a second after it starts.
+ */
+export const webService = specContract.service;
+
+/**
+ * Write the contract's build method and health check onto a live `web`
+ * component, in place.
+ *
+ * The buildpack fields are deleted rather than left: `doctl apps update --spec`
+ * is a full replace, and an `environment_slug` that survives beside a
+ * `dockerfile_path` is App Platform being told to build this component two
+ * ways. `run_command` goes with them - it was `pnpm start`, which does not
+ * exist in the runtime image - so the image's own CMD runs.
+ */
+export function applyServiceBuild(web) {
+  web.dockerfile_path = webService.dockerfilePath;
+  delete web.environment_slug;
+  delete web.build_command;
+  delete web.run_command;
+  web.http_port = webService.httpPort;
+  web.health_check = { ...web.health_check, ...webService.healthCheck };
+}
+
+/** Deployment phases that mean a build or a rollout is still in flight. */
+export const activeDeploymentPhases = new Set([
+  "PENDING_BUILD",
+  "BUILDING",
+  "PENDING_DEPLOY",
+  "DEPLOYING",
+]);
+
+/**
  * Merge the contract's alerts into whatever the platform already has, keyed by
  * rule. An alert the contract does not name is left exactly as it is - a
  * notification channel someone attached in the console is not this script's to

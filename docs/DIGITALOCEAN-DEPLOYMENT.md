@@ -18,9 +18,9 @@ a customer request handler: it runs in an Inngest function served at
 | Authoritative deployment source | `codex/overnight-launch-2026-09-08`, the branch on the live `web` service's `git.branch` |
 | Production app | `jewelo-production` (created only at approved cutover) |
 | Production deployment configuration | `scripts/digitalocean/*` and `infra/digitalocean/spec-contract.json`; no workflows, and not yet production-accepted |
-| Runtime | Node.js 24, pnpm 11.23.0, DigitalOcean Node buildpack |
+| Runtime | Node.js 24, pnpm 11.23.0, the repository's root `Dockerfile` (Next standalone on `node:24-slim`) |
 | Compute | One fixed shared 1-vCPU/1-GiB instance per component |
-| Components | `web` (git `https://github.com/Sanchay-T/jewelo.git`, no `deploy_on_push`, Node buildpack, public `/`) and `inngest` (Docker Hub `inngest/inngest:v1.44.0-amd64`, `internal_ports: [8288]`, no public route) |
+| Components | `web` (git `https://github.com/Sanchay-T/jewelo.git`, no `deploy_on_push`, `dockerfile_path: Dockerfile`, public `/`) and `inngest` (Docker Hub `inngest/inngest:v1.44.0-amd64`, `internal_ports: [8288]`, no public route) |
 | Job engine | Self-hosted Inngest. `web` reaches it at `${inngest.PRIVATE_URL}`; it reaches `web` at `${web.PRIVATE_URL}/api/inngest` |
 
 The active staging deployment is `b50be520-f728-4234-870e-7141dbea3cfa`, phase
@@ -53,6 +53,14 @@ cd ~/hq/projects/devonel/jewelo
 JEWELO_ENV_FILE=.env.staging bash scripts/digitalocean/deploy.sh staging codex/overnight-launch-2026-09-08
 bash scripts/digitalocean/smoke.sh https://jewelo-staging-gqumd.ondigitalocean.app
 ```
+
+`deploy.sh` refuses with exit 2 when the app's newest deployment is still
+`PENDING_BUILD`, `BUILDING`, `PENDING_DEPLOY` or `DEPLOYING`, and prints that
+deployment's id.
+App Platform answers a second update by cancelling the build in flight, which
+is how three builds were lost in one night with nothing in the output to say so.
+Wait, cancel the named deployment on purpose, or set
+`DEPLOY_ALLOW_CONCURRENT=1`.
 
 `deploy.sh <environment> <source ref>` does exactly this, per its source:
 
@@ -97,7 +105,7 @@ component have two very different costs:
 
 | Change | App Platform work | Measured wall time |
 | --- | --- | --- |
-| Source-code deploy (`deploy.sh`, `--update-sources`) | Git checkout, Node buildpack install/build, image save/upload, then rollout | about 15 minutes (the `b50be520` rollout took roughly 9m50s to build and 5m to roll out) |
+| Source-code deploy (`deploy.sh`, `--update-sources`) | Git checkout, Docker build from the root `Dockerfile`, image save/upload, then rollout | about 15 minutes on the retired node-js buildpack (the `b50be520` rollout took roughly 9m50s to build and 5m to roll out); the Dockerfile replaced it because ~585 s of that was one multi-GB layer carrying the whole repository against a 48 s `next build`. Re-measure on the first Dockerfile deploy. |
 | Restart-only change | restart existing image and wait for health | about 63 seconds (`7fbb8f4`) |
 | Config-only change | `doctl apps update --spec ... --wait` without `--update-sources` | use when only the app spec changes; it avoids a source rebuild, but still waits for rollout |
 
@@ -329,10 +337,16 @@ bash scripts/digitalocean/deploy.sh staging <branch>
 bash scripts/digitalocean/smoke.sh https://jewelo-staging-gqumd.ondigitalocean.app
 ```
 
-The Node buildpack does not always expose the same version behavior as a local
-shell. The buildpack receives the normal build command from the app contract,
-and foundation verification uses the repository's Node 24 pin without a
-second cloud-only activation flag.
+The build now runs in the repository's root `Dockerfile`, so the cloud build
+and a local `docker build` are the same build.
+Two consequences are easy to forget.
+App Platform hands a Dockerfile build its `RUN_AND_BUILD_TIME` variables as
+`--build-arg` values, not as environment variables, and an undeclared build arg
+is silently dropped, so every such key has an `ARG` line in the Dockerfile;
+today that is exactly the `NEXT_PUBLIC_*` set.
+And the spec carries no `run_command`, because `pnpm start` does not exist in
+the runtime image; the image's own `CMD` starts the standalone server on
+`$PORT`.
 
 A deploy is an external mutation.
 Run it only when the current task authorizes a staging update, record the
@@ -475,7 +489,7 @@ credential incident.
 | Bootstrap exits after creating/updating an app | The deployment did not become ACTIVE | Inspect the latest App Platform build/deploy logs; do not keep retrying blindly or report a URL as healthy |
 | Push does not deploy staging | Expected: no workflow and no `deploy_on_push` exist, so a push never deploys | Run `deploy.sh` from `home-mini` when a staging update is authorized |
 | Staging serves an old commit | The last `deploy.sh` predates the pushed commit | Redeploy the branch; `--update-sources` re-resolves the ref to its current head |
-| App starts but health smoke fails | Build/start command, `PORT`, health route, or required environment is wrong | Inspect runtime logs, verify `pnpm start` honors injected `PORT`, validate environment names, then redeploy |
+| App starts but health smoke fails | Build/start command, `PORT`, health route, or required environment is wrong | Inspect runtime logs, verify the image's `CMD` honors injected `PORT`, validate environment names, then redeploy |
 | `doctl` wrapper cannot authenticate | Token is missing, expired, or absent from the current worktree's ignored `.env` | Restore/rotate the scoped token without printing it; update Preview and Production GitHub secrets |
 
 Stop after one failed externally mutating retry unless the failure is clearly
