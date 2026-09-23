@@ -537,7 +537,7 @@ export function savedExampleSource(view: View, draft: Draft): string | undefined
 }
 export const sampleSource = (view: View, draft?: Draft) =>
   view === "Studio" && draft?.twoNames
-    ? "/atelier/v1/asma-fatima.png"
+    ? "/atelier/v1/asma-fatima.webp"
     : view === "Studio" && draft?.script === "Arabic"
-      ? "/atelier/v1/asma-arabic.png"
-      : `/atelier/v1/asma-${view === "On skin" ? "worn" : view === "Dark" ? "dark" : view === "Close-up" ? "close" : "studio"}.png`;
+      ? "/atelier/v1/asma-arabic.webp"
+      : `/atelier/v1/asma-${view === "On skin" ? "worn" : view === "Dark" ? "dark" : view === "Close-up" ? "close" : "studio"}.webp`;

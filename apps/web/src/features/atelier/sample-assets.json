@@ -1,7 +1,7 @@
 [
   {
     "id": "origami",
-    "file": "origami-studio.png",
+    "file": "origami-studio.webp",
     "view": "Studio",
     "patch": {
       "construction": "Origami ribbon"
@@ -9,7 +9,7 @@
   },
   {
     "id": "framed",
-    "file": "framed-studio.png",
+    "file": "framed-studio.webp",
     "view": "Studio",
     "patch": {
       "construction": "Framed minimal"
@@ -17,7 +17,7 @@
   },
   {
     "id": "rose",
-    "file": "rose-studio.png",
+    "file": "rose-studio.webp",
     "view": "Studio",
     "patch": {
       "metal": "Rose gold"
@@ -25,7 +25,7 @@
   },
   {
     "id": "white",
-    "file": "white-studio.png",
+    "file": "white-studio.webp",
     "view": "Studio",
     "patch": {
       "metal": "White gold"
@@ -33,7 +33,7 @@
   },
   {
     "id": "rails",
-    "file": "rails-studio.png",
+    "file": "rails-studio.webp",
     "view": "Studio",
     "patch": {
       "construction": "Diamond rails"
@@ -41,7 +41,7 @@
   },
   {
     "id": "minimal",
-    "file": "minimal-studio.png",
+    "file": "minimal-studio.webp",
     "view": "Studio",
     "patch": {
       "lettering": "Minimal"
@@ -49,7 +49,7 @@
   },
   {
     "id": "signature",
-    "file": "signature-studio.png",
+    "file": "signature-studio.webp",
     "view": "Studio",
     "patch": {
       "lettering": "Signature"
@@ -57,7 +57,7 @@
   },
   {
     "id": "kufi",
-    "file": "kufi-studio.png",
+    "file": "kufi-studio.webp",
     "view": "Studio",
     "patch": {
       "lettering": "Kufi"
@@ -65,7 +65,7 @@
   },
   {
     "id": "diwani",
-    "file": "diwani-studio.png",
+    "file": "diwani-studio.webp",
     "view": "Studio",
     "patch": {
       "lettering": "Diwani"
@@ -73,7 +73,7 @@
   },
   {
     "id": "thuluth",
-    "file": "thuluth-studio.png",
+    "file": "thuluth-studio.webp",
     "view": "Studio",
     "patch": {
       "lettering": "Thuluth inspired"
@@ -81,7 +81,7 @@
   },
   {
     "id": "side",
-    "file": "side-studio.png",
+    "file": "side-studio.webp",
     "view": "Studio",
     "patch": {
       "twoNames": true,
@@ -90,7 +90,7 @@
   },
   {
     "id": "heart",
-    "file": "heart-studio-repaired.png",
+    "file": "heart-studio-repaired.webp",
     "view": "Studio",
     "patch": {
       "twoNames": true,
@@ -99,7 +99,7 @@
   },
   {
     "id": "stacked",
-    "file": "stacked-studio.png",
+    "file": "stacked-studio.webp",
     "view": "Studio",
     "patch": {
       "twoNames": true,
@@ -108,7 +108,7 @@
   },
   {
     "id": "infinity",
-    "file": "infinity-studio.png",
+    "file": "infinity-studio.webp",
     "view": "Studio",
     "patch": {
       "twoNames": true,
@@ -118,7 +118,7 @@
   },
   {
     "id": "interlocked",
-    "file": "interlocked-studio-repaired.png",
+    "file": "interlocked-studio-repaired.webp",
     "view": "Studio",
     "patch": {
       "twoNames": true,
@@ -127,7 +127,7 @@
   },
   {
     "id": "rolo",
-    "file": "rolo-studio.png",
+    "file": "rolo-studio.webp",
     "view": "Studio",
     "patch": {
       "chain": "Rolo"
@@ -135,7 +135,7 @@
   },
   {
     "id": "box",
-    "file": "box-studio.png",
+    "file": "box-studio.webp",
     "view": "Studio",
     "patch": {
       "chain": "Box"
@@ -143,7 +143,7 @@
   },
   {
     "id": "small",
-    "file": "small-studio.png",
+    "file": "small-studio.webp",
     "view": "Studio",
     "patch": {
       "size": 22
@@ -151,7 +151,7 @@
   },
   {
     "id": "accent",
-    "file": "accent-studio.png",
+    "file": "accent-studio.webp",
     "view": "Studio",
     "patch": {
       "coverage": "Accent"
@@ -159,7 +159,7 @@
   },
   {
     "id": "partial",
-    "file": "partial-studio.png",
+    "file": "partial-studio.webp",
     "view": "Studio",
     "patch": {
       "coverage": "Partial pavé"
@@ -167,7 +167,7 @@
   },
   {
     "id": "full",
-    "file": "full-studio.png",
+    "file": "full-studio.webp",
     "view": "Studio",
     "patch": {
       "coverage": "Full pavé"
@@ -175,7 +175,7 @@
   },
   {
     "id": "natural",
-    "file": "natural-studio.png",
+    "file": "natural-studio.webp",
     "view": "Studio",
     "patch": {
       "coverage": "Accent",
@@ -184,7 +184,7 @@
   },
   {
     "id": "ruby",
-    "file": "ruby-studio.png",
+    "file": "ruby-studio.webp",
     "view": "Studio",
     "patch": {
       "coverage": "Accent",
@@ -193,7 +193,7 @@
   },
   {
     "id": "emerald",
-    "file": "emerald-studio.png",
+    "file": "emerald-studio.webp",
     "view": "Studio",
     "patch": {
       "coverage": "Accent",
@@ -202,7 +202,7 @@
   },
   {
     "id": "blue",
-    "file": "blue-studio.png",
+    "file": "blue-studio.webp",
     "view": "Studio",
     "patch": {
       "coverage": "Accent",
@@ -211,7 +211,7 @@
   },
   {
     "id": "pink",
-    "file": "pink-studio.png",
+    "file": "pink-studio.webp",
     "view": "Studio",
     "patch": {
       "coverage": "Accent",
@@ -220,7 +220,7 @@
   },
   {
     "id": "curb-v2",
-    "file": "curb-v2.png",
+    "file": "curb-v2.webp",
     "view": "Studio",
     "patch": {
       "chain": "Curb"
@@ -228,7 +228,7 @@
   },
   {
     "id": "arabic-kufi",
-    "file": "arabic-kufi-repaired.png",
+    "file": "arabic-kufi-repaired.webp",
     "view": "Studio",
     "patch": {
       "script": "Arabic",
@@ -237,7 +237,7 @@
   },
   {
     "id": "arabic-signature",
-    "file": "arabic-signature-repaired.png",
+    "file": "arabic-signature-repaired.webp",
     "view": "Studio",
     "patch": {
       "script": "Arabic",
@@ -246,7 +246,7 @@
   },
   {
     "id": "arabic-worn",
-    "file": "arabic-worn.png",
+    "file": "arabic-worn.webp",
     "view": "On skin",
     "patch": {
       "script": "Arabic"
@@ -254,7 +254,7 @@
   },
   {
     "id": "arabic-close",
-    "file": "arabic-close.png",
+    "file": "arabic-close.webp",
     "view": "Close-up",
     "patch": {
       "script": "Arabic"
@@ -262,7 +262,7 @@
   },
   {
     "id": "arabic-dark",
-    "file": "arabic-dark.png",
+    "file": "arabic-dark.webp",
     "view": "Dark",
     "patch": {
       "script": "Arabic"
@@ -270,7 +270,7 @@
   },
   {
     "id": "arabic-minimal-v2",
-    "file": "arabic-minimal-v2-repaired.png",
+    "file": "arabic-minimal-v2-repaired.webp",
     "view": "Studio",
     "patch": {
       "script": "Arabic",
@@ -289,7 +289,7 @@
   },
   {
     "id": "arabic-thuluth-v2",
-    "file": "arabic-thuluth-v2-repaired.png",
+    "file": "arabic-thuluth-v2-repaired.webp",
     "view": "Studio",
     "patch": {
       "script": "Arabic",
@@ -298,7 +298,7 @@
   },
   {
     "id": "origami-worn",
-    "file": "origami-worn.png",
+    "file": "origami-worn.webp",
     "view": "On skin",
     "patch": {
       "construction": "Origami ribbon"
@@ -306,7 +306,7 @@
   },
   {
     "id": "origami-close",
-    "file": "origami-close.png",
+    "file": "origami-close.webp",
     "view": "Close-up",
     "patch": {
       "construction": "Origami ribbon"
@@ -314,7 +314,7 @@
   },
   {
     "id": "origami-dark",
-    "file": "origami-dark.png",
+    "file": "origami-dark.webp",
     "view": "Dark",
     "patch": {
       "construction": "Origami ribbon"
@@ -322,7 +322,7 @@
   },
   {
     "id": "framed-worn",
-    "file": "framed-worn.png",
+    "file": "framed-worn.webp",
     "view": "On skin",
     "patch": {
       "construction": "Framed minimal"
@@ -330,7 +330,7 @@
   },
   {
     "id": "framed-close",
-    "file": "framed-close.png",
+    "file": "framed-close.webp",
     "view": "Close-up",
     "patch": {
       "construction": "Framed minimal"
@@ -338,7 +338,7 @@
   },
   {
     "id": "framed-dark",
-    "file": "framed-dark.png",
+    "file": "framed-dark.webp",
     "view": "Dark",
     "patch": {
       "construction": "Framed minimal"
@@ -346,7 +346,7 @@
   },
   {
     "id": "rose-worn",
-    "file": "rose-worn.png",
+    "file": "rose-worn.webp",
     "view": "On skin",
     "patch": {
       "metal": "Rose gold"
@@ -354,7 +354,7 @@
   },
   {
     "id": "rose-close",
-    "file": "rose-close.png",
+    "file": "rose-close.webp",
     "view": "Close-up",
     "patch": {
       "metal": "Rose gold"
@@ -362,7 +362,7 @@
   },
   {
     "id": "rose-dark",
-    "file": "rose-dark.png",
+    "file": "rose-dark.webp",
     "view": "Dark",
     "patch": {
       "metal": "Rose gold"
@@ -370,7 +370,7 @@
   },
   {
     "id": "white-worn",
-    "file": "white-worn.png",
+    "file": "white-worn.webp",
     "view": "On skin",
     "patch": {
       "metal": "White gold"
@@ -378,7 +378,7 @@
   },
   {
     "id": "white-close",
-    "file": "white-close.png",
+    "file": "white-close.webp",
     "view": "Close-up",
     "patch": {
       "metal": "White gold"
@@ -386,7 +386,7 @@
   },
   {
     "id": "white-dark",
-    "file": "white-dark.png",
+    "file": "white-dark.webp",
     "view": "Dark",
     "patch": {
       "metal": "White gold"
@@ -394,7 +394,7 @@
   },
   {
     "id": "rails-worn",
-    "file": "rails-worn.png",
+    "file": "rails-worn.webp",
     "view": "On skin",
     "patch": {
       "construction": "Diamond rails"
@@ -402,7 +402,7 @@
   },
   {
     "id": "rails-close",
-    "file": "rails-close.png",
+    "file": "rails-close.webp",
     "view": "Close-up",
     "patch": {
       "construction": "Diamond rails"
@@ -410,7 +410,7 @@
   },
   {
     "id": "rails-dark",
-    "file": "rails-dark.png",
+    "file": "rails-dark.webp",
     "view": "Dark",
     "patch": {
       "construction": "Diamond rails"
@@ -418,7 +418,7 @@
   },
   {
     "id": "side-worn",
-    "file": "side-worn.png",
+    "file": "side-worn.webp",
     "view": "On skin",
     "patch": {
       "twoNames": true,
@@ -427,7 +427,7 @@
   },
   {
     "id": "side-close",
-    "file": "side-close.png",
+    "file": "side-close.webp",
     "view": "Close-up",
     "patch": {
       "twoNames": true,
@@ -436,7 +436,7 @@
   },
   {
     "id": "side-dark",
-    "file": "side-dark.png",
+    "file": "side-dark.webp",
     "view": "Dark",
     "patch": {
       "twoNames": true,
@@ -445,7 +445,7 @@
   },
   {
     "id": "heart-worn",
-    "file": "heart-worn-repaired.png",
+    "file": "heart-worn-repaired.webp",
     "view": "On skin",
     "patch": {
       "twoNames": true,
@@ -454,7 +454,7 @@
   },
   {
     "id": "heart-close",
-    "file": "heart-close-repaired.png",
+    "file": "heart-close-repaired.webp",
     "view": "Close-up",
     "patch": {
       "twoNames": true,
@@ -463,7 +463,7 @@
   },
   {
     "id": "heart-dark",
-    "file": "heart-dark-repaired.png",
+    "file": "heart-dark-repaired.webp",
     "view": "Dark",
     "patch": {
       "twoNames": true,
@@ -472,7 +472,7 @@
   },
   {
     "id": "stacked-worn",
-    "file": "stacked-worn.png",
+    "file": "stacked-worn.webp",
     "view": "On skin",
     "patch": {
       "twoNames": true,
@@ -481,7 +481,7 @@
   },
   {
     "id": "stacked-close",
-    "file": "stacked-close.png",
+    "file": "stacked-close.webp",
     "view": "Close-up",
     "patch": {
       "twoNames": true,
@@ -490,7 +490,7 @@
   },
   {
     "id": "stacked-dark",
-    "file": "stacked-dark.png",
+    "file": "stacked-dark.webp",
     "view": "Dark",
     "patch": {
       "twoNames": true,
@@ -499,7 +499,7 @@
   },
   {
     "id": "infinity-worn",
-    "file": "infinity-worn.png",
+    "file": "infinity-worn.webp",
     "view": "On skin",
     "patch": {
       "twoNames": true,
@@ -509,7 +509,7 @@
   },
   {
     "id": "infinity-close",
-    "file": "infinity-close.png",
+    "file": "infinity-close.webp",
     "view": "Close-up",
     "patch": {
       "twoNames": true,
@@ -519,7 +519,7 @@
   },
   {
     "id": "infinity-dark",
-    "file": "infinity-dark.png",
+    "file": "infinity-dark.webp",
     "view": "Dark",
     "patch": {
       "twoNames": true,
@@ -529,7 +529,7 @@
   },
   {
     "id": "interlocked-worn",
-    "file": "interlocked-worn-repaired.png",
+    "file": "interlocked-worn-repaired.webp",
     "view": "On skin",
     "patch": {
       "twoNames": true,
@@ -538,7 +538,7 @@
   },
   {
     "id": "interlocked-close",
-    "file": "interlocked-close-repaired.png",
+    "file": "interlocked-close-repaired.webp",
     "view": "Close-up",
     "patch": {
       "twoNames": true,
@@ -547,7 +547,7 @@
   },
   {
     "id": "interlocked-dark",
-    "file": "interlocked-dark-repaired.png",
+    "file": "interlocked-dark-repaired.webp",
     "view": "Dark",
     "patch": {
       "twoNames": true,

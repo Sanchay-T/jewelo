@@ -1,7 +1,7 @@
 [
   {
     "id": "origami-white",
-    "file": "origami-white-studio.png",
+    "file": "origami-white-studio.webp",
     "view": "Studio",
     "patch": {
       "construction": "Origami ribbon",
@@ -10,7 +10,7 @@
   },
   {
     "id": "origami-white-accent",
-    "file": "origami-white-accent-studio.png",
+    "file": "origami-white-accent-studio.webp",
     "view": "Studio",
     "patch": {
       "construction": "Origami ribbon",
@@ -20,7 +20,7 @@
   },
   {
     "id": "origami-white-ruby",
-    "file": "origami-white-ruby-studio.png",
+    "file": "origami-white-ruby-studio.webp",
     "view": "Studio",
     "patch": {
       "construction": "Origami ribbon",
@@ -31,7 +31,7 @@
   },
   {
     "id": "origami-white-worn",
-    "file": "origami-white-worn.png",
+    "file": "origami-white-worn.webp",
     "view": "On skin",
     "patch": {
       "construction": "Origami ribbon",
@@ -40,7 +40,7 @@
   },
   {
     "id": "origami-white-close",
-    "file": "origami-white-close.png",
+    "file": "origami-white-close.webp",
     "view": "Close-up",
     "patch": {
       "construction": "Origami ribbon",
@@ -49,7 +49,7 @@
   },
   {
     "id": "origami-white-dark",
-    "file": "origami-white-dark.png",
+    "file": "origami-white-dark.webp",
     "view": "Dark",
     "patch": {
       "construction": "Origami ribbon",
@@ -58,7 +58,7 @@
   },
   {
     "id": "origami-white-accent-worn",
-    "file": "origami-white-accent-worn.png",
+    "file": "origami-white-accent-worn.webp",
     "view": "On skin",
     "patch": {
       "construction": "Origami ribbon",
@@ -68,7 +68,7 @@
   },
   {
     "id": "origami-white-accent-close",
-    "file": "origami-white-accent-close.png",
+    "file": "origami-white-accent-close.webp",
     "view": "Close-up",
     "patch": {
       "construction": "Origami ribbon",
@@ -78,7 +78,7 @@
   },
   {
     "id": "origami-white-accent-dark",
-    "file": "origami-white-accent-dark.png",
+    "file": "origami-white-accent-dark.webp",
     "view": "Dark",
     "patch": {
       "construction": "Origami ribbon",
@@ -88,7 +88,7 @@
   },
   {
     "id": "origami-white-ruby-worn",
-    "file": "origami-white-ruby-worn.png",
+    "file": "origami-white-ruby-worn.webp",
     "view": "On skin",
     "patch": {
       "construction": "Origami ribbon",
@@ -99,7 +99,7 @@
   },
   {
     "id": "origami-white-ruby-close",
-    "file": "origami-white-ruby-close.png",
+    "file": "origami-white-ruby-close.webp",
     "view": "Close-up",
     "patch": {
       "construction": "Origami ribbon",
@@ -110,7 +110,7 @@
   },
   {
     "id": "origami-white-ruby-dark",
-    "file": "origami-white-ruby-dark.png",
+    "file": "origami-white-ruby-dark.webp",
     "view": "Dark",
     "patch": {
       "construction": "Origami ribbon",

@@ -115,6 +115,20 @@ const nextConfig: NextConfig = {
       { source: "/api/inngest/:path*", headers: baseSecurityHeaders },
       { source: "/api/shopify/:path*", headers: baseSecurityHeaders },
       { source: "/", headers: documentSecurityHeaders },
+      // The sample photographs are content-addressed by version: a file under
+      // /atelier/v5 is never edited in place, a new photograph becomes v6. So
+      // the browser may keep them for a year and stop re-validating them on
+      // every visit, which is what made a second load pay for the first one
+      // again.
+      {
+        source: "/atelier/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=31536000, immutable",
+          },
+        ],
+      },
       {
         source: "/:path((?!api/inngest|api/shopify).*)",
         headers: documentSecurityHeaders,

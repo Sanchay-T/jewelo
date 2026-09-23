@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { SAMPLE_PHOTO_TIMEOUT_MS } from "@jewelo/config/sellable";
 import { resolveOptionFamily } from "./catalogue";
 import { views, type Draft, type View, type VisualField } from "./model";
 import { assemblyKey } from "./assembly";
@@ -15,8 +16,8 @@ export function usePhotographicPiece(draft: Draft, enabled: boolean, focus?: Vis
   // stone, gem, size or chain click neither reloads it nor flashes a loading
   // state over a pendant that has not changed.
   const identity = familyKey || "sample-coming:" + family.tier1Key;
-  const current = useRef({ key, enabled, identity, assets: family.assets });
-  current.current = { key, enabled, identity, assets: family.assets };
+  const current = useRef({ key, enabled, identity, assets: family.assets, activeView });
+  current.current = { key, enabled, identity, assets: family.assets, activeView };
   const [publishedIdentity, setPublishedIdentity] = useState("");
   const alive = useRef(false);
   const revision = useRef(0);
@@ -50,7 +51,7 @@ export function usePhotographicPiece(draft: Draft, enabled: boolean, focus?: Vis
         if (failDark && view === "Dark") throw new Error("This view failed. Retry Dark.");
         const photo = assets.find((sample) => sample.view === view);
         if (!photo) throw new Error("A matching photo is not available for this selection.");
-        const response = await fetch(photo.src, { signal: AbortSignal.timeout(15000) });
+        const response = await fetch(photo.src, { signal: AbortSignal.timeout(SAMPLE_PHOTO_TIMEOUT_MS) });
         if (!response.ok) throw new Error("This photo could not load. Please retry.");
         const blob = await response.blob();
         if (!blob.type.startsWith("image/")) throw new Error("This photo is unavailable.");
@@ -83,7 +84,20 @@ export function usePhotographicPiece(draft: Draft, enabled: boolean, focus?: Vis
   }, []);
   useEffect(() => {
     // Only the views this family actually has: an absent camera is hidden, not failed.
-    if (enabled) void capture(shownViews()).catch(() => {});
+    if (!enabled) return;
+    const available = shownViews();
+    // The camera on screen is fetched alone and first; the other angles of the
+    // same look follow once it has landed. Asking for all four at once put the
+    // photograph the shopper is actually looking at in a four-way race with
+    // three she cannot see, which is what made the first paint feel slow.
+    const hero = available.includes(current.current.activeView) ? current.current.activeView : available[0];
+    if (!hero) return;
+    void capture([hero])
+      .then(() => {
+        const rest = available.filter((view) => view !== hero);
+        return rest.length ? capture(rest) : undefined;
+      })
+      .catch(() => {});
   }, [identity, enabled, capture]);
   const retry = useCallback((view?: View) => {
     const targetIdentity = current.current.identity;

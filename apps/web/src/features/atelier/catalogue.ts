@@ -102,13 +102,13 @@ export const samples: Sample[] = [
           : view === "Close-up"
             ? "close"
             : "dark") +
-      ".png",
+      ".webp",
   })),
   {
     id: "arabic",
     view: "Studio",
     draft: { ...base, script: "Arabic", name: "أسماء" },
-    src: "/atelier/v1/asma-arabic.png",
+    src: "/atelier/v1/asma-arabic.webp",
   },
   ...generated.map((entry) => ({
     id: entry.id,

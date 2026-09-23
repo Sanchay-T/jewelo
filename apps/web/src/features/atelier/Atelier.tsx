@@ -2264,6 +2264,11 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                     ref={photoElement}
                     key={`${source}-${imageAttempt}`}
                     src={source}
+                    /* The hero is the one photograph on screen; it decodes
+                       ahead of the rail thumbnails below it. */
+                    fetchPriority="high"
+                    loading="eager"
+                    decoding="async"
                     alt={
                       locale === "ar"
                         ? `صورة تجريبية لـ${sampleNames(" و")}، ${t(shown.construction)}، ${t(shown.lettering)}، ${t(shown.metal)}، ${t(shown.coverage)}${shown.coverage === "No stones" ? "" : `، ${stoneLabel(shown)}`}، ${shown.size} مم`
@@ -2518,6 +2523,11 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
                         ) : !missing ? (
                           <img
                             src={thumbnail}
+                            /* The rail is the other three cameras of the same
+                               look: they follow the hero, they never race it. */
+                            loading="lazy"
+                            fetchPriority="low"
+                            decoding="async"
                             alt={
                               sampleTile
                                 ? locale === "ar"

@@ -1,7 +1,7 @@
 [
   {
     "id": "minimal-worn",
-    "file": "minimal-worn.png",
+    "file": "minimal-worn.webp",
     "view": "On skin",
     "patch": {
       "lettering": "Minimal"
@@ -9,7 +9,7 @@
   },
   {
     "id": "minimal-close",
-    "file": "minimal-close.png",
+    "file": "minimal-close.webp",
     "view": "Close-up",
     "patch": {
       "lettering": "Minimal"
@@ -17,7 +17,7 @@
   },
   {
     "id": "minimal-dark",
-    "file": "minimal-dark.png",
+    "file": "minimal-dark.webp",
     "view": "Dark",
     "patch": {
       "lettering": "Minimal"
@@ -25,7 +25,7 @@
   },
   {
     "id": "signature-worn",
-    "file": "signature-worn.png",
+    "file": "signature-worn.webp",
     "view": "On skin",
     "patch": {
       "lettering": "Signature"
@@ -33,7 +33,7 @@
   },
   {
     "id": "signature-close",
-    "file": "signature-close.png",
+    "file": "signature-close.webp",
     "view": "Close-up",
     "patch": {
       "lettering": "Signature"
@@ -41,7 +41,7 @@
   },
   {
     "id": "signature-dark",
-    "file": "signature-dark.png",
+    "file": "signature-dark.webp",
     "view": "Dark",
     "patch": {
       "lettering": "Signature"
@@ -49,7 +49,7 @@
   },
   {
     "id": "kufi-worn",
-    "file": "kufi-worn.png",
+    "file": "kufi-worn.webp",
     "view": "On skin",
     "patch": {
       "lettering": "Kufi"
@@ -57,7 +57,7 @@
   },
   {
     "id": "kufi-close",
-    "file": "kufi-close.png",
+    "file": "kufi-close.webp",
     "view": "Close-up",
     "patch": {
       "lettering": "Kufi"
@@ -65,7 +65,7 @@
   },
   {
     "id": "kufi-dark",
-    "file": "kufi-dark.png",
+    "file": "kufi-dark.webp",
     "view": "Dark",
     "patch": {
       "lettering": "Kufi"
@@ -73,7 +73,7 @@
   },
   {
     "id": "diwani-worn",
-    "file": "diwani-worn.png",
+    "file": "diwani-worn.webp",
     "view": "On skin",
     "patch": {
       "lettering": "Diwani"
@@ -81,7 +81,7 @@
   },
   {
     "id": "diwani-close",
-    "file": "diwani-close.png",
+    "file": "diwani-close.webp",
     "view": "Close-up",
     "patch": {
       "lettering": "Diwani"
@@ -89,7 +89,7 @@
   },
   {
     "id": "diwani-dark",
-    "file": "diwani-dark.png",
+    "file": "diwani-dark.webp",
     "view": "Dark",
     "patch": {
       "lettering": "Diwani"
@@ -97,7 +97,7 @@
   },
   {
     "id": "thuluth-worn",
-    "file": "thuluth-worn.png",
+    "file": "thuluth-worn.webp",
     "view": "On skin",
     "patch": {
       "lettering": "Thuluth inspired"
@@ -105,7 +105,7 @@
   },
   {
     "id": "thuluth-close",
-    "file": "thuluth-close.png",
+    "file": "thuluth-close.webp",
     "view": "Close-up",
     "patch": {
       "lettering": "Thuluth inspired"
@@ -113,7 +113,7 @@
   },
   {
     "id": "thuluth-dark",
-    "file": "thuluth-dark.png",
+    "file": "thuluth-dark.webp",
     "view": "Dark",
     "patch": {
       "lettering": "Thuluth inspired"
@@ -121,7 +121,7 @@
   },
   {
     "id": "rolo-worn",
-    "file": "rolo-worn.png",
+    "file": "rolo-worn.webp",
     "view": "On skin",
     "patch": {
       "chain": "Rolo"
@@ -129,7 +129,7 @@
   },
   {
     "id": "rolo-close",
-    "file": "rolo-close.png",
+    "file": "rolo-close.webp",
     "view": "Close-up",
     "patch": {
       "chain": "Rolo"
@@ -137,7 +137,7 @@
   },
   {
     "id": "rolo-dark",
-    "file": "rolo-dark.png",
+    "file": "rolo-dark.webp",
     "view": "Dark",
     "patch": {
       "chain": "Rolo"
@@ -145,7 +145,7 @@
   },
   {
     "id": "box-worn",
-    "file": "box-worn.png",
+    "file": "box-worn.webp",
     "view": "On skin",
     "patch": {
       "chain": "Box"
@@ -153,7 +153,7 @@
   },
   {
     "id": "box-close",
-    "file": "box-close.png",
+    "file": "box-close.webp",
     "view": "Close-up",
     "patch": {
       "chain": "Box"
@@ -161,7 +161,7 @@
   },
   {
     "id": "box-dark",
-    "file": "box-dark.png",
+    "file": "box-dark.webp",
     "view": "Dark",
     "patch": {
       "chain": "Box"
@@ -169,7 +169,7 @@
   },
   {
     "id": "small-worn",
-    "file": "small-worn.png",
+    "file": "small-worn.webp",
     "view": "On skin",
     "patch": {
       "size": 22
@@ -177,7 +177,7 @@
   },
   {
     "id": "small-dark",
-    "file": "small-dark.png",
+    "file": "small-dark.webp",
     "view": "Dark",
     "patch": {
       "size": 22
@@ -185,7 +185,7 @@
   },
   {
     "id": "small-close",
-    "file": "small-close.png",
+    "file": "small-close.webp",
     "view": "Close-up",
     "patch": {
       "size": 22

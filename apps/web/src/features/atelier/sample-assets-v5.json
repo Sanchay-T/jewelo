@@ -1,7 +1,7 @@
 [
   {
     "id": "arabic-origami-v5",
-    "file": "arabic-origami-studio.png",
+    "file": "arabic-origami-studio.webp",
     "view": "Studio",
     "patch": {
       "script": "Arabic",
@@ -10,7 +10,7 @@
   },
   {
     "id": "arabic-rails-v5",
-    "file": "arabic-rails-studio.png",
+    "file": "arabic-rails-studio.webp",
     "view": "Studio",
     "patch": {
       "script": "Arabic",
@@ -19,7 +19,7 @@
   },
   {
     "id": "arabic-side-v5",
-    "file": "arabic-side-studio.png",
+    "file": "arabic-side-studio.webp",
     "view": "Studio",
     "patch": {
       "script": "Arabic",
@@ -29,7 +29,7 @@
   },
   {
     "id": "arabic-framed-v5",
-    "file": "arabic-framed-studio.png",
+    "file": "arabic-framed-studio.webp",
     "view": "Studio",
     "patch": {
       "script": "Arabic",
@@ -38,7 +38,7 @@
   },
   {
     "id": "arabic-framed-v5-On skin",
-    "file": "arabic-framed-worn.png",
+    "file": "arabic-framed-worn.webp",
     "view": "On skin",
     "patch": {
       "script": "Arabic",
@@ -47,7 +47,7 @@
   },
   {
     "id": "arabic-framed-v5-Close-up",
-    "file": "arabic-framed-close.png",
+    "file": "arabic-framed-close.webp",
     "view": "Close-up",
     "patch": {
       "script": "Arabic",
@@ -56,7 +56,7 @@
   },
   {
     "id": "arabic-framed-v5-Dark",
-    "file": "arabic-framed-dark.png",
+    "file": "arabic-framed-dark.webp",
     "view": "Dark",
     "patch": {
       "script": "Arabic",
@@ -65,7 +65,7 @@
   },
   {
     "id": "arabic-origami-v5-On skin",
-    "file": "arabic-origami-worn.png",
+    "file": "arabic-origami-worn.webp",
     "view": "On skin",
     "patch": {
       "script": "Arabic",
@@ -74,7 +74,7 @@
   },
   {
     "id": "arabic-origami-v5-Close-up",
-    "file": "arabic-origami-close.png",
+    "file": "arabic-origami-close.webp",
     "view": "Close-up",
     "patch": {
       "script": "Arabic",
@@ -83,7 +83,7 @@
   },
   {
     "id": "arabic-origami-v5-Dark",
-    "file": "arabic-origami-dark.png",
+    "file": "arabic-origami-dark.webp",
     "view": "Dark",
     "patch": {
       "script": "Arabic",
@@ -92,7 +92,7 @@
   },
   {
     "id": "arabic-rails-v5-On skin",
-    "file": "arabic-rails-worn.png",
+    "file": "arabic-rails-worn.webp",
     "view": "On skin",
     "patch": {
       "script": "Arabic",
@@ -101,7 +101,7 @@
   },
   {
     "id": "arabic-rails-v5-Close-up",
-    "file": "arabic-rails-close.png",
+    "file": "arabic-rails-close.webp",
     "view": "Close-up",
     "patch": {
       "script": "Arabic",
@@ -110,7 +110,7 @@
   },
   {
     "id": "arabic-rails-v5-Dark",
-    "file": "arabic-rails-dark.png",
+    "file": "arabic-rails-dark.webp",
     "view": "Dark",
     "patch": {
       "script": "Arabic",
@@ -119,7 +119,7 @@
   },
   {
     "id": "arabic-side-v5-On skin",
-    "file": "arabic-side-worn.png",
+    "file": "arabic-side-worn.webp",
     "view": "On skin",
     "patch": {
       "script": "Arabic",
@@ -129,7 +129,7 @@
   },
   {
     "id": "arabic-side-v5-Close-up",
-    "file": "arabic-side-close.png",
+    "file": "arabic-side-close.webp",
     "view": "Close-up",
     "patch": {
       "script": "Arabic",
@@ -139,7 +139,7 @@
   },
   {
     "id": "arabic-side-v5-Dark",
-    "file": "arabic-side-dark.png",
+    "file": "arabic-side-dark.webp",
     "view": "Dark",
     "patch": {
       "script": "Arabic",
@@ -149,7 +149,7 @@
   },
   {
     "id": "arabic-heart-v5",
-    "file": "arabic-heart-studio.png",
+    "file": "arabic-heart-studio.webp",
     "view": "Studio",
     "patch": {
       "script": "Arabic",
@@ -159,7 +159,7 @@
   },
   {
     "id": "arabic-stacked-v5",
-    "file": "arabic-stacked-studio.png",
+    "file": "arabic-stacked-studio.webp",
     "view": "Studio",
     "patch": {
       "script": "Arabic",
@@ -169,7 +169,7 @@
   },
   {
     "id": "arabic-infinity-v5",
-    "file": "arabic-infinity-studio.png",
+    "file": "arabic-infinity-studio.webp",
     "view": "Studio",
     "patch": {
       "script": "Arabic",
@@ -179,7 +179,7 @@
   },
   {
     "id": "arabic-interlocked-v5",
-    "file": "arabic-interlocked-studio.png",
+    "file": "arabic-interlocked-studio.webp",
     "view": "Studio",
     "patch": {
       "script": "Arabic",
@@ -189,7 +189,7 @@
   },
   {
     "id": "arabic-heart-v5-On skin",
-    "file": "arabic-heart-worn.png",
+    "file": "arabic-heart-worn.webp",
     "view": "On skin",
     "patch": {
       "script": "Arabic",
@@ -199,7 +199,7 @@
   },
   {
     "id": "arabic-heart-v5-Close-up",
-    "file": "arabic-heart-close.png",
+    "file": "arabic-heart-close.webp",
     "view": "Close-up",
     "patch": {
       "script": "Arabic",
@@ -209,7 +209,7 @@
   },
   {
     "id": "arabic-heart-v5-Dark",
-    "file": "arabic-heart-dark.png",
+    "file": "arabic-heart-dark.webp",
     "view": "Dark",
     "patch": {
       "script": "Arabic",
@@ -219,7 +219,7 @@
   },
   {
     "id": "arabic-stacked-v5-On skin",
-    "file": "arabic-stacked-worn.png",
+    "file": "arabic-stacked-worn.webp",
     "view": "On skin",
     "patch": {
       "script": "Arabic",
@@ -229,7 +229,7 @@
   },
   {
     "id": "arabic-stacked-v5-Close-up",
-    "file": "arabic-stacked-close.png",
+    "file": "arabic-stacked-close.webp",
     "view": "Close-up",
     "patch": {
       "script": "Arabic",
@@ -239,7 +239,7 @@
   },
   {
     "id": "arabic-stacked-v5-Dark",
-    "file": "arabic-stacked-dark.png",
+    "file": "arabic-stacked-dark.webp",
     "view": "Dark",
     "patch": {
       "script": "Arabic",
@@ -249,7 +249,7 @@
   },
   {
     "id": "arabic-infinity-v5-On skin",
-    "file": "arabic-infinity-worn.png",
+    "file": "arabic-infinity-worn.webp",
     "view": "On skin",
     "patch": {
       "script": "Arabic",
@@ -259,7 +259,7 @@
   },
   {
     "id": "arabic-infinity-v5-Close-up",
-    "file": "arabic-infinity-close.png",
+    "file": "arabic-infinity-close.webp",
     "view": "Close-up",
     "patch": {
       "script": "Arabic",
@@ -269,7 +269,7 @@
   },
   {
     "id": "arabic-infinity-v5-Dark",
-    "file": "arabic-infinity-dark.png",
+    "file": "arabic-infinity-dark.webp",
     "view": "Dark",
     "patch": {
       "script": "Arabic",
@@ -279,7 +279,7 @@
   },
   {
     "id": "arabic-interlocked-v5-On skin",
-    "file": "arabic-interlocked-worn.png",
+    "file": "arabic-interlocked-worn.webp",
     "view": "On skin",
     "patch": {
       "script": "Arabic",
@@ -289,7 +289,7 @@
   },
   {
     "id": "arabic-interlocked-v5-Close-up",
-    "file": "arabic-interlocked-close.png",
+    "file": "arabic-interlocked-close.webp",
     "view": "Close-up",
     "patch": {
       "script": "Arabic",
@@ -299,7 +299,7 @@
   },
   {
     "id": "arabic-interlocked-v5-Dark",
-    "file": "arabic-interlocked-dark.png",
+    "file": "arabic-interlocked-dark.webp",
     "view": "Dark",
     "patch": {
       "script": "Arabic",

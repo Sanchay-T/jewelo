@@ -1,7 +1,7 @@
 [
   {
     "id": "arabic-kufi-v6-close",
-    "file": "arabic-kufi-close.png",
+    "file": "arabic-kufi-close.webp",
     "view": "Close-up",
     "patch": {
       "script": "Arabic",
@@ -10,7 +10,7 @@
   },
   {
     "id": "arabic-kufi-v6-dark",
-    "file": "arabic-kufi-dark.png",
+    "file": "arabic-kufi-dark.webp",
     "view": "Dark",
     "patch": {
       "script": "Arabic",
@@ -19,7 +19,7 @@
   },
   {
     "id": "arabic-signature-v6-worn",
-    "file": "arabic-signature-worn.png",
+    "file": "arabic-signature-worn.webp",
     "view": "On skin",
     "patch": {
       "script": "Arabic",
@@ -28,7 +28,7 @@
   },
   {
     "id": "arabic-signature-v6-close",
-    "file": "arabic-signature-close.png",
+    "file": "arabic-signature-close.webp",
     "view": "Close-up",
     "patch": {
       "script": "Arabic",
@@ -37,7 +37,7 @@
   },
   {
     "id": "arabic-signature-v6-dark",
-    "file": "arabic-signature-dark.png",
+    "file": "arabic-signature-dark.webp",
     "view": "Dark",
     "patch": {
       "script": "Arabic",
@@ -46,7 +46,7 @@
   },
   {
     "id": "arabic-minimal-v2-v6-close",
-    "file": "arabic-minimal-v2-close.png",
+    "file": "arabic-minimal-v2-close.webp",
     "view": "Close-up",
     "patch": {
       "script": "Arabic",
@@ -55,7 +55,7 @@
   },
   {
     "id": "arabic-minimal-v2-v6-worn",
-    "file": "arabic-minimal-v2-worn.png",
+    "file": "arabic-minimal-v2-worn.webp",
     "view": "On skin",
     "patch": {
       "script": "Arabic",
@@ -64,7 +64,7 @@
   },
   {
     "id": "arabic-minimal-v2-v6-dark",
-    "file": "arabic-minimal-v2-dark.png",
+    "file": "arabic-minimal-v2-dark.webp",
     "view": "Dark",
     "patch": {
       "script": "Arabic",
@@ -103,7 +103,7 @@
   },
   {
     "id": "arabic-thuluth-v2-v6-close",
-    "file": "arabic-thuluth-v2-close.png",
+    "file": "arabic-thuluth-v2-close.webp",
     "view": "Close-up",
     "patch": {
       "script": "Arabic",
@@ -112,7 +112,7 @@
   },
   {
     "id": "arabic-thuluth-v2-v6-worn",
-    "file": "arabic-thuluth-v2-worn.png",
+    "file": "arabic-thuluth-v2-worn.webp",
     "view": "On skin",
     "patch": {
       "script": "Arabic",
@@ -121,7 +121,7 @@
   },
   {
     "id": "arabic-thuluth-v2-v6-dark",
-    "file": "arabic-thuluth-v2-dark.png",
+    "file": "arabic-thuluth-v2-dark.webp",
     "view": "Dark",
     "patch": {
       "script": "Arabic",
@@ -130,7 +130,7 @@
   },
   {
     "id": "arabic-kufi-v6-worn-corrected",
-    "file": "arabic-kufi-worn-corrected.png",
+    "file": "arabic-kufi-worn-corrected.webp",
     "view": "On skin",
     "patch": {
       "script": "Arabic",

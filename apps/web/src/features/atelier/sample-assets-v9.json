@@ -1,7 +1,7 @@
 [
   {
     "id": "akr-white-none-On skin-v9",
-    "file": "arabic-kufi-rails-white-none-worn.png",
+    "file": "arabic-kufi-rails-white-none-worn.webp",
     "view": "On skin",
     "patch": {
       "script": "Arabic",
@@ -14,7 +14,7 @@
   },
   {
     "id": "akr-white-none-Close-up-v9",
-    "file": "arabic-kufi-rails-white-none-close.png",
+    "file": "arabic-kufi-rails-white-none-close.webp",
     "view": "Close-up",
     "patch": {
       "script": "Arabic",
@@ -27,7 +27,7 @@
   },
   {
     "id": "akr-white-none-Dark-v9",
-    "file": "arabic-kufi-rails-white-none-dark.png",
+    "file": "arabic-kufi-rails-white-none-dark.webp",
     "view": "Dark",
     "patch": {
       "script": "Arabic",
