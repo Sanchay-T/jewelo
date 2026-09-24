@@ -125,7 +125,9 @@ export const optionalRuntimeConfig = [
   // from the stencil, which is what production does today; "1" lets
   // `stillRoute` decide each studio still's route from the approved name
   // before any spend. Shipped when present so the switch can be flipped on one
-  // environment without a code change.
+  // environment without a code change. It holds no secret, but this file has no
+  // plain-config category: `appSecretEnvs` below types every non-empty value
+  // `SECRET`, so this one ships encrypted like the rest.
   "STILL_FREE_ROUTE",
   "OPENAI_VERIFIER_MODEL",
   "REAL_MODE_MAX_RESERVED_SPEND_CENTS",

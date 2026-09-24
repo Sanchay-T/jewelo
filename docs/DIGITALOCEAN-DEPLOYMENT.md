@@ -193,6 +193,16 @@ time - a public key that arrives at run time only is a key the bundle was
 compiled without. `SENTRY_DSN` is a server value and is never exposed to the
 browser.
 
+`STILL_FREE_ROUTE` (SP-2e2 / D-024) is the switch that lets a proven-safe name
+be photographed from the words instead of from the stencil.
+Set it to `1` in `.env.staging` and redeploy to turn it on, to `0` or remove it
+to turn it off; it is validated in `packages/config` and defaults to off, so an
+environment that never names it photographs every studio still from the stencil.
+Turning it off affects only tasks that have not compiled yet: the route is
+written into the immutable prompt snapshot when the studio still first compiles,
+so a run already in flight on the free route stays free to its last dependent
+view, and there is nothing to roll back in the database.
+
 Source map upload is a separate decision. It happens only when
 `SENTRY_AUTH_TOKEN`, `SENTRY_ORG` and `SENTRY_PROJECT` are all present in the
 build environment (`packages/observability/src/next-config.ts`); none of the

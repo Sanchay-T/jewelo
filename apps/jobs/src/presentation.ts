@@ -27,7 +27,10 @@ import { parseJobsEnv, pipelineLimits } from "@jewelo/config";
 // drift from it.
 import { REFERENCE_ASSET_ID } from "@jewelo/contracts";
 import {
-  stillRoute,
+  // Renamed at the import: `executePresentationTask` has a local `stillRoute`
+  // holding this task's decided route, and a decision function shadowed by a
+  // value of the same name is a misreading waiting to happen.
+  stillRoute as decideStillRoute,
   type StillRouteChoice,
   type StillRouteSpecification,
 } from "@jewelo/identity";
@@ -157,8 +160,17 @@ export interface PresentationRepository {
    * file never reads an environment variable. Required rather than optional so
    * a repository that cannot say which route a studio takes is a compile error
    * instead of a silent stencil.
+   *
+   * SP-2e2b: the release is part of the decision, not only the name. A release
+   * whose own template text names the stencil compiles to words that point at
+   * an image the free route does not send, which `compileStillPrompt` refuses
+   * as `still_unresolved_reference_tag:@stencil` - so such a release is stencil
+   * whatever the name says.
    */
-  studioStillRoute(revision: RevisionRow): StillRouteChoice;
+  studioStillRoute(
+    revision: RevisionRow,
+    release: PromptReleaseRow,
+  ): StillRouteChoice;
   loadStoredOutput(task: TaskRow): Promise<StoredOutput | undefined>;
   reserveAttempt(
     task: TaskRow,
@@ -570,10 +582,10 @@ export async function executePresentationTask(
     // still by its own name (`studioStillRoute`, D-024), a dependent view by
     // its parent's. A parent with no snapshot yet has not been dispatched, so
     // the view waits.
-    const route = task.dependency_task_id
+    const parentRoute = task.dependency_task_id
       ? await repository.dependencyStillRoute(task)
-      : repository.studioStillRoute(revision);
-    if (!route) {
+      : undefined;
+    if (task.dependency_task_id && !parentRoute) {
       // No parent snapshot has two causes. The parent went terminal before it
       // ever compiled one, in which case waiting is waiting for ever and the
       // stale sweeper would re-queue this view once per window: refuse it
@@ -586,7 +598,13 @@ export async function executePresentationTask(
     }
     let compiled: ReturnType<typeof compileStillPrompt>;
     let compiledPrompt: string;
+    let route: StillRouteChoice;
     try {
+      // Inside the try with the compile: `studioStillRoute` reads the same
+      // revision-shaped fields the variable snapshot does, so a specification
+      // that is wrong in the row fails here as `prompt_compile_failed` rather
+      // than throwing out of the job and looping on the stale sweeper.
+      route = parentRoute ?? repository.studioStillRoute(revision, release);
       const variables = buildPromptVariableSnapshot({
         approvedName: revision.identity_anchor.approvedText,
         language: revision.identity_anchor.language,
@@ -758,24 +776,37 @@ export async function executePresentationTask(
   // pairing sent. The stencil is rendered, gated, hashed and stored on both
   // routes (D-010); only the stencil route sends it to the model.
   const identityImageUrl = stillRoute === "stencil" ? identity.url : undefined;
-  // SP-2e2: the route the snapshot recorded and the images this request
-  // carries must agree, and they are compared here, before the attempt budget
-  // is read and before any reservation. `buildStillReferences` and
-  // `compileStillPrompt` raise the same three codes inside `generator.generate`,
-  // which is past the reservation: a disagreement caught there costs a booked
-  // attempt, and one caught here costs nothing. Each is a property of the
-  // snapshot row and the task row, so every redispatch decides it the same way:
-  // terminal, a code, no customer text.
-  if (stillRoute === "stencil" && !identityImageUrl?.trim())
+  // SP-2e2b: the words this model will actually read, compared against the
+  // images this request will actually carry. Not the route column against a
+  // value derived from it - that compares a thing with itself - but the stored
+  // `compiled_prompt` text against the two URLs, so a snapshot whose route and
+  // whose words disagree is caught here whichever of them is wrong.
+  //
+  // The compiler leaves exactly one readable mark per image it numbered: it
+  // rewrites every `@role` tag into `Image N (role)` and writes the same label
+  // in the IMAGE ROLES header and in the minimal family's opening lines, so a
+  // stencil compile always says "(stencil)" and a master compile always says
+  // "(master)". A free compile can say neither: `compileStillPrompt` refuses
+  // the whole prompt if the word "stencil" survives anywhere in it
+  // (`still_free_route_names_stencil`).
+  //
+  // Compared here, before the attempt budget is read and before any
+  // reservation: the same disagreement inside `generator.generate` costs a
+  // booked attempt. Each side is a property of the stored snapshot and the task
+  // row, so every redispatch decides it the same way: terminal, a code, no
+  // customer text.
+  const promptNamesStencil = snapshot.compiled_prompt.includes("(stencil)");
+  const promptNamesMaster = snapshot.compiled_prompt.includes("(master)");
+  if (promptNamesStencil && !identityImageUrl?.trim())
     return blockPreSpendTerminally(new Error("still_stencil_required"));
-  if (stillRoute === "free" && identityImageUrl?.trim())
+  if (!promptNamesStencil && identityImageUrl?.trim())
     return blockPreSpendTerminally(
       new Error("still_free_route_carries_stencil"),
     );
-  // A dependent view copies the approved studio photograph. On the free route
-  // that photograph is the only authority for the piece - no stencil is sent -
-  // so a free view without it has nothing to copy.
-  if (stillRoute === "free" && task.dependency_task_id && !reference?.url)
+  // A dependent view copies the approved studio photograph, and on the free
+  // route that photograph is the only authority for the piece - no stencil is
+  // sent - so words that name a master without one have nothing to copy.
+  if (promptNamesMaster && !reference?.url?.trim())
     return blockPreSpendTerminally(new Error("still_master_required"));
   // D-020, fix pass 6: there is no bar rail any more and no flag that lets one
   // through. `ringPlacement` is `welded`, `frame` (P2-2b: the construction the
@@ -994,6 +1025,10 @@ export async function executePresentationTask(
       )
         throw new Error("identity_verification_failed");
       const record = verification as unknown as Record<string, unknown>;
+      // SP-2e2b: which way this photograph was taken, stored beside the checks
+      // that passed it. An operator asking why a piece looks the way it does
+      // reads it off the asset instead of joining back to the prompt snapshot.
+      record.stillRoute = stillRoute;
       // SP-2a. In real mode the verifier above is the mock, so its
       // `singleConnectedPiece` is always true and the gate on it never fires.
       // The blind piece reader is the live one: one image, one question, no
@@ -1167,9 +1202,20 @@ export class SupabasePresentationRepository implements PresentationRepository {
     // `@jewelo/config` (STILL_FREE_ROUTE) rather than read here.
     private readonly freeRouteEnabled = false,
   ) {}
-  studioStillRoute(revision: RevisionRow): StillRouteChoice {
+  studioStillRoute(
+    revision: RevisionRow,
+    release: PromptReleaseRow,
+  ): StillRouteChoice {
     if (!this.freeRouteEnabled) return "stencil";
-    return stillRoute({
+    // SP-2e2b. The live `image.packshot` releases (`@v2`, `@v3`) write the
+    // stencil into the template prose itself. Compiled free, that prose keeps
+    // a tag no image was numbered for, and `compileStillPrompt` refuses the
+    // whole snapshot (`still_unresolved_reference_tag:@stencil`), which would
+    // make an allowlisted name unphotographable rather than free. Decided here,
+    // once, from the release this task is pinned to, rather than caught as a
+    // per-attempt fallback.
+    if (/stencil/i.test(release.template)) return "stencil";
+    return decideStillRoute({
       approvedText: revision.identity_anchor.approvedText,
       language: revision.identity_anchor.language,
       // The same specification object the snapshot's variables are built from,

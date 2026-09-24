@@ -35,6 +35,14 @@
  * So the route is an allowlist, not a deny-list: a letter routes free only if it is in `ARABIC_FREE_LETTERS` or `LATIN_FREE_LETTER`.
  * Every other letter, every combining mark, every presentation or compatibility form and every construction this module cannot name routes to the stencil.
  * Origami-ribbon Arabic routes to the stencil (`arabic_print_construction:origami-ribbon`).
+ *
+ * The labs also measured one piece and one piece only: stoneless, in the face
+ * the construction draws by default. A free prompt is given no stencil, so the
+ * stones sentence and the lettering brief are the only thing standing between
+ * the shopper's choice and the metal, and neither was ever photographed away
+ * from its default. A piece set with stones, or one whose shopper picked a
+ * named face (Kufi, Diwani, Signature, Thuluth, Minimal), routes to the stencil
+ * (`stones_not_proven`, `lettering_not_default`).
  */
 
 /** Free prompt, or the deterministic stencil. */
@@ -53,6 +61,15 @@ export interface StillRouteSpecification {
     readonly approvedArabicText?: string | null;
   }[];
   readonly construction?: string | null;
+  /** `StoneCoverage`: "none", "accent", "partial-pave", "full-pave". */
+  readonly stoneCoverage?: string | null;
+  /** `Gemstone`: "none" or a stone. `gemstones` is the full chosen list. */
+  readonly gemstone?: string | null;
+  readonly gemstones?: readonly (string | null | undefined)[];
+  /** `ArabicStyle`: the Arabic identity engine's face selector. */
+  readonly arabicStyle?: string | null;
+  /** `LetteringStyle`: the shopper's own face choice, either script. */
+  readonly lettering?: string | null;
 }
 
 export interface StillRouteInput {
@@ -103,36 +120,32 @@ const KNOWN_CONSTRUCTIONS = new Set([
 const CONNECTED_LATIN_CONSTRUCTION = "classical";
 
 /**
- * The only Arabic letters a free prompt may draw: letters with no detached part
- * in any positional form (no dot, hamza, madda, inner stroke or separate
- * stroke). The value says whether the letter joins the letter after it
- * (Joining_Type D in ArabicShaping.txt); a letter that does not may only be
- * last, because the gap after it is a second piece of metal.
+ * The only Arabic letters a free prompt may draw: exactly the six a free prompt
+ * was ever measured drawing, and nothing admitted on shape alone. The SP-2d and
+ * SP-2f2 labs drew محمد and سلمى, which between them is م ح د س ل ى; every
+ * other letter of the Arabic script, proven or not, routes to the stencil.
  *
- * Measured by the SP-2d lab: م ح د س ل ى (محمد, سلمى). The rest are admitted on
- * shape alone, because they have no dot, hamza, madda or separate stroke in any
- * form. Everything else in the Arabic script - dotted letters, hamza and madda
- * letters, ك and ک (the inner stroke of final kaf), ٹ ڑ ڈ ۀ ۓ ۂ ٱ ٲ ۃ ڨ,
- * U+0750-077F, U+08A0-08FF - routes to the stencil.
+ * The value says whether the letter joins the letter after it (Joining_Type D
+ * in ArabicShaping.txt); a letter that does not may only be last, because the
+ * gap after it is a second piece of metal.
+ *
+ * An earlier version of this table also admitted ا ر ص ط ع ه و on the argument
+ * that they carry no dot, hamza, madda or separate stroke in any form. That is
+ * a claim about their shape, not a photograph anyone looked at: it made عمر,
+ * على, طه, هلا and علا free on evidence that does not exist. They route to the
+ * stencil until a lab draws them.
  *
  * U+0649 ALEF MAKSURA is Joining_Type=D in ArabicShaping.txt, but the Naskh and
  * Kufi faces pinned in `engines/caleums-arabic-v3` draw it final-only, so it is
- * treated as non-joining.
+ * treated as non-joining - which is also the only position سلمى measured it in.
  */
 const ARABIC_FREE_LETTERS: ReadonlyMap<number, boolean> = new Map([
-  [0x0627, false], // ARABIC LETTER ALEF (ا)
-  [0x062d, true], // ARABIC LETTER HAH (ح), measured
-  [0x062f, false], // ARABIC LETTER DAL (د), measured
-  [0x0631, false], // ARABIC LETTER REH (ر)
-  [0x0633, true], // ARABIC LETTER SEEN (س), measured
-  [0x0635, true], // ARABIC LETTER SAD (ص)
-  [0x0637, true], // ARABIC LETTER TAH (ط)
-  [0x0639, true], // ARABIC LETTER AIN (ع)
-  [0x0644, true], // ARABIC LETTER LAM (ل), measured
-  [0x0645, true], // ARABIC LETTER MEEM (م), measured
-  [0x0647, true], // ARABIC LETTER HEH (ه)
-  [0x0648, false], // ARABIC LETTER WAW (و)
-  [0x0649, false], // ARABIC LETTER ALEF MAKSURA (ى), measured, final-only
+  [0x062d, true], // ARABIC LETTER HAH (ح), محمد
+  [0x062f, false], // ARABIC LETTER DAL (د), محمد, final
+  [0x0633, true], // ARABIC LETTER SEEN (س), سلمى
+  [0x0644, true], // ARABIC LETTER LAM (ل), سلمى
+  [0x0645, true], // ARABIC LETTER MEEM (م), محمد, سلمى
+  [0x0649, false], // ARABIC LETTER ALEF MAKSURA (ى), سلمى, final-only
 ]);
 
 /**
@@ -169,6 +182,22 @@ const LATIN_FREE_LETTER = /^[A-Za-z]$/u;
  * leaves the tittle floating, which is a second piece of metal.
  */
 const LATIN_TITTLE = /^[ij]$/iu;
+
+/**
+ * The lettering the shop draws when the shopper picks nothing: "Classic", which
+ * `backendSpecification` stores as `lettering: "classic"` and, on an Arabic
+ * piece, as `arabicStyle: "contemporary"`. Read exactly the way the prompt
+ * compiler's `letteringStyle` reads it - `arabicStyle` unless it says "none",
+ * then `lettering` - so the route and the words agree on which face was asked
+ * for.
+ */
+const DEFAULT_LETTERING = new Set(["classic", "contemporary"]);
+
+/**
+ * The value `stoneCoverage`, `gemstone` and `arabicStyle` all use for "nothing
+ * chosen here".
+ */
+const NONE = "none";
 
 /**
  * Decide, before any spend, whether this name can be photographed from a free
@@ -292,6 +321,29 @@ export function stillRoute(input: StillRouteInput): StillRouteDecision {
       else if (LATIN_TITTLE.test(letter)) add("latin_tittle");
     }
   }
+
+  // 6. The piece itself: stoneless, in the construction's default face. Both
+  // labs drew only that piece, and on the free route neither the stones
+  // sentence nor the lettering brief has a stencil behind it to be checked
+  // against - the compiled free prompt is byte for byte the same whichever
+  // face the shopper picked, so a Diwani order photographed free would come
+  // back in whatever the construction paragraph asks for.
+  const coverage = specification.stoneCoverage ?? NONE;
+  const chosenStones = specification.gemstones?.length
+    ? specification.gemstones
+    : [specification.gemstone];
+  if (
+    coverage !== NONE ||
+    chosenStones.some((stone) => stone && stone !== NONE)
+  ) {
+    add("stones_not_proven");
+  }
+  const arabicStyle = specification.arabicStyle ?? "";
+  const face =
+    arabicStyle && arabicStyle !== NONE
+      ? arabicStyle
+      : (specification.lettering ?? "");
+  if (face && !DEFAULT_LETTERING.has(face)) add("lettering_not_default");
 
   return {
     route: reasons.length === 0 ? "free" : "stencil",

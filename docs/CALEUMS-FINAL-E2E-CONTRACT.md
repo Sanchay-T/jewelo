@@ -187,7 +187,11 @@ images the request carries are asserted to agree before the attempt is reserved
 `still_master_required`).
 
 OpenAI verification compares each generated still with the approved
-configuration, and with the identity silhouette on the stencil route. `ready`
+configuration and with the identity silhouette. It gets the silhouette on both
+routes: the route decides only what the image model is sent, and
+`apps/jobs/src/presentation.ts` hands the verifier `identity.url` either way, so
+a free still is still checked against the drawing the shop would have cut.
+`ready`
 requires exact spelling/script and identity, correct metal/stones and shot, a
 coherent pendant, exactly two connected jump rings with chain attachment, and no
 added letters, names, charms, or duplicates. On the free route the spelling

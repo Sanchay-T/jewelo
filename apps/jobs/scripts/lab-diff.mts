@@ -431,6 +431,8 @@ const ROUTE_EXPECTATIONS: readonly {
   language?: "ar" | "en";
   construction?: string;
   names?: { approvedEnglishText?: string; approvedArabicText?: string }[];
+  /** Extra specification fields this case turns on, merged over the defaults. */
+  specification?: Record<string, unknown>;
   route: "free" | "stencil";
   reason?: string;
 }[] = [
@@ -448,6 +450,26 @@ const ROUTE_EXPECTATIONS: readonly {
   { name: "OMar", language: "en", construction: "classical", route: "stencil", reason: "latin_inner_capital" },
   { name: "McDonald", language: "en", construction: "classical", route: "stencil", reason: "latin_inner_capital" },
   { label: "Omar approved as Tijani", name: "Omar", language: "en", construction: "classical", names: [{ approvedEnglishText: "Tijani" }], route: "stencil", reason: "approved_text_mismatch" },
+  // SP-2e2b: the five names the old shape-only allowlist would have sent to a
+  // free prompt on evidence nobody ever looked at. Each carries at least one of
+  // ا ر ص ط ع ه و.
+  { name: "عمر", construction: "classical", route: "stencil", reason: "arabic_letter_not_proven" },
+  { name: "على", construction: "classical", route: "stencil", reason: "arabic_letter_not_proven" },
+  { name: "طه", construction: "classical", route: "stencil", reason: "arabic_letter_not_proven" },
+  { name: "هلا", construction: "classical", route: "stencil", reason: "arabic_letter_not_proven" },
+  { name: "علا", construction: "classical", route: "stencil", reason: "arabic_letter_not_proven" },
+  // SP-2e2b: the labs drew stoneless pieces in the construction's default face
+  // only. A free prompt carries no stencil, so nothing behind the words holds
+  // the shop to the stones or the face the shopper picked.
+  { label: "Omar with accent diamonds", name: "Omar", language: "en", construction: "classical", specification: { stoneCoverage: "accent", gemstone: "lab-diamond" }, route: "stencil", reason: "stones_not_proven" },
+  { label: "Omar with three stones", name: "Omar", language: "en", construction: "classical", specification: { stoneCoverage: "partial-pave", gemstone: "none", gemstones: ["none", "ruby"] }, route: "stencil", reason: "stones_not_proven" },
+  { label: "Omar in Signature lettering", name: "Omar", language: "en", construction: "classical", specification: { arabicStyle: "none", lettering: "signature" }, route: "stencil", reason: "lettering_not_default" },
+  { label: "محمد in Diwani", name: "محمد", construction: "classical", specification: { arabicStyle: "diwani", lettering: "diwani" }, route: "stencil", reason: "lettering_not_default" },
+  { label: "محمد in Kufi", name: "محمد", construction: "classical", specification: { arabicStyle: "kufi", lettering: "kufi" }, route: "stencil", reason: "lettering_not_default" },
+  // What a shopper who picked no face and no stone really carries, as
+  // `backendSpecification` writes it: Classic lettering, stoneless.
+  { label: "Omar as the atelier stores a default order", name: "Omar", language: "en", construction: "classical", specification: { arabicStyle: "none", lettering: "classic", stoneCoverage: "none", gemstone: "none" }, route: "free" },
+  { label: "محمد as the atelier stores a default order", name: "محمد", construction: "diamond-rails", specification: { arabicStyle: "contemporary", lettering: "classic", stoneCoverage: "none", gemstone: "none" }, route: "free" },
 ];
 for (const expectation of ROUTE_EXPECTATIONS) {
   const decision = stillRoute({
@@ -457,6 +479,7 @@ for (const expectation of ROUTE_EXPECTATIONS) {
       layout: "single-name",
       construction: expectation.construction,
       names: expectation.names,
+      ...expectation.specification,
     },
   });
   const label = `${expectation.construction ?? "no construction"} ${expectation.label ?? expectation.name} routes ${expectation.route}`;
@@ -475,8 +498,12 @@ for (const expectation of ROUTE_EXPECTATIONS) {
  * Last, exactly the allowlist may route free; in the middle, exactly the
  * allowlist minus the letters that do not join forward.
  */
-const ARABIC_FREE = "ا ح د ر س ص ط ع ل م ه و ى".split(" ");
-const ARABIC_NON_JOINING = new Set("ا د ر و ى".split(" "));
+// SP-2e2b: exactly the six letters the labs drew (محمد, سلمى), in code-point
+// order, which is the order the walk below finds them in. The seven admitted on
+// shape alone - ا ر ص ط ع ه و - are gone, so عمر, على, طه, هلا and علا route to
+// the stencil.
+const ARABIC_FREE = "ح د س ل م ى".split(" ");
+const ARABIC_NON_JOINING = new Set("د ى".split(" "));
 const arabicBlocks: [number, number][] = [[0x0600, 0x06ff], [0x0750, 0x077f], [0x08a0, 0x08ff]];
 const freeAs = (wrap: (letter: string) => string): string[] => {
   const free: string[] = [];
@@ -739,13 +766,21 @@ for (const [label, run, want] of [
 /**
  * SP-2e2 / D-024: the switch itself, through the exact call
  * `executePresentationTask` makes for a studio still
- * (`repository.studioStillRoute(revision)`), not through `stillRoute` again.
+ * (`repository.studioStillRoute(revision, release)`), not through `stillRoute`
+ * again.
  *
  * With `STILL_FREE_ROUTE` off - what production runs until the switch is set -
  * every studio still is stencil, whatever the name. With it on, a proven-safe
  * name is photographed from the words and a dotted Arabic name still goes to
  * the stencil. The constructor takes no network: nothing here is paid and
  * nothing here connects.
+ *
+ * SP-2e2b adds the other half of the decision: the release. The live
+ * `image.packshot` releases write the stencil into the template prose, and such
+ * a template cannot compile free at all - the tag survives substitution and
+ * `compileStillPrompt` refuses the snapshot. So an allowlisted name pinned to
+ * one of them routes to the stencil and compiles there, which is the last pair
+ * of rows below.
  */
 const routeRevision = (approvedText: string, language: "en" | "ar") => ({
   id: "revision",
@@ -757,11 +792,21 @@ const routeRevision = (approvedText: string, language: "en" | "ar") => ({
     fingerprint: "fingerprint",
   },
 });
-for (const [name, language, freeRouteEnabled, want] of [
-  ["Omar", "en", false, "stencil"],
-  ["فاطمة", "ar", false, "stencil"],
-  ["Omar", "en", true, "free"],
-  ["فاطمة", "ar", true, "stencil"],
+/** The shape of the live `@v2`/`@v3` packshot releases: the prose names the
+ * stencil itself, where the baseline template leaves that to the compiler. */
+const LIVE_SHAPE_PACKSHOT = `${BASELINE_PROMPT_TEMPLATES["image.packshot"]}\nExact spelling and glyph order from @stencil.`;
+const routeRelease = (template: string) => ({
+  id: "release",
+  profile: "image.packshot" as const,
+  template,
+});
+for (const [name, language, freeRouteEnabled, template, want] of [
+  ["Omar", "en", false, BASELINE_PROMPT_TEMPLATES["image.packshot"], "stencil"],
+  ["فاطمة", "ar", false, BASELINE_PROMPT_TEMPLATES["image.packshot"], "stencil"],
+  ["Omar", "en", true, BASELINE_PROMPT_TEMPLATES["image.packshot"], "free"],
+  ["فاطمة", "ar", true, BASELINE_PROMPT_TEMPLATES["image.packshot"], "stencil"],
+  ["Omar", "en", true, LIVE_SHAPE_PACKSHOT, "stencil"],
+  ["محمد", "ar", true, LIVE_SHAPE_PACKSHOT, "stencil"],
 ] as const) {
   const repository = new SupabasePresentationRepository(
     "https://lab.invalid",
@@ -773,12 +818,97 @@ for (const [name, language, freeRouteEnabled, want] of [
     new Map<string, string>(),
     freeRouteEnabled,
   );
-  const got = repository.studioStillRoute(routeRevision(name, language));
-  const label = `studio ${name} classical with STILL_FREE_ROUTE=${freeRouteEnabled ? 1 : 0} routes ${want}`;
+  const live = template === LIVE_SHAPE_PACKSHOT;
+  const got = repository.studioStillRoute(
+    routeRevision(name, language),
+    routeRelease(template),
+  );
+  const label = `studio ${name} classical on the ${live ? "live-shape @v3" : "baseline"} packshot with STILL_FREE_ROUTE=${freeRouteEnabled ? 1 : 0} routes ${want}`;
   if (got === want) console.log(`MATCH  ${label}`);
   else {
     failed += 1;
     console.log(`DIFFER ${label}: got ${got}`);
+  }
+}
+
+/**
+ * And the reason that last pair matters: the same allowlisted name compiles on
+ * the stencil route against the live-shape template, and would be refused on
+ * the free one. Without the release in the decision, switching the route on
+ * would turn a proven-safe name into an uncompilable task.
+ */
+for (const [route, want] of [
+  ["stencil", "compiles"],
+  ["free", "still_unresolved_reference_tag:@stencil"],
+] as const) {
+  let got = "";
+  try {
+    compileStillPrompt({
+      profile: "image.packshot",
+      template: LIVE_SHAPE_PACKSHOT,
+      variables: buildPromptVariableSnapshot({
+        approvedName: "Omar",
+        language: "en",
+        route,
+        specification: {
+          construction: "classical",
+          arabicStyle: "none",
+          lettering: "classic",
+          layout: "single-name",
+          metalKarat: "18K",
+          metalColor: "yellow",
+          finish: "polished",
+          stoneCoverage: "none",
+          gemstone: "none",
+          sizeProfile: "classic",
+          dimensions: LAB_DIMENSIONS,
+          chain: { style: "cable", lengthCm: 45 },
+        },
+        presentationView: "studio",
+      }),
+      references: { stencil: route === "stencil", master: false, look: true, style: false, inspiration: false },
+    });
+    got = "compiles";
+  } catch (error) {
+    got = error instanceof Error ? error.message : String(error);
+  }
+  const label = `Omar on the live-shape @v3 packshot, ${route} route: ${want}`;
+  if (got === want) console.log(`MATCH  ${label}`);
+  else {
+    failed += 1;
+    console.log(`DIFFER ${label}: got ${got}`);
+  }
+}
+
+/**
+ * SP-2e2b: the mark the pre-spend pairing assertion in
+ * `apps/jobs/src/presentation.ts` reads. That assertion compares the stored
+ * `compiled_prompt` against the URLs the request carries, and it can only do
+ * that because the compiler leaves one readable label per image it numbered.
+ * Pinned here in both directions: every stencil compile says "(stencil)", every
+ * free compile says it nowhere, and every dependent compile says "(master)" on
+ * either route.
+ */
+for (const [label, text, wantStencil, wantMaster] of [
+  ["stencil studio packshot", compile({ file: "", construction: "classical", ...NAMES.asma!, metalColor: "yellow" }, "stencil"), true, false],
+  ["free studio packshot", compile({ file: "", construction: "classical", ...NAMES.asma!, metalColor: "yellow" }, "free"), false, false],
+  ...DEPENDENT_VIEWS.flatMap(([profile, view]) =>
+    (["stencil", "free"] as const).map((route) => [
+      `${route} ${profile}`,
+      compileDependent({ construction: "classical", ...NAMES.asma!, metalColor: "yellow" }, profile, view, route, { master: true, inspiration: false }).compiledPrompt,
+      route === "stencil",
+      true,
+    ] as const),
+  ),
+] as const) {
+  const gotStencil = text.includes("(stencil)");
+  const gotMaster = text.includes("(master)");
+  const line = `${label} names stencil=${gotStencil} master=${gotMaster}`;
+  if (gotStencil === wantStencil && gotMaster === wantMaster)
+    console.log(`MATCH  ${line}`);
+  else {
+    failed += 1;
+    console.log(`DIFFER ${line} (want stencil=${wantStencil} master=${wantMaster})`);
   }
 }
 
