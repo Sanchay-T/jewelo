@@ -11,8 +11,13 @@ import {
 /**
  * The runs a person has to look at.
  *
- * A run in `operator_review` is one the pipeline stopped on purpose: it has a
- * reason on the run row and, usually, a terminal code on the task that stopped.
+ * A run in `operator_review` is one a person has to look at, which is not the
+ * same as a run that has stopped: `refresh_run_status` writes that status as
+ * soon as ANY still task is blocked or failed, whatever its siblings are doing,
+ * so a run can sit in this queue while another view is still generating
+ * (staging run 217cb812, 24 Sep 2026; see `TERMINAL_RUN_STATUSES` in
+ * `apps/web/src/features/atelier/personalizedRun.ts`). It has a reason on the
+ * run row and, usually, a terminal code on the task that stopped.
  * Nothing in the shop could read either until now, so a stopped piece sat in
  * the database and nobody was told. This route publishes exactly the columns
  * the queue needs to say what happened and to offer the retry the database

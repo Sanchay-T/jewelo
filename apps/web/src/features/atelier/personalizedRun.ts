@@ -485,9 +485,16 @@ export function shouldStartRun(input: {
  * altogether is a page whose photographs turn into broken images five minutes
  * later.
  *
- * `PERSONALIZED_RUN_WATCH_MS` bounds the live poll of a run that has not
- * settled - the three-second read of a run nobody is advancing, which is what
- * that window was built for. It deliberately does not bound the settled
+ * `PERSONALIZED_RUN_WATCH_MS` bounds the three-second read, and only that: a
+ * run that has never settled stops being read at all when the window closes,
+ * and a run that has settled keeps being read but can no longer go back to the
+ * fast cadence, however it moves afterwards. That second half is `watchRun`'s
+ * `fastCadenceAllowed`, not this predicate, because the window closes while the
+ * watcher is running and tearing the watcher down to tell it would cost the
+ * Realtime subscription. Either way nothing polls Supabase every three seconds
+ * past the window - which is what that window was built for, whether the run
+ * nobody is advancing is stuck or was retried by an operator an hour later.
+ * It deliberately does not bound the settled
  * refresh: that costs one read per signed-URL window, and ending it was the
  * cliff moving rather than going away - a shop tablet left on a finished
  * preview showed four broken photographs about thirty-five minutes in, because

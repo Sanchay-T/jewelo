@@ -483,9 +483,17 @@ export function usePersonalizedPreview(input: {
   // view unsettles a settled run, and reading the live flag here made the watch
   // stop dead past the window - photographs expiring, spinner never resolving.
   // The memory is per run id, so a new run starts under the window rule again.
+  //
+  // Past the window the watcher survives only to re-sign, so it must not go
+  // back to the three-second poll if that run un-settles: `watchRun` reads this
+  // ref at that moment. A ref, not a prop, because the effect below must not
+  // re-run when the window closes - re-running it tears the Realtime
+  // subscription down and back up for nothing.
   const everSettled = useRef<{ runId?: string; settled: boolean }>({
     settled: false,
   });
+  const watchWindowClosedRef = useRef(watchWindowClosed);
+  watchWindowClosedRef.current = watchWindowClosed;
   if (everSettled.current.runId !== runId)
     everSettled.current = { runId, settled: false };
   if (run?.settled && run.runId === runId) everSettled.current.settled = true;
@@ -500,6 +508,7 @@ export function usePersonalizedPreview(input: {
     return watchRun({
       deps,
       handles: { runId, designId },
+      fastCadenceAllowed: () => !watchWindowClosedRef.current,
       onUpdate: (next) => {
         if (!next) return;
         setRun(next);

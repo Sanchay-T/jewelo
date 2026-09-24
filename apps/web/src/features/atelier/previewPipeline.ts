@@ -403,6 +403,14 @@ export interface WatchOptions {
   onUpdate: (run: PersonalizedRun | undefined) => void;
   onError?: (error: unknown) => void;
   intervalMs?: number;
+  /**
+   * Whether the live three-second poll may still be armed. Read at the moment a
+   * run un-settles, not once at mount, because the answer changes under a
+   * watcher that is deliberately not torn down: the page's reading window
+   * (`PERSONALIZED_RUN_WATCH_MS`) closes while a settled run keeps its cheap
+   * re-signing read. Absent means always allowed.
+   */
+  fastCadenceAllowed?: () => boolean;
 }
 
 /**
@@ -480,9 +488,18 @@ export function watchRun(options: WatchOptions): () => void {
    * (the stale sweeper cannot do this: `recover_stale_generation_tasks` only
    * touches queued, generating, verifying and retrying rows). Left on the slow
    * cadence the page would have shown that at up to four minutes' delay.
+   *
+   * Past the page's reading window that trade is off: nobody is standing in
+   * front of this tab, and the only reason the watcher is still alive there is
+   * to keep re-signing the URLs, which the settled cadence already does. A run
+   * that un-settles after the window - an operator retry, the sweeper re-queuing
+   * a task - would otherwise re-arm a three-second read of Supabase with no
+   * ceiling for as long as the tab stays open. So the window vetoes the
+   * narrowing and the slow cadence simply continues.
    */
   function resumeFastCadence() {
     if (stopped || !settledCadence) return;
+    if (options.fastCadenceAllowed && !options.fastCadenceAllowed()) return;
     settledCadence = false;
     clearInterval(timer);
     timer = setInterval(refresh, interval);

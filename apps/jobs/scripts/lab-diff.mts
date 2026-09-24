@@ -448,6 +448,20 @@ const ROUTE_DEFAULT_SPEC = {
 } as const;
 
 /**
+ * The whole reason set, not a membership test.
+ *
+ * Fourth adversarial pass, m3: these checks used `includes`, so a case that
+ * named one reason passed while the route was refusing for two, and a case that
+ * named none was only ever checked through `route === "free"` - which says
+ * nothing, because `still-route.ts` writes `free` exactly when the reason list
+ * is empty. Comparing the sorted lists is the only form of this check that can
+ * fail when a rule starts refusing for a reason nobody expected.
+ */
+const sameReasons = (got: readonly string[], want: readonly string[]) =>
+  got.length === want.length &&
+  [...got].sort().every((reason, index) => reason === [...want].sort()[index]);
+
+/**
  * The route rules the free-route lab put in place, the cells it kept free, and
  * the unproven cases closed wide after review.
  */
@@ -460,7 +474,8 @@ const ROUTE_EXPECTATIONS: readonly {
   /** Extra specification fields this case turns on, merged over the defaults. */
   specification?: Record<string, unknown>;
   route: "free" | "stencil";
-  reason?: string;
+  /** Every reason the route must give, in full; see `sameReasons`. */
+  reason?: string | readonly string[];
 }[] = [
   { name: "ليلى", construction: "classical", route: "stencil", reason: "arabic_letter_not_proven" },
   { name: "محمد", construction: "origami-ribbon", route: "stencil", reason: "arabic_print_construction:origami-ribbon" },
@@ -477,8 +492,10 @@ const ROUTE_EXPECTATIONS: readonly {
   { label: "محمد (presentation forms)", name: "\ufee3\ufea4\ufee4\ufeaa", construction: "classical", route: "stencil", reason: "arabic_presentation_form" },
   { name: "ملأ", construction: "classical", route: "stencil", reason: "arabic_letter_not_proven" }, // final أ is its only problem
   { label: "محمد (shadda)", name: "مح\u0651مد", construction: "classical", route: "stencil", reason: "combining_mark" },
-  { label: "bare fatha U+064E", name: "\u064e", construction: "classical", route: "stencil", reason: "no_letter" },
-  { label: "Aylı + U+0307 + n", name: "Ayl\u0131\u0307n", language: "en", construction: "classical", route: "stencil", reason: "combining_mark" },
+  // Fourth adversarial pass, m3: the whole refusal, not one of it. A bare mark
+  // is both a combining mark and a name with no letter in it at all.
+  { label: "bare fatha U+064E", name: "\u064e", construction: "classical", route: "stencil", reason: ["combining_mark", "no_letter"] },
+  { label: "Aylı + U+0307 + n", name: "Ayl\u0131\u0307n", language: "en", construction: "classical", route: "stencil", reason: ["combining_mark", "latin_letter_not_proven"] },
   { name: "OMar", language: "en", construction: "classical", route: "stencil", reason: "latin_inner_capital" },
   { name: "McDonald", language: "en", construction: "classical", route: "stencil", reason: "latin_inner_capital" },
   { label: "Omar approved as Tijani", name: "Omar", language: "en", construction: "classical", names: [{ approvedEnglishText: "Tijani" }], route: "stencil", reason: "approved_text_mismatch" },
@@ -542,7 +559,14 @@ for (const expectation of ROUTE_EXPECTATIONS) {
     },
   });
   const label = `${expectation.construction ?? "no construction"} ${expectation.label ?? expectation.name} routes ${expectation.route}`;
-  const reasonOk = !expectation.reason || decision.reasons.includes(expectation.reason);
+  const reasonOk = expectation.reason
+    ? sameReasons(
+        decision.reasons,
+        typeof expectation.reason === "string"
+          ? [expectation.reason]
+          : expectation.reason,
+      )
+    : true;
   if (decision.route === expectation.route && reasonOk) {
     console.log(`MATCH  ${label}${expectation.reason ? ` (${expectation.reason})` : ""}`);
   } else {
@@ -887,25 +911,31 @@ const routeRelease = (template: string) => ({
   template,
 });
 const BASELINE_PACKSHOT = BASELINE_PROMPT_TEMPLATES["image.packshot"];
-for (const [name, language, construction, freeRouteEnabled, template, want] of [
-  ["Omar", "en", "classical", false, BASELINE_PACKSHOT, "stencil"],
-  ["فاطمة", "ar", "classical", false, BASELINE_PACKSHOT, "stencil"],
-  ["Omar", "en", "classical", true, BASELINE_PACKSHOT, "free"],
-  ["فاطمة", "ar", "classical", true, BASELINE_PACKSHOT, "stencil"],
-  ["Omar", "en", "classical", true, LIVE_SHAPE_PACKSHOT, "stencil"],
-  ["محمد", "ar", "classical", true, LIVE_SHAPE_PACKSHOT, "stencil"],
+/**
+ * Fourth adversarial pass, m3: the last column is what the route must refuse
+ * for, in full. It is `undefined` only where this loop already knows the whole
+ * answer - the switch being off and the release naming the stencil each end the
+ * decision with one reason of their own - and on a free row, which has none.
+ */
+for (const [name, language, construction, freeRouteEnabled, template, want, refusal] of [
+  ["Omar", "en", "classical", false, BASELINE_PACKSHOT, "stencil", undefined],
+  ["فاطمة", "ar", "classical", false, BASELINE_PACKSHOT, "stencil", undefined],
+  ["Omar", "en", "classical", true, BASELINE_PACKSHOT, "free", undefined],
+  ["فاطمة", "ar", "classical", true, BASELINE_PACKSHOT, "stencil", "arabic_letter_not_proven"],
+  ["Omar", "en", "classical", true, LIVE_SHAPE_PACKSHOT, "stencil", undefined],
+  ["محمد", "ar", "classical", true, LIVE_SHAPE_PACKSHOT, "stencil", undefined],
   // SP-2e2c: with the switch on, framed-minimal Arabic goes to the stencil
   // (`arabic_one_piece_unproven:framed-minimal`, pinned by reason above) while
   // diamond-rails and classical Arabic stay free. With it off, all three are
   // stencil, exactly as before the switch existed.
-  ["محمد", "ar", "framed-minimal", true, BASELINE_PACKSHOT, "stencil"],
-  ["سلمى", "ar", "framed-minimal", true, BASELINE_PACKSHOT, "stencil"],
-  ["محمد", "ar", "diamond-rails", true, BASELINE_PACKSHOT, "free"],
-  ["محمد", "ar", "classical", true, BASELINE_PACKSHOT, "free"],
-  ["محمد", "ar", "framed-minimal", false, BASELINE_PACKSHOT, "stencil"],
-  ["سلمى", "ar", "framed-minimal", false, BASELINE_PACKSHOT, "stencil"],
-  ["محمد", "ar", "diamond-rails", false, BASELINE_PACKSHOT, "stencil"],
-  ["محمد", "ar", "classical", false, BASELINE_PACKSHOT, "stencil"],
+  ["محمد", "ar", "framed-minimal", true, BASELINE_PACKSHOT, "stencil", "arabic_one_piece_unproven:framed-minimal"],
+  ["سلمى", "ar", "framed-minimal", true, BASELINE_PACKSHOT, "stencil", "arabic_one_piece_unproven:framed-minimal"],
+  ["محمد", "ar", "diamond-rails", true, BASELINE_PACKSHOT, "free", undefined],
+  ["محمد", "ar", "classical", true, BASELINE_PACKSHOT, "free", undefined],
+  ["محمد", "ar", "framed-minimal", false, BASELINE_PACKSHOT, "stencil", undefined],
+  ["سلمى", "ar", "framed-minimal", false, BASELINE_PACKSHOT, "stencil", undefined],
+  ["محمد", "ar", "diamond-rails", false, BASELINE_PACKSHOT, "stencil", undefined],
+  ["محمد", "ar", "classical", false, BASELINE_PACKSHOT, "stencil", undefined],
 ] as const) {
   const repository = new SupabasePresentationRepository(
     "https://lab.invalid",
@@ -924,17 +954,15 @@ for (const [name, language, construction, freeRouteEnabled, template, want] of [
   );
   // SP-2e2e: the repository's own two answers carry a reason of their own, so
   // every stencil studio still says why it is one.
-  const wantReason = !freeRouteEnabled
+  const wantReason: string | undefined = !freeRouteEnabled
     ? "free_route_off"
     : live
       ? "release_names_stencil"
-      : undefined;
+      : refusal;
   const label = `studio ${name} ${construction} on the ${live ? "stencil-naming @v2/@v3-shape" : "baseline"} packshot with STILL_FREE_ROUTE=${freeRouteEnabled ? 1 : 0} routes ${want}${wantReason ? ` (${wantReason})` : ""}`;
   if (
     got.route === want &&
-    (!wantReason || got.reasons.includes(wantReason)) &&
-    // A free route is a route with nothing against it: no reason, ever.
-    (got.route === "stencil" || got.reasons.length === 0)
+    sameReasons(got.reasons, wantReason ? [wantReason] : [])
   )
     console.log(`MATCH  ${label}`);
   else {
