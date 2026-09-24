@@ -54,6 +54,12 @@ JEWELO_ENV_FILE=.env.staging bash scripts/digitalocean/deploy.sh staging codex/o
 bash scripts/digitalocean/smoke.sh https://jewelo-staging-gqumd.ondigitalocean.app
 ```
 
+When a change ships code and a migration together, deploy the code first and
+apply the migration after: new code against a database that is still behind
+stops each photograph once with a retryable code, while a migration applied
+under the old code can loop the photographs already in flight until the deploy
+lands.
+
 `deploy.sh` refuses with exit 2 when the app's newest deployment is still
 `PENDING_BUILD`, `BUILDING`, `PENDING_DEPLOY` or `DEPLOYING`, and prints that
 deployment's id.

@@ -46,7 +46,7 @@ import s from "./PreviewRequestQueue.module.css";
  */
 const PLAIN_WORDS: Readonly<Record<string, string>> = {
   identity_no_ring_seat:
-    "The name offers no place for the rings. Make this one by hand.",
+    "The name offers no place for the rings.",
   identity_ring_gate_failed: "The rings will not sit safely on this name.",
   identity_ring_anchor_missing: "The rings will not sit safely on this name.",
   identity_ring_hole_too_small: "The ring holes come out too small to thread.",
@@ -58,7 +58,7 @@ const PLAIN_WORDS: Readonly<Record<string, string>> = {
   identity_ring_welded_to_glyph: "The rings run into a letter.",
   identity_ring_punched_ink: "The rings would cut into a letter.",
   identity_bar_fallback:
-    "The letters would not join, so a plain bar was used instead. Check this one by hand.",
+    "The letters would not join, so a plain bar was used instead.",
   identity_bridge_failed: "The letters would not join into one piece.",
   identity_bridge_moved_ink: "Joining the letters moved them out of shape.",
   identity_shaping_gate_failed: "The letter shapes did not come out clean.",
@@ -71,7 +71,7 @@ const PLAIN_WORDS: Readonly<Record<string, string>> = {
   identity_font_bytes_mismatch: "The lettering file does not match the one on record.",
   identity_gate_failed: "The name did not pass the shape checks.",
   identity_reuse_lettering_mismatch:
-    "The lettering for this style changed after the first photograph, so the other views could not match it. Start the request again.",
+    "The lettering for this style changed after the first photograph, so the other views could not match it. A new request from the shopper will be made fresh.",
   identity_verification_failed:
     "The photograph does not match the shape of the name.",
   identity_not_one_piece:
@@ -85,11 +85,11 @@ const PLAIN_WORDS: Readonly<Record<string, string>> = {
   runtime_policy_missing:
     "The shop's spending settings are missing, so the photograph was stopped. This needs a fix in the shop's settings; once fixed, photograph it again.",
   provider_attempt_budget_exhausted:
-    "Every paid try for this photograph was used. Look at the last one, or make this one by hand.",
+    "Every paid try for this photograph was used. Look at the last one.",
   stored_provider_output_download_failed:
     "A finished photograph could not be read back from storage. Look at it before trying again.",
   provider_attempt_checkpoint_missing:
-    "A finished photograph has no record of how it was made. Make this one by hand.",
+    "A finished photograph has no record of how it was made.",
   // The checks a finished photograph goes through, stopped by a bad moment
   // rather than a verdict: each head is what `errorClass` makes of the reader's
   // own message, so running the photograph again is the right move.
@@ -135,26 +135,26 @@ const PLAIN_WORDS: Readonly<Record<string, string>> = {
   // SP-2e1: the recipe and the photograph's inputs disagree about how this
   // pendant is to be made, which no re-run changes.
   still_free_route_carries_stencil:
-    "The recipe and the photograph's inputs do not agree. Make this one by hand.",
+    "The recipe and the photograph's inputs do not agree.",
   still_stencil_required:
-    "The recipe and the photograph's inputs do not agree. Make this one by hand.",
+    "The recipe and the photograph's inputs do not agree.",
   // SP-2e1c: the shop's photograph settings are missing or out of range, which
   // a person fixes in the settings and then runs again.
   still_model_required:
     "The shop's photograph settings are incomplete. Fix the settings, then photograph it again.",
   unsupported_still_aspect_ratio:
     "The shop's photograph settings ask for a shape the workshop cannot take. Fix the settings, then photograph it again.",
-  task_prompt_release_mismatch: "The recipe versions do not line up. Make this one by hand.",
-  prompt_snapshot_lineage_mismatch: "The recipe versions do not line up. Make this one by hand.",
+  task_prompt_release_mismatch: "The recipe versions do not line up.",
+  prompt_snapshot_lineage_mismatch: "The recipe versions do not line up.",
   pre_spend_gate_failed: "The piece was stopped before anything was spent.",
   operator_rejected: "Somebody in the shop stopped this one.",
   cancelled: "This one was stopped.",
   // Every other code the still and film jobs can write, derived from their
   // error strings and the sweeper's writes (RC-1d).
   approved_text_missing:
-    "The piece has no approved name to work from. Make this one by hand.",
+    "The piece has no approved name to work from.",
   decodemask:
-    "A shape check on the name failed inside the workshop tools. Make this one by hand.",
+    "A shape check on the name failed inside the workshop tools.",
   dependency_cancelled:
     "This view waits on the studio photograph, which was stopped.",
   dependency_failed:
@@ -162,47 +162,45 @@ const PLAIN_WORDS: Readonly<Record<string, string>> = {
   identity_anchor_upload_failed:
     "The name outline could not be saved. Photograph it again.",
   identity_artifact_lineage_missing:
-    "The name outline has no record of where it came from. Start the request again.",
+    "The name outline has no record of where it came from. A new request from the shopper will be made fresh.",
   identity_carrier_moved_ink:
-    "Joining the letters moved them out of shape. Make this one by hand.",
+    "Joining the letters moved them out of shape.",
   identity_carrier_no_room:
-    "The name leaves no room for the piece that joins it. Make this one by hand.",
+    "The name leaves no room for the piece that joins it.",
   identity_label4_size:
-    "A shape check on the name failed inside the workshop tools. Make this one by hand.",
+    "A shape check on the name failed inside the workshop tools.",
   identity_pipeline_release_mismatch:
-    "The workshop tools changed after this piece was started. Start the request again.",
+    "The workshop tools changed after this piece was started. A new request from the shopper will be made fresh.",
   identity_raster_channels:
-    "The name outline came out in the wrong format. Make this one by hand.",
+    "The name outline came out in the wrong format.",
   identity_recentre_too_large:
-    "The name would sit too far off centre. Make this one by hand.",
+    "The name would sit too far off centre.",
   identity_reuse_artifact_mismatch:
-    "The other views could not find the studio photograph's name outline. Start the request again.",
+    "The other views could not find the studio photograph's name outline. A new request from the shopper will be made fresh.",
   identity_reuse_download_failed:
     "The studio photograph's name outline could not be read back. Photograph it again.",
   identity_reuse_fingerprint_mismatch:
-    "The other views' name outline does not match the studio photograph. Start the request again.",
+    "The other views' name outline does not match the studio photograph. A new request from the shopper will be made fresh.",
   identity_reuse_font_mismatch:
-    "The lettering changed after the studio photograph. Start the request again.",
+    "The lettering changed after the studio photograph. A new request from the shopper will be made fresh.",
   identity_reuse_png_format_mismatch:
-    "The studio photograph's name outline is in the wrong format. Start the request again.",
+    "The studio photograph's name outline is in the wrong format. A new request from the shopper will be made fresh.",
   identity_reuse_png_mismatch:
-    "The studio photograph's name outline does not match its record. Start the request again.",
+    "The studio photograph's name outline does not match its record. A new request from the shopper will be made fresh.",
   identity_reuse_report_mismatch:
-    "The studio photograph's name outline does not match its record. Start the request again.",
+    "The studio photograph's name outline does not match its record. A new request from the shopper will be made fresh.",
   identity_reuse_route_mismatch:
-    "This view was set up to be photographed differently from the studio photograph, so it would show a different piece. Start the request again.",
+    "This view was set up to be photographed differently from the studio photograph, so it would show a different piece. A new request from the shopper will be made fresh.",
   identity_reuse_revision_mismatch:
-    "The piece was changed after the studio photograph. Start the request again.",
+    "The piece was changed after the studio photograph. A new request from the shopper will be made fresh.",
   identity_reuse_source_asset_mismatch:
-    "The studio photograph did not pass every check, so the other views cannot copy it. Start the request again.",
+    "The studio photograph did not pass every check, so the other views cannot copy it. A new request from the shopper will be made fresh.",
   identity_reuse_source_task_mismatch:
-    "The other views point at the wrong studio photograph. Start the request again.",
+    "The other views point at the wrong studio photograph. A new request from the shopper will be made fresh.",
   identity_reuse_unsupported_input:
-    "The studio photograph's name outline cannot be reused. Start the request again.",
-  injected_media_failure:
-    "A sample run stopped on purpose. Nothing was charged and no piece was made.",
+    "The studio photograph's name outline cannot be reused. A new request from the shopper will be made fresh.",
   inspiration_reference_invalid:
-    "The shopper's inspiration photo cannot be used. Make this one by hand.",
+    "The shopper's inspiration photo cannot be used.",
   inspiration_reference_missing:
     "The shopper's inspiration photo could not be opened. Photograph it again; if it stops again, make this one by hand.",
   look_reference_checksum_mismatch:
@@ -212,7 +210,7 @@ const PLAIN_WORDS: Readonly<Record<string, string>> = {
   look_reference_unreadable:
     "The reference photograph for this style could not be read. Photograph it again.",
   measuremask:
-    "A shape check on the name failed inside the workshop tools. Make this one by hand.",
+    "A shape check on the name failed inside the workshop tools.",
   openai_image_edit_omitted:
     "The photograph came back empty. Photograph it again.",
   openai_input_download_failed:
@@ -221,30 +219,22 @@ const PLAIN_WORDS: Readonly<Record<string, string>> = {
     "The check of the finished photograph came back unreadable. Photograph it again.",
   photomask:
     "A finished photograph could not be measured. Photograph it again.",
-  prompt_release_not_found:
-    "The recipe for this photograph is missing. This needs a fix in the shop's settings; once fixed, photograph it again.",
   prompt_snapshot_compiler_stale:
-    "The recipe for this piece was written by an older version. Start the request again.",
+    "The recipe for this piece was written by an older version. A new request from the shopper will be made fresh.",
   prompt_snapshot_rejected:
-    "The recipe for this piece was refused. Start the request again.",
+    "The recipe for this piece was refused. A new request from the shopper will be made fresh.",
   prompt_snapshot_schema_behind:
     "The shop's records are behind this version. Bring the database up to date, then photograph it again.",
   provider_output_checkpoint_conflict:
     "Two copies of the same photograph were saved. Check it before running it again.",
-  revision_not_found:
-    "The piece this photograph belongs to is missing. Start the request again.",
-  run_not_found:
-    "The request this photograph belongs to is missing. Start the request again.",
   signed_storage_path_invalid:
-    "A stored file has an invalid address. Make this one by hand.",
+    "A stored file has an invalid address.",
   signed_storage_url_missing:
     "A stored file could not be opened just then. Photograph it again.",
   spend_ceiling_not_set:
     "The shop's spending settings are outside what this setup allows. This needs a fix in the shop's settings; once fixed, photograph it again.",
   style_anchor_unreadable:
     "The studio photograph this view copies could not be read. Photograph it again.",
-  task_not_found:
-    "This photograph's record is missing. Start the request again.",
   unknown_pinned_identity_font:
     "The lettering this name needs is not installed. This needs a fix in the shop's settings; once fixed, photograph it again.",
   unknown: "It stopped for a reason with no words yet. Read the code below.",

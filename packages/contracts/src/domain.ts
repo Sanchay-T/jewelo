@@ -815,19 +815,23 @@ export const DETERMINISTIC_REFUSAL_CODES = [
   "prompt_snapshot_compiler_stale",
   "prompt_snapshot_rejected",
   "signed_storage_path_invalid",
-  // The rows this photograph belongs to are gone.
-  "task_not_found",
-  "run_not_found",
-  "revision_not_found",
+  // SP-2e1g: `task_not_found`, `run_not_found` and `revision_not_found` used to
+  // sit here. They are thrown by `SupabasePresentationRepository.load()`, which
+  // runs at the top of `executePresentationTask` before any gate and outside
+  // every try, so the throw escapes to Inngest (retries: 0) and nothing ever
+  // writes them to `terminal_error_code`. A list entry for a code no row can
+  // hold is a claim the queue cannot honour, so they are gone.
   // The studio photograph was cancelled, so this view has nothing to copy.
   // `dependency_blocked` and `dependency_failed` are not here: once the studio
   // photograph is retried and ready, retrying the view is what moves it.
   "dependency_cancelled",
   // Configuration codes (`spend_ceiling_not_set`, `runtime_policy_missing`,
   // `look_reference_missing`, `look_reference_checksum_mismatch`,
-  // `unknown_pinned_identity_font`, `prompt_release_not_found`) are not here
-  // either: each is checked again on every dispatch, so once a person fixes
-  // the setting a retry works.
+  // `unknown_pinned_identity_font`) are not here either: each is checked again
+  // on every dispatch, so once a person fixes the setting a retry works.
+  // `prompt_release_not_found` used to be named in that sentence as if a retry
+  // would work; it is thrown by `load()` on the same escaping path as the three
+  // above, so no row can carry it and there is nothing to retry (SP-2e1g).
 ] as const;
 
 export type DeterministicRefusalCode =
