@@ -55,3 +55,16 @@ Full-size PNGs stay local in `img/` (gitignored by `docs/goals/road-to-gold/lab-
 ## Verdicts
 
 Not scored here. This lab generated the stills and never judged them; a blind `viewer` scores dot attachment, spelling, one piece and the ring tabs from the pixels, A against B against the UNIV-1 baseline for the same name.
+
+## Verdict (lead, 24 Sep)
+
+Blind viewer, one session, the 32 UNIV-2 stills mixed with the 16 UNIV-1 stills of the same 8 names (`blind-scores.md`, `blind-map.json`):
+
+| prompt | spelled | one piece | both | presentable |
+|---|---|---|---|---|
+| production free prompt (UNIV-1) | 16/16 | 8/16 | 8/16 | 8/16 |
+| wording A | 15/16 | 14/16 | 14/16 | 14/16 |
+| wording B | 14/16 | 14/16 | 13/16 | 13/16 |
+
+Wording A is taken. Its two misses: عائشة b (the three dots of ش float) and شيخة a (medial ي with one dot, reads ب).
+The dominant remaining defect across all three is the three-dot cluster of ش floating; dots drawn as spheres on posts almost always attach.
