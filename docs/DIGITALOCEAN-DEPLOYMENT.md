@@ -518,7 +518,7 @@ Measured on 8 September 2026 against staging deployment `8b8aa87a-820d-4194-884a
 - A response that writes one byte every 10 s survived to 900 s, the probe's own cap, so the 600 s is an idle timer that each chunk resets, not a total-request wall.
 - The app spec has no timeout field; the only `timeout_seconds` is the health check's own 5 s. The 600 s is a platform constant that can change without notice, so the executor cap stays well below it rather than tuned to it.
 
-The executor cap of 484 s (`pipelineLimits.executorRequestCapSeconds`, since 24 September one retry per vision read plus a 2 s pause after a 429) is therefore inside the bound with 116 s to spare, and no worker component or heartbeat is needed before the first production-provider run.
+The executor cap of 482 s (`pipelineLimits.executorRequestCapSeconds`: since 24 September the piece and name reads run concurrently under a 120 s vision timeout, each with one retry and a 2 s pause after a 429) is therefore inside the bound with 118 s to spare, and no worker component or heartbeat is needed before the first production-provider run.
 If a step ever needs more than 600 s of silence, a streaming heartbeat is the mechanism, and this section must be re-measured first.
 
 ## Inngest component (added 7 September 2026)

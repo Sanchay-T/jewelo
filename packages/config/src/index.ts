@@ -913,11 +913,11 @@ export const pipelineLimitsSchema = z
     /** Hard ceiling on one provider image request, aborted by the adapter. */
     providerRequestTimeoutMs: positiveInt.min(30_000).max(600_000),
     /**
-     * Hard ceiling on one vision request, aborted by the adapter. Both vision
-     * calls a still can make use it: `OpenAIStudioVerifier.verify` and
-     * `OpenAINameReader.read` in `packages/ai/src/studio.ts`. A vision read
-     * answers in seconds where an image edit takes minutes, so it is its own
-     * number rather than the image timeout reused.
+     * Hard ceiling on one vision request, aborted by the adapter:
+     * `OpenAIStudioVerifier.verify`, `OpenAINameReader.read` and
+     * `OpenAIPieceReader.read` in `packages/ai/src/studio.ts`. 120 s since the
+     * piece read went to high detail (6f1bfc5) and about one in ten reads
+     * outran 60 s. It is its own number rather than the image timeout reused.
      */
     visionRequestTimeoutMs: positiveInt.min(10_000).max(300_000),
     /**
@@ -933,6 +933,19 @@ export const pipelineLimitsSchema = z
      * `executorRequestCapSeconds` for every read that may repeat.
      */
     visionRetryDelayMs: positiveInt.min(500).max(10_000),
+    /**
+     * Ceiling on one storage download or upload made by the still job (stored
+     * output, stencil, anchors, look and inspiration references, finished and
+     * rejected stills). A hung transfer fails instead of holding the dispatch;
+     * the transfers are the local work `localWorkAllowanceMs` stands for.
+     */
+    storageRequestTimeoutMs: positiveInt.min(5_000).max(120_000),
+    /**
+     * How many times the sweeper may hand one stored photograph (task and
+     * attempt) back for verification before the job stops at operator review
+     * with the attempt charged at its estimate (`stored_output_resume_exhausted`).
+     */
+    storedOutputResumeLimit: positiveInt.max(10),
     /** Responses output ceiling, including reasoning tokens, for a name read. */
     nameReaderMaxOutputTokens: positiveInt.min(64).max(2_048),
     /**
@@ -1033,19 +1046,21 @@ export const pipelineLimitsSchema = z
      * its HTTP request, in whole seconds, and the value the executor route's
      * `maxDuration` must carry.
      *
-     * One pass of a still makes, in sequence, the image edit
-     * (`OpenAIStillAdapter.generate`) and then, in real mode, two bounded
-     * vision reads: the blind one-piece read (`OpenAIPieceReader.read`) and the
-     * engraved-name read (`OpenAINameReader.read`). The verifier that used to
-     * be a third is the mock since 2026-08-27 and makes no request. Each read
-     * may be repeated `visionReadRetries` times after a transient failure
-     * (`readVision` in `apps/jobs/src/presentation.ts`), so the pass holds one
-     * provider timeout plus 2 x (1 + visionReadRetries) vision timeouts, each
-     * aborted by its own, plus 2 x visionReadRetries rate-limit pauses of
-     * `visionRetryDelayMs`, plus the local work `localWorkAllowanceMs` covers.
-     * With the defaults: 180 + 4 x 60 + 2 x 2 + 60 = 484 s. Wiring a live verifier
-     * back in makes the reads three and this factor must follow. Anything
-     * less is a cap that kills a request the pipeline is still legally inside.
+     * One pass of a still makes the image edit (`OpenAIStillAdapter.generate`)
+     * and then, in real mode, two bounded vision reads that run concurrently:
+     * the blind one-piece read (`OpenAIPieceReader.read`) and the engraved-name
+     * read (`OpenAINameReader.read`). Concurrent reads count once. Each read may
+     * be repeated `visionReadRetries` times after a transient failure, after a
+     * `visionRetryDelayMs` pause when rate limited (`readVision` in
+     * `apps/jobs/src/presentation.ts`), and the repeats also overlap. So the
+     * pass holds one provider timeout, plus (1 + visionReadRetries) vision
+     * timeouts, plus visionReadRetries pauses, plus the local work
+     * `localWorkAllowanceMs` covers. With the defaults:
+     * 180 + 2 x 120 + 1 x 2 + 60 = 482 s, inside the 600 s edge idle timeout.
+     * The verifier is the mock since 2026-08-27 and makes no request; if it is
+     * ever live again it must join the concurrent group, or this sum must
+     * count it as a sequential read. Anything less is a cap that kills a
+     * request the pipeline is still legally inside.
      *
      * This is the cap for one pass, not for a dispatch that regenerates. A
      * refused piece or a misread name regenerates in place inside the same
@@ -1058,8 +1073,8 @@ export const pipelineLimitsSchema = z
      */
     executorRequestCapSeconds: Math.ceil(
       (value.providerRequestTimeoutMs +
-        2 * (1 + value.visionReadRetries) * value.visionRequestTimeoutMs +
-        2 * value.visionReadRetries * value.visionRetryDelayMs +
+        (1 + value.visionReadRetries) * value.visionRequestTimeoutMs +
+        value.visionReadRetries * value.visionRetryDelayMs +
         value.localWorkAllowanceMs) /
         1_000,
     ),
@@ -1104,9 +1119,11 @@ export type PipelineLimits = z.infer<typeof pipelineLimitsSchema>;
 
 export const pipelineLimits: PipelineLimits = pipelineLimitsSchema.parse({
   providerRequestTimeoutMs: 180_000,
-  visionRequestTimeoutMs: 60_000,
+  visionRequestTimeoutMs: 120_000,
   visionReadRetries: 1,
   visionRetryDelayMs: 2_000,
+  storageRequestTimeoutMs: 30_000,
+  storedOutputResumeLimit: 3,
   nameReaderMaxOutputTokens: 2_048,
   pieceReaderMaxOutputTokens: 8_192,
   staleRecoveryMarginMs: 120_000,

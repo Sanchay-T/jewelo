@@ -108,6 +108,22 @@ const PLAIN_WORDS: Readonly<Record<string, string>> = {
   fetch_failed: "A connection dropped part way. Photograph it again.",
   the_operation_was_aborted:
     "A step took too long and was stopped. Photograph it again.",
+  terminated: "A connection was cut part way. Photograph it again.",
+  openai_image_edit_failed:
+    "The photograph could not be taken just then. Photograph it again.",
+  asset_upload_failed:
+    "A finished photograph could not be saved. Photograph it again.",
+  rejected_asset_upload_failed:
+    "A refused photograph could not be kept for review. Photograph it again.",
+  // A reply that stopped part way through, as the parser words it.
+  unterminated_string_in_json:
+    "A check came back cut off. Photograph it again.",
+  unexpected_end_of_json: "A check came back cut off. Photograph it again.",
+  expected_or: "A check came back garbled. Photograph it again.",
+  stored_output_resume_exhausted:
+    "A finished photograph was checked too many times without finishing. Look at it before trying again.",
+  operator_review_ambiguous_paid_request:
+    "A photograph stopped half way and may have been charged. Check it before running it again.",
   stale_worker_ambiguous_paid_request:
     "A photograph stopped half way. Check it before running it again.",
   video_poll_timeout: "The film took too long and was let go.",
@@ -129,6 +145,9 @@ function plainWords(code: string | undefined): string {
   const head = code.split("|")[0]?.split(":")[0] ?? "";
   return (
     PLAIN_WORDS[head] ??
+    (head.startsWith("supabase_job_request_")
+      ? "The shop's records could not be reached just then. Photograph it again."
+      : undefined) ??
     "It stopped for a reason this queue has no words for yet. Read the code."
   );
 }
@@ -334,7 +353,7 @@ export function PreviewRequestQueue() {
                   code list is `@jewelo/contracts`; retry stays for a provider
                   or worker failure, which is exactly what running it again
                   fixes. */}
-              {isDeterministicRefusal(task.errorCode) ? (
+              {isDeterministicRefusal(task.errorCode) || task.attemptsUsedUp ? (
                 <span className={s.byHand}>Make this one by hand</span>
               ) : (
                 <button

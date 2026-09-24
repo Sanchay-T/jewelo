@@ -287,10 +287,15 @@ function visionRetryKind(error: unknown): "pause" | "now" | undefined {
     error.message,
   )?.[2];
   if (failed === "429") return "pause";
-  if (failed?.startsWith("5")) return "now";
+  if (failed === "408" || failed?.startsWith("5")) return "now";
   if (error.name === "TimeoutError" || error.name === "AbortError")
     return "now";
-  if (error instanceof TypeError && error.message === "fetch failed")
+  // undici: "fetch failed" before a response, "terminated" when the body
+  // stream is cut part way through reading it.
+  if (
+    error instanceof TypeError &&
+    (error.message === "fetch failed" || error.message === "terminated")
+  )
     return "now";
   return undefined;
 }
@@ -434,7 +439,16 @@ export async function executePresentationTask(
    * will not, and `operator_review` either way. The messages are category
    * strings; a customer name never appears in one.
    */
+  // Loaded before any preparation step (see below), so a preparation
+  // failure on a resume can tell that the attempt it would close is paid for.
+  let checkpoint: StoredOutput | undefined;
   const blockPreSpendTerminally = async (error: unknown) => {
+    // A resume holds an open attempt whose photograph is paid for and stored.
+    // `mark_task_pre_spend_blocked` refuses any attempt past 0 and its fallback
+    // closes at 0, which would discard the photograph and under-count the
+    // ledger. Re-throw instead: the attempt stays open, the sweeper resumes
+    // it next window, and `storedOutputResumeLimit` bounds how often.
+    if (checkpoint) throw error;
     try {
       await repository.blockPreSpend({ task, run, error });
     } catch (blockError) {
@@ -463,6 +477,40 @@ export async function executePresentationTask(
   };
   // The release row the job loaded is not the release the task is pinned to.
   // That is a property of the two rows, so re-dispatching cannot change it.
+  // `attempt` is the latest attempt the database holds for this task, which
+  // inside the regeneration loop is `reservation.attempt`, not `task.attempt`.
+  const stopBeforeSpend = async (
+    code: string,
+    attempt = task.attempt,
+    actualCostCents = 0,
+  ) => {
+    if (attempt === 0) return blockPreSpendTerminally(new Error(code));
+    await repository.fail({
+      task,
+      run,
+      attempt,
+      error: new Error(code),
+      terminal: true,
+      actualCostCents,
+    });
+    return { status: "operator_review" as const, attempt };
+  };
+  // The stored checkpoint is read first. Reordering is safe: it depends on
+  // the task row alone, returns nothing at attempt 0 (so every pre-spend gate
+  // below behaves exactly as before on a first dispatch) and spends nothing.
+  // What it changes is that a gate failing on a resume now knows the attempt
+  // is paid for and re-throws rather than closing it at 0.
+  try {
+    checkpoint = await repository.loadStoredOutput(task);
+  } catch (error) {
+    if (error instanceof StoredOutputUnavailableError)
+      return stopBeforeSpend(
+        error.message,
+        task.attempt,
+        error.actualCostCents,
+      );
+    throw error;
+  }
   if (release.id !== task.prompt_release_id)
     return blockPreSpendTerminally(new Error("task_prompt_release_mismatch"));
   let snapshot = existingSnapshot;
@@ -639,36 +687,6 @@ export async function executePresentationTask(
   // attempt 0 the task still holds its up-front reservation, which only
   // `mark_task_pre_spend_blocked` releases; past it every earlier attempt was
   // reconciled, so `fail` closes whatever `actualCostCents` names and blocks.
-  // `attempt` is the latest attempt the database holds for this task, which
-  // inside the regeneration loop is `reservation.attempt`, not `task.attempt`.
-  const stopBeforeSpend = async (
-    code: string,
-    attempt = task.attempt,
-    actualCostCents = 0,
-  ) => {
-    if (attempt === 0) return blockPreSpendTerminally(new Error(code));
-    await repository.fail({
-      task,
-      run,
-      attempt,
-      error: new Error(code),
-      terminal: true,
-      actualCostCents,
-    });
-    return { status: "operator_review" as const, attempt };
-  };
-  let checkpoint: StoredOutput | undefined;
-  try {
-    checkpoint = await repository.loadStoredOutput(task);
-  } catch (error) {
-    if (error instanceof StoredOutputUnavailableError)
-      return stopBeforeSpend(
-        error.message,
-        task.attempt,
-        error.actualCostCents,
-      );
-    throw error;
-  }
   const provider = generator instanceof MockStudioGenerator ? "mock" : "openai";
   const model =
     generator instanceof OpenAIStillAdapter
@@ -856,12 +874,29 @@ export async function executePresentationTask(
       const record = verification as unknown as Record<string, unknown>;
       // SP-2a. In real mode the verifier above is the mock, so its
       // `singleConnectedPiece` is always true and the gate on it never fires.
-      // This blind reader is the live one: one image, one question, no stencil
-      // and no approved text. It runs before the name read because a pendant
-      // cut in two halves still spells the name, so the name read would pay a
-      // second vision call to agree with a piece no jeweller can make.
-      if (pieceReader) {
-        const piece = await readVision(() => pieceReader.read(media));
+      // The blind piece reader is the live one: one image, one question, no
+      // stencil and no approved text.
+      //
+      // The piece read and the name read run concurrently: at high detail the
+      // piece read alone can take over a minute, and in sequence the two filled
+      // the executor cap. Each retries only itself (`readVision`). The gates
+      // still apply in the old order - a thrown piece read, the piece verdict,
+      // then a thrown name read and the name verdict - so a split pendant is
+      // refused as `identity_not_one_piece` whatever the name read says. The
+      // cost is one name read paid for on a split pendant. If the verifier is
+      // ever live again it joins this group (see `executorRequestCapSeconds`).
+      const expected = revision.identity_anchor.approvedText;
+      const [pieceRead, nameRead] = await Promise.allSettled([
+        pieceReader
+          ? readVision(() => pieceReader.read(media))
+          : Promise.resolve(undefined),
+        nameReader
+          ? readVision(() => nameReader.read(media, expected))
+          : Promise.resolve(undefined),
+      ]);
+      if (pieceRead.status === "rejected") throw pieceRead.reason;
+      if (pieceRead.value) {
+        const piece = pieceRead.value;
         record.pieceCheck = {
           singleConnectedPiece: piece.singleConnectedPiece,
           notes: piece.notes,
@@ -888,11 +923,9 @@ export async function executePresentationTask(
           continue;
         }
       }
-      if (nameReader) {
-        const expected = revision.identity_anchor.approvedText;
-        const reading = await readVision(() =>
-          nameReader.read(media, expected),
-        );
+      if (nameRead.status === "rejected") throw nameRead.reason;
+      if (nameRead.value) {
+        const reading = nameRead.value;
         const readText = reading.text;
         // Pipeline review 1 finding 1. The script of a name is decided by its
         // letters. The old class required the whole approved text to be Latin
@@ -1143,11 +1176,44 @@ export class SupabasePresentationRepository implements PresentationRepository {
       attempt.completed_at !== null
     )
       return undefined;
-    const signedUrl = await this.signedStorageUrl(
-      checkpoint.bucket_id,
-      checkpoint.object_path,
+    // Bound the resume. The sweeper writes one `task.stale_verification_recovered`
+    // row per verification recovery it emits, in the same transaction as the
+    // outbox event, carrying this task and attempt; a resume only happens
+    // because of one. So the count is exactly how often this stored photograph
+    // has been handed back, with no counter of our own to keep in step or to
+    // lose when a worker dies. Past the limit the attempt closes at its
+    // estimate - the photograph was paid for - and a person looks at it.
+    const recoveries = await this.#request<Array<{ id: string }>>(
+      `/rest/v1/audit_events?select=id&action=eq.task.stale_verification_recovered&principal_id=eq.${task.owner_principal_id}&detail->>taskId=eq.${task.id}&detail->>attempt=eq.${task.attempt}`,
     );
-    const response = await fetch(signedUrl);
+    if (recoveries.length > pipelineLimits.storedOutputResumeLimit)
+      throw new StoredOutputUnavailableError(
+        "stored_output_resume_exhausted",
+        attempt.estimated_cost_cents,
+      );
+    let signedUrl: string;
+    try {
+      signedUrl = await this.signedStorageUrl(
+        checkpoint.bucket_id,
+        checkpoint.object_path,
+      );
+    } catch (error) {
+      // Storage answers a sign request for a missing object with HTTP 400 and
+      // `{"statusCode":"404","error":"not_found","code":"NoSuchKey"}`, so the
+      // object being gone surfaces here, never as a 404 on the download.
+      if (
+        error instanceof Error &&
+        /NoSuchKey|"statusCode":"404"/.test(error.message)
+      )
+        throw new StoredOutputUnavailableError(
+          "stored_provider_output_download_failed:404",
+          attempt.estimated_cost_cents,
+        );
+      throw error;
+    }
+    const response = await fetch(signedUrl, {
+      signal: AbortSignal.timeout(pipelineLimits.storageRequestTimeoutMs),
+    });
     // Gone for good (404/410): the image was paid for, so the attempt closes
     // at its estimate - the same conservative charge the sweeper books for an
     // ambiguous attempt. Any other status is storage having a bad moment: the
@@ -1253,6 +1319,7 @@ export class SupabasePresentationRepository implements PresentationRepository {
       `${this.url}/storage/v1/object/identity-anchors/${basePath}.png`,
       {
         method: "POST",
+        signal: AbortSignal.timeout(pipelineLimits.storageRequestTimeoutMs),
         headers: {
           apikey: this.key,
           authorization: `Bearer ${this.key}`,
@@ -1368,7 +1435,7 @@ export class SupabasePresentationRepository implements PresentationRepository {
     ) throw new Error("identity_reuse_artifact_mismatch");
     const signed = await this.signedStorageUrl(artifact.bucket_id, artifact.object_path);
     const response = await fetch(signed, {
-      signal: AbortSignal.timeout(pipelineLimits.visionRequestTimeoutMs),
+      signal: AbortSignal.timeout(pipelineLimits.storageRequestTimeoutMs),
     });
     if (!response.ok) throw new Error(`identity_reuse_download_failed:${response.status}`);
     const png = new Uint8Array(await response.arrayBuffer());
@@ -1421,7 +1488,9 @@ export class SupabasePresentationRepository implements PresentationRepository {
     // Every anchor carries a different customer's name; the low-pass keeps its
     // light, palette and mood while destroying the letterforms the model kept
     // copying into the pendant.
-    const response = await fetch(signed);
+    const response = await fetch(signed, {
+      signal: AbortSignal.timeout(pipelineLimits.storageRequestTimeoutMs),
+    });
     if (!response.ok)
       throw new Error(`style_anchor_unreadable:${release.source_task_id}`);
     const lowPassed = await sharp(Buffer.from(await response.arrayBuffer()))
@@ -1451,7 +1520,9 @@ export class SupabasePresentationRepository implements PresentationRepository {
       "look-references",
       `${construction}/v1.png`,
     );
-    const response = await fetch(signed);
+    const response = await fetch(signed, {
+      signal: AbortSignal.timeout(pipelineLimits.storageRequestTimeoutMs),
+    });
     if (!response.ok)
       throw new Error(`look_reference_unreadable:${construction}`);
     const bytes = Buffer.from(await response.arrayBuffer());
@@ -1649,6 +1720,7 @@ export class SupabasePresentationRepository implements PresentationRepository {
       `${this.url}/storage/v1/object/generated-assets/${path}`,
       {
         method: "POST",
+        signal: AbortSignal.timeout(pipelineLimits.storageRequestTimeoutMs),
         headers: {
           apikey: this.key,
           authorization: `Bearer ${this.key}`,
@@ -1706,6 +1778,7 @@ export class SupabasePresentationRepository implements PresentationRepository {
       `${this.url}/storage/v1/object/generated-assets/${path}`,
       {
         method: "POST",
+        signal: AbortSignal.timeout(pipelineLimits.storageRequestTimeoutMs),
         headers: {
           apikey: this.key,
           authorization: `Bearer ${this.key}`,

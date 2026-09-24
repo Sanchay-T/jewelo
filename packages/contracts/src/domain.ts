@@ -779,6 +779,9 @@ export const DETERMINISTIC_REFUSAL_CODES = [
   "provider_attempt_budget_exhausted",
   // A stored photograph with no attempt row cannot be settled or resumed.
   "provider_attempt_checkpoint_missing",
+  // No runtime policy row: every dispatch is refused the same way until the
+  // shop's spending settings are restored, so a retry from the queue cannot work.
+  "runtime_policy_missing",
 ] as const;
 
 export type DeterministicRefusalCode =

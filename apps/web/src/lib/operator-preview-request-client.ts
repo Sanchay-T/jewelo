@@ -17,6 +17,8 @@ export interface OperatorReviewTask {
   attempt: number;
   errorCode?: string;
   cancelRequested: boolean;
+  /** The task has used every paid attempt `runtime_policy` allows. */
+  attemptsUsedUp: boolean;
 }
 export interface OperatorReviewRun {
   id: string;
