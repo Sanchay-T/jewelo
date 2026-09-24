@@ -136,6 +136,8 @@ Arabic stays at 800 on every construction and `diamond-rails` stays at 500.
 The engine release stays `caleums-identity-v5`: the weight is a fingerprint input, so a stencil cut at 600 while the change was live mints a different fingerprint and is never served for an 800 revision.
 `validateStoredIdentityAnchor` refuses such a stencil with `identity_reuse_lettering_mismatch`, which is now a deterministic refusal: the operator is told to start the request again instead of being offered a retry that cannot work.
 
+Three of those deterministic refusals are final only for the deployment that wrote them: `task_prompt_release_mismatch`, `prompt_snapshot_lineage_mismatch` and `identity_pipeline_release_mismatch` compare a task's pinned row against what is running, so republishing a prompt release or rolling the code back to the pinned pipeline release makes them retryable again, and the operator has to re-open those requests in the database because the queue will never offer them a retry button.
+
 ## D-020 detail
 
 Three fix passes tuned raster rules (erosion size, island-area ratio, exemption zones) and each adversarial pass found a name outside the corpus where the ring landed on a dot.

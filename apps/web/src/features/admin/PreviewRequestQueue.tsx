@@ -132,6 +132,14 @@ const PLAIN_WORDS: Readonly<Record<string, string>> = {
     "The recipe cannot be written for this specification.",
   studio_only_policy:
     "The shop is set to the studio photograph only, so this view was not taken.",
+  // SP-2e1: the recipe and the photograph's inputs disagree about how this
+  // pendant is to be made, which no re-run changes.
+  still_free_route_carries_stencil:
+    "The recipe and the photograph's inputs do not agree. Make this one by hand.",
+  still_stencil_required:
+    "The recipe and the photograph's inputs do not agree. Make this one by hand.",
+  still_route_variables_mismatch:
+    "The recipe and the photograph's inputs do not agree. Make this one by hand.",
   task_prompt_release_mismatch: "The recipe versions do not line up. Make this one by hand.",
   prompt_snapshot_lineage_mismatch: "The recipe versions do not line up. Make this one by hand.",
   pre_spend_gate_failed: "The piece was stopped before anything was spent.",

@@ -803,6 +803,12 @@ export const DETERMINISTIC_REFUSAL_CODES = [
   "identity_reuse_unsupported_input",
   // SP-2e1: a view recorded on another route than its studio photograph.
   "identity_reuse_route_mismatch",
+  // SP-2e1: the compiled recipe and the images the request carries disagree
+  // about the route. A property of the snapshot and the release, so the same
+  // dispatch decides it the same way every time.
+  "still_free_route_carries_stencil",
+  "still_stencil_required",
+  "still_route_variables_mismatch",
   // An immutable snapshot or a pinned release that does not line up with its task never will.
   "prompt_snapshot_lineage_mismatch",
   "task_prompt_release_mismatch",

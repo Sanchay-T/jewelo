@@ -100,8 +100,13 @@ interface PromptSnapshotRow {
   /**
    * The one source of the route for this task: recorded when the snapshot was
    * compiled and read back from it on every dispatch, never recomputed.
+   *
+   * Optional because a database without migration 20260924020000 - a restored
+   * backup, say - has no such column, and every snapshot written before it is
+   * a stencil one by definition (that is the column default). Missing reads as
+   * `stencil`; a present value that is neither route is still corrupt.
    */
-  still_route: StillRouteChoice;
+  still_route?: StillRouteChoice | null;
 }
 
 /**
@@ -541,7 +546,17 @@ export async function executePresentationTask(
     const route = task.dependency_task_id
       ? await repository.dependencyStillRoute?.(task)
       : STUDIO_STILL_ROUTE;
-    if (!route) return { status: "deferred" as const };
+    if (!route) {
+      // No parent snapshot has two causes. The parent went terminal before it
+      // ever compiled one, in which case waiting is waiting for ever and the
+      // stale sweeper would re-queue this view once per window: refuse it
+      // pre-spend here, exactly as the later missing-reference block does.
+      // Otherwise the parent simply has not been dispatched yet: defer.
+      const terminal = await repository.dependencyTerminalStatus?.(task);
+      if (terminal)
+        return blockPreSpendTerminally(new Error(`dependency_${terminal}`));
+      return { status: "deferred" as const };
+    }
     let compiled: ReturnType<typeof compileStillPrompt>;
     let compiledPrompt: string;
     try {
@@ -614,13 +629,17 @@ export async function executePresentationTask(
       );
     }
   }
+  // Read once, here, and used everywhere below: an absent route is a snapshot
+  // from before migration 20260924020000, which is a stencil one by definition.
+  // A present value that is neither route is a corrupt row and still refused.
+  const stillRoute: StillRouteChoice = snapshot.still_route ?? "stencil";
   // A stored snapshot that belongs to another task, another release or another
   // prompt text is wrong in the row, not in this attempt: the same comparison
   // fails on every redispatch, so it is a pre-spend refusal like the others.
   if (
     snapshot.task_id !== task.id ||
     snapshot.prompt_release_id !== task.prompt_release_id ||
-    (snapshot.still_route !== "stencil" && snapshot.still_route !== "free") ||
+    (stillRoute !== "stencil" && stillRoute !== "free") ||
     createHash("sha256")
       .update(snapshot.compiled_prompt, "utf8")
       .digest("hex") !== snapshot.sha256
@@ -855,9 +874,8 @@ export async function executePresentationTask(
           referenceImageUrl: reference?.url,
           // The stencil is rendered, gated, hashed and stored on both routes
           // (D-010); only the stencil route sends it.
-          route: snapshot.still_route,
-          identityImageUrl:
-            snapshot.still_route === "stencil" ? identity.url : undefined,
+          route: stillRoute,
+          identityImageUrl: stillRoute === "stencil" ? identity.url : undefined,
           lookReferenceUrl,
           styleAnchorUrl,
           inspirationImageUrl,
