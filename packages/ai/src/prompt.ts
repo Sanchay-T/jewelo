@@ -140,7 +140,8 @@ export function stillPrompt(input: {
   const construction = CONSTRUCTION[chosen];
   if (!construction) throw new UnknownConstructionError(chosen);
 
-  const metal = `${(text(spec.metalKarat) || "18K").toLowerCase()} ${text(spec.metalColor) || "yellow"} gold`;
+  const colour = text(spec.metalColor) || "yellow";
+  const metal = `${(text(spec.metalKarat) || "18K").toLowerCase()} ${colour} gold`;
   const lettering =
     LETTERING[text(spec.arabicStyle)] ??
     LETTERING[text(spec.lettering)] ??
@@ -155,9 +156,11 @@ export function stillPrompt(input: {
   const [first, second] = input.name.split(" & ");
   const spelling = second
     ? `spelling "${first}" and "${second}"${
-        CONNECTOR[text(spec.connector)]
-          ? ` ${CONNECTOR[text(spec.connector)]}`
-          : ""
+        text(spec.layout) === "stacked"
+          ? ", one name set above the other"
+          : CONNECTOR[text(spec.connector)]
+            ? ` ${CONNECTOR[text(spec.connector)]}`
+            : ""
       }`
     : `spelling "${input.name}"`;
 
@@ -178,8 +181,13 @@ export function stillPrompt(input: {
     ...(width ? [`about ${width} mm wide`] : []),
     construction.body,
     ...(stones ? [stones] : []),
-    ...(chain ? [`on a ${chain}`] : []),
+    ...(chain ? [`on a ${colour} gold ${chain}`] : []),
   ].join(", ");
 
-  return `${line}. ${input.script === "ar" ? JEWELLER : LATIN_ONE_PIECE} ${PHOTO}`;
+  // Every bare "gold" in the wording names the chosen colour, so a rose or
+  // white piece is not outvoted by yellow-sounding clauses.
+  return `${line}. ${input.script === "ar" ? JEWELLER : LATIN_ONE_PIECE} ${PHOTO}`.replace(
+    /(?<!(?:yellow|white|rose) )\bgold\b/g,
+    `${colour} gold`,
+  );
 }
