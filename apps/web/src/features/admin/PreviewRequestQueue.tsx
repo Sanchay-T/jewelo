@@ -83,13 +83,31 @@ const PLAIN_WORDS: Readonly<Record<string, string>> = {
     "A sample run stopped. Nothing was charged and no piece was made.",
   spend_guard_exceeded: "The day's spending limit was reached.",
   runtime_policy_missing:
-    "The shop's spending settings are missing, so nothing was photographed.",
+    "The shop's spending settings are missing, so the photograph was stopped.",
   provider_attempt_budget_exhausted:
-    "Every paid try for this photograph was used. Look at it before trying again.",
+    "Every paid try for this photograph was used. Look at the last one, or make this one by hand.",
   stored_provider_output_download_failed:
     "A finished photograph could not be read back from storage. Look at it before trying again.",
   provider_attempt_checkpoint_missing:
-    "A finished photograph has no record of how it was made. Look at it before trying again.",
+    "A finished photograph has no record of how it was made. Make this one by hand.",
+  // The checks a finished photograph goes through, stopped by a bad moment
+  // rather than a verdict: each head is what `errorClass` makes of the reader's
+  // own message, so running the photograph again is the right move.
+  openai_verification_failed:
+    "The finished photograph could not be checked just then. Photograph it again.",
+  openai_verification_omitted_output:
+    "The check of the finished photograph came back empty. Photograph it again.",
+  openai_name_read_failed:
+    "The name on the photograph could not be checked just then. Photograph it again.",
+  openai_name_read_was:
+    "The check of the name came back unreadable. Photograph it again.",
+  openai_piece_read_failed:
+    "The pendant on the photograph could not be checked just then. Photograph it again.",
+  openai_piece_read_was:
+    "The check of the pendant came back unreadable. Photograph it again.",
+  fetch_failed: "A connection dropped part way. Photograph it again.",
+  the_operation_was_aborted:
+    "A step took too long and was stopped. Photograph it again.",
   stale_worker_ambiguous_paid_request:
     "A photograph stopped half way. Check it before running it again.",
   video_poll_timeout: "The film took too long and was let go.",

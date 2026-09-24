@@ -64,6 +64,8 @@ interface TaskRow {
   /** Set on the three model views: the studio still they must reproduce. */
   dependency_task_id?: string | null;
   identity_artifact_id?: string | null;
+  /** The day `reserve_provider_attempt` books every attempt of this task against. */
+  reservation_usage_date?: string | null;
 }
 interface RunRow {
   id: string;
@@ -273,39 +275,80 @@ export class StoredOutputUnavailableError extends Error {
 }
 
 /**
- * A vision read that failed without answering: timed out, dropped, rate
- * limited, a provider 5xx, or a body with no parseable answer. A reader that
- * answered - even "no" - returns normally and is never matched here.
+ * How a failed vision read may be repeated: `pause` for a 429, `now` for a
+ * timeout, a dropped connection or a provider 5xx, `undefined` for anything
+ * else. An empty or unparseable answer is not repeated: a read cut off at its
+ * output ceiling or a content refusal comes back the same way the second time.
+ * A reader that answered - even "no" - returns normally and is never seen here.
  */
-function isTransientVisionError(error: unknown) {
-  if (!(error instanceof Error)) return false;
-  if (["TimeoutError", "AbortError", "SyntaxError"].includes(error.name))
-    return true;
+function visionRetryKind(error: unknown): "pause" | "now" | undefined {
+  if (!(error instanceof Error)) return undefined;
+  const failed = /(verification|name read|piece read) failed:(\d{3})$/.exec(
+    error.message,
+  )?.[2];
+  if (failed === "429") return "pause";
+  if (failed?.startsWith("5")) return "now";
+  if (error.name === "TimeoutError" || error.name === "AbortError")
+    return "now";
   if (error instanceof TypeError && error.message === "fetch failed")
-    return true;
-  return (
-    /omitted output text|was malformed/.test(error.message) ||
-    /(verification|name read|piece read) failed:(429|5\d\d)$/.test(
-      error.message,
-    )
-  );
+    return "now";
+  return undefined;
 }
 
 /**
  * One bounded vision read, repeated at most `pipelineLimits.visionReadRetries`
- * times while it fails transiently. After a checkpoint a thrown read closes the
- * attempt and pays for a fresh image, so a dropped request is worth one more
- * cheap read first. `executorRequestCapSeconds` counts every repeat.
+ * times while it fails transiently, after `visionRetryDelayMs` when it was rate
+ * limited. After a checkpoint a thrown read closes the attempt and pays for a
+ * fresh image, so a dropped request is worth one more cheap read first.
+ * `executorRequestCapSeconds` counts every repeat and every pause.
  */
 async function readVision<T>(read: () => Promise<T>): Promise<T> {
   for (let retry = 0; ; retry += 1) {
     try {
       return await read();
     } catch (error) {
-      if (retry >= pipelineLimits.visionReadRetries) throw error;
-      if (!isTransientVisionError(error)) throw error;
+      const kind = visionRetryKind(error);
+      if (retry >= pipelineLimits.visionReadRetries || !kind) throw error;
+      if (kind === "pause")
+        await new Promise((resolve) =>
+          setTimeout(resolve, pipelineLimits.visionRetryDelayMs),
+        );
     }
   }
+}
+
+/**
+ * The `reserve_provider_attempt` refusals no later window can change, as the
+ * code to stop at operator review with, or `undefined` to re-throw. The RPC
+ * raises "attempt already open" before all of them, so when one is returned
+ * every attempt is closed and the refused transaction booked nothing.
+ *
+ * The daily guard (`reserve_provider_attempt` and the
+ * `enforce_daily_provider_spend_cap` trigger, per principal and global) counts
+ * reserved plus actual spend on the day the task books against, which is
+ * `generation_tasks.reservation_usage_date` (null until the first reservation,
+ * which then books today). While that day is today, another run settling frees
+ * it, so the refusal re-throws and the sweeper tries again next window. Once
+ * the day is over no new run books against it, so it stops. That bounds the
+ * wait at one UTC day of pre-spend re-dispatches, each rolled back before any
+ * attempt row exists.
+ */
+function reservationRefusal(
+  error: unknown,
+  bookedOn: string | null | undefined,
+): string | undefined {
+  const message = error instanceof Error ? error.message : "";
+  if (message.includes("provider attempt budget exhausted"))
+    return "provider_attempt_budget_exhausted";
+  if (message.includes("runtime policy missing"))
+    return "runtime_policy_missing";
+  if (
+    message.includes("daily spend guard exceeded") &&
+    bookedOn &&
+    bookedOn < new Date().toISOString().slice(0, 10)
+  )
+    return "spend_guard_exceeded";
+  return undefined;
 }
 
 const PROMPT_SNAPSHOT_REJECTIONS: readonly (readonly [string, string])[] = [
@@ -596,24 +639,34 @@ export async function executePresentationTask(
   // attempt 0 the task still holds its up-front reservation, which only
   // `mark_task_pre_spend_blocked` releases; past it every earlier attempt was
   // reconciled, so `fail` closes whatever `actualCostCents` names and blocks.
-  const stopBeforeSpend = async (code: string, actualCostCents = 0) => {
-    if (task.attempt === 0) return blockPreSpendTerminally(new Error(code));
+  // `attempt` is the latest attempt the database holds for this task, which
+  // inside the regeneration loop is `reservation.attempt`, not `task.attempt`.
+  const stopBeforeSpend = async (
+    code: string,
+    attempt = task.attempt,
+    actualCostCents = 0,
+  ) => {
+    if (attempt === 0) return blockPreSpendTerminally(new Error(code));
     await repository.fail({
       task,
       run,
-      attempt: task.attempt,
+      attempt,
       error: new Error(code),
       terminal: true,
       actualCostCents,
     });
-    return { status: "operator_review" as const, attempt: task.attempt };
+    return { status: "operator_review" as const, attempt };
   };
   let checkpoint: StoredOutput | undefined;
   try {
     checkpoint = await repository.loadStoredOutput(task);
   } catch (error) {
     if (error instanceof StoredOutputUnavailableError)
-      return stopBeforeSpend(error.message, error.actualCostCents);
+      return stopBeforeSpend(
+        error.message,
+        task.attempt,
+        error.actualCostCents,
+      );
     throw error;
   }
   const provider = generator instanceof MockStudioGenerator ? "mock" : "openai";
@@ -652,18 +705,10 @@ export async function executePresentationTask(
       : await repository.reserveAttempt(task, provider, model);
   } catch (error) {
     if (isTaskCancelled(error)) return { status: "cancelled" as const };
-    // Refusals `reserve_provider_attempt` raises that no redispatch can
-    // change: no attempt left, the daily guard, no policy row. The RPC raises
-    // "attempt already open" before any of them, so every attempt is closed
-    // here, its transaction rolled back, and nothing was booked. "Already
-    // open" itself still throws: another dispatch is live on this task.
-    const message = error instanceof Error ? error.message : "";
-    for (const [raised, code] of [
-      ["provider attempt budget exhausted", "provider_attempt_budget_exhausted"],
-      ["daily spend guard exceeded", "spend_guard_exceeded"],
-      ["runtime policy missing", "runtime_policy_missing"],
-    ] as const)
-      if (message.includes(raised)) return stopBeforeSpend(code);
+    // "Already open" and a guard that can still clear re-throw: another
+    // dispatch is live, or the next window may book.
+    const code = reservationRefusal(error, task.reservation_usage_date);
+    if (code) return stopBeforeSpend(code);
     throw error;
   }
   if (reservation.duplicateComplete) return { status: "deduplicated" as const };
@@ -719,12 +764,20 @@ export async function executePresentationTask(
         status: "operator_review" as const,
         attempt: reservation.attempt,
       };
-    reservation = await repository.reserveAttempt(
-      task,
-      provider,
-      model,
-      reservation.attempt + 1,
-    );
+    try {
+      reservation = await repository.reserveAttempt(
+        task,
+        provider,
+        model,
+        reservation.attempt + 1,
+      );
+    } catch (error) {
+      // Same classification as the dispatch-time reservation. The attempt
+      // just failed above is the latest one, so that is what `fail` names.
+      const code = reservationRefusal(error, task.reservation_usage_date);
+      if (code) return stopBeforeSpend(code, reservation.attempt);
+      throw error;
+    }
     actualCostCents = undefined;
     return undefined;
   };
@@ -1095,12 +1148,18 @@ export class SupabasePresentationRepository implements PresentationRepository {
       checkpoint.object_path,
     );
     const response = await fetch(signedUrl);
-    // The image was paid for, so the attempt closes at its estimate - the
-    // same conservative charge the sweeper books for an ambiguous attempt.
-    if (!response.ok)
+    // Gone for good (404/410): the image was paid for, so the attempt closes
+    // at its estimate - the same conservative charge the sweeper books for an
+    // ambiguous attempt. Any other status is storage having a bad moment: the
+    // attempt stays open and the next window resumes the paid photograph.
+    if (response.status === 404 || response.status === 410)
       throw new StoredOutputUnavailableError(
         `stored_provider_output_download_failed:${response.status}`,
         attempt.estimated_cost_cents,
+      );
+    if (!response.ok)
+      throw new Error(
+        `stored_provider_output_download_failed:${response.status}`,
       );
     return {
       media: {

@@ -769,9 +769,16 @@ export const DETERMINISTIC_REFUSAL_CODES = [
   "identity_shaping_gate_failed",
   "identity_component_gate_failed",
   "identity_bar_fallback",
+  // The studio stencil was drawn in lettering the construction no longer uses,
+  // so every view that reuses it is refused again; the request has to restart.
+  "identity_reuse_lettering_mismatch",
   "prompt_compile_failed",
   "studio_only_policy",
   "dependency_blocked",
+  // Every paid try is used; the database refuses another.
+  "provider_attempt_budget_exhausted",
+  // A stored photograph with no attempt row cannot be settled or resumed.
+  "provider_attempt_checkpoint_missing",
 ] as const;
 
 export type DeterministicRefusalCode =
