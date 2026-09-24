@@ -16,6 +16,10 @@
 //     the 22 September origami-ribbon prompts. Those five superseded files are
 //     listed as `superseded` rather than compared: the compiler is expected to
 //     disagree with them.
+//   `docs/goals/road-to-gold/lab-2026-09-24-free-route/prompts/*.txt`  the
+//     free-route studio family, 24 September 2026: no stencil image, so the
+//     words are the only authority for the spelling and the single piece. Each
+//     cell is also asserted to really route free through `stillRoute`.
 //
 // Run it (Node is pinned to 24.18.1):
 //   corepack pnpm --filter @jewelo/jobs lab-diff
@@ -34,6 +38,7 @@ import {
   compileStillPrompt,
   STILL_COMPILER_VERSION,
 } from "@jewelo/ai";
+import { stillRoute } from "@jewelo/identity";
 
 const REPO_ROOT = resolve(fileURLToPath(new URL("../../..", import.meta.url)));
 const LAB_0922 = "docs/goals/road-to-gold/lab-2026-09-22/final";
@@ -272,19 +277,60 @@ if (orphanTagCaught.startsWith("still_unresolved_reference_tag")) {
 }
 
 /**
- * The free route, printed for inspection only. SP-2d measures these bytes on
- * Runway and commits the lab files this script will then compare them against;
- * until then nothing here asserts they are right, only that they compile with
- * no stencil line and no orphan tag.
+ * The free-route family (SP-2d, 24 September 2026). Same proof as above and for
+ * the same reason: `docs/goals/road-to-gold/lab-2026-09-24-free-route/prompts/`
+ * holds the exact bytes that were generated and judged on Runway, so a later
+ * word change in the free construction paragraphs or in `name_spelling` has to
+ * fail here rather than quietly reach a customer.
+ *
+ * Every cell must also really route free - `stillRoute` is the gate production
+ * uses - otherwise the file would be a prompt no shopper can ever get.
  */
+const LAB_FREE = "docs/goals/road-to-gold/lab-2026-09-24-free-route/prompts";
 const FREE_CASES: readonly Case[] = [
-  { file: "free/classical-muhammad-ar", construction: "classical", name: "محمد", language: "ar", metalColor: "yellow" },
-  { file: "free/classical-love-rose", construction: "classical", ...NAMES.love!, metalColor: "rose" },
+  { file: `${LAB_FREE}/classical-muhammad-ar.txt`, construction: "classical", name: "محمد", language: "ar", metalColor: "yellow" },
+  { file: `${LAB_FREE}/origami-ribbon-muhammad-ar.txt`, construction: "origami-ribbon", name: "محمد", language: "ar", metalColor: "yellow" },
+  { file: `${LAB_FREE}/framed-minimal-muhammad-ar.txt`, construction: "framed-minimal", name: "محمد", language: "ar", metalColor: "yellow" },
+  { file: `${LAB_FREE}/diamond-rails-muhammad-ar.txt`, construction: "diamond-rails", name: "محمد", language: "ar", metalColor: "yellow" },
+  { file: `${LAB_FREE}/classical-layla-ar.txt`, construction: "classical", name: "ليلى", language: "ar", metalColor: "yellow" },
+  { file: `${LAB_FREE}/framed-minimal-salma-ar.txt`, construction: "framed-minimal", name: "سلمى", language: "ar", metalColor: "yellow" },
+  { file: `${LAB_FREE}/classical-muhammad-en.txt`, construction: "classical", ...NAMES.muhammad!, metalColor: "yellow" },
+  { file: `${LAB_FREE}/classical-omar-en.txt`, construction: "classical", name: "Omar", language: "en", metalColor: "yellow" },
+  { file: `${LAB_FREE}/classical-love-en.txt`, construction: "classical", ...NAMES.love!, metalColor: "rose" },
+  { file: `${LAB_FREE}/classical-asma-en.txt`, construction: "classical", ...NAMES.asma!, metalColor: "yellow" },
 ];
 for (const testCase of FREE_CASES) {
-  console.log(`\n----- free route (not compared)  ${testCase.file} -----`);
-  console.log(compile(testCase, "free"));
-  console.log(`----- end ${testCase.file} -----`);
+  const decision = stillRoute({
+    approvedText: testCase.name,
+    language: testCase.language,
+    specification: { layout: "single-name", construction: testCase.construction },
+  });
+  if (decision.route !== "free") {
+    failed += 1;
+    console.log(
+      `DIFFER ${testCase.file} does not route free: ${decision.reasons.join(", ")}`,
+    );
+    continue;
+  }
+  const expected = readFileSync(join(REPO_ROOT, testCase.file), "utf8");
+  const rows = divergences(expected, compile(testCase, "free"));
+  if (!rows.length) {
+    console.log(`MATCH  ${testCase.file}`);
+    continue;
+  }
+  failed += 1;
+  console.log(`DIFFER ${testCase.file}`);
+  for (const row of rows)
+    console.log(
+      [
+        `  line ${row.index + 1}`,
+        `  - lab        ${JSON.stringify(row.lab)}`,
+        `  + production ${JSON.stringify(row.production)}`,
+      ].join("\n"),
+    );
 }
+console.log(
+  `${FREE_CASES.length} free-route studio prompts compared against their lab file`,
+);
 
 if (failed) process.exitCode = 1;

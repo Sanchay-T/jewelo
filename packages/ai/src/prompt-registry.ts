@@ -241,6 +241,71 @@ export const PENDANT_CONSTRUCTION_PROSE: Readonly<Record<string, string>> = {
 export const PENDANT_CONSTRUCTION_FALLBACK = PENDANT_CONSTRUCTION_PROSE.classical!;
 
 /**
+ * The `construction` slot on the free route, where no stencil is sent.
+ *
+ * Two things force a separate paragraph rather than a reuse of the stencil-era
+ * one above. First, the stencil-era text for `framed-minimal` and
+ * `diamond-rails` says "joined only where @stencil joins them", and on the free
+ * route that tag can never become an image number, so the compile is refused
+ * (`still_unresolved_reference_tag`). Second, and the reason Omran rejected the
+ * first free photographs, the stencil-era classical paragraph describes a stiff
+ * nameplate - "flat mirror-polished face and straight square side walls" - while
+ * the free lab (`docs/goals/road-to-gold/lab-2026-09-24-free/`) shows that the
+ * short prompts which produced "the best-looking object" ask for flowing joined
+ * script instead. Every paragraph here names the join in words, because the
+ * words are the only thing holding the piece together when there is no
+ * silhouette to copy.
+ *
+ * `classical` is keyed by script: Latin wants joined script letters, Arabic
+ * wants calligraphy that is explicitly not Kufi (the free lab's classical
+ * محمد came out as "one flowing body"). The other three constructions are
+ * reachable on the free route only in Arabic, because a Latin name outside
+ * `classical` routes to the stencil (`stillRoute`).
+ *
+ * `STILL_COMPILER_VERSION` is deliberately not bumped: no free-route prompt has
+ * ever been sent to a paid provider, so there is no stored snapshot these bytes
+ * could be confused with. The first free generation that is paid for is what
+ * pins them.
+ */
+export const PENDANT_CONSTRUCTION_PROSE_FREE: Readonly<Record<string, string>> = {
+  "classical:en":
+    "Flowing high-polish gold script. Fine tapered strokes, every letter joined to the next in one " +
+    "continuous line, softly rounded like hand-finished cast gold. One piece.",
+  "classical:ar":
+    "Flowing Arabic calligraphy in gold, not Kufi. Every letter joined to the next along the baseline, " +
+    "fine tapered strokes, softly rounded cast gold. One piece.",
+  "origami-ribbon": `${PENDANT_CONSTRUCTION_PROSE["origami-ribbon"]!} Every letter joined to the next. One piece.`,
+  "framed-minimal":
+    "Framed minimal. The letters sit inside one slim rectangular gold frame and are welded to its top and " +
+    "bottom bars, so frame and name are one piece. Flat mirror-polished faces, crisp square edges.",
+  "diamond-rails":
+    "Rails. The letters sit between two straight parallel gold rails, one above and one below, and every " +
+    "letter is welded to both rails; the rings are at the ends of the top rail. Flat mirror-polished faces, " +
+    "crisp square edges. One piece.",
+};
+
+/**
+ * The construction paragraph for this route. The stencil route reads the
+ * measured table above and is byte-identical to what it always compiled; the
+ * free route reads its own table, keyed by script where the script changes the
+ * lettering.
+ */
+function constructionProse(
+  construction: string,
+  language: string,
+  route: StillRouteChoice,
+): string {
+  if (route !== "free")
+    return PENDANT_CONSTRUCTION_PROSE[construction] ?? PENDANT_CONSTRUCTION_FALLBACK;
+  const script = language === "ar" ? "ar" : "en";
+  return (
+    PENDANT_CONSTRUCTION_PROSE_FREE[`${construction}:${script}`] ??
+    PENDANT_CONSTRUCTION_PROSE_FREE[construction] ??
+    PENDANT_CONSTRUCTION_PROSE_FREE[`classical:${script}`]!
+  );
+}
+
+/**
  * The compiler's Image 2 sentence, everything after the image number: what this
  * construction's look crop shows and how much of it to copy. Lab text, verbatim.
  *
@@ -264,6 +329,39 @@ export const PENDANT_LOOK_PROSE: Readonly<Record<string, string>> = {
     "shows the gold finish to copy: slim crisp polished bars and flat mirror-polished letter faces. Copy " +
     "only the finish, not its letters, outline, stones, rings or chain.",
 };
+
+/**
+ * The free route's Image 1 sentence for `classical`, and only for `classical`.
+ *
+ * The classical look crop is the framed-minimal crop - the same sha stands
+ * behind both ids in `LOOK_REFERENCES` - so the measured sentence above tells
+ * the model to copy "flat mirror-polished letter faces and crisp square side
+ * walls", which is the stiff square nameplate the free classical paragraph
+ * explicitly refuses ("softly rounded like hand-finished cast gold"). On the
+ * stencil route the silhouette settles the argument; on the free route nothing
+ * does, so the crop wins and Omran gets the nameplate back. Here the crop is
+ * asked for its polish alone, and the frame is named in the do-not-copy list
+ * because the crop is a framed piece.
+ *
+ * The other three constructions keep one sentence on both routes: their free
+ * paragraphs ask for the same flat mirror-polished faces and crisp square
+ * edges (or, for `origami-ribbon`, the same folded panels) that their own crops
+ * show, so there is nothing to contradict.
+ */
+const PENDANT_LOOK_PROSE_FREE: Readonly<Record<string, string>> = {
+  classical:
+    "shows the gold finish to copy: mirror polish and bright reflections in the gold. Copy only that " +
+    "polish, never its letters, letter shapes, outline, frame, stones, rings or chain.",
+};
+
+/** The Image 1 (look) sentence for this construction on this route. */
+function lookProse(construction: string, route: StillRouteChoice): string {
+  return (
+    (route === "free" ? PENDANT_LOOK_PROSE_FREE[construction] : undefined) ??
+    PENDANT_LOOK_PROSE[construction] ??
+    PENDANT_LOOK_PROSE.classical!
+  );
+}
 
 /**
  * The compiler's Image 1 sentence, everything after the image number.
@@ -596,9 +694,11 @@ export function buildPromptVariableSnapshot(input: {
     drape: `Natural asymmetric ${scalar(chain.style)} chain drape at ${scalar(chain.lengthCm)} cm, with the pendant centered at the approved scale.`,
     // An unknown construction id would silently describe the wrong piece, so it
     // falls back to the brief that only repeats what the stencil already shows.
-    construction:
-      PENDANT_CONSTRUCTION_PROSE[scalar(specification.construction)] ??
-      PENDANT_CONSTRUCTION_FALLBACK,
+    construction: constructionProse(
+      scalar(specification.construction),
+      scalar(input.language),
+      route,
+    ),
     // How the name is read, which is a property of the script and of the face
     // the stencil draws it in, so it cannot be a slot in one template.
     name_spelling: nameSpelling(
@@ -608,9 +708,7 @@ export function buildPromptVariableSnapshot(input: {
       route,
     ),
     stones_rule: stonesRule(specification),
-    look_rule:
-      PENDANT_LOOK_PROSE[scalar(specification.construction)] ??
-      PENDANT_LOOK_PROSE.classical!,
+    look_rule: lookProse(scalar(specification.construction), route),
     // On the free route there is no Image 1 (stencil) line to write, so this
     // variable has no value rather than a sentence about an image the model
     // never receives. A release that interpolates it would be refused before
@@ -673,10 +771,20 @@ function nameSpelling(
     route === "free" ? "spelled letter for letter" : "spelled exactly as @stencil";
   const lettering = CONSTRUCTION_LETTERING[scalar(specification.construction)];
   if (language === "ar") {
+    // On the free route the Style paragraph is the lettering brief and it says
+    // flowing calligraphy, not Kufi; naming a face here as well would tell the
+    // model two different things about the same letters. The mark sentence is
+    // also stronger there: with no silhouette to copy, a dot that is "in place"
+    // can still be a second piece of metal floating beside its letter.
     const kufi =
-      /kufi/i.test(lettering?.ar?.fontFile ?? "") ||
-      letteringStyle(specification) === "kufi";
-    return `"${drawn}" in connected Arabic${kufi ? " Kufi" : ""} letters, right to left, ${spelledAs}, every dot and mark in place.`;
+      route !== "free" &&
+      (/kufi/i.test(lettering?.ar?.fontFile ?? "") ||
+        letteringStyle(specification) === "kufi");
+    const marks =
+      route === "free"
+        ? "every dot and mark joined to its letter"
+        : "every dot and mark in place";
+    return `"${drawn}" in connected Arabic${kufi ? " Kufi" : ""} letters, right to left, ${spelledAs}, ${marks}.`;
   }
   const capitals =
     /\p{Lu}/u.test(drawn) && drawn === drawn.toLocaleUpperCase("en");

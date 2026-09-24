@@ -1,0 +1,143 @@
+{
+  "lab": "lab-2026-09-24-free-route",
+  "date": "2026-09-24",
+  "task": "SP-2d",
+  "compilerVersion": "caleums-still-compiler-v4",
+  "model": "gpt-image-2.5-sunburst",
+  "aspectRatio": "1:1",
+  "images": [
+    "1 = look reference (the construction's texture crop; no stencil is sent on this route)"
+  ],
+  "cells": [
+    {
+      "cell": "classical-muhammad-ar",
+      "file": "prompts/classical-muhammad-ar.txt",
+      "name": "محمد",
+      "language": "ar",
+      "construction": "classical",
+      "metal": "18K yellow gold, polished",
+      "stones": "none",
+      "lookReferenceConstruction": "classical",
+      "route": "free",
+      "routeReasons": [],
+      "sha256": "92835ad907bc30db5da34b51351b0afb88d5e55b92280d944bb98074ab098511"
+    },
+    {
+      "cell": "origami-ribbon-muhammad-ar",
+      "file": "prompts/origami-ribbon-muhammad-ar.txt",
+      "name": "محمد",
+      "language": "ar",
+      "construction": "origami-ribbon",
+      "metal": "18K yellow gold, polished",
+      "stones": "none",
+      "lookReferenceConstruction": "origami-ribbon",
+      "route": "free",
+      "routeReasons": [],
+      "sha256": "a895bad41c63665887a864a6279fb85aebed79b4983d76e99304f37e8ab80175"
+    },
+    {
+      "cell": "framed-minimal-muhammad-ar",
+      "file": "prompts/framed-minimal-muhammad-ar.txt",
+      "name": "محمد",
+      "language": "ar",
+      "construction": "framed-minimal",
+      "metal": "18K yellow gold, polished",
+      "stones": "none",
+      "lookReferenceConstruction": "framed-minimal",
+      "route": "free",
+      "routeReasons": [],
+      "sha256": "65a69fb7d13f5d2e3206c54f5cab97c35744e4ca501f731217571c09553227d0"
+    },
+    {
+      "cell": "diamond-rails-muhammad-ar",
+      "file": "prompts/diamond-rails-muhammad-ar.txt",
+      "name": "محمد",
+      "language": "ar",
+      "construction": "diamond-rails",
+      "metal": "18K yellow gold, polished",
+      "stones": "none",
+      "lookReferenceConstruction": "diamond-rails",
+      "route": "free",
+      "routeReasons": [],
+      "sha256": "94a042443ab2e6efa5ff04e9fc4fdb94e74e810a34f3e13cc327bc48ce2008b6"
+    },
+    {
+      "cell": "classical-layla-ar",
+      "file": "prompts/classical-layla-ar.txt",
+      "name": "ليلى",
+      "language": "ar",
+      "construction": "classical",
+      "metal": "18K yellow gold, polished",
+      "stones": "none",
+      "lookReferenceConstruction": "classical",
+      "route": "free",
+      "routeReasons": [],
+      "sha256": "e6fe5b2f541586e71e2f8b5e32311b8cb4a16adc57bad6bfd2d52d26c8c27f77"
+    },
+    {
+      "cell": "framed-minimal-salma-ar",
+      "file": "prompts/framed-minimal-salma-ar.txt",
+      "name": "سلمى",
+      "language": "ar",
+      "construction": "framed-minimal",
+      "metal": "18K yellow gold, polished",
+      "stones": "none",
+      "lookReferenceConstruction": "framed-minimal",
+      "route": "free",
+      "routeReasons": [],
+      "sha256": "dedfa7ecf21d419e649c949feddd327b0cc3be5879d90e779539863d54202440"
+    },
+    {
+      "cell": "classical-muhammad-en",
+      "file": "prompts/classical-muhammad-en.txt",
+      "name": "Muhammad",
+      "language": "en",
+      "construction": "classical",
+      "metal": "18K yellow gold, polished",
+      "stones": "none",
+      "lookReferenceConstruction": "classical",
+      "route": "free",
+      "routeReasons": [],
+      "sha256": "950dfff1d41a43fce1f8774c09136f1130ce0b621dafefbb0a231e91466ee9df"
+    },
+    {
+      "cell": "classical-omar-en",
+      "file": "prompts/classical-omar-en.txt",
+      "name": "Omar",
+      "language": "en",
+      "construction": "classical",
+      "metal": "18K yellow gold, polished",
+      "stones": "none",
+      "lookReferenceConstruction": "classical",
+      "route": "free",
+      "routeReasons": [],
+      "sha256": "499e0accc82f1690c140666a300537df4da093e3f43c7f4a5fa39c30bb62851c"
+    },
+    {
+      "cell": "classical-love-en",
+      "file": "prompts/classical-love-en.txt",
+      "name": "Love",
+      "language": "en",
+      "construction": "classical",
+      "metal": "18K rose gold, polished",
+      "stones": "none",
+      "lookReferenceConstruction": "classical",
+      "route": "free",
+      "routeReasons": [],
+      "sha256": "6df5f8f2dd6240d7a29d9775a39819761d8f69478b4376ca52737f6849e2f907"
+    },
+    {
+      "cell": "classical-asma-en",
+      "file": "prompts/classical-asma-en.txt",
+      "name": "Asma",
+      "language": "en",
+      "construction": "classical",
+      "metal": "18K yellow gold, polished",
+      "stones": "none",
+      "lookReferenceConstruction": "classical",
+      "route": "free",
+      "routeReasons": [],
+      "sha256": "b2ba0064c46d4147c6959254f9a556e937c4745c80dcacd51797d224b53b43ac"
+    }
+  ]
+}
