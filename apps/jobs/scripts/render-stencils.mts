@@ -822,9 +822,11 @@ const PRE_RING_CONSTRUCTION = CONSTRUCTION_LETTERING[specificationConstruction]
  * Whether that plane is drawn in the same lettering as the piece under test,
  * per script.
  *
- * D-023 gives `diamond-rails` a lighter Latin weight than the other two boxy
- * constructions, and `origami-ribbon` is the only letters-alone construction in
- * that group, so on `diamond-rails` the Latin plane is a different letterform
+ * D-023 gives each boxy construction its own Latin weight - `framed-minimal`
+ * 800, `origami-ribbon` 600 since the 24 September 2026 addendum, and
+ * `diamond-rails` 500 - and `origami-ribbon` is the only letters-alone
+ * construction in that group, so on `framed-minimal` and on `diamond-rails` the
+ * Latin plane is a different letterform
  * from the piece: its ink box is a few pixels wider, and `CARRIER-DELTA` - which
  * rebuilds the placement from the plane's own ink box - then reports a 5 to 7 px
  * disagreement on every one of the 282 Latin cells that is the harness's own

@@ -669,6 +669,28 @@ const BOXY_LATIN_LIGHT: IdentityLettering = {
   weight: 500,
   trackingMax: 90,
 };
+/**
+ * `origami-ribbon` draws its Latin name at `wght=600` (D-023 addendum, 24
+ * September 2026).
+ *
+ * The 23 September origami lab shot the same prompt against the same name at
+ * three stencil weights and measured the photographs: stroke width over letter
+ * height fell from 0.267 to 0.192 on `LOVE` and from 0.347 to 0.220 on `ASMA`
+ * going from 800 to 600, and both of `ASMA`'s A counters came back as open
+ * holes for the first time, because the counter roughly doubles in the stencil
+ * (3879 px to 7678 px). At 800 the model filled them with gold. 500 was
+ * measured too and buys 6 percent more: it did not read slimmer in the
+ * photograph and it is the only weight where a stroke went missing, so 600 is
+ * the default and 500 stays on the shelf.
+ *
+ * The folded ribbon is the letters alone, so its whole look is the letterform;
+ * `framed-minimal` and `diamond-rails` carry a frame or rails and keep their
+ * own weights.
+ */
+const BOXY_LATIN_RIBBON: IdentityLettering = {
+  ...BOXY_LATIN,
+  weight: 600,
+};
 const BOXY_ARABIC: IdentityLettering = {
   ...LIVE_STYLES.kufi.ar,
   weight: 800,
@@ -727,7 +749,9 @@ export interface IdentityLettering extends PinnedFace {
  * stencil is the truth for the letterform, so the letterform moved here. The
  * lab measured 12 of 12 cells passing every gate with `cairo` at `wght=800`,
  * 60 units of negative tracking and the name in capitals, and no cell needed a
- * bridge bar between two letters.
+ * bridge bar between two letters. Each construction then kept the weight its
+ * own lab pass measured: `framed-minimal` 800, `origami-ribbon` 600 and
+ * `diamond-rails` 500.
  *
  * `classical` is absent on purpose: it is the customer's own chosen lettering
  * and it stays exactly as it was. A construction absent from this table draws
@@ -737,7 +761,7 @@ export interface IdentityLettering extends PinnedFace {
 export const CONSTRUCTION_LETTERING: Readonly<
   Record<string, Partial<Record<IdentityScript, IdentityLettering>>>
 > = Object.freeze({
-  "origami-ribbon": { en: BOXY_LATIN, ar: BOXY_ARABIC },
+  "origami-ribbon": { en: BOXY_LATIN_RIBBON, ar: BOXY_ARABIC },
   "framed-minimal": { en: BOXY_LATIN, ar: BOXY_ARABIC },
   "diamond-rails": { en: BOXY_LATIN_LIGHT, ar: BOXY_ARABIC },
 });
