@@ -132,8 +132,8 @@ const PLAIN_WORDS: Readonly<Record<string, string>> = {
     "The recipe cannot be written for this specification.",
   studio_only_policy:
     "The shop is set to the studio photograph only, so this view was not taken.",
-  task_prompt_release_mismatch: "The recipe versions do not line up.",
-  prompt_snapshot_lineage_mismatch: "The recipe versions do not line up.",
+  task_prompt_release_mismatch: "The recipe versions do not line up. Make this one by hand.",
+  prompt_snapshot_lineage_mismatch: "The recipe versions do not line up. Make this one by hand.",
   pre_spend_gate_failed: "The piece was stopped before anything was spent.",
   operator_rejected: "Somebody in the shop stopped this one.",
   cancelled: "This one was stopped.",

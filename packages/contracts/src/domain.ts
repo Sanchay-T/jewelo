@@ -803,6 +803,9 @@ export const DETERMINISTIC_REFUSAL_CODES = [
   "identity_reuse_unsupported_input",
   // SP-2e1: a view recorded on another route than its studio photograph.
   "identity_reuse_route_mismatch",
+  // An immutable snapshot or a pinned release that does not line up with its task never will.
+  "prompt_snapshot_lineage_mismatch",
+  "task_prompt_release_mismatch",
   "inspiration_reference_invalid",
   "prompt_snapshot_compiler_stale",
   "prompt_snapshot_rejected",
