@@ -233,7 +233,21 @@ export interface PresentationRepository {
     url: string;
     fingerprint: string;
     artifactId: string;
+    /**
+     * RETRY-SIGN. Where the stencil this URL points at is stored, so a second
+     * or third attempt can re-sign the same object instead of rendering,
+     * gating and uploading it again just to get a link with a fresh clock.
+     * Absent when the URL carries its own bytes (the dependency-reuse path
+     * returns a `data:` URL, which has no clock).
+     */
+    storage?: { bucket: string; objectPath: string };
   }>;
+  /**
+   * A fresh time-limited link to an object already resolved this dispatch.
+   * Optional: an in-memory repository in a harness has no storage to sign, and
+   * only the inputs that really are links are ever renewed through it.
+   */
+  signedStorageUrl?(bucket: string, path: string): Promise<string>;
   signedStyleAnchorUrl(task: TaskRow): Promise<string>;
   /**
    * The approved look reference for a construction that requires one, proved
@@ -775,7 +789,7 @@ export async function executePresentationTask(
   // handed to the generator below, so the pairing asserted before spend is the
   // pairing sent. The stencil is rendered, gated, hashed and stored on both
   // routes (D-010); only the stencil route sends it to the model.
-  const identityImageUrl = stillRoute === "stencil" ? identity.url : undefined;
+  let identityImageUrl = stillRoute === "stencil" ? identity.url : undefined;
   // SP-2e2b: the words this model will actually read, compared against the
   // images this request will actually carry. Not the route column against a
   // value derived from it - that compares a thing with itself - but the stored
@@ -948,6 +962,59 @@ export async function executePresentationTask(
     actualCostCents = undefined;
     return undefined;
   };
+  // RETRY-SIGN. Every input above was signed once, before the reservation, for
+  // `pipelineLimits.signedUrlExpirySeconds`. An in-place regeneration is a
+  // second and a third provider call two and five minutes later, and they were
+  // being sent those same links: the live run 217cb812 (24 Sep) had its two
+  // refused attempts followed by `openai_input_download_failed:400` on attempt
+  // 3, because OpenAI could no longer fetch the expired inputs. So every
+  // provider request renews its links first.
+  //
+  // Only the links are renewed. The identity render and its validation, the
+  // dependency reuse guard, the terminal-parent check and the pairing assertion
+  // ran once above and stay run once; a `data:` input carries its own bytes and
+  // has no clock; and each renewal replaces a non-empty URL with a non-empty
+  // URL of the same object, so freshness changes and presence never does - the
+  // pairing asserted before spend is still the pairing sent.
+  const refreshInputUrls = async () => {
+    if (identity.storage && repository.signedStorageUrl) {
+      const url = await repository.signedStorageUrl(
+        identity.storage.bucket,
+        identity.storage.objectPath,
+      );
+      if (!url.trim()) throw new Error("identity_resign_empty");
+      identity = { ...identity, url };
+      // The same route expression the assertion above compared the words
+      // against, so a stencil task keeps sending the stencil and a free one
+      // can never start.
+      identityImageUrl = stillRoute === "stencil" ? identity.url : undefined;
+    }
+    if (reference && !reference.url.startsWith("data:")) {
+      const again = await repository.signedDependencyStillUrl?.(task);
+      // A master that has become a different asset, or none at all, would give
+      // this attempt another piece to copy than the one the words name.
+      if (!again?.url.trim() || again.assetId !== reference.assetId)
+        throw new Error("dependency_still_resign_changed");
+      reference = again;
+    }
+    if (styleAnchorUrl && !styleAnchorUrl.startsWith("data:"))
+      styleAnchorUrl = await repository.signedStyleAnchorUrl(task);
+    if (lookReferenceUrl && !lookReferenceUrl.startsWith("data:")) {
+      const again = await repository.signedLookReferenceUrl?.(
+        String(revision.specification.construction),
+      );
+      if (!again?.trim()) throw new Error("look_reference_resign_empty");
+      lookReferenceUrl = again;
+    }
+    if (inspirationImageUrl && !inspirationImageUrl.startsWith("data:")) {
+      const again = await repository.signedInspirationUrl(
+        revision,
+        task.owner_principal_id,
+      );
+      if (!again?.trim()) throw new Error("inspiration_resign_empty");
+      inspirationImageUrl = again;
+    }
+  };
   try {
     // A studio still whose engraved name is not the approved one is regenerated
     // in place: at most two extra paid attempts, then operator review.
@@ -967,6 +1034,10 @@ export async function executePresentationTask(
           { attempt: reservation.attempt, input_asset_ids: inputAssetIds },
         );
         if (started === "cancelled") return { status: "cancelled" as const };
+        // The first request carries the links signed just above the
+        // reservation; every regeneration after it signs its own, because by
+        // then the first set is one or two vision-read cycles old.
+        if (regeneration > 0) await refreshInputUrls();
         media = await generator.generate({
           idempotencyKey: reservation.idempotencyKey,
           prompt: snapshot.compiled_prompt,
@@ -1207,8 +1278,9 @@ export class SupabasePresentationRepository implements PresentationRepository {
     release: PromptReleaseRow,
   ): StillRouteChoice {
     if (!this.freeRouteEnabled) return "stencil";
-    // SP-2e2b. The live `image.packshot` releases (`@v2`, `@v3`) write the
-    // stencil into the template prose itself. Compiled free, that prose keeps
+    // SP-2e2b. The live `image.packshot` release is `@v4` and does not name the
+    // stencil in its prose; the older `@v2` and `@v3`, which a task can still
+    // be pinned to, do. Compiled free, that prose keeps
     // a tag no image was numbered for, and `compileStillPrompt` refuses the
     // whole snapshot (`still_unresolved_reference_tag:@stencil`), which would
     // make an allowlisted name unphotographable rather than free. Decided here,
@@ -1567,6 +1639,9 @@ export class SupabasePresentationRepository implements PresentationRepository {
       url,
       fingerprint: rendered.fingerprint,
       artifactId,
+      // RETRY-SIGN: the object the link above points at, so a regeneration
+      // re-signs these bytes rather than re-rendering the stencil.
+      storage: { bucket: "identity-anchors", objectPath: `${basePath}.png` },
     };
   }
   async dependencyStillRoute(task: TaskRow) {
