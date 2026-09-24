@@ -977,15 +977,15 @@ for (const [name, language, construction, freeRouteEnabled, template, want, refu
  * colour no lab drew free, and a missing field each route to the stencil with
  * the switch on; with the switch off every one of them is stencil anyway.
  */
-for (const [label, specification, want] of [
-  ["an inspiration photograph", { referenceAsset: { id: "asset", storagePath: "path" } }, "stencil"],
-  ["white gold", { metalColor: "white" }, "stencil"],
-  ["rose gold", { metalColor: "rose" }, "free"],
-  ["no metalColor", { metalColor: undefined }, "stencil"],
-  ["no lettering", { lettering: undefined }, "stencil"],
-  ["no stoneCoverage", { stoneCoverage: undefined }, "stencil"],
-  ["no gemstone", { gemstone: undefined }, "stencil"],
-  ["no arabicStyle", { arabicStyle: undefined }, "stencil"],
+for (const [label, specification, want, refusal] of [
+  ["an inspiration photograph", { referenceAsset: { id: "asset", storagePath: "path" } }, "stencil", "inspiration_not_proven"],
+  ["white gold", { metalColor: "white" }, "stencil", "metal_not_proven"],
+  ["rose gold", { metalColor: "rose" }, "free", undefined],
+  ["no metalColor", { metalColor: undefined }, "stencil", "metal_not_proven"],
+  ["no lettering", { lettering: undefined }, "stencil", "piece_field_missing:lettering"],
+  ["no stoneCoverage", { stoneCoverage: undefined }, "stencil", "piece_field_missing:stoneCoverage"],
+  ["no gemstone", { gemstone: undefined }, "stencil", "piece_field_missing:gemstone"],
+  ["no arabicStyle", { arabicStyle: undefined }, "stencil", "piece_field_missing:arabicStyle"],
 ] as const) {
   for (const freeRouteEnabled of [true, false]) {
     const repository = new SupabasePresentationRepository(
@@ -1004,10 +1004,13 @@ for (const [label, specification, want] of [
       routeRelease(BASELINE_PACKSHOT),
     );
     const line = `studio Omar classical with ${label} and STILL_FREE_ROUTE=${freeRouteEnabled ? 1 : 0} routes ${wanted}`;
-    // With the switch off the reason is the switch itself, not the field.
-    const reasonOk = freeRouteEnabled
-      ? true
-      : got.reasons.includes("free_route_off");
+    // With the switch off the reason is the switch itself, not the field. Fifth
+    // adversarial pass, m2: both states are compared in full, so a field that
+    // starts refusing for a second reason cannot pass here unnoticed.
+    const reasonOk = sameReasons(
+      got.reasons,
+      freeRouteEnabled ? (refusal ? [refusal] : []) : ["free_route_off"],
+    );
     if (got.route === wanted && reasonOk) console.log(`MATCH  ${line}`);
     else {
       failed += 1;

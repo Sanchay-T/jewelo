@@ -462,12 +462,22 @@ export function usePersonalizedPreview(input: {
 
   // This page's own reading window, started at mount and not at the submission:
   // a reload always reads the run once more, however long ago it was bought.
+  //
+  // `watchRun` asks for the window on every poll through this ref rather than
+  // through its options, because the watcher must not be torn down and rebuilt
+  // when the window closes: that would cost the Realtime subscription and a
+  // re-read for nothing.
+  const watchWindowClosedRef = useRef(watchWindowClosed);
+  watchWindowClosedRef.current = watchWindowClosed;
   useEffect(() => {
     if (!runId || watchWindowClosed) return;
-    const timer = setTimeout(
-      () => setWatchWindowClosed(true),
-      PERSONALIZED_RUN_WATCH_MS,
-    );
+    const timer = setTimeout(() => {
+      // Written here as well as during render: `watchRun` reads this ref on
+      // every poll, and a three-second poll would otherwise ask it up to once
+      // before React has rendered the state change.
+      watchWindowClosedRef.current = true;
+      setWatchWindowClosed(true);
+    }, PERSONALIZED_RUN_WATCH_MS);
     return () => clearTimeout(timer);
   }, [runId, watchWindowClosed]);
 
@@ -484,16 +494,12 @@ export function usePersonalizedPreview(input: {
   // stop dead past the window - photographs expiring, spinner never resolving.
   // The memory is per run id, so a new run starts under the window rule again.
   //
-  // Past the window the watcher survives only to re-sign, so it must not go
-  // back to the three-second poll if that run un-settles: `watchRun` reads this
-  // ref at that moment. A ref, not a prop, because the effect below must not
-  // re-run when the window closes - re-running it tears the Realtime
-  // subscription down and back up for nothing.
+  // A run that has not settled is kept too, for as long as one of the
+  // customer's own photographs is on screen: that photograph's signature dies
+  // in five minutes and only this watcher renews it.
   const everSettled = useRef<{ runId?: string; settled: boolean }>({
     settled: false,
   });
-  const watchWindowClosedRef = useRef(watchWindowClosed);
-  watchWindowClosedRef.current = watchWindowClosed;
   if (everSettled.current.runId !== runId)
     everSettled.current = { runId, settled: false };
   if (run?.settled && run.runId === runId) everSettled.current.settled = true;
@@ -501,6 +507,7 @@ export function usePersonalizedPreview(input: {
     enabled,
     runId,
     everSettled: everSettled.current.settled,
+    hasPhotograph: personalized && run?.runId === runId,
     watchWindowClosed,
   });
   useEffect(() => {

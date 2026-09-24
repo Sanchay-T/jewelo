@@ -404,11 +404,11 @@ export interface WatchOptions {
   onError?: (error: unknown) => void;
   intervalMs?: number;
   /**
-   * Whether the live three-second poll may still be armed. Read at the moment a
-   * run un-settles, not once at mount, because the answer changes under a
-   * watcher that is deliberately not torn down: the page's reading window
-   * (`PERSONALIZED_RUN_WATCH_MS`) closes while a settled run keeps its cheap
-   * re-signing read. Absent means always allowed.
+   * Whether the live three-second poll may still be armed. Asked on every
+   * refresh, not once at mount, because the answer changes under a watcher that
+   * is deliberately not torn down: the page's reading window
+   * (`PERSONALIZED_RUN_WATCH_MS`) closes while the run is still being read to
+   * keep its signatures alive. Absent means always allowed.
    */
   fastCadenceAllowed?: () => boolean;
 }
@@ -449,7 +449,16 @@ export function watchRun(options: WatchOptions): () => void {
         // so the cadence must not change either: narrowing here read every
         // three seconds for ever.
         if (!stable) return;
-        if (stable.settled) keepUrlsFresh();
+        // The cadence is decided here, on every read, from both halves of the
+        // question: has this run stopped moving, and is anyone still watching
+        // it. Fifth adversarial pass, M1: deciding it only inside
+        // `resumeFastCadence` made the window a one-way veto - a run that
+        // un-settled INSIDE the window narrowed to 3 s and nothing ever widened
+        // it again, so a tab left open read `/api/state` 1200 times an hour for
+        // ever. Read on every refresh, the window closing widens the cadence on
+        // the next read whatever the run is doing.
+        if (stable.settled || options.fastCadenceAllowed?.() === false)
+          keepUrlsFresh();
         else resumeFastCadence();
       })
       .catch((error) => {
@@ -492,14 +501,14 @@ export function watchRun(options: WatchOptions): () => void {
    * Past the page's reading window that trade is off: nobody is standing in
    * front of this tab, and the only reason the watcher is still alive there is
    * to keep re-signing the URLs, which the settled cadence already does. A run
-   * that un-settles after the window - an operator retry, the sweeper re-queuing
-   * a task - would otherwise re-arm a three-second read of Supabase with no
-   * ceiling for as long as the tab stays open. So the window vetoes the
-   * narrowing and the slow cadence simply continues.
+   * that moves after the window - an operator retry, the sweeper re-queuing a
+   * task - would otherwise leave a three-second read of Supabase running with
+   * no ceiling for as long as the tab stays open. `fastCadenceAllowed` is what
+   * refuses that, and it is asked in `refresh` rather than here, so the answer
+   * is re-read on every poll and not only when a run happens to un-settle.
    */
   function resumeFastCadence() {
     if (stopped || !settledCadence) return;
-    if (options.fastCadenceAllowed && !options.fastCadenceAllowed()) return;
     settledCadence = false;
     clearInterval(timer);
     timer = setInterval(refresh, interval);

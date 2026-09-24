@@ -511,17 +511,28 @@ export function shouldStartRun(input: {
  * subscription - and left the photographs to expire within the signed lifetime
  * with the spinner never resolving. Once a run has settled on this page it is
  * read for as long as the page is open; `watchRun` decides the cadence.
+ *
+ * `hasPhotograph` is the same argument for a run that has NOT settled. Fifth
+ * adversarial pass, M2: studio ready at minute 2 and one dependent still
+ * generating at minute 30 is a live page showing the customer's own piece, and
+ * keying survival on `everSettled` alone tore its watcher down - so that studio
+ * photograph broke within `signedUrlExpirySeconds` (300 s) while the shopper
+ * was looking at it. A run with nothing on screen and nothing settled still
+ * stops at the window: there is no photograph to keep alive and nobody is being
+ * shown progress.
  */
 export function shouldWatchRun(input: {
   enabled: boolean;
   runId?: string;
   everSettled: boolean;
+  /** At least one of the customer's own photographs is on screen. */
+  hasPhotograph: boolean;
   watchWindowClosed: boolean;
 }): boolean {
   return (
     input.enabled &&
     !!input.runId &&
-    (!input.watchWindowClosed || input.everSettled)
+    (!input.watchWindowClosed || input.everSettled || input.hasPhotograph)
   );
 }
 
