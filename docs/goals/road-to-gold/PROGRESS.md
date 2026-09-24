@@ -353,3 +353,6 @@ Evidence in `dogfood-2026-09-23/real-run/`.
 - Risk: one on-skin call failed provider moderation (`SAFETY.OUTPUT.THIRD_PARTY`); modest wardrobe wording passed.
 - Waiting on Sanchay's review of the sheets before porting the split design into the compiler.
 - Origami Latin weight 600 (implementer, uncommitted in the tree): build exit 0, 576-cell sweep refuses the same 18 Arabic names as before, LOVE/ASMA byte-identical to the lab stencils, other constructions byte-identical. Held uncommitted: if the split design is approved the stencil no longer drives the piece, so review and deploy of this change wait on that decision.
+- Human review (Sanchay): classical فاطمة is two pieces in all four views (ا never joins the next letter). Weld-line test fixed فاطمة, broke عمران; stencil-guided keeps one piece but shows bars (`59f3611`, ledger "Found in human review").
+- Sanchay said "do it" to: one-piece check, free prompt first, stencil where free cannot hold. Phase 8 in `docs/TASKS.md`: SP-1 (enforced `singleConnectedPiece`, implementer running), SP-2 (deterministic free/stencil route per task, plan-reviewer challenging it before code).
+- Origami weight 600 committed as its own slice `f310301`; still needs the review loop before deploy.
