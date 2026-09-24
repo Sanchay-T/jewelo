@@ -30,15 +30,18 @@
 // from a delta the case declares and explains. Anything else is printed line by
 // line and exits 1. Nothing here is paid, nothing here touches the network or
 // the database.
-import { readFileSync } from "node:fs";
-import { join, resolve } from "node:path";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { basename, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import {
   BASELINE_PROMPT_TEMPLATES,
   buildPromptVariableSnapshot,
+  buildStillReferences,
   compileStillPrompt,
+  PRESENTATION_ASPECT_RATIO,
   STILL_COMPILER_VERSION,
+  stillLookReferenceRequired,
 } from "@jewelo/ai";
 import { stillRoute } from "@jewelo/identity";
 
@@ -279,45 +282,107 @@ if (orphanTagCaught.startsWith("still_unresolved_reference_tag")) {
 }
 
 /**
- * The three dependent views must still compile on the stencil route. The
- * unresolved-tag check once read the IMAGE ROLES header too, whose `master`
- * rule says "@stencil", and refused every on-skin, close-up and dark view on
- * staging (run 4cfd9a5b, 24 September 2026) while the studio went through.
+ * The three dependent views must still compile on the stencil route, to the
+ * same bytes. The unresolved-tag check once read the IMAGE ROLES header too,
+ * whose `master` rule says "@stencil", and refused every on-skin, close-up and
+ * dark view on staging (run 4cfd9a5b, 24 September 2026) while the studio went
+ * through. SP-2f1 turned the four @stencil sentences of these templates into
+ * route variables; the hashes below were captured from HEAD acd33fa (before
+ * that change, templates with the sentences written inline, which is the `@v2`
+ * text) for Asma, master + look + style, without and with inspiration. A
+ * stencil-route `@v3` release must compile to exactly these bytes.
  */
-for (const [profile, view] of [
+const STENCIL_DEPENDENT_SHA256: Readonly<Record<string, string>> = {
+  "image.worn classical false": "b043d5453011d5d6be8197674e5090b9c5cefc5be45b399639f9e939cf40dd67",
+  "image.worn classical true": "053a2089252751e53fbfed3c0ce5593891eec9fb5793063f136e1382dc1e0613",
+  "image.worn origami-ribbon false": "0c13be0361c1575d313a85e1a62374c96a6aef29c2d79152110d7cc42740dca6",
+  "image.worn origami-ribbon true": "c52eebed95a514686eac0271423ec534d45157fdb55e3f5ce921b1e66035548f",
+  "image.worn framed-minimal false": "da6ac37cd44664c543feaa4fe9ece95d30d84e7869a088d7f86c5b60d89e1e81",
+  "image.worn framed-minimal true": "778014330cc7fd79610a39ffbd4587ed5faa54f45196fa647967eb63304ddbf6",
+  "image.worn diamond-rails false": "1371839c04376560de281f95667630d84b93ba4fff0015c02d269d88c69eccb0",
+  "image.worn diamond-rails true": "cd3c5c5d3efdc5168fa682e9147ddb040eb441a7a4dcbe698c5d23d899e5010b",
+  "image.macro_gift classical false": "c447f3abe2d52ba040697f6190a7f180d3a795189a6d31a8610c2aaa1f69a390",
+  "image.macro_gift classical true": "142ee090f2f9d4a10ee84979165551c6c47732d37e01e9e07954726a81ddccc8",
+  "image.macro_gift origami-ribbon false": "a8089381bcbe7a21b44fb44fee3bd2612cd2e16042e23ea54ed691a8e13ce0ed",
+  "image.macro_gift origami-ribbon true": "eb454ca336cfbdcdab92a7e458cab4a3d52d9e41db404a405a0cfcfcaf2ac854",
+  "image.macro_gift framed-minimal false": "25463f5746dc1144919b585e7e908ee339d167a44c9822d6e87401c9847549f2",
+  "image.macro_gift framed-minimal true": "6f6d3563f52bd82723bb5ddd1f211aa43b124a99626397403b06cc910813880b",
+  "image.macro_gift diamond-rails false": "8e3f6d7b7d5155e09ad9a04e926e7d56bba82e85562e79f56f9f7d41f48d6760",
+  "image.macro_gift diamond-rails true": "3b8da24baec2000a3cac0710b82d253faa54f25284e9ba887eb49990dfef375c",
+  "image.dark_editorial classical false": "d289ea1ed9f868dc66175335424c58f434cc91845a8f481d8a0040918743dbf2",
+  "image.dark_editorial classical true": "3030237f56a45c01724d81b032e4eb4c90966f6a843ca68c1f7ed2c7e8037721",
+  "image.dark_editorial origami-ribbon false": "52fa8207815aa76f44041749e5072762ea678513bd1c6a4efef5bfc7a9a223c4",
+  "image.dark_editorial origami-ribbon true": "f21242af2726a34b042be4885981b3bc54eb1df6e50d27791bc4eb830c6414ff",
+  "image.dark_editorial framed-minimal false": "9a6b8a4beadbdb186191e16e9e2a019b745bb8839716043200707cc5256917bb",
+  "image.dark_editorial framed-minimal true": "95d2db37c2f95d41bee590b21b7ba39dc26cb2918eb8f5601e680385a6999d62",
+  "image.dark_editorial diamond-rails false": "ef8b0b94a8485f6dbc6c6b6d3e89e939274032915c9aa9eacf79b19f9c1049fd",
+  "image.dark_editorial diamond-rails true": "afb25d4343ba9c48b33384ca24af6a59a74a9d1c352de4f1571ced41653302bb",
+};
+const DEPENDENT_VIEWS = [
   ["image.worn", "on_skin"],
   ["image.macro_gift", "close_up"],
   ["image.dark_editorial", "dark"],
-] as const)
-for (const construction of ["classical", "origami-ribbon", "framed-minimal", "diamond-rails"]) {
+] as const;
+function compileDependent(
+  testCase: Pick<Case, "construction" | "name" | "language" | "metalColor">,
+  profile: (typeof DEPENDENT_VIEWS)[number][0],
+  view: string,
+  route: "free" | "stencil",
+  references: { master: boolean; inspiration: boolean },
+  template: string = BASELINE_PROMPT_TEMPLATES[profile],
+) {
+  return compileStillPrompt({
+    profile,
+    template,
+    variables: buildPromptVariableSnapshot({
+      approvedName: testCase.name,
+      language: testCase.language,
+      route,
+      specification: {
+        construction: testCase.construction,
+        arabicStyle: testCase.language === "ar" ? "kufi" : "none",
+        layout: "single-name",
+        metalKarat: "18K",
+        metalColor: testCase.metalColor,
+        finish: "polished",
+        stoneCoverage: "none",
+        gemstone: "none",
+        sizeProfile: "classic",
+        dimensions: LAB_DIMENSIONS,
+        chain: { style: "cable", lengthCm: 45 },
+      },
+      presentationView: view,
+    }),
+    references: {
+      stencil: route === "stencil",
+      master: references.master,
+      look: stillLookReferenceRequired(testCase.construction),
+      style: true,
+      inspiration: references.inspiration,
+    },
+  });
+}
+for (const [profile, view] of DEPENDENT_VIEWS)
+for (const construction of CONSTRUCTIONS)
+for (const inspiration of [false, true]) {
+  const key = `${profile} ${construction} ${inspiration}`;
   try {
-    compileStillPrompt({
+    const { sha256 } = compileDependent(
+      { construction, ...NAMES.asma!, metalColor: "yellow" },
       profile,
-      template: BASELINE_PROMPT_TEMPLATES[profile],
-      variables: buildPromptVariableSnapshot({
-        approvedName: "Asma",
-        language: "en",
-        specification: {
-          construction,
-          arabicStyle: "none",
-          layout: "single-name",
-          metalKarat: "18K",
-          metalColor: "yellow",
-          finish: "polished",
-          stoneCoverage: "none",
-          gemstone: "none",
-          sizeProfile: "classic",
-          dimensions: LAB_DIMENSIONS,
-          chain: { style: "cable", lengthCm: 45 },
-        },
-        presentationView: view,
-      }),
-      references: { master: true, look: true, style: true, inspiration: true },
-    });
-    console.log(`MATCH  ${profile} ${construction} compiles with every reference`);
+      view,
+      "stencil",
+      { master: true, inspiration },
+    );
+    if (sha256 === STENCIL_DEPENDENT_SHA256[key])
+      console.log(`MATCH  stencil ${key} byte-identical to HEAD (${sha256.slice(0, 12)})`);
+    else {
+      failed += 1;
+      console.log(`DIFFER stencil ${key} ${sha256} (HEAD ${STENCIL_DEPENDENT_SHA256[key]})`);
+    }
   } catch (error) {
     failed += 1;
-    console.log(`DIFFER ${profile} ${construction} refused: ${error instanceof Error ? error.message : String(error)}`);
+    console.log(`DIFFER stencil ${key} refused: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
 
@@ -470,5 +535,101 @@ for (const file of FREE_EVIDENCE_ONLY)
 console.log(
   `${FREE_CASES.length} free-route studio prompts compared against their lab file`,
 );
+
+/**
+ * The free dependent sheet (SP-2f1, 24 September 2026): the eight cells that
+ * still route free x on skin, close up, dark, compiled on the free route with
+ * the approved studio still as @master. These are the bytes SP-2f2 runs on the
+ * lab, so the files are pinned like every other lab prompt: a word change
+ * fails here. `--write-free-dependent` (re)writes the prompts and index.json;
+ * without it every file is compared. No compiled prompt may mention a stencil.
+ */
+const LAB_FREE_DEPENDENT = "docs/goals/road-to-gold/lab-2026-09-24-free-dependent";
+const WRITE_FREE_DEPENDENT = process.argv.includes("--write-free-dependent");
+const freeDependentIndex = [];
+for (const testCase of FREE_CASES)
+for (const [profile, view] of DEPENDENT_VIEWS) {
+  const cell = basename(testCase.file, ".txt");
+  const file = `${LAB_FREE_DEPENDENT}/prompts/${cell}-${view}.txt`;
+  let compiled;
+  try {
+    compiled = compileDependent(testCase, profile, view, "free", { master: true, inspiration: false });
+  } catch (error) {
+    failed += 1;
+    console.log(`DIFFER free ${cell} ${view} refused: ${error instanceof Error ? error.message : String(error)}`);
+    continue;
+  }
+  const stencilWords = compiled.compiledPrompt.match(/stencil/gi)?.length ?? 0;
+  const references = buildStillReferences({
+    route: "free",
+    referenceImageUrl: "master",
+    lookReferenceUrl: stillLookReferenceRequired(testCase.construction) ? "look" : undefined,
+    styleAnchorUrl: "style",
+  }).map(({ role }) => role);
+  freeDependentIndex.push({
+    cell,
+    view,
+    profile,
+    file: `prompts/${cell}-${view}.txt`,
+    name: testCase.name,
+    language: testCase.language,
+    construction: testCase.construction,
+    metal: `18K ${testCase.metalColor} gold, polished`,
+    route: "free",
+    aspectRatio: PRESENTATION_ASPECT_RATIO[view],
+    references,
+    sha256: compiled.sha256,
+  });
+  const path = join(REPO_ROOT, file);
+  if (WRITE_FREE_DEPENDENT) {
+    mkdirSync(join(REPO_ROOT, LAB_FREE_DEPENDENT, "prompts"), { recursive: true });
+    writeFileSync(path, compiled.compiledPrompt);
+  }
+  const onDisk = existsSync(path) ? readFileSync(path, "utf8") : undefined;
+  if (stencilWords || onDisk !== compiled.compiledPrompt) {
+    failed += 1;
+    console.log(`DIFFER ${file}: ${stencilWords} "stencil", ${onDisk === undefined ? "missing" : onDisk === compiled.compiledPrompt ? "bytes match" : "bytes differ"}`);
+  } else console.log(`MATCH  ${file}  0 "stencil"  [${references.join(", ")}] ${PRESENTATION_ASPECT_RATIO[view]}`);
+}
+const indexPath = join(REPO_ROOT, LAB_FREE_DEPENDENT, "index.json");
+const indexJson = `${JSON.stringify({ lab: "lab-2026-09-24-free-dependent", task: "SP-2f1", compilerVersion: STILL_COMPILER_VERSION, cells: freeDependentIndex }, null, 2)}\n`;
+if (WRITE_FREE_DEPENDENT) writeFileSync(indexPath, indexJson);
+if (existsSync(indexPath) && readFileSync(indexPath, "utf8") === indexJson)
+  console.log(`MATCH  ${LAB_FREE_DEPENDENT}/index.json  ${freeDependentIndex.length} free dependent prompts`);
+else {
+  failed += 1;
+  console.log(`DIFFER ${LAB_FREE_DEPENDENT}/index.json missing or stale`);
+}
+
+/**
+ * A free dependent view without its approved studio still has no authority for
+ * the piece at all, and a free prompt that still says @stencil (a `@v2`
+ * release) points at an image nobody sent. Both are refused before spend.
+ */
+for (const [label, run, want] of [
+  [
+    "free image.worn without master",
+    () => compileDependent({ construction: "classical", ...NAMES.asma!, metalColor: "yellow" }, "image.worn", "on_skin", "free", { master: false, inspiration: false }),
+    "still_master_required",
+  ],
+  [
+    "free image.worn on a @v2 template (@stencil inline)",
+    () => compileDependent({ construction: "classical", ...NAMES.asma!, metalColor: "yellow" }, "image.worn", "on_skin", "free", { master: true, inspiration: false },
+      BASELINE_PROMPT_TEMPLATES["image.worn"].replace("{{spelling_rule}}", "Exact spelling and glyph order from @stencil.")),
+    "still_unresolved_reference_tag:@stencil",
+  ],
+] as const) {
+  let caught = "";
+  try {
+    run();
+  } catch (error) {
+    caught = error instanceof Error ? error.message : String(error);
+  }
+  if (caught === want) console.log(`MATCH  ${label} refused (${caught})`);
+  else {
+    failed += 1;
+    console.log(`DIFFER ${label}: ${caught || "no error thrown"}`);
+  }
+}
 
 if (failed) process.exitCode = 1;

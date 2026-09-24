@@ -90,6 +90,13 @@ export const PROMPT_VARIABLES = {
     "What the look reference shows and how much of it to copy; the compiler's Image 2 sentence",
   stencil_rule:
     "How binding the stencil is for this construction; the compiler's Image 1 sentence",
+  // The dependent views' four sentences that name the identity authority
+  // (SP-2f1, 24 September 2026): @stencil on the stencil route, @master on the
+  // free route, where no stencil is sent. See `DEPENDENT_AUTHORITY_SENTENCES`.
+  glyph_rule: "Dependent view: every glyph appears as the identity authority shows it",
+  bridge_rule: "Dependent view: every metal bridge the identity authority shows is metal",
+  rings_rule: "Dependent view: the jump rings sit where the identity authority places them",
+  spelling_rule: "Dependent view: spelling and glyph order come from the identity authority",
 } as const;
 export type PromptVariable = keyof typeof PROMPT_VARIABLES;
 export type PromptVariableSnapshot = Record<PromptVariable, string>;
@@ -105,6 +112,10 @@ const OPTIONAL_VARIABLES: readonly PromptVariable[] = Object.freeze([
   "stones_rule",
   "look_rule",
   "stencil_rule",
+  "glyph_rule",
+  "bridge_rule",
+  "rings_rule",
+  "spelling_rule",
 ]);
 
 /**
@@ -386,6 +397,32 @@ export const PENDANT_STENCIL_PROSE: Readonly<Record<string, string>> = {
 };
 
 /**
+ * The four sentences of the dependent views (on skin, close up, dark) that name
+ * the identity authority. The stencil-route text is the measured `@v2` wording,
+ * byte for byte (`lab-diff` pins the compiled hashes). On the free route no
+ * stencil is sent and the approved studio photograph is the only authority for
+ * the piece, so the same sentence points at @master instead - the one change.
+ */
+const DEPENDENT_AUTHORITY_SENTENCES = {
+  glyph_rule:
+    "Every glyph, dot, mark and stroke in @stencil appears in the photograph, in the same order, at the same place, at the same angle.",
+  bridge_rule:
+    "Where @stencil shows a bridge of metal between two shapes, that bridge is metal in the photograph.",
+  rings_rule:
+    "Both jump rings sit exactly where @stencil places them: @stencil is the whole physical piece, so it is the only authority on where they are, and no further eyelet, loop or ring is added anywhere.",
+  spelling_rule: "Exact spelling and glyph order from @stencil.",
+} as const;
+
+function dependentAuthoritySentences(route: StillRouteChoice) {
+  return Object.fromEntries(
+    Object.entries(DEPENDENT_AUTHORITY_SENTENCES).map(([variable, sentence]) => [
+      variable,
+      route === "free" ? sentence.replaceAll("@stencil", "@master") : sentence,
+    ]),
+  ) as Record<keyof typeof DEPENDENT_AUTHORITY_SENTENCES, string>;
+}
+
+/**
  * The thickness the sheet prints for a construction whose measured lab prompt
  * names one of its own, in millimetres, as the text writes it.
  *
@@ -651,10 +688,18 @@ export function buildPromptVariableSnapshot(input: {
   // itself is unchanged where it is the truth: the anchor is still shaped from
   // it and the name reader still compares against it.
   const drawnName = drawnNameFor(input.approvedName, input.language, specification);
+  // The lettering face (`arabicStyle`, or `lettering` behind it) is a stencil-
+  // engine choice: it names the face the stencil is cut in, such as Kufi. On
+  // the free route no stencil is cut and the free Style paragraph asks for
+  // flowing letters "not Kufi", so naming the face would contradict it. The
+  // approved studio still is the only authority for the letters there, so the
+  // slot points at it; a free packshot has no @master, so a release that
+  // interpolated this slot on one would be refused as an unresolved tag.
+  const freeLettering = "exactly as the approved pendant in @master";
   const pieceSpec = [
     `name=${drawnName}`,
     `language=${scalar(input.language)}`,
-    `arabic_style=${prose(ARABIC_STYLE_PROSE, specification.arabicStyle)}`,
+    `arabic_style=${route === "free" ? freeLettering : prose(ARABIC_STYLE_PROSE, specification.arabicStyle)}`,
     `layout=${prose(LAYOUT_PROSE, specification.layout)}`,
     ...(connector && connector !== "none"
       ? [`connector=${prose(CONNECTOR_PROSE, connector)}`]
@@ -672,7 +717,7 @@ export function buildPromptVariableSnapshot(input: {
   return {
     approved_name: drawnName,
     language: scalar(input.language),
-    arabic_style: letteringStyle(specification),
+    arabic_style: route === "free" ? freeLettering : letteringStyle(specification),
     layout: scalar(specification.layout),
     metal_karat: scalar(specification.metalKarat),
     metal_color: scalar(specification.metalColor),
@@ -719,6 +764,7 @@ export function buildPromptVariableSnapshot(input: {
         ? ""
         : (PENDANT_STENCIL_PROSE[scalar(specification.construction)] ??
           PENDANT_STENCIL_PROSE_DEFAULT),
+    ...dependentAuthoritySentences(route),
   };
 }
 
@@ -987,6 +1033,23 @@ const STILL_ROLE_RULES = {
 } as const;
 
 /**
+ * The free route's header rules, where no stencil is sent. The approved studio
+ * photograph is then the only authority for the piece, so the master rule
+ * locks its identity in the split lab's words ("Photograph this exact same
+ * pendant, unchanged: ...", `lab-2026-09-24-split/ledger.md`), and the look
+ * rule is applied to that piece rather than to a silhouette. The header is not
+ * tag-substituted, so neither rule may carry an @tag.
+ */
+const STILL_ROLE_RULES_FREE: Readonly<Record<string, string>> = {
+  master:
+    "is an approved photograph of this exact pendant and the sole authority for its letters, spelling, shape, " +
+    "construction, metal, stones, rings and chain. Photograph this exact same pendant, unchanged: same letters, " +
+    "same spelling, every dot and mark where it is, same construction, same metal, same stones, same thickness, " +
+    "same rings and chain, changing only the requested scene.",
+  look: "supplies only the surface treatment of the metal - the size and number of flat planes, crease crispness, edge depth and polish; never its letters, name, outline, frame, stones, rings, chain or layout; apply it to the approved pendant without changing its shape.",
+};
+
+/**
  * The minimal style-first sheet (lab, 22 September 2026). Such a release names
  * its own two opening image lines through the compiler, carries no IMAGE ROLES
  * block, and refers to an input as a bare "Image N" because that is the text
@@ -1027,12 +1090,9 @@ export function compileStillPrompt(input: {
   if (!["image.packshot", "image.worn", "image.macro_gift", "image.dark_editorial"].includes(input.profile))
     throw new Error("unsupported_canonical_still_profile");
   const stencil = input.references.stencil ?? true;
-  // The free route is studio only. A dependent view is photographed from an
-  // approved sibling still and a style anchor, and the stencil is what keeps
-  // the spelling from drifting across those extra images; SP-2f is where that
-  // is measured, so until then anything but the packshot is refused.
-  if (!stencil && input.profile !== "image.packshot")
-    throw new Error("still_stencil_required");
+  // Every dependent view needs its approved studio still. On the free route
+  // that still is the only authority for the piece (no stencil is sent), so a
+  // free dependent view without it has nothing to copy and is refused here.
   if (input.profile !== "image.packshot" && !input.references.master)
     throw new Error("still_master_required");
   // The studio packshot still gets no sibling still and no style photo - every
@@ -1084,7 +1144,7 @@ export function compileStillPrompt(input: {
         "IMAGE ROLES",
         ...references.map(
           ({ role }) =>
-            `Image ${position.get(role)} (${role}) ${STILL_ROLE_RULES[role]}`,
+            `Image ${position.get(role)} (${role}) ${(stencil ? undefined : STILL_ROLE_RULES_FREE[role]) ?? STILL_ROLE_RULES[role]}`,
         ),
         "",
         body,
@@ -1095,13 +1155,18 @@ export function compileStillPrompt(input: {
   // An unresolved tag used to be left as written, which sends the model the
   // literal word "@stencil" and points it at nothing - the exact failure a
   // free-route sheet would hit if it kept a stencil sentence. Both routes are
-  // held to it. Only the body is checked: the IMAGE ROLES header is compiler
-  // text whose `master` rule has always said "@stencil", and those bytes are
-  // the ones the dependent views were measured with (checking them refused
-  // every on-skin, close-up and dark view on staging, run 4cfd9a5b).
-  const unresolved = body.match(STILL_REFERENCE_TAG)?.[0];
+  // held to it. On the stencil route only the body is checked: the IMAGE ROLES
+  // header is compiler text whose `master` rule has always said "@stencil", and
+  // those bytes are the ones the dependent views were measured with (checking
+  // them refused every on-skin, close-up and dark view on staging, run
+  // 4cfd9a5b). On the free route the whole prompt is checked, header included,
+  // and the word "stencil" itself is refused: the model is sent no stencil, so
+  // any mention of one points it at an image that does not exist.
+  const unresolved = (stencil ? body : compiledPrompt).match(STILL_REFERENCE_TAG)?.[0];
   if (unresolved)
     throw new Error(`still_unresolved_reference_tag:${unresolved}`);
+  if (!stencil && /stencil/i.test(compiledPrompt))
+    throw new Error("still_free_route_names_stencil");
   return {
     ...compiled,
     compiledPrompt,
@@ -1308,14 +1373,14 @@ function stillTemplate(view: keyof typeof STILL_VIEW_BRIEFS): string {
     "",
     "IDENTITY",
     'The name is "{{approved_name}}". Script: {{language}} - "en" is English Latin letters read left to right, "ar" is Arabic script read right to left. Lettering: {{arabic_style}}. Layout: {{layout}}.',
-    "Every glyph, dot, mark and stroke in @stencil appears in the photograph, in the same order, at the same place, at the same angle. Nothing is added, nothing is removed, nothing is rotated, nothing is duplicated, nothing is mirrored. Do not write the name a second time anywhere in the picture.",
+    "{{glyph_rule}} Nothing is added, nothing is removed, nothing is rotated, nothing is duplicated, nothing is mirrored. Do not write the name a second time anywhere in the picture.",
     "",
     "CASTING",
     "This is one piece of gold, as if it came out of a single mould.",
-    "Every letter is physically fused to the next letter or to the part of the piece that holds it. There are no separate islands and no air gap that would make this two objects. Where @stencil shows a bridge of metal between two shapes, that bridge is metal in the photograph. A jeweller could pick this whole pendant up as one object and nothing would fall off. If any letter, dot or mark is a separate floating piece, the picture is wrong.",
+    "Every letter is physically fused to the next letter or to the part of the piece that holds it. There are no separate islands and no air gap that would make this two objects. {{bridge_rule}} A jeweller could pick this whole pendant up as one object and nothing would fall off. If any letter, dot or mark is a separate floating piece, the picture is wrong.",
     "",
     "ATTACHMENT",
-    "Exactly two jump rings, no more and no fewer. Both are closed rings of the same gold, grown out of the body of the piece, not soldered-on afterthoughts and not floating beside it. Both jump rings sit exactly where @stencil places them: @stencil is the whole physical piece, so it is the only authority on where they are, and no further eyelet, loop or ring is added anywhere.",
+    "Exactly two jump rings, no more and no fewer. Both are closed rings of the same gold, grown out of the body of the piece, not soldered-on afterthoughts and not floating beside it. {{rings_rule}}",
     "Each of the two jump rings is threaded: something passes through its open hole and you can see daylight through the hole on both sides of what passes through it. That is either the chain's own end link or one small connector link, and it goes THROUGH the hole - never behind the pendant, never hooked on the outside of the ring, never resting against a closed eyelet. An empty ring hole with the chain passing behind the piece is wrong.",
     "The chain is a fine {{chain_style}}-link chain at {{chain_length}} in the same gold and hangs from both rings, one side to each. The chain never passes over, around or behind a letter, and there is no second chain, no cord, no clasp in shot and no other hardware.",
     "",
@@ -1337,7 +1402,7 @@ function stillTemplate(view: keyof typeof STILL_VIEW_BRIEFS): string {
     "No 3D-render look, no plastic or candy gold, no glow, no bloom, no neon rim light, no beauty-filter smoothing, no lens flare, no watermark, no logo, no caption, no added words or numbers anywhere in the frame.",
     "",
     "PRESERVE",
-    "Exact spelling and glyph order from @stencil. One connected piece. Exactly two jump rings with the chain through both. The pendant is the sharpest thing in the frame. No added letters, no second name, no charms, no duplicate pendant and no extra jewellery.",
+    "{{spelling_rule}} One connected piece. Exactly two jump rings with the chain through both. The pendant is the sharpest thing in the frame. No added letters, no second name, no charms, no duplicate pendant and no extra jewellery.",
   ].join("\n");
 }
 

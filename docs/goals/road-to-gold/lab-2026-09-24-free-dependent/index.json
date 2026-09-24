@@ -1,0 +1,439 @@
+{
+  "lab": "lab-2026-09-24-free-dependent",
+  "task": "SP-2f1",
+  "compilerVersion": "caleums-still-compiler-v4",
+  "cells": [
+    {
+      "cell": "classical-muhammad-ar",
+      "view": "on_skin",
+      "profile": "image.worn",
+      "file": "prompts/classical-muhammad-ar-on_skin.txt",
+      "name": "محمد",
+      "language": "ar",
+      "construction": "classical",
+      "metal": "18K yellow gold, polished",
+      "route": "free",
+      "aspectRatio": "4:5",
+      "references": [
+        "master",
+        "look",
+        "style"
+      ],
+      "sha256": "f4421c40219645c67b69fba66a9230d0398ae17cd0299bad9a0a0e148c91cf17"
+    },
+    {
+      "cell": "classical-muhammad-ar",
+      "view": "close_up",
+      "profile": "image.macro_gift",
+      "file": "prompts/classical-muhammad-ar-close_up.txt",
+      "name": "محمد",
+      "language": "ar",
+      "construction": "classical",
+      "metal": "18K yellow gold, polished",
+      "route": "free",
+      "aspectRatio": "1:1",
+      "references": [
+        "master",
+        "look",
+        "style"
+      ],
+      "sha256": "448683a01ea29c84fb3d3e17aa7401790ed2ba18827935dab15775c6e011b811"
+    },
+    {
+      "cell": "classical-muhammad-ar",
+      "view": "dark",
+      "profile": "image.dark_editorial",
+      "file": "prompts/classical-muhammad-ar-dark.txt",
+      "name": "محمد",
+      "language": "ar",
+      "construction": "classical",
+      "metal": "18K yellow gold, polished",
+      "route": "free",
+      "aspectRatio": "9:16",
+      "references": [
+        "master",
+        "look",
+        "style"
+      ],
+      "sha256": "5329dc566c37deebfe0447a64cf4982b70e89abfdceb5f1bd362192a709b5965"
+    },
+    {
+      "cell": "framed-minimal-muhammad-ar",
+      "view": "on_skin",
+      "profile": "image.worn",
+      "file": "prompts/framed-minimal-muhammad-ar-on_skin.txt",
+      "name": "محمد",
+      "language": "ar",
+      "construction": "framed-minimal",
+      "metal": "18K yellow gold, polished",
+      "route": "free",
+      "aspectRatio": "4:5",
+      "references": [
+        "master",
+        "look",
+        "style"
+      ],
+      "sha256": "cbdb11d1e188e3aa863be46e4b267c0131e353ee01deefda2165c45e629faca8"
+    },
+    {
+      "cell": "framed-minimal-muhammad-ar",
+      "view": "close_up",
+      "profile": "image.macro_gift",
+      "file": "prompts/framed-minimal-muhammad-ar-close_up.txt",
+      "name": "محمد",
+      "language": "ar",
+      "construction": "framed-minimal",
+      "metal": "18K yellow gold, polished",
+      "route": "free",
+      "aspectRatio": "1:1",
+      "references": [
+        "master",
+        "look",
+        "style"
+      ],
+      "sha256": "2f8d938c3239e1e5ae2a793e84487692771eb12f753e9231ea94a808c24aa1c0"
+    },
+    {
+      "cell": "framed-minimal-muhammad-ar",
+      "view": "dark",
+      "profile": "image.dark_editorial",
+      "file": "prompts/framed-minimal-muhammad-ar-dark.txt",
+      "name": "محمد",
+      "language": "ar",
+      "construction": "framed-minimal",
+      "metal": "18K yellow gold, polished",
+      "route": "free",
+      "aspectRatio": "9:16",
+      "references": [
+        "master",
+        "look",
+        "style"
+      ],
+      "sha256": "9d2bdc3065b3c90b104e83cffec062157704babeff1e91f3e60c851a60ea2a67"
+    },
+    {
+      "cell": "diamond-rails-muhammad-ar",
+      "view": "on_skin",
+      "profile": "image.worn",
+      "file": "prompts/diamond-rails-muhammad-ar-on_skin.txt",
+      "name": "محمد",
+      "language": "ar",
+      "construction": "diamond-rails",
+      "metal": "18K yellow gold, polished",
+      "route": "free",
+      "aspectRatio": "4:5",
+      "references": [
+        "master",
+        "look",
+        "style"
+      ],
+      "sha256": "f8e9dc84880e560fda0e69606408223b362c4d7dd76e4db9a1671b9210ddd190"
+    },
+    {
+      "cell": "diamond-rails-muhammad-ar",
+      "view": "close_up",
+      "profile": "image.macro_gift",
+      "file": "prompts/diamond-rails-muhammad-ar-close_up.txt",
+      "name": "محمد",
+      "language": "ar",
+      "construction": "diamond-rails",
+      "metal": "18K yellow gold, polished",
+      "route": "free",
+      "aspectRatio": "1:1",
+      "references": [
+        "master",
+        "look",
+        "style"
+      ],
+      "sha256": "7015f1950bb34c97e04e7ffae27676be2f2ae8b32e72f22add3ccbe64a4cb520"
+    },
+    {
+      "cell": "diamond-rails-muhammad-ar",
+      "view": "dark",
+      "profile": "image.dark_editorial",
+      "file": "prompts/diamond-rails-muhammad-ar-dark.txt",
+      "name": "محمد",
+      "language": "ar",
+      "construction": "diamond-rails",
+      "metal": "18K yellow gold, polished",
+      "route": "free",
+      "aspectRatio": "9:16",
+      "references": [
+        "master",
+        "look",
+        "style"
+      ],
+      "sha256": "37ed9c8e23a6929793e2460ea55c1d00777c339bf498ed48cd7b126399a1b9e2"
+    },
+    {
+      "cell": "framed-minimal-salma-ar",
+      "view": "on_skin",
+      "profile": "image.worn",
+      "file": "prompts/framed-minimal-salma-ar-on_skin.txt",
+      "name": "سلمى",
+      "language": "ar",
+      "construction": "framed-minimal",
+      "metal": "18K yellow gold, polished",
+      "route": "free",
+      "aspectRatio": "4:5",
+      "references": [
+        "master",
+        "look",
+        "style"
+      ],
+      "sha256": "d58328e60bda6683f3ca830c8905db4d71411e40717d0bac90b1398d07751f81"
+    },
+    {
+      "cell": "framed-minimal-salma-ar",
+      "view": "close_up",
+      "profile": "image.macro_gift",
+      "file": "prompts/framed-minimal-salma-ar-close_up.txt",
+      "name": "سلمى",
+      "language": "ar",
+      "construction": "framed-minimal",
+      "metal": "18K yellow gold, polished",
+      "route": "free",
+      "aspectRatio": "1:1",
+      "references": [
+        "master",
+        "look",
+        "style"
+      ],
+      "sha256": "7d2cff48f804f64d0ba6618f639897645990dfac6fad7a76c54f67ada8aba8ac"
+    },
+    {
+      "cell": "framed-minimal-salma-ar",
+      "view": "dark",
+      "profile": "image.dark_editorial",
+      "file": "prompts/framed-minimal-salma-ar-dark.txt",
+      "name": "سلمى",
+      "language": "ar",
+      "construction": "framed-minimal",
+      "metal": "18K yellow gold, polished",
+      "route": "free",
+      "aspectRatio": "9:16",
+      "references": [
+        "master",
+        "look",
+        "style"
+      ],
+      "sha256": "80bfc87268af83472e99b44ce2c9d703392cf6011b7d3a9a147d50e440e63fb6"
+    },
+    {
+      "cell": "classical-muhammad-en",
+      "view": "on_skin",
+      "profile": "image.worn",
+      "file": "prompts/classical-muhammad-en-on_skin.txt",
+      "name": "Muhammad",
+      "language": "en",
+      "construction": "classical",
+      "metal": "18K yellow gold, polished",
+      "route": "free",
+      "aspectRatio": "4:5",
+      "references": [
+        "master",
+        "look",
+        "style"
+      ],
+      "sha256": "2a9e1bcb302cd31be259377e78d99937db134de248cbd6d79dad85f3e3bf6e8e"
+    },
+    {
+      "cell": "classical-muhammad-en",
+      "view": "close_up",
+      "profile": "image.macro_gift",
+      "file": "prompts/classical-muhammad-en-close_up.txt",
+      "name": "Muhammad",
+      "language": "en",
+      "construction": "classical",
+      "metal": "18K yellow gold, polished",
+      "route": "free",
+      "aspectRatio": "1:1",
+      "references": [
+        "master",
+        "look",
+        "style"
+      ],
+      "sha256": "39671e3c47d15d5f5053d59fac704a161d368ac5e98db65ab468015e39247774"
+    },
+    {
+      "cell": "classical-muhammad-en",
+      "view": "dark",
+      "profile": "image.dark_editorial",
+      "file": "prompts/classical-muhammad-en-dark.txt",
+      "name": "Muhammad",
+      "language": "en",
+      "construction": "classical",
+      "metal": "18K yellow gold, polished",
+      "route": "free",
+      "aspectRatio": "9:16",
+      "references": [
+        "master",
+        "look",
+        "style"
+      ],
+      "sha256": "98712052c954cc6cdea688168b879c448451d60f07080bb39b6b410a0c94686e"
+    },
+    {
+      "cell": "classical-omar-en",
+      "view": "on_skin",
+      "profile": "image.worn",
+      "file": "prompts/classical-omar-en-on_skin.txt",
+      "name": "Omar",
+      "language": "en",
+      "construction": "classical",
+      "metal": "18K yellow gold, polished",
+      "route": "free",
+      "aspectRatio": "4:5",
+      "references": [
+        "master",
+        "look",
+        "style"
+      ],
+      "sha256": "059a71982a5f6d7da9a63985ae36751910bdb5206920b464710f21dc781b6f6c"
+    },
+    {
+      "cell": "classical-omar-en",
+      "view": "close_up",
+      "profile": "image.macro_gift",
+      "file": "prompts/classical-omar-en-close_up.txt",
+      "name": "Omar",
+      "language": "en",
+      "construction": "classical",
+      "metal": "18K yellow gold, polished",
+      "route": "free",
+      "aspectRatio": "1:1",
+      "references": [
+        "master",
+        "look",
+        "style"
+      ],
+      "sha256": "8f704b3ece9bcafaa60e1a9226fb30501cb4d97ea363967dd620379f6bdd89a7"
+    },
+    {
+      "cell": "classical-omar-en",
+      "view": "dark",
+      "profile": "image.dark_editorial",
+      "file": "prompts/classical-omar-en-dark.txt",
+      "name": "Omar",
+      "language": "en",
+      "construction": "classical",
+      "metal": "18K yellow gold, polished",
+      "route": "free",
+      "aspectRatio": "9:16",
+      "references": [
+        "master",
+        "look",
+        "style"
+      ],
+      "sha256": "7f96be7940d1751c45eee4c7edd7bb8e7aaf8f7c30a01378f2fad8e8b030a89d"
+    },
+    {
+      "cell": "classical-love-en",
+      "view": "on_skin",
+      "profile": "image.worn",
+      "file": "prompts/classical-love-en-on_skin.txt",
+      "name": "Love",
+      "language": "en",
+      "construction": "classical",
+      "metal": "18K rose gold, polished",
+      "route": "free",
+      "aspectRatio": "4:5",
+      "references": [
+        "master",
+        "look",
+        "style"
+      ],
+      "sha256": "f0021099360d036590a8dbd575fcc50fcc4dbd292a6ad4e4fcb9e8425abacd33"
+    },
+    {
+      "cell": "classical-love-en",
+      "view": "close_up",
+      "profile": "image.macro_gift",
+      "file": "prompts/classical-love-en-close_up.txt",
+      "name": "Love",
+      "language": "en",
+      "construction": "classical",
+      "metal": "18K rose gold, polished",
+      "route": "free",
+      "aspectRatio": "1:1",
+      "references": [
+        "master",
+        "look",
+        "style"
+      ],
+      "sha256": "f349883ff49e6c20b176f6d59a2cf4c7d6db44ed81cd1eb07275549b823dc8ae"
+    },
+    {
+      "cell": "classical-love-en",
+      "view": "dark",
+      "profile": "image.dark_editorial",
+      "file": "prompts/classical-love-en-dark.txt",
+      "name": "Love",
+      "language": "en",
+      "construction": "classical",
+      "metal": "18K rose gold, polished",
+      "route": "free",
+      "aspectRatio": "9:16",
+      "references": [
+        "master",
+        "look",
+        "style"
+      ],
+      "sha256": "f7c7240ff3bf6f900b479e53daaaacd3549db187685dc6a108e1ec21dd964e1d"
+    },
+    {
+      "cell": "classical-asma-en",
+      "view": "on_skin",
+      "profile": "image.worn",
+      "file": "prompts/classical-asma-en-on_skin.txt",
+      "name": "Asma",
+      "language": "en",
+      "construction": "classical",
+      "metal": "18K yellow gold, polished",
+      "route": "free",
+      "aspectRatio": "4:5",
+      "references": [
+        "master",
+        "look",
+        "style"
+      ],
+      "sha256": "936d684497433a8f2ca4fc8e73ffac4f4d0d1709621a1a9f00661e2b3a371010"
+    },
+    {
+      "cell": "classical-asma-en",
+      "view": "close_up",
+      "profile": "image.macro_gift",
+      "file": "prompts/classical-asma-en-close_up.txt",
+      "name": "Asma",
+      "language": "en",
+      "construction": "classical",
+      "metal": "18K yellow gold, polished",
+      "route": "free",
+      "aspectRatio": "1:1",
+      "references": [
+        "master",
+        "look",
+        "style"
+      ],
+      "sha256": "d5038db2042f8127fa41bf2693b22a3920af22499ce4ed6d7b3e475c8d2bd2e9"
+    },
+    {
+      "cell": "classical-asma-en",
+      "view": "dark",
+      "profile": "image.dark_editorial",
+      "file": "prompts/classical-asma-en-dark.txt",
+      "name": "Asma",
+      "language": "en",
+      "construction": "classical",
+      "metal": "18K yellow gold, polished",
+      "route": "free",
+      "aspectRatio": "9:16",
+      "references": [
+        "master",
+        "look",
+        "style"
+      ],
+      "sha256": "7f93a0c0ddc4601873cf22fb1dcf20817b63f1e3a9642671fc88e18f9533004f"
+    }
+  ]
+}
