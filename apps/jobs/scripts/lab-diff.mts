@@ -20,8 +20,11 @@
 //     free-route studio family, 24 September 2026: no stencil image, so the
 //     words are the only authority for the spelling and the single piece. Each
 //     cell is also asserted to really route free through `stillRoute`; the two
-//     cells the lab broke (classical ليلى, origami-ribbon محمد) now route to the
-//     stencil and are listed as evidence rather than compared.
+//     cells the lab broke are listed as evidence rather than compared.
+//   `docs/goals/road-to-gold/lab-2026-09-24-universal-2/prompts/*-A.txt`  the
+//     eight UNIV-2 wording-A studio prompts, 24 September 2026, which are the
+//     free Arabic bytes production compiles after D-024. The four SP-2d Arabic
+//     cells above are one Name paragraph behind them and declare that delta.
 //
 // Run it (Node is pinned to 24.18.1):
 //   corepack pnpm --filter @jewelo/jobs lab-diff
@@ -412,11 +415,23 @@ for (const inspiration of [false, true]) {
  * below is built from.
  */
 const LAB_FREE = "docs/goals/road-to-gold/lab-2026-09-24-free-route/prompts";
+/**
+ * UNIV-2 / D-024 replaced the free Arabic `name_spelling` clause with wording A,
+ * so the four SP-2d Arabic files below are one paragraph behind production. They
+ * stay pinned - they were generated, judged, and the SP-2f1 dependent sheet is
+ * built from them - with the Name line declared as the only allowed divergence,
+ * which is the assertion that the change is that paragraph and nothing else. The
+ * bytes production compiles today are pinned instead by `FREE_WORDING_A_CASES`.
+ */
+const UNIV2_WORDING_A_DELTA = {
+  line: /^Name: /,
+  why: "UNIV-2 wording A replaced the dot clause on the free Arabic route (D-024)",
+} as const;
 const FREE_CASES: readonly Case[] = [
-  { file: `${LAB_FREE}/classical-muhammad-ar.txt`, construction: "classical", name: "محمد", language: "ar", metalColor: "yellow" },
-  { file: `${LAB_FREE}/framed-minimal-muhammad-ar.txt`, construction: "framed-minimal", name: "محمد", language: "ar", metalColor: "yellow", routesStencil: "arabic_one_piece_unproven:framed-minimal" },
-  { file: `${LAB_FREE}/diamond-rails-muhammad-ar.txt`, construction: "diamond-rails", name: "محمد", language: "ar", metalColor: "yellow" },
-  { file: `${LAB_FREE}/framed-minimal-salma-ar.txt`, construction: "framed-minimal", name: "سلمى", language: "ar", metalColor: "yellow", routesStencil: "arabic_one_piece_unproven:framed-minimal" },
+  { file: `${LAB_FREE}/classical-muhammad-ar.txt`, construction: "classical", name: "محمد", language: "ar", metalColor: "yellow", allowedDelta: UNIV2_WORDING_A_DELTA },
+  { file: `${LAB_FREE}/framed-minimal-muhammad-ar.txt`, construction: "framed-minimal", name: "محمد", language: "ar", metalColor: "yellow", routesStencil: "arabic_one_piece_unproven:framed-minimal", allowedDelta: UNIV2_WORDING_A_DELTA },
+  { file: `${LAB_FREE}/diamond-rails-muhammad-ar.txt`, construction: "diamond-rails", name: "محمد", language: "ar", metalColor: "yellow", allowedDelta: UNIV2_WORDING_A_DELTA },
+  { file: `${LAB_FREE}/framed-minimal-salma-ar.txt`, construction: "framed-minimal", name: "سلمى", language: "ar", metalColor: "yellow", routesStencil: "arabic_one_piece_unproven:framed-minimal", allowedDelta: UNIV2_WORDING_A_DELTA },
   { file: `${LAB_FREE}/classical-muhammad-en.txt`, construction: "classical", ...NAMES.muhammad!, metalColor: "yellow" },
   { file: `${LAB_FREE}/classical-omar-en.txt`, construction: "classical", name: "Omar", language: "en", metalColor: "yellow" },
   { file: `${LAB_FREE}/classical-love-en.txt`, construction: "classical", ...NAMES.love!, metalColor: "rose" },
@@ -427,8 +442,37 @@ const FREE_CASES: readonly Case[] = [
  * lab showed a free prompt breaks these two, so `stillRoute` now sends them to
  * the stencil and no shopper can get these bytes (ledger in the lab folder).
  */
+/**
+ * UNIV-2 wording A (`docs/goals/road-to-gold/lab-2026-09-24-universal-2`), the
+ * free Arabic bytes production compiles today. These eight classical prompts
+ * were generated on gpt-image-2.5-sunburst and scored blind against the old
+ * wording in one session: 14 of 16 spelled and one piece, against 8 of 16.
+ * They are compared for the studio sheet only and are deliberately NOT in
+ * `FREE_CASES`, which also drives the SP-2f1 dependent sheet that was shot from
+ * the SP-2d cells.
+ */
+const LAB_UNIV2 = "docs/goals/road-to-gold/lab-2026-09-24-universal-2/prompts";
+const FREE_WORDING_A_CASES: readonly Case[] = (
+  [
+    ["aisha", "عائشة"],
+    ["hessa", "حصة"],
+    ["khalid", "خالد"],
+    ["noor", "نور"],
+    ["rashid", "راشد"],
+    ["shaikha", "شيخة"],
+    ["yousef", "يوسف"],
+    ["zainab", "زينب"],
+  ] as const
+).map(([slug, name]) => ({
+  file: `${LAB_UNIV2}/classical-${slug}-ar-A.txt`,
+  construction: "classical",
+  name,
+  language: "ar" as const,
+  metalColor: "yellow",
+}));
+
 const FREE_EVIDENCE_ONLY = [
-  `${LAB_FREE}/classical-layla-ar.txt`, // dots under ي touched at a corner or hung, 0 of 2 one piece
+  `${LAB_FREE}/classical-layla-ar.txt`, // 0 of 2 one piece on the old wording; UNIV-2 wording A is what changed, not the route
   `${LAB_FREE}/origami-ribbon-muhammad-ar.txt`, // م lost its loop, read لحمد / الحد, 0 of 2 spelled
 ];
 
@@ -462,7 +506,10 @@ const ROUTE_EXPECTATIONS: readonly {
   route: "free" | "stencil";
   reason?: string;
 }[] = [
-  { name: "ليلى", construction: "classical", route: "stencil", reason: "arabic_letter_not_proven" },
+  // UNIV-4 / D-024: any standard Arabic base letter routes free in classical and
+  // diamond-rails, in any position. ليلى was the SP-2d break that narrowed the
+  // table to six letters; UNIV-2's wording A is what fuses its ي dots now.
+  { name: "ليلى", construction: "classical", route: "free" },
   { name: "محمد", construction: "origami-ribbon", route: "stencil", reason: "arabic_print_construction:origami-ribbon" },
   { name: "محمد", construction: "classical", route: "free" },
   { name: "محمد", construction: "diamond-rails", route: "free" },
@@ -475,21 +522,43 @@ const ROUTE_EXPECTATIONS: readonly {
   { name: "محمد", route: "stencil", reason: "arabic_construction_unknown" },
   // محمد typed in presentation forms: meem initial, hah medial, meem medial, dal final.
   { label: "محمد (presentation forms)", name: "\ufee3\ufea4\ufee4\ufeaa", construction: "classical", route: "stencil", reason: "arabic_presentation_form" },
-  { name: "ملأ", construction: "classical", route: "stencil", reason: "arabic_letter_not_proven" }, // final أ is its only problem
+  { name: "ملأ", construction: "classical", route: "free" }, // أ is a base letter (U+0623)
+  // UNIV-4: the six names the letter set is widened for, in both free
+  // constructions. Between them they carry the hamza carriers on alif and waw,
+  // the madda, ta marbuta, the three-dot sheen, and the non-joining letters
+  // alif lam dal waw reh inside the word rather than last.
+  ...(["عبدالله", "عائشة", "شيخة", "مؤمن", "آمنة", "إبراهيم"] as const).flatMap(
+    (name) =>
+      (["classical", "diamond-rails"] as const).map((construction) => ({
+        name,
+        construction,
+        route: "free" as const,
+      })),
+  ),
+  // The two constructions no lab ever proved free in Arabic stay stencil for
+  // those names too, each on the reason it was closed for.
+  { name: "عائشة", construction: "framed-minimal", route: "stencil", reason: "arabic_one_piece_unproven:framed-minimal" },
+  { name: "إبراهيم", construction: "origami-ribbon", route: "stencil", reason: "arabic_print_construction:origami-ribbon" },
+  // A harakat mark is still a second piece of metal nobody photographed.
+  { label: "aisha with a fatha", name: "عَائشة", construction: "classical", route: "stencil", reason: "combining_mark" },
+  // Tatweel matches \p{L} as a modifier letter but its script is Common, not
+  // Arabic, so it is caught one rule earlier as a letter belonging to neither
+  // script. It is also outside the U+0621-U+063A range on purpose.
+  { label: "muhammad with a tatweel", name: "محـمد", construction: "classical", route: "stencil", reason: "mixed_scripts" },
   { label: "محمد (shadda)", name: "مح\u0651مد", construction: "classical", route: "stencil", reason: "combining_mark" },
   { label: "bare fatha U+064E", name: "\u064e", construction: "classical", route: "stencil", reason: "no_letter" },
   { label: "Aylı + U+0307 + n", name: "Ayl\u0131\u0307n", language: "en", construction: "classical", route: "stencil", reason: "combining_mark" },
   { name: "OMar", language: "en", construction: "classical", route: "stencil", reason: "latin_inner_capital" },
   { name: "McDonald", language: "en", construction: "classical", route: "stencil", reason: "latin_inner_capital" },
   { label: "Omar approved as Tijani", name: "Omar", language: "en", construction: "classical", names: [{ approvedEnglishText: "Tijani" }], route: "stencil", reason: "approved_text_mismatch" },
-  // SP-2e2b: the five names the old shape-only allowlist would have sent to a
-  // free prompt on evidence nobody ever looked at. Each carries at least one of
-  // ا ر ص ط ع ه و.
-  { name: "عمر", construction: "classical", route: "stencil", reason: "arabic_letter_not_proven" },
-  { name: "على", construction: "classical", route: "stencil", reason: "arabic_letter_not_proven" },
-  { name: "طه", construction: "classical", route: "stencil", reason: "arabic_letter_not_proven" },
-  { name: "هلا", construction: "classical", route: "stencil", reason: "arabic_letter_not_proven" },
-  { name: "علا", construction: "classical", route: "stencil", reason: "arabic_letter_not_proven" },
+  // SP-2e2b listed these five as stencil, because the six-letter table had no
+  // photograph of ا ر ص ط ع ه و. UNIV-1 and UNIV-3 drew them, so they are
+  // free again (UNIV-4 / D-024).
+  { name: "عمر", construction: "classical", route: "free" },
+  { name: "على", construction: "classical", route: "free" },
+  { name: "طه", construction: "classical", route: "free" },
+  { name: "هلا", construction: "classical", route: "free" },
+  { name: "علا", construction: "classical", route: "free" },
   // SP-2e2b: the labs drew stoneless pieces in the construction's default face
   // only. A free prompt carries no stencil, so nothing behind the words holds
   // the shop to the stones or the face the shopper picked.
@@ -554,15 +623,17 @@ for (const expectation of ROUTE_EXPECTATIONS) {
 /**
  * Pin the Arabic rule itself, not samples: every code point in the Arabic
  * blocks, drawn last (after مم) and in the middle (between م and م), classical.
- * Last, exactly the allowlist may route free; in the middle, exactly the
- * allowlist minus the letters that do not join forward.
+ * Exactly the allowlist may route free, and since UNIV-4 dropped the position
+ * rules the two walks must give the same answer - a re-introduced ى-last or
+ * د-last rule fails the middle row.
  */
-// SP-2e2b: exactly the six letters the labs drew (محمد, سلمى), in code-point
-// order, which is the order the walk below finds them in. The seven admitted on
-// shape alone - ا ر ص ط ع ه و - are gone, so عمر, على, طه, هلا and علا route to
-// the stencil.
-const ARABIC_FREE = "ح د س ل م ى".split(" ");
-const ARABIC_NON_JOINING = new Set("د ى".split(" "));
+// UNIV-4 / D-024: the standard Arabic base letters, U+0621-U+063A and
+// U+0641-U+064A, in code-point order, which is the order the walk below finds
+// them in. U+0640 TATWEEL sits in the gap on purpose.
+const ARABIC_FREE =
+  "ء آ أ ؤ إ ئ ا ب ة ت ث ج ح خ د ذ ر ز س ش ص ض ط ظ ع غ ف ق ك ل م ن ه و ى ي".split(
+    " ",
+  );
 const arabicBlocks: [number, number][] = [[0x0600, 0x06ff], [0x0750, 0x077f], [0x08a0, 0x08ff]];
 const freeAs = (wrap: (letter: string) => string): string[] => {
   const free: string[] = [];
@@ -580,7 +651,7 @@ const freeAs = (wrap: (letter: string) => string): string[] => {
 };
 for (const [where, got, want] of [
   ["last", freeAs((l) => `مم${l}`), ARABIC_FREE],
-  ["middle", freeAs((l) => `م${l}م`), ARABIC_FREE.filter((l) => !ARABIC_NON_JOINING.has(l))],
+  ["middle", freeAs((l) => `م${l}م`), ARABIC_FREE],
 ] as const) {
   const line = `Arabic letters that route free as the ${where} letter: ${got.join(" ")}`;
   if (got.join(" ") === want.join(" ")) console.log(`MATCH  ${line}`);
@@ -590,7 +661,7 @@ for (const [where, got, want] of [
   }
 }
 
-for (const testCase of FREE_CASES) {
+for (const testCase of [...FREE_CASES, ...FREE_WORDING_A_CASES]) {
   const decision = stillRoute({
     approvedText: testCase.name,
     language: testCase.language,
@@ -621,9 +692,20 @@ for (const testCase of FREE_CASES) {
     console.log(`MATCH  ${testCase.file}`);
     continue;
   }
+  // The declared delta is the assertion, not an excuse: only the lines it names
+  // may differ, so a second drift on any other line still fails.
+  const unexpected = rows.filter(
+    (row) => !testCase.allowedDelta?.line.test(row.lab),
+  );
+  if (!unexpected.length) {
+    console.log(
+      `MATCH  ${testCase.file}  (expected delta on ${rows.length} line${rows.length === 1 ? "" : "s"}: ${testCase.allowedDelta!.why})`,
+    );
+    continue;
+  }
   failed += 1;
   console.log(`DIFFER ${testCase.file}`);
-  for (const row of rows)
+  for (const row of unexpected)
     console.log(
       [
         `  line ${row.index + 1}`,
@@ -635,7 +717,7 @@ for (const testCase of FREE_CASES) {
 for (const file of FREE_EVIDENCE_ONLY)
   console.log(`evidence, routes stencil now (not compared)  ${file}`);
 console.log(
-  `${FREE_CASES.length} free-route studio prompts compared against their lab file`,
+  `${FREE_CASES.length + FREE_WORDING_A_CASES.length} free-route studio prompts compared against their lab file (${FREE_WORDING_A_CASES.length} of them UNIV-2 wording A)`,
 );
 
 /**
@@ -841,9 +923,10 @@ for (const [label, run, want] of [
  * again.
  *
  * With `STILL_FREE_ROUTE` off - what production runs until the switch is set -
- * every studio still is stencil, whatever the name. With it on, a proven-safe
- * name is photographed from the words and a dotted Arabic name still goes to
- * the stencil. The constructor takes no network: nothing here is paid and
+ * every studio still is stencil, whatever the name. With it on, a name whose
+ * letters and piece a lab photographed is drawn from the words, and a name
+ * carrying anything no lab drew - a harakat mark here - still goes to the
+ * stencil. The constructor takes no network: nothing here is paid and
  * nothing here connects.
  *
  * SP-2e2b adds the other half of the decision: the release. A release whose
@@ -891,7 +974,10 @@ for (const [name, language, construction, freeRouteEnabled, template, want] of [
   ["Omar", "en", "classical", false, BASELINE_PACKSHOT, "stencil"],
   ["فاطمة", "ar", "classical", false, BASELINE_PACKSHOT, "stencil"],
   ["Omar", "en", "classical", true, BASELINE_PACKSHOT, "free"],
-  ["فاطمة", "ar", "classical", true, BASELINE_PACKSHOT, "stencil"],
+  ["فاطمة", "ar", "classical", true, BASELINE_PACKSHOT, "free"],
+  // UNIV-4: an Arabic name is unproven now only for what is written around
+  // its letters, not for the letters - here a shadda on the second meem.
+  ["محّمد", "ar", "classical", true, BASELINE_PACKSHOT, "stencil"],
   ["Omar", "en", "classical", true, LIVE_SHAPE_PACKSHOT, "stencil"],
   ["محمد", "ar", "classical", true, LIVE_SHAPE_PACKSHOT, "stencil"],
   // SP-2e2c: with the switch on, framed-minimal Arabic goes to the stencil
