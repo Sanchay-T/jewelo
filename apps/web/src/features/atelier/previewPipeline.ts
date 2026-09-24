@@ -409,12 +409,23 @@ export interface WatchOptions {
  * Poll `/api/state`, accelerated by Realtime when it is available, and re-read
  * immediately when the tab comes back: a backgrounded phone suspends timers, and
  * signed media URLs expire in five minutes.
+ *
+ * A settled run cannot change again without a new run, so the three-second poll
+ * would only re-read the same rows - but the page must keep reading anyway, at
+ * the slow cadence, or its signed URLs expire under it. This used to stop
+ * outright, and the studio photograph, which settles first, expired first: seen
+ * live 41 s past expiry, returning 400, with the Studio slide and thumbnail
+ * broken while the three later views still loaded. So on settle the interval
+ * widens to `signedUrlRefreshAfterMs`, the hold window the server publishes and
+ * `createSignedUrlCache` rotates on, which swaps each URL one refresh margin
+ * before its signature expires and costs one read per window instead of eighty.
  */
 export function watchRun(options: WatchOptions): () => void {
   const interval = options.intervalMs ?? 3000;
   const stabilise = createSignedUrlCache();
   let stopped = false;
   let inFlight = false;
+  let settledCadence = false;
   const refresh = () => {
     if (stopped || inFlight) return;
     inFlight = true;
@@ -423,9 +434,7 @@ export function watchRun(options: WatchOptions): () => void {
         if (stopped) return;
         const stable = stabilise(run);
         options.onUpdate(stable);
-        // A settled run cannot change again without a new run, so polling it
-        // would only burn a signed URL every three seconds.
-        if (stable?.settled) stop();
+        if (stable?.settled) keepUrlsFresh();
       })
       .catch((error) => {
         if (!stopped) options.onError?.(error);
@@ -438,6 +447,18 @@ export function watchRun(options: WatchOptions): () => void {
     if (document.visibilityState === "visible") refresh();
   };
   const hasDocument = typeof document !== "undefined";
+  /**
+   * Widen the poll to the signed-URL hold window, once. The visibilitychange
+   * listener stays on so a phone tab that was suspended past the window re-reads
+   * the moment it is looked at again.
+   */
+  function keepUrlsFresh() {
+    if (stopped || settledCadence) return;
+    settledCadence = true;
+    clearInterval(timer);
+    timer = setInterval(refresh, signedUrlRefreshAfterMs);
+  }
+  /** The unmount path: after this nothing reads, times out or listens. */
   function stop() {
     if (stopped) return;
     stopped = true;
@@ -445,7 +466,7 @@ export function watchRun(options: WatchOptions): () => void {
     if (hasDocument) document.removeEventListener("visibilitychange", onVisible);
     unwatch?.();
   }
-  const timer = setInterval(refresh, interval);
+  let timer = setInterval(refresh, interval);
   if (hasDocument) document.addEventListener("visibilitychange", onVisible);
   const unwatch = options.deps.session.watch?.(options.handles.runId, refresh);
   refresh();

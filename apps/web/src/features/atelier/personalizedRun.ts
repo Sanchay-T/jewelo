@@ -465,12 +465,14 @@ export function shouldStartRun(input: {
 /**
  * Whether durable state should still be read for this run.
  *
- * `watchRun` stops itself on a settled run; this stops the rest. The shopper's
- * six-minute ceiling is deliberately not a reason to stop reading: a run that
- * finishes after it must still appear, on the next poll or the next reload.
- * What does stop reading is the run being over, or this page having watched for
- * `PERSONALIZED_RUN_WATCH_MS` without one - a shop tablet must not re-sign every
- * media URL every three seconds for the rest of the day.
+ * The shopper's six-minute ceiling is deliberately not a reason to stop reading:
+ * a run that finishes after it must still appear, on the next poll or the next
+ * reload. Nor is the run settling: `watchRun` widens its own interval to the
+ * signed-URL hold window there, and a settled run whose page stops reading
+ * altogether is a page whose photographs turn into broken images five minutes
+ * later. What stops reading is this page having watched for
+ * `PERSONALIZED_RUN_WATCH_MS` - a shop tablet must not re-sign every media URL
+ * for the rest of the day.
  */
 export function shouldWatchRun(input: {
   enabled: boolean;
@@ -478,12 +480,7 @@ export function shouldWatchRun(input: {
   settled: boolean;
   watchWindowClosed: boolean;
 }): boolean {
-  return (
-    input.enabled &&
-    !!input.runId &&
-    !input.settled &&
-    !input.watchWindowClosed
-  );
+  return input.enabled && !!input.runId && !input.watchWindowClosed;
 }
 
 /**
