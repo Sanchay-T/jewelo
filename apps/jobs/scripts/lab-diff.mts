@@ -286,7 +286,8 @@ for (const [profile, view] of [
   ["image.worn", "on_skin"],
   ["image.macro_gift", "close_up"],
   ["image.dark_editorial", "dark"],
-] as const) {
+] as const)
+for (const construction of ["classical", "origami-ribbon", "framed-minimal", "diamond-rails"]) {
   try {
     compileStillPrompt({
       profile,
@@ -295,7 +296,7 @@ for (const [profile, view] of [
         approvedName: "Asma",
         language: "en",
         specification: {
-          construction: "origami-ribbon",
+          construction,
           arabicStyle: "none",
           layout: "single-name",
           metalKarat: "18K",
@@ -309,12 +310,12 @@ for (const [profile, view] of [
         },
         presentationView: view,
       }),
-      references: { master: true, look: true, style: true, inspiration: false },
+      references: { master: true, look: true, style: true, inspiration: true },
     });
-    console.log(`MATCH  ${profile} compiles with @master, @look and @style`);
+    console.log(`MATCH  ${profile} ${construction} compiles with every reference`);
   } catch (error) {
     failed += 1;
-    console.log(`DIFFER ${profile} refused: ${error instanceof Error ? error.message : String(error)}`);
+    console.log(`DIFFER ${profile} ${construction} refused: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
 
