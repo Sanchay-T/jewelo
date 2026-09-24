@@ -76,11 +76,21 @@ const RUN_STATUSES = [
 ] as const;
 
 /**
- * The `run_status` values a run never leaves. Only the two that mean "no worker
- * will touch this again" are listed: a run in one of them cannot produce another
- * photograph, so its tasks must not be presented as still on their way.
+ * The `run_status` value that stops every task in the run.
+ *
+ * Exactly one qualifies. `operator_review` used to be listed here as well, on
+ * the reading that it means "the pipeline stopped this run on purpose"; the
+ * server does not mean that. `refresh_run_status` (read live with
+ * `pg_get_functiondef`, 24 Sep 2026) writes `operator_review` whenever ANY
+ * still task is blocked or failed, whatever its siblings are doing, so it is
+ * "someone has to look at this run", not "nothing in it is moving". Staging
+ * run 217cb812 was exactly that: close_up went blocked at 12:32:50 and flipped
+ * the run to `operator_review` while dark was still generating on attempt 2 -
+ * and this page told the shopper the shop would photograph a view that was
+ * mid-generation. Each task's own status decides whether it is in flight; only
+ * `cancelled`, and a run status this build has no rule for, stop all of them.
  */
-const TERMINAL_RUN_STATUSES: readonly string[] = ["cancelled", "operator_review"];
+const TERMINAL_RUN_STATUSES: readonly string[] = ["cancelled"];
 
 /**
  * The providers whose stills may be presented as the shopper's own photograph.
@@ -187,9 +197,11 @@ export function readPersonalizedRun(
   // The run itself has stopped. `complete` and `partial` are deliberately not
   // here: they are written as the last tasks finish, so treating them as a stop
   // could beat an asset row to this read and call a finished run unavailable.
-  // `cancelled` and `operator_review` are unambiguous - no worker will pick a
-  // task of theirs up again - so a task still sitting in `queued` under one of
-  // them is not in flight, whatever its own row says.
+  // Neither is `operator_review`, which `refresh_run_status` writes as soon as
+  // one task is blocked or failed while the others keep working; see
+  // `TERMINAL_RUN_STATUSES`. `cancelled` is unambiguous - no worker will pick a
+  // task of that run up again - so a task still sitting in `queued` under it is
+  // not in flight, whatever its own row says.
   // A run status this client does not recognise joins them: it may well be a
   // live run on a newer server, but this page has no rule that can turn it into
   // an honest sentence, so it stops reading rather than spin on it.
@@ -379,8 +391,9 @@ export const PERSONALIZED_RUN_CEILING_MS = 6 * 60 * 1000;
  * not even after a reload, because the reload recomputed the same expired
  * ceiling and never read the run at all (ux review major 1). Reading is now
  * bounded on its own clock, which starts fresh on every mount: a reload always
- * gets an immediate read, and a shop tablet left open on an abandoned piece
- * still stops re-signing media URLs.
+ * gets an immediate read, and a shop tablet left open on an abandoned run that
+ * never settles stops reading it. It bounds only that live poll - see
+ * `shouldWatchRun` for why a settled run keeps its cheap refresh.
  */
 export const PERSONALIZED_RUN_WATCH_MS = 30 * 60 * 1000;
 
@@ -470,9 +483,18 @@ export function shouldStartRun(input: {
  * reload. Nor is the run settling: `watchRun` widens its own interval to the
  * signed-URL hold window there, and a settled run whose page stops reading
  * altogether is a page whose photographs turn into broken images five minutes
- * later. What stops reading is this page having watched for
- * `PERSONALIZED_RUN_WATCH_MS` - a shop tablet must not re-sign every media URL
- * for the rest of the day.
+ * later.
+ *
+ * `PERSONALIZED_RUN_WATCH_MS` bounds the live poll of a run that has not
+ * settled - the three-second read of a run nobody is advancing, which is what
+ * that window was built for. It deliberately does not bound the settled
+ * refresh: that costs one read per signed-URL window, and ending it was the
+ * cliff moving rather than going away - a shop tablet left on a finished
+ * preview showed four broken photographs about thirty-five minutes in, because
+ * the watch stopped and nothing re-signed. A settled run keeps its one cheap
+ * read per window for as long as the page is open; while the tab is hidden the
+ * browser throttles that timer anyway and `watchRun`'s visibilitychange
+ * listener re-reads the moment it is looked at again.
  */
 export function shouldWatchRun(input: {
   enabled: boolean;
@@ -480,7 +502,9 @@ export function shouldWatchRun(input: {
   settled: boolean;
   watchWindowClosed: boolean;
 }): boolean {
-  return input.enabled && !!input.runId && !input.watchWindowClosed;
+  return (
+    input.enabled && !!input.runId && (!input.watchWindowClosed || input.settled)
+  );
 }
 
 /**

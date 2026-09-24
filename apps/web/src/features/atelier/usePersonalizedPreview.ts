@@ -473,10 +473,11 @@ export function usePersonalizedPreview(input: {
 
   // Durable state, polled and accelerated by Realtime. A settled run is still
   // watched, at the slow signed-URL cadence the watcher switches to, so the
-  // photographs on screen never outlive their signatures; this effect tears the
-  // watcher down when this page's reading window closes. Passing the shopper's
-  // ceiling is not a reason to stop: the capture path opens, and the run is
-  // still shown if it finishes afterwards.
+  // photographs on screen never outlive their signatures - for as long as the
+  // page is open, not only for this page's reading window. What that window
+  // tears down is the live poll of a run that never settled. Passing the
+  // shopper's ceiling is not a reason to stop either: the capture path opens,
+  // and the run is still shown if it finishes afterwards.
   const watching = shouldWatchRun({
     enabled,
     runId,

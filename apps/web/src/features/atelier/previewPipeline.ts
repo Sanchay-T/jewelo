@@ -435,6 +435,7 @@ export function watchRun(options: WatchOptions): () => void {
         const stable = stabilise(run);
         options.onUpdate(stable);
         if (stable?.settled) keepUrlsFresh();
+        else resumeFastCadence();
       })
       .catch((error) => {
         if (!stopped) options.onError?.(error);
@@ -457,6 +458,18 @@ export function watchRun(options: WatchOptions): () => void {
     settledCadence = true;
     clearInterval(timer);
     timer = setInterval(refresh, signedUrlRefreshAfterMs);
+  }
+  /**
+   * Narrow back to the live poll. `settled` is not one-way: a failed studio
+   * strands its dependents, which reads as settled, and then the sweeper
+   * re-dispatches the studio and the run is moving again. Left on the slow
+   * cadence the page would have shown that at up to four minutes' delay.
+   */
+  function resumeFastCadence() {
+    if (stopped || !settledCadence) return;
+    settledCadence = false;
+    clearInterval(timer);
+    timer = setInterval(refresh, interval);
   }
   /** The unmount path: after this nothing reads, times out or listens. */
   function stop() {
