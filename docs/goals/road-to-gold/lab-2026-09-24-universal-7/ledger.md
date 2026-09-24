@@ -101,3 +101,10 @@ Blind, one image at a time, same rubric as UNIV-6, with hamza and madda now the 
 
 Compare the classical cells against the same names in `../lab-2026-09-24-universal-6/` to judge whether naming the marks restored the hamza that the dot-only inventory dropped, and whether it disturbed the dot counts UNIV-6 fixed.
 Compare the rails cells against the same names in `../lab-2026-09-24-universal-5/`, which had no inventory sentence at all.
+
+## Blind verdict (`blind-scores.md`, map in `blind-map.json`)
+
+- Dots right on 24 of 24, hamza and madda right on 12 of 12 that need them, spelled 23 of 24, one piece 21 of 24, presentable 20 of 24.
+- Rails 8 of 8 on every axis. Classical: spelled 15 of 16 (تسنيم b draws the final م as an open bowl and reads تسنى, the same letter-shape defect as UNIV-6 قاسم b), one piece 13 of 16 (كريم a and b split after ر, إبراهيم b split after ر).
+- Against the same names: UNIV-6 (dot inventory) spelled 9 of 16, UNIV-3 classical (wording A) 18 of 24, UNIV-5 rails (wording A) 10 of 16. Naming every dot and every hamza or madda removes the mark errors at the source; what is left is the open final م (spelling) and splits after a non-joining letter (one piece, which the piece reader refused on every split it saw in UNIV-1).
+- Next: UNIV-8 checks A3 on 12 names it was never tuned on, plus one sentence that keeps loops closed.
