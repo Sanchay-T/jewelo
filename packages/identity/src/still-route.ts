@@ -24,7 +24,7 @@
  * log. The only variable part allowed is a value this module has already
  * checked against a closed enum (`layout:<known id>`,
  * `latin_print_construction:<known id>`, `arabic_print_construction:<known id>`,
- * `arabic_one_piece_unproven:<known id>`);
+ * `arabic_one_piece_unproven:<known id>`, `piece_field_missing:<known field>`);
  * anything else collapses to the bare code.
  *
  * Measured on the SP-2d free-route lab, 24 Sep 2026
@@ -52,7 +52,16 @@
  * the shopper's choice and the metal, and neither was ever photographed away
  * from its default. A piece set with stones, or one whose shopper picked a
  * named face (Kufi, Diwani, Signature, Thuluth, Minimal), routes to the stencil
- * (`stones_not_proven`, `lettering_not_default`).
+ * (`stones_not_proven`, `lettering_not_default`). The metal colour is measured
+ * the same way: yellow and rose were both photographed free and passed, white
+ * never was, so white routes to the stencil (`metal_not_proven`).
+ *
+ * A specification that carries the customer's own inspiration photograph routes
+ * to the stencil (`inspiration_not_proven`). No lab ever drew a free piece with
+ * one, and on the live minimal packshot family the prompt writes an
+ * `Image N (role)` line for the stencil and the look only: a free compile with
+ * an inspiration attached hands the model an unlabelled customer photograph and
+ * no stencil to hold the letters.
  */
 
 /** Free prompt, or the deterministic stencil. */
@@ -80,6 +89,13 @@ export interface StillRouteSpecification {
   readonly arabicStyle?: string | null;
   /** `LetteringStyle`: the shopper's own face choice, either script. */
   readonly lettering?: string | null;
+  /** `MetalColor`: "yellow", "white" or "rose". */
+  readonly metalColor?: string | null;
+  /**
+   * `ReferenceAssetInput`: the customer's own inspiration photograph. Read as
+   * presence only - never its contents, which are a customer's file.
+   */
+  readonly referenceAsset?: unknown;
 }
 
 export interface StillRouteInput {
@@ -220,6 +236,33 @@ const DEFAULT_LETTERING = new Set(["classic", "contemporary"]);
 const NONE = "none";
 
 /**
+ * The metal colours a free prompt was measured drawing: yellow in all but four
+ * of the lab cells, and rose in classical, origami-ribbon, framed-minimal and
+ * diamond-rails Love (`docs/goals/road-to-gold/lab-2026-09-24-free/ledger.md`
+ * rows 5, 11, 17, 23, all pass; `lab-2026-09-24-free-route/ledger.md` line 22
+ * and the worn takes in `lab-2026-09-24-free-dependent/ledger.md` lines 54-55).
+ * White gold was never photographed from a free prompt, and the compiled words
+ * are the only thing carrying the colour, so it routes to the stencil.
+ */
+const PROVEN_METAL_COLORS = new Set(["yellow", "rose"]);
+
+/**
+ * The specification fields whose absence is not a default. The atelier writes
+ * every one of them for a new revision (`backendSpecification` in
+ * `apps/web/src/features/atelier/previewHandoff.ts`: `arabicStyle`, `lettering`,
+ * `metalColor`, `stoneCoverage`, `gemstone`), so a missing one is a revision
+ * this module cannot read - not a stoneless piece in the default face. Read as
+ * a closed set of field names, so the code names the field without carrying an
+ * unvalidated value.
+ */
+const REQUIRED_PIECE_FIELDS = [
+  "stoneCoverage",
+  "gemstone",
+  "arabicStyle",
+  "lettering",
+] as const;
+
+/**
  * Decide, before any spend, whether this name can be photographed from a free
  * prompt or must be drawn on the stencil first. Name-driven; it reads the text
  * and the specification, never a rendered piece.
@@ -344,12 +387,31 @@ export function stillRoute(input: StillRouteInput): StillRouteDecision {
     }
   }
 
-  // 6. The piece itself: stoneless, in the construction's default face. Both
-  // labs drew only that piece, and on the free route neither the stones
-  // sentence nor the lettering brief has a stencil behind it to be checked
-  // against - the compiled free prompt is byte for byte the same whichever
-  // face the shopper picked, so a Diwani order photographed free would come
-  // back in whatever the construction paragraph asks for.
+  // 6. The piece itself: stoneless, in the construction's default face, in a
+  // metal colour a lab photographed, with no customer inspiration photograph.
+  // Both labs drew one piece and one piece only, and on the free route there is
+  // no stencil behind the words to check the result against: the stones
+  // sentence, the lettering brief and the metal colour all reach the model as
+  // prose the readers do not judge. The face is the sharpest case - the
+  // compiled free prompt is byte for byte the same whichever face the shopper
+  // picked, so a Diwani order photographed free comes back in whatever the
+  // construction paragraph asks for - but the stones sentence and the metal
+  // colour do change the words, and nothing downstream measures either, so
+  // both stay on what was photographed.
+  //
+  // Absence is not a default here. The atelier writes every one of these
+  // fields on every new revision, so a specification missing one is a revision
+  // this module cannot read.
+  for (const field of REQUIRED_PIECE_FIELDS) {
+    if (specification[field] == null) add(`piece_field_missing:${field}`);
+  }
+  // The customer's own inspiration photograph: no lab drew a free piece with
+  // one, and the live minimal packshot family labels only the stencil and the
+  // look, so a free compile would hand the model an unlabelled photograph of
+  // somebody else's pendant and no stencil to hold the letters.
+  if (specification.referenceAsset != null) add("inspiration_not_proven");
+  const metalColor = specification.metalColor ?? "";
+  if (!PROVEN_METAL_COLORS.has(metalColor)) add("metal_not_proven");
   const coverage = specification.stoneCoverage ?? NONE;
   const chosenStones = specification.gemstones?.length
     ? specification.gemstones

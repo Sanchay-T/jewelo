@@ -433,6 +433,21 @@ const FREE_EVIDENCE_ONLY = [
 ];
 
 /**
+ * What a shopper who picks nothing really carries, exactly as
+ * `backendSpecification` writes it (`apps/web/src/features/atelier/previewHandoff.ts`):
+ * every field present, stoneless, Classic lettering, yellow gold. SP-2e2d made
+ * absence stencil rather than a default, so a route case that means to be free
+ * has to start from a whole specification the way a revision does.
+ */
+const ROUTE_DEFAULT_SPEC = {
+  arabicStyle: "none",
+  lettering: "classic",
+  stoneCoverage: "none",
+  gemstone: "none",
+  metalColor: "yellow",
+} as const;
+
+/**
  * The route rules the free-route lab put in place, the cells it kept free, and
  * the unproven cases closed wide after review.
  */
@@ -487,6 +502,26 @@ const ROUTE_EXPECTATIONS: readonly {
   // `backendSpecification` writes it: Classic lettering, stoneless.
   { label: "Omar as the atelier stores a default order", name: "Omar", language: "en", construction: "classical", specification: { arabicStyle: "none", lettering: "classic", stoneCoverage: "none", gemstone: "none" }, route: "free" },
   { label: "محمد as the atelier stores a default order", name: "محمد", construction: "diamond-rails", specification: { arabicStyle: "contemporary", lettering: "classic", stoneCoverage: "none", gemstone: "none" }, route: "free" },
+  // SP-2e2d. The customer's own inspiration photograph: no lab drew a free
+  // piece with one, and the live minimal packshot family writes an
+  // `Image N (role)` line for the stencil and the look only, so a free compile
+  // would hand the model an unlabelled customer photograph and no stencil.
+  { label: "Omar with an inspiration photograph", name: "Omar", language: "en", construction: "classical", specification: { referenceAsset: { id: "asset", storagePath: "path" } }, route: "stencil", reason: "inspiration_not_proven" },
+  { label: "محمد with an inspiration photograph", name: "محمد", construction: "classical", specification: { referenceAsset: { id: "asset", storagePath: "path" } }, route: "stencil", reason: "inspiration_not_proven" },
+  // SP-2e2d. Absence is not a default: the atelier writes all five fields, so a
+  // specification missing one is a revision the route cannot read.
+  { label: "Omar with no stoneCoverage", name: "Omar", language: "en", construction: "classical", specification: { stoneCoverage: undefined }, route: "stencil", reason: "piece_field_missing:stoneCoverage" },
+  { label: "Omar with no gemstone", name: "Omar", language: "en", construction: "classical", specification: { gemstone: undefined }, route: "stencil", reason: "piece_field_missing:gemstone" },
+  { label: "Omar with no arabicStyle", name: "Omar", language: "en", construction: "classical", specification: { arabicStyle: undefined }, route: "stencil", reason: "piece_field_missing:arabicStyle" },
+  { label: "Omar with no lettering", name: "Omar", language: "en", construction: "classical", specification: { lettering: undefined }, route: "stencil", reason: "piece_field_missing:lettering" },
+  { label: "محمد with no lettering", name: "محمد", construction: "classical", specification: { lettering: undefined }, route: "stencil", reason: "piece_field_missing:lettering" },
+  // SP-2e2d. The metal colour reaches the model as prose no reader judges, so
+  // it is an allowlist of what was photographed free: yellow everywhere and
+  // rose in all four constructions (Love), never white, never absent.
+  { label: "Love in rose gold", name: "Love", language: "en", construction: "classical", specification: { metalColor: "rose" }, route: "free" },
+  { label: "Omar in white gold", name: "Omar", language: "en", construction: "classical", specification: { metalColor: "white" }, route: "stencil", reason: "metal_not_proven" },
+  { label: "محمد in white gold", name: "محمد", construction: "classical", specification: { metalColor: "white" }, route: "stencil", reason: "metal_not_proven" },
+  { label: "Omar with no metalColor", name: "Omar", language: "en", construction: "classical", specification: { metalColor: undefined }, route: "stencil", reason: "metal_not_proven" },
 ];
 for (const expectation of ROUTE_EXPECTATIONS) {
   const decision = stillRoute({
@@ -496,6 +531,7 @@ for (const expectation of ROUTE_EXPECTATIONS) {
       layout: "single-name",
       construction: expectation.construction,
       names: expectation.names,
+      ...ROUTE_DEFAULT_SPEC,
       ...expectation.specification,
     },
   });
@@ -530,7 +566,7 @@ const freeAs = (wrap: (letter: string) => string): string[] => {
       const decision = stillRoute({
         approvedText: wrap(letter),
         language: "ar",
-        specification: { layout: "single-name", construction: "classical" },
+        specification: { layout: "single-name", construction: "classical", ...ROUTE_DEFAULT_SPEC },
       });
       if (decision.route === "free") free.push(letter);
     }
@@ -552,7 +588,14 @@ for (const testCase of FREE_CASES) {
   const decision = stillRoute({
     approvedText: testCase.name,
     language: testCase.language,
-    specification: { layout: "single-name", construction: testCase.construction },
+    specification: {
+      layout: "single-name",
+      construction: testCase.construction,
+      ...ROUTE_DEFAULT_SPEC,
+      // The cell's own metal colour, so the rose Love cell proves rose routes
+      // free rather than inheriting the yellow default (SP-2e2d).
+      metalColor: testCase.metalColor,
+    },
   });
   const wantRoute = testCase.routesStencil ? "stencil" : "free";
   if (
@@ -797,20 +840,30 @@ for (const [label, run, want] of [
  * the stencil. The constructor takes no network: nothing here is paid and
  * nothing here connects.
  *
- * SP-2e2b adds the other half of the decision: the release. The live
- * `image.packshot` releases write the stencil into the template prose, and such
- * a template cannot compile free at all - the tag survives substitution and
- * `compileStillPrompt` refuses the snapshot. So an allowlisted name pinned to
- * one of them routes to the stencil and compiles there, which is the last pair
- * of rows below.
+ * SP-2e2b adds the other half of the decision: the release. A release whose
+ * template prose writes the stencil into the words itself cannot compile free
+ * at all - the tag survives substitution and `compileStillPrompt` refuses the
+ * snapshot - so an allowlisted name pinned to one of them routes to the stencil
+ * and compiles there, which is the last pair of rows below. The live studio
+ * release is the minimal `image.packshot@v4`, whose prose does not name the
+ * stencil (the compiler writes the `Image N (stencil)` line only when the
+ * stencil is attached), so the guard below is pinned against the shape of the
+ * earlier `@v2`/`@v3` prose rather than against what production runs today: the
+ * refusal has to stay for the day a release names the stencil again.
  */
 const routeRevision = (
   approvedText: string,
   language: "en" | "ar",
   construction = "classical",
+  specification: Record<string, unknown> = {},
 ) => ({
   id: "revision",
-  specification: { layout: "single-name", construction },
+  specification: {
+    layout: "single-name",
+    construction,
+    ...ROUTE_DEFAULT_SPEC,
+    ...specification,
+  },
   identity_anchor: {
     approvedText,
     language,
@@ -818,8 +871,9 @@ const routeRevision = (
     fingerprint: "fingerprint",
   },
 });
-/** The shape of the live `@v2`/`@v3` packshot releases: the prose names the
- * stencil itself, where the baseline template leaves that to the compiler. */
+/** The shape of the earlier `@v2`/`@v3` packshot releases: the prose names the
+ * stencil itself, where the baseline template and the live minimal `@v4` both
+ * leave that to the compiler. */
 const LIVE_SHAPE_PACKSHOT = `${BASELINE_PROMPT_TEMPLATES["image.packshot"]}\nExact spelling and glyph order from @stencil.`;
 const routeRelease = (template: string) => ({
   id: "release",
@@ -862,11 +916,52 @@ for (const [name, language, construction, freeRouteEnabled, template, want] of [
     routeRevision(name, language, construction),
     routeRelease(template),
   );
-  const label = `studio ${name} ${construction} on the ${live ? "live-shape @v3" : "baseline"} packshot with STILL_FREE_ROUTE=${freeRouteEnabled ? 1 : 0} routes ${want}`;
+  const label = `studio ${name} ${construction} on the ${live ? "stencil-naming @v2/@v3-shape" : "baseline"} packshot with STILL_FREE_ROUTE=${freeRouteEnabled ? 1 : 0} routes ${want}`;
   if (got === want) console.log(`MATCH  ${label}`);
   else {
     failed += 1;
     console.log(`DIFFER ${label}: got ${got}`);
+  }
+}
+
+/**
+ * SP-2e2d: the same call, for the specification fields the second adversarial
+ * pass found the route reading as defaults. An inspiration photograph, a metal
+ * colour no lab drew free, and a missing field each route to the stencil with
+ * the switch on; with the switch off every one of them is stencil anyway.
+ */
+for (const [label, specification, want] of [
+  ["an inspiration photograph", { referenceAsset: { id: "asset", storagePath: "path" } }, "stencil"],
+  ["white gold", { metalColor: "white" }, "stencil"],
+  ["rose gold", { metalColor: "rose" }, "free"],
+  ["no metalColor", { metalColor: undefined }, "stencil"],
+  ["no lettering", { lettering: undefined }, "stencil"],
+  ["no stoneCoverage", { stoneCoverage: undefined }, "stencil"],
+  ["no gemstone", { gemstone: undefined }, "stencil"],
+  ["no arabicStyle", { arabicStyle: undefined }, "stencil"],
+] as const) {
+  for (const freeRouteEnabled of [true, false]) {
+    const repository = new SupabasePresentationRepository(
+      "https://lab.invalid",
+      "no-key",
+      false,
+      false,
+      new Set<string>(),
+      "caleums-final-media-v2",
+      new Map<string, string>(),
+      freeRouteEnabled,
+    );
+    const wanted = freeRouteEnabled ? want : "stencil";
+    const got = repository.studioStillRoute(
+      routeRevision("Omar", "en", "classical", { ...specification }),
+      routeRelease(BASELINE_PACKSHOT),
+    );
+    const line = `studio Omar classical with ${label} and STILL_FREE_ROUTE=${freeRouteEnabled ? 1 : 0} routes ${wanted}`;
+    if (got === wanted) console.log(`MATCH  ${line}`);
+    else {
+      failed += 1;
+      console.log(`DIFFER ${line}: got ${got}`);
+    }
   }
 }
 
