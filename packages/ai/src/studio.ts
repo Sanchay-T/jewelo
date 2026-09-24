@@ -497,6 +497,7 @@ export class OpenAIPieceReader implements StudioPieceReader {
               {
                 type: "input_image",
                 image_url: `data:${media.mimeType};base64,${base64}`,
+                detail: "high",
               },
             ],
           },
