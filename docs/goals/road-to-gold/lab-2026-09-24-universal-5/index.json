@@ -1,0 +1,176 @@
+{
+  "lab": "lab-2026-09-24-universal-5",
+  "task": "UNIV-5",
+  "date": "2026-09-24",
+  "compilerVersion": "caleums-still-compiler-v4",
+  "model": "gpt-image-2.5-sunburst",
+  "aspectRatio": "1:1",
+  "route": "free",
+  "images": [
+    "1 = look reference (the construction's crop); no stencil, no master, no style anchor"
+  ],
+  "cells": [
+    {
+      "cell": "diamond-rails-qasim-ar",
+      "file": "prompts/diamond-rails-qasim-ar.txt",
+      "name": "قاسم",
+      "construction": "diamond-rails",
+      "look": true,
+      "sha256": "0d503318d2a217030b64371ba1184d573302365cbd0407ec1f863c5bb689885c",
+      "takes": [
+        {
+          "take": "a",
+          "taskId": "f64ed74d-37d0-49dc-87d3-973ed1456995",
+          "file": "img/diamond-rails-qasim-ar-a.png"
+        },
+        {
+          "take": "b",
+          "taskId": "da22b5a2-6ad2-4725-8b26-1ad6f10238e2",
+          "file": "img/diamond-rails-qasim-ar-b.png"
+        }
+      ]
+    },
+    {
+      "cell": "diamond-rails-karim-ar",
+      "file": "prompts/diamond-rails-karim-ar.txt",
+      "name": "كريم",
+      "construction": "diamond-rails",
+      "look": true,
+      "sha256": "358d7f97fd6688e3baa58019a81c5c5520fd5509c9e316ddbc9d674e560322bc",
+      "takes": [
+        {
+          "take": "a",
+          "taskId": "672e2ebc-e968-41d8-9e15-720a9dd32712",
+          "file": "img/diamond-rails-karim-ar-a.png"
+        },
+        {
+          "take": "b",
+          "taskId": "f774368c-43a2-4770-9886-7075905bb427",
+          "file": "img/diamond-rails-karim-ar-b.png"
+        }
+      ]
+    },
+    {
+      "cell": "diamond-rails-zafir-ar",
+      "file": "prompts/diamond-rails-zafir-ar.txt",
+      "name": "ظافر",
+      "construction": "diamond-rails",
+      "look": true,
+      "sha256": "59caa40635369795f25d178b44d155ff8e7b46da8f4eed29748b47099fda97a7",
+      "takes": [
+        {
+          "take": "a",
+          "taskId": "ab22d6f2-6014-4936-b035-252c6dcdd859",
+          "file": "img/diamond-rails-zafir-ar-a.png"
+        },
+        {
+          "take": "b",
+          "taskId": "441fc0df-a682-40e7-a9f2-b365e454c764",
+          "file": "img/diamond-rails-zafir-ar-b.png"
+        }
+      ]
+    },
+    {
+      "cell": "diamond-rails-amna-ar",
+      "file": "prompts/diamond-rails-amna-ar.txt",
+      "name": "آمنة",
+      "construction": "diamond-rails",
+      "look": true,
+      "sha256": "4ba672c3095719063b9712510e99fcf59f1a512f91b575684ac6c1d1cbfed82f",
+      "takes": [
+        {
+          "take": "a",
+          "taskId": "61bcb60d-ca8d-44b2-a4e3-447f18f0f121",
+          "file": "img/diamond-rails-amna-ar-a.png"
+        },
+        {
+          "take": "b",
+          "taskId": "1f44c86b-2687-4503-899d-2c9d34c4321b",
+          "file": "img/diamond-rails-amna-ar-b.png"
+        }
+      ]
+    },
+    {
+      "cell": "diamond-rails-tasneem-ar",
+      "file": "prompts/diamond-rails-tasneem-ar.txt",
+      "name": "تسنيم",
+      "construction": "diamond-rails",
+      "look": true,
+      "sha256": "27ef8b5823896823a50dc4f5f7f06f8f7cb2917ae765bb6828d3c3c6c197d18e",
+      "takes": [
+        {
+          "take": "a",
+          "taskId": "ba586d02-2fb9-4608-9728-e5d68bf7f0fc",
+          "file": "img/diamond-rails-tasneem-ar-a.png"
+        },
+        {
+          "take": "b",
+          "taskId": "8a06e507-beab-4a03-a242-d3599ff728f0",
+          "file": "img/diamond-rails-tasneem-ar-b.png"
+        }
+      ]
+    },
+    {
+      "cell": "diamond-rails-ibrahim-ar",
+      "file": "prompts/diamond-rails-ibrahim-ar.txt",
+      "name": "إبراهيم",
+      "construction": "diamond-rails",
+      "look": true,
+      "sha256": "21db862ba43ca59f7b32ff875d2df31253fd73455a2415f8b29e51a210a187eb",
+      "takes": [
+        {
+          "take": "a",
+          "taskId": "1ddde205-ebfc-4e9c-98eb-d78d5f2e45c4",
+          "file": "img/diamond-rails-ibrahim-ar-a.png"
+        },
+        {
+          "take": "b",
+          "taskId": "3958cfa4-0c5f-430f-a4f5-ab864fac2af4",
+          "file": "img/diamond-rails-ibrahim-ar-b.png"
+        }
+      ]
+    },
+    {
+      "cell": "diamond-rails-ghada-ar",
+      "file": "prompts/diamond-rails-ghada-ar.txt",
+      "name": "غادة",
+      "construction": "diamond-rails",
+      "look": true,
+      "sha256": "6590aecee0c8443a46379b2ac2dae7c6f957f15df70447d255b321f853d3e0ac",
+      "takes": [
+        {
+          "take": "a",
+          "taskId": "c205db6b-e501-417e-981c-fd2727c73ab4",
+          "file": "img/diamond-rails-ghada-ar-a.png"
+        },
+        {
+          "take": "b",
+          "taskId": "4ba1ee75-514e-4236-819f-bae2d6c5253f",
+          "file": "img/diamond-rails-ghada-ar-b.png"
+        }
+      ]
+    },
+    {
+      "cell": "diamond-rails-mumin-ar",
+      "file": "prompts/diamond-rails-mumin-ar.txt",
+      "name": "مؤمن",
+      "construction": "diamond-rails",
+      "look": true,
+      "sha256": "1d3011fba8f050d8f70e049cc79d3d2f5e4f4272fa3090b305bc5bb4c6da1a02",
+      "takes": [
+        {
+          "take": "a",
+          "taskId": "63467ddb-c935-4568-831a-6629f8e9e7c0",
+          "file": "img/diamond-rails-mumin-ar-a.png"
+        },
+        {
+          "take": "b",
+          "taskId": "6c7147da-8b99-454e-adb3-d71ff670f176",
+          "file": "img/diamond-rails-mumin-ar-b.png"
+        }
+      ]
+    }
+  ],
+  "wording": "A (production name_spelling at HEAD)",
+  "contactSheet": "<scratchpad>/univ5-rails.webp"
+}

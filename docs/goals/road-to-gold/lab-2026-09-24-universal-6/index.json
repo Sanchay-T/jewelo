@@ -1,0 +1,203 @@
+{
+  "lab": "lab-2026-09-24-universal-6",
+  "task": "UNIV-6",
+  "date": "2026-09-24",
+  "compilerVersion": "caleums-still-compiler-v4",
+  "model": "gpt-image-2.5-sunburst",
+  "aspectRatio": "1:1",
+  "route": "free",
+  "wording": "A2 (wording A at HEAD plus a per-name dot inventory sentence)",
+  "images": [
+    "1 = look reference (classical crop); no stencil, no master, no style anchor"
+  ],
+  "creditsBefore": 199561,
+  "creditsAfter": 199153,
+  "creditsUsed": 408,
+  "verdict": "pending-blind-viewer",
+  "cells": [
+    {
+      "cell": "classical-qasim-ar-A2",
+      "slug": "qasim",
+      "name": "قاسم",
+      "file": "prompts/classical-qasim-ar-A2.txt",
+      "construction": "classical",
+      "look": true,
+      "dotInventory": "Its dots, exactly and only: two above ق. No other letter has any dot, and no dot is added anywhere else.",
+      "baseSha256": "dfebe53a3d36a80be760e702fc285a6b35b4b1a6889d030b5a7647bbc88cfe39",
+      "sha256": "c1470cb1eed789d30cc13a571881a345447de4a93cbe8d855fff603130a6df46",
+      "takes": [
+        {
+          "take": "a",
+          "taskId": "f1fbc7ff-7ba4-46f2-ad57-a5f45c517ad7",
+          "file": "img/classical-qasim-ar-a.png"
+        },
+        {
+          "take": "b",
+          "taskId": "267e457e-412d-4418-a17c-04b9585629c4",
+          "file": "img/classical-qasim-ar-b.png"
+        }
+      ]
+    },
+    {
+      "cell": "classical-ahmad-ar-A2",
+      "slug": "ahmad",
+      "name": "أحمد",
+      "file": "prompts/classical-ahmad-ar-A2.txt",
+      "construction": "classical",
+      "look": true,
+      "dotInventory": "This name has no dots at all; do not add any dot anywhere.",
+      "baseSha256": "91592e7b401fdaac523aa71ee5979b0791aaa45f2f8eec5b30d232f9b8d673cb",
+      "sha256": "c84c4a7bd2252a59e5dca76b074eb3fb768667269fb6c8128b9a8eb628d13383",
+      "takes": [
+        {
+          "take": "a",
+          "taskId": "5d902760-97b7-432b-b30d-dee25a966bba",
+          "file": "img/classical-ahmad-ar-a.png"
+        },
+        {
+          "take": "b",
+          "taskId": "c1bb108d-5eaf-45b8-bbf0-46ee89bd0472",
+          "file": "img/classical-ahmad-ar-b.png"
+        }
+      ]
+    },
+    {
+      "cell": "classical-karim-ar-A2",
+      "slug": "karim",
+      "name": "كريم",
+      "file": "prompts/classical-karim-ar-A2.txt",
+      "construction": "classical",
+      "look": true,
+      "dotInventory": "Its dots, exactly and only: two below ي. No other letter has any dot, and no dot is added anywhere else.",
+      "baseSha256": "6d554939b65728629cd7564e2d6fa8b9985651501953ca15edc2184c64a7cd23",
+      "sha256": "a474a088d0a94a8703d11ee70e1cf882550504201fe815e77cc60bf1e3017397",
+      "takes": [
+        {
+          "take": "a",
+          "taskId": "24cc8436-c45a-4236-aa46-725080ab1566",
+          "file": "img/classical-karim-ar-a.png"
+        },
+        {
+          "take": "b",
+          "taskId": "0d8f5007-003b-4479-9a08-ac1b50e36904",
+          "file": "img/classical-karim-ar-b.png"
+        }
+      ]
+    },
+    {
+      "cell": "classical-tasneem-ar-A2",
+      "slug": "tasneem",
+      "name": "تسنيم",
+      "file": "prompts/classical-tasneem-ar-A2.txt",
+      "construction": "classical",
+      "look": true,
+      "dotInventory": "Its dots, exactly and only: two above ت, one above ن, two below ي. No other letter has any dot, and no dot is added anywhere else.",
+      "baseSha256": "f422a9c48e55bac46136fff0472020b2d2ebc09547505ee72d12d791ef7c16c2",
+      "sha256": "ae388b64368ce7cd92587783b70ca8792c773b61e11edb7b9d6ee55387fc6de6",
+      "takes": [
+        {
+          "take": "a",
+          "taskId": "085a11c1-39ed-436e-be5e-5dff79355735",
+          "file": "img/classical-tasneem-ar-a.png"
+        },
+        {
+          "take": "b",
+          "taskId": "f95e12bd-fbf4-41dc-b841-35994c08e71a",
+          "file": "img/classical-tasneem-ar-b.png"
+        }
+      ]
+    },
+    {
+      "cell": "classical-mumin-ar-A2",
+      "slug": "mumin",
+      "name": "مؤمن",
+      "file": "prompts/classical-mumin-ar-A2.txt",
+      "construction": "classical",
+      "look": true,
+      "dotInventory": "Its dots, exactly and only: one above ن. No other letter has any dot, and no dot is added anywhere else.",
+      "baseSha256": "89f2a81a763e48e2d69ff4c14dfd56a9a92612451674661a0e81ffa55ac8e395",
+      "sha256": "d5ec364ff31b95aed7065253bcb4298983ba0ce680af078a1bd7861c9966532c",
+      "takes": [
+        {
+          "take": "a",
+          "taskId": "9309dc34-1197-489f-99e7-7b046d61d9f7",
+          "file": "img/classical-mumin-ar-a.png"
+        },
+        {
+          "take": "b",
+          "taskId": "80856b51-a248-426a-9b45-b6bbf3637e14",
+          "file": "img/classical-mumin-ar-b.png"
+        }
+      ]
+    },
+    {
+      "cell": "classical-ibrahim-ar-A2",
+      "slug": "ibrahim",
+      "name": "إبراهيم",
+      "file": "prompts/classical-ibrahim-ar-A2.txt",
+      "construction": "classical",
+      "look": true,
+      "dotInventory": "Its dots, exactly and only: one below ب, two below ي. No other letter has any dot, and no dot is added anywhere else.",
+      "baseSha256": "e44b89a73947ebd43c29c6f26161c54435d57f3419e7a52f880b61ae66393299",
+      "sha256": "c9432bde9b309588050ac12c3fbeeba8b63beb7fa0240d3000b53ffbcc44f2a7",
+      "takes": [
+        {
+          "take": "a",
+          "taskId": "3ca8a82a-4f2b-4a34-8b63-117185536489",
+          "file": "img/classical-ibrahim-ar-a.png"
+        },
+        {
+          "take": "b",
+          "taskId": "917bbbf4-017c-413b-b15d-28ce8aaa1cce",
+          "file": "img/classical-ibrahim-ar-b.png"
+        }
+      ]
+    },
+    {
+      "cell": "classical-shaikha-ar-A2",
+      "slug": "shaikha",
+      "name": "شيخة",
+      "file": "prompts/classical-shaikha-ar-A2.txt",
+      "construction": "classical",
+      "look": true,
+      "dotInventory": "Its dots, exactly and only: three above ش, two below ي, one above خ, two above ة. No other letter has any dot, and no dot is added anywhere else.",
+      "baseSha256": "8f8a21a175a7dd8b80cdefb701c33ee4aa012092926d099618de47589c485f19",
+      "sha256": "da39a5567cd391ffcf179a2fbffee467dac36e0dc8ae9b3a722871578cd0d852",
+      "takes": [
+        {
+          "take": "a",
+          "taskId": "4082a940-a44d-44df-922f-203e9337c4d3",
+          "file": "img/classical-shaikha-ar-a.png"
+        },
+        {
+          "take": "b",
+          "taskId": "3f7c7843-5e67-4a77-86c9-a9d86eb704e7",
+          "file": "img/classical-shaikha-ar-b.png"
+        }
+      ]
+    },
+    {
+      "cell": "classical-aisha-ar-A2",
+      "slug": "aisha",
+      "name": "عائشة",
+      "file": "prompts/classical-aisha-ar-A2.txt",
+      "construction": "classical",
+      "look": true,
+      "dotInventory": "Its dots, exactly and only: three above ش, two above ة. No other letter has any dot, and no dot is added anywhere else.",
+      "baseSha256": "03b4fb85b66bd61e41f5c3595d1ae3f124429f72b41aad7d7083d121d8d02bf8",
+      "sha256": "b52d2c39bded2d44a2c5237e869a31f339ad8a67b156c03c0bc2a9b0cc78d46c",
+      "takes": [
+        {
+          "take": "a",
+          "taskId": "b6e035d7-bd88-44b3-b888-e752ad4127a5",
+          "file": "img/classical-aisha-ar-a.png"
+        },
+        {
+          "take": "b",
+          "taskId": "33df21e3-5326-45fe-9fa0-c34be49c86cf",
+          "file": "img/classical-aisha-ar-b.png"
+        }
+      ]
+    }
+  ]
+}
