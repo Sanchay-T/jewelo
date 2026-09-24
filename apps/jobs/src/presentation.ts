@@ -585,6 +585,60 @@ export async function executePresentationTask(
   // Name-rejected stills are kept in private storage so an operator can see
   // what the model actually engraved; they never become assets.
   const rejectedObjectPaths: string[] = [];
+  // Both deterministic refusals in the loop below - a pendant that is not one
+  // piece, and a name the model did not engrave - end an attempt the same way:
+  // keep the still as evidence, fail this attempt inline, then either stop at
+  // operator review or book the next attempt and regenerate.
+  //
+  // Inline is the whole point. Thrown instead, they land in the outer `catch`,
+  // whose `fail` is not terminal until the attempt budget is reached and never
+  // bumps the attempt - so an attempt that has already written its immutable
+  // provider output checkpoint goes `retrying`, the stale sweeper's
+  // `has_checkpoint` branch flips it back to `verifying`, the resumed dispatch
+  // loads the SAME checkpoint bytes, pays for the same read, gets the same
+  // refusal, and repeats once per stale window for ever: never terminal, never
+  // re-shot, never in front of an operator.
+  //
+  // Returns the terminal result to return, or `undefined` when the caller
+  // should `continue` into the next regeneration.
+  const refuseAttempt = async (
+    media: GeneratedMedia,
+    error: Error,
+    terminal: boolean,
+  ) => {
+    if (repository.storeRejectedOutput)
+      rejectedObjectPaths.push(
+        await repository.storeRejectedOutput({
+          task,
+          run,
+          revision,
+          attempt: reservation.attempt,
+          media,
+        }),
+      );
+    await repository.fail({
+      task,
+      run,
+      attempt: reservation.attempt,
+      error,
+      terminal,
+      actualCostCents: actualCostCents ?? 0,
+      rejectedObjectPaths,
+    });
+    if (terminal)
+      return {
+        status: "operator_review" as const,
+        attempt: reservation.attempt,
+      };
+    reservation = await repository.reserveAttempt(
+      task,
+      provider,
+      model,
+      reservation.attempt + 1,
+    );
+    actualCostCents = undefined;
+    return undefined;
+  };
   try {
     // A studio still whose engraved name is not the approved one is regenerated
     // in place: at most two extra paid attempts, then operator review.
@@ -678,22 +732,18 @@ export async function executePresentationTask(
           verification.singleConnectedPiece === true &&
           piece.singleConnectedPiece === true;
         if (piece.singleConnectedPiece !== true) {
-          // Same keep-the-evidence mechanism the name-mismatch path uses; the
-          // `catch` below hands `rejectedObjectPaths` to `fail`, so an operator
-          // can look at the split piece that was refused. The thrown message
-          // stays exactly SP-1's code - the reader's notes are prose and
+          // Exactly the name-mismatch path: the split still is kept as
+          // evidence, this attempt fails in place, and a fresh still is shot
+          // rather than the refused checkpoint being read again. The error
+          // code stays SP-1's - the reader's notes are prose and
           // `terminal_error_code` is customer-visible.
-          if (repository.storeRejectedOutput)
-            rejectedObjectPaths.push(
-              await repository.storeRejectedOutput({
-                task,
-                run,
-                revision,
-                attempt: reservation.attempt,
-                media,
-              }),
-            );
-          throw new Error("identity_not_one_piece");
+          const refused = await refuseAttempt(
+            media,
+            new Error("identity_not_one_piece"),
+            regeneration >= 2 || reservation.attempt >= attemptBudget,
+          );
+          if (refused) return refused;
+          continue;
         }
       }
       if (nameReader) {
@@ -736,45 +786,18 @@ export async function executePresentationTask(
           modelReportedMatch: reading.matches,
         };
         if (!passed) {
-          const terminal =
-            letterlessApproved ||
-            regeneration >= 2 ||
-            reservation.attempt >= attemptBudget;
-          if (repository.storeRejectedOutput)
-            rejectedObjectPaths.push(
-              await repository.storeRejectedOutput({
-                task,
-                run,
-                revision,
-                attempt: reservation.attempt,
-                media,
-              }),
-            );
-          await repository.fail({
-            task,
-            run,
-            attempt: reservation.attempt,
-            error: new Error(
+          const refused = await refuseAttempt(
+            media,
+            new Error(
               letterlessApproved
                 ? "approved_text_has_no_letters"
                 : nameMismatchCode(readText),
             ),
-            terminal,
-            actualCostCents: actualCostCents ?? 0,
-            rejectedObjectPaths,
-          });
-          if (terminal)
-            return {
-              status: "operator_review" as const,
-              attempt: reservation.attempt,
-            };
-          reservation = await repository.reserveAttempt(
-            task,
-            provider,
-            model,
-            reservation.attempt + 1,
+            letterlessApproved ||
+              regeneration >= 2 ||
+              reservation.attempt >= attemptBudget,
           );
-          actualCostCents = undefined;
+          if (refused) return refused;
           continue;
         }
       }

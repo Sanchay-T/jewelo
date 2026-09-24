@@ -1013,12 +1013,24 @@ export const pipelineLimitsSchema = z
      * its HTTP request, in whole seconds, and the value the executor route's
      * `maxDuration` must carry.
      *
-     * A still makes three provider calls in sequence - the image edit
-     * (`OpenAIStillAdapter.generate`), the still verification
-     * (`OpenAIStudioVerifier.verify`) and the engraved-name read
-     * (`OpenAINameReader.read`) - each aborted by its own timeout, plus the
-     * local work `localWorkAllowanceMs` covers. Anything less is a cap that
-     * kills a request the pipeline is still legally inside.
+     * One pass of a still makes three provider calls in sequence - the image
+     * edit (`OpenAIStillAdapter.generate`) and then, in real mode, the two
+     * vision reads: the blind one-piece read (`OpenAIPieceReader.read`) and the
+     * engraved-name read (`OpenAINameReader.read`). The verifier that used to
+     * be the second call is the mock since 2026-08-27 and costs nothing, so the
+     * count is unchanged: one provider timeout plus two vision timeouts, each
+     * aborted by its own, plus the local work `localWorkAllowanceMs` covers.
+     * Anything less is a cap that kills a request the pipeline is still legally
+     * inside.
+     *
+     * This is the cap for one pass, not for a dispatch that regenerates. A
+     * refused piece or a misread name regenerates in place inside the same
+     * request, up to three passes, so the worst case is about three times this
+     * value. The cap is not raised for it: `staleRecoveryWindowMs` is derived
+     * from this number, and tripling it would leave a genuinely dead dispatch
+     * unreclaimed for that long. A regenerating dispatch that outlives the
+     * window is recovered by the checkpoint path instead of being killed
+     * mid-flight, which is the cheaper of the two wrong answers.
      */
     executorRequestCapSeconds: Math.ceil(
       (value.providerRequestTimeoutMs +
