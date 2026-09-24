@@ -126,6 +126,7 @@ export async function runPresentationTask(
         dependencies.generator,
         dependencies.verifier,
         dependencies.nameReader,
+        dependencies.pieceReader,
       );
     });
   const dispatch = overrides.dispatch ?? dispatchPendingOutbox;

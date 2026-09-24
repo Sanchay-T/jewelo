@@ -84,7 +84,7 @@ Fix tests (classical studio, 2 takes each, `img/v3/`):
 
 | Approach | فاطمة | أسماء | عمران |
 | --- | --- | --- | --- |
-| Free prompt + a weld line the code computes per name ("the tail of the ط runs into the foot of the ا and is welded to it") | one piece in 2/2; take a reads right, take b makes the ا look like ل | joined in 2/2; the ا leans toward ل | fail 2/2: ر+ا became لا (reads عملان) and the ن dot floats |
+| Free prompt + a weld line the code computes per name ("the tail of the ط runs into the foot of the ا and is welded to it") | take a looked whole but the blind piece reader found the ة dots hang from the ring, not the letter (`piece-reader-replay.md`); take b makes the ا look like ل | joined in 2/2; the ا leans toward ل | fail 2/2: ر+ا became لا (reads عملان) and the ن dot floats |
 | Production stencil as `@stencil` (engine bridges every gap, 558/558 single-piece) plus the free style and realism blocks | one piece, spelling held, visible baseline bar, clunkier | not run | one piece, dot attached, bridge bars show |
 
 Gap list per name is deterministic: `فاطمة` -> ا|ط; `أسماء` -> أ|س, ا|ء; `عمران` -> ر|ا, ا|ن; `محمد` -> none.

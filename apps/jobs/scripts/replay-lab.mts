@@ -357,6 +357,7 @@ function projectGates(decision: VerificationDecision): GateRecord[] {
     },
     flag("correctMetalAndStones", decision.correctMetalAndStones),
     flag("coherentPendant", decision.coherentPendant),
+    flag("singleConnectedPiece", decision.singleConnectedPiece),
     flag("exactlyTwoConnectedRings", decision.exactlyTwoConnectedRings),
     flag("correctShot", decision.correctShot),
     flag("noAddedIdentityElements", decision.noAddedIdentityElements),
@@ -542,7 +543,14 @@ async function main(): Promise<void> {
       stencil: stencil?.file ?? null,
       identityImageUrl,
       references,
-      decision: decision.passed ? "accepted" : "rejected",
+      // A pendant the verifier says is not one connected piece is rejected
+      // here exactly as production rejects it (`identity_not_one_piece`),
+      // whatever `passed` claims; otherwise this tool would score a split
+      // piece as accepted.
+      decision:
+        decision.passed && decision.singleConnectedPiece === true
+          ? "accepted"
+          : "rejected",
       notRunReason: null,
       gateSource: carried === null ? "projected" : "carried",
       gates: carried ?? projectGates(decision),

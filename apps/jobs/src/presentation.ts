@@ -3,6 +3,7 @@ import {
   MockStudioGenerator,
   MockStudioVerifier,
   OpenAINameReader,
+  OpenAIPieceReader,
   OpenAIStillAdapter,
   PRESENTATION_ASPECT_RATIO,
   STILL_COMPILER_VERSION,
@@ -16,6 +17,7 @@ import {
   type PromptVariableSnapshot,
   type StudioGenerator,
   type StudioNameReader,
+  type StudioPieceReader,
   type StudioVerifier,
 } from "@jewelo/ai";
 import { parseJobsEnv, pipelineLimits } from "@jewelo/config";
@@ -309,6 +311,7 @@ export async function executePresentationTask(
   generator: StudioGenerator,
   verifier: StudioVerifier,
   nameReader?: StudioNameReader,
+  pieceReader?: StudioPieceReader,
 ) {
   const {
     task,
@@ -655,6 +658,44 @@ export async function executePresentationTask(
       )
         throw new Error("identity_verification_failed");
       const record = verification as unknown as Record<string, unknown>;
+      // SP-2a. In real mode the verifier above is the mock, so its
+      // `singleConnectedPiece` is always true and the gate on it never fires.
+      // This blind reader is the live one: one image, one question, no stencil
+      // and no approved text. It runs before the name read because a pendant
+      // cut in two halves still spells the name, so the name read would pay a
+      // second vision call to agree with a piece no jeweller can make.
+      if (pieceReader) {
+        const piece = await pieceReader.read(media);
+        record.pieceCheck = {
+          singleConnectedPiece: piece.singleConnectedPiece,
+          notes: piece.notes,
+        };
+        // One authoritative verdict in the stored record: the verifier and the
+        // reader must both say yes. `complete_presentation` restates this field
+        // in the database, and the dependent-view reuse guard reads it back, so
+        // it has to be the conjunction and not the mock verifier's opinion.
+        record.singleConnectedPiece =
+          verification.singleConnectedPiece === true &&
+          piece.singleConnectedPiece === true;
+        if (piece.singleConnectedPiece !== true) {
+          // Same keep-the-evidence mechanism the name-mismatch path uses; the
+          // `catch` below hands `rejectedObjectPaths` to `fail`, so an operator
+          // can look at the split piece that was refused. The thrown message
+          // stays exactly SP-1's code - the reader's notes are prose and
+          // `terminal_error_code` is customer-visible.
+          if (repository.storeRejectedOutput)
+            rejectedObjectPaths.push(
+              await repository.storeRejectedOutput({
+                task,
+                run,
+                revision,
+                attempt: reservation.attempt,
+                media,
+              }),
+            );
+          throw new Error("identity_not_one_piece");
+        }
+      }
       if (nameReader) {
         const expected = revision.identity_anchor.approvedText;
         const reading = await nameReader.read(media, expected);
@@ -1116,6 +1157,7 @@ export class SupabasePresentationRepository implements PresentationRepository {
       !["openai", "mock"].includes(asset.provider) ||
       asset.presentation_view !== "studio" || asset.pipeline_release !== task.pipeline_release ||
       !verification || verification.passed !== true || verification.exactText !== true ||
+      verification.singleConnectedPiece !== true ||
       verification.exactScript !== true || verification.exactlyTwoConnectedRings !== true ||
       verification.correctShot !== true || verification.noAddedIdentityElements !== true ||
       (asset.provider === "openai" && nameCheck?.passed !== true)
@@ -1655,6 +1697,8 @@ export function productionPresentationDependencies(
       generator: new MockStudioGenerator(),
       verifier: new MockStudioVerifier(),
       nameReader: undefined as StudioNameReader | undefined,
+      // Mock mode keeps no readers: local runs stay free and unchanged.
+      pieceReader: undefined as StudioPieceReader | undefined,
     };
   return {
     repository,
@@ -1670,5 +1714,10 @@ export function productionPresentationDependencies(
       config.OPENAI_API_KEY!,
       config.OPENAI_VERIFIER_MODEL,
     ) as StudioNameReader | undefined,
+    // The only live one-piece check: the verifier above is the mock.
+    pieceReader: new OpenAIPieceReader(
+      config.OPENAI_API_KEY!,
+      config.OPENAI_VERIFIER_MODEL,
+    ) as StudioPieceReader | undefined,
   };
 }

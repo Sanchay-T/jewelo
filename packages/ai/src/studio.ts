@@ -46,6 +46,14 @@ export interface VerificationDecision {
   notes: string;
 }
 
+/**
+ * The one definition of "one piece", shared by the full verifier and the blind
+ * piece reader. Two copies of this sentence would drift, and the two checks
+ * would then disagree about the same photograph.
+ */
+export const ONE_PIECE_RULE =
+  "singleConnectedPiece is true only if every letter, dot, diacritic, mark, frame and rail between the two rings is joined into one continuous piece of metal. It is false if any part of the name is a separate object, if any dot floats free, or if any gap separates two parts of the name. Arabic letters such as ا د ذ ر ز و do not join the next letter in handwriting, and a pendant that keeps that gap is two pieces, not one.";
+
 export interface StudioGenerator {
   generate(input: StudioGenerationInput): Promise<GeneratedMedia>;
 }
@@ -195,7 +203,7 @@ export class OpenAIStudioVerifier implements StudioVerifier {
                   `Compare the generated pendant with the immutable identity silhouette and approved exact text ${JSON.stringify(input.approvedText)}.`,
                   `Identity fingerprint: ${input.identityFingerprint}. Required shot: ${input.presentationView}.`,
                   `Approved configuration: ${JSON.stringify(input.specification)}.`,
-                  "singleConnectedPiece is true only if every letter, dot, diacritic, mark, frame and rail between the two rings is joined into one continuous piece of metal. It is false if any part of the name is a separate object, if any dot floats free, or if any gap separates two parts of the name. Arabic letters such as ا د ذ ر ز و do not join the next letter in handwriting, and a pendant that keeps that gap is two pieces, not one.",
+                  ONE_PIECE_RULE,
                   "Fail unless spelling and script are exact, identity is preserved, metal and stones match, the pendant is coherent, the pendant is a single connected piece, exactly two connected jump rings attach the chain, the shot is correct, and there are no added letters, names, charms or duplicate pendants.",
                 ].join(" "),
               },
@@ -438,6 +446,97 @@ export class OpenAINameReader implements StudioNameReader {
     if (typeof parsed.text !== "string" || typeof parsed.matches !== "boolean")
       throw new Error("OpenAI name read was malformed");
     return { text: parsed.text, matches: parsed.matches };
+  }
+}
+
+/**
+ * Answers one question about one photograph: is the pendant one connected piece
+ * of metal? It is deliberately blind - no stencil, no approved text, no
+ * specification - because the August failure was a vision call given so much
+ * context that it agreed with whatever it was shown. Nothing here can pass a
+ * still; it can only refuse one.
+ */
+export interface StudioPieceReader {
+  read(
+    media: GeneratedMedia,
+  ): Promise<{ singleConnectedPiece: boolean; notes: string }>;
+}
+
+export class OpenAIPieceReader implements StudioPieceReader {
+  constructor(
+    private readonly apiKey: string,
+    private readonly model: string,
+    private readonly fetcher: Fetch = fetch,
+  ) {}
+
+  async read(
+    media: GeneratedMedia,
+  ): Promise<{ singleConnectedPiece: boolean; notes: string }> {
+    const base64 = Buffer.from(media.bytes).toString("base64");
+    const response = await this.fetcher("https://api.openai.com/v1/responses", {
+      method: "POST",
+      headers: {
+        authorization: `Bearer ${this.apiKey}`,
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        model: this.model,
+        max_output_tokens: pipelineLimits.nameReaderMaxOutputTokens,
+        input: [
+          {
+            role: "user",
+            content: [
+              {
+                type: "input_text",
+                text: [
+                  "Look only at the pendant in this photograph and judge whether a jeweller could make it as one piece.",
+                  ONE_PIECE_RULE,
+                  "Put in notes what you saw: where the metal is continuous and, if it is not, exactly where it breaks.",
+                ].join(" "),
+              },
+              {
+                type: "input_image",
+                image_url: `data:${media.mimeType};base64,${base64}`,
+              },
+            ],
+          },
+        ],
+        text: {
+          format: {
+            type: "json_schema",
+            name: "caleums_pendant_piece",
+            strict: true,
+            schema: {
+              type: "object",
+              additionalProperties: false,
+              properties: {
+                singleConnectedPiece: { type: "boolean" },
+                notes: { type: "string" },
+              },
+              required: ["singleConnectedPiece", "notes"],
+            },
+          },
+        },
+      }),
+      // Same bound as the name read: the task sits in `verifying` while this
+      // runs, and the stale window is derived from this timeout.
+      signal: AbortSignal.timeout(pipelineLimits.visionRequestTimeoutMs),
+    });
+    if (!response.ok)
+      throw new Error(`OpenAI piece read failed:${response.status}`);
+    const parsed = JSON.parse(extractResponseText(await response.json())) as {
+      singleConnectedPiece?: unknown;
+      notes?: unknown;
+    };
+    if (
+      typeof parsed.singleConnectedPiece !== "boolean" ||
+      typeof parsed.notes !== "string"
+    )
+      throw new Error("OpenAI piece read was malformed");
+    return {
+      singleConnectedPiece: parsed.singleConnectedPiece,
+      notes: parsed.notes,
+    };
   }
 }
 
