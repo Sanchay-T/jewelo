@@ -13,8 +13,8 @@ import { functions } from "../../../inngest/functions";
 // makes alone sum to 300 s, so on a host that honours the cap the request was
 // killed after the image had been paid for. It is now
 // `pipelineLimits.executorRequestCapSeconds`: the image timeout, the two vision
-// timeouts and the validated allowance for the render, downloads, upload and
-// writes around them.
+// reads with their transient retries and the validated allowance for the
+// render, downloads, upload and writes around them.
 //
 // Fix-3 review M4: what this number is not. App Platform runs the app as a
 // standalone `next start`, and that server has no consumer of `maxDuration` on
@@ -26,7 +26,7 @@ import { functions } from "../../../inngest/functions";
 // derived from, which is what makes "the sweeper cannot fire while a dispatch
 // is still legally running" true, and a hosting hint for any platform that does
 // read it.
-export const maxDuration = 360;
+export const maxDuration = 480;
 export const dynamic = "force-dynamic";
 
 /** Thrown at import when the literal above no longer matches the configuration. */

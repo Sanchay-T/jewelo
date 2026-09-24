@@ -70,6 +70,8 @@ const PLAIN_WORDS: Readonly<Record<string, string>> = {
   identity_font_missing: "The lettering this name needs is not installed.",
   identity_font_bytes_mismatch: "The lettering file does not match the one on record.",
   identity_gate_failed: "The name did not pass the shape checks.",
+  identity_reuse_lettering_mismatch:
+    "The lettering for this style changed after the first photograph, so the other views could not match it. Start the request again.",
   identity_verification_failed:
     "The photograph does not match the shape of the name.",
   identity_not_one_piece:
@@ -80,6 +82,14 @@ const PLAIN_WORDS: Readonly<Record<string, string>> = {
   mock_generation_failed:
     "A sample run stopped. Nothing was charged and no piece was made.",
   spend_guard_exceeded: "The day's spending limit was reached.",
+  runtime_policy_missing:
+    "The shop's spending settings are missing, so nothing was photographed.",
+  provider_attempt_budget_exhausted:
+    "Every paid try for this photograph was used. Look at it before trying again.",
+  stored_provider_output_download_failed:
+    "A finished photograph could not be read back from storage. Look at it before trying again.",
+  provider_attempt_checkpoint_missing:
+    "A finished photograph has no record of how it was made. Look at it before trying again.",
   stale_worker_ambiguous_paid_request:
     "A photograph stopped half way. Check it before running it again.",
   video_poll_timeout: "The film took too long and was let go.",

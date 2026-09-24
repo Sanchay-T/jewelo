@@ -256,6 +256,58 @@ export interface PresentationRepository {
  * write into `terminal_error_code`. Neither the compiled prompt nor the
  * customer's name ever appears in one.
  */
+/**
+ * A stored checkpoint the dispatch cannot use: the bytes will not download, or
+ * the attempt row it belongs to is gone. Thrown by `loadStoredOutput` with the
+ * cost to book, so the dispatch can close the attempt and stop at operator
+ * review instead of leaving it open for the sweeper to re-emit every window.
+ */
+export class StoredOutputUnavailableError extends Error {
+  constructor(
+    code: string,
+    readonly actualCostCents: number,
+  ) {
+    super(code);
+    this.name = "StoredOutputUnavailableError";
+  }
+}
+
+/**
+ * A vision read that failed without answering: timed out, dropped, rate
+ * limited, a provider 5xx, or a body with no parseable answer. A reader that
+ * answered - even "no" - returns normally and is never matched here.
+ */
+function isTransientVisionError(error: unknown) {
+  if (!(error instanceof Error)) return false;
+  if (["TimeoutError", "AbortError", "SyntaxError"].includes(error.name))
+    return true;
+  if (error instanceof TypeError && error.message === "fetch failed")
+    return true;
+  return (
+    /omitted output text|was malformed/.test(error.message) ||
+    /(verification|name read|piece read) failed:(429|5\d\d)$/.test(
+      error.message,
+    )
+  );
+}
+
+/**
+ * One bounded vision read, repeated at most `pipelineLimits.visionReadRetries`
+ * times while it fails transiently. After a checkpoint a thrown read closes the
+ * attempt and pays for a fresh image, so a dropped request is worth one more
+ * cheap read first. `executorRequestCapSeconds` counts every repeat.
+ */
+async function readVision<T>(read: () => Promise<T>): Promise<T> {
+  for (let retry = 0; ; retry += 1) {
+    try {
+      return await read();
+    } catch (error) {
+      if (retry >= pipelineLimits.visionReadRetries) throw error;
+      if (!isTransientVisionError(error)) throw error;
+    }
+  }
+}
+
 const PROMPT_SNAPSHOT_REJECTIONS: readonly (readonly [string, string])[] = [
   ["prompt release does not match task pin", "release_pin"],
   ["invalid prompt variable snapshot", "variables"],
@@ -538,7 +590,32 @@ export async function executePresentationTask(
   const attemptBudget =
     (await repository.providerAttemptBudget?.()) ??
     pipelineLimits.providerAttemptBudget;
-  const checkpoint = await repository.loadStoredOutput(task);
+  // Every refusal below that stops a dispatch before a new image is paid for
+  // ends here rather than throwing: a throw leaves the task `retrying` (or its
+  // attempt open) and the sweeper re-dispatches it every window for ever. At
+  // attempt 0 the task still holds its up-front reservation, which only
+  // `mark_task_pre_spend_blocked` releases; past it every earlier attempt was
+  // reconciled, so `fail` closes whatever `actualCostCents` names and blocks.
+  const stopBeforeSpend = async (code: string, actualCostCents = 0) => {
+    if (task.attempt === 0) return blockPreSpendTerminally(new Error(code));
+    await repository.fail({
+      task,
+      run,
+      attempt: task.attempt,
+      error: new Error(code),
+      terminal: true,
+      actualCostCents,
+    });
+    return { status: "operator_review" as const, attempt: task.attempt };
+  };
+  let checkpoint: StoredOutput | undefined;
+  try {
+    checkpoint = await repository.loadStoredOutput(task);
+  } catch (error) {
+    if (error instanceof StoredOutputUnavailableError)
+      return stopBeforeSpend(error.message, error.actualCostCents);
+    throw error;
+  }
   const provider = generator instanceof MockStudioGenerator ? "mock" : "openai";
   const model =
     generator instanceof OpenAIStillAdapter
@@ -575,25 +652,18 @@ export async function executePresentationTask(
       : await repository.reserveAttempt(task, provider, model);
   } catch (error) {
     if (isTaskCancelled(error)) return { status: "cancelled" as const };
-    // Nothing resumable and no attempt left to book. The RPC checks for an
-    // open attempt before the budget, so every attempt is closed here and
-    // `fail` reconciles nothing. Left to throw, the task would stay `retrying`
-    // and the sweeper would re-dispatch it for ever; this is the same end the
-    // outer catch gives the last attempt, before any spend.
-    if (
-      error instanceof Error &&
-      error.message.includes("provider attempt budget exhausted")
-    ) {
-      await repository.fail({
-        task,
-        run,
-        attempt: task.attempt,
-        error: new Error("provider_attempt_budget_exhausted"),
-        terminal: true,
-        actualCostCents: 0,
-      });
-      return { status: "operator_review" as const, attempt: task.attempt };
-    }
+    // Refusals `reserve_provider_attempt` raises that no redispatch can
+    // change: no attempt left, the daily guard, no policy row. The RPC raises
+    // "attempt already open" before any of them, so every attempt is closed
+    // here, its transaction rolled back, and nothing was booked. "Already
+    // open" itself still throws: another dispatch is live on this task.
+    const message = error instanceof Error ? error.message : "";
+    for (const [raised, code] of [
+      ["provider attempt budget exhausted", "provider_attempt_budget_exhausted"],
+      ["daily spend guard exceeded", "spend_guard_exceeded"],
+      ["runtime policy missing", "runtime_policy_missing"],
+    ] as const)
+      if (message.includes(raised)) return stopBeforeSpend(code);
     throw error;
   }
   if (reservation.duplicateComplete) return { status: "deduplicated" as const };
@@ -707,14 +777,14 @@ export async function executePresentationTask(
         "verifying",
       );
       if (verifying === "cancelled") return { status: "cancelled" as const };
-      const verification = await verifier.verify({
+      const verification = await readVision(() => verifier.verify({
         approvedText: revision.identity_anchor.approvedText,
         identityFingerprint: identity.fingerprint,
         identityImageUrl: identity.url,
         presentationView: task.presentation_view,
         specification: revision.specification,
         media,
-      });
+      }));
       // A name cut into two halves hanging off separate rings is not a piece a
       // jeweller can make, so it is refused before the generic verdict and with
       // its own code: the operator sees why, not just that it failed. Same
@@ -738,7 +808,7 @@ export async function executePresentationTask(
       // cut in two halves still spells the name, so the name read would pay a
       // second vision call to agree with a piece no jeweller can make.
       if (pieceReader) {
-        const piece = await pieceReader.read(media);
+        const piece = await readVision(() => pieceReader.read(media));
         record.pieceCheck = {
           singleConnectedPiece: piece.singleConnectedPiece,
           notes: piece.notes,
@@ -767,7 +837,9 @@ export async function executePresentationTask(
       }
       if (nameReader) {
         const expected = revision.identity_anchor.approvedText;
-        const reading = await nameReader.read(media, expected);
+        const reading = await readVision(() =>
+          nameReader.read(media, expected),
+        );
         const readText = reading.text;
         // Pipeline review 1 finding 1. The script of a name is decided by its
         // letters. The old class required the whole approved text to be Latin
@@ -1002,7 +1074,11 @@ export class SupabasePresentationRepository implements PresentationRepository {
       `/rest/v1/provider_attempts?task_id=eq.${task.id}&attempt=eq.${task.attempt}`,
     );
     const attempt = attempts[0];
-    if (!attempt) throw new Error("provider_attempt_checkpoint_missing");
+    if (!attempt)
+      throw new StoredOutputUnavailableError(
+        "provider_attempt_checkpoint_missing",
+        0,
+      );
     // A checkpoint is resumable only while its attempt is still open. Once
     // `fail` closed it (a transient verifier error after the still was stored),
     // `complete_presentation_task` refuses that attempt for ever, so resuming it
@@ -1019,9 +1095,12 @@ export class SupabasePresentationRepository implements PresentationRepository {
       checkpoint.object_path,
     );
     const response = await fetch(signedUrl);
+    // The image was paid for, so the attempt closes at its estimate - the
+    // same conservative charge the sweeper books for an ambiguous attempt.
     if (!response.ok)
-      throw new Error(
+      throw new StoredOutputUnavailableError(
         `stored_provider_output_download_failed:${response.status}`,
+        attempt.estimated_cost_cents,
       );
     return {
       media: {

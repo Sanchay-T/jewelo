@@ -920,6 +920,13 @@ export const pipelineLimitsSchema = z
      * number rather than the image timeout reused.
      */
     visionRequestTimeoutMs: positiveInt.min(10_000).max(300_000),
+    /**
+     * How many times one vision read is repeated after a transient failure
+     * (timeout, dropped connection, 429/5xx, no parseable answer) before the
+     * attempt fails. A reader that answered is never repeated. Each repeat is
+     * another bounded vision request, so `executorRequestCapSeconds` counts it.
+     */
+    visionReadRetries: z.number().int().min(0).max(2),
     /** Responses output ceiling, including reasoning tokens, for a name read. */
     nameReaderMaxOutputTokens: positiveInt.min(64).max(2_048),
     /**
@@ -1020,15 +1027,18 @@ export const pipelineLimitsSchema = z
      * its HTTP request, in whole seconds, and the value the executor route's
      * `maxDuration` must carry.
      *
-     * One pass of a still makes three provider calls in sequence - the image
-     * edit (`OpenAIStillAdapter.generate`) and then, in real mode, the two
+     * One pass of a still makes, in sequence, the image edit
+     * (`OpenAIStillAdapter.generate`) and then, in real mode, two bounded
      * vision reads: the blind one-piece read (`OpenAIPieceReader.read`) and the
      * engraved-name read (`OpenAINameReader.read`). The verifier that used to
-     * be the second call is the mock since 2026-08-27 and costs nothing, so the
-     * count is unchanged: one provider timeout plus two vision timeouts, each
+     * be a third is the mock since 2026-08-27 and makes no request. Each read
+     * may be repeated `visionReadRetries` times after a transient failure
+     * (`readVision` in `apps/jobs/src/presentation.ts`), so the pass holds one
+     * provider timeout plus 2 x (1 + visionReadRetries) vision timeouts, each
      * aborted by its own, plus the local work `localWorkAllowanceMs` covers.
-     * Anything less is a cap that kills a request the pipeline is still legally
-     * inside.
+     * With the defaults: 180 + 4 x 60 + 60 = 480 s. Wiring a live verifier
+     * back in makes the reads three and this factor must follow. Anything
+     * less is a cap that kills a request the pipeline is still legally inside.
      *
      * This is the cap for one pass, not for a dispatch that regenerates. A
      * refused piece or a misread name regenerates in place inside the same
@@ -1041,7 +1051,7 @@ export const pipelineLimitsSchema = z
      */
     executorRequestCapSeconds: Math.ceil(
       (value.providerRequestTimeoutMs +
-        2 * value.visionRequestTimeoutMs +
+        2 * (1 + value.visionReadRetries) * value.visionRequestTimeoutMs +
         value.localWorkAllowanceMs) /
         1_000,
     ),
@@ -1087,6 +1097,7 @@ export type PipelineLimits = z.infer<typeof pipelineLimitsSchema>;
 export const pipelineLimits: PipelineLimits = pipelineLimitsSchema.parse({
   providerRequestTimeoutMs: 180_000,
   visionRequestTimeoutMs: 60_000,
+  visionReadRetries: 1,
   nameReaderMaxOutputTokens: 2_048,
   pieceReaderMaxOutputTokens: 8_192,
   staleRecoveryMarginMs: 120_000,
