@@ -1,7 +1,11 @@
 import { createHash } from "node:crypto";
 // The one place that says which constructions draw Latin in capitals and in
 // which face; `solveIdentity` reads the same table to decide what it cuts.
-import { CONSTRUCTION_LETTERING, identityDrawnText } from "@jewelo/identity";
+import {
+  CONSTRUCTION_LETTERING,
+  identityDrawnText,
+  type StillRouteChoice,
+} from "@jewelo/identity";
 import {
   STILL_SIZE_BY_RATIO,
   stillImageOptions,
@@ -520,7 +524,15 @@ export function buildPromptVariableSnapshot(input: {
   language: unknown;
   specification: Readonly<Record<string, unknown>>;
   presentationView: unknown;
+  /**
+   * Which way this still is photographed (`stillRoute`). The default is the
+   * stencil, so every existing caller composes the same bytes it always did;
+   * `"free"` composes the variants that cannot mention a stencil, because on
+   * that route no stencil image is sent to the model.
+   */
+  route?: StillRouteChoice;
 }): PromptVariableSnapshot {
+  const route: StillRouteChoice = input.route ?? "stencil";
   const specification = input.specification;
   const dimensions = asObject(specification.dimensions);
   const chain = asObject(specification.chain);
@@ -589,14 +601,26 @@ export function buildPromptVariableSnapshot(input: {
       PENDANT_CONSTRUCTION_FALLBACK,
     // How the name is read, which is a property of the script and of the face
     // the stencil draws it in, so it cannot be a slot in one template.
-    name_spelling: nameSpelling(drawnName, scalar(input.language), specification),
+    name_spelling: nameSpelling(
+      drawnName,
+      scalar(input.language),
+      specification,
+      route,
+    ),
     stones_rule: stonesRule(specification),
     look_rule:
       PENDANT_LOOK_PROSE[scalar(specification.construction)] ??
       PENDANT_LOOK_PROSE.classical!,
+    // On the free route there is no Image 1 (stencil) line to write, so this
+    // variable has no value rather than a sentence about an image the model
+    // never receives. A release that interpolates it would be refused before
+    // spend by `compilePrompt`'s missing-value check, which is the safe way for
+    // that mistake to fail.
     stencil_rule:
-      PENDANT_STENCIL_PROSE[scalar(specification.construction)] ??
-      PENDANT_STENCIL_PROSE_DEFAULT,
+      route === "free"
+        ? ""
+        : (PENDANT_STENCIL_PROSE[scalar(specification.construction)] ??
+          PENDANT_STENCIL_PROSE_DEFAULT),
   };
 }
 
@@ -634,24 +658,31 @@ function drawnNameFor(
  * construction overrides the face with the boxy Kufi row or because the
  * approved lettering is `kufi`. Any other face is described without a name
  * rather than mislabelled.
+ *
+ * On the free route there is no stencil image, so the sentence cannot point at
+ * one: it quotes the same drawn text and asks for it letter for letter, which
+ * is the only spelling authority the model is given on that route.
  */
 function nameSpelling(
   drawn: string,
   language: string,
   specification: Readonly<Record<string, unknown>>,
+  route: StillRouteChoice,
 ): string {
+  const spelledAs =
+    route === "free" ? "spelled letter for letter" : "spelled exactly as @stencil";
   const lettering = CONSTRUCTION_LETTERING[scalar(specification.construction)];
   if (language === "ar") {
     const kufi =
       /kufi/i.test(lettering?.ar?.fontFile ?? "") ||
       letteringStyle(specification) === "kufi";
-    return `"${drawn}" in connected Arabic${kufi ? " Kufi" : ""} letters, right to left, spelled exactly as @stencil, every dot and mark in place.`;
+    return `"${drawn}" in connected Arabic${kufi ? " Kufi" : ""} letters, right to left, ${spelledAs}, every dot and mark in place.`;
   }
   const capitals =
     /\p{Lu}/u.test(drawn) && drawn === drawn.toLocaleUpperCase("en");
   return capitals
-    ? `"${drawn}" in capital letters, spelled exactly as @stencil.`
-    : `"${drawn}", spelled exactly as @stencil.`;
+    ? `"${drawn}" in capital letters, ${spelledAs}.`
+    : `"${drawn}", ${spelledAs}.`;
 }
 
 /**
@@ -759,20 +790,34 @@ export function compilePrompt(input: {
   };
 }
 
-/** Ordered exactly as the existing API transport, including historical snapshots. */
+/**
+ * Ordered exactly as the existing API transport, including historical snapshots.
+ *
+ * `route` defaults to the stencil, which is what every production call sends
+ * today. On the free route no stencil file is sent at all, and a stencil URL
+ * handed in anyway is refused rather than dropped: a free prompt that silently
+ * carried the silhouette would be a prompt nobody measured.
+ */
 export function buildStillReferences(input: {
-  identityImageUrl: string;
+  identityImageUrl?: string;
+  route?: StillRouteChoice;
   referenceImageUrl?: string;
   lookReferenceUrl?: string;
   styleAnchorUrl?: string;
   inspirationImageUrl?: string;
 }) {
-  if (!input.identityImageUrl?.trim()) throw new Error("still_stencil_required");
+  const free = input.route === "free";
+  if (free && input.identityImageUrl?.trim())
+    throw new Error("still_free_route_carries_stencil");
+  if (!free && !input.identityImageUrl?.trim())
+    throw new Error("still_stencil_required");
   return [
     ...(input.referenceImageUrl
       ? [{ role: "master" as const, url: input.referenceImageUrl, fileName: "reference.png" }]
       : []),
-    { role: "stencil" as const, url: input.identityImageUrl, fileName: "identity.png" },
+    ...(free
+      ? []
+      : [{ role: "stencil" as const, url: input.identityImageUrl!, fileName: "identity.png" }]),
     // Lab, 22 September 2026: on gpt-image-2.5-sunburst the folded ribbon look
     // only appears when a text-free crop of the shop's own reference photo is
     // supplied as its own texture-only input. Wording alone gives a flat plate.
@@ -812,6 +857,13 @@ export function stillLookReferenceRequired(construction: unknown): boolean {
 }
 
 export type StillReferencePresence = {
+  /**
+   * Whether the stencil image is sent with this prompt. Absent means yes, so
+   * every existing caller compiles the bytes it always did; `false` is the free
+   * route, where the model is given no silhouette and the text is the only
+   * authority for the spelling.
+   */
+  stencil?: boolean;
   master: boolean;
   look?: boolean;
   style: boolean;
@@ -854,6 +906,9 @@ export function assertStillTemplateCompatibility(
     );
 }
 
+/** The five reference roles a template may name, as authored. */
+const STILL_REFERENCE_TAG = /@(?:stencil|master|look|style|inspiration)\b/;
+
 /** Compiles a new release; stored snapshots never pass through this function. */
 export function compileStillPrompt(input: {
   profile: PromptProfile;
@@ -863,6 +918,13 @@ export function compileStillPrompt(input: {
 }): CompiledPrompt {
   if (!["image.packshot", "image.worn", "image.macro_gift", "image.dark_editorial"].includes(input.profile))
     throw new Error("unsupported_canonical_still_profile");
+  const stencil = input.references.stencil ?? true;
+  // The free route is studio only. A dependent view is photographed from an
+  // approved sibling still and a style anchor, and the stencil is what keeps
+  // the spelling from drifting across those extra images; SP-2f is where that
+  // is measured, so until then anything but the packshot is refused.
+  if (!stencil && input.profile !== "image.packshot")
+    throw new Error("still_stencil_required");
   if (input.profile !== "image.packshot" && !input.references.master)
     throw new Error("still_master_required");
   // The studio packshot still gets no sibling still and no style photo - every
@@ -883,7 +945,8 @@ export function compileStillPrompt(input: {
   assertStillTemplateCompatibility(input.profile, input.template);
   const compiled = compilePrompt({ ...input, variables });
   const references = buildStillReferences({
-    identityImageUrl: "stencil",
+    route: stencil ? "stencil" : "free",
+    identityImageUrl: stencil ? "stencil" : undefined,
     referenceImageUrl: input.references.master ? "master" : undefined,
     lookReferenceUrl: input.references.look ? "look" : undefined,
     styleAnchorUrl: input.references.style ? "style" : undefined,
@@ -920,6 +983,13 @@ export function compileStillPrompt(input: {
       ].join("\n");
   if (compiledPrompt.length > MAX_COMPILED_PROMPT_LENGTH)
     throw new Error("Canonical still prompt exceeds maximum length");
+  // Every reference tag must have become an image number. An unresolved tag
+  // used to be left as written, which sends the model the literal word
+  // "@stencil" and points it at nothing - the exact failure a free-route sheet
+  // would hit if it kept a stencil sentence. Both routes are held to it.
+  const unresolved = compiledPrompt.match(STILL_REFERENCE_TAG)?.[0];
+  if (unresolved)
+    throw new Error(`still_unresolved_reference_tag:${unresolved}`);
   return {
     ...compiled,
     compiledPrompt,
@@ -941,9 +1011,12 @@ function minimalOpeningLines(
   position: ReadonlyMap<string, number>,
   variables: PromptVariableSnapshot,
 ): string[] {
+  const stencil = position.get("stencil");
   const lines = [
     "Photorealistic photograph of one real gold name pendant on a chain.",
-    `Image ${position.get("stencil")} (stencil) ${variables.stencil_rule}`,
+    // No stencil on the free route, so no Image line for it; writing one would
+    // print "Image undefined (stencil)" and a rule about a file nobody sent.
+    ...(stencil ? [`Image ${stencil} (stencil) ${variables.stencil_rule}`] : []),
   ];
   const look = position.get("look");
   if (look) lines.push(`Image ${look} (look) ${variables.look_rule}`);
@@ -956,7 +1029,9 @@ export const STILL_API_SIZE_BY_RATIO = STILL_SIZE_BY_RATIO.standard;
 export function prepareStillRequest(input: {
   prompt: string;
   aspectRatio: StillAspectRatio;
-  identityImageUrl: string;
+  /** Required on the stencil route, refused on the free one. */
+  identityImageUrl?: string;
+  route?: StillRouteChoice;
   referenceImageUrl?: string;
   lookReferenceUrl?: string;
   styleAnchorUrl?: string;

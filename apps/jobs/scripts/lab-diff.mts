@@ -136,10 +136,14 @@ const cases: Case[] = [
   },
 ];
 
-function compile(testCase: Case): string {
+function compile(
+  testCase: Case,
+  route: "free" | "stencil" = "stencil",
+): string {
   const variables = buildPromptVariableSnapshot({
     approvedName: testCase.name,
     language: testCase.language,
+    route,
     specification: {
       construction: testCase.construction,
       arabicStyle: testCase.language === "ar" ? "kufi" : "none",
@@ -160,7 +164,13 @@ function compile(testCase: Case): string {
     profile: "image.packshot",
     template: BASELINE_PROMPT_TEMPLATES["image.packshot"],
     variables,
-    references: { master: false, look: true, style: false, inspiration: false },
+    references: {
+      stencil: route === "stencil",
+      master: false,
+      look: true,
+      style: false,
+      inspiration: false,
+    },
   }).compiledPrompt;
 }
 
@@ -216,4 +226,65 @@ for (const file of SUPERSEDED)
 console.log(
   `${cases.length - failed}/${cases.length} compiled studio prompts match their lab file, apart from the declared deltas above`,
 );
+
+/**
+ * A reference tag that never became an image number used to be left in the
+ * text, so the model was sent the literal word "@style" pointing at nothing.
+ * `@style` is the tag that can really be orphaned on a studio packshot: that
+ * profile is refused a style anchor, so no file is ever numbered for it.
+ */
+const ORPHAN_TAG_TEMPLATE = `${BASELINE_PROMPT_TEMPLATES["image.packshot"]}\nMatch the light of @style.`;
+let orphanTagCaught = "";
+try {
+  compileStillPrompt({
+    profile: "image.packshot",
+    template: ORPHAN_TAG_TEMPLATE,
+    variables: buildPromptVariableSnapshot({
+      approvedName: "Asma",
+      language: "en",
+      specification: {
+        construction: "classical",
+        arabicStyle: "none",
+        layout: "single-name",
+        metalKarat: "18K",
+        metalColor: "yellow",
+        finish: "polished",
+        stoneCoverage: "none",
+        gemstone: "none",
+        sizeProfile: "classic",
+        dimensions: LAB_DIMENSIONS,
+        chain: { style: "cable", lengthCm: 45 },
+      },
+      presentationView: "studio",
+    }),
+    references: { master: false, look: true, style: false, inspiration: false },
+  });
+} catch (error) {
+  orphanTagCaught = error instanceof Error ? error.message : String(error);
+}
+if (orphanTagCaught.startsWith("still_unresolved_reference_tag")) {
+  console.log(`MATCH  unresolved @tag refused (${orphanTagCaught})`);
+} else {
+  failed += 1;
+  console.log(
+    `DIFFER an unresolved @tag survived compilation: ${orphanTagCaught || "no error thrown"}`,
+  );
+}
+
+/**
+ * The free route, printed for inspection only. SP-2d measures these bytes on
+ * Runway and commits the lab files this script will then compare them against;
+ * until then nothing here asserts they are right, only that they compile with
+ * no stencil line and no orphan tag.
+ */
+const FREE_CASES: readonly Case[] = [
+  { file: "free/classical-muhammad-ar", construction: "classical", name: "محمد", language: "ar", metalColor: "yellow" },
+  { file: "free/classical-love-rose", construction: "classical", ...NAMES.love!, metalColor: "rose" },
+];
+for (const testCase of FREE_CASES) {
+  console.log(`\n----- free route (not compared)  ${testCase.file} -----`);
+  console.log(compile(testCase, "free"));
+  console.log(`----- end ${testCase.file} -----`);
+}
+
 if (failed) process.exitCode = 1;
