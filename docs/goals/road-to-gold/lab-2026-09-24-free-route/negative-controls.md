@@ -95,3 +95,24 @@ Inside the frame the Arabic word "محمد" hangs from the top bar: one thin ver
 All twelve tasks are in `docs/goals/overnight-launch/ledger.jsonl` under run `lab-2026-09-24-negative-controls`, task `SP-2a3`, written at submit time with the prompt hash, task id and the credit balance before and after each release.
 Their verdict field is `pending-blind-viewer` until the viewer scores them.
 
+
+
+## Labels (blind viewer, lead decides the one close call)
+
+A viewer who did not generate them labelled copies under random names; the lead mapped them back.
+| file | intended | label | where |
+| --- | --- | --- | --- |
+| `neg-N1-1` | N1 | split | whole word floats inside the frame |
+| `neg-N1-2` | N1 | split | whole word floats inside the frame |
+| `neg-N2-1` | N2 | split | frame, O, m and "ar" are four bodies |
+| `neg-N2-2` | N2 | split | word floats |
+| `neg-N3-1` | N3 | split | left diamond of the ة dots floats; ف dot on its point |
+| `neg-N3-2` | N3 | split (lead) | the viewer passed it on a thin pixel neck; the ة diamonds meet each other and the letter tip to tip and the ف diamond sits on its point, which the rule calls floating, so the lead labels it split |
+| `neg-N4-1` | N4 | one piece | the model drew an edge join: alif runs into the top rail |
+| `neg-N4-2` | N4 | one piece | alif runs into the top rail |
+| `neg-P1-1` | P1 | one piece | baseline rail into both side bars |
+| `neg-P1-2` | P1 | one piece | alif into the top rail, feet on the bottom rail |
+| `neg-P2-1` | P2 | one piece | strut from the top rail into the ح |
+| `neg-P2-2` | P2 | one piece | strut from the top rail into the ح |
+
+Six split and six one piece. The viewer flagged `neg-P2-1` and `neg-P2-2` letterforms as odd; spelling is not what this set measures.
