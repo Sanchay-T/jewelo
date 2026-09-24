@@ -2,120 +2,88 @@
 
 This file is the handover. Its content is mirrored into the description of
 https://github.com/Sanchay-T/jewelo/pull/21 (draft, base `main`); that pull request is the deliverable.
-Pull request #12 was merged into `main` on 11 September; everything below is new since then.
 
 ## The whole story, in plain paragraphs
 
 CALEUMS is a pendant studio for Omran's jewelry shop in the UAE.
-A shopper types an English or Arabic name, chooses a look and metal, and should receive four photographs of that exact pendant: studio, on skin, close up, and dark.
-The deterministic stencil owns the name and geometry; the image model only dresses it, and verification refuses drift.
+A shopper types an English or Arabic name, chooses a look, metal and stones, and gets a photograph of that pendant.
 
-On the 22 September call Omran asked for calmer, less stylized pieces that match his own reference photographs, sharp folded edges on origami, a boxy capitals look, and a list of site changes.
-This session answered all of it.
-The styles were re-proven on the Runway MCP with `gpt-image-2.5-sunburst`, the same model production calls: one short style-first prompt, where styles differ only by swapped parameters, plus a text-free crop of Omran's photo sent as a texture-only reference.
-The boxy look comes from the stencil, not the words: origami, framed and diamond-rails now draw Cairo capitals (weight 800, rails 500) and the identity engine was reworked so ring posts and rail welds never read as letters.
-Production compiles the exact lab prompt byte for byte (20/20), so what passed on Runway is what production sends.
-The site changes are live on staging and I drove them myself.
+On 25 September Sanchay cut the image pipeline down to what worked in the lab: no stencil, no reference images, no name or piece reader, no rechecking, no rule text, no Python helpers.
+The shopper's approved choices become one sentence written the way you would brief a jeweller, and that sentence goes straight to `gpt-image-2.5-sunburst`.
+For Arabic the sentence adds how a jeweller's nameplate is made (dots bridged to their letters, non-joining letters linked on the baseline), which made every lab piece one connected casting.
+About 23,500 lines left the repository with it.
 
-Staging now makes real photographs on `gpt-image-2.5-sunburst` at max quality, with Sanchay's spend approval.
-On 23 Sep evening Omran tested the old `caleums` app (a different repository, `Sanchay-T/caleums`) and got a script pavé piece; he was sent the staging link instead.
-The same evening the staging database had gone read-only (Inngest run logs filled the 500 MB plan), which broke sign-in for every new visitor; it was cleared and an hourly cleanup added.
-The shop sample photographs were still the old stylized look; they are now v10 photographs made by the live pipeline.
+In the Runway lab the jeweller wording spelt 9 of 12 Arabic names right on the four styles the shop sells.
+On live staging it spelt the English name right and both Arabic names wrong.
+With no reader, nothing stops a misspelt Arabic piece reaching the shopper; that is the trade this simplification makes.
 
 ## Status
 
 | | |
 | --- | --- |
 | Live URL | https://jewelo-staging-gqumd.ondigitalocean.app/en/design/new |
-| Active deployed commit | `d457eb3`, DigitalOcean deployment `fd6cb4c9-f25d-4422-9f9c-bf08bae12327` (ACTIVE); smoke health and readiness passed |
-| Branch head | `codex/overnight-launch-2026-09-08`, the `Handover:` commit after `731f7a7` (docs only) |
-| Provider mode | Staging `real`, sunburst max; `runtime_policy` cap 2000 cents a day, 16 runs a day, 4 per device, 3 attempts; `REAL_MODE_MAX_RESERVED_SPEND_CENTS=2000` |
-| Build | `corepack pnpm build` exit 0, 13/13, on the handed-over tree |
-| Prompt proof | `lab-diff.mts`: 20/20 production-compiled studio prompts byte-identical to the Runway lab prompts |
-| Reviews | Seven fresh-context review rounds; rounds 6 and 7 found nothing above minor, and their minors are fixed |
-| Database | Migrations `20260922000000` and `20260922010000` applied; private `look-references` bucket holds 4 checksum-verified crops |
-| Sessions | 8 (this one: 22 to 23 September 2026) |
-| Omran | Tagged in the Jewelry AI group 23 Sep 22:18 IST with the staging link and his origami rose gold Love piece |
+| Active deployed commit | `d1b3cbc7`, DigitalOcean deployment `7e00b6f6-695e-4084-bcea-e9cb7014b516` (ACTIVE); health and readiness passed |
+| Branch head | `codex/overnight-launch-2026-09-08`, the `Handover:` commit after `81d82bde` (docs only) |
+| Provider mode | Staging `real`, `gpt-image-2.5-sunburst-2026-09-08` at max quality, OpenAI images generations, no input images; `runtime_policy.studio_only` true (one photograph per run), caps unchanged |
+| Build | `corepack pnpm build` exit 0, 12/12 tasks |
+| Reviews | Two fresh `reviewer` passes (SIMPLE-1, SIMPLE-1b); every blocker and major fixed in `7f355ef0` and `d1b3cbc7` |
+| Next task | Sanchay's call on Arabic spelling (Needs Sanchay 1) |
 
 ## What a shopper gets today
 
-Seen in my own agent-browser session on staging (`dff6102`), screenshots in `docs/goals/road-to-gold/dogfood-2026-09-23/`:
+Seen in my own agent-browser session on staging at `d1b3cbc7`, evidence in `docs/goals/road-to-gold/dogfood-2026-09-25/`:
 
-- Sections read Size, Name, Style, Gold and stones; no italic text anywhere (0 italic elements measured).
-- No chain picker; every piece is cable 45 cm.
-- Up to three stones; a fourth is disabled, with the note "Choose up to 3 stones." / "اختر حتى ٣ أحجار.".
-- The review step photo is larger than on the design step: 857 vs 704 px wide at 1440, 643 vs 459 at 1024, 478 vs 341 at 768; on phones the photo comes first at full width.
-- Add to bag asks for contact first (email is the default channel); from the design step it moves to review, focuses the contact box and says "Where should we send it?".
-- Final pass: contact for design A, edit to design B, add from the design step, double click: two database rows (one per design), one bag item, carrying B's reference; A shows as "Your earlier request".
-- Saved designs list newest first.
-- No horizontal scroll at 1440x900, 1280x720, 1024x768, 768x1024, 390x844, 390x600, 320x568; Arabic RTL and reduced motion pass.
-- The photographs shown are labelled shop samples; the personalized run is refused before spend on staging, and the panel asks where to send the piece.
+- Design, review, spelling confirmation, then "Your photograph is being made. About two minutes."; the studio photograph arrived in 80 to 90 seconds each time.
+- On skin, close-up and dark say "We will photograph it in the shop and send it".
+- Omar, English, diamond rails, white gold, accent, at 390x844: spelt right, white gold, rails with bezel diamonds, one piece.
+- زينب, Arabic, framed minimal, rose gold, accent, at 1440x900: rose gold, frame and diamonds right; spelling wrong (final ب drawn as ن, medial ن has no dot).
+- قاسم, Arabic, classical, yellow gold, no stones, at 1440x900: the bail drops into an extra tall stroke, reads close to قالسم.
 
 ## Done this session
 
-- Omran's site feedback: upright type, size first, one chain, up to three stones, newest first, email-first capture, larger results (`b1268fc`).
-- Add from design step and duplicate saves (`6c0189d`).
-- Identity engine v5: per-construction lettering (boxy capitals), ring post cap 0.45 of height and 120 px, rail welds only on real stems; D-023 (`a1a7d87`).
-- Minimal style-first still prompt v2, look references, quality and size as config, two migrations (`834505d`).
-- Runway lab record, origami variants, v5 proof sheets (`04fdf18` and later).
-- Private client folder ignored; reviewer agents no longer create worktrees (`f6e777b`).
-- Stencil-cased name in every template, stale-snapshot refusal, uppercase length guard, cost floor, stone placement (`bbf7e7a`).
-- Staging record and generated types (`469ba4b`); staging-found double-click fix (`353b99d`).
-- Every chosen stone kept, contact headline, deployable cost floor, compiler v3 (`b1ae140`, `2c1f59b`).
-- Capture tied to its design, reservation floor on the booked `studio_reservation_cents` (`706e274`, `a6cf1b6`).
-- Contact panel edges (`f5edcd1`, `d29e0fc`); close-out notes (`dff6102`).
-- Look references published (4/4, re-hashed from signed URLs) and `LOOK_REFERENCES` set on staging; runbook section added.
+- SIMPLE-1 (`c7670158`): one prompt in `packages/ai/src/prompt.ts`; OpenAI adapter moved from edits to generations; deleted the identity package, readers, prompt registry and snapshots, style anchors, look references, operator prompt library, identity diagnostics, transliteration, lab scripts and pipeline Python; migration `20260925000000` completes a task without verification fields.
+- SIMPLE-1b (`7f355ef0`): the prompt carries metal, lettering, stones, chain, width and both names; an unmapped construction ends before spend; migration `20260925010000` makes `studio_only` default true.
+- SIMPLE-1c (`d1b3cbc7`): every "gold" names the chosen colour; Stacked says one name above the other.
+- Lab record (`c7670158`): `docs/goals/road-to-gold/lab-2026-09-25-text-only/ledger.md`.
+- Live evidence and progress (`822502fe`, `81d82bde`).
 
 ## Evidence
 
-- Lab: `docs/goals/road-to-gold/lab-2026-09-22/` - `ledger.md`, `final/*.txt` (the 20 proven prompts), `sheets/` including `v5-engine-proof.png` (10/10 on the new stencils, sunburst) and `origami-boxy-variants.png` (variants A, B, C).
-- Browser: `docs/goals/road-to-gold/dogfood-2026-09-22/` and `dogfood-2026-09-23/` (viewport sweep, RTL, final save flow).
-- Engine sweeps (scratchpad, not in git): framed-minimal and diamond-rails 576/576 clean with no refusals, classical 547/576, letters 411/624; refusals are the refuse-rather-than-rod trade.
-- Reviews: findings and fixes are in the commit messages listed above.
+- Lab: `docs/goals/road-to-gold/lab-2026-09-25-text-only/ledger.md` (three text-only rounds, 18 images each, and the jeweller wording round).
+- Browser: `docs/goals/road-to-gold/dogfood-2026-09-25/` (design, review, run, result; three live photographs).
 
 ## Decisions taken by default
 
-- Origami boxy variant A (Cairo 800) is the default; variant B (950, heavier) is Omran's call. C (one crease per stroke) was indistinguishable from A.
-- Classical keeps its own lettering (Playfair), not capitals; classical and framed share the framed look crop, as proven in the lab.
-- Ring posts capped at 120 px: five of 48 lab names (mostly ليلى) now go to operator review instead of hanging on a rod.
-- A name whose capitals would change its letter count (Weiß) is drawn as typed.
-- Framed with three stones fills four corners, so the first stone repeats at bottom left.
-- Cable 45 cm is the house chain.
-- Earlier defaults still stand: DS-3/D-019 HarfBuzz engine, D-022 full contract look set, DS-6 studio-only smoke, DS-8 SMTP/log notification, DS-9 observability, DS-10 sweeper.
+- The app keeps its four styles (classical, origami ribbon, framed minimal, diamond rails); faceted origami and diamond constellation stay lab-only.
+- Only the studio photograph is made; the other three views say the shop will photograph them.
+- Framed and rails carry stones only when the shopper picks stones.
+- `scripts/webp.py` and `scripts/atelier/build-geometry.py` stay: evidence tooling and UI geometry, not the image pipeline.
+- Video code left in place, still off.
 
 ## Needs Sanchay
 
-1. Supabase billing before 29 September 2026 (upgrade Devonel or move the project). The database also filled once on 23 Sep; the hourly log cleanup keeps it near 200 MB, but Pro removes the read-only risk.
-2. The old `caleums` app (`caleums-xp8xk.ondigitalocean.app`, repo `Sanchay-T/caleums`) still serves the old studio to anyone with that link: redirect it to staging or delete it.
-3. Spend: the cap is 2000 cents and 16 runs a day so Omran can try names; say when to put it back to 800 and 4.
-4. Resend (or SMTP) and `NOTIFICATION_TO` so captured requests email the shop; until then they are stored only.
-5. Remove the skin-tone titles in the Shopify theme; they are not in this repository.
-6. Omran: confirm cable 45 cm as the one chain, and origami variant A versus B (`lab-2026-09-22/sheets/origami-boxy-variants.png`).
+1. Arabic spelling: live 0/2, lab 9/12, and no reader. Keep it as is, or allow one step back (the one-line mark list in the lab ledger fixed most dot errors).
+2. Supabase billing before 29 September 2026 (upgrade Devonel or move the project).
+3. The old `caleums` app (`caleums-xp8xk.ondigitalocean.app`) still serves the old studio: redirect it to staging or delete it.
+4. Spend cap is 2000 cents and 16 runs a day; say when to go back to 800 and 4.
+5. Resend (or SMTP) and `NOTIFICATION_TO` so captured requests email the shop.
 
 ## Open findings
 
-1. Major, pre-existing: a bag row can show a substitute sample photograph (another construction or script) under "YOUR DESIGN" with no substitution label (`Atelier.tsx` bag row, from `7b76e5a`). Owner: implementer.
-2. Minor: a bag saved before 23 Sep still shows its old sample thumbnail beside the new v10 family. Owner: implementer.
-3. Minor: classical ring tab on "Asma" and "Sara" still reads like an accent; fixing it means seating the ring outside the name (wider piece). Owner: lab decision.
-4. Minor: stones prose safe only up to `GEMSTONE_MAX=3`; classical "a middle letter" for two-letter names; `visualFields` stale (chain, gems); `look_rule` not in the variable snapshot. Owner: implementer.
-5. Minor: the reservation floor only applies at quality max, xhigh or auto; at the default `high` the spend cap is the only guard. Owner: platform, when quality is raised.
-6. Observed once: a `/api/preview-requests` POST returned 504 on staging with nothing in the logs; the retry succeeded without a duplicate row. Owner: platform, watch.
-7. Carried over: P1-5 identity proof sign-off, fix-review-3 MJ-1 and minors, Vitest literals (frozen by repo rule), P2-3 to P2-7, P3-5, P3-6, P5-2, P5-3, P7-4, P7-8, L-1 to L-4.
+1. Not run: the seven-viewport sweep and two adversarial passes the repo asks for on prompt changes; only 1440x900 and 390x844 were driven. Owner: lead, next session.
+2. Minor: an unknown chain, stone or connector id drops its phrase silently; only construction refuses. Unreachable today because the contracts schema validates at approval. Owner: implementer.
+3. Minor: `unknown_construction` on a resumed attempt with a checkpoint falls to the generic failure path. Unreachable today for the same reason. Owner: implementer.
+4. Major, pre-existing: a bag row can show a substitute sample photograph under "YOUR DESIGN" with no label (`Atelier.tsx` bag row). Owner: implementer.
+5. Observed once earlier: a `/api/preview-requests` POST returned 504 on staging; the retry succeeded. Owner: platform, watch.
 
 ## Rollback
 
-- App, from home-mini: `bash scripts/digitalocean/rollback.sh staging 5e0b190b-a25d-4985-8b25-500b317a7c04` (`f5edcd1`); the pre-session target is `c7193dc3-f0f5-4402-bf9b-0f75ac34b708` (`b734e57`). Check `doctl apps list-deployments ec09c9fd-84e4-45c5-b60a-fd62277af322` first.
-- Database: both new migrations are additive (a private bucket and two `create or replace function` bodies); no rollback is needed to run older code.
-- Look references: remove `LOOK_REFERENCES` from the env file and redeploy; the bucket objects can stay.
-
-## Resolved after the first handover
-
-- Deploys run from the laptop: the working DigitalOcean token (from `~/hq/projects/localhost/.env`) is in `.env` and `doctl`; `.env.staging` is the deploy copy; dry run passes (`4556186`).
-- Laptop disk: `mo clean` and `mo purge` freed about 22 GB (25 GB free).
+- App: `bash scripts/digitalocean/rollback.sh staging 2f576e65-38fe-47c6-aa57-8a64782615fa` (the deployment before SIMPLE-1). Check `doctl apps list-deployments ec09c9fd-84e4-45c5-b60a-fd62277af322` first.
+- Database: both new migrations only loosen `complete_presentation_task` and set `studio_only`; older code runs against them. To make four photographs again, set `studio_only = false` on `runtime_policy`.
 
 ## Spend
 
-- OpenAI API: USD 0; no API image call was made.
-- Runway: 342 credits in the metered batches (162 for the origami variants, 180 for the v5 proof); the earlier 49-generation lab and single proofs were not metered separately. Balance 209,845.
-- DigitalOcean: six staging deployments of the one app; no new resources.
-- Supabase: two migrations and four storage objects in the existing project.
+- OpenAI API: three studio photographs on staging (one attempt each), inside `runtime_policy`.
+- Runway: 288 credits for the jeweller wording round (16 per image, 18 images), balance 196,605; earlier text-only rounds this session not metered separately.
+- DigitalOcean: three staging deployments of the one app; no new resources.
+- Supabase: two migrations in the existing project.
