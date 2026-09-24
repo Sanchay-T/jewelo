@@ -66,12 +66,14 @@ Piece reader: refused both broken ليلى stills, and falsely refused 5 of the 
 
 ## Route decision
 
-Dotted Arabic moves to the stencil: any Arabic, Persian or Urdu letter drawn with a dot routes with reason `arabic_dotted_letter` (closed code point list in `packages/identity/src/still-route.ts`).
+Dotted Arabic moves to the stencil. After review the Arabic rule became an allowlist: a letter routes free only if it is one of ا ح د ر س ص ط ع ل م ه و ى (`ARABIC_FREE_LETTERS` in `packages/identity/src/still-route.ts`), and every other Arabic letter routes with reason `arabic_letter_not_proven`.
+Of those, the lab measured م ح د س ل ى; the rest are admitted on shape, because they have no dot, hamza, madda or separate stroke in any form.
 The `still-route.ts` header had pre-registered this: if the lab showed a material failure rate on dotted letters, they would route wide like the rest; ليلى failed 2 of 2.
 Origami-ribbon Arabic moves to the stencil with reason `arabic_print_construction:origami-ribbon`, because the free prompt misspelled محمد 2 of 2 and nothing after generation caught it.
 Latin capital-plus-lowercase in classical (Muhammad, Omar, Love, Asma) passed 8 of 8 and stays free.
 Undotted, gap-free Arabic in classical, framed-minimal and diamond-rails (محمد, سلمى) passed 8 of 8 and stays free.
-In the same change, three cases the lab did not prove were closed wide: Arabic with no known construction (`arabic_construction_unknown`), Arabic presentation forms (read after NFKC and flagged `arabic_presentation_form`), and ء آ أ ؤ إ anywhere in the name, including last (`arabic_hamza`).
+In the same change, the cases the lab did not prove were closed wide: Arabic with no known construction (`arabic_construction_unknown`), Arabic presentation forms (read after NFKC and flagged `arabic_presentation_form`), any other compatibility form (`compatibility_form`), any combining mark such as harakat or shadda (`combining_mark`), text with no letter (`no_letter`), text that differs from the approved name in the specification (`approved_text_mismatch`), a Latin capital after the first letter (`latin_inner_capital`), and any Latin letter outside plain A-Z and a-z (`latin_letter_not_proven`).
+`lab-diff` pins the Arabic rule by drawing every code point in U+0600-06FF, U+0750-077F and U+08A0-08FF and asserting that exactly the allowlist routes free as the last letter, and exactly its forward-joining letters as a middle letter.
 `lab-diff` now compares the 8 cells that still route free, asserts the two new stencil routes and the two kept free routes, and keeps `classical-layla-ar.txt` and `origami-ribbon-muhammad-ar.txt` as evidence only.
 
 ## Reader findings

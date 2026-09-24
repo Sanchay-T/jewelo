@@ -354,29 +354,41 @@ const FREE_EVIDENCE_ONLY = [
 
 /**
  * The route rules the free-route lab put in place, the cells it kept free, and
- * the unproven cases closed wide in the same change.
+ * the unproven cases closed wide after review.
  */
 const ROUTE_EXPECTATIONS: readonly {
   label?: string;
   name: string;
+  language?: "ar" | "en";
   construction?: string;
+  names?: { approvedEnglishText?: string; approvedArabicText?: string }[];
   route: "free" | "stencil";
   reason?: string;
 }[] = [
-  { name: "ليلى", construction: "classical", route: "stencil", reason: "arabic_dotted_letter" },
+  { name: "ليلى", construction: "classical", route: "stencil", reason: "arabic_letter_not_proven" },
   { name: "محمد", construction: "origami-ribbon", route: "stencil", reason: "arabic_print_construction:origami-ribbon" },
   { name: "محمد", construction: "classical", route: "free" },
   { name: "سلمى", construction: "framed-minimal", route: "free" },
   { name: "محمد", route: "stencil", reason: "arabic_construction_unknown" },
   // محمد typed in presentation forms: meem initial, hah medial, meem medial, dal final.
   { label: "محمد (presentation forms)", name: "\ufee3\ufea4\ufee4\ufeaa", construction: "classical", route: "stencil", reason: "arabic_presentation_form" },
-  { name: "ملأ", construction: "classical", route: "stencil", reason: "arabic_hamza" }, // final أ is its only reason
+  { name: "ملأ", construction: "classical", route: "stencil", reason: "arabic_letter_not_proven" }, // final أ is its only problem
+  { label: "محمد (shadda)", name: "مح\u0651مد", construction: "classical", route: "stencil", reason: "combining_mark" },
+  { label: "bare fatha U+064E", name: "\u064e", construction: "classical", route: "stencil", reason: "no_letter" },
+  { label: "Aylı + U+0307 + n", name: "Ayl\u0131\u0307n", language: "en", construction: "classical", route: "stencil", reason: "combining_mark" },
+  { name: "OMar", language: "en", construction: "classical", route: "stencil", reason: "latin_inner_capital" },
+  { name: "McDonald", language: "en", construction: "classical", route: "stencil", reason: "latin_inner_capital" },
+  { label: "Omar approved as Tijani", name: "Omar", language: "en", construction: "classical", names: [{ approvedEnglishText: "Tijani" }], route: "stencil", reason: "approved_text_mismatch" },
 ];
 for (const expectation of ROUTE_EXPECTATIONS) {
   const decision = stillRoute({
     approvedText: expectation.name,
-    language: "ar",
-    specification: { layout: "single-name", construction: expectation.construction },
+    language: expectation.language ?? "ar",
+    specification: {
+      layout: "single-name",
+      construction: expectation.construction,
+      names: expectation.names,
+    },
   });
   const label = `${expectation.construction ?? "no construction"} ${expectation.label ?? expectation.name} routes ${expectation.route}`;
   const reasonOk = !expectation.reason || decision.reasons.includes(expectation.reason);
@@ -385,6 +397,41 @@ for (const expectation of ROUTE_EXPECTATIONS) {
   } else {
     failed += 1;
     console.log(`DIFFER ${label}: got ${decision.route} [${decision.reasons.join(", ")}]`);
+  }
+}
+
+/**
+ * Pin the Arabic rule itself, not samples: every code point in the Arabic
+ * blocks, drawn last (after مم) and in the middle (between م and م), classical.
+ * Last, exactly the allowlist may route free; in the middle, exactly the
+ * allowlist minus the letters that do not join forward.
+ */
+const ARABIC_FREE = "ا ح د ر س ص ط ع ل م ه و ى".split(" ");
+const ARABIC_NON_JOINING = new Set("ا د ر و ى".split(" "));
+const arabicBlocks: [number, number][] = [[0x0600, 0x06ff], [0x0750, 0x077f], [0x08a0, 0x08ff]];
+const freeAs = (wrap: (letter: string) => string): string[] => {
+  const free: string[] = [];
+  for (const [from, to] of arabicBlocks)
+    for (let codePoint = from; codePoint <= to; codePoint += 1) {
+      const letter = String.fromCodePoint(codePoint);
+      const decision = stillRoute({
+        approvedText: wrap(letter),
+        language: "ar",
+        specification: { layout: "single-name", construction: "classical" },
+      });
+      if (decision.route === "free") free.push(letter);
+    }
+  return free;
+};
+for (const [where, got, want] of [
+  ["last", freeAs((l) => `مم${l}`), ARABIC_FREE],
+  ["middle", freeAs((l) => `م${l}م`), ARABIC_FREE.filter((l) => !ARABIC_NON_JOINING.has(l))],
+] as const) {
+  const line = `Arabic letters that route free as the ${where} letter: ${got.join(" ")}`;
+  if (got.join(" ") === want.join(" ")) console.log(`MATCH  ${line}`);
+  else {
+    failed += 1;
+    console.log(`DIFFER ${line} (want ${want.join(" ")})`);
   }
 }
 
