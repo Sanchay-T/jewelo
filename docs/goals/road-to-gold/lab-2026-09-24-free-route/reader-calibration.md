@@ -307,3 +307,6 @@ Wording 4 does not meet the bar out of sample: it accepts a point contact on a f
 The labels are not changed after the run; whether a hair-thin wire is "one piece" is a fair question, but it was answered before the votes were seen.
 Consequence: framed-minimal Arabic routes to the stencil (SP-2e2c), and a new wording needs a fresh held-out set (SP-2a4).
 Wording 4 stays the live rule until the comparison with the SP-2a2 rule on this same set says otherwise.
+
+The SP-2a2 rule (`4d618f4`, live before wording 4) on the same held-out set, same reads (`cal3-w2.mts w2-held`, USD 0.77): 20 of 75 split reads accepted (H1a 10 of 10, H2 10 of 10, every other split image refused 5 of 5) and 3 of 21 one-piece reads refused.
+It is worse on both counts, so wording 4 stays live.
