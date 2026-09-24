@@ -19,7 +19,9 @@
 //   `docs/goals/road-to-gold/lab-2026-09-24-free-route/prompts/*.txt`  the
 //     free-route studio family, 24 September 2026: no stencil image, so the
 //     words are the only authority for the spelling and the single piece. Each
-//     cell is also asserted to really route free through `stillRoute`.
+//     cell is also asserted to really route free through `stillRoute`; the two
+//     cells the lab broke (classical ليلى, origami-ribbon محمد) now route to the
+//     stencil and are listed as evidence rather than compared.
 //
 // Run it (Node is pinned to 24.18.1):
 //   corepack pnpm --filter @jewelo/jobs lab-diff
@@ -332,16 +334,60 @@ for (const construction of ["classical", "origami-ribbon", "framed-minimal", "di
 const LAB_FREE = "docs/goals/road-to-gold/lab-2026-09-24-free-route/prompts";
 const FREE_CASES: readonly Case[] = [
   { file: `${LAB_FREE}/classical-muhammad-ar.txt`, construction: "classical", name: "محمد", language: "ar", metalColor: "yellow" },
-  { file: `${LAB_FREE}/origami-ribbon-muhammad-ar.txt`, construction: "origami-ribbon", name: "محمد", language: "ar", metalColor: "yellow" },
   { file: `${LAB_FREE}/framed-minimal-muhammad-ar.txt`, construction: "framed-minimal", name: "محمد", language: "ar", metalColor: "yellow" },
   { file: `${LAB_FREE}/diamond-rails-muhammad-ar.txt`, construction: "diamond-rails", name: "محمد", language: "ar", metalColor: "yellow" },
-  { file: `${LAB_FREE}/classical-layla-ar.txt`, construction: "classical", name: "ليلى", language: "ar", metalColor: "yellow" },
   { file: `${LAB_FREE}/framed-minimal-salma-ar.txt`, construction: "framed-minimal", name: "سلمى", language: "ar", metalColor: "yellow" },
   { file: `${LAB_FREE}/classical-muhammad-en.txt`, construction: "classical", ...NAMES.muhammad!, metalColor: "yellow" },
   { file: `${LAB_FREE}/classical-omar-en.txt`, construction: "classical", name: "Omar", language: "en", metalColor: "yellow" },
   { file: `${LAB_FREE}/classical-love-en.txt`, construction: "classical", ...NAMES.love!, metalColor: "rose" },
   { file: `${LAB_FREE}/classical-asma-en.txt`, construction: "classical", ...NAMES.asma!, metalColor: "yellow" },
 ];
+/**
+ * Lab files kept as the evidence for why the route narrowed, not compared: the
+ * lab showed a free prompt breaks these two, so `stillRoute` now sends them to
+ * the stencil and no shopper can get these bytes (ledger in the lab folder).
+ */
+const FREE_EVIDENCE_ONLY = [
+  `${LAB_FREE}/classical-layla-ar.txt`, // dots under ي touched at a corner or hung, 0 of 2 one piece
+  `${LAB_FREE}/origami-ribbon-muhammad-ar.txt`, // م lost its loop, read لحمد / الحد, 0 of 2 spelled
+];
+
+/**
+ * The route rules the free-route lab put in place, the cells it kept free, and
+ * the unproven cases closed wide in the same change.
+ */
+const ROUTE_EXPECTATIONS: readonly {
+  label?: string;
+  name: string;
+  construction?: string;
+  route: "free" | "stencil";
+  reason?: string;
+}[] = [
+  { name: "ليلى", construction: "classical", route: "stencil", reason: "arabic_dotted_letter" },
+  { name: "محمد", construction: "origami-ribbon", route: "stencil", reason: "arabic_print_construction:origami-ribbon" },
+  { name: "محمد", construction: "classical", route: "free" },
+  { name: "سلمى", construction: "framed-minimal", route: "free" },
+  { name: "محمد", route: "stencil", reason: "arabic_construction_unknown" },
+  // محمد typed in presentation forms: meem initial, hah medial, meem medial, dal final.
+  { label: "محمد (presentation forms)", name: "\ufee3\ufea4\ufee4\ufeaa", construction: "classical", route: "stencil", reason: "arabic_presentation_form" },
+  { name: "ملأ", construction: "classical", route: "stencil", reason: "arabic_hamza" }, // final أ is its only reason
+];
+for (const expectation of ROUTE_EXPECTATIONS) {
+  const decision = stillRoute({
+    approvedText: expectation.name,
+    language: "ar",
+    specification: { layout: "single-name", construction: expectation.construction },
+  });
+  const label = `${expectation.construction ?? "no construction"} ${expectation.label ?? expectation.name} routes ${expectation.route}`;
+  const reasonOk = !expectation.reason || decision.reasons.includes(expectation.reason);
+  if (decision.route === expectation.route && reasonOk) {
+    console.log(`MATCH  ${label}${expectation.reason ? ` (${expectation.reason})` : ""}`);
+  } else {
+    failed += 1;
+    console.log(`DIFFER ${label}: got ${decision.route} [${decision.reasons.join(", ")}]`);
+  }
+}
+
 for (const testCase of FREE_CASES) {
   const decision = stillRoute({
     approvedText: testCase.name,
@@ -372,6 +418,8 @@ for (const testCase of FREE_CASES) {
       ].join("\n"),
     );
 }
+for (const file of FREE_EVIDENCE_ONLY)
+  console.log(`evidence, routes stencil now (not compared)  ${file}`);
 console.log(
   `${FREE_CASES.length} free-route studio prompts compared against their lab file`,
 );

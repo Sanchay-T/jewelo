@@ -23,17 +23,20 @@
  * logged, counted and read by an operator, and a name in a code is a name in a
  * log. The only variable part allowed is a value this module has already
  * checked against a closed enum (`layout:<known id>`,
- * `latin_print_construction:<known id>`); anything else collapses to the bare
- * code.
+ * `latin_print_construction:<known id>`, `arabic_print_construction:<known id>`);
+ * anything else collapses to the bare code.
  *
- * NOT routed here, decided by the lead on 24 Sep 2026 (SP-2 review):
- * Arabic dotted letters (ن ب ي ...) and Latin capital-plus-lowercase joins
- * ("Omar", "Omran") also risk a second piece of metal, but they are NOT sent to
- * the stencil by this function. They are gated after generation by the blind
- * one-piece reader (`OpenAIPieceReader`, `apps/jobs/src/presentation.ts`), and
- * the SP-2d lab measures exactly those cases - نبيل, ليلى, Omar, Omran - before
- * the route is switched on in SP-2e. If that lab shows a material failure rate,
- * they move into this function and route wide like the rest.
+ * Measured on the SP-2d free-route lab, 24 Sep 2026
+ * (`docs/goals/road-to-gold/lab-2026-09-24-free-route/ledger.md`):
+ * Classical ليلى came out two pieces in 2 of 2 stills: the dots under ي touched the stroke only at a corner or hung with a gap.
+ * So any Arabic letter drawn with a dot now routes to the stencil (`arabic_dotted_letter`).
+ * Origami-ribbon محمد lost the loop of م in 2 of 2 stills and read لحمد or الحد, and the production name reader passed both.
+ * So origami-ribbon Arabic now routes to the stencil (`arabic_print_construction:origami-ribbon`).
+ * Latin capital-plus-lowercase in classical (Muhammad, Omar, Love, Asma) passed 8 of 8 and stays free.
+ * Undotted, gap-free Arabic in classical, framed-minimal and diamond-rails (محمد, سلمى) passed 8 of 8 and stays free.
+ * In the same change, three unproven cases were closed wide: Arabic with no known construction (`arabic_construction_unknown`),
+ * Arabic presentation forms, which are read after NFKC and also flagged (`arabic_presentation_form`),
+ * and ء آ أ ؤ إ anywhere in the name, last letter included (`arabic_hamza`).
  */
 
 /** Free prompt, or the deterministic stencil. */
@@ -165,8 +168,70 @@ function arabicJoiningType(codePoint: number): ArabicJoiningType {
   return /\p{L}/u.test(String.fromCodePoint(codePoint)) ? "R" : "U";
 }
 
-/** U+0621 ARABIC LETTER HAMZA: stands alone on both sides. */
-const ARABIC_HAMZA = 0x0621;
+/**
+ * Arabic, Persian and Urdu letters drawn with a dot or dots (or, for ئ, a
+ * detached hamza). A free prompt draws the dot as a separate piece of metal, or
+ * touches it to its letter only at a corner (SP-2d lab, classical ليلى 0 of 2),
+ * so any of these routes to the stencil, which bridges every dot.
+ *
+ * A closed explicit list, not a Unicode property: Unicode has no "has a dot"
+ * property. U+0649 ALEF MAKSURA (ى), U+0647 HEH (ه), U+062D HAH (ح) and U+0645
+ * MEEM (م) are undotted and deliberately absent.
+ */
+const ARABIC_DOTTED_LETTERS = new Set([
+  0x0626, // ARABIC LETTER YEH WITH HAMZA ABOVE (ئ), detached hamza like a dot
+  0x0628, // ARABIC LETTER BEH (ب)
+  0x0629, // ARABIC LETTER TEH MARBUTA (ة)
+  0x062a, // ARABIC LETTER TEH (ت)
+  0x062b, // ARABIC LETTER THEH (ث)
+  0x062c, // ARABIC LETTER JEEM (ج)
+  0x062e, // ARABIC LETTER KHAH (خ)
+  0x0630, // ARABIC LETTER THAL (ذ)
+  0x0632, // ARABIC LETTER ZAIN (ز)
+  0x0634, // ARABIC LETTER SHEEN (ش)
+  0x0636, // ARABIC LETTER DAD (ض)
+  0x0638, // ARABIC LETTER ZAH (ظ)
+  0x063a, // ARABIC LETTER GHAIN (غ)
+  0x0641, // ARABIC LETTER FEH (ف)
+  0x0642, // ARABIC LETTER QAF (ق)
+  0x0646, // ARABIC LETTER NOON (ن)
+  0x064a, // ARABIC LETTER YEH (ي), two dots below in every form
+  0x067e, // ARABIC LETTER PEH (پ)
+  0x0686, // ARABIC LETTER TCHEH (چ)
+  0x0698, // ARABIC LETTER JEH (ژ)
+  0x06a4, // ARABIC LETTER VEH (ڤ)
+  0x06cc, // ARABIC LETTER FARSI YEH (ی), dotted in initial and medial forms; listed for every position, the wide direction
+  0x06d0, // ARABIC LETTER E (ې), two dots below
+]);
+
+/**
+ * Arabic constructions a free prompt cannot be trusted to spell: origami-ribbon
+ * محمد lost the loop of م in 2 of 2 SP-2d stills and the name reader passed
+ * both. Every id here is in `KNOWN_CONSTRUCTIONS`.
+ */
+const ARABIC_PRINT_CONSTRUCTIONS = new Set(["origami-ribbon"]);
+
+/**
+ * Letters that carry a detached hamza or madda, which a free prompt can leave
+ * floating wherever the letter sits, last letter included. ئ is in
+ * `ARABIC_DOTTED_LETTERS` and already routes wide.
+ */
+const ARABIC_HAMZA_LETTERS = new Set([
+  0x0621, // ARABIC LETTER HAMZA (ء), stands alone on both sides
+  0x0622, // ARABIC LETTER ALEF WITH MADDA ABOVE (آ)
+  0x0623, // ARABIC LETTER ALEF WITH HAMZA ABOVE (أ)
+  0x0624, // ARABIC LETTER WAW WITH HAMZA ABOVE (ؤ)
+  0x0625, // ARABIC LETTER ALEF WITH HAMZA BELOW (إ)
+]);
+
+/**
+ * Arabic Presentation Forms-A and -B. NFKC turns them into base letters so the
+ * rules above see them, and their presence alone also routes wide: the text
+ * the customer approved is not the text the rules read.
+ */
+const isArabicPresentationForm = (codePoint: number): boolean =>
+  (codePoint >= 0xfb50 && codePoint <= 0xfdff) ||
+  (codePoint >= 0xfe70 && codePoint <= 0xfeff);
 
 const isLetter = (character: string): boolean => /\p{L}/u.test(character);
 const isArabicScript = (character: string): boolean =>
@@ -214,9 +279,19 @@ export function stillRoute(input: StillRouteInput): StillRouteDecision {
   }
 
   // 2. The text itself: letters only, nothing else.
-  // NFC first, so a decomposed "e" + combining diaeresis is seen as the single
-  // letter "ë" the Latin check below knows how to refuse.
-  const characters = [...approvedText.normalize("NFC")];
+  // NFKC first, so a decomposed "e" + combining diaeresis is seen as the single
+  // letter "ë" the Latin check below knows how to refuse, and an Arabic
+  // presentation form is seen as the base letter the Arabic rules know.
+  // Any compatibility change routes wide: the rules then read text that is not
+  // byte for byte what the customer approved (a circled letter becomes a plain
+  // one, for example).
+  const nfc = approvedText.normalize("NFC");
+  const characters = [...approvedText.normalize("NFKC")];
+  if ([...nfc].some((c) => isArabicPresentationForm(c.codePointAt(0) ?? 0))) {
+    add("arabic_presentation_form");
+  } else if (characters.join("") !== nfc) {
+    add("compatibility_form");
+  }
   if (characters.length === 0 || approvedText.trim().length === 0) {
     add("empty_text");
   }
@@ -254,13 +329,23 @@ export function stillRoute(input: StillRouteInput): StillRouteDecision {
       // A character from another script already fired `mixed_scripts`; do not
       // also report it as an Arabic letter that fails to join.
       if (point.type === "T" || !isArabicScript(point.character)) return;
-      if (point.character.codePointAt(0) === ARABIC_HAMZA) add("arabic_hamza");
+      const codePoint = point.character.codePointAt(0) ?? 0;
+      if (ARABIC_HAMZA_LETTERS.has(codePoint)) add("arabic_hamza");
+      if (ARABIC_DOTTED_LETTERS.has(codePoint)) add("arabic_dotted_letter");
       if (point.type === "D" || point.type === "C") return;
       const followed = points
         .slice(index + 1)
         .some((next) => next.type !== "T");
       if (followed) add("arabic_non_joining_gap");
     });
+    // A construction the free prompt misspells in Arabic (SP-2d lab), or one
+    // this module cannot name at all.
+    const construction = specification.construction ?? "unspecified";
+    if (!KNOWN_CONSTRUCTIONS.has(construction)) {
+      add("arabic_construction_unknown");
+    } else if (ARABIC_PRINT_CONSTRUCTIONS.has(construction)) {
+      add(`arabic_print_construction:${construction}`);
+    }
   }
 
   // 5. Latin: connected script only, and no floating dots or accents.
