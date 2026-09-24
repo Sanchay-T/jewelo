@@ -819,24 +819,18 @@ function nameSpelling(
   if (language === "ar") {
     // On the free route the Style paragraph is the lettering brief and it says
     // flowing calligraphy, not Kufi; naming a face here as well would tell the
-    // model two different things about the same letters. The dot sentence is
-    // also much stronger there: with no silhouette to copy, a dot that is "in
-    // place" can still be a second piece of metal floating beside its letter.
-    //
-    // UNIV-2 wording A (24 Sep 2026,
-    // `docs/goals/road-to-gold/lab-2026-09-24-universal-2/ledger.md`). The
-    // short mark clause this replaces left the dots floating on half the
-    // classical stills of UNIV-1. Naming the weld - a solid dot on a short bar
-    // as thick as the letter strokes - and the ring tabs took the same eight
-    // dotted names from 8 of 16 to 14 of 16 spelled and one piece, scored blind
-    // in one session against the old wording.
-    if (route === "free") {
-      return `"${drawn}" in connected Arabic letters, right to left, spelled letter for letter. Every dot is a small solid gold dot fused to its own letter by a short straight gold bar as thick as the letter strokes, so no dot floats free and none touches only at a point; where a letter has two or three dots, they are fused to each other and to the letter the same way. The two rings sit at the two ends of the name on short plain tabs that never curl or rise into a stroke that could be read as a letter.`;
-    }
+    // model two different things about the same letters. The mark sentence is
+    // also stronger there: with no silhouette to copy, a dot that is "in place"
+    // can still be a second piece of metal floating beside its letter.
     const kufi =
-      /kufi/i.test(lettering?.ar?.fontFile ?? "") ||
-      letteringStyle(specification) === "kufi";
-    return `"${drawn}" in connected Arabic${kufi ? " Kufi" : ""} letters, right to left, ${spelledAs}, every dot and mark in place.`;
+      route !== "free" &&
+      (/kufi/i.test(lettering?.ar?.fontFile ?? "") ||
+        letteringStyle(specification) === "kufi");
+    const marks =
+      route === "free"
+        ? "every dot and mark joined to its letter"
+        : "every dot and mark in place";
+    return `"${drawn}" in connected Arabic${kufi ? " Kufi" : ""} letters, right to left, ${spelledAs}, ${marks}.`;
   }
   const capitals =
     /\p{Lu}/u.test(drawn) && drawn === drawn.toLocaleUpperCase("en");

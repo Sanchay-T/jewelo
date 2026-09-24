@@ -3,17 +3,16 @@
  *
  * The split-design lab (`docs/goals/road-to-gold/lab-2026-09-24-split/ledger.md`,
  * "Found in human review") caught a free prompt drawing classical فاطمة as two
- * separate pieces of metal, and for a while every Arabic letter that does not
- * join the letter after it (ا د ر و ...) routed to the stencil for that reason.
- * The universal labs of 24 Sep 2026 replaced that rule with a wording that
- * fuses the dots and the ring tabs by name (D-024): the model draws the piece
- * and the piece reader plus the three paid attempts refuse the ones that drift.
+ * separate pieces of metal. Arabic letters that do not join the letter after
+ * them (ا د ر و ...) leave a gap a real pendant has to bridge with a weld, and a
+ * "weld the letters" instruction fixed فاطمة while breaking عمران. The stencil
+ * engine bridges those gaps deterministically, so a name that needs a bridge
+ * goes to the stencil and never to a free prompt.
  *
- * The route is still deliberately WIDE everywhere else. A false "stencil" costs
- * a slightly stiffer photograph; a false "free" costs a customer a pendant that
- * spells their name in two pieces. So anything outside what a lab photographed -
- * a mark, a second name, a construction, a stone, a metal colour - routes to
- * "stencil".
+ * The route is deliberately WIDE. A false "stencil" costs a slightly stiffer
+ * photograph; a false "free" costs a customer a pendant that spells their name
+ * in two pieces. So anything this module cannot positively prove is a single
+ * connected run of letters routes to "stencil".
  *
  * Pure and deterministic: no provider call, no font, no I/O. It is decided
  * before any spend.
@@ -30,16 +29,13 @@
  *
  * Measured on the SP-2d free-route lab, 24 Sep 2026
  * (`docs/goals/road-to-gold/lab-2026-09-24-free-route/ledger.md`):
+ * Classical ليلى came out two pieces in 2 of 2 stills: the dots under ي touched the stroke only at a corner or hung with a gap.
  * Origami-ribbon محمد lost the loop of م in 2 of 2 stills and read لحمد or الحد, and the production name reader passed both.
  * Latin capital-plus-lowercase in classical (Muhammad, Omar, Love, Asma) passed 8 of 8.
- * Widened for Arabic by the three universal labs of 24 Sep 2026 (`lab-2026-09-24-universal`, `-2`, `-3`, D-024):
- * 16 common UAE Arabic names on the production free studio prompt spelled right 48 of 48 to a blind viewer,
- * diamond-rails was one piece 12 of 12, and UNIV-2's wording A took the eight dotted names classical floated from 8 of 16 to 14 of 16 spelled and one piece.
- * So the route is still an allowlist, not a deny-list: a letter routes free only if it is in `ARABIC_FREE_LETTER_RANGES` or `LATIN_FREE_LETTER`.
- * Every combining mark, every presentation or compatibility form, every non-letter and every construction this module cannot name routes to the stencil.
+ * Undotted, gap-free Arabic in classical, framed-minimal and diamond-rails (محمد, سلمى) passed 8 of 8 on spelling.
+ * So the route is an allowlist, not a deny-list: a letter routes free only if it is in `ARABIC_FREE_LETTERS` or `LATIN_FREE_LETTER`.
+ * Every other letter, every combining mark, every presentation or compatibility form and every construction this module cannot name routes to the stencil.
  * Origami-ribbon Arabic routes to the stencil (`arabic_print_construction:origami-ribbon`).
- * What catches a dot that still floats is the piece reader plus the three paid attempts, not a letter table:
- * on 45 free stills it made 0 false accepts and refused all three real rail splits (`lab-2026-09-24-universal/reader-replay.md`).
  *
  * Framed-minimal Arabic also routes to the stencil, for a different reason and
  * under a different code (`arabic_one_piece_unproven:framed-minimal`). Its
@@ -152,37 +148,33 @@ const KNOWN_CONSTRUCTIONS = new Set([
 const CONNECTED_LATIN_CONSTRUCTION = "classical";
 
 /**
- * The Arabic letters a free prompt may draw: the standard Arabic base letters,
- * U+0621-U+063A (ء أ آ ؤ إ ئ ا ب ة ت ث ج ح خ د ذ ر ز س ش ص ض ط ظ ع غ) and
- * U+0641-U+064A (ف ق ك ل م ن ه و ى ي). Two ranges, one constant, so the set can
- * be narrowed again in one line.
+ * The only Arabic letters a free prompt may draw: exactly the six a free prompt
+ * was ever measured drawing, and nothing admitted on shape alone. The SP-2d and
+ * SP-2f2 labs drew محمد and سلمى, which between them is م ح د س ل ى; every
+ * other letter of the Arabic script, proven or not, routes to the stencil.
  *
- * Nothing else is in: U+0640 TATWEEL is a modifier letter, not a letter of a
- * name, and everything above U+064A is a harakat, a Quranic mark or an extended
- * letter for another language. Combining marks are refused separately.
+ * The value says whether the letter joins the letter after it (Joining_Type D
+ * in ArabicShaping.txt); a letter that does not may only be last, because the
+ * gap after it is a second piece of metal.
  *
- * Widened from the six letters of محمد and سلمى by the universal free-route
- * labs of 24 September 2026 (UNIV-1 `lab-2026-09-24-universal`, UNIV-2
- * `lab-2026-09-24-universal-2`, UNIV-3 `lab-2026-09-24-universal-3`). UNIV-1
- * drew 16 common UAE Arabic names on the production free studio prompt and a
- * blind viewer read every one of the 48 stills correctly, so spelling does not
- * depend on which letters the name happens to carry; UNIV-3 put the letters
- * UNIV-1 never drew - the hamza carriers أ إ آ ؤ, the emphatics ق ض ظ, and
- * ك ج غ ذ ت and a final ى - on diamond-rails for the same check.
+ * An earlier version of this table also admitted ا ر ص ط ع ه و on the argument
+ * that they carry no dot, hamza, madda or separate stroke in any form. That is
+ * a claim about their shape, not a photograph anyone looked at: it made عمر,
+ * على, طه, هلا and علا free on evidence that does not exist. They route to the
+ * stencil until a lab draws them.
  *
- * The position rules are gone with the letter table. They said a non-joining
- * letter may only be last, which made the gap after ا ر د و a stencil case.
- * UNIV-1's diamond-rails cells were one piece 12 of 12 with those letters
- * inside the name, and on classical UNIV-2's wording A fused the dots and tabs
- * explicitly; a gap the model has to bridge is now the readers' job and the
- * three paid attempts', not a rule written from six letters.
+ * U+0649 ALEF MAKSURA is Joining_Type=D in ArabicShaping.txt, but the Naskh and
+ * Kufi faces pinned in `engines/caleums-arabic-v3` draw it final-only, so it is
+ * treated as non-joining - which is also the only position سلمى measured it in.
  */
-const ARABIC_FREE_LETTER_RANGES: readonly (readonly [number, number])[] = [
-  [0x0621, 0x063a],
-  [0x0641, 0x064a],
-];
-const isArabicFreeLetter = (codePoint: number): boolean =>
-  ARABIC_FREE_LETTER_RANGES.some(([from, to]) => codePoint >= from && codePoint <= to);
+const ARABIC_FREE_LETTERS: ReadonlyMap<number, boolean> = new Map([
+  [0x062d, true], // ARABIC LETTER HAH (ح), محمد
+  [0x062f, false], // ARABIC LETTER DAL (د), محمد, final
+  [0x0633, true], // ARABIC LETTER SEEN (س), سلمى
+  [0x0644, true], // ARABIC LETTER LAM (ل), سلمى
+  [0x0645, true], // ARABIC LETTER MEEM (م), محمد, سلمى
+  [0x0649, false], // ARABIC LETTER ALEF MAKSURA (ى), سلمى, final-only
+]);
 
 /**
  * Arabic constructions a free prompt cannot be trusted to spell: origami-ribbon
@@ -357,16 +349,18 @@ export function stillRoute(input: StillRouteInput): StillRouteDecision {
     add("language_script_mismatch");
   }
 
-  // 4. Arabic: every letter is a standard Arabic base letter. Position no
-  // longer matters. Characters from another script already fired
+  // 4. Arabic: every letter is on the allowlist, and every letter but the last
+  // joins the one after it. Characters from another script already fired
   // `mixed_scripts`; marks already fired `combining_mark`.
   if (arabicLetters.length > 0) {
-    for (const character of characters) {
-      if (!isArabicScript(character) || !isLetter(character)) continue;
-      if (!isArabicFreeLetter(character.codePointAt(0) ?? 0)) {
-        add("arabic_letter_not_proven");
+    characters.forEach((character, index) => {
+      if (!isArabicScript(character) || !isLetter(character)) return;
+      const joinsForward = ARABIC_FREE_LETTERS.get(character.codePointAt(0) ?? 0);
+      if (joinsForward === undefined) add("arabic_letter_not_proven");
+      else if (!joinsForward && index < characters.length - 1) {
+        add("arabic_non_joining_gap");
       }
-    }
+    });
     // A construction the free prompt misspells in Arabic (SP-2d lab), or one
     // this module cannot name at all.
     const construction = specification.construction ?? "unspecified";
