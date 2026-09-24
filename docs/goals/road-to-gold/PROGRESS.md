@@ -437,3 +437,19 @@ Evidence in `dogfood-2026-09-23/real-run/`.
 - UNIV-7 (mark inventory A3) blind verdict: dots 24 of 24, hamza and madda 12 of 12, spelled 23 of 24, one piece 21 of 24; rails 8 of 8 on every axis. The one misspelling is an open final م (تسنى), a letter shape; the three splits come after ر in classical. Mark errors are gone at the source on these 12 names. UNIV-8 (image-lab, 72 stills) tests A3 on 12 new names and a closed-loop sentence (A4) for the final م.
 - SIGN-1f `3a7a594a` verified by me (harness 10 cases pass, Realtime past the window 0 extra reads, build exit 0 on the committed tree): Realtime obeys the past-window ceiling; `everSettled` deleted, a watcher survives the window only while a photograph is on screen. Deploying; seventh pass next.
 - One-line prompt check (`lab-2026-09-24-oneliner/`, Sanchay's request): a one-line prompt with no reference reproduces Omran's ChatGPT LOVE origami almost exactly (2 of 2). The same one-liner in Arabic gets the look but floats every dot (تسنيم, 0 of 2 one piece) and misspells 1 of 2 (قاسم drawn as قاسح). What stands between the one-liner and a shippable Arabic piece is the connector rule for dots (fixed by A3 in UNIV-7) and the rarer letter-shape slip. Next: origami Arabic, one-liner plus A3.
+
+## 2026-09-25 - SIMPLE-1: one prompt, nothing else
+
+Sanchay: "no verification, no rechecker, no bunch of rules here and there, and python files."
+
+Done:
+
+- Lab, text only, no reference images: `docs/goals/road-to-gold/lab-2026-09-25-text-only/ledger.md`. The jeweller wording (18k, bench terms, the one-piece sentence) spells 9/12 on the four app styles against 7/12 for the plain wording; every piece but one is one connected casting.
+- `c7670158`: the still pipeline is `packages/ai/src/prompt.ts` `stillPrompt` -> OpenAI `/v1/images/generations` -> store -> `complete_presentation_task`. Deleted the identity package, readers, prompt registry and snapshots, style anchors, look references, operator prompt library, identity diagnostics, transliteration, lab scripts and pipeline python (23,531 lines out, 1,562 in).
+- Migration `20260925000000_completion_without_verification.sql` pushed; `runtime_policy.studio_only` set true (a run reserves one photograph, not four).
+- Dead env keys `OPENAI_VERIFIER_MODEL`, `LOOK_REFERENCES`, `STILL_FREE_ROUTE` removed from `.env` and `.env.staging`.
+
+Open:
+
+- Faceted origami and constellation are lab-only styles; not in the app's construction list.
+- Stale comment `apps/web/src/features/atelier/Atelier.tsx:1186` names the deleted `preflightRefusal`.
