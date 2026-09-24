@@ -1,0 +1,190 @@
+{
+ "lab": "lab-2026-09-24-universal-2",
+ "task": "UNIV-2",
+ "date": "2026-09-24",
+ "model": "gpt-image-2.5-sunburst",
+ "aspectRatio": "1:1",
+ "route": "free route, Name paragraph replaced",
+ "base": "docs/goals/road-to-gold/lab-2026-09-24-universal/prompts/classical-<name>-ar.txt",
+ "images": [
+  "1 = look reference (classical crop, same bytes as UNIV-1); no stencil, no master, no style anchor"
+ ],
+ "cells": [
+  {
+   "cell": "classical-noor-ar-A",
+   "file": "prompts/classical-noor-ar-A.txt",
+   "name": "نور",
+   "wording": "A",
+   "sha256": "988be82ff77569be41ded2532d85e18846e268fc96b6a78079647b0a2753bb4c",
+   "taskIds": [
+    "c0880230-f196-4023-8df8-eaeee519aa77",
+    "d1699198-9e19-4674-9ffc-75a468a75c8a"
+   ]
+  },
+  {
+   "cell": "classical-noor-ar-B",
+   "file": "prompts/classical-noor-ar-B.txt",
+   "name": "نور",
+   "wording": "B",
+   "sha256": "d697a816e79ee4b26220b72c983604ffeb157da403ebd7637542c5724e3b3412",
+   "taskIds": [
+    "66ed035f-fb82-4c5c-a604-4a28c1edd510",
+    "91aa5412-b167-4e12-bb9d-688a00aee811"
+   ]
+  },
+  {
+   "cell": "classical-khalid-ar-A",
+   "file": "prompts/classical-khalid-ar-A.txt",
+   "name": "خالد",
+   "wording": "A",
+   "sha256": "3226ba128d3adbeb11b3a8e47b69d0a870dce4b98ad8fe66f9efb8ad8be890b0",
+   "taskIds": [
+    "1258479b-48b5-4696-87a3-c3f870b7e94d",
+    "2d060e07-522a-46d6-b00c-78112ac63343"
+   ]
+  },
+  {
+   "cell": "classical-khalid-ar-B",
+   "file": "prompts/classical-khalid-ar-B.txt",
+   "name": "خالد",
+   "wording": "B",
+   "sha256": "11666f5c991c82b36fe452db78333f18c5757afcb617732b9b2147fb29ef1a3f",
+   "taskIds": [
+    "70ecf55e-73ea-4011-bf91-3948f3273c7f",
+    "ef061ed8-8ee9-4efe-a778-cfa4560c47ee"
+   ]
+  },
+  {
+   "cell": "classical-rashid-ar-A",
+   "file": "prompts/classical-rashid-ar-A.txt",
+   "name": "راشد",
+   "wording": "A",
+   "sha256": "ca616d54910e3022c8794a2303c355835434fbdd48b82c739f3ae170c04ca853",
+   "taskIds": [
+    "950f5347-c801-47c1-bc82-fef0428df867",
+    "08e68801-3cab-4e21-bc68-5f9891c2ee78"
+   ]
+  },
+  {
+   "cell": "classical-rashid-ar-B",
+   "file": "prompts/classical-rashid-ar-B.txt",
+   "name": "راشد",
+   "wording": "B",
+   "sha256": "7caa2c54fca95bb08837a5489e5e9b1b81e8c984e0f3132260ffe50148b37f1d",
+   "taskIds": [
+    "080b8288-4ce2-4206-8f3f-24fda0c11965",
+    "9632dba5-8c3c-443b-96a9-af82fc0627ca"
+   ]
+  },
+  {
+   "cell": "classical-hessa-ar-A",
+   "file": "prompts/classical-hessa-ar-A.txt",
+   "name": "حصة",
+   "wording": "A",
+   "sha256": "f66fe775cd65d3d367fc2233bee41a6e78b7272ed8c4e8e488651c8a7dc74eec",
+   "taskIds": [
+    "553fda67-747f-48a8-b8bd-2b0dd353e7de",
+    "a2e25d04-23ef-4310-8643-2a501ab052e0"
+   ]
+  },
+  {
+   "cell": "classical-hessa-ar-B",
+   "file": "prompts/classical-hessa-ar-B.txt",
+   "name": "حصة",
+   "wording": "B",
+   "sha256": "28b33da6eb39fa4bcb632ed2bfceb5e63ad4ea7dd7d262473a14f635100ebd26",
+   "taskIds": [
+    "c54e8d3c-0958-4bec-89f6-f4cb7199fdd2",
+    "5049bb0a-9d60-4fd5-b5b6-2f4ba155c959"
+   ]
+  },
+  {
+   "cell": "classical-aisha-ar-A",
+   "file": "prompts/classical-aisha-ar-A.txt",
+   "name": "عائشة",
+   "wording": "A",
+   "sha256": "ef5922da1c2bd98c491811e1dcddf01d3e697c63cd3242b04875b0c38e0fef9b",
+   "taskIds": [
+    "f1e84999-6a55-4f64-a6fd-682aa34d28c7",
+    "938c6922-10db-473b-887e-dbea83007d8d"
+   ]
+  },
+  {
+   "cell": "classical-aisha-ar-B",
+   "file": "prompts/classical-aisha-ar-B.txt",
+   "name": "عائشة",
+   "wording": "B",
+   "sha256": "cc0041a48ddd3fe5b9513de796f9565e3dba5b9107bbf3fcd3dfecae6828958d",
+   "taskIds": [
+    "85db9d90-d1d4-4baf-93cd-8afca6346583",
+    "8f6e019f-ed3a-41f9-bd2c-5b02cb3e0bde"
+   ]
+  },
+  {
+   "cell": "classical-shaikha-ar-A",
+   "file": "prompts/classical-shaikha-ar-A.txt",
+   "name": "شيخة",
+   "wording": "A",
+   "sha256": "3762fbb146376c8bd638d36beb182ca95f4890c5ec91a9413bdd7307e90518ec",
+   "taskIds": [
+    "2ef3ee46-7140-46a8-a24c-83ca7eebe65a",
+    "3f00c55d-5f11-43af-b349-40a7e389b26c"
+   ]
+  },
+  {
+   "cell": "classical-shaikha-ar-B",
+   "file": "prompts/classical-shaikha-ar-B.txt",
+   "name": "شيخة",
+   "wording": "B",
+   "sha256": "32caa3aad83a5d77d0173a07b003a0f7dd4ba3e626d4dd6874ef2566d34116d1",
+   "taskIds": [
+    "c4764c20-ba02-4be4-9b37-238dd7b8368f",
+    "ee7a8282-2aad-460b-bd41-af53bdc47e66"
+   ]
+  },
+  {
+   "cell": "classical-zainab-ar-A",
+   "file": "prompts/classical-zainab-ar-A.txt",
+   "name": "زينب",
+   "wording": "A",
+   "sha256": "49c29191b8728e4cd4b77a55696b541e4c213b888f184de3b10799813cf6ae59",
+   "taskIds": [
+    "d5c63975-fd20-4e7f-bf24-105b86c3a932",
+    "0a4c9a8b-274a-462d-a5ea-d301eaf2d61f"
+   ]
+  },
+  {
+   "cell": "classical-zainab-ar-B",
+   "file": "prompts/classical-zainab-ar-B.txt",
+   "name": "زينب",
+   "wording": "B",
+   "sha256": "d3df9e3247734bc1050c48d421c749db085b506d6b7086e19e332b45056c8434",
+   "taskIds": [
+    "82fb553f-591c-49d7-b699-838462d7185c",
+    "87b7a763-33bf-454c-adb4-be6fc2be78b5"
+   ]
+  },
+  {
+   "cell": "classical-yousef-ar-A",
+   "file": "prompts/classical-yousef-ar-A.txt",
+   "name": "يوسف",
+   "wording": "A",
+   "sha256": "20f983a3feeb5aec65c3bb21384e34688e78addfb07577de159a7f73c717b777",
+   "taskIds": [
+    "200be237-66e3-40ea-beb9-f8f1784c18db",
+    "d1f19433-ea3c-4975-9552-7e5cc01a8227"
+   ]
+  },
+  {
+   "cell": "classical-yousef-ar-B",
+   "file": "prompts/classical-yousef-ar-B.txt",
+   "name": "يوسف",
+   "wording": "B",
+   "sha256": "2c1d62262b4bddc76f72620b1b7bca50e00e4e1478c06c1e517da2027a743ea5",
+   "taskIds": [
+    "21fc8940-424f-42c4-9ec5-ff2cd6adec0a",
+    "f2da29b4-e68d-49ab-98e7-d8a82724ce1b"
+   ]
+  }
+ ]
+}

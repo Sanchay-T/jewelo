@@ -1,0 +1,110 @@
+{
+  "lab": "lab-2026-09-24-universal-3",
+  "task": "UNIV-3",
+  "date": "2026-09-24",
+  "compilerVersion": "caleums-still-compiler-v4",
+  "model": "gpt-image-2.5-sunburst",
+  "aspectRatio": "1:1",
+  "route": "free",
+  "images": [
+    "1 = look reference (the construction's crop); no stencil, no master, no style anchor"
+  ],
+  "cells": [
+    {
+      "cell": "diamond-rails-ahmad-ar",
+      "file": "prompts/diamond-rails-ahmad-ar.txt",
+      "name": "أحمد",
+      "construction": "diamond-rails",
+      "look": true,
+      "sha256": "b27fa5739f62b569607943545afc11348ef40ffea1decbb6e76e9120cdb2a44b"
+    },
+    {
+      "cell": "diamond-rails-ibrahim-ar",
+      "file": "prompts/diamond-rails-ibrahim-ar.txt",
+      "name": "إبراهيم",
+      "construction": "diamond-rails",
+      "look": true,
+      "sha256": "939905df77dcbb91a2249cabee58dcef8032a569373bbd7f4fa511f502ca02d7"
+    },
+    {
+      "cell": "diamond-rails-amna-ar",
+      "file": "prompts/diamond-rails-amna-ar.txt",
+      "name": "آمنة",
+      "construction": "diamond-rails",
+      "look": true,
+      "sha256": "1ced1541c0b97fdafe8b42e357cbb941cdbd2f5c0bc58ed144c9e3268185f69e"
+    },
+    {
+      "cell": "diamond-rails-qasim-ar",
+      "file": "prompts/diamond-rails-qasim-ar.txt",
+      "name": "قاسم",
+      "construction": "diamond-rails",
+      "look": true,
+      "sha256": "7eee65e3e99be3aa4a8ef104ee1e3bcf976505dadd99e0ea9446736125cf0e1d"
+    },
+    {
+      "cell": "diamond-rails-karim-ar",
+      "file": "prompts/diamond-rails-karim-ar.txt",
+      "name": "كريم",
+      "construction": "diamond-rails",
+      "look": true,
+      "sha256": "88a37d1dc5974e436553a4f4d619fc67cfa5f7b599f020b390beb25c31360925"
+    },
+    {
+      "cell": "diamond-rails-jamila-ar",
+      "file": "prompts/diamond-rails-jamila-ar.txt",
+      "name": "جميلة",
+      "construction": "diamond-rails",
+      "look": true,
+      "sha256": "7b4c2af32225917f258273fb61c5e3fc9eaa0e88f1a61653f38d92c4d7ab1fca"
+    },
+    {
+      "cell": "diamond-rails-ghada-ar",
+      "file": "prompts/diamond-rails-ghada-ar.txt",
+      "name": "غادة",
+      "construction": "diamond-rails",
+      "look": true,
+      "sha256": "b123f9c00a1cb3cac8ce9302c6bbdcc95b173bbc5042eb3a5fb419bde2f18656"
+    },
+    {
+      "cell": "diamond-rails-duha-ar",
+      "file": "prompts/diamond-rails-duha-ar.txt",
+      "name": "ضحى",
+      "construction": "diamond-rails",
+      "look": true,
+      "sha256": "71d4cbae5a2f30a78597f61dcd1119ad8586a00fc27db495b377c0d160da0147"
+    },
+    {
+      "cell": "diamond-rails-zafir-ar",
+      "file": "prompts/diamond-rails-zafir-ar.txt",
+      "name": "ظافر",
+      "construction": "diamond-rails",
+      "look": true,
+      "sha256": "2c51620ccb69a7b3fae88e1fbe2a24ae44430f330e104f186d4338b13e6c2a92"
+    },
+    {
+      "cell": "diamond-rails-dhikra-ar",
+      "file": "prompts/diamond-rails-dhikra-ar.txt",
+      "name": "ذكرى",
+      "construction": "diamond-rails",
+      "look": true,
+      "sha256": "1bc314ebb30170a36430215f77203449926fb01a96709d52a429988af92394e5"
+    },
+    {
+      "cell": "diamond-rails-tasneem-ar",
+      "file": "prompts/diamond-rails-tasneem-ar.txt",
+      "name": "تسنيم",
+      "construction": "diamond-rails",
+      "look": true,
+      "sha256": "6e3db916b7d7c3c13e6ba00286ab0da9a63a7a9a20afe726c01f1df1c0f3cff5"
+    },
+    {
+      "cell": "diamond-rails-mumin-ar",
+      "file": "prompts/diamond-rails-mumin-ar.txt",
+      "name": "مؤمن",
+      "construction": "diamond-rails",
+      "look": true,
+      "sha256": "da461194910d15befdd6a568955da98341bf9004f4f0742ad19232859b7187a3"
+    }
+  ]
+}
