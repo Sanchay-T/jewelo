@@ -328,7 +328,9 @@ function compileDependent(
   profile: (typeof DEPENDENT_VIEWS)[number][0],
   view: string,
   route: "free" | "stencil",
-  references: { master: boolean; inspiration: boolean },
+  // `stencil` defaults to the route, which is what production always sends; it
+  // is overridable only so the route/variables guard below can be exercised.
+  references: { master: boolean; inspiration: boolean; stencil?: boolean },
   template: string = BASELINE_PROMPT_TEMPLATES[profile],
 ) {
   return compileStillPrompt({
@@ -354,7 +356,7 @@ function compileDependent(
       presentationView: view,
     }),
     references: {
-      stencil: route === "stencil",
+      stencil: references.stencil ?? route === "stencil",
       master: references.master,
       look: stillLookReferenceRequired(testCase.construction),
       style: true,
@@ -602,6 +604,28 @@ else {
 }
 
 /**
+ * SP-2e1c: the stencil route's own roles and order, pinned beside the free
+ * ones the sheet above records. The studio still on the stencil route carries
+ * the letter drawing first and the look texture after it, and no sibling still
+ * and no style photograph - that order is what the compiled "Image N (role)"
+ * block numbers, so a change here has to fail rather than renumber silently.
+ */
+{
+  const roles = buildStillReferences({
+    route: "stencil",
+    identityImageUrl: "identity",
+    lookReferenceUrl: "look",
+  }).map(({ role }) => role);
+  const want = ["stencil", "look"];
+  if (roles.join(", ") === want.join(", "))
+    console.log(`MATCH  stencil route references [${roles.join(", ")}]`);
+  else {
+    failed += 1;
+    console.log(`DIFFER stencil route references [${roles.join(", ")}] (want [${want.join(", ")}])`);
+  }
+}
+
+/**
  * A free dependent view without its approved studio still has no authority for
  * the piece at all, and a free prompt that still says @stencil (a `@v2`
  * release) points at an image nobody sent. Both are refused before spend.
@@ -617,6 +641,19 @@ for (const [label, run, want] of [
     () => compileDependent({ construction: "classical", ...NAMES.asma!, metalColor: "yellow" }, "image.worn", "on_skin", "free", { master: true, inspiration: false },
       BASELINE_PROMPT_TEMPLATES["image.worn"].replace("{{spelling_rule}}", "Exact spelling and glyph order from @stencil.")),
     "still_unresolved_reference_tag:@stencil",
+  ],
+  // SP-2e1c: the route/variables guard. Free-route words compiled with the
+  // stencil image attached (and the reverse) would number images the request
+  // does not carry, so both are refused before anything is spent.
+  [
+    "free image.worn variables with the stencil attached",
+    () => compileDependent({ construction: "classical", ...NAMES.asma!, metalColor: "yellow" }, "image.worn", "on_skin", "free", { master: true, inspiration: false, stencil: true }),
+    "still_route_variables_mismatch:variables=free,references=stencil",
+  ],
+  [
+    "stencil image.worn variables with no stencil attached",
+    () => compileDependent({ construction: "classical", ...NAMES.asma!, metalColor: "yellow" }, "image.worn", "on_skin", "stencil", { master: true, inspiration: false, stencil: false }),
+    "still_route_variables_mismatch:variables=stencil,references=free",
   ],
 ] as const) {
   let caught = "";

@@ -207,6 +207,7 @@ export interface PresentationRepository {
     revision: RevisionRow,
     ownerId: string,
     task: TaskRow,
+    stillRoute: StillRouteChoice,
   ): Promise<{
     url: string;
     fingerprint: string;
@@ -640,6 +641,12 @@ export async function executePresentationTask(
     snapshot.task_id !== task.id ||
     snapshot.prompt_release_id !== task.prompt_release_id ||
     (stillRoute !== "stencil" && stillRoute !== "free") ||
+    // The sha ties the text to itself but nothing tied the route to the text.
+    // A free-route snapshot whose compiled text still references the stencil
+    // would send the letter drawing to a free render: the route column and the
+    // words disagree, which is wrong in the row and fails the same way on every
+    // redispatch.
+    (stillRoute === "free" && snapshot.compiled_prompt.includes("@stencil")) ||
     createHash("sha256")
       .update(snapshot.compiled_prompt, "utf8")
       .digest("hex") !== snapshot.sha256
@@ -686,6 +693,10 @@ export async function executePresentationTask(
       revision,
       task.owner_principal_id,
       task,
+      // The route this task was resolved with above, so the reuse gate compares
+      // the parent against one already-decided value instead of re-reading it
+      // and applying a second, different absent-route rule.
+      stillRoute,
     );
     // The studio still gets NO style photo: every wrong name today was copied
     // from the anchor. Dependent views inherit the studio still as reference.
@@ -1327,6 +1338,7 @@ export class SupabasePresentationRepository implements PresentationRepository {
     revision: RevisionRow,
     ownerId: string,
     task: TaskRow,
+    stillRoute: StillRouteChoice,
   ) {
     // Adversarial review 1 finding 1: the release the engine stamps into the
     // artifact has to be the release the task is pinned to. Two releases in one
@@ -1342,7 +1354,7 @@ export class SupabasePresentationRepository implements PresentationRepository {
         `identity_pipeline_release_mismatch:task=${task.pipeline_release},report=${this.pipelineReleaseId}`,
       );
     if (task.dependency_task_id)
-      return this.#reuseDependencyIdentity(revision, ownerId, task);
+      return this.#reuseDependencyIdentity(revision, ownerId, task, stillRoute);
     const rendered = await renderIdentityAnchor(
       {
         approvedText: revision.identity_anchor.approvedText,
@@ -1439,12 +1451,33 @@ export class SupabasePresentationRepository implements PresentationRepository {
   }
   async dependencyStillRoute(task: TaskRow) {
     if (!task.dependency_task_id) return undefined;
-    const rows = await this.#request<Array<{ still_route: StillRouteChoice }>>(
-      `/rest/v1/generation_prompt_snapshots?task_id=eq.${encodeURIComponent(task.dependency_task_id)}&select=still_route`,
-    );
-    return rows[0]?.still_route;
+    return this.#snapshotStillRoute(task.dependency_task_id);
   }
-  async #reuseDependencyIdentity(revision: RevisionRow, ownerId: string, task: TaskRow) {
+  /**
+   * The one place a stored snapshot's route is read. The column is not named in
+   * the select, because a database without migration 20260924020000 answers a
+   * named-column select with 400 and the throw would escape the pre-spend path
+   * and leave the dependent views looping on the stale sweeper. No row means no
+   * route yet (`undefined`); a row without the column is a snapshot from before
+   * the migration, which is a stencil one by definition - the same rule the
+   * studio path applies to `snapshot.still_route`.
+   */
+  async #snapshotStillRoute(taskId: string) {
+    const rows = await this.#request<
+      Array<{ still_route?: StillRouteChoice | null }>
+    >(
+      `/rest/v1/generation_prompt_snapshots?task_id=eq.${encodeURIComponent(taskId)}`,
+    );
+    const row = rows[0];
+    if (!row) return undefined;
+    return row.still_route ?? ("stencil" as StillRouteChoice);
+  }
+  async #reuseDependencyIdentity(
+    revision: RevisionRow,
+    ownerId: string,
+    task: TaskRow,
+    stillRoute: StillRouteChoice,
+  ) {
     const parents = await this.#request<TaskRow[]>(
       `/rest/v1/generation_tasks?id=eq.${encodeURIComponent(task.dependency_task_id!)}&select=id,run_id,owner_principal_id,presentation_view,status,attempt,cancel_requested_at,pipeline_release,identity_artifact_id`,
     );
@@ -1458,14 +1491,12 @@ export class SupabasePresentationRepository implements PresentationRepository {
     ) throw new Error("identity_reuse_source_task_mismatch");
     // A view on another route than its studio would photograph a different
     // piece: a stencil-bound view redraws the letters from the stencil, a free
-    // one copies the studio photograph. Both routes are read from the stored
-    // snapshots, the only record of them; either one missing is a mismatch.
-    const routes = await this.#request<Array<{ task_id: string; still_route: string }>>(
-      `/rest/v1/generation_prompt_snapshots?task_id=in.(${encodeURIComponent(parent.id)},${encodeURIComponent(task.id)})&select=task_id,still_route`,
-    );
-    const parentRoute = routes.find((row) => row.task_id === parent.id)?.still_route;
-    const childRoute = routes.find((row) => row.task_id === task.id)?.still_route;
-    if (!parentRoute || parentRoute !== childRoute)
+    // one copies the studio photograph. The child's route is the one already
+    // resolved from its own snapshot above, so there is one rule in one place;
+    // only the parent's is read here, through the shared reader, and a parent
+    // with no snapshot row at all is still a mismatch.
+    const parentRoute = await this.#snapshotStillRoute(parent.id);
+    if (!parentRoute || parentRoute !== stillRoute)
       throw new Error("identity_reuse_route_mismatch");
     const runs = await this.#request<RunRow[]>(
       `/rest/v1/generation_runs?id=eq.${encodeURIComponent(task.run_id)}&select=id,revision_id,owner_principal_id`,

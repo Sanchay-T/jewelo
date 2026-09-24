@@ -138,8 +138,12 @@ const PLAIN_WORDS: Readonly<Record<string, string>> = {
     "The recipe and the photograph's inputs do not agree. Make this one by hand.",
   still_stencil_required:
     "The recipe and the photograph's inputs do not agree. Make this one by hand.",
-  still_route_variables_mismatch:
-    "The recipe and the photograph's inputs do not agree. Make this one by hand.",
+  // SP-2e1c: the shop's photograph settings are missing or out of range, which
+  // a person fixes in the settings and then runs again.
+  still_model_required:
+    "The shop's photograph settings are incomplete. Fix the settings, then photograph it again.",
+  unsupported_still_aspect_ratio:
+    "The shop's photograph settings ask for a shape the workshop cannot take. Fix the settings, then photograph it again.",
   task_prompt_release_mismatch: "The recipe versions do not line up. Make this one by hand.",
   prompt_snapshot_lineage_mismatch: "The recipe versions do not line up. Make this one by hand.",
   pre_spend_gate_failed: "The piece was stopped before anything was spent.",

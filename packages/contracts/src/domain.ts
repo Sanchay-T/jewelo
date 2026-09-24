@@ -808,7 +808,6 @@ export const DETERMINISTIC_REFUSAL_CODES = [
   // dispatch decides it the same way every time.
   "still_free_route_carries_stencil",
   "still_stencil_required",
-  "still_route_variables_mismatch",
   // An immutable snapshot or a pinned release that does not line up with its task never will.
   "prompt_snapshot_lineage_mismatch",
   "task_prompt_release_mismatch",
