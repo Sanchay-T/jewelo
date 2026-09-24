@@ -33,6 +33,13 @@ export interface VerificationDecision {
   identityScore: number;
   correctMetalAndStones: boolean;
   coherentPendant: boolean;
+  /**
+   * The piece a jeweller can actually make: one continuous run of metal from
+   * ring to ring. A still that answers anything but `true` is refused by the
+   * gate - a name cut in two halves hanging off separate rings reached human
+   * review in September and nothing in the pipeline caught it.
+   */
+  singleConnectedPiece: boolean;
   exactlyTwoConnectedRings: boolean;
   correctShot: boolean;
   noAddedIdentityElements: boolean;
@@ -83,6 +90,7 @@ export class MockStudioVerifier implements StudioVerifier {
       identityScore: 1,
       correctMetalAndStones: true,
       coherentPendant: true,
+      singleConnectedPiece: true,
       exactlyTwoConnectedRings: true,
       correctShot: true,
       noAddedIdentityElements: true,
@@ -187,7 +195,8 @@ export class OpenAIStudioVerifier implements StudioVerifier {
                   `Compare the generated pendant with the immutable identity silhouette and approved exact text ${JSON.stringify(input.approvedText)}.`,
                   `Identity fingerprint: ${input.identityFingerprint}. Required shot: ${input.presentationView}.`,
                   `Approved configuration: ${JSON.stringify(input.specification)}.`,
-                  "Fail unless spelling and script are exact, identity is preserved, metal and stones match, the pendant is coherent, exactly two connected jump rings attach the chain, the shot is correct, and there are no added letters, names, charms or duplicate pendants.",
+                  "singleConnectedPiece is true only if every letter, dot, diacritic, mark, frame and rail between the two rings is joined into one continuous piece of metal. It is false if any part of the name is a separate object, if any dot floats free, or if any gap separates two parts of the name. Arabic letters such as ا د ذ ر ز و do not join the next letter in handwriting, and a pendant that keeps that gap is two pieces, not one.",
+                  "Fail unless spelling and script are exact, identity is preserved, metal and stones match, the pendant is coherent, the pendant is a single connected piece, exactly two connected jump rings attach the chain, the shot is correct, and there are no added letters, names, charms or duplicate pendants.",
                 ].join(" "),
               },
               { type: "input_image", image_url: input.identityImageUrl },
@@ -213,6 +222,7 @@ export class OpenAIStudioVerifier implements StudioVerifier {
                 identityScore: { type: "number" },
                 correctMetalAndStones: { type: "boolean" },
                 coherentPendant: { type: "boolean" },
+                singleConnectedPiece: { type: "boolean" },
                 exactlyTwoConnectedRings: { type: "boolean" },
                 correctShot: { type: "boolean" },
                 noAddedIdentityElements: { type: "boolean" },
@@ -225,6 +235,7 @@ export class OpenAIStudioVerifier implements StudioVerifier {
                 "identityScore",
                 "correctMetalAndStones",
                 "coherentPendant",
+                "singleConnectedPiece",
                 "exactlyTwoConnectedRings",
                 "correctShot",
                 "noAddedIdentityElements",
@@ -247,6 +258,7 @@ export class OpenAIStudioVerifier implements StudioVerifier {
     if (
       typeof parsed.passed !== "boolean" ||
       typeof parsed.exactText !== "boolean" ||
+      typeof parsed.singleConnectedPiece !== "boolean" ||
       typeof parsed.exactlyTwoConnectedRings !== "boolean"
     )
       throw new Error("OpenAI verification was malformed");

@@ -72,6 +72,7 @@ const PLAIN_WORDS: Readonly<Record<string, string>> = {
   identity_gate_failed: "The name did not pass the shape checks.",
   identity_verification_failed:
     "The photograph does not match the shape of the name.",
+  identity_not_one_piece: "The name came out in separate pieces instead of one.",
   name_mismatch: "The photograph did not read the name back.",
   dependency_blocked:
     "This view waits on the studio photograph, which never arrived.",

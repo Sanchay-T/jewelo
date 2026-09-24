@@ -639,6 +639,12 @@ export async function executePresentationTask(
         specification: revision.specification,
         media,
       });
+      // A name cut into two halves hanging off separate rings is not a piece a
+      // jeweller can make, so it is refused before the generic verdict and with
+      // its own code: the operator sees why, not just that it failed. Same
+      // failure and retry path as `identity_verification_failed`.
+      if (verification.singleConnectedPiece !== true)
+        throw new Error("identity_not_one_piece");
       if (
         !verification.passed ||
         !verification.exactText ||
