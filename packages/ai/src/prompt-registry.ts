@@ -1091,11 +1091,15 @@ export function compileStillPrompt(input: {
       ].join("\n");
   if (compiledPrompt.length > MAX_COMPILED_PROMPT_LENGTH)
     throw new Error("Canonical still prompt exceeds maximum length");
-  // Every reference tag must have become an image number. An unresolved tag
-  // used to be left as written, which sends the model the literal word
-  // "@stencil" and points it at nothing - the exact failure a free-route sheet
-  // would hit if it kept a stencil sentence. Both routes are held to it.
-  const unresolved = compiledPrompt.match(STILL_REFERENCE_TAG)?.[0];
+  // Every reference tag in the release prose must have become an image number.
+  // An unresolved tag used to be left as written, which sends the model the
+  // literal word "@stencil" and points it at nothing - the exact failure a
+  // free-route sheet would hit if it kept a stencil sentence. Both routes are
+  // held to it. Only the body is checked: the IMAGE ROLES header is compiler
+  // text whose `master` rule has always said "@stencil", and those bytes are
+  // the ones the dependent views were measured with (checking them refused
+  // every on-skin, close-up and dark view on staging, run 4cfd9a5b).
+  const unresolved = body.match(STILL_REFERENCE_TAG)?.[0];
   if (unresolved)
     throw new Error(`still_unresolved_reference_tag:${unresolved}`);
   return {

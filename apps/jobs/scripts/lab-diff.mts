@@ -277,6 +277,48 @@ if (orphanTagCaught.startsWith("still_unresolved_reference_tag")) {
 }
 
 /**
+ * The three dependent views must still compile on the stencil route. The
+ * unresolved-tag check once read the IMAGE ROLES header too, whose `master`
+ * rule says "@stencil", and refused every on-skin, close-up and dark view on
+ * staging (run 4cfd9a5b, 24 September 2026) while the studio went through.
+ */
+for (const [profile, view] of [
+  ["image.worn", "on_skin"],
+  ["image.macro_gift", "close_up"],
+  ["image.dark_editorial", "dark"],
+] as const) {
+  try {
+    compileStillPrompt({
+      profile,
+      template: BASELINE_PROMPT_TEMPLATES[profile],
+      variables: buildPromptVariableSnapshot({
+        approvedName: "Asma",
+        language: "en",
+        specification: {
+          construction: "origami-ribbon",
+          arabicStyle: "none",
+          layout: "single-name",
+          metalKarat: "18K",
+          metalColor: "yellow",
+          finish: "polished",
+          stoneCoverage: "none",
+          gemstone: "none",
+          sizeProfile: "classic",
+          dimensions: LAB_DIMENSIONS,
+          chain: { style: "cable", lengthCm: 45 },
+        },
+        presentationView: view,
+      }),
+      references: { master: true, look: true, style: true, inspiration: false },
+    });
+    console.log(`MATCH  ${profile} compiles with @master, @look and @style`);
+  } catch (error) {
+    failed += 1;
+    console.log(`DIFFER ${profile} refused: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
+
+/**
  * The free-route family (SP-2d, 24 September 2026). Same proof as above and for
  * the same reason: `docs/goals/road-to-gold/lab-2026-09-24-free-route/prompts/`
  * holds the exact bytes that were generated and judged on Runway, so a later
