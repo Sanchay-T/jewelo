@@ -32,3 +32,7 @@ scripts/style-anchors/manifest.json
 context/
 .tmp/
 /test-content-img-1.png
+
+# Lab stills and signed URLs stay local (public repo, 2 MB guard)
+docs/goals/road-to-gold/lab-*/img/
+docs/goals/road-to-gold/lab-*/urls.tsv
