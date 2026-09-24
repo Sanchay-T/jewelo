@@ -495,15 +495,26 @@ export function shouldStartRun(input: {
  * read per window for as long as the page is open; while the tab is hidden the
  * browser throttles that timer anyway and `watchRun`'s visibilitychange
  * listener re-reads the moment it is looked at again.
+ *
+ * `everSettled` is "this run has settled at least once on this page", not the
+ * live flag. Settling is not one-way: an operator retrying a blocked view with
+ * `operator_retry_generation_task` moves the run again, and reading the live
+ * flag here made the answer flip back to false past the window, which tore the
+ * whole watcher down - interval, visibilitychange listener and Realtime
+ * subscription - and left the photographs to expire within the signed lifetime
+ * with the spinner never resolving. Once a run has settled on this page it is
+ * read for as long as the page is open; `watchRun` decides the cadence.
  */
 export function shouldWatchRun(input: {
   enabled: boolean;
   runId?: string;
-  settled: boolean;
+  everSettled: boolean;
   watchWindowClosed: boolean;
 }): boolean {
   return (
-    input.enabled && !!input.runId && (!input.watchWindowClosed || input.settled)
+    input.enabled &&
+    !!input.runId &&
+    (!input.watchWindowClosed || input.everSettled)
   );
 }
 

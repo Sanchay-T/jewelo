@@ -426,6 +426,8 @@ export function watchRun(options: WatchOptions): () => void {
   let stopped = false;
   let inFlight = false;
   let settledCadence = false;
+  /** The hold window the settled interval is currently armed on. */
+  let settledWindowMs = 0;
   const refresh = () => {
     if (stopped || inFlight) return;
     inFlight = true;
@@ -434,7 +436,12 @@ export function watchRun(options: WatchOptions): () => void {
         if (stopped) return;
         const stable = stabilise(run);
         options.onUpdate(stable);
-        if (stable?.settled) keepUrlsFresh();
+        // An undefined read is the run row missing from a 200 answer. The UI
+        // keeps the settled run it already has (`onUpdate` discards undefined),
+        // so the cadence must not change either: narrowing here read every
+        // three seconds for ever.
+        if (!stable) return;
+        if (stable.settled) keepUrlsFresh();
         else resumeFastCadence();
       })
       .catch((error) => {
@@ -449,20 +456,29 @@ export function watchRun(options: WatchOptions): () => void {
   };
   const hasDocument = typeof document !== "undefined";
   /**
-   * Widen the poll to the signed-URL hold window, once. The visibilitychange
-   * listener stays on so a phone tab that was suspended past the window re-reads
-   * the moment it is looked at again.
+   * Widen the poll to the signed-URL hold window. The visibilitychange listener
+   * stays on so a phone tab that was suspended past the window re-reads the
+   * moment it is looked at again.
+   *
+   * The timer is re-armed when the published window changes - a rolling deploy
+   * can lower `signedUrlRefreshAfterMs` under a page that is already settled,
+   * and `createSignedUrlCache` holds on the current value, so an interval still
+   * running on the old, longer one would let a URL expire before it rotated.
    */
   function keepUrlsFresh() {
-    if (stopped || settledCadence) return;
+    if (stopped) return;
+    if (settledCadence && settledWindowMs === signedUrlRefreshAfterMs) return;
     settledCadence = true;
+    settledWindowMs = signedUrlRefreshAfterMs;
     clearInterval(timer);
-    timer = setInterval(refresh, signedUrlRefreshAfterMs);
+    timer = setInterval(refresh, settledWindowMs);
   }
   /**
    * Narrow back to the live poll. `settled` is not one-way: a failed studio
-   * strands its dependents, which reads as settled, and then the sweeper
-   * re-dispatches the studio and the run is moving again. Left on the slow
+   * strands its dependents, which reads as settled, and then an operator retries
+   * that view with `operator_retry_generation_task` and the run is moving again
+   * (the stale sweeper cannot do this: `recover_stale_generation_tasks` only
+   * touches queued, generating, verifying and retrying rows). Left on the slow
    * cadence the page would have shown that at up to four minutes' delay.
    */
   function resumeFastCadence() {

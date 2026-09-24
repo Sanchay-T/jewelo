@@ -478,10 +478,21 @@ export function usePersonalizedPreview(input: {
   // tears down is the live poll of a run that never settled. Passing the
   // shopper's ceiling is not a reason to stop either: the capture path opens,
   // and the run is still shown if it finishes afterwards.
+  //
+  // "Has settled" is remembered, not read live: an operator retrying a blocked
+  // view unsettles a settled run, and reading the live flag here made the watch
+  // stop dead past the window - photographs expiring, spinner never resolving.
+  // The memory is per run id, so a new run starts under the window rule again.
+  const everSettled = useRef<{ runId?: string; settled: boolean }>({
+    settled: false,
+  });
+  if (everSettled.current.runId !== runId)
+    everSettled.current = { runId, settled: false };
+  if (run?.settled && run.runId === runId) everSettled.current.settled = true;
   const watching = shouldWatchRun({
     enabled,
     runId,
-    settled: !!run?.settled,
+    everSettled: everSettled.current.settled,
     watchWindowClosed,
   });
   useEffect(() => {
