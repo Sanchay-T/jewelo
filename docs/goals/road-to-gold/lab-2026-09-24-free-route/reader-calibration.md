@@ -190,3 +190,96 @@ Split pendants: 29 of 30 reads refused. The miss is `v2/f-fat-studio`, the frame
 One-piece pendants: 4 false refusals in 71 reads that returned (4 errored), 5.6%: `framed-minimal-muhammad-ar-a` 1 of 3 and `v2/r-fat-studio` 3 of 3 (label unconfirmed); SP-2a2's wording refused 10 of 74.
 Verdict: wording 3 lets a split framed pendant through, which the gate may never do, so it is not shipped; the SP-2a2 wording is restored and SP-2a3 stays open until a wording refuses every split read, with framed negative controls added to the set (review 5 found the set has no framed pendant whose word truly floats).
 Total SP-2a3 spend so far: USD 3.89.
+
+## SP-2a3 wording 4 (24 September 2026)
+
+Wording 3 read framed pendants much better and was still shipped back out, because it accepted the split framed فاطمة `v2/f-fat-studio` on 1 of 6 reads and the gate may never accept a split piece.
+Wording 4 keeps wording 3 whole and closes the two leaks it had: a contact that is only a point or a corner, and a "joint" the reader infers from closeness rather than sees.
+
+### The set and the reads
+
+`reader-cal/cal2.mts` (scratchpad, not in git) runs 47 images: the 35 of SP-2a2 with the corrected labels, plus the 12 framed controls of `negative-controls.md`.
+Split images get 5 reads each, one-piece images 3.
+Corrected labels give 10 split and 25 one piece in the old 35 (`v3/c-fat-studio-a` and `v2/f-fat-studio` are split), and the controls add 6 split and 6 one piece, so the gate is 16 split images x 5 reads = 80 reads that must all refuse.
+`v2/r-fat-studio` stays labelled one piece but its label is unconfirmed, so it is counted separately and left out of the false-refusal rate.
+
+### Baseline: the shipped SP-2a2 rule on the 12 framed controls
+
+| control | label | votes |
+| --- | --- | --- |
+| `neg-N1-1`, `neg-N1-2` | split | FFFFF, FFFFF |
+| `neg-N2-1`, `neg-N2-2` | split | FFFFF, FFFFF |
+| `neg-N3-1`, `neg-N3-2` | split | FFFFF, FFFFF |
+| `neg-N4-1`, `neg-N4-2` | one piece | FTT, TTT |
+| `neg-P1-1`, `neg-P1-2` | one piece | TTT, TTT |
+| `neg-P2-1`, `neg-P2-2` | one piece | TFF, EEE (three timeouts) |
+
+Misses 0 of 30. False refusals 3 of 15 reads that returned, 20.0%: the shipped rule refuses framed pendants that are one piece, which is the SP-2a3 defect, and it does not need the controls to be caught out.
+
+### Wording 4
+
+Wording 3's text with two clauses strengthened and nothing else changed.
+After "a single point or corner of contact never does", it now adds:
+
+```text
+That joint has to be metal you can see and point to in this photograph, a band with width: a strut, an inner rail, a shared edge, or a letter stroke running into the frame. If you cannot see such a band of metal, the word is a separate piece however close it comes to the frame, and closeness, alignment, a dark seam or a shadow is not a joint.
+```
+
+and wording 3's dot sentence ("A dot or mark that touches its letter or its neighbour only at a single point or corner, or with background visible between it and its letter, floats free and makes it false.") is replaced by:
+
+```text
+A dot, diamond, diacritic or mark floats free and makes it false whenever its contact is a point, a corner or a tip rather than a band of metal with width, and that holds even when no background shows at the meeting point itself: a dot resting on its letter at one corner, a dot or diamond balanced on its own point, and two dots or diamonds meeting each other tip to tip are all floating. Background visible between a mark and its letter also makes it false.
+```
+
+The first clause is what refuses the floating-word controls N1 and N2 under a rule that otherwise tells the reader to expect open background inside a frame; the second is what refuses the corner-contact dots of N3 and of `f-fat-studio`, which is the read wording 3 lost.
+One candidate was built and it cleared the gate on the first run, so no second or third wording was spent.
+
+### Results
+
+| wording | misses of 80 split reads | false refusals of one-piece reads | framed controls, split (6) | framed controls, one piece (6) | dep-replay framed-minimal |
+| --- | --- | --- | --- | --- | --- |
+| SP-2a2, shipped | not re-run in full; 0 of 30 on the controls | 10 of 74 = 13.5% on the 35-image set, 3 of 15 on the controls | 6 refused | 3 refusals in 15 returned reads, 3 timeouts | 4 of 12 |
+| wording 3 | 1 (accepted `f-fat-studio` on 1 of 6 reads) | 4 of 71 = 5.6% | not measured, the controls did not exist | not measured | 10 of 12 |
+| wording 4 | **0 of 80** | 6 of 89 = 6.7% | 6 refused, 30 of 30 reads | 1 refusal in 18 reads | **12 of 12** |
+
+Wording 4's six false refusals are single dissenting reads, no image refused by majority except `v2/r-fat-studio`, whose label is unconfirmed: `classical-asma-en-b` TFT, `framed-minimal-salma-ar-a` FTT, `o-muh-studio` TFT, `o-fat-studio` FET, `rose-rejected-1` TFT, `neg-N4-2` TTF.
+`v2/r-fat-studio` reads FFF, as it did at `detail: "high"` under SP-2a2; that image still needs a viewer re-score before it is counted either way.
+
+Per-image votes on every split image under wording 4, 5 reads each, all F:
+
+| image | votes |
+| --- | --- |
+| `free/classical-layla-ar-a` | FFFFF |
+| `free/classical-layla-ar-b` | FFFFF |
+| `split/v2/c-fat-studio.png` | FFFFF |
+| `split/v2/c-fat-on_skin.png` | FFFFF |
+| `split/v2/c-fat-close_up.png` | FFFFF |
+| `split/v2/c-fat-dark.png` | FFFFF |
+| `split/v3/c-omran-studio-a.png` | FFFFF |
+| `split/v3/c-omran-studio-b.png` | FFFFF |
+| `split/v3/c-fat-studio-a.png` | FFFFF |
+| `split/v2/f-fat-studio.png` | FFFFF |
+| `ctrl/neg-N1-1` | FFFFF |
+| `ctrl/neg-N1-2` | FFFFF |
+| `ctrl/neg-N2-1` | FFFFF |
+| `ctrl/neg-N2-2` | FFFFF |
+| `ctrl/neg-N3-1` | FFFFF |
+| `ctrl/neg-N3-2` | FFFFF |
+
+### The 48 SP-2f2 dependent stills, 1 read each
+
+| reader | SP-2f2 shipped | wording 3 | wording 4 |
+| --- | --- | --- | --- |
+| piece, all 48 | 40 of 48 | 46 of 48 | 47 of 48 |
+| piece, framed-minimal only | 4 of 12 | 10 of 12 | 12 of 12 |
+| piece, classical and diamond-rails | 36 of 36 | 36 of 36 | 35 of 36 |
+
+The one refusal is `classical-love-en-close_up-a`: "the v and the e are separated by background with no metal band bridging them".
+Sixteen of the 48 reads timed out on the first pass and were re-read once at concurrency 2 (`reader-cal/dep-retry.mts`); all sixteen returned one piece, and the table counts the re-reads.
+The name reader is untouched by this change and its counts are not comparable on this run, because the same sixteen timeouts took the name read with them.
+
+### Spend
+
+Metered from the response `usage` at USD 1.25 per million input and USD 10 per million output tokens.
+Baseline on the controls USD 0.4257, wording 4 split gate USD 0.7905, wording 4 one-piece half USD 0.9362, dependent replay USD 0.4670, dependent retry USD 0.1488.
+Total USD 2.768 against the USD 6 cap.
