@@ -55,9 +55,9 @@ The attached image @master is a photograph of one real gold name pendant that re
 | rails Muhammad | pass (take b) | pass | pass | pass |
 | rails فاطمة | pass | pass | pass | pass |
 | classical Muhammad | pass | pass | pass | pass |
-| classical فاطمة | pass | pass | pass | pass |
+| classical فاطمة | **fail: two pieces** | fail | fail | fail |
 
-All 32 spell the name.
+All 32 spell the name, but classical فاطمة is two separate pieces in all four views (see "Found in human review" below), so 28 of 32 pass.
 Every Arabic dot is fused to its letter or rail in every view (zoom crops checked for the classical فاطمة dark and close up, and earlier for all studios).
 The same piece carries through all four views in every row.
 
@@ -72,3 +72,21 @@ The same piece carries through all four views in every row.
 
 - Nothing in production changed. Porting the split design into the prompt compiler waits for Sanchay's review of these sheets.
 - No OpenAI API call was made; Runway serves the same model, so the prompts transfer.
+
+## Found in human review: classical فاطمة is two pieces
+
+Sanchay caught it; my review had zoomed on dots and missed it.
+In Arabic, ا (and د ذ ر ز و) never join the next letter, so فاطمة is written فا + طمة.
+The free prompt drew correct typography, so the ط stops short of the ا and each part hangs from its own ring.
+Origami, framed and rails escaped only because the folds, frame or rails bridge the gap.
+
+Fix tests (classical studio, 2 takes each, `img/v3/`):
+
+| Approach | فاطمة | أسماء | عمران |
+| --- | --- | --- | --- |
+| Free prompt + a weld line the code computes per name ("the tail of the ط runs into the foot of the ا and is welded to it") | one piece in 2/2; take a reads right, take b makes the ا look like ل | joined in 2/2; the ا leans toward ل | fail 2/2: ر+ا became لا (reads عملان) and the ن dot floats |
+| Production stencil as `@stencil` (engine bridges every gap, 558/558 single-piece) plus the free style and realism blocks | one piece, spelling held, visible baseline bar, clunkier | not run | one piece, dot attached, bridge bars show |
+
+Gap list per name is deterministic: `فاطمة` -> ا|ط; `أسماء` -> أ|س, ا|ء; `عمران` -> ر|ا, ا|ن; `محمد` -> none.
+
+Production note: the verifier returns `coherentPendant`, but the gate in `apps/jobs/src/presentation.ts` (the `identity_verification_failed` check) does not enforce it, and no field asks "one connected piece, nothing floating".
