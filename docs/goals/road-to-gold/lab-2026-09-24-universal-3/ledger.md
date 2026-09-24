@@ -67,3 +67,51 @@ Blind, one image at a time, against the rubric already used in UNIV-1's `reader-
 5. Ring posts - does any ring post or tab curl into a stroke that could be read as an extra letter (the RING-POST defect)?
 
 All 24 files are in `img/`, named `diamond-rails-<latin>-ar-<a|b>.png`.
+
+## Part 2 - the same 12 names in classical, wording A
+
+Same model, ratio, references discipline and compile path as part 1, one axis changed: the `Name:` paragraph.
+The base prompt is the production free-route compile for construction `classical` (look reference `caleums-private/look-references-v1/classical.png`), and in each one the single `Name:` paragraph
+
+```
+Name: "<NAME>" in connected Arabic letters, right to left, spelled letter for letter, every dot and mark joined to its letter. The whole pendant is one piece of gold. No other text anywhere.
+```
+
+is replaced by wording A, which spells out the dot bridge and forbids a ring tab that curls into a readable stroke.
+The build script asserts that paragraph occurs exactly once in each base prompt before substituting and exits with `FAIL <slug>` otherwise; all 12 passed.
+Nothing else in the prompt changed, so any difference from UNIV-1's classical cells is attributable to the wording alone.
+
+Prompts: `prompts/classical-<latin>-ar-A.txt`. Images: `img/classical-<latin>-ar-<a|b>.png`.
+Echo check: all 12 responses returned `promptText` byte for byte identical to the file, trailing newline included.
+Credits: 200105 before part 2, 199697 after, so 408 credits for 24 stills.
+Run total for UNIV-3: 200513 before, 199697 after, 816 credits for 48 stills.
+Contact sheet: `<scratchpad>/univ3-classical.webp`.
+
+| cell | name | take | Runway task id | prompt sha256 (first 16) | credits before / after |
+| --- | --- | --- | --- | --- | --- |
+| classical-ahmad-ar-A | أحمد | a | `6a21f7aa-d3f5-4266-b571-a4f572b07cf7` | `91592e7b401fdaac` | 200105 / 200071 |
+| classical-ahmad-ar-A | أحمد | b | `fbceb3dd-4b99-4dfc-8d91-2b9c775648d5` | `91592e7b401fdaac` | 200105 / 200071 |
+| classical-ibrahim-ar-A | إبراهيم | a | `d9bdaf1f-fb8c-42b3-b22e-6e907f3c2637` | `e44b89a73947ebd4` | 200071 / 200037 |
+| classical-ibrahim-ar-A | إبراهيم | b | `f4f68749-f565-4166-bf9e-66c6b3223439` | `e44b89a73947ebd4` | 200071 / 200037 |
+| classical-amna-ar-A | آمنة | a | `7b4484ab-cb95-464d-9625-4e14f49a8786` | `6015325bfb5b051e` | 200037 / 200003 |
+| classical-amna-ar-A | آمنة | b | `7cc38430-a97c-4db5-84e9-bbd0994fc0fc` | `6015325bfb5b051e` | 200037 / 200003 |
+| classical-qasim-ar-A | قاسم | a | `e13f7d9e-37c0-43d1-8fcf-c1088a990abf` | `dfebe53a3d36a80b` | 200003 / 199969 |
+| classical-qasim-ar-A | قاسم | b | `ba126749-7259-4446-8cc6-c77ef667cdb2` | `dfebe53a3d36a80b` | 200003 / 199969 |
+| classical-karim-ar-A | كريم | a | `b6090c33-f095-40b1-9a8e-1a503a040555` | `6d554939b6572862` | 199969 / 199935 |
+| classical-karim-ar-A | كريم | b | `be6d333b-bfe6-45d4-84d6-764b020486b2` | `6d554939b6572862` | 199969 / 199935 |
+| classical-jamila-ar-A | جميلة | a | `5660b128-6147-4978-a121-a5ff3915c5d0` | `07f9e61588a61f52` | 199935 / 199901 |
+| classical-jamila-ar-A | جميلة | b | `385ec9a0-fdf1-4ee5-bd4e-51ea9c29df4d` | `07f9e61588a61f52` | 199935 / 199901 |
+| classical-ghada-ar-A | غادة | a | `e7402e9c-2554-4622-b7fc-a450441e03d1` | `993d69fabe01ed7a` | 199901 / 199867 |
+| classical-ghada-ar-A | غادة | b | `afdad6c2-066b-4829-9c8d-fb4bf1339a8c` | `993d69fabe01ed7a` | 199901 / 199867 |
+| classical-duha-ar-A | ضحى | a | `f1b48cc3-0dd8-4216-89d6-40053ff7cd7b` | `bafe6b65c8737324` | 199867 / 199833 |
+| classical-duha-ar-A | ضحى | b | `3ed1238b-7ddd-44a7-8226-47c429c73dd3` | `bafe6b65c8737324` | 199867 / 199833 |
+| classical-zafir-ar-A | ظافر | a | `53fc71c9-bb3c-42a3-8e41-5f9de67387b0` | `d6e92aa86e20b723` | 199833 / 199799 |
+| classical-zafir-ar-A | ظافر | b | `8ccecc8d-d5eb-4a32-80bd-7f4643d087ad` | `d6e92aa86e20b723` | 199833 / 199799 |
+| classical-dhikra-ar-A | ذكرى | a | `cd35e41b-6721-48f7-9879-b3be39079430` | `3a8e2acab93e5284` | 199799 / 199765 |
+| classical-dhikra-ar-A | ذكرى | b | `0605aeba-a721-4de9-9f1c-bf08e8226f96` | `3a8e2acab93e5284` | 199799 / 199765 |
+| classical-tasneem-ar-A | تسنيم | a | `8c0a63ab-190f-4c69-85ff-12ae3ba16474` | `f422a9c48e55bac4` | 199765 / 199731 |
+| classical-tasneem-ar-A | تسنيم | b | `3d6adf1c-5fe8-4ca7-98fe-64c3a16371a4` | `f422a9c48e55bac4` | 199765 / 199731 |
+| classical-mumin-ar-A | مؤمن | a | `58ef9d1c-2b1e-4f1f-8ccd-4baecf1d4fd8` | `89f2a81a763e48e2` | 199731 / 199697 |
+| classical-mumin-ar-A | مؤمن | b | `f611197a-138e-441f-8e45-576ba58d3434` | `89f2a81a763e48e2` | 199731 / 199697 |
+
+The viewer scores these on the same five points as part 1, plus the one wording A is meant to move: are the dots bridged to their letters with a visible gold bar rather than floating or touching at a point, and do the ring tabs stay plain instead of curling into a stroke that reads as an extra letter? Compare against UNIV-1's classical cells for the same construction, which used the short wording.
