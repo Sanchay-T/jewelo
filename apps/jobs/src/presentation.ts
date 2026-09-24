@@ -418,7 +418,9 @@ export function promptSnapshotRejectionClass(
   const status = /Supabase job request (\d{3}):/.exec(message);
   if (!status) return undefined;
   const code = Number(status[1]);
-  if (!Number.isFinite(code) || code < 400 || code >= 500) return undefined;
+  // PGRST203 is answered with 300 Multiple Choices, not a 4xx, so the range
+  // below it opens at 300; the SQLSTATE match keeps the 4xx window it had.
+  if (!Number.isFinite(code) || code < 300 || code >= 500) return undefined;
   const body = message.slice(status.index + status[0].length);
   // Adversarial review 4 M1: PostgREST answers a call whose signature it does
   // not know with 404 and `PGRST202`, which is what a database missing
@@ -429,8 +431,13 @@ export function promptSnapshotRejectionClass(
   // operator could read. It is a pre-spend block, but its own one: unlike the
   // rejections below it stops being true the moment the database is brought up
   // to date, so it stays out of `DETERMINISTIC_REFUSAL_CODES` and keeps the
-  // retry button.
-  if (body.includes("PGRST202")) return "schema_behind";
+  // retry button. Adversarial review 5: `PGRST203` (two candidate overloads,
+  // which a manually re-applied old migration leaves behind) is the same
+  // answer about the same cause, and both are matched on the structured
+  // `code` field, because a `P0001` whose message merely quotes `PGRST202`
+  // would otherwise be misread as a schema that is behind.
+  if (/"code"\s*:\s*"PGRST20[23]"/.test(body)) return "schema_behind";
+  if (code < 400) return undefined;
   const sqlState = /"code"\s*:\s*"([0-9A-Za-z]{5})"/.exec(body)?.[1];
   if (sqlState !== "P0001" && sqlState !== "22023") return undefined;
   for (const [raised, reason] of PROMPT_SNAPSHOT_REJECTIONS)

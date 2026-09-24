@@ -651,6 +651,42 @@ else {
 }
 
 /**
+ * SP-2e1e: the same two orders when the shopper attached an inspiration
+ * photo. `executePresentationTask` passes `inspirationImageUrl` last
+ * (`apps/jobs/src/presentation.ts`, the `generator.generate` call) and
+ * `buildStillReferences` appends that role after the style photograph, so the
+ * attachment can only ever be the final image - it must never displace the
+ * letter drawing the spelling rule numbers.
+ */
+for (const [label, input, want] of [
+  [
+    "studio",
+    { route: "stencil", identityImageUrl: "identity", lookReferenceUrl: "look", inspirationImageUrl: "inspiration" },
+    ["stencil", "look", "inspiration"],
+  ],
+  [
+    "dependent",
+    {
+      route: "stencil",
+      referenceImageUrl: "master",
+      identityImageUrl: "identity",
+      lookReferenceUrl: "look",
+      styleAnchorUrl: "style",
+      inspirationImageUrl: "inspiration",
+    },
+    ["master", "stencil", "look", "style", "inspiration"],
+  ],
+] as const) {
+  const roles = buildStillReferences(input).map(({ role }) => role);
+  if (roles.join(", ") === want.join(", "))
+    console.log(`MATCH  stencil route ${label} references with inspiration [${roles.join(", ")}]`);
+  else {
+    failed += 1;
+    console.log(`DIFFER stencil route ${label} references with inspiration [${roles.join(", ")}] (want [${want.join(", ")}])`);
+  }
+}
+
+/**
  * A free dependent view without its approved studio still has no authority for
  * the piece at all, and a free prompt that still says @stencil (a `@v2`
  * release) points at an image nobody sent. Both are refused before spend.
