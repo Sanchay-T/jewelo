@@ -52,7 +52,7 @@ export interface VerificationDecision {
  * would then disagree about the same photograph.
  */
 export const ONE_PIECE_RULE =
-  "singleConnectedPiece is true only if every letter, dot, diacritic, mark, frame and rail between the two rings is joined into one continuous piece of metal. It is false if any part of the name is a separate object, if any dot floats free, or if any gap separates two parts of the name. Arabic letters such as ا د ذ ر ز و do not join the next letter in handwriting, and a pendant that keeps that gap is two pieces, not one.";
+  "singleConnectedPiece is true only if every letter, dot, diacritic, mark, frame and rail between the two rings is joined into one continuous piece of metal. Parts that touch along an edge, overlap, or meet at a weld line or seam are joined, and that includes a letter that runs into or rests against a frame or rail. A facet line, seam, polished edge, reflection, highlight or shadow on the metal is not a gap. It is false if any part of the name is a separate object, or if background shows all the way through between two parts of the name. A dot or mark that touches its letter or its neighbour only at a single point or corner, or with background visible between it and its letter, floats free and makes it false. Arabic letters such as ا د ذ ر ز و do not join the next letter in handwriting, and a pendant that keeps that gap is two pieces, not one.";
 
 export interface StudioGenerator {
   generate(input: StudioGenerationInput): Promise<GeneratedMedia>;
@@ -481,7 +481,7 @@ export class OpenAIPieceReader implements StudioPieceReader {
       },
       body: JSON.stringify({
         model: this.model,
-        max_output_tokens: pipelineLimits.nameReaderMaxOutputTokens,
+        max_output_tokens: pipelineLimits.pieceReaderMaxOutputTokens,
         input: [
           {
             role: "user",

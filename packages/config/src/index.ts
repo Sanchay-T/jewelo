@@ -923,6 +923,13 @@ export const pipelineLimitsSchema = z
     /** Responses output ceiling, including reasoning tokens, for a name read. */
     nameReaderMaxOutputTokens: positiveInt.min(64).max(2_048),
     /**
+     * Responses output ceiling, including reasoning tokens, for the blind
+     * one-piece read (`OpenAIPieceReader.read`). Its own number because that
+     * read reasons longer than the name read: measured reads used 500-2048
+     * output tokens, and a read cut off at the ceiling returns no answer.
+     */
+    pieceReaderMaxOutputTokens: positiveInt.min(1_024).max(16_384),
+    /**
      * Grace added to the bounded provider calls to get the stale window. It
      * covers the work either side of those calls inside one dispatch - the
      * identity render, the reference and anchor downloads, the storage upload,
@@ -1081,6 +1088,7 @@ export const pipelineLimits: PipelineLimits = pipelineLimitsSchema.parse({
   providerRequestTimeoutMs: 180_000,
   visionRequestTimeoutMs: 60_000,
   nameReaderMaxOutputTokens: 2_048,
+  pieceReaderMaxOutputTokens: 8_192,
   staleRecoveryMarginMs: 120_000,
   localWorkAllowanceMs: 60_000,
   staleRecoveryLimit: 100,
