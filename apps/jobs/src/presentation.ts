@@ -575,6 +575,25 @@ export async function executePresentationTask(
       : await repository.reserveAttempt(task, provider, model);
   } catch (error) {
     if (isTaskCancelled(error)) return { status: "cancelled" as const };
+    // Nothing resumable and no attempt left to book. The RPC checks for an
+    // open attempt before the budget, so every attempt is closed here and
+    // `fail` reconciles nothing. Left to throw, the task would stay `retrying`
+    // and the sweeper would re-dispatch it for ever; this is the same end the
+    // outer catch gives the last attempt, before any spend.
+    if (
+      error instanceof Error &&
+      error.message.includes("provider attempt budget exhausted")
+    ) {
+      await repository.fail({
+        task,
+        run,
+        attempt: task.attempt,
+        error: new Error("provider_attempt_budget_exhausted"),
+        terminal: true,
+        actualCostCents: 0,
+      });
+      return { status: "operator_review" as const, attempt: task.attempt };
+    }
     throw error;
   }
   if (reservation.duplicateComplete) return { status: "deduplicated" as const };
@@ -976,12 +995,25 @@ export class SupabasePresentationRepository implements PresentationRepository {
         model: string;
         provider_request_id?: string;
         estimated_cost_cents: number;
+        status: string;
+        completed_at: string | null;
       }>
     >(
       `/rest/v1/provider_attempts?task_id=eq.${task.id}&attempt=eq.${task.attempt}`,
     );
     const attempt = attempts[0];
     if (!attempt) throw new Error("provider_attempt_checkpoint_missing");
+    // A checkpoint is resumable only while its attempt is still open. Once
+    // `fail` closed it (a transient verifier error after the still was stored),
+    // `complete_presentation_task` refuses that attempt for ever, so resuming it
+    // paid for a vision read that could never complete. Undefined here makes
+    // the dispatch book attempt + 1 and shoot a fresh still; the stale sweeper
+    // applies the same rule (20260924010000_resume_only_open_checkpoints.sql).
+    if (
+      !["reserved", "submitted"].includes(attempt.status) ||
+      attempt.completed_at !== null
+    )
+      return undefined;
     const signedUrl = await this.signedStorageUrl(
       checkpoint.bucket_id,
       checkpoint.object_path,
