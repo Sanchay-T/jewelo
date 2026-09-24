@@ -523,7 +523,16 @@ export function watchRun(options: WatchOptions): () => void {
   }
   let timer = setInterval(refresh, interval);
   if (hasDocument) document.addEventListener("visibilitychange", onVisible);
-  const unwatch = options.deps.session.watch?.(options.handles.runId, refresh);
+  // Realtime accelerates the poll; it does not escape its ceiling. Sixth
+  // adversarial pass, m1: this handed `refresh` straight to the channel, so
+  // past the reading window one operator retry - about six row changes across
+  // tasks and assets - still produced six immediate reads, which is exactly the
+  // traffic the window exists to end. Past the window the 240 s timer is the
+  // only thing that reads, and that is all the signatures need.
+  const unwatch = options.deps.session.watch?.(options.handles.runId, () => {
+    if (options.fastCadenceAllowed?.() === false) return;
+    refresh();
+  });
   refresh();
   return stop;
 }

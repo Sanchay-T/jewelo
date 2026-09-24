@@ -478,61 +478,44 @@ export function shouldStartRun(input: {
 /**
  * Whether durable state should still be read for this run.
  *
- * The shopper's six-minute ceiling is deliberately not a reason to stop reading:
- * a run that finishes after it must still appear, on the next poll or the next
- * reload. Nor is the run settling: `watchRun` widens its own interval to the
- * signed-URL hold window there, and a settled run whose page stops reading
- * altogether is a page whose photographs turn into broken images five minutes
- * later.
+ * Inside the page's reading window, always: the shopper's six-minute ceiling is
+ * not a reason to stop, because a run that finishes after it must still appear,
+ * and neither is the run settling, because `watchRun` widens its own interval
+ * to the signed-URL hold window there rather than stopping.
  *
- * `PERSONALIZED_RUN_WATCH_MS` bounds the three-second read, and only that: a
- * run that has never settled stops being read at all when the window closes,
- * and a run that has settled keeps being read but can no longer go back to the
- * fast cadence, however it moves afterwards. That second half is `watchRun`'s
- * `fastCadenceAllowed`, not this predicate, because the window closes while the
- * watcher is running and tearing the watcher down to tell it would cost the
- * Realtime subscription. Either way nothing polls Supabase every three seconds
- * past the window - which is what that window was built for, whether the run
- * nobody is advancing is stuck or was retried by an operator an hour later.
- * It deliberately does not bound the settled
- * refresh: that costs one read per signed-URL window, and ending it was the
- * cliff moving rather than going away - a shop tablet left on a finished
- * preview showed four broken photographs about thirty-five minutes in, because
- * the watch stopped and nothing re-signed. A settled run keeps its one cheap
- * read per window for as long as the page is open; while the tab is hidden the
- * browser throttles that timer anyway and `watchRun`'s visibilitychange
- * listener re-reads the moment it is looked at again.
+ * `PERSONALIZED_RUN_WATCH_MS` bounds it. Past the window there is exactly one
+ * reason left to read durable state: keeping the photographs already on this
+ * screen signed, because a signature dies in `signedUrlExpirySeconds` (300 s)
+ * and only this watcher renews it. So past the window the watcher survives on
+ * `hasPhotograph` and nothing else, at the slow re-signing cadence, and a run
+ * with nothing on screen - stuck, cancelled, every view failed, or a studio
+ * that ended blocked - stops being read at all. Reading it would buy the
+ * shopper nothing and cost the shop one Supabase read per tab per window for
+ * ever, on an org over its egress allowance.
  *
- * `everSettled` is "this run has settled at least once on this page", not the
- * live flag. Settling is not one-way: an operator retrying a blocked view with
- * `operator_retry_generation_task` moves the run again, and reading the live
- * flag here made the answer flip back to false past the window, which tore the
- * whole watcher down - interval, visibilitychange listener and Realtime
- * subscription - and left the photographs to expire within the signed lifetime
- * with the spinner never resolving. Once a run has settled on this page it is
- * read for as long as the page is open; `watchRun` decides the cadence.
+ * Two earlier readings of this are gone. Reading the live `settled` flag tore
+ * the whole watcher down - interval, visibilitychange listener and Realtime
+ * subscription - the moment an operator retry un-settled a finished run, and
+ * left its photographs to expire with the spinner never resolving. Remembering
+ * that it had settled once (`everSettled`) fixed that but kept reading a run
+ * that had nothing to show for the life of the tab (sixth adversarial pass,
+ * m2). What is on screen answers both: a finished run's photographs keep it
+ * alive whatever its status does afterwards, and an empty run does not.
  *
- * `hasPhotograph` is the same argument for a run that has NOT settled. Fifth
- * adversarial pass, M2: studio ready at minute 2 and one dependent still
- * generating at minute 30 is a live page showing the customer's own piece, and
- * keying survival on `everSettled` alone tore its watcher down - so that studio
- * photograph broke within `signedUrlExpirySeconds` (300 s) while the shopper
- * was looking at it. A run with nothing on screen and nothing settled still
- * stops at the window: there is no photograph to keep alive and nobody is being
- * shown progress.
+ * The other half of the window - that nothing polls every three seconds past it
+ * - is `watchRun`'s `fastCadenceAllowed`, not this predicate, because the
+ * window closes while the watcher is running and tearing it down to say so
+ * would cost the Realtime subscription.
  */
 export function shouldWatchRun(input: {
   enabled: boolean;
   runId?: string;
-  everSettled: boolean;
   /** At least one of the customer's own photographs is on screen. */
   hasPhotograph: boolean;
   watchWindowClosed: boolean;
 }): boolean {
   return (
-    input.enabled &&
-    !!input.runId &&
-    (!input.watchWindowClosed || input.everSettled || input.hasPhotograph)
+    input.enabled && !!input.runId && (!input.watchWindowClosed || input.hasPhotograph)
   );
 }
 

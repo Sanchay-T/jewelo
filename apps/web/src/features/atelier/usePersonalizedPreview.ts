@@ -481,32 +481,21 @@ export function usePersonalizedPreview(input: {
     return () => clearTimeout(timer);
   }, [runId, watchWindowClosed]);
 
-  // Durable state, polled and accelerated by Realtime. A settled run is still
-  // watched, at the slow signed-URL cadence the watcher switches to, so the
-  // photographs on screen never outlive their signatures - for as long as the
-  // page is open, not only for this page's reading window. What that window
-  // tears down is the live poll of a run that never settled. Passing the
-  // shopper's ceiling is not a reason to stop either: the capture path opens,
-  // and the run is still shown if it finishes afterwards.
+  // Durable state, polled and accelerated by Realtime. Inside this page's
+  // reading window every run is read; past it, only a run with one of the
+  // customer's own photographs on screen, at the slow signed-URL cadence the
+  // watcher widens to, because that photograph's signature dies in five minutes
+  // and only this watcher renews it. A run with nothing to show stops there.
+  // Passing the shopper's six-minute ceiling is not a reason to stop: the
+  // capture path opens, and the run is still shown if it finishes afterwards.
   //
-  // "Has settled" is remembered, not read live: an operator retrying a blocked
-  // view unsettles a settled run, and reading the live flag here made the watch
-  // stop dead past the window - photographs expiring, spinner never resolving.
-  // The memory is per run id, so a new run starts under the window rule again.
-  //
-  // A run that has not settled is kept too, for as long as one of the
-  // customer's own photographs is on screen: that photograph's signature dies
-  // in five minutes and only this watcher renews it.
-  const everSettled = useRef<{ runId?: string; settled: boolean }>({
-    settled: false,
-  });
-  if (everSettled.current.runId !== runId)
-    everSettled.current = { runId, settled: false };
-  if (run?.settled && run.runId === runId) everSettled.current.settled = true;
+  // What is on screen, not what the run's status was: an operator retrying a
+  // blocked view un-settles a finished run, and a watcher keyed on the live
+  // `settled` flag stopped dead there - photographs expiring, spinner never
+  // resolving. Photographs do not un-arrive, so this answer does not flap.
   const watching = shouldWatchRun({
     enabled,
     runId,
-    everSettled: everSettled.current.settled,
     hasPhotograph: personalized && run?.runId === runId,
     watchWindowClosed,
   });
