@@ -159,18 +159,6 @@ const PLAIN_WORDS: Readonly<Record<string, string>> = {
     "This view waits on the studio photograph, which was stopped.",
   dependency_failed:
     "This view waits on the studio photograph, which failed. Get the studio photograph ready first, then photograph this view again.",
-  fal_video_download_failed:
-    "The film could not be downloaded. Run it again.",
-  fal_video_result_failed:
-    "The film could not be collected. Run it again.",
-  fal_video_result_omitted:
-    "The film came back without a file. Run it again.",
-  fal_video_status_failed:
-    "The film's progress could not be read. Run it again.",
-  fal_video_submission_failed:
-    "The film could not be started. Run it again.",
-  fal_video_submission_omitted:
-    "The film was started without a way to follow it. Run it again.",
   identity_anchor_upload_failed:
     "The name outline could not be saved. Photograph it again.",
   identity_artifact_lineage_missing:
@@ -241,16 +229,6 @@ const PLAIN_WORDS: Readonly<Record<string, string>> = {
     "The recipe for this piece was refused. Start the request again.",
   prompt_snapshot_schema_behind:
     "The shop's records are behind this version. Bring the database up to date, then photograph it again.",
-  // The film recipe is written outside the still's pre-spend gates, so these
-  // four arrive as their own heads rather than as `prompt_compile_failed`.
-  missing_required_prompt_value:
-    "The film recipe cannot be written for this piece. Make it by hand.",
-  missing_required_prompt_variables:
-    "The film recipe cannot be written for this piece. Make it by hand.",
-  unknown_prompt_variable:
-    "The film recipe cannot be written for this piece. Make it by hand.",
-  prompt_value_contains_unresolved:
-    "The film recipe cannot be written for this piece. Make it by hand.",
   provider_output_checkpoint_conflict:
     "Two copies of the same photograph were saved. Check it before running it again.",
   revision_not_found:
@@ -265,26 +243,10 @@ const PLAIN_WORDS: Readonly<Record<string, string>> = {
     "The shop's spending settings are outside what this setup allows. This needs a fix in the shop's settings; once fixed, photograph it again.",
   style_anchor_unreadable:
     "The studio photograph this view copies could not be read. Photograph it again.",
-  supabase_video_request_failed:
-    "The shop's records could not be reached for the film. Run it again.",
   task_not_found:
     "This photograph's record is missing. Start the request again.",
   unknown_pinned_identity_font:
     "The lettering this name needs is not installed. This needs a fix in the shop's settings; once fixed, photograph it again.",
-  video_poll_lineage_missing:
-    "The film has no record of how it was started. Run it again.",
-  video_provider_request_missing:
-    "The film has no record of how it was started. Run it again.",
-  video_source_signing_failed:
-    "The photograph for the film could not be opened. Run it again.",
-  video_source_signing_omitted:
-    "The photograph for the film could not be opened. Run it again.",
-  video_task_lineage_missing:
-    "The film has no record of its photograph. Run it again.",
-  video_task_not_found:
-    "The film's record is missing. Run it again.",
-  video_upload_failed:
-    "The film could not be saved. Run it again.",
   unknown: "It stopped for a reason with no words yet. Read the code below.",
 };
 

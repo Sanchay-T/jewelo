@@ -418,9 +418,7 @@ export function promptSnapshotRejectionClass(
   const status = /Supabase job request (\d{3}):/.exec(message);
   if (!status) return undefined;
   const code = Number(status[1]);
-  // PGRST203 is answered with 300 Multiple Choices, not a 4xx, so the range
-  // below it opens at 300; the SQLSTATE match keeps the 4xx window it had.
-  if (!Number.isFinite(code) || code < 300 || code >= 500) return undefined;
+  if (!Number.isFinite(code) || code < 400 || code >= 500) return undefined;
   const body = message.slice(status.index + status[0].length);
   // Adversarial review 4 M1: PostgREST answers a call whose signature it does
   // not know with 404 and `PGRST202`, which is what a database missing
@@ -431,13 +429,13 @@ export function promptSnapshotRejectionClass(
   // operator could read. It is a pre-spend block, but its own one: unlike the
   // rejections below it stops being true the moment the database is brought up
   // to date, so it stays out of `DETERMINISTIC_REFUSAL_CODES` and keeps the
-  // retry button. Adversarial review 5: `PGRST203` (two candidate overloads,
-  // which a manually re-applied old migration leaves behind) is the same
-  // answer about the same cause, and both are matched on the structured
-  // `code` field, because a `P0001` whose message merely quotes `PGRST202`
-  // would otherwise be misread as a schema that is behind.
-  if (/"code"\s*:\s*"PGRST20[23]"/.test(body)) return "schema_behind";
-  if (code < 400) return undefined;
+  // retry button. Adversarial review 6: it is matched on the structured `code`
+  // field, because a `P0001` whose message merely quotes `PGRST202` would
+  // otherwise be misread as a schema that is behind. Only `PGRST202` is
+  // matched: this repository sends all seven arguments by name, so PostgREST
+  // resolves the seven-argument function uniquely and can never answer the
+  // ambiguous-overload `PGRST203` here.
+  if (/"code"\s*:\s*"PGRST202"/.test(body)) return "schema_behind";
   const sqlState = /"code"\s*:\s*"([0-9A-Za-z]{5})"/.exec(body)?.[1];
   if (sqlState !== "P0001" && sqlState !== "22023") return undefined;
   for (const [raised, reason] of PROMPT_SNAPSHOT_REJECTIONS)
@@ -704,8 +702,8 @@ export async function executePresentationTask(
       if (!reference) {
         // A dependent view whose studio still is terminal can never get a
         // pendant to copy. Deferring would let the stale sweeper re-queue it
-        // once per stale window forever; block it once instead, which also
-        // releases its reservation through the pre-spend path below.
+        // once per stale window forever; block it once instead, through the
+        // pre-spend path below.
         const terminal = await repository.dependencyTerminalStatus(task);
         if (terminal) throw new Error(`dependency_${terminal}`);
         // Otherwise a recovery dispatch simply arrived before the studio still

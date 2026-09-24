@@ -652,11 +652,13 @@ else {
 
 /**
  * SP-2e1e: the same two orders when the shopper attached an inspiration
- * photo. `executePresentationTask` passes `inspirationImageUrl` last
- * (`apps/jobs/src/presentation.ts`, the `generator.generate` call) and
- * `buildStillReferences` appends that role after the style photograph, so the
- * attachment can only ever be the final image - it must never displace the
- * letter drawing the spelling rule numbers.
+ * photo. What these pins guard is `buildStillReferences` alone: given an
+ * inspiration URL it appends that role after the style photograph, so within
+ * the builder the attachment can only ever be the final image and can never
+ * displace the letter drawing the spelling rule numbers. SP-2e1f: the order of
+ * the arguments `executePresentationTask` hands the builder at its
+ * `generator.generate` call (`apps/jobs/src/presentation.ts`) is NOT guarded
+ * here - a pin below would only restate the builder's own signature.
  */
 for (const [label, input, want] of [
   [
