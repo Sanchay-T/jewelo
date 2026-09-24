@@ -76,3 +76,11 @@ Blind, one image at a time, same rubric as UNIV-3:
 5. Ring posts - does any ring post or tab curl into a stroke that could be read as an extra letter?
 
 Compare each cell against the same name in `../lab-2026-09-24-universal-3/` (wording A, no inventory) to judge whether the inventory sentence moved the dot count.
+
+## Blind verdict (`blind-scores.md`, map in `blind-map.json`)
+
+- Spelled 9 of 16, one piece 14 of 16, both 8 of 16.
+- Dot counts are fixed: كريم 2 of 2, تسنيم 2 of 2, عائشة 2 of 2 (UNIV-3 wording A miscounted dots on كريم, تسنيم, أحمد, قاسم, مؤمن, شيخة); one dot error left, four dots on ش in شيخة a.
+- New failure, caused by the sentence: the hamza is dropped on 5 stills (أحمد a and b, إبراهيم a and b, مؤمن b). "This name has no dots at all" and "No other letter has any dot" read as "no marks".
+- Other: قاسم b draws the final م as a hook (reads قاسل); قاسم a and إبراهيم b are not one piece (gaps after the non-joining ا and ر).
+- Next: UNIV-7 names hamza and madda in the inventory (a mark inventory, A3).
