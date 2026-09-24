@@ -453,3 +453,17 @@ Open:
 
 - Faceted origami and constellation are lab-only styles; not in the app's construction list.
 - Stale comment `apps/web/src/features/atelier/Atelier.tsx:1186` names the deleted `preflightRefusal`.
+
+Later the same day:
+
+- `7f355ef0` SIMPLE-1b and `d1b3cbc7` SIMPLE-1c after two reviewer passes: the prompt carries metal, lettering, stones, chain, width, both names and arrangement; every "gold" names the chosen colour; an unmapped construction ends pre-spend; `studio_only` defaults true by migration `20260925010000`.
+- Staging deployment `7e00b6f6` at `d1b3cbc7`, health and readiness passed.
+- Three live paid runs driven in agent-browser on the staging URL (evidence `dogfood-2026-09-25/`), each about 80 to 90 s:
+  - Omar, English, diamond rails, white gold, accent, 390x844: correct, white gold, rails with bezel diamonds, one piece.
+  - زينب, Arabic, framed minimal, rose gold, accent, 1440x900: rose gold and frame right; spelling wrong (final ب drawn as ن, medial ن has no dot).
+  - قاسم, Arabic, classical, yellow gold, no stones, 1440x900: the bail drops into an extra tall stroke, reads close to قالسم.
+- Not run: the seven-viewport sweep and two adversarial passes the repo asks for on prompt changes; only 1440x900 and 390x844 were driven.
+
+Open:
+
+- Arabic live 0/2 against 9/12 in the Runway lab. Without a reader nothing catches a misspelt Arabic piece before the shopper sees it; Sanchay's call whether that stands.
