@@ -1,0 +1,331 @@
+{
+  "lab": "lab-2026-09-24-universal-7",
+  "task": "UNIV-7",
+  "date": "2026-09-24",
+  "compilerVersion": "caleums-still-compiler-v4",
+  "model": "gpt-image-2.5-sunburst",
+  "aspectRatio": "1:1",
+  "route": "free",
+  "wording": "A3 (mark inventory naming dots, hamza and madda; replaces the UNIV-6 dot-only inventory)",
+  "images": [
+    "1 = look reference (classical crop for classical cells, diamond-rails crop for rails cells); no stencil, no master, no style anchor"
+  ],
+  "creditsBefore": 199153,
+  "creditsAfter": 198745,
+  "creditsUsed": 408,
+  "verdict": "pending-blind-viewer",
+  "cells": [
+    {
+      "cell": "classical-ahmad-ar-A3",
+      "slug": "ahmad",
+      "name": "أحمد",
+      "file": "prompts/classical-ahmad-ar-A3.txt",
+      "construction": "classical",
+      "look": true,
+      "markInventory": "Its marks, exactly and only: a small hamza above the alif (أ). No other letter has any dot or mark, and none is added anywhere else.",
+      "sourcePrompt": "lab-2026-09-24-universal-6/prompts/classical-ahmad-ar-A2.txt",
+      "sourceSha256": "c84c4a7bd2252a59e5dca76b074eb3fb768667269fb6c8128b9a8eb628d13383",
+      "sha256": "033b6070d890e7e0ba7415da9bf5769568f94742611a203b1b6cefe18683c987",
+      "takes": [
+        {
+          "take": "a",
+          "taskId": "9438213f-77a6-49ab-b3b2-951c0afaf1de",
+          "file": "img/classical-ahmad-ar-A3-a.png"
+        },
+        {
+          "take": "b",
+          "taskId": "e6ce22a2-9f7b-473a-92af-37835e133cad",
+          "file": "img/classical-ahmad-ar-A3-b.png"
+        }
+      ],
+      "creditsBefore": 199153,
+      "creditsAfter": 199119
+    },
+    {
+      "cell": "classical-ibrahim-ar-A3",
+      "slug": "ibrahim",
+      "name": "إبراهيم",
+      "file": "prompts/classical-ibrahim-ar-A3.txt",
+      "construction": "classical",
+      "look": true,
+      "markInventory": "Its marks, exactly and only: a small hamza below the alif (إ), one dot below ب, two dots below ي. No other letter has any dot or mark, and none is added anywhere else.",
+      "sourcePrompt": "lab-2026-09-24-universal-6/prompts/classical-ibrahim-ar-A2.txt",
+      "sourceSha256": "c9432bde9b309588050ac12c3fbeeba8b63beb7fa0240d3000b53ffbcc44f2a7",
+      "sha256": "48b7cb77870d6c289a0a0d5f79c55a0690134c573b54be4b652c8c6466183276",
+      "takes": [
+        {
+          "take": "a",
+          "taskId": "3b4e85d7-9b6e-4abb-bc31-935f9c5aa95d",
+          "file": "img/classical-ibrahim-ar-A3-a.png"
+        },
+        {
+          "take": "b",
+          "taskId": "8dab9e93-0838-4edf-94b3-6356323b3e53",
+          "file": "img/classical-ibrahim-ar-A3-b.png"
+        }
+      ],
+      "creditsBefore": 199119,
+      "creditsAfter": 199085
+    },
+    {
+      "cell": "classical-mumin-ar-A3",
+      "slug": "mumin",
+      "name": "مؤمن",
+      "file": "prompts/classical-mumin-ar-A3.txt",
+      "construction": "classical",
+      "look": true,
+      "markInventory": "Its marks, exactly and only: a small hamza above the waw (ؤ), one dot above ن. No other letter has any dot or mark, and none is added anywhere else.",
+      "sourcePrompt": "lab-2026-09-24-universal-6/prompts/classical-mumin-ar-A2.txt",
+      "sourceSha256": "d5ec364ff31b95aed7065253bcb4298983ba0ce680af078a1bd7861c9966532c",
+      "sha256": "fc17d3d2e9e444bd41dcc099dab68f022ca79565fad8aa32527a3ee109cda793",
+      "takes": [
+        {
+          "take": "a",
+          "taskId": "32c72225-a4e8-4f2d-b230-2e4a8f635886",
+          "file": "img/classical-mumin-ar-A3-a.png"
+        },
+        {
+          "take": "b",
+          "taskId": "de43f54c-eb70-43ec-b530-4ab77aae217b",
+          "file": "img/classical-mumin-ar-A3-b.png"
+        }
+      ],
+      "creditsBefore": 199085,
+      "creditsAfter": 199051
+    },
+    {
+      "cell": "classical-qasim-ar-A3",
+      "slug": "qasim",
+      "name": "قاسم",
+      "file": "prompts/classical-qasim-ar-A3.txt",
+      "construction": "classical",
+      "look": true,
+      "markInventory": "Its marks, exactly and only: two dots above ق. No other letter has any dot or mark, and none is added anywhere else.",
+      "sourcePrompt": "lab-2026-09-24-universal-6/prompts/classical-qasim-ar-A2.txt",
+      "sourceSha256": "c1470cb1eed789d30cc13a571881a345447de4a93cbe8d855fff603130a6df46",
+      "sha256": "fbf8453cb01339ca1e8dc775c1451f51608ce03258d9619054301e229cefcc1a",
+      "takes": [
+        {
+          "take": "a",
+          "taskId": "6cc100aa-6306-4edd-88f6-8d10569bcce3",
+          "file": "img/classical-qasim-ar-A3-a.png"
+        },
+        {
+          "take": "b",
+          "taskId": "528cd494-71a7-4477-8759-23f84c00db42",
+          "file": "img/classical-qasim-ar-A3-b.png"
+        }
+      ],
+      "creditsBefore": 199051,
+      "creditsAfter": 199017
+    },
+    {
+      "cell": "classical-karim-ar-A3",
+      "slug": "karim",
+      "name": "كريم",
+      "file": "prompts/classical-karim-ar-A3.txt",
+      "construction": "classical",
+      "look": true,
+      "markInventory": "Its marks, exactly and only: two dots below ي. No other letter has any dot or mark, and none is added anywhere else.",
+      "sourcePrompt": "lab-2026-09-24-universal-6/prompts/classical-karim-ar-A2.txt",
+      "sourceSha256": "a474a088d0a94a8703d11ee70e1cf882550504201fe815e77cc60bf1e3017397",
+      "sha256": "cd0f894d4a3e36b524184ae4ca5036e7b92ff40ec24b4d3269eb8e377062b3cb",
+      "takes": [
+        {
+          "take": "a",
+          "taskId": "10fc94ec-be57-467d-b1c0-9fe724f104ce",
+          "file": "img/classical-karim-ar-A3-a.png"
+        },
+        {
+          "take": "b",
+          "taskId": "82c704e0-976e-401d-bec9-b8931312ff9d",
+          "file": "img/classical-karim-ar-A3-b.png"
+        }
+      ],
+      "creditsBefore": 199017,
+      "creditsAfter": 198983
+    },
+    {
+      "cell": "classical-tasneem-ar-A3",
+      "slug": "tasneem",
+      "name": "تسنيم",
+      "file": "prompts/classical-tasneem-ar-A3.txt",
+      "construction": "classical",
+      "look": true,
+      "markInventory": "Its marks, exactly and only: two dots above ت, one dot above ن, two dots below ي. No other letter has any dot or mark, and none is added anywhere else.",
+      "sourcePrompt": "lab-2026-09-24-universal-6/prompts/classical-tasneem-ar-A2.txt",
+      "sourceSha256": "ae388b64368ce7cd92587783b70ca8792c773b61e11edb7b9d6ee55387fc6de6",
+      "sha256": "76a8e98a5119c50ea6f60e6216bcd02870301c815b7da62ecba5384ae543591f",
+      "takes": [
+        {
+          "take": "a",
+          "taskId": "ec64ea74-b390-447b-8729-519e31d04db8",
+          "file": "img/classical-tasneem-ar-A3-a.png"
+        },
+        {
+          "take": "b",
+          "taskId": "148ce75f-17df-477d-b5dd-87f188aabde2",
+          "file": "img/classical-tasneem-ar-A3-b.png"
+        }
+      ],
+      "creditsBefore": 198983,
+      "creditsAfter": 198949
+    },
+    {
+      "cell": "classical-shaikha-ar-A3",
+      "slug": "shaikha",
+      "name": "شيخة",
+      "file": "prompts/classical-shaikha-ar-A3.txt",
+      "construction": "classical",
+      "look": true,
+      "markInventory": "Its marks, exactly and only: three dots above ش in a small triangle, two dots below ي, one dot above خ, two dots above ة. No other letter has any dot or mark, and none is added anywhere else.",
+      "sourcePrompt": "lab-2026-09-24-universal-6/prompts/classical-shaikha-ar-A2.txt",
+      "sourceSha256": "da39a5567cd391ffcf179a2fbffee467dac36e0dc8ae9b3a722871578cd0d852",
+      "sha256": "f44348b0472f122c280bfb4c6b3b46045da42e6e40033527f0a25b996ab99796",
+      "takes": [
+        {
+          "take": "a",
+          "taskId": "59abcd16-9471-481a-b636-36346068089f",
+          "file": "img/classical-shaikha-ar-A3-a.png"
+        },
+        {
+          "take": "b",
+          "taskId": "8ddda050-6696-4d30-bc11-7c9d4308bfb7",
+          "file": "img/classical-shaikha-ar-A3-b.png"
+        }
+      ],
+      "creditsBefore": 198949,
+      "creditsAfter": 198915
+    },
+    {
+      "cell": "classical-aisha-ar-A3",
+      "slug": "aisha",
+      "name": "عائشة",
+      "file": "prompts/classical-aisha-ar-A3.txt",
+      "construction": "classical",
+      "look": true,
+      "markInventory": "Its marks, exactly and only: a small hamza above the tooth of ئ, which has no dots, three dots above ش in a small triangle, two dots above ة. No other letter has any dot or mark, and none is added anywhere else.",
+      "sourcePrompt": "lab-2026-09-24-universal-6/prompts/classical-aisha-ar-A2.txt",
+      "sourceSha256": "b52d2c39bded2d44a2c5237e869a31f339ad8a67b156c03c0bc2a9b0cc78d46c",
+      "sha256": "2e1f5baab5a5038ef942cc73bc64f6227f5c63a11efd990266b09c0e623461d9",
+      "takes": [
+        {
+          "take": "a",
+          "taskId": "16992098-5e5b-4502-be29-47047d3d454c",
+          "file": "img/classical-aisha-ar-A3-a.png"
+        },
+        {
+          "take": "b",
+          "taskId": "34bce33f-d162-40d7-a169-ec9652d7f2e7",
+          "file": "img/classical-aisha-ar-A3-b.png"
+        }
+      ],
+      "creditsBefore": 198915,
+      "creditsAfter": 198881
+    },
+    {
+      "cell": "diamond-rails-tasneem-ar-A3",
+      "slug": "tasneem",
+      "name": "تسنيم",
+      "file": "prompts/diamond-rails-tasneem-ar-A3.txt",
+      "construction": "diamond-rails",
+      "look": true,
+      "markInventory": "Its marks, exactly and only: two dots above ت, one dot above ن, two dots below ي. No other letter has any dot or mark, and none is added anywhere else.",
+      "sourcePrompt": "lab-2026-09-24-universal-5/prompts/diamond-rails-tasneem-ar.txt",
+      "sourceSha256": "27ef8b5823896823a50dc4f5f7f06f8f7cb2917ae765bb6828d3c3c6c197d18e",
+      "sha256": "2444c8141db4c7e832febb7044ef9460e96adc0b12b662bbec8e2729ca42c65c",
+      "takes": [
+        {
+          "take": "a",
+          "taskId": "c0fe888d-ffee-4c4b-aa96-4aeb712b92be",
+          "file": "img/diamond-rails-tasneem-ar-A3-a.png"
+        },
+        {
+          "take": "b",
+          "taskId": "9b091b07-bc59-4ded-989e-b84d3a6910bd",
+          "file": "img/diamond-rails-tasneem-ar-A3-b.png"
+        }
+      ],
+      "creditsBefore": 198881,
+      "creditsAfter": 198847
+    },
+    {
+      "cell": "diamond-rails-karim-ar-A3",
+      "slug": "karim",
+      "name": "كريم",
+      "file": "prompts/diamond-rails-karim-ar-A3.txt",
+      "construction": "diamond-rails",
+      "look": true,
+      "markInventory": "Its marks, exactly and only: two dots below ي. No other letter has any dot or mark, and none is added anywhere else.",
+      "sourcePrompt": "lab-2026-09-24-universal-5/prompts/diamond-rails-karim-ar.txt",
+      "sourceSha256": "358d7f97fd6688e3baa58019a81c5c5520fd5509c9e316ddbc9d674e560322bc",
+      "sha256": "bc1c5d49b0f17163cbaa42d96e24c900ce2ea4974aab8eea63cfaa57bfc82431",
+      "takes": [
+        {
+          "take": "a",
+          "taskId": "0e3b4dec-7098-4933-b5a5-3a0f6c1e0c00",
+          "file": "img/diamond-rails-karim-ar-A3-a.png"
+        },
+        {
+          "take": "b",
+          "taskId": "9dfe97ef-7a51-4030-9546-5d73b6e87cd5",
+          "file": "img/diamond-rails-karim-ar-A3-b.png"
+        }
+      ],
+      "creditsBefore": 198847,
+      "creditsAfter": 198813
+    },
+    {
+      "cell": "diamond-rails-mumin-ar-A3",
+      "slug": "mumin",
+      "name": "مؤمن",
+      "file": "prompts/diamond-rails-mumin-ar-A3.txt",
+      "construction": "diamond-rails",
+      "look": true,
+      "markInventory": "Its marks, exactly and only: a small hamza above the waw (ؤ), one dot above ن. No other letter has any dot or mark, and none is added anywhere else.",
+      "sourcePrompt": "lab-2026-09-24-universal-5/prompts/diamond-rails-mumin-ar.txt",
+      "sourceSha256": "1d3011fba8f050d8f70e049cc79d3d2f5e4f4272fa3090b305bc5bb4c6da1a02",
+      "sha256": "a522b02c06aa77cfa9d506ca284447773f9edccb71f83300a33bb88a0eab4fa3",
+      "takes": [
+        {
+          "take": "a",
+          "taskId": "91da1080-517c-4a88-8929-5138ae7c7230",
+          "file": "img/diamond-rails-mumin-ar-A3-a.png"
+        },
+        {
+          "take": "b",
+          "taskId": "ca4dd31b-3e9e-4ae6-bdef-28f15e2ff27f",
+          "file": "img/diamond-rails-mumin-ar-A3-b.png"
+        }
+      ],
+      "creditsBefore": 198813,
+      "creditsAfter": 198779
+    },
+    {
+      "cell": "diamond-rails-amna-ar-A3",
+      "slug": "amna",
+      "name": "آمنة",
+      "file": "prompts/diamond-rails-amna-ar-A3.txt",
+      "construction": "diamond-rails",
+      "look": true,
+      "markInventory": "Its marks, exactly and only: a madda, a short flat wave, above the alif (آ), one dot above ن, two dots above ة. No other letter has any dot or mark, and none is added anywhere else.",
+      "sourcePrompt": "lab-2026-09-24-universal-5/prompts/diamond-rails-amna-ar.txt",
+      "sourceSha256": "4ba672c3095719063b9712510e99fcf59f1a512f91b575684ac6c1d1cbfed82f",
+      "sha256": "61fdc9ce61f0c53ca68d7369b9d221d10969af68face9639e990d0975ae7fca4",
+      "takes": [
+        {
+          "take": "a",
+          "taskId": "873b54a4-284e-41b8-a3ea-5f4cf0722f91",
+          "file": "img/diamond-rails-amna-ar-A3-a.png"
+        },
+        {
+          "take": "b",
+          "taskId": "7d4bed37-60ae-4ccc-b3c7-6511f297c344",
+          "file": "img/diamond-rails-amna-ar-A3-b.png"
+        }
+      ],
+      "creditsBefore": 198779,
+      "creditsAfter": 198745
+    }
+  ]
+}
