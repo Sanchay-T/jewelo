@@ -149,7 +149,7 @@ export interface PresentationRepository {
    * The route recorded in the parent studio task's snapshot, or undefined
    * while the parent has none. A dependent view compiles on that route.
    */
-  dependencyStillRoute?(task: TaskRow): Promise<StillRouteChoice | undefined>;
+  dependencyStillRoute(task: TaskRow): Promise<StillRouteChoice | undefined>;
   loadStoredOutput(task: TaskRow): Promise<StoredOutput | undefined>;
   reserveAttempt(
     task: TaskRow,
@@ -233,7 +233,7 @@ export interface PresentationRepository {
    * produce a still. A dependent view whose parent is terminal can never
    * become dispatchable, so it must stop instead of deferring forever.
    */
-  dependencyTerminalStatus?(task: TaskRow): Promise<string | undefined>;
+  dependencyTerminalStatus(task: TaskRow): Promise<string | undefined>;
   signedInspirationUrl(
     revision: RevisionRow,
     ownerId: string,
@@ -420,6 +420,17 @@ export function promptSnapshotRejectionClass(
   const code = Number(status[1]);
   if (!Number.isFinite(code) || code < 400 || code >= 500) return undefined;
   const body = message.slice(status.index + status[0].length);
+  // Adversarial review 4 M1: PostgREST answers a call whose signature it does
+  // not know with 404 and `PGRST202`, which is what a database missing
+  // migration 20260924020000 (or one whose schema cache has not reloaded since
+  // it ran) says to `materialize_prompt_snapshot(..., p_still_route)`. The
+  // code is not a SQLSTATE, so the five-character match below never saw it and
+  // the throw escaped, looping the task on the stale sweeper with nothing an
+  // operator could read. It is a pre-spend block, but its own one: unlike the
+  // rejections below it stops being true the moment the database is brought up
+  // to date, so it stays out of `DETERMINISTIC_REFUSAL_CODES` and keeps the
+  // retry button.
+  if (body.includes("PGRST202")) return "schema_behind";
   const sqlState = /"code"\s*:\s*"([0-9A-Za-z]{5})"/.exec(body)?.[1];
   if (sqlState !== "P0001" && sqlState !== "22023") return undefined;
   for (const [raised, reason] of PROMPT_SNAPSHOT_REJECTIONS)
@@ -545,7 +556,7 @@ export async function executePresentationTask(
     // studio takes `STUDIO_STILL_ROUTE`, a dependent view its parent's. A
     // parent with no snapshot yet has not been dispatched, so the view waits.
     const route = task.dependency_task_id
-      ? await repository.dependencyStillRoute?.(task)
+      ? await repository.dependencyStillRoute(task)
       : STUDIO_STILL_ROUTE;
     if (!route) {
       // No parent snapshot has two causes. The parent went terminal before it
@@ -553,7 +564,7 @@ export async function executePresentationTask(
       // stale sweeper would re-queue this view once per window: refuse it
       // pre-spend here, exactly as the later missing-reference block does.
       // Otherwise the parent simply has not been dispatched yet: defer.
-      const terminal = await repository.dependencyTerminalStatus?.(task);
+      const terminal = await repository.dependencyTerminalStatus(task);
       if (terminal)
         return blockPreSpendTerminally(new Error(`dependency_${terminal}`));
       return { status: "deferred" as const };
@@ -626,7 +637,14 @@ export async function executePresentationTask(
       const reason = promptSnapshotRejectionClass(error);
       if (reason === undefined) throw error;
       return blockPreSpendTerminally(
-        new Error(`prompt_snapshot_rejected:${reason}`),
+        new Error(
+          // A schema that is merely behind gets its own head, not the
+          // deterministic `prompt_snapshot_rejected` family: running the
+          // migration makes the same dispatch work.
+          reason === "schema_behind"
+            ? "prompt_snapshot_schema_behind"
+            : `prompt_snapshot_rejected:${reason}`,
+        ),
       );
     }
   }
@@ -681,7 +699,7 @@ export async function executePresentationTask(
         // pendant to copy. Deferring would let the stale sweeper re-queue it
         // once per stale window forever; block it once instead, which also
         // releases its reservation through the pre-spend path below.
-        const terminal = await repository.dependencyTerminalStatus?.(task);
+        const terminal = await repository.dependencyTerminalStatus(task);
         if (terminal) throw new Error(`dependency_${terminal}`);
         // Otherwise a recovery dispatch simply arrived before the studio still
         // existed: wait for the release rather than spend on an empty scene.
@@ -1466,7 +1484,7 @@ export class SupabasePresentationRepository implements PresentationRepository {
     const rows = await this.#request<
       Array<{ still_route?: StillRouteChoice | null }>
     >(
-      `/rest/v1/generation_prompt_snapshots?task_id=eq.${encodeURIComponent(taskId)}`,
+      `/rest/v1/generation_prompt_snapshots?task_id=eq.${encodeURIComponent(taskId)}&limit=1`,
     );
     const row = rows[0];
     if (!row) return undefined;

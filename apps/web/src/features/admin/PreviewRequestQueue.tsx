@@ -239,6 +239,18 @@ const PLAIN_WORDS: Readonly<Record<string, string>> = {
     "The recipe for this piece was written by an older version. Start the request again.",
   prompt_snapshot_rejected:
     "The recipe for this piece was refused. Start the request again.",
+  prompt_snapshot_schema_behind:
+    "The shop's records are behind this version. Bring the database up to date, then photograph it again.",
+  // The film recipe is written outside the still's pre-spend gates, so these
+  // four arrive as their own heads rather than as `prompt_compile_failed`.
+  missing_required_prompt_value:
+    "The film recipe cannot be written for this piece. Make it by hand.",
+  missing_required_prompt_variables:
+    "The film recipe cannot be written for this piece. Make it by hand.",
+  unknown_prompt_variable:
+    "The film recipe cannot be written for this piece. Make it by hand.",
+  prompt_value_contains_unresolved:
+    "The film recipe cannot be written for this piece. Make it by hand.",
   provider_output_checkpoint_conflict:
     "Two copies of the same photograph were saved. Check it before running it again.",
   revision_not_found:

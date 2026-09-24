@@ -626,6 +626,31 @@ else {
 }
 
 /**
+ * SP-2e1d m5: the stencil route's DEPENDENT view order, exactly as
+ * `executePresentationTask` sends it today - the approved studio still as
+ * `master`, then the letter drawing, then the look texture, then the style
+ * photograph (`apps/jobs/src/presentation.ts`, the `generator.generate` call).
+ * The studio pin above covers only the two-file studio call, so a renumbering
+ * of the three views it does not touch had nothing to fail against.
+ */
+{
+  const roles = buildStillReferences({
+    route: "stencil",
+    referenceImageUrl: "master",
+    identityImageUrl: "identity",
+    lookReferenceUrl: "look",
+    styleAnchorUrl: "style",
+  }).map(({ role }) => role);
+  const want = ["master", "stencil", "look", "style"];
+  if (roles.join(", ") === want.join(", "))
+    console.log(`MATCH  stencil route dependent references [${roles.join(", ")}]`);
+  else {
+    failed += 1;
+    console.log(`DIFFER stencil route dependent references [${roles.join(", ")}] (want [${want.join(", ")}])`);
+  }
+}
+
+/**
  * A free dependent view without its approved studio still has no authority for
  * the piece at all, and a free prompt that still says @stencil (a `@v2`
  * release) points at an image nobody sent. Both are refused before spend.
