@@ -108,7 +108,7 @@ So each window is scanned from the outer end of the name inward, and the top rai
 `diamond-rails` also caps its tightening at 90 units rather than 120: at `wght=500` the letters are narrower, the loop spent the whole allowance, and the double `M` of `MUHAMMAD` ran together into one block.
 A bar inside a letter body is a finish; two letters run together is a different word.
 
-### Addendum: `origami-ribbon` Latin moves to `wght=600` (image lab, 23 September 2026, accepted 24 September 2026)
+### Addendum: `origami-ribbon` Latin at `wght=600` measured and not taken (image lab, 23 September 2026, reverted 24 September 2026)
 
 The origami lab held the prompt byte-identical and moved only the stencil weight, which is the review condition D-023 itself wrote down: "a lab pass measures a weight or tracking that reads better in metal".
 Measured on the returned photographs, stroke width over letter height: `LOVE` 0.267 at 800 and 0.192 at 600, `ASMA` 0.347 at 800 and 0.220 at 600.
@@ -116,9 +116,25 @@ Both of `ASMA`'s A counters came back as open holes for the first time in eleven
 `wght=500` was measured in the same round and is not taken: it removes only 6 percent more ink than 600, it did not read slimmer on `ASMA` at all, and it produced the round's single spelling defect, an `M` right stem that merged into the following `A`.
 Evidence: `docs/goals/road-to-gold/lab-2026-09-23-origami/verdicts-round3.md` and `ledger.md`.
 
-Only `origami-ribbon` Latin moves. Arabic stays at 800 on every construction, `framed-minimal` stays at 800 and `diamond-rails` stays at 500, so their stencils are byte-identical before and after.
-The engine release stays `caleums-identity-v5`: D-023 bumped it because the weight became a fingerprint input where it had not been one, and it still is one, so an `origami-ribbon` pendant drawn at 600 already mints a different fingerprint from the same pendant drawn at 800.
-Artifacts are keyed by `(revision_id, fingerprint)` and `validateStoredIdentityAnchor` restates the construction's lettering from the table before it will reuse stored bytes, so a stencil cut at 800 is refused for a revision drawn at 600 rather than silently served.
+The photographs read better at 600, but the stencil does not hold together at 600.
+At 800 the tightening settles by 90 units and 1 of 48 Latin names needs a bridge bar (`ZOË`, for its diaeresis); at 600 the lighter letters spend the whole 120-unit allowance and 25 names still need bars, `MUHAMMAD` among them with 3 bars and 835 px of bar metal.
+D-023 calls a bar across the word the defect, so the stencil geometry outranks the photograph measurement.
+Every lighter option was measured on the 48 Latin names of the `render-stencils` geometry sweep, `origami-ribbon` only, rings on:
+
+| Option | Names needing a bar | Total bar px | Refused | `MUHAMMAD` |
+| --- | --- | --- | --- | --- |
+| `wght=800` (kept) | 1 (`ZOË`) | 2370 | 0 | one piece, no bar, M M distinct |
+| `wght=700` | 2 (`NIKI` new) | 3210 | 1 (`ABDULRAHMAN`, pinhole) | one piece, no bar, M M distinct |
+| `wght=700`, `trackingMax` 90 | 29 | 18294 | 0 | 3 bars, 810 px |
+| `wght=600`, `trackingMax` 90 | 42 | 41808 | 0 | 3 bars, 1185 px |
+| `wght=600` | 25 | 19204 | 0 | 3 bars, 835 px |
+
+The rule was the lightest option that adds no bar and no refusal over 800 and keeps the two `M`s of `MUHAMMAD` apart; only 800 qualifies, so `origami-ribbon` Latin stays at 800 with `framed-minimal`.
+`wght=700` misses by one name each way: `NIKI` gains two bars and `ABDULRAHMAN` squeezes a counter under the pinhole floor at 120 units.
+A per-name weight ladder was not built: it would make the letterform depend on the name, and one weight per construction is what D-023 fingerprints and reviews.
+Arabic stays at 800 on every construction and `diamond-rails` stays at 500.
+The engine release stays `caleums-identity-v5`: the weight is a fingerprint input, so a stencil cut at 600 while the change was live mints a different fingerprint and is never served for an 800 revision.
+`validateStoredIdentityAnchor` refuses such a stencil with `identity_reuse_lettering_mismatch`, which is now a deterministic refusal: the operator is told to start the request again instead of being offered a retry that cannot work.
 
 ## D-020 detail
 

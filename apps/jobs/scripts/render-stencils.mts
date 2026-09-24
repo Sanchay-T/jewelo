@@ -822,15 +822,15 @@ const PRE_RING_CONSTRUCTION = CONSTRUCTION_LETTERING[specificationConstruction]
  * Whether that plane is drawn in the same lettering as the piece under test,
  * per script.
  *
- * D-023 gives each boxy construction its own Latin weight - `framed-minimal`
- * 800, `origami-ribbon` 600 since the 24 September 2026 addendum, and
- * `diamond-rails` 500 - and `origami-ribbon` is the only letters-alone
- * construction in that group, so on `framed-minimal` and on `diamond-rails` the
- * Latin plane is a different letterform
- * from the piece: its ink box is a few pixels wider, and `CARRIER-DELTA` - which
- * rebuilds the placement from the plane's own ink box - then reports a 5 to 7 px
- * disagreement on every one of the 282 Latin cells that is the harness's own
- * plane, not the engine's structure. That is a measurement this harness cannot
+ * D-023 draws `framed-minimal` and `origami-ribbon` Latin at 800 and
+ * `diamond-rails` at 500, and `origami-ribbon` is the only letters-alone
+ * construction in that group, so `framed-minimal` shares the plane's
+ * letterform and every one of its cells is measured. On `diamond-rails` the
+ * Latin plane is a different letterform from the piece: its ink box is a few
+ * pixels wider, and `CARRIER-DELTA` - which rebuilds the placement from the
+ * plane's own ink box - then reports a 5 to 7 px disagreement on every one of
+ * the 282 Latin cells that is the harness's own plane, not the engine's
+ * structure. That is a measurement this harness cannot
  * make for that construction, and saying so is the honest answer; saying `282
  * cells disagree` would be a false alarm, and widening the tolerance to swallow
  * it would be weakening the only independent check of the structure there is.

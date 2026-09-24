@@ -72,8 +72,6 @@ Their Arabic name is `NotoKufiArabic-Regular.ttf` at `wght=800` with no tracking
 `classical` is absent from the table and keeps the style's own pinned face at its default instance, which is the customer's chosen lettering and exactly what every pendant was drawn in before this table existed.
 
 `diamond-rails` draws its Latin name at `wght=500`: the two rails already carry a lot of metal, and at 800 the piece closed up.
-`origami-ribbon` draws its Latin name at `wght=600` since 24 September 2026 (D-023 addendum): the 23 September origami lab measured the same prompt and name at three stencil weights, and 600 slimmed the photographed stroke by 28 percent on `LOVE` and 37 percent on `ASMA` and opened both of `ASMA`'s A counters, which 800 filled with gold; 500 buys 6 percent more ink, did not read slimmer, and is the only weight where a stroke went missing.
-Arabic is unchanged at `wght=800` on every construction, and `framed-minimal` keeps `wght=800` for Latin.
 The tracking in the table is a floor, not a fixed value: the drawn tracking starts there and is tightened in steps of `IDENTITY_LETTERING_TRACKING_STEP` only while the raster is still more than one island, and never past `IDENTITY_LETTERING_MAX_TRACKING`, because at 60 units a long name still leaves gaps that the bridging pass then joins with a capsule that reads as a bar laid across the word.
 The effective value is what the report carries and what the fingerprint hashes.
 Arabic never enters that loop.
