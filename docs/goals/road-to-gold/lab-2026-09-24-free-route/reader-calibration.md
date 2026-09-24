@@ -122,3 +122,71 @@ Aborted reads return no `usage`, so up to 20 timed-out reads are not metered; at
 
 Give the vision reads a longer timeout or accept the retry latency: at `detail: "high"` about one read in ten ran past 60 s.
 Look at the framed-construction refusals with a viewer; if the thin bars are real, a crop that holds up on on-skin and dark shots is the next lever, wired where an image library already lives.
+
+## SP-2a3: joined is transitive (24 September 2026)
+
+SP-2f2's replay refused 8 of the 12 framed-minimal dependent stills that are one piece.
+The reader saw a shadow line between the Arabic word and the bottom rail, called it a break, and ignored the joint that actually holds the word (the inner rail the word rests on, or the lam strut up to the top rail).
+Only `ONE_PIECE_RULE` changed; the name reader, the config and the request shape are untouched, so this sits on top of SP-2a2's kept variant (a) plus `detail: "high"`.
+
+### Wording
+
+Three sentences were added and two existing ones qualified, in three variants.
+Variant 1 added transitivity ("two parts are one piece if any path of touching metal links them, directly or through a third part"), the framed clause ("a word that meets the frame or a rail at even one place ... is joined to it even where open background or shadow shows between that word and the frame everywhere else"), "the open space inside a frame is expected ... and is not a break", and rewrote the false clause as "a separate object with no touching path to the rest".
+It also qualified the dot sentence with "and nothing else bridging it" and the Arabic non-joining sentence with "with nothing bridging it, no rail, strut or frame that both sides touch".
+Variant 2 removed "and nothing else bridging it" from the dot sentence and added "Only a join along an edge or a run of metal counts as a link in that path; a single point or corner of contact never does."
+Variant 3 is variant 2 plus "Judge every dot, diacritic and detached mark on its own contact and not on the word's: a word joined to a frame or a rail does not carry a floating dot with it."
+Variant 3 is what shipped.
+
+### Calibration set (the 35 images above, 3 reads each)
+
+Labels are the corrected ones from "Labels re-scored": 25 one piece, 10 split (the two ليلى stills, the four c-fat, the two c-omran, `v3/c-fat-studio-a`, `v2/f-fat-studio`).
+
+| variant | false refusals per read (25 one-piece images) | misses per read (10 split images) | spend |
+| --- | --- | --- | --- |
+| SP-2a2 (c), the shipped baseline | 10/74 = 13.5% | 0/30 | - |
+| 1 | 2/75 = 2.7% | 4/30 (ليلى a 1, ليلى b 1, f-fat 2) | USD 0.8984 |
+| 2 | 3/75 = 4.0% | 3/30 (ليلى b 2, f-fat 1) | USD 1.0055 |
+| 3 (shipped) | not re-read, see below | 0/30 | USD 0.3125 |
+
+Variant 1 and variant 2 both let point-contact dots through: the reader read "the two diamond marks are connected to the underside of the central rail by touching metal" on ليلى b, which is exactly the contact SP-2a2 scored as floating.
+Variant 3 targets that and reads FFF on all ten split images, 30 of 30 refusals, 0 misses.
+Its one-piece side was measured on the 48 dependent stills below (46 of 48, and 2 of the 2 refusals are framed-minimal) rather than on this 35-image set again, because a third full run would have pushed the task past its USD 3 cap.
+The per-image votes for variants 1 and 2 are in `reader-cal/sp2a3-v1.json` and `reader-cal/sp2a3.json`, variant 3's split probe in `reader-cal/sp2a3-v3-false.json` (scratchpad, not in git).
+
+Variant 2 votes that differ from variant 1, expected-true first: `classical-love-en-a` TFF to TTT, `framed-minimal-muhammad-ar-a` TTT to TTF, `o-muh-studio` TTT to TTF, `r-fat-studio` TTT to TTF, `f-fat-studio` TFT to TFF, ليلى a FFT to FFF, ليلى b FFT to TTF.
+
+### The 48 SP-2f2 dependent stills, 1 read each
+
+| reader | SP-2f2 (shipped rule) | SP-2a3 variant 3 |
+| --- | --- | --- |
+| piece, all 48 | 40 of 48 | 46 of 48 |
+| piece, framed-minimal only | 4 of 12 | 10 of 12 |
+| piece, classical and diamond-rails | 36 of 36 | 36 of 36 |
+| name | 47 of 48 (false "Asmaa" on `classical-asma-en-close_up-a`) | 46 of 48 (false "Asmaa" on `classical-asma-en-close_up-a` and `-b`) |
+
+The name reader is untouched by this change; the second "Asmaa" is the same false refusal on the second take of the same cell, read once.
+
+Two framed-minimal stills still refuse, both of them stills that refused before:
+
+| still | reader's note |
+| --- | --- |
+| `framed-minimal-muhammad-ar-dark-b` | "The rectangular frame is a continuous piece, and the Arabic lettering appears continuous within itself, but the lettering is separated from the frame by visible background gaps. No letter or rail forms a touching metal bridge between the word and the frame, so the pendant is not one connected piece." |
+| `framed-minimal-salma-ar-close_up-b` | "The rectangular frame and its two upper ring attachments are continuous, and the Arabic lettering appears internally connected as a word. However, the lettering is separated from the frame/bottom rail by visible background gaps, with no continuous metal bridge linking the word to the frame. Therefore the pendant is not one connected piece." |
+
+Both are single reads, and both cells pass on their other three views, so this is the reader failing to see the joint in one frame rather than a rule that still denies transitivity.
+
+### Spend
+
+Metered from the response `usage` at USD 1.25 per million input and USD 10 per million output tokens.
+Variant 1 calibration USD 0.8984, variant 2 calibration USD 1.0055, variant 3 split probe USD 0.3125, dependent replay USD 0.6523.
+Total USD 2.869 against the USD 3 cap.
+
+### SP-2a3 wording 3, full calibration set (lead, after the implementer's cap)
+
+`cal.mts sp2a3-v3-full`, the shipped wording 3, 35 images x 3 reads, USD 1.0202.
+Split pendants: 30 of 30 reads refused, 0 misses.
+One-piece pendants: 9 false refusals in 71 reads that returned (4 reads errored and are retried once in production), 12.7%, against 10 of 74 (13.5%) for the SP-2a2 wording.
+The refusals: `framed-minimal-muhammad-ar-a` 1 of 3 (was 3 of 3), `v3/c-fat-studio-a` 3 of 3 (was 3 of 3), `v2/r-fat-studio` 3 of 3 (was 2 of 3, label still unconfirmed, SP-2a2 asked for a viewer re-score), `v2/f-fat-studio` 2 of 3 (was 3 of 3).
+Framed-minimal in this set went from 6 of 12 reads refused to 1 of 12.
+Total SP-2a3 spend: USD 2.869 (implementer) + USD 1.0202 (this run) = USD 3.89.
