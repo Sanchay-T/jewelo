@@ -1182,16 +1182,11 @@ export function Atelier({ locale }: { locale: "en" | "ar" }) {
     return !hasExactSample({ ...d, ...patch });
   }
   /**
-   * Two Arabic names are refused before anything is reserved
-   * (`preflightRefusal`, `arabic_two_name`): the Arabic identity engine solves
-   * exactly one name. Until now the shopper only met that fact after ticking
-   * the spelling confirmation on the review, having chosen "Two names" and
-   * typed both (storyline review 1, minor). It is said here instead, on the
-   * control that causes it, and only while the pendant is Arabic - it is not a
-   * fact about the option, it is a fact about the option in this script.
+   * An Arabic two-name pendant is a piece the shop makes by hand, so the fact
+   * is said on the control that causes it and only while the pendant is Arabic.
    *
    * Deliberately not routed through `unphotographed`: that marks a look the shop
-   * cannot photograph at all, and this is a piece the shop makes by hand.
+   * cannot photograph at all.
    */
   function twoArabicNamesNote(option: string | number) {
     return d.script === "Arabic" && option === "Two names"

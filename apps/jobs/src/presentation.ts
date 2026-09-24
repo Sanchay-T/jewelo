@@ -3,6 +3,7 @@ import {
   MockStudioGenerator,
   OpenAIStillAdapter,
   stillPrompt,
+  UnknownConstructionError,
   type GeneratedMedia,
   type StudioGenerator,
 } from "@jewelo/ai";
@@ -265,12 +266,22 @@ export async function executePresentationTask(
   if (task.presentation_view !== "studio")
     return blockPreSpendTerminally(new Error("studio_view_only"));
   // The whole prompt: the approved name, the script it is written in, and the
-  // construction the shopper chose.
-  const prompt = stillPrompt({
-    name: revision.identity_anchor.approvedText,
-    script: revision.identity_anchor.language === "ar" ? "ar" : "en",
-    construction: String(revision.specification.construction ?? "classical"),
-  });
+  // piece the shopper approved. A construction the prompt has no wording for
+  // stops the task here, before any money is reserved, with
+  // `unknown_construction`; it is never photographed as some other piece and
+  // never left for the sweeper to re-emit.
+  let prompt: string;
+  try {
+    prompt = stillPrompt({
+      name: revision.identity_anchor.approvedText,
+      script: revision.identity_anchor.language === "ar" ? "ar" : "en",
+      specification: revision.specification,
+    });
+  } catch (error) {
+    if (error instanceof UnknownConstructionError)
+      return blockPreSpendTerminally(error);
+    throw error;
+  }
   // The attempt budget is the database's, not this file's: `reserve_provider_attempt`,
   // `retry_generation_task` and `operator_retry_generation_task` all refuse past
   // the same `runtime_policy.provider_attempt_budget`, so a job that stopped one
