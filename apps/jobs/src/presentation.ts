@@ -32,6 +32,7 @@ import {
   // value of the same name is a misreading waiting to happen.
   stillRoute as decideStillRoute,
   type StillRouteChoice,
+  type StillRouteDecision,
   type StillRouteSpecification,
 } from "@jewelo/identity";
 import { isDuplicateObject } from "@jewelo/media";
@@ -166,11 +167,17 @@ export interface PresentationRepository {
    * an image the free route does not send, which `compileStillPrompt` refuses
    * as `still_unresolved_reference_tag:@stencil` - so such a release is stencil
    * whatever the name says.
+   *
+   * SP-2e2e: the whole decision, route and reasons, not only the route. The
+   * reasons are the closed snake_case vocabulary of `stillRoute` plus this
+   * repository's own two answers (`free_route_off`, `release_names_stencil`),
+   * and they are recorded on the asset so an operator can read why a name that
+   * looks allowlisted was photographed from the stencil.
    */
   studioStillRoute(
     revision: RevisionRow,
     release: PromptReleaseRow,
-  ): StillRouteChoice;
+  ): StillRouteDecision;
   loadStoredOutput(task: TaskRow): Promise<StoredOutput | undefined>;
   reserveAttempt(
     task: TaskRow,
@@ -618,7 +625,8 @@ export async function executePresentationTask(
       // revision-shaped fields the variable snapshot does, so a specification
       // that is wrong in the row fails here as `prompt_compile_failed` rather
       // than throwing out of the job and looping on the stale sweeper.
-      route = parentRoute ?? repository.studioStillRoute(revision, release);
+      route =
+        parentRoute ?? repository.studioStillRoute(revision, release).route;
       const variables = buildPromptVariableSnapshot({
         approvedName: revision.identity_anchor.approvedText,
         language: revision.identity_anchor.language,
@@ -731,6 +739,33 @@ export async function executePresentationTask(
     return blockPreSpendTerminally(
       new Error("prompt_snapshot_compiler_stale"),
     );
+  // SP-2e2e. Why this studio still took its route, in the closed snake_case
+  // vocabulary the decision uses and never a letter of the customer's name,
+  // recorded on the asset beside the route itself. Without it an operator
+  // looking at a stencil photograph of an allowlisted-looking name has no way
+  // to tell which rule sent it there.
+  //
+  // Asked again here rather than carried down from the compile above, because
+  // a resumed dispatch reuses a stored snapshot and never compiles; the
+  // decision is pure, so asking it twice costs nothing. It is recorded only
+  // when it still answers the route this snapshot was compiled for: the switch
+  // can be flipped between the two, and a reason for the other route is not the
+  // reason for this photograph. A dependent view inherits its studio's route
+  // and has no reasons of its own, so it records none.
+  //
+  // Bookkeeping only: nothing here decides anything this attempt does, so a
+  // specification too malformed to read again loses the reasons rather than
+  // failing a task whose snapshot is already compiled and valid.
+  let studioDecision: StillRouteDecision | undefined;
+  if (!task.dependency_task_id) {
+    try {
+      studioDecision = repository.studioStillRoute(revision, release);
+    } catch {
+      studioDecision = undefined;
+    }
+  }
+  const stillRouteReasons =
+    studioDecision?.route === stillRoute ? studioDecision.reasons : undefined;
   let identity: Awaited<
     ReturnType<PresentationRepository["signedIdentityUrl"]>
   >;
@@ -977,6 +1012,18 @@ export async function executePresentationTask(
   // URL of the same object, so freshness changes and presence never does - the
   // pairing asserted before spend is still the pairing sent.
   const refreshInputUrls = async () => {
+    // SP-2e2e. A stencil link with a clock, on the route that sends it, that
+    // this repository cannot re-sign is the exact failure RETRY-SIGN exists to
+    // stop: the attempt would go out carrying the expired link it was given.
+    // Fail closed like the dependency, look and inspiration branches below
+    // rather than send a stale URL. A `data:` stencil carries its own bytes and
+    // has no clock, and the free route sends no stencil at all.
+    if (
+      stillRoute === "stencil" &&
+      !identity.url.startsWith("data:") &&
+      !(identity.storage && repository.signedStorageUrl)
+    )
+      throw new Error("identity_resign_unavailable");
     if (identity.storage && repository.signedStorageUrl) {
       const url = await repository.signedStorageUrl(
         identity.storage.bucket,
@@ -1100,6 +1147,15 @@ export async function executePresentationTask(
       // that passed it. An operator asking why a piece looks the way it does
       // reads it off the asset instead of joining back to the prompt snapshot.
       record.stillRoute = stillRoute;
+      // SP-2e2e: and why, for a studio still (see `stillRouteReasons` above).
+      // A plain extra key in the same JSON column: the completion function
+      // reads `verification_result` key by key
+      // (`20260924000000_completion_requires_single_connected_piece.sql`) and
+      // the column has no check constraint, so no migration is involved.
+      // A free route is a route with nothing against it, so the key appears
+      // only where there is something to read: on a stencil studio still.
+      if (stillRouteReasons?.length)
+        record.stillRouteReasons = stillRouteReasons;
       // SP-2a. In real mode the verifier above is the mock, so its
       // `singleConnectedPiece` is always true and the gate on it never fires.
       // The blind piece reader is the live one: one image, one question, no
@@ -1276,8 +1332,12 @@ export class SupabasePresentationRepository implements PresentationRepository {
   studioStillRoute(
     revision: RevisionRow,
     release: PromptReleaseRow,
-  ): StillRouteChoice {
-    if (!this.freeRouteEnabled) return "stencil";
+  ): StillRouteDecision {
+    // SP-2e2e. Both answers this method gives on its own carry a reason too,
+    // so every stencil studio still on the asset says why it is a stencil one
+    // and an operator never reads a bare "stencil" with nothing behind it.
+    if (!this.freeRouteEnabled)
+      return { route: "stencil", reasons: ["free_route_off"] };
     // SP-2e2b. The live `image.packshot` release is `@v4` and does not name the
     // stencil in its prose; the older `@v2` and `@v3`, which a task can still
     // be pinned to, do. Compiled free, that prose keeps
@@ -1286,7 +1346,8 @@ export class SupabasePresentationRepository implements PresentationRepository {
     // make an allowlisted name unphotographable rather than free. Decided here,
     // once, from the release this task is pinned to, rather than caught as a
     // per-attempt fallback.
-    if (/stencil/i.test(release.template)) return "stencil";
+    if (/stencil/i.test(release.template))
+      return { route: "stencil", reasons: ["release_names_stencil"] };
     return decideStillRoute({
       approvedText: revision.identity_anchor.approvedText,
       language: revision.identity_anchor.language,
@@ -1294,7 +1355,7 @@ export class SupabasePresentationRepository implements PresentationRepository {
       // read structurally: `stillRoute` proves each field it uses and routes to
       // the stencil for anything it cannot name.
       specification: revision.specification as StillRouteSpecification,
-    }).route;
+    });
   }
   async #request<T>(path: string, init: RequestInit = {}): Promise<T> {
     const response = await fetch(`${this.url}${path}`, {

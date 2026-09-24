@@ -516,9 +516,15 @@ const ROUTE_EXPECTATIONS: readonly {
   { label: "Omar with no lettering", name: "Omar", language: "en", construction: "classical", specification: { lettering: undefined }, route: "stencil", reason: "piece_field_missing:lettering" },
   { label: "محمد with no lettering", name: "محمد", construction: "classical", specification: { lettering: undefined }, route: "stencil", reason: "piece_field_missing:lettering" },
   // SP-2e2d. The metal colour reaches the model as prose no reader judges, so
-  // it is an allowlist of what was photographed free: yellow everywhere and
-  // rose in all four constructions (Love), never white, never absent.
+  // it is an allowlist of what was photographed free: yellow in both scripts,
+  // rose in Latin only (Love, in all four constructions), never white, never
+  // absent.
   { label: "Love in rose gold", name: "Love", language: "en", construction: "classical", specification: { metalColor: "rose" }, route: "free" },
+  // SP-2e2e: and per script, because that is how it was measured. Every rose
+  // cell in the labs is "Love", in Latin; no lab ever drew an Arabic name in
+  // rose, so an Arabic rose piece is as unproven as a white one.
+  { label: "محمد in rose gold", name: "محمد", construction: "classical", specification: { metalColor: "rose" }, route: "stencil", reason: "metal_not_proven" },
+  { label: "سلمى in rose gold", name: "سلمى", construction: "diamond-rails", specification: { metalColor: "rose" }, route: "stencil", reason: "metal_not_proven" },
   { label: "Omar in white gold", name: "Omar", language: "en", construction: "classical", specification: { metalColor: "white" }, route: "stencil", reason: "metal_not_proven" },
   { label: "محمد in white gold", name: "محمد", construction: "classical", specification: { metalColor: "white" }, route: "stencil", reason: "metal_not_proven" },
   { label: "Omar with no metalColor", name: "Omar", language: "en", construction: "classical", specification: { metalColor: undefined }, route: "stencil", reason: "metal_not_proven" },
@@ -916,11 +922,24 @@ for (const [name, language, construction, freeRouteEnabled, template, want] of [
     routeRevision(name, language, construction),
     routeRelease(template),
   );
-  const label = `studio ${name} ${construction} on the ${live ? "stencil-naming @v2/@v3-shape" : "baseline"} packshot with STILL_FREE_ROUTE=${freeRouteEnabled ? 1 : 0} routes ${want}`;
-  if (got === want) console.log(`MATCH  ${label}`);
+  // SP-2e2e: the repository's own two answers carry a reason of their own, so
+  // every stencil studio still says why it is one.
+  const wantReason = !freeRouteEnabled
+    ? "free_route_off"
+    : live
+      ? "release_names_stencil"
+      : undefined;
+  const label = `studio ${name} ${construction} on the ${live ? "stencil-naming @v2/@v3-shape" : "baseline"} packshot with STILL_FREE_ROUTE=${freeRouteEnabled ? 1 : 0} routes ${want}${wantReason ? ` (${wantReason})` : ""}`;
+  if (
+    got.route === want &&
+    (!wantReason || got.reasons.includes(wantReason)) &&
+    // A free route is a route with nothing against it: no reason, ever.
+    (got.route === "stencil" || got.reasons.length === 0)
+  )
+    console.log(`MATCH  ${label}`);
   else {
     failed += 1;
-    console.log(`DIFFER ${label}: got ${got}`);
+    console.log(`DIFFER ${label}: got ${got.route} [${got.reasons.join(", ")}]`);
   }
 }
 
@@ -957,10 +976,14 @@ for (const [label, specification, want] of [
       routeRelease(BASELINE_PACKSHOT),
     );
     const line = `studio Omar classical with ${label} and STILL_FREE_ROUTE=${freeRouteEnabled ? 1 : 0} routes ${wanted}`;
-    if (got === wanted) console.log(`MATCH  ${line}`);
+    // With the switch off the reason is the switch itself, not the field.
+    const reasonOk = freeRouteEnabled
+      ? true
+      : got.reasons.includes("free_route_off");
+    if (got.route === wanted && reasonOk) console.log(`MATCH  ${line}`);
     else {
       failed += 1;
-      console.log(`DIFFER ${line}: got ${got}`);
+      console.log(`DIFFER ${line}: got ${got.route} [${got.reasons.join(", ")}]`);
     }
   }
 }

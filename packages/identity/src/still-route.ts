@@ -53,8 +53,10 @@
  * from its default. A piece set with stones, or one whose shopper picked a
  * named face (Kufi, Diwani, Signature, Thuluth, Minimal), routes to the stencil
  * (`stones_not_proven`, `lettering_not_default`). The metal colour is measured
- * the same way: yellow and rose were both photographed free and passed, white
- * never was, so white routes to the stencil (`metal_not_proven`).
+ * the same way, and per script, because that is how it was photographed:
+ * yellow passed in both scripts, rose was only ever drawn in Latin ("Love"),
+ * and white was never drawn at all. So an Arabic piece in rose gold routes to
+ * the stencil exactly as a white one does (`metal_not_proven`).
  *
  * A specification that carries the customer's own inspiration photograph routes
  * to the stencil (`inspiration_not_proven`). No lab ever drew a free piece with
@@ -236,15 +238,19 @@ const DEFAULT_LETTERING = new Set(["classic", "contemporary"]);
 const NONE = "none";
 
 /**
- * The metal colours a free prompt was measured drawing: yellow in all but four
- * of the lab cells, and rose in classical, origami-ribbon, framed-minimal and
- * diamond-rails Love (`docs/goals/road-to-gold/lab-2026-09-24-free/ledger.md`
- * rows 5, 11, 17, 23, all pass; `lab-2026-09-24-free-route/ledger.md` line 22
- * and the worn takes in `lab-2026-09-24-free-dependent/ledger.md` lines 54-55).
- * White gold was never photographed from a free prompt, and the compiled words
- * are the only thing carrying the colour, so it routes to the stencil.
+ * The metal colours a free prompt was measured drawing, per script, because
+ * that is how they were measured. Yellow carried all but four of the lab cells
+ * in both scripts. Rose was drawn in classical, origami-ribbon, framed-minimal
+ * and diamond-rails (`docs/goals/road-to-gold/lab-2026-09-24-free/ledger.md`
+ * lines 50, 56, 62, 68; `lab-2026-09-24-free-route/ledger.md` line 22; the
+ * dependent takes in `lab-2026-09-24-free-dependent/ledger.md`) - but every one
+ * of those cells is "Love", in Latin. No lab ever drew an Arabic name in rose,
+ * and white gold was never drawn at all. The compiled words are the only thing
+ * carrying the colour, so anything not on this script's list routes to the
+ * stencil.
  */
-const PROVEN_METAL_COLORS = new Set(["yellow", "rose"]);
+const PROVEN_LATIN_METAL_COLORS = new Set(["yellow", "rose"]);
+const PROVEN_ARABIC_METAL_COLORS = new Set(["yellow"]);
 
 /**
  * The specification fields whose absence is not a default. The atelier writes
@@ -411,7 +417,15 @@ export function stillRoute(input: StillRouteInput): StillRouteDecision {
   // somebody else's pendant and no stencil to hold the letters.
   if (specification.referenceAsset != null) add("inspiration_not_proven");
   const metalColor = specification.metalColor ?? "";
-  if (!PROVEN_METAL_COLORS.has(metalColor)) add("metal_not_proven");
+  // Read against the script this name is written in: rose was only ever
+  // photographed free in Latin. A text carrying both scripts, or no Arabic and
+  // no Latin letter, has already routed wide above; a mixed one is read against
+  // the Arabic list, the narrower of the two.
+  const provenMetalColors =
+    arabicLetters.length > 0
+      ? PROVEN_ARABIC_METAL_COLORS
+      : PROVEN_LATIN_METAL_COLORS;
+  if (!provenMetalColors.has(metalColor)) add("metal_not_proven");
   const coverage = specification.stoneCoverage ?? NONE;
   const chosenStones = specification.gemstones?.length
     ? specification.gemstones
