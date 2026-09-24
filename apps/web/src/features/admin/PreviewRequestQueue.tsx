@@ -137,6 +137,128 @@ const PLAIN_WORDS: Readonly<Record<string, string>> = {
   pre_spend_gate_failed: "The piece was stopped before anything was spent.",
   operator_rejected: "Somebody in the shop stopped this one.",
   cancelled: "This one was stopped.",
+  // Every other code the still and film jobs can write, derived from their
+  // error strings and the sweeper's writes (RC-1d).
+  approved_text_missing:
+    "The piece has no approved name to work from. Make this one by hand.",
+  decodemask:
+    "A shape check on the name failed inside the workshop tools. Make this one by hand.",
+  dependency_cancelled:
+    "This view waits on the studio photograph, which was stopped.",
+  dependency_failed:
+    "This view waits on the studio photograph, which failed.",
+  fal_video_download_failed:
+    "The film could not be downloaded. Try the film again.",
+  fal_video_result_failed:
+    "The film could not be collected. Try the film again.",
+  fal_video_result_omitted:
+    "The film came back without a file. Try the film again.",
+  fal_video_status_failed:
+    "The film's progress could not be read. Try the film again.",
+  fal_video_submission_failed:
+    "The film could not be started. Try the film again.",
+  fal_video_submission_omitted:
+    "The film was started without a way to follow it. Try the film again.",
+  identity_anchor_upload_failed:
+    "The name outline could not be saved. Photograph it again.",
+  identity_artifact_lineage_missing:
+    "The name outline has no record of where it came from. Start the request again.",
+  identity_carrier_moved_ink:
+    "Joining the letters moved them out of shape. Make this one by hand.",
+  identity_carrier_no_room:
+    "The name leaves no room for the piece that joins it. Make this one by hand.",
+  identity_label4_size:
+    "A shape check on the name failed inside the workshop tools. Make this one by hand.",
+  identity_pipeline_release_mismatch:
+    "The workshop tools changed after this piece was started. Start the request again.",
+  identity_raster_channels:
+    "The name outline came out in the wrong format. Make this one by hand.",
+  identity_recentre_too_large:
+    "The name would sit too far off centre. Make this one by hand.",
+  identity_reuse_artifact_mismatch:
+    "The other views could not find the studio photograph's name outline. Start the request again.",
+  identity_reuse_download_failed:
+    "The studio photograph's name outline could not be read back. Photograph it again.",
+  identity_reuse_fingerprint_mismatch:
+    "The other views' name outline does not match the studio photograph. Start the request again.",
+  identity_reuse_font_mismatch:
+    "The lettering changed after the studio photograph. Start the request again.",
+  identity_reuse_png_format_mismatch:
+    "The studio photograph's name outline is in the wrong format. Start the request again.",
+  identity_reuse_png_mismatch:
+    "The studio photograph's name outline does not match its record. Start the request again.",
+  identity_reuse_report_mismatch:
+    "The studio photograph's name outline does not match its record. Start the request again.",
+  identity_reuse_revision_mismatch:
+    "The piece was changed after the studio photograph. Start the request again.",
+  identity_reuse_source_asset_mismatch:
+    "The studio photograph did not pass every check, so the other views cannot copy it. Start the request again.",
+  identity_reuse_source_task_mismatch:
+    "The other views point at the wrong studio photograph. Start the request again.",
+  identity_reuse_unsupported_input:
+    "The studio photograph's name outline cannot be reused. Start the request again.",
+  injected_media_failure:
+    "A sample run stopped on purpose. Nothing was charged and no piece was made.",
+  inspiration_reference_invalid:
+    "The shopper's inspiration photo cannot be used. Make this one by hand.",
+  inspiration_reference_missing:
+    "The shopper's inspiration photo is missing. Make this one by hand.",
+  look_reference_checksum_mismatch:
+    "The reference photograph for this style does not match the one on record. The shop's settings need a fix.",
+  look_reference_missing:
+    "This style has no reference photograph set up. The shop's settings need a fix.",
+  look_reference_unreadable:
+    "The reference photograph for this style could not be read. Photograph it again.",
+  measuremask:
+    "A shape check on the name failed inside the workshop tools. Make this one by hand.",
+  openai_image_edit_omitted:
+    "The photograph came back empty. Photograph it again.",
+  openai_input_download_failed:
+    "A reference photograph could not be read in time. Photograph it again.",
+  openai_verification_was_malformed:
+    "The check of the finished photograph came back unreadable. Photograph it again.",
+  photomask:
+    "A finished photograph could not be measured. Photograph it again.",
+  prompt_release_not_found:
+    "The recipe for this photograph is missing. The shop's settings need a fix.",
+  prompt_snapshot_compiler_stale:
+    "The recipe for this piece was written by an older version. Start the request again.",
+  prompt_snapshot_rejected:
+    "The recipe for this piece was refused. Start the request again.",
+  provider_output_checkpoint_conflict:
+    "Two copies of the same photograph were saved. Check it before running it again.",
+  revision_not_found:
+    "The piece this photograph belongs to is missing. Start the request again.",
+  run_not_found:
+    "The request this photograph belongs to is missing. Start the request again.",
+  signed_storage_path_invalid:
+    "A stored file has an invalid address. Make this one by hand.",
+  signed_storage_url_missing:
+    "A stored file could not be opened just then. Photograph it again.",
+  spend_ceiling_not_set:
+    "The shop's spending limits are looser than this setup allows. The shop's settings need a fix.",
+  style_anchor_unreadable:
+    "The studio photograph this view copies could not be read. Photograph it again.",
+  supabase_video_request_failed:
+    "The shop's records could not be reached for the film. Try the film again.",
+  task_not_found:
+    "This photograph's record is missing. Start the request again.",
+  unknown_pinned_identity_font:
+    "The lettering this name needs is not installed. The shop's settings need a fix.",
+  video_poll_lineage_missing:
+    "The film has no record of how it was started. Try the film again.",
+  video_provider_request_missing:
+    "The film has no record of how it was started. Try the film again.",
+  video_source_signing_failed:
+    "The photograph for the film could not be opened. Try the film again.",
+  video_source_signing_omitted:
+    "The photograph for the film could not be opened. Try the film again.",
+  video_task_lineage_missing:
+    "The film has no record of its photograph. Try the film again.",
+  video_task_not_found:
+    "The film's record is missing. Try the film again.",
+  video_upload_failed:
+    "The film could not be saved. Try the film again.",
   unknown: "It stopped for a reason with no words yet. Read the code below.",
 };
 

@@ -922,9 +922,11 @@ export const pipelineLimitsSchema = z
     visionRequestTimeoutMs: positiveInt.min(10_000).max(300_000),
     /**
      * How many times one vision read is repeated after a transient failure
-     * (timeout, dropped connection, 429/5xx, no parseable answer) before the
-     * attempt fails. A reader that answered is never repeated. Each repeat is
-     * another bounded vision request, so `executorRequestCapSeconds` counts it.
+     * (timeout, abort, dropped or cut connection, HTTP 408, 429 or 5xx) before
+     * the attempt fails. An empty or unparseable answer is not repeated - a
+     * cut-off or a refusal comes back the same way - and a reader that
+     * answered is never repeated. Each repeat is another bounded vision
+     * request, so `executorRequestCapSeconds` counts it.
      */
     visionReadRetries: z.number().int().min(0).max(2),
     /**

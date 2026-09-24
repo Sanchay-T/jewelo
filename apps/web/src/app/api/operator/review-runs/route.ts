@@ -68,9 +68,10 @@ export async function GET(request: Request) {
       ? await supabaseRequest<Array<{ provider_attempt_budget?: number }>>(
           admin,
           "/rest/v1/runtime_policy?select=provider_attempt_budget&id=eq.true",
-        )
+        ).catch(() => [])
       : [];
     const attemptBudget = Number(policy[0]?.provider_attempt_budget);
+    const budgetKnown = Number.isInteger(attemptBudget);
     const tasks = runIds.length
       ? await supabaseRequest<Array<Record<string, unknown>>>(
           admin,
@@ -103,9 +104,9 @@ export async function GET(request: Request) {
                 ? String(task.terminal_error_code)
                 : undefined,
               cancelRequested: Boolean(task.cancel_requested_at),
-              attemptsUsedUp:
-                Number.isInteger(attemptBudget) &&
-                Number(task.attempt ?? 0) >= attemptBudget,
+              attemptsUsedUp: budgetKnown
+                ? Number(task.attempt ?? 0) >= attemptBudget
+                : undefined,
             })),
         })),
       },

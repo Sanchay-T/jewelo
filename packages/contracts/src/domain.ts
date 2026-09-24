@@ -782,6 +782,38 @@ export const DETERMINISTIC_REFUSAL_CODES = [
   // No runtime policy row: every dispatch is refused the same way until the
   // shop's spending settings are restored, so a retry from the queue cannot work.
   "runtime_policy_missing",
+  // Configuration a person has to change first: the shop's spending limits,
+  // a style's reference photograph, the installed lettering, the tool release.
+  "spend_ceiling_not_set",
+  "look_reference_missing",
+  "look_reference_checksum_mismatch",
+  "unknown_pinned_identity_font",
+  "identity_pipeline_release_mismatch",
+  "prompt_release_not_found",
+  // Properties of the name or the stored rows: the same dispatch decides them
+  // the same way every time.
+  "approved_text_missing",
+  "identity_carrier_moved_ink",
+  "identity_carrier_no_room",
+  "identity_recentre_too_large",
+  "identity_artifact_lineage_missing",
+  "identity_reuse_artifact_mismatch",
+  "identity_reuse_fingerprint_mismatch",
+  "identity_reuse_font_mismatch",
+  "identity_reuse_png_format_mismatch",
+  "identity_reuse_png_mismatch",
+  "identity_reuse_report_mismatch",
+  "identity_reuse_revision_mismatch",
+  "identity_reuse_source_asset_mismatch",
+  "identity_reuse_source_task_mismatch",
+  "identity_reuse_unsupported_input",
+  "inspiration_reference_invalid",
+  "inspiration_reference_missing",
+  "prompt_snapshot_compiler_stale",
+  "prompt_snapshot_rejected",
+  "signed_storage_path_invalid",
+  "dependency_failed",
+  "dependency_cancelled",
 ] as const;
 
 export type DeterministicRefusalCode =
