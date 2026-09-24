@@ -283,3 +283,27 @@ The name reader is untouched by this change and its counts are not comparable on
 Metered from the response `usage` at USD 1.25 per million input and USD 10 per million output tokens.
 Baseline on the controls USD 0.4257, wording 4 split gate USD 0.7905, wording 4 one-piece half USD 0.9362, dependent replay USD 0.4670, dependent retry USD 0.1488.
 Total USD 2.768 against the USD 6 cap.
+
+## SP-2a3 held-out check of wording 4 (24 Sep)
+
+The held-out set is `negative-controls.md` H1-H8: 22 images generated after wording 4 was fixed, labelled before any read, never used to tune a wording.
+Run: `cal3.mts w4-held 1.5 held` against `packages/ai/src/studio.ts` at `1c9915f`, 5 reads per split image, 3 per one-piece image, USD 0.84, 0 errors.
+
+| image | label | votes |
+|---|---|---|
+| held-H1a-1 (framed سلمى, alif tip meets the top bar at a point) | split | TTFFF |
+| held-H1a-2 (same) | split | TTTFT |
+| held-H1b-1, -2 (framed محمد, drawn with a real joint) | one piece | TFT, TTT |
+| held-H2-1, -2 (framed محمد hung from the top bar on a hair-thin wire) | split | TTTTT, TTTTT |
+| held-H3, H3b (inner rail, one letter floating free), 4 images | split | FFFFF each |
+| held-H4-1, H4b (diamond rails, one letter floating), 3 images | split | FFFFF each |
+| held-H4-2 (diamond rails, drawn joined) | one piece | TTT |
+| held-H5 (Sarah, h cut off), H6 (Sarah, loose jump ring), 4 images | split | FFFFF each |
+| held-H7 (framed محمد on a welded plate), H8 (Sarah joined), 4 images | one piece | TTT each |
+
+Split reads accepted: 16 of 75, all on framed pieces (H1a 6 of 10, H2 10 of 10).
+One-piece reads refused: 1 of 21.
+Wording 4 does not meet the bar out of sample: it accepts a point contact on a framed piece, the case it names, and a hair-thin wire.
+The labels are not changed after the run; whether a hair-thin wire is "one piece" is a fair question, but it was answered before the votes were seen.
+Consequence: framed-minimal Arabic routes to the stencil (SP-2e2c), and a new wording needs a fresh held-out set (SP-2a4).
+Wording 4 stays the live rule until the comparison with the SP-2a2 rule on this same set says otherwise.
