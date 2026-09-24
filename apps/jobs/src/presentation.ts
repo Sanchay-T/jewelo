@@ -26,6 +26,7 @@ import { parseJobsEnv, pipelineLimits } from "@jewelo/config";
 // path - is the one the upload route validates against, so this job cannot
 // drift from it.
 import { REFERENCE_ASSET_ID } from "@jewelo/contracts";
+import type { StillRouteChoice } from "@jewelo/identity";
 import { isDuplicateObject } from "@jewelo/media";
 import sharp from "sharp";
 // Fix-3 review M1: `errorClass` used to be private to this file, so the video
@@ -96,7 +97,20 @@ interface PromptSnapshotRow {
   compiled_prompt: string;
   compiler_version: string;
   sha256: string;
+  /**
+   * The one source of the route for this task: recorded when the snapshot was
+   * compiled and read back from it on every dispatch, never recomputed.
+   */
+  still_route: StillRouteChoice;
 }
+
+/**
+ * SP-2e1: the route every studio still is compiled for, in one place.
+ * Pinned to the stencil, so production is unchanged. SP-2e2 replaces this
+ * constant with `stillRoute` behind a validated config switch. Dependent views
+ * never read it: they copy their parent studio snapshot's route.
+ */
+const STUDIO_STILL_ROUTE: StillRouteChoice = "stencil";
 interface StoredOutput {
   media: GeneratedMedia;
   stored: { bucket: string; path: string; checksum: string };
@@ -124,7 +138,13 @@ export interface PresentationRepository {
     compiledPrompt: string;
     compilerVersion: string;
     sha256: string;
+    stillRoute: StillRouteChoice;
   }): Promise<PromptSnapshotRow>;
+  /**
+   * The route recorded in the parent studio task's snapshot, or undefined
+   * while the parent has none. A dependent view compiles on that route.
+   */
+  dependencyStillRoute?(task: TaskRow): Promise<StillRouteChoice | undefined>;
   loadStoredOutput(task: TaskRow): Promise<StoredOutput | undefined>;
   reserveAttempt(
     task: TaskRow,
@@ -515,6 +535,13 @@ export async function executePresentationTask(
     return blockPreSpendTerminally(new Error("task_prompt_release_mismatch"));
   let snapshot = existingSnapshot;
   if (!snapshot) {
+    // The route is decided here, once, and written into the snapshot: the
+    // studio takes `STUDIO_STILL_ROUTE`, a dependent view its parent's. A
+    // parent with no snapshot yet has not been dispatched, so the view waits.
+    const route = task.dependency_task_id
+      ? await repository.dependencyStillRoute?.(task)
+      : STUDIO_STILL_ROUTE;
+    if (!route) return { status: "deferred" as const };
     let compiled: ReturnType<typeof compileStillPrompt>;
     let compiledPrompt: string;
     try {
@@ -523,12 +550,14 @@ export async function executePresentationTask(
         language: revision.identity_anchor.language,
         specification: revision.specification,
         presentationView: task.presentation_view,
+        route,
       });
       compiled = compileStillPrompt({
         profile: release.profile,
         template: release.template,
         variables,
         references: {
+          stencil: route === "stencil",
           master: Boolean(task.dependency_task_id),
           // Same predicate the reference resolution below uses, so the prompt
           // can never name an image the request does not carry.
@@ -568,6 +597,7 @@ export async function executePresentationTask(
         sha256: createHash("sha256")
           .update(compiledPrompt, "utf8")
           .digest("hex"),
+        stillRoute: route,
       });
     } catch (error) {
       // A write against Supabase fails in two different ways and they need
@@ -590,6 +620,7 @@ export async function executePresentationTask(
   if (
     snapshot.task_id !== task.id ||
     snapshot.prompt_release_id !== task.prompt_release_id ||
+    (snapshot.still_route !== "stencil" && snapshot.still_route !== "free") ||
     createHash("sha256")
       .update(snapshot.compiled_prompt, "utf8")
       .digest("hex") !== snapshot.sha256
@@ -822,7 +853,11 @@ export async function executePresentationTask(
           idempotencyKey: reservation.idempotencyKey,
           prompt: snapshot.compiled_prompt,
           referenceImageUrl: reference?.url,
-          identityImageUrl: identity.url,
+          // The stencil is rendered, gated, hashed and stored on both routes
+          // (D-010); only the stencil route sends it.
+          route: snapshot.still_route,
+          identityImageUrl:
+            snapshot.still_route === "stencil" ? identity.url : undefined,
           lookReferenceUrl,
           styleAnchorUrl,
           inspirationImageUrl,
@@ -1091,6 +1126,7 @@ export class SupabasePresentationRepository implements PresentationRepository {
     compiledPrompt: string;
     compilerVersion: string;
     sha256: string;
+    stillRoute: StillRouteChoice;
   }) {
     return this.#request<PromptSnapshotRow>(
       "/rest/v1/rpc/materialize_prompt_snapshot",
@@ -1103,6 +1139,7 @@ export class SupabasePresentationRepository implements PresentationRepository {
           p_compiled_prompt: input.compiledPrompt,
           p_compiler_version: input.compilerVersion,
           p_sha256: input.sha256,
+          p_still_route: input.stillRoute,
         }),
       },
     );
@@ -1382,6 +1419,13 @@ export class SupabasePresentationRepository implements PresentationRepository {
       artifactId,
     };
   }
+  async dependencyStillRoute(task: TaskRow) {
+    if (!task.dependency_task_id) return undefined;
+    const rows = await this.#request<Array<{ still_route: StillRouteChoice }>>(
+      `/rest/v1/generation_prompt_snapshots?task_id=eq.${encodeURIComponent(task.dependency_task_id)}&select=still_route`,
+    );
+    return rows[0]?.still_route;
+  }
   async #reuseDependencyIdentity(revision: RevisionRow, ownerId: string, task: TaskRow) {
     const parents = await this.#request<TaskRow[]>(
       `/rest/v1/generation_tasks?id=eq.${encodeURIComponent(task.dependency_task_id!)}&select=id,run_id,owner_principal_id,presentation_view,status,attempt,cancel_requested_at,pipeline_release,identity_artifact_id`,
@@ -1394,6 +1438,17 @@ export class SupabasePresentationRepository implements PresentationRepository {
       parent.cancel_requested_at || parent.pipeline_release !== task.pipeline_release ||
       !parent.identity_artifact_id
     ) throw new Error("identity_reuse_source_task_mismatch");
+    // A view on another route than its studio would photograph a different
+    // piece: a stencil-bound view redraws the letters from the stencil, a free
+    // one copies the studio photograph. Both routes are read from the stored
+    // snapshots, the only record of them; either one missing is a mismatch.
+    const routes = await this.#request<Array<{ task_id: string; still_route: string }>>(
+      `/rest/v1/generation_prompt_snapshots?task_id=in.(${encodeURIComponent(parent.id)},${encodeURIComponent(task.id)})&select=task_id,still_route`,
+    );
+    const parentRoute = routes.find((row) => row.task_id === parent.id)?.still_route;
+    const childRoute = routes.find((row) => row.task_id === task.id)?.still_route;
+    if (!parentRoute || parentRoute !== childRoute)
+      throw new Error("identity_reuse_route_mismatch");
     const runs = await this.#request<RunRow[]>(
       `/rest/v1/generation_runs?id=eq.${encodeURIComponent(task.run_id)}&select=id,revision_id,owner_principal_id`,
     );

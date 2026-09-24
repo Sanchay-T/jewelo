@@ -416,6 +416,7 @@ export type Database = {
           created_at: string
           prompt_release_id: string
           sha256: string
+          still_route: string
           task_id: string
           variable_snapshot: Json
         }
@@ -425,6 +426,7 @@ export type Database = {
           created_at?: string
           prompt_release_id: string
           sha256: string
+          still_route?: string
           task_id: string
           variable_snapshot: Json
         }
@@ -434,6 +436,7 @@ export type Database = {
           created_at?: string
           prompt_release_id?: string
           sha256?: string
+          still_route?: string
           task_id?: string
           variable_snapshot?: Json
         }
@@ -1915,6 +1918,7 @@ export type Database = {
           p_compiler_version: string
           p_prompt_release_id: string
           p_sha256: string
+          p_still_route?: string
           p_task_id: string
           p_variable_snapshot: Json
         }
@@ -1924,6 +1928,7 @@ export type Database = {
           created_at: string
           prompt_release_id: string
           sha256: string
+          still_route: string
           task_id: string
           variable_snapshot: Json
         }

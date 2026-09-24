@@ -774,28 +774,22 @@ export const DETERMINISTIC_REFUSAL_CODES = [
   "identity_reuse_lettering_mismatch",
   "prompt_compile_failed",
   "studio_only_policy",
-  "dependency_blocked",
   // Every paid try is used; the database refuses another.
   "provider_attempt_budget_exhausted",
   // A stored photograph with no attempt row cannot be settled or resumed.
   "provider_attempt_checkpoint_missing",
-  // No runtime policy row: every dispatch is refused the same way until the
-  // shop's spending settings are restored, so a retry from the queue cannot work.
-  "runtime_policy_missing",
-  // Configuration a person has to change first: the shop's spending limits,
-  // a style's reference photograph, the installed lettering, the tool release.
-  "spend_ceiling_not_set",
-  "look_reference_missing",
-  "look_reference_checksum_mismatch",
-  "unknown_pinned_identity_font",
+  // The tool release this task is pinned to is not the one running.
   "identity_pipeline_release_mismatch",
-  "prompt_release_not_found",
   // Properties of the name or the stored rows: the same dispatch decides them
   // the same way every time.
   "approved_text_missing",
   "identity_carrier_moved_ink",
   "identity_carrier_no_room",
   "identity_recentre_too_large",
+  "identity_label4_size",
+  "identity_raster_channels",
+  "decodemask",
+  "measuremask",
   "identity_artifact_lineage_missing",
   "identity_reuse_artifact_mismatch",
   "identity_reuse_fingerprint_mismatch",
@@ -807,13 +801,25 @@ export const DETERMINISTIC_REFUSAL_CODES = [
   "identity_reuse_source_asset_mismatch",
   "identity_reuse_source_task_mismatch",
   "identity_reuse_unsupported_input",
+  // SP-2e1: a view recorded on another route than its studio photograph.
+  "identity_reuse_route_mismatch",
   "inspiration_reference_invalid",
-  "inspiration_reference_missing",
   "prompt_snapshot_compiler_stale",
   "prompt_snapshot_rejected",
   "signed_storage_path_invalid",
-  "dependency_failed",
+  // The rows this photograph belongs to are gone.
+  "task_not_found",
+  "run_not_found",
+  "revision_not_found",
+  // The studio photograph was cancelled, so this view has nothing to copy.
+  // `dependency_blocked` and `dependency_failed` are not here: once the studio
+  // photograph is retried and ready, retrying the view is what moves it.
   "dependency_cancelled",
+  // Configuration codes (`spend_ceiling_not_set`, `runtime_policy_missing`,
+  // `look_reference_missing`, `look_reference_checksum_mismatch`,
+  // `unknown_pinned_identity_font`, `prompt_release_not_found`) are not here
+  // either: each is checked again on every dispatch, so once a person fixes
+  // the setting a retry works.
 ] as const;
 
 export type DeterministicRefusalCode =

@@ -1090,6 +1090,15 @@ export function compileStillPrompt(input: {
   if (!["image.packshot", "image.worn", "image.macro_gift", "image.dark_editorial"].includes(input.profile))
     throw new Error("unsupported_canonical_still_profile");
   const stencil = input.references.stencil ?? true;
+  // The variables and the references must be for the same route. Free
+  // variables compiled with a stencil reference (or the reverse) would number
+  // and describe images the request does not carry, and nothing downstream
+  // would notice. `stencil_rule` is the marker: `buildPromptVariableSnapshot`
+  // writes it empty on the free route only.
+  if ((input.variables.stencil_rule === "") === stencil)
+    throw new Error(
+      `still_route_variables_mismatch:variables=${stencil ? "free" : "stencil"},references=${stencil ? "stencil" : "free"}`,
+    );
   // Every dependent view needs its approved studio still. On the free route
   // that still is the only authority for the piece (no stencil is sent), so a
   // free dependent view without it has nothing to copy and is refused here.

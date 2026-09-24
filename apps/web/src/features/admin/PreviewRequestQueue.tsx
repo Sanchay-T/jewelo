@@ -78,12 +78,12 @@ const PLAIN_WORDS: Readonly<Record<string, string>> = {
     "A photograph showed the pendant in more than one piece, so it was not used.",
   name_mismatch: "The photograph did not read the name back.",
   dependency_blocked:
-    "This view waits on the studio photograph, which never arrived.",
+    "This view waits on the studio photograph, which is not ready. Get the studio photograph ready first, then photograph this view again.",
   mock_generation_failed:
     "A sample run stopped. Nothing was charged and no piece was made.",
   spend_guard_exceeded: "The day's spending limit was reached.",
   runtime_policy_missing:
-    "The shop's spending settings are missing, so the photograph was stopped.",
+    "The shop's spending settings are missing, so the photograph was stopped. This needs a fix in the shop's settings; once fixed, photograph it again.",
   provider_attempt_budget_exhausted:
     "Every paid try for this photograph was used. Look at the last one, or make this one by hand.",
   stored_provider_output_download_failed:
@@ -146,19 +146,19 @@ const PLAIN_WORDS: Readonly<Record<string, string>> = {
   dependency_cancelled:
     "This view waits on the studio photograph, which was stopped.",
   dependency_failed:
-    "This view waits on the studio photograph, which failed.",
+    "This view waits on the studio photograph, which failed. Get the studio photograph ready first, then photograph this view again.",
   fal_video_download_failed:
-    "The film could not be downloaded. Try the film again.",
+    "The film could not be downloaded. Run it again.",
   fal_video_result_failed:
-    "The film could not be collected. Try the film again.",
+    "The film could not be collected. Run it again.",
   fal_video_result_omitted:
-    "The film came back without a file. Try the film again.",
+    "The film came back without a file. Run it again.",
   fal_video_status_failed:
-    "The film's progress could not be read. Try the film again.",
+    "The film's progress could not be read. Run it again.",
   fal_video_submission_failed:
-    "The film could not be started. Try the film again.",
+    "The film could not be started. Run it again.",
   fal_video_submission_omitted:
-    "The film was started without a way to follow it. Try the film again.",
+    "The film was started without a way to follow it. Run it again.",
   identity_anchor_upload_failed:
     "The name outline could not be saved. Photograph it again.",
   identity_artifact_lineage_missing:
@@ -189,6 +189,8 @@ const PLAIN_WORDS: Readonly<Record<string, string>> = {
     "The studio photograph's name outline does not match its record. Start the request again.",
   identity_reuse_report_mismatch:
     "The studio photograph's name outline does not match its record. Start the request again.",
+  identity_reuse_route_mismatch:
+    "This view was set up to be photographed differently from the studio photograph, so it would show a different piece. Start the request again.",
   identity_reuse_revision_mismatch:
     "The piece was changed after the studio photograph. Start the request again.",
   identity_reuse_source_asset_mismatch:
@@ -202,11 +204,11 @@ const PLAIN_WORDS: Readonly<Record<string, string>> = {
   inspiration_reference_invalid:
     "The shopper's inspiration photo cannot be used. Make this one by hand.",
   inspiration_reference_missing:
-    "The shopper's inspiration photo is missing. Make this one by hand.",
+    "The shopper's inspiration photo could not be opened. Photograph it again; if it stops again, make this one by hand.",
   look_reference_checksum_mismatch:
-    "The reference photograph for this style does not match the one on record. The shop's settings need a fix.",
+    "The reference photograph for this style does not match the one on record. This needs a fix in the shop's settings; once fixed, photograph it again.",
   look_reference_missing:
-    "This style has no reference photograph set up. The shop's settings need a fix.",
+    "This style has no reference photograph set up. This needs a fix in the shop's settings; once fixed, photograph it again.",
   look_reference_unreadable:
     "The reference photograph for this style could not be read. Photograph it again.",
   measuremask:
@@ -220,7 +222,7 @@ const PLAIN_WORDS: Readonly<Record<string, string>> = {
   photomask:
     "A finished photograph could not be measured. Photograph it again.",
   prompt_release_not_found:
-    "The recipe for this photograph is missing. The shop's settings need a fix.",
+    "The recipe for this photograph is missing. This needs a fix in the shop's settings; once fixed, photograph it again.",
   prompt_snapshot_compiler_stale:
     "The recipe for this piece was written by an older version. Start the request again.",
   prompt_snapshot_rejected:
@@ -236,29 +238,29 @@ const PLAIN_WORDS: Readonly<Record<string, string>> = {
   signed_storage_url_missing:
     "A stored file could not be opened just then. Photograph it again.",
   spend_ceiling_not_set:
-    "The shop's spending limits are looser than this setup allows. The shop's settings need a fix.",
+    "The shop's spending settings are outside what this setup allows. This needs a fix in the shop's settings; once fixed, photograph it again.",
   style_anchor_unreadable:
     "The studio photograph this view copies could not be read. Photograph it again.",
   supabase_video_request_failed:
-    "The shop's records could not be reached for the film. Try the film again.",
+    "The shop's records could not be reached for the film. Run it again.",
   task_not_found:
     "This photograph's record is missing. Start the request again.",
   unknown_pinned_identity_font:
-    "The lettering this name needs is not installed. The shop's settings need a fix.",
+    "The lettering this name needs is not installed. This needs a fix in the shop's settings; once fixed, photograph it again.",
   video_poll_lineage_missing:
-    "The film has no record of how it was started. Try the film again.",
+    "The film has no record of how it was started. Run it again.",
   video_provider_request_missing:
-    "The film has no record of how it was started. Try the film again.",
+    "The film has no record of how it was started. Run it again.",
   video_source_signing_failed:
-    "The photograph for the film could not be opened. Try the film again.",
+    "The photograph for the film could not be opened. Run it again.",
   video_source_signing_omitted:
-    "The photograph for the film could not be opened. Try the film again.",
+    "The photograph for the film could not be opened. Run it again.",
   video_task_lineage_missing:
-    "The film has no record of its photograph. Try the film again.",
+    "The film has no record of its photograph. Run it again.",
   video_task_not_found:
-    "The film's record is missing. Try the film again.",
+    "The film's record is missing. Run it again.",
   video_upload_failed:
-    "The film could not be saved. Try the film again.",
+    "The film could not be saved. Run it again.",
   unknown: "It stopped for a reason with no words yet. Read the code below.",
 };
 

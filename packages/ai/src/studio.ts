@@ -1,12 +1,24 @@
 import { pipelineLimits } from "@jewelo/config";
-import { prepareOpenAIStillRequest } from "./prompt-registry";
+import type { StillRouteChoice } from "@jewelo/identity";
+import { prepareOpenAIStillRequest, prepareStillRequest } from "./prompt-registry";
 
 export interface StudioGenerationInput {
   idempotencyKey: string;
   prompt: string;
   /** Verified sibling still whose pendant the new scene must reproduce. */
   referenceImageUrl?: string;
-  identityImageUrl: string;
+  /**
+   * The route recorded in this task's prompt snapshot. It decides which images
+   * are sent and in what order, which is the order the compiled prompt numbers
+   * them in (`buildStillReferences`).
+   */
+  route: StillRouteChoice;
+  /**
+   * The stencil. Required on the stencil route and refused on the free route
+   * (`still_stencil_required`, `still_free_route_carries_stencil`): the free
+   * prompt names no stencil, so sending one would be an input nobody measured.
+   */
+  identityImageUrl?: string;
   /** Texture-only crop for the chosen construction; no letters, no layout. */
   lookReferenceUrl?: string;
   styleAnchorUrl?: string;
@@ -74,6 +86,11 @@ export class MockStudioGenerator implements StudioGenerator {
     // Deterministic zero-cost failure hook for mock end-to-end verification.
     if (input.prompt.includes("MOCKFAIL"))
       throw new Error("mock_generation_failed");
+    // The same request builder the real adapter uses, so a mock run refuses a
+    // route and stencil that do not match and records the reference roles it
+    // was given, in the order a real request would send them. The roles end
+    // up in `provider_request_id`, where a mock run can be read back.
+    const roles = prepareStillRequest(input).references.map(({ role }) => role);
     const transparentPng = Buffer.from(
       "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M/wHwAF/gL+X8tZAAAAAElFTkSuQmCC",
       "base64",
@@ -81,7 +98,7 @@ export class MockStudioGenerator implements StudioGenerator {
     return {
       provider: "mock",
       model: "mock-openai-still-v1",
-      requestId: `mock:${input.idempotencyKey}`,
+      requestId: `mock:${input.idempotencyKey}:roles=${roles.join("+")}`,
       bytes: new Uint8Array(transparentPng),
       mimeType: "image/png",
       estimatedCostCents: 0,

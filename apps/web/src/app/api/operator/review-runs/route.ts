@@ -68,7 +68,15 @@ export async function GET(request: Request) {
       ? await supabaseRequest<Array<{ provider_attempt_budget?: number }>>(
           admin,
           "/rest/v1/runtime_policy?select=provider_attempt_budget&id=eq.true",
-        ).catch(() => [])
+        ).catch((error: unknown) => {
+          // The query names no customer row, so its error carries none; the
+          // key never appears in a request error.
+          console.error(
+            "review-runs: runtime_policy read failed, retry buttons left to the database:",
+            error instanceof Error ? error.message.slice(0, 200) : String(error),
+          );
+          return [];
+        })
       : [];
     const attemptBudget = Number(policy[0]?.provider_attempt_budget);
     const budgetKnown = Number.isInteger(attemptBudget);
