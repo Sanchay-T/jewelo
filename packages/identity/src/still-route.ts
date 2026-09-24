@@ -23,7 +23,8 @@
  * logged, counted and read by an operator, and a name in a code is a name in a
  * log. The only variable part allowed is a value this module has already
  * checked against a closed enum (`layout:<known id>`,
- * `latin_print_construction:<known id>`, `arabic_print_construction:<known id>`);
+ * `latin_print_construction:<known id>`, `arabic_print_construction:<known id>`,
+ * `arabic_one_piece_unproven:<known id>`);
  * anything else collapses to the bare code.
  *
  * Measured on the SP-2d free-route lab, 24 Sep 2026
@@ -31,10 +32,19 @@
  * Classical ليلى came out two pieces in 2 of 2 stills: the dots under ي touched the stroke only at a corner or hung with a gap.
  * Origami-ribbon محمد lost the loop of م in 2 of 2 stills and read لحمد or الحد, and the production name reader passed both.
  * Latin capital-plus-lowercase in classical (Muhammad, Omar, Love, Asma) passed 8 of 8.
- * Undotted, gap-free Arabic in classical, framed-minimal and diamond-rails (محمد, سلمى) passed 8 of 8.
+ * Undotted, gap-free Arabic in classical, framed-minimal and diamond-rails (محمد, سلمى) passed 8 of 8 on spelling.
  * So the route is an allowlist, not a deny-list: a letter routes free only if it is in `ARABIC_FREE_LETTERS` or `LATIN_FREE_LETTER`.
  * Every other letter, every combining mark, every presentation or compatibility form and every construction this module cannot name routes to the stencil.
  * Origami-ribbon Arabic routes to the stencil (`arabic_print_construction:origami-ribbon`).
+ *
+ * Framed-minimal Arabic also routes to the stencil, for a different reason and
+ * under a different code (`arabic_one_piece_unproven:framed-minimal`). Its
+ * spelling is fine - that 8 of 8 above includes it - but the one-piece reader
+ * is the only gate a framed free still has, and it failed its held-out check on
+ * framed joints (`docs/goals/road-to-gold/lab-2026-09-24-free-route/reader-calibration.md`):
+ * a framed سلمى whose alif tip touches the top bar at a point was accepted on 6
+ * of 10 reads, and a framed محمد hanging from the top bar on a hair-thin wire
+ * on 10 of 10. Diamond-rails and classical Arabic held.
  *
  * The labs also measured one piece and one piece only: stoneless, in the face
  * the construction draws by default. A free prompt is given no stencil, so the
@@ -154,6 +164,16 @@ const ARABIC_FREE_LETTERS: ReadonlyMap<number, boolean> = new Map([
  * both. Every id here is in `KNOWN_CONSTRUCTIONS`.
  */
 const ARABIC_PRINT_CONSTRUCTIONS = new Set(["origami-ribbon"]);
+
+/**
+ * Arabic constructions whose spelling a free prompt gets right but whose
+ * one-piece joint the reader cannot be trusted to judge: on a framed piece the
+ * word meets a bar, and the SP-2a held-out set showed point contact and a
+ * hair-thin wire accepted (6 of 10 and 10 of 10). The stencil decides the joint
+ * geometrically, so framed Arabic goes there until a reader wording passes a
+ * fresh held-out bar. Every id here is in `KNOWN_CONSTRUCTIONS`.
+ */
+const ARABIC_ONE_PIECE_UNPROVEN_CONSTRUCTIONS = new Set(["framed-minimal"]);
 
 /**
  * Arabic Presentation Forms-A and -B. NFKC turns them into base letters so the
@@ -299,6 +319,8 @@ export function stillRoute(input: StillRouteInput): StillRouteDecision {
       add("arabic_construction_unknown");
     } else if (ARABIC_PRINT_CONSTRUCTIONS.has(construction)) {
       add(`arabic_print_construction:${construction}`);
+    } else if (ARABIC_ONE_PIECE_UNPROVEN_CONSTRUCTIONS.has(construction)) {
+      add(`arabic_one_piece_unproven:${construction}`);
     }
   }
 

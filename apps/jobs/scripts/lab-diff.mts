@@ -66,6 +66,13 @@ type Case = {
    * that differs is drift and fails the run.
    */
   allowedDelta?: { line: RegExp; why: string };
+  /**
+   * A free-lab cell whose route has since moved to the stencil, and the reason
+   * code that moves it. Its lab bytes stay pinned - the prompts were generated
+   * and judged, and the SP-2f1 dependent sheet is built from them - but the
+   * route assertion below expects `stencil` with this reason, not `free`.
+   */
+  routesStencil?: string;
 };
 
 /** The four names the labs drew, by the token their filenames use. */
@@ -397,15 +404,19 @@ for (const inspiration of [false, true]) {
  * word change in the free construction paragraphs or in `name_spelling` has to
  * fail here rather than quietly reach a customer.
  *
- * Every cell must also really route free - `stillRoute` is the gate production
- * uses - otherwise the file would be a prompt no shopper can ever get.
+ * Every cell's route is also asserted through `stillRoute`, the gate production
+ * uses. Most must route free, otherwise the file would be a prompt no shopper
+ * can ever get; the two framed-minimal Arabic cells carry `routesStencil`
+ * (SP-2e2c) and must route stencil with that reason - their bytes stay pinned
+ * because they were generated, judged, and are what the SP-2f1 dependent sheet
+ * below is built from.
  */
 const LAB_FREE = "docs/goals/road-to-gold/lab-2026-09-24-free-route/prompts";
 const FREE_CASES: readonly Case[] = [
   { file: `${LAB_FREE}/classical-muhammad-ar.txt`, construction: "classical", name: "محمد", language: "ar", metalColor: "yellow" },
-  { file: `${LAB_FREE}/framed-minimal-muhammad-ar.txt`, construction: "framed-minimal", name: "محمد", language: "ar", metalColor: "yellow" },
+  { file: `${LAB_FREE}/framed-minimal-muhammad-ar.txt`, construction: "framed-minimal", name: "محمد", language: "ar", metalColor: "yellow", routesStencil: "arabic_one_piece_unproven:framed-minimal" },
   { file: `${LAB_FREE}/diamond-rails-muhammad-ar.txt`, construction: "diamond-rails", name: "محمد", language: "ar", metalColor: "yellow" },
-  { file: `${LAB_FREE}/framed-minimal-salma-ar.txt`, construction: "framed-minimal", name: "سلمى", language: "ar", metalColor: "yellow" },
+  { file: `${LAB_FREE}/framed-minimal-salma-ar.txt`, construction: "framed-minimal", name: "سلمى", language: "ar", metalColor: "yellow", routesStencil: "arabic_one_piece_unproven:framed-minimal" },
   { file: `${LAB_FREE}/classical-muhammad-en.txt`, construction: "classical", ...NAMES.muhammad!, metalColor: "yellow" },
   { file: `${LAB_FREE}/classical-omar-en.txt`, construction: "classical", name: "Omar", language: "en", metalColor: "yellow" },
   { file: `${LAB_FREE}/classical-love-en.txt`, construction: "classical", ...NAMES.love!, metalColor: "rose" },
@@ -439,7 +450,13 @@ const ROUTE_EXPECTATIONS: readonly {
   { name: "ليلى", construction: "classical", route: "stencil", reason: "arabic_letter_not_proven" },
   { name: "محمد", construction: "origami-ribbon", route: "stencil", reason: "arabic_print_construction:origami-ribbon" },
   { name: "محمد", construction: "classical", route: "free" },
-  { name: "سلمى", construction: "framed-minimal", route: "free" },
+  { name: "محمد", construction: "diamond-rails", route: "free" },
+  { name: "سلمى", construction: "classical", route: "free" },
+  // SP-2e2c: framed-minimal Arabic spells right but the one-piece reader failed
+  // its held-out check on framed joints, and a free still has no stencil behind
+  // it, so the joint has nothing else to catch it.
+  { name: "محمد", construction: "framed-minimal", route: "stencil", reason: "arabic_one_piece_unproven:framed-minimal" },
+  { name: "سلمى", construction: "framed-minimal", route: "stencil", reason: "arabic_one_piece_unproven:framed-minimal" },
   { name: "محمد", route: "stencil", reason: "arabic_construction_unknown" },
   // محمد typed in presentation forms: meem initial, hah medial, meem medial, dal final.
   { label: "محمد (presentation forms)", name: "\ufee3\ufea4\ufee4\ufeaa", construction: "classical", route: "stencil", reason: "arabic_presentation_form" },
@@ -537,10 +554,15 @@ for (const testCase of FREE_CASES) {
     language: testCase.language,
     specification: { layout: "single-name", construction: testCase.construction },
   });
-  if (decision.route !== "free") {
+  const wantRoute = testCase.routesStencil ? "stencil" : "free";
+  if (
+    decision.route !== wantRoute ||
+    (testCase.routesStencil &&
+      !decision.reasons.includes(testCase.routesStencil))
+  ) {
     failed += 1;
     console.log(
-      `DIFFER ${testCase.file} does not route free: ${decision.reasons.join(", ")}`,
+      `DIFFER ${testCase.file} does not route ${wantRoute}${testCase.routesStencil ? ` (${testCase.routesStencil})` : ""}: ${decision.route} [${decision.reasons.join(", ")}]`,
     );
     continue;
   }
@@ -782,9 +804,13 @@ for (const [label, run, want] of [
  * one of them routes to the stencil and compiles there, which is the last pair
  * of rows below.
  */
-const routeRevision = (approvedText: string, language: "en" | "ar") => ({
+const routeRevision = (
+  approvedText: string,
+  language: "en" | "ar",
+  construction = "classical",
+) => ({
   id: "revision",
-  specification: { layout: "single-name", construction: "classical" },
+  specification: { layout: "single-name", construction },
   identity_anchor: {
     approvedText,
     language,
@@ -800,13 +826,26 @@ const routeRelease = (template: string) => ({
   profile: "image.packshot" as const,
   template,
 });
-for (const [name, language, freeRouteEnabled, template, want] of [
-  ["Omar", "en", false, BASELINE_PROMPT_TEMPLATES["image.packshot"], "stencil"],
-  ["فاطمة", "ar", false, BASELINE_PROMPT_TEMPLATES["image.packshot"], "stencil"],
-  ["Omar", "en", true, BASELINE_PROMPT_TEMPLATES["image.packshot"], "free"],
-  ["فاطمة", "ar", true, BASELINE_PROMPT_TEMPLATES["image.packshot"], "stencil"],
-  ["Omar", "en", true, LIVE_SHAPE_PACKSHOT, "stencil"],
-  ["محمد", "ar", true, LIVE_SHAPE_PACKSHOT, "stencil"],
+const BASELINE_PACKSHOT = BASELINE_PROMPT_TEMPLATES["image.packshot"];
+for (const [name, language, construction, freeRouteEnabled, template, want] of [
+  ["Omar", "en", "classical", false, BASELINE_PACKSHOT, "stencil"],
+  ["فاطمة", "ar", "classical", false, BASELINE_PACKSHOT, "stencil"],
+  ["Omar", "en", "classical", true, BASELINE_PACKSHOT, "free"],
+  ["فاطمة", "ar", "classical", true, BASELINE_PACKSHOT, "stencil"],
+  ["Omar", "en", "classical", true, LIVE_SHAPE_PACKSHOT, "stencil"],
+  ["محمد", "ar", "classical", true, LIVE_SHAPE_PACKSHOT, "stencil"],
+  // SP-2e2c: with the switch on, framed-minimal Arabic goes to the stencil
+  // (`arabic_one_piece_unproven:framed-minimal`, pinned by reason above) while
+  // diamond-rails and classical Arabic stay free. With it off, all three are
+  // stencil, exactly as before the switch existed.
+  ["محمد", "ar", "framed-minimal", true, BASELINE_PACKSHOT, "stencil"],
+  ["سلمى", "ar", "framed-minimal", true, BASELINE_PACKSHOT, "stencil"],
+  ["محمد", "ar", "diamond-rails", true, BASELINE_PACKSHOT, "free"],
+  ["محمد", "ar", "classical", true, BASELINE_PACKSHOT, "free"],
+  ["محمد", "ar", "framed-minimal", false, BASELINE_PACKSHOT, "stencil"],
+  ["سلمى", "ar", "framed-minimal", false, BASELINE_PACKSHOT, "stencil"],
+  ["محمد", "ar", "diamond-rails", false, BASELINE_PACKSHOT, "stencil"],
+  ["محمد", "ar", "classical", false, BASELINE_PACKSHOT, "stencil"],
 ] as const) {
   const repository = new SupabasePresentationRepository(
     "https://lab.invalid",
@@ -820,10 +859,10 @@ for (const [name, language, freeRouteEnabled, template, want] of [
   );
   const live = template === LIVE_SHAPE_PACKSHOT;
   const got = repository.studioStillRoute(
-    routeRevision(name, language),
+    routeRevision(name, language, construction),
     routeRelease(template),
   );
-  const label = `studio ${name} classical on the ${live ? "live-shape @v3" : "baseline"} packshot with STILL_FREE_ROUTE=${freeRouteEnabled ? 1 : 0} routes ${want}`;
+  const label = `studio ${name} ${construction} on the ${live ? "live-shape @v3" : "baseline"} packshot with STILL_FREE_ROUTE=${freeRouteEnabled ? 1 : 0} routes ${want}`;
   if (got === want) console.log(`MATCH  ${label}`);
   else {
     failed += 1;

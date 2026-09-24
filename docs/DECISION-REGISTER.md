@@ -41,6 +41,8 @@ So `stillRoute` is an allowlist of what was photographed, and nothing else.
 In Arabic that is six letters, م ح د س ل ى, which is what محمد and سلمى are made of; ى may only be last, and د may only be last.
 In Latin it is the plain classical A-Z, no accented or extended letter, no dotted i or j, and no capital except the first.
 The construction has to be one the lab proved for that script.
+Framed-minimal Arabic is excluded even though it spells correctly (SP-2e2c, `arabic_one_piece_unproven:framed-minimal`): a framed piece joins its word to a bar, a free still has no stencil behind it, so the one-piece reader is the only thing that can catch that joint - and it failed its held-out check there, accepting a سلمى whose alif touched the top bar at a point on 6 of 10 reads and a محمد hung on a hair-thin wire on 10 of 10 (`docs/goals/road-to-gold/lab-2026-09-24-free-route/reader-calibration.md`).
+Framed-minimal Arabic returns to the free route only when a reader wording passes a fresh held-out set (SP-2a4); diamond-rails and classical Arabic held and stay free.
 The piece has to be stoneless and in the face the construction draws by default - the shopper picked no named face, so the specification carries `lettering: "classic"` and, in Arabic, `arabicStyle: "contemporary"` - because a free prompt has no stencil behind it and its compiled words are identical whichever face or stone was chosen.
 The pinned prompt release has to be one whose template text does not mention the stencil, because such a template cannot compile free at all.
 Anything the module cannot positively name - a second name, a layout that is not `single-name`, a combining mark, a presentation form, a mixed script, an unknown construction - is a stencil.
