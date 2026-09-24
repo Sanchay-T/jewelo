@@ -59,6 +59,10 @@ apply the migration after: new code against a database that is still behind
 stops each photograph once with a retryable code, while a migration applied
 under the old code can loop the photographs already in flight until the deploy
 lands.
+Every run caught in that window ends with a blocked studio task
+(`prompt_snapshot_schema_behind`) and its three dependent views blocked
+`dependency_blocked`, so recovery is four "Photograph it again" presses in the
+operator queue per run, the studio one first.
 
 `deploy.sh` refuses with exit 2 when the app's newest deployment is still
 `PENDING_BUILD`, `BUILDING`, `PENDING_DEPLOY` or `DEPLOYING`, and prints that

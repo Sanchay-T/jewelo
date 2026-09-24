@@ -134,6 +134,7 @@ const PLAIN_WORDS: Readonly<Record<string, string>> = {
     "The shop is set to the studio photograph only, so this view was not taken.",
   // SP-2e1: the recipe and the photograph's inputs disagree about how this
   // pendant is to be made, which no re-run changes.
+  // Unreachable while STUDIO_STILL_ROUTE is stencil; kept for SP-2e2.
   still_free_route_carries_stencil:
     "The recipe and the photograph's inputs do not agree.",
   still_stencil_required:
@@ -444,7 +445,16 @@ export function PreviewRequestQueue() {
                 {task.status} · attempt {task.attempt} ·{" "}
                 {task.errorCode ?? "no code"}
               </span>
-              <span>{plainWords(task.errorCode)}</span>
+              {/* SP-2e1h m1: a retryable code whose paid attempts are all
+                  used up shows the "Make this one by hand" badge, so its
+                  words must not end "Photograph it again." - there is no
+                  button to press. The stop code itself is printed in the line
+                  above, so the cause is still on the card. */}
+              <span>
+                {!isDeterministicRefusal(task.errorCode) && task.attemptsUsedUp
+                  ? "Every paid try for this photograph was used."
+                  : plainWords(task.errorCode)}
+              </span>
               {/* Storyline review 1 M7: a deterministic refusal is a property
                   of the name, the specification or the recipe, decided before
                   any money is spent, so the same dispatch decides it the same

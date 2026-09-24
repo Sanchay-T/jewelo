@@ -626,12 +626,14 @@ else {
 }
 
 /**
- * SP-2e1d m5: the stencil route's DEPENDENT view order, exactly as
- * `executePresentationTask` sends it today - the approved studio still as
- * `master`, then the letter drawing, then the look texture, then the style
- * photograph (`apps/jobs/src/presentation.ts`, the `generator.generate` call).
- * The studio pin above covers only the two-file studio call, so a renumbering
- * of the three views it does not touch had nothing to fail against.
+ * SP-2e1d m5: the stencil route's DEPENDENT view order - the approved studio
+ * still as `master`, then the letter drawing, then the look texture, then the
+ * style photograph. The studio pin above covers only the two-file studio call,
+ * so a renumbering of the three views it does not touch had nothing to fail
+ * against. SP-2e1h: as with the inspiration pin below, what this guards is
+ * `buildStillReferences` alone; the arguments `executePresentationTask` hands
+ * it at its `generator.generate` call (`apps/jobs/src/presentation.ts`) are
+ * passed by property name and are NOT guarded here.
  */
 {
   const roles = buildStillReferences({

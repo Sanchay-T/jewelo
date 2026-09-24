@@ -806,6 +806,7 @@ export const DETERMINISTIC_REFUSAL_CODES = [
   // SP-2e1: the compiled recipe and the images the request carries disagree
   // about the route. A property of the snapshot and the release, so the same
   // dispatch decides it the same way every time.
+  // Unreachable while STUDIO_STILL_ROUTE is stencil; kept for SP-2e2.
   "still_free_route_carries_stencil",
   "still_stencil_required",
   // An immutable snapshot or a pinned release that does not line up with its task never will.
