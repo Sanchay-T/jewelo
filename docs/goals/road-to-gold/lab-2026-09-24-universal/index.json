@@ -1,0 +1,190 @@
+{
+  "lab": "lab-2026-09-24-universal",
+  "task": "UNIV-1",
+  "date": "2026-09-24",
+  "compilerVersion": "caleums-still-compiler-v4",
+  "model": "gpt-image-2.5-sunburst",
+  "aspectRatio": "1:1",
+  "route": "free",
+  "images": [
+    "1 = look reference (the construction's crop); no stencil, no master, no style anchor"
+  ],
+  "cells": [
+    {
+      "cell": "classical-fatima-ar",
+      "file": "prompts/classical-fatima-ar.txt",
+      "name": "فاطمة",
+      "construction": "classical",
+      "look": true,
+      "sha256": "71e78b57795b92ad2a511b400127bac7d04522f6a22f1372fae88fad517eaa93"
+    },
+    {
+      "cell": "classical-maryam-ar",
+      "file": "prompts/classical-maryam-ar.txt",
+      "name": "مريم",
+      "construction": "classical",
+      "look": true,
+      "sha256": "c08fd8997df8e8cedcd408097c692206f6b368f1cd003077ceb990b669916148"
+    },
+    {
+      "cell": "classical-aisha-ar",
+      "file": "prompts/classical-aisha-ar.txt",
+      "name": "عائشة",
+      "construction": "classical",
+      "look": true,
+      "sha256": "f2eb71d15b013c6ba2ea7b350f4b0ffb23900475de8b8703a7d460616397644d"
+    },
+    {
+      "cell": "classical-noor-ar",
+      "file": "prompts/classical-noor-ar.txt",
+      "name": "نور",
+      "construction": "classical",
+      "look": true,
+      "sha256": "b2990c59820e895b3779c23ff471ac79d73be3a2783e1185396d18e662668d9a"
+    },
+    {
+      "cell": "classical-zainab-ar",
+      "file": "prompts/classical-zainab-ar.txt",
+      "name": "زينب",
+      "construction": "classical",
+      "look": true,
+      "sha256": "a64803a9b22b0485e2b2320671f725d60e6f5e5f2e28ba14457599635c226d5c"
+    },
+    {
+      "cell": "classical-khalid-ar",
+      "file": "prompts/classical-khalid-ar.txt",
+      "name": "خالد",
+      "construction": "classical",
+      "look": true,
+      "sha256": "2d9ba15edd9bca9e606200066418be9ea48aae0e020f6e823b54d1e0a78e7278"
+    },
+    {
+      "cell": "classical-yousef-ar",
+      "file": "prompts/classical-yousef-ar.txt",
+      "name": "يوسف",
+      "construction": "classical",
+      "look": true,
+      "sha256": "c6b278ce600f244ec9a2d430e419792a694696896a6db41fcb013133426451b5"
+    },
+    {
+      "cell": "classical-layla-ar",
+      "file": "prompts/classical-layla-ar.txt",
+      "name": "ليلى",
+      "construction": "classical",
+      "look": true,
+      "sha256": "e6fe5b2f541586e71e2f8b5e32311b8cb4a16adc57bad6bfd2d52d26c8c27f77"
+    },
+    {
+      "cell": "classical-hessa-ar",
+      "file": "prompts/classical-hessa-ar.txt",
+      "name": "حصة",
+      "construction": "classical",
+      "look": true,
+      "sha256": "ddd0398af083da50fb039bea3e1250044396e60ef50d9378a463811ea73a6ec5"
+    },
+    {
+      "cell": "classical-shamma-ar",
+      "file": "prompts/classical-shamma-ar.txt",
+      "name": "شمة",
+      "construction": "classical",
+      "look": true,
+      "sha256": "104977b5dead42e2821eaf10ea160fef80ad55cda014fe3e9f39dc70b4bc8b18"
+    },
+    {
+      "cell": "classical-rashid-ar",
+      "file": "prompts/classical-rashid-ar.txt",
+      "name": "راشد",
+      "construction": "classical",
+      "look": true,
+      "sha256": "aea13d73928ef96cb180bce06790b526c9f9acf5c09bb491cd621c3cb289ac12"
+    },
+    {
+      "cell": "classical-abdullah-ar",
+      "file": "prompts/classical-abdullah-ar.txt",
+      "name": "عبدالله",
+      "construction": "classical",
+      "look": true,
+      "sha256": "1d88f84095991c8c71e2f9bad64e4f820d852f039a19796c55975b13dfe6863b"
+    },
+    {
+      "cell": "classical-hamdan-ar",
+      "file": "prompts/classical-hamdan-ar.txt",
+      "name": "حمدان",
+      "construction": "classical",
+      "look": true,
+      "sha256": "719d13d5f0ffbbefaac93eea2aa5ca43211fa534eeb6f88a7bc2b01042eb3255"
+    },
+    {
+      "cell": "classical-maitha-ar",
+      "file": "prompts/classical-maitha-ar.txt",
+      "name": "ميثاء",
+      "construction": "classical",
+      "look": true,
+      "sha256": "33d9cb126243f6dfde0514231df63b3d412e0bc9bcdaf67aca3caaca5b8fd48f"
+    },
+    {
+      "cell": "classical-hind-ar",
+      "file": "prompts/classical-hind-ar.txt",
+      "name": "هند",
+      "construction": "classical",
+      "look": true,
+      "sha256": "91dbcca94273b7ad638031ec89785671371a96f64d6dfe14db045adfd157b02e"
+    },
+    {
+      "cell": "classical-shaikha-ar",
+      "file": "prompts/classical-shaikha-ar.txt",
+      "name": "شيخة",
+      "construction": "classical",
+      "look": true,
+      "sha256": "553d021a3d58ac230605265eee94a8b991fbd9869deef56683ef2ee651510527"
+    },
+    {
+      "cell": "diamond-rails-fatima-ar",
+      "file": "prompts/diamond-rails-fatima-ar.txt",
+      "name": "فاطمة",
+      "construction": "diamond-rails",
+      "look": true,
+      "sha256": "5ddac9c3e9cd4e4d19da62986b8aae38d4f80966059147c23a531599f76a35fe"
+    },
+    {
+      "cell": "diamond-rails-noor-ar",
+      "file": "prompts/diamond-rails-noor-ar.txt",
+      "name": "نور",
+      "construction": "diamond-rails",
+      "look": true,
+      "sha256": "343966bb916f8fc71a9908110b8bd5b921c598852399eac07cf2be3d870520e1"
+    },
+    {
+      "cell": "diamond-rails-zainab-ar",
+      "file": "prompts/diamond-rails-zainab-ar.txt",
+      "name": "زينب",
+      "construction": "diamond-rails",
+      "look": true,
+      "sha256": "670d1d01c6292b3c243d1b51eafb4fcc41c307af97a95619410a39e23107b5fe"
+    },
+    {
+      "cell": "diamond-rails-khalid-ar",
+      "file": "prompts/diamond-rails-khalid-ar.txt",
+      "name": "خالد",
+      "construction": "diamond-rails",
+      "look": true,
+      "sha256": "64f43f343831082d741a556a8760a447571443e07e6b0ce06a8646ae00a024cc"
+    },
+    {
+      "cell": "diamond-rails-yousef-ar",
+      "file": "prompts/diamond-rails-yousef-ar.txt",
+      "name": "يوسف",
+      "construction": "diamond-rails",
+      "look": true,
+      "sha256": "aa5fd2274095c70ae2eee3315e282a29bc81bbaffb9cd3eeb0f703949d7c60e0"
+    },
+    {
+      "cell": "diamond-rails-shamma-ar",
+      "file": "prompts/diamond-rails-shamma-ar.txt",
+      "name": "شمة",
+      "construction": "diamond-rails",
+      "look": true,
+      "sha256": "2bb63b6c23e8f581ed60d7e98cd6398591da8a577669ad45e26f7ae89cba13d8"
+    }
+  ]
+}
