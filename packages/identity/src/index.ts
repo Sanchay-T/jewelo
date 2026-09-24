@@ -4,6 +4,7 @@ export * from "./caleums-arabic-v3";
 export * from "./errors";
 export * from "./geometry";
 export * from "./shaping";
+export * from "./still-route";
 
 export type IdentityFingerprint = Brand<string, "IdentityFingerprint">;
 
