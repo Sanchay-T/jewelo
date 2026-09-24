@@ -27,7 +27,7 @@ import { functions } from "../../../inngest/functions";
 // derived from, which is what makes "the sweeper cannot fire while a dispatch
 // is still legally running" true, and a hosting hint for any platform that does
 // read it.
-export const maxDuration = 482;
+export const maxDuration = 240;
 export const dynamic = "force-dynamic";
 
 /** Thrown at import when the literal above no longer matches the configuration. */

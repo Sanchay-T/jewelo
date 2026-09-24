@@ -1,0 +1,128 @@
+{
+ "classical-haifa-ar-A3": {
+  "a": "94f2cdd8-b734-455f-a9cd-fc929c2b16ab",
+  "b": "06d4b955-c435-4d5a-a909-2b2cfccb514f",
+  "before": 198745,
+  "after": 198711,
+  "sha256": "318491fcce52fc121a9572592b4a16daa08e37c9e22bcc2431e32a48f51f873b"
+ },
+ "classical-thamer-ar-A3": {
+  "a": "6e30f7bc-4547-4f43-8841-31d829bca2d2",
+  "b": "b66a348a-1c7f-4eff-a7fd-ed1ad402e26d",
+  "before": 198711,
+  "after": 198677,
+  "sha256": "4d3b73c89257d54d896524fbebfc609493f08610719be39cc4c30e22ed0b7f09"
+ },
+ "classical-diyaa-ar-A3": {
+  "a": "70d7af23-f5f0-4620-bc64-777e53865007",
+  "b": "8376ea27-947c-455e-ba2d-77f382a3493c",
+  "before": 198677,
+  "after": 198643,
+  "sha256": "97048f581a1fd652a6085a245caa01a87a5ee63e06a10349ba8310ccd1a782cf"
+ },
+ "classical-bushra-ar-A3": {
+  "a": "0cd5d14d-5a68-4071-b235-32cd1b522d2c",
+  "b": "b74e3290-7627-43a8-8019-df39992463c3",
+  "before": 198643,
+  "after": 198609,
+  "sha256": "e92c3ba724b2d982abad1869e8cc05a198d6d770cad35889036797bfdb8ba12c"
+ },
+ "classical-jawaher-ar-A3": {
+  "a": "4f2fb848-0b56-4952-a45a-57872ff71532",
+  "b": "811176a4-2686-472d-b846-4d8e1e2f489a",
+  "before": 198609,
+  "after": 198575,
+  "sha256": "d6d1289197f6d1c2d26388ad1fb458f94128235bc7ffc214dce97d17811bb3b9"
+ },
+ "classical-maryam-ar-A3": {
+  "a": "2c1b6d1f-d156-41fe-88da-50f63a65747c",
+  "b": "4a759f21-95d8-44c5-9cd0-0b2735ea856f",
+  "before": 198575,
+  "after": 198541,
+  "sha256": "2afba5dd5a408db522aeca17ec7b0a49228a2841ca8340450a712d98729de8e0"
+ },
+ "classical-saleh-ar-A3": {
+  "a": "aac9fe8c-79bd-4fab-a3c4-cabd9d467683",
+  "b": "53a5de6d-ca77-4ec5-baa0-4478e01d4ecc",
+  "before": 198541,
+  "after": 198507,
+  "sha256": "9002109b378c71c1556ab29717c6eac36140693d0f2b5b29cc69e5ac75925e26"
+ },
+ "classical-lulua-ar-A3": {
+  "a": "51bfab98-2a6c-4475-9f6c-fd7b8ffd7cf1",
+  "b": "a0246c95-c6f1-401d-9b7f-2714070f0297",
+  "before": 198507,
+  "after": 198473,
+  "sha256": "49370828e4fcc91c0ac1fca3d4ff7d1cc871213d5ffe7c0e3029988cc2640ec3"
+ },
+ "classical-abeer-ar-A3": {
+  "a": "6e05b667-36d9-4376-974b-a69faaf8c40f",
+  "b": "1ad3a4fb-9a74-4ff8-8ae5-6dec0e4145b3",
+  "before": 198473,
+  "after": 198439,
+  "sha256": "52c1c50a921d399268ae16c6a57c5c819bf68afeca2f6029906eb6ab829b7294"
+ },
+ "classical-najlaa-ar-A3": {
+  "a": "776a2e80-01cf-4f49-967f-8b25ffc832b5",
+  "b": "f1359764-2c59-499c-95df-0cf5033a85b6",
+  "before": 198439,
+  "after": 198405,
+  "sha256": "2c85c317bc671e3d7164b89f8828baa8cbdfaece559d9a9871a2656b713d39ff"
+ },
+ "classical-tariq-ar-A3": {
+  "a": "16d5849c-ac23-44f7-afc1-e984a092c739",
+  "b": "1e0caf93-d0e8-44ec-9ba1-8b7a9b523cb6",
+  "before": 198405,
+  "after": 198371,
+  "sha256": "fe28998f48a58a249a9bff949cad7e281214789cd47cd29ab6475afda7f6f080"
+ },
+ "classical-raed-ar-A3": {
+  "a": "e17fdecd-ad94-41c2-9bf9-951a3908fbeb",
+  "b": "042413d9-b207-4b78-b338-e3b693b2e61e",
+  "before": 198371,
+  "after": 198337,
+  "sha256": "16fd89632306fc56a0fd1b455818650974acd0824e8fcff17396b362eafa729a"
+ },
+ "diamond-rails-haifa-ar-A3": {
+  "a": "79a2f777-3160-4854-b36d-ad930e4da670",
+  "b": "beb4ec6f-e367-4828-b67e-cd92394c6cd2",
+  "before": 198337,
+  "after": 198303,
+  "sha256": "51c7e22f2ca6fdfbc2a8e6317ac8337ed9055fb600136880c1359c202662f546"
+ },
+ "diamond-rails-thamer-ar-A3": {
+  "a": "b8439552-0b10-4f90-a4ed-f22b5b45475f",
+  "b": "9408d5b9-f6fc-435d-b52a-a60127106139",
+  "before": 198303,
+  "after": 198269,
+  "sha256": "bdfb0928c08c8ad2bdcb7a4537903e9a580fec07fff59f3b7645eea6bb527640"
+ },
+ "diamond-rails-diyaa-ar-A3": {
+  "a": "f913e70a-ce4d-448e-8075-60f7bb04f38a",
+  "b": "5dc0724f-28bc-448c-8639-aafed2a57d6e",
+  "before": 198269,
+  "after": 198235,
+  "sha256": "571306ffb4de33e293b852bfb1de357188af4460144da0102befb0cdabea7691"
+ },
+ "diamond-rails-bushra-ar-A3": {
+  "a": "6056e6fd-0e5a-4ce8-97c3-cbee9567ab5d",
+  "b": "fc2ea3ca-53f5-4802-a15f-0138c456eb4b",
+  "before": 198235,
+  "after": 198201,
+  "sha256": "cf3b590afc59420ecc04abf5c548a26b32c6026ef8865897eaf4d351f0d6c7ff"
+ },
+ "diamond-rails-jawaher-ar-A3": {
+  "a": "a872e6c6-0e0f-4a5c-8163-be763c49056d",
+  "b": "813daab2-ef63-41a8-a910-22b82768515e",
+  "before": 198201,
+  "after": 198167,
+  "sha256": "33f1847ca909de9657f6793ea3a7401f48c80d46150105a7b7e2c0e0871b7456"
+ },
+ "diamond-rails-maryam-ar-A3": {
+  "a": "89db184b-d5c9-4742-9020-7b2fdda5e367",
+  "b": "af70cd11-aa67-4a22-95a0-6127b8fb87a2",
+  "before": 198167,
+  "after": 198133,
+  "sha256": "92ce411107e984a753f2bf7205b994bef63f5e65fb15bdfce5866a9bffd9e5b3"
+ }
+}

@@ -2,9 +2,9 @@
 
 You are the senior engineer who owns this product end to end. Read `docs/MINDSET.md` first: it is who you are here and what you do when stuck.
 
-A shopper in Omran's jewelry shop types their name in English or Arabic, picks a look, and sees four photographs of that exact pendant: studio, on skin, close up, dark. Their name, correctly spelled, one connected piece of gold. Then the request reaches the shop. Everything in this repository serves that sentence.
+A shopper in Omran's jewelry shop types their name in English or Arabic, picks a look, and sees a studio photograph of that exact pendant. Their name, correctly spelled, one connected piece of gold. Then the request reaches the shop. Everything in this repository serves that sentence. (The other three views - on skin, close up, dark - are not generated; SIMPLE-1 photographs the studio view only.)
 
-The model renders the name; it never decides the name. A deterministic stencil is rendered for every name and is the truth for any name whose letters can drift; for names proven safe the approved studio piece is the reference, and readers refuse anything that drifted. If any link in that chain is fake, a wrong pendant reaches a customer and nothing catches it.
+SIMPLE-1 (25 Sep 2026): the path is one prompt and one image. The approved name and the chosen construction build a single prompt string (`packages/ai/src/prompt.ts`, the only prompt source), it goes to the image model with no input images, the photograph is stored and shown. There is no stencil, no identity engine, no verifier and no reader; what guards the shopper is the name they approved and the shop looking at the result.
 
 ## Read on demand, not all at once
 

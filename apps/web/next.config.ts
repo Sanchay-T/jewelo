@@ -102,10 +102,9 @@ const nextConfig: NextConfig = {
   // push and pull per deploy against a 48 second `next build`.
   output: "standalone",
   // Standalone in a pnpm workspace: name the root explicitly rather than let
-  // Next infer it. An inferred root one directory too deep silently drops
-  // `packages/identity/engines/**` and the hoisted `.pnpm` store from the
-  // trace, which is exactly the harfbuzz wasm and the pinned `.ttf` files the
-  // Inngest route needs, and the failure only appears at runtime.
+  // Next infer it. An inferred root one directory too deep silently drops the
+  // hoisted `.pnpm` store from the trace, and the failure only appears at
+  // runtime.
   outputFileTracingRoot: workspaceRoot,
   // The Mac mini also has an older port-3001 checkout running from this app
   // directory. Keep the port-3011 LaunchAgent's Turbopack lock and cache
@@ -161,19 +160,12 @@ const nextConfig: NextConfig = {
   },
   reactStrictMode: true,
   transpilePackages: ["@jewelo/config", "@jewelo/observability"],
-  // `@jewelo/jobs` renders the deterministic identity anchor with sharp, a
-  // native module the Inngest route loads at runtime; it must not be bundled.
-  // `harfbuzzjs` ships a `.wasm` its ESM entry reads next to its own module
-  // URL; bundling it would rewrite that URL, so it stays external and is
-  // required from `node_modules` at runtime. `@jewelo/identity` cannot join it:
-  // its export map points at raw `.ts`, so Next has to compile it, which is
-  // also what emits the pinned `.ttf` files into `.next/server/assets`.
-  serverExternalPackages: ["sharp", "harfbuzzjs"],
-  // Belt and braces for a traced deploy: the pinned font bytes and the HarfBuzz
-  // wasm are data files no import graph points at once they are external, so
-  // name them. Globs are relative to this app directory.
+  // `@jewelo/jobs` uses sharp, a native module the Inngest route loads at
+  // runtime; it must not be bundled.
+  serverExternalPackages: ["sharp"],
+  // Belt and braces for a traced deploy.
   //
-  // libvips is the same class of file and was measured, not guessed. sharp's
+  // libvips was measured, not guessed. sharp's
   // platform package (`@img/sharp-<platform>`) is traced because something
   // requires it, but the shared library it dlopens through an rpath -
   // `@img/sharp-libvips-<platform>/lib/libvips-cpp.*` - is reachable from no
@@ -182,13 +174,6 @@ const nextConfig: NextConfig = {
   // `next start` never showed it: it runs against the full node_modules tree.
   outputFileTracingIncludes: {
     "/api/inngest": [
-      "../../packages/identity/engines/**/*.ttf",
-      "../../node_modules/.pnpm/harfbuzzjs@*/node_modules/harfbuzzjs/dist/*.wasm",
-      "../../node_modules/.pnpm/@img+sharp-libvips-*/node_modules/@img/*/lib/**",
-    ],
-    "/api/operator/diagnostics/identity": [
-      "../../packages/identity/engines/**/*.ttf",
-      "../../node_modules/.pnpm/harfbuzzjs@*/node_modules/harfbuzzjs/dist/*.wasm",
       "../../node_modules/.pnpm/@img+sharp-libvips-*/node_modules/@img/*/lib/**",
     ],
   },

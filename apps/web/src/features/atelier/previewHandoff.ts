@@ -140,9 +140,8 @@ const LETTERING = {
   "Thuluth inspired": "thuluth-inspired",
 } as const;
 /**
- * `contemporary` is the frozen Caleums alias for the certified `classic` Arabic
- * engine (docs/CALEUMS-FINAL-E2E-CONTRACT.md; identity-anchor.ts and
- * prompt-registry.ts both resolve contemporary -> classic). The approve RPC also
+ * `contemporary` is the frozen Caleums alias for the `classic` Arabic style.
+ * The approve RPC also
  * reads a non-`none` arabicStyle as "this run is Arabic", so an Arabic name must
  * always carry one. Styles the identity engine has not certified stay mapped to
  * themselves and fail closed at the pre-spend gate; they are never silently

@@ -1,11 +1,5 @@
 import { createHash } from "node:crypto";
-import {
-  FalSeedanceVideoAdapter,
-  buildPromptVariableSnapshot,
-  compilePrompt,
-  type MotionSubmission,
-  type PromptProfile,
-} from "@jewelo/ai";
+import { FalSeedanceVideoAdapter, type MotionSubmission } from "@jewelo/ai";
 import { parseJobsEnv, pipelineLimits } from "@jewelo/config";
 import { isDuplicateObject } from "@jewelo/media";
 import { errorClass } from "./error-class";
@@ -34,7 +28,7 @@ export async function submitVideoTask(
     return { status: "deduplicated" as const };
   if (context.task.status === "cancelled" || context.task.cancel_requested_at)
     return { status: "cancelled" as const };
-  const prompt = await materializePrompt(api, context);
+  const prompt = MOTION_PROMPT;
   const reservation = await api.rpc<
     Array<{ attempt_number: number; duplicate_complete: boolean }>
   >("reserve_provider_attempt", {
@@ -430,36 +424,14 @@ async function loadVideoContext(
   };
 }
 
-async function materializePrompt(
-  api: ReturnType<typeof supabase>,
-  context: Awaited<ReturnType<typeof loadVideoContext>>,
-) {
-  const snapshots = await api.get<Row[]>(
-    `generation_prompt_snapshots?task_id=eq.${context.task.id}`,
-  );
-  if (snapshots[0]) return String(snapshots[0].compiled_prompt);
-  const anchor = context.revision.identity_anchor as Record<string, unknown>;
-  const variables = buildPromptVariableSnapshot({
-    approvedName: anchor.approvedText,
-    language: anchor.language,
-    specification: context.revision.specification as Record<string, unknown>,
-    presentationView: context.task.presentation_view,
-  });
-  const compiled = compilePrompt({
-    profile: context.release.profile as PromptProfile,
-    template: String(context.release.template),
-    variables,
-  });
-  const snapshot = await api.rpc<Row>("materialize_prompt_snapshot", {
-    p_task_id: context.task.id,
-    p_prompt_release_id: context.task.prompt_release_id,
-    p_variable_snapshot: compiled.variableSnapshot,
-    p_compiled_prompt: compiled.compiledPrompt,
-    p_compiler_version: compiled.compilerVersion,
-    p_sha256: compiled.sha256,
-  });
-  return String(snapshot.compiled_prompt);
-}
+/**
+ * SIMPLE-1. Motion is off (`VIDEO_ENABLED`) and out of the simplified image
+ * path, so the prompt registry it used to compile against is gone. The clip is
+ * a slow turn of the still it is given; it names no customer text, because the
+ * pendant is carried by `verifiedStillUrl` and not by words.
+ */
+const MOTION_PROMPT =
+  "Slow gentle turn of this gold pendant, studio light, no other movement.";
 
 async function completeVideo(
   api: ReturnType<typeof supabase>,

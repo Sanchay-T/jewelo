@@ -3,27 +3,27 @@ import type { Draft } from "./model";
 
 // The live identity face mapping, served as web fonts without importing the engine.
 const naskh = localFont({
-  src: "../../../../../packages/identity/engines/caleums-arabic-v3/fonts/NotoNaskhArabic-Regular.ttf",
+  src: "./fonts/NotoNaskhArabic-Regular.ttf",
   display: "swap",
 });
 const scheherazade = localFont({
-  src: "../../../../../packages/identity/engines/caleums-arabic-v3/fonts/ScheherazadeNew-Regular.ttf",
+  src: "./fonts/ScheherazadeNew-Regular.ttf",
   display: "swap",
 });
 const kufi = localFont({
-  src: "../../../../../packages/identity/engines/caleums-arabic-v3/fonts/NotoKufiArabic-Regular.ttf",
+  src: "./fonts/NotoKufiArabic-Regular.ttf",
   display: "swap",
 });
 const rakkas = localFont({
-  src: "../../../../../packages/identity/engines/caleums-arabic-v3/fonts/rakkas.ttf",
+  src: "./fonts/rakkas.ttf",
   display: "swap",
 });
 const playfair = localFont({
-  src: "../../../../../packages/identity/engines/caleums-arabic-v3/fonts/PlayfairDisplay-SemiBold.ttf",
+  src: "./fonts/PlayfairDisplay-SemiBold.ttf",
   display: "swap",
 });
 const cairo = localFont({
-  src: "../../../../../packages/identity/engines/caleums-arabic-v3/fonts/cairo.ttf",
+  src: "./fonts/cairo.ttf",
   display: "swap",
 });
 

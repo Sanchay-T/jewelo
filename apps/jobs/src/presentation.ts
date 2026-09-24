@@ -1,52 +1,18 @@
 import { createHash } from "node:crypto";
 import {
   MockStudioGenerator,
-  MockStudioVerifier,
-  OpenAINameReader,
-  OpenAIPieceReader,
   OpenAIStillAdapter,
-  PRESENTATION_ASPECT_RATIO,
-  STILL_COMPILER_VERSION,
-  buildPromptVariableSnapshot,
-  compileStillPrompt,
-  identityTextMatches,
-  stillLookReferenceRequired,
-  normalizeIdentityText,
+  stillPrompt,
   type GeneratedMedia,
-  type PromptProfile,
-  type PromptVariableSnapshot,
   type StudioGenerator,
-  type StudioNameReader,
-  type StudioPieceReader,
-  type StudioVerifier,
 } from "@jewelo/ai";
 import { parseJobsEnv, pipelineLimits } from "@jewelo/config";
-// Pipeline fix review 1 finding 5. The one definition of a reference-asset id -
-// the opaque identifier the upload route mints, and nothing that can traverse a
-// path - is the one the upload route validates against, so this job cannot
-// drift from it.
-import { REFERENCE_ASSET_ID } from "@jewelo/contracts";
-import {
-  // Renamed at the import: `executePresentationTask` has a local `stillRoute`
-  // holding this task's decided route, and a decision function shadowed by a
-  // value of the same name is a misreading waiting to happen.
-  stillRoute as decideStillRoute,
-  type StillRouteChoice,
-  type StillRouteDecision,
-  type StillRouteSpecification,
-} from "@jewelo/identity";
 import { isDuplicateObject } from "@jewelo/media";
-import sharp from "sharp";
 // Fix-3 review M1: `errorClass` used to be private to this file, so the video
 // job wrote fal's raw refusal into the same customer-visible columns. It is a
 // shared jobs module now and every category write in `apps/jobs` goes through
 // it.
-import { errorClass, nameMismatchCode } from "./error-class";
-import {
-  renderIdentityAnchor,
-  validateStoredIdentityAnchor,
-  type StoredIdentityAnchor,
-} from "./identity-anchor";
+import { errorClass } from "./error-class";
 // Storyline review 1 M2: what the day's money is allowed to be before a
 // real-mode dispatch spends any of it.
 import {
@@ -54,6 +20,24 @@ import {
   spendCeilingRefusal,
   type RuntimeSpendPolicy,
 } from "./spend-ceiling";
+
+/**
+ * SIMPLE-1 (25 Sep 2026). The whole image path, end to end:
+ *
+ *   load task, run, revision
+ *   -> one prompt string (`stillPrompt`)
+ *   -> spend check
+ *   -> reserve attempt
+ *   -> generate
+ *   -> store
+ *   -> complete
+ *
+ * There is no stencil, no identity anchor, no style anchor, no look reference,
+ * no inspiration upload, no prompt snapshot, no verifier, no name reader, no
+ * piece reader and no regeneration loop. The model renders the name from the
+ * approved text and the chosen construction, and the photograph it returns is
+ * the photograph the shopper sees.
+ */
 
 interface TaskRow {
   id: string;
@@ -70,8 +54,6 @@ interface TaskRow {
   pipeline_release: string;
   aspect_ratio: "1:1" | "4:5" | "9:16" | "16:9";
   cancel_requested_at?: string;
-  /** Set on the three model views: the studio still they must reproduce. */
-  dependency_task_id?: string | null;
   identity_artifact_id?: string | null;
   /** The day `reserve_provider_attempt` books every attempt of this task against. */
   reservation_usage_date?: string | null;
@@ -93,29 +75,6 @@ interface RevisionRow {
     fingerprint: string;
   };
 }
-interface PromptReleaseRow {
-  id: string;
-  profile: PromptProfile;
-  template: string;
-}
-interface PromptSnapshotRow {
-  task_id: string;
-  prompt_release_id: string;
-  variable_snapshot: PromptVariableSnapshot;
-  compiled_prompt: string;
-  compiler_version: string;
-  sha256: string;
-  /**
-   * The one source of the route for this task: recorded when the snapshot was
-   * compiled and read back from it on every dispatch, never recomputed.
-   *
-   * Optional because a database without migration 20260924020000 - a restored
-   * backup, say - has no such column, and every snapshot written before it is
-   * a stencil one by definition (that is the column default). Missing reads as
-   * `stencil`; a present value that is neither route is still corrupt.
-   */
-  still_route?: StillRouteChoice | null;
-}
 
 interface StoredOutput {
   media: GeneratedMedia;
@@ -129,61 +88,33 @@ export function isTaskCancelled(error: unknown): boolean {
   return error instanceof Error && /task cancelled/i.test(error.message);
 }
 
+/**
+ * A stored checkpoint the dispatch cannot use: the bytes will not download, or
+ * the attempt row it belongs to is gone. Thrown by `loadStoredOutput` with the
+ * cost to book, so the dispatch can close the attempt and stop at operator
+ * review instead of leaving it open for the sweeper to re-emit every window.
+ */
+export class StoredOutputUnavailableError extends Error {
+  constructor(
+    code: string,
+    readonly actualCostCents: number,
+  ) {
+    super(code);
+    this.name = "StoredOutputUnavailableError";
+  }
+}
+
 export interface PresentationRepository {
   load(taskId: string): Promise<{
     task: TaskRow;
     run: RunRow;
     revision: RevisionRow;
-    release: PromptReleaseRow;
-    snapshot?: PromptSnapshotRow;
   }>;
-  materializePromptSnapshot(input: {
-    task: TaskRow;
-    release: PromptReleaseRow;
-    variables: PromptVariableSnapshot;
-    compiledPrompt: string;
-    compilerVersion: string;
-    sha256: string;
-    stillRoute: StillRouteChoice;
-  }): Promise<PromptSnapshotRow>;
-  /**
-   * The route recorded in the parent studio task's snapshot, or undefined
-   * while the parent has none. A dependent view compiles on that route.
-   */
-  dependencyStillRoute(task: TaskRow): Promise<StillRouteChoice | undefined>;
-  /**
-   * SP-2e2 / D-024: the route a studio still is compiled for, decided once,
-   * from the approved name and the specification, before any spend.
-   *
-   * It lives on the repository for the same reason `ringlessConstructions` and
-   * `pipelineReleaseId` do: the switch that governs it (`STILL_FREE_ROUTE`) is
-   * validated configuration read once at the environment boundary, and this
-   * file never reads an environment variable. Required rather than optional so
-   * a repository that cannot say which route a studio takes is a compile error
-   * instead of a silent stencil.
-   *
-   * SP-2e2b: the release is part of the decision, not only the name. A release
-   * whose own template text names the stencil compiles to words that point at
-   * an image the free route does not send, which `compileStillPrompt` refuses
-   * as `still_unresolved_reference_tag:@stencil` - so such a release is stencil
-   * whatever the name says.
-   *
-   * SP-2e2e: the whole decision, route and reasons, not only the route. The
-   * reasons are the closed snake_case vocabulary of `stillRoute` plus this
-   * repository's own two answers (`free_route_off`, `release_names_stencil`),
-   * and they are recorded on the asset so an operator can read why a name that
-   * looks allowlisted was photographed from the stencil.
-   */
-  studioStillRoute(
-    revision: RevisionRow,
-    release: PromptReleaseRow,
-  ): StillRouteDecision;
   loadStoredOutput(task: TaskRow): Promise<StoredOutput | undefined>;
   reserveAttempt(
     task: TaskRow,
     provider: string,
     model: string,
-    attemptOverride?: number,
   ): Promise<{
     attempt: number;
     idempotencyKey: string;
@@ -202,14 +133,6 @@ export interface PresentationRepository {
     attempt: number;
     media: GeneratedMedia;
   }): Promise<{ bucket: string; path: string; checksum: string }>;
-  /** Keeps a name-rejected still in private storage for inspection. */
-  storeRejectedOutput?(input: {
-    task: TaskRow;
-    run: RunRow;
-    revision: RevisionRow;
-    attempt: number;
-    media: GeneratedMedia;
-  }): Promise<string>;
   complete(input: {
     task: TaskRow;
     run: RunRow;
@@ -217,10 +140,6 @@ export interface PresentationRepository {
     attempt: number;
     media: GeneratedMedia;
     stored: { bucket: string; path: string; checksum: string };
-    verification: Record<string, unknown>;
-    identityFingerprint: string;
-    identityArtifactId: string;
-    inputAssetIds?: readonly string[];
   }): Promise<TransitionOutcome | void>;
   fail(input: {
     task: TaskRow;
@@ -229,165 +148,25 @@ export interface PresentationRepository {
     error: unknown;
     terminal: boolean;
     actualCostCents: number;
-    rejectedObjectPaths?: readonly string[];
   }): Promise<void>;
-  signedIdentityUrl(
-    revision: RevisionRow,
-    ownerId: string,
-    task: TaskRow,
-    stillRoute: StillRouteChoice,
-  ): Promise<{
-    url: string;
-    fingerprint: string;
-    artifactId: string;
-    /**
-     * RETRY-SIGN. Where the stencil this URL points at is stored, so a second
-     * or third attempt can re-sign the same object instead of rendering,
-     * gating and uploading it again just to get a link with a fresh clock.
-     * Absent when the URL carries its own bytes (the dependency-reuse path
-     * returns a `data:` URL, which has no clock).
-     */
-    storage?: { bucket: string; objectPath: string };
-  }>;
-  /**
-   * A fresh time-limited link to an object already resolved this dispatch.
-   * Optional: an in-memory repository in a harness has no storage to sign, and
-   * only the inputs that really are links are ever renewed through it.
-   */
-  signedStorageUrl?(bucket: string, path: string): Promise<string>;
-  signedStyleAnchorUrl(task: TaskRow): Promise<string>;
-  /**
-   * The approved look reference for a construction that requires one, proved
-   * against its configured sha256. Throws `look_reference_missing:<id>` or
-   * `look_reference_checksum_mismatch:<id>` - both pre-spend refusals.
-   *
-   * Optional like the other reference readers, and its absence is a refusal
-   * rather than a silent generation: a repository with no way to fetch the
-   * look cannot draw a construction that needs one.
-   */
-  signedLookReferenceUrl?(construction: string): Promise<string>;
-  /** Ready still of `dependency_task_id`; undefined while it is not ready yet. */
-  signedDependencyStillUrl?(
-    task: TaskRow,
-  ): Promise<{ url: string; assetId: string } | undefined>;
-  /**
-   * Terminal status of `dependency_task_id`, or undefined while it can still
-   * produce a still. A dependent view whose parent is terminal can never
-   * become dispatchable, so it must stop instead of deferring forever.
-   */
-  dependencyTerminalStatus(task: TaskRow): Promise<string | undefined>;
-  signedInspirationUrl(
-    revision: RevisionRow,
-    ownerId: string,
-  ): Promise<string | undefined>;
   blockPreSpend(input: {
     task: TaskRow;
     run: RunRow;
     error: unknown;
   }): Promise<void>;
   /**
-   * Paid attempts this task may make, read from the same row the SQL gates
-   * read (`runtime_policy.provider_attempt_budget`).
-   *
-   * Optional so a repository that has no policy to read - the in-memory one in
-   * a harness - can leave it out, and only then is the validated default in
-   * `packages/config` used.
-   *
-   * Pipeline fix review 1 finding 8: this used to promise that same fallback
-   * when the policy read failed, which the Supabase implementation does not do
-   * and should not do. A read that errors leaves this job unable to say how
-   * many paid attempts the SQL gates will allow, and guessing that number is
-   * how a task either wastes a still or is declared retryable when
-   * `reserve_provider_attempt` will never serve it again. It throws instead,
-   * the dispatch stops before any provider call, and the stale sweeper brings
-   * the task back when the database answers again. The config default applies
-   * only to a policy row that answered with a missing or invalid value.
+   * Paid attempts this task may make, read from the same row the SQL gates read
+   * (`runtime_policy.provider_attempt_budget`). A repository that has one and
+   * cannot read it throws rather than guessing; the dispatch then stops before
+   * the provider and the stale sweeper brings the task back.
    */
   providerAttemptBudget?(): Promise<number>;
   /**
    * The two `runtime_policy` numbers a real-mode dispatch refuses to spend
    * against when they are looser than the deployment's ceilings
-   * (`./spend-ceiling`). One row, one query, cached per process.
-   *
-   * Optional for the same reason as `providerAttemptBudget`: an in-memory
-   * repository in a harness has no policy row. A repository that has one and
-   * cannot read it throws rather than guessing; the dispatch then stops before
-   * the provider and the stale sweeper brings the task back.
+   * (`./spend-ceiling`). One row, one query.
    */
   spendPolicy?(): Promise<RuntimeSpendPolicy>;
-}
-
-/**
- * The deterministic refusals `materialize_prompt_snapshot` raises
- * (`supabase/migrations/20260827060000_caleums_prompt_registry.sql:284-289`),
- * each mapped to a reason class.
- *
- * The message text is the RPC's own; the class is what this job is allowed to
- * write into `terminal_error_code`. Neither the compiled prompt nor the
- * customer's name ever appears in one.
- */
-/**
- * A stored checkpoint the dispatch cannot use: the bytes will not download, or
- * the attempt row it belongs to is gone. Thrown by `loadStoredOutput` with the
- * cost to book, so the dispatch can close the attempt and stop at operator
- * review instead of leaving it open for the sweeper to re-emit every window.
- */
-export class StoredOutputUnavailableError extends Error {
-  constructor(
-    code: string,
-    readonly actualCostCents: number,
-  ) {
-    super(code);
-    this.name = "StoredOutputUnavailableError";
-  }
-}
-
-/**
- * How a failed vision read may be repeated: `pause` for a 429, `now` for a
- * timeout, a dropped connection or a provider 5xx, `undefined` for anything
- * else. An empty or unparseable answer is not repeated: a read cut off at its
- * output ceiling or a content refusal comes back the same way the second time.
- * A reader that answered - even "no" - returns normally and is never seen here.
- */
-function visionRetryKind(error: unknown): "pause" | "now" | undefined {
-  if (!(error instanceof Error)) return undefined;
-  const failed = /(verification|name read|piece read) failed:(\d{3})$/.exec(
-    error.message,
-  )?.[2];
-  if (failed === "429") return "pause";
-  if (failed === "408" || failed?.startsWith("5")) return "now";
-  if (error.name === "TimeoutError" || error.name === "AbortError")
-    return "now";
-  // undici: "fetch failed" before a response, "terminated" when the body
-  // stream is cut part way through reading it.
-  if (
-    error instanceof TypeError &&
-    (error.message === "fetch failed" || error.message === "terminated")
-  )
-    return "now";
-  return undefined;
-}
-
-/**
- * One bounded vision read, repeated at most `pipelineLimits.visionReadRetries`
- * times while it fails transiently, after `visionRetryDelayMs` when it was rate
- * limited. After a checkpoint a thrown read closes the attempt and pays for a
- * fresh image, so a dropped request is worth one more cheap read first.
- * `executorRequestCapSeconds` counts every repeat and every pause.
- */
-async function readVision<T>(read: () => Promise<T>): Promise<T> {
-  for (let retry = 0; ; retry += 1) {
-    try {
-      return await read();
-    } catch (error) {
-      const kind = visionRetryKind(error);
-      if (retry >= pipelineLimits.visionReadRetries || !kind) throw error;
-      if (kind === "pause")
-        await new Promise((resolve) =>
-          setTimeout(resolve, pipelineLimits.visionRetryDelayMs),
-        );
-    }
-  }
 }
 
 /**
@@ -395,16 +174,6 @@ async function readVision<T>(read: () => Promise<T>): Promise<T> {
  * code to stop at operator review with, or `undefined` to re-throw. The RPC
  * raises "attempt already open" before all of them, so when one is returned
  * every attempt is closed and the refused transaction booked nothing.
- *
- * The daily guard (`reserve_provider_attempt` and the
- * `enforce_daily_provider_spend_cap` trigger, per principal and global) counts
- * reserved plus actual spend on the day the task books against, which is
- * `generation_tasks.reservation_usage_date` (null until the first reservation,
- * which then books today). While that day is today, another run settling frees
- * it, so the refusal re-throws and the sweeper tries again next window. Once
- * the day is over no new run books against it, so it stops. That bounds the
- * wait at one UTC day of pre-spend re-dispatches, each rolled back before any
- * attempt row exists.
  */
 function reservationRefusal(
   error: unknown,
@@ -424,128 +193,31 @@ function reservationRefusal(
   return undefined;
 }
 
-const PROMPT_SNAPSHOT_REJECTIONS: readonly (readonly [string, string])[] = [
-  ["prompt release does not match task pin", "release_pin"],
-  ["invalid prompt variable snapshot", "variables"],
-  ["invalid compiled prompt length", "length"],
-  ["compiled prompt checksum mismatch", "checksum"],
-];
-
-/**
- * Whether a failed `materialize_prompt_snapshot` call is a property of the task
- * rather than of the moment, and if so which one.
- *
- * Adversarial review 3: the call used to be left to the stale sweeper on every
- * failure. That is right for a transport fault or a 5xx, which the next
- * dispatch will not see. It is wrong for the four `raise exception`s the RPC
- * carries, because they depend only on rows that a re-dispatch cannot change -
- * and `recover_stale_generation_tasks`
- * (`supabase/migrations/20260907020000_dependent_view_terminal_gate.sql:150-172`)
- * has no attempt cap on `attempt = 0 and status = 'queued'` and bumps
- * `updated_at`, so one deterministic raise becomes an outbox row every two
- * minutes for ever.
- *
- * PostgREST answers a raise with a 4xx whose body carries the SQLSTATE and the
- * message. `SupabasePresentationRepository.#request` folds both into its error
- * message and truncates the body at 300 characters, so the body is matched as
- * text rather than parsed: a truncated JSON object still carries the code and
- * the message, which are the first fields PostgREST writes. Anything else -
- * a 5xx, a fetch that never answered, a `P0001` this job does not recognise -
- * returns undefined and keeps the sweeper path.
- */
-export function promptSnapshotRejectionClass(
-  error: unknown,
-): string | undefined {
-  const message = error instanceof Error ? error.message : String(error);
-  const status = /Supabase job request (\d{3}):/.exec(message);
-  if (!status) return undefined;
-  const code = Number(status[1]);
-  if (!Number.isFinite(code) || code < 400 || code >= 500) return undefined;
-  const body = message.slice(status.index + status[0].length);
-  // Adversarial review 4 M1: PostgREST answers a call whose signature it does
-  // not know with 404 and `PGRST202`, which is what a database missing
-  // migration 20260924020000 (or one whose schema cache has not reloaded since
-  // it ran) says to `materialize_prompt_snapshot(..., p_still_route)`. The
-  // code is not a SQLSTATE, so the five-character match below never saw it and
-  // the throw escaped, looping the task on the stale sweeper with nothing an
-  // operator could read. It is a pre-spend block, but its own one: unlike the
-  // rejections below it stops being true the moment the database is brought up
-  // to date, so it stays out of `DETERMINISTIC_REFUSAL_CODES` and keeps the
-  // retry button. Adversarial review 6: it is matched on the structured `code`
-  // field, because a `P0001` whose message merely quotes `PGRST202` would
-  // otherwise be misread as a schema that is behind. Only `PGRST202` is
-  // matched: this repository sends all seven arguments by name, so PostgREST
-  // resolves the seven-argument function uniquely and can never answer the
-  // ambiguous-overload `PGRST203` here.
-  if (/"code"\s*:\s*"PGRST202"/.test(body)) return "schema_behind";
-  const sqlState = /"code"\s*:\s*"([0-9A-Za-z]{5})"/.exec(body)?.[1];
-  if (sqlState !== "P0001" && sqlState !== "22023") return undefined;
-  for (const [raised, reason] of PROMPT_SNAPSHOT_REJECTIONS)
-    if (body.includes(raised)) return reason;
-  // `22023` is invalid_parameter_value: the argument itself is wrong, so the
-  // next dispatch sends the same wrong argument. A `P0001` with a message this
-  // job does not know is not classified, because an unrecognised raise may yet
-  // be about the moment rather than the row.
-  return sqlState === "22023" ? "invalid_argument" : undefined;
-}
-
 export async function executePresentationTask(
   taskId: string,
   repository: PresentationRepository,
   generator: StudioGenerator,
-  verifier: StudioVerifier,
-  nameReader?: StudioNameReader,
-  pieceReader?: StudioPieceReader,
 ) {
-  const {
-    task,
-    run,
-    revision,
-    release,
-    snapshot: existingSnapshot,
-  } = await repository.load(taskId);
+  const { task, run, revision } = await repository.load(taskId);
   if (task.status === "ready") return { status: "deduplicated" as const };
   if (task.status === "cancelled" || task.cancel_requested_at)
     return { status: "cancelled" as const };
-  /**
-   * The one way out of a pre-spend failure, used by every pre-spend gate below.
-   *
-   * Adversarial review 1 finding 3: `mark_task_pre_spend_blocked` raises for a
-   * task whose attempt is not 0, because the pre-spend gate cannot follow a
-   * provider reservation. Adversarial review 2 finding 4: only one of the call
-   * sites carried that fallback, and the gates that simply threw carried none,
-   * so on a retry the throw escaped `executePresentationTask` (the Inngest
-   * function runs with `retries: 0`), the task stayed `retrying` with no
-   * `terminal_error_code`, and the stale sweeper re-dispatched it for ever.
-   * (The sweeper runs every two minutes but only claims tasks older than
-   * `pipelineLimits.staleRecoveryWindowMs`; the cadence is not the window.) Every deterministic pre-spend refusal now ends the same way:
-   * block if the RPC will take it, terminal `fail` with the same message if it
-   * will not, and `operator_review` either way. The messages are category
-   * strings; a customer name never appears in one.
-   */
-  // Loaded before any preparation step (see below), so a preparation
-  // failure on a resume can tell that the attempt it would close is paid for.
+  // Loaded before anything else so a later refusal can tell that the attempt it
+  // would close is already paid for.
   let checkpoint: StoredOutput | undefined;
+  /**
+   * The one way out of a pre-spend failure. `mark_task_pre_spend_blocked`
+   * refuses a task whose attempt is not 0, so past that the task is failed
+   * terminally instead; either way it ends at operator review with a category
+   * code and never a letter of the customer's name.
+   */
   const blockPreSpendTerminally = async (error: unknown) => {
     // A resume holds an open attempt whose photograph is paid for and stored.
-    // `mark_task_pre_spend_blocked` refuses any attempt past 0 and its fallback
-    // closes at 0, which would discard the photograph and under-count the
-    // ledger. Re-throw instead: the attempt stays open, the sweeper resumes
-    // it next window, and `storedOutputResumeLimit` bounds how often.
+    // Closing it at 0 would discard the photograph and under-count the ledger.
     if (checkpoint) throw error;
     try {
       await repository.blockPreSpend({ task, run, error });
     } catch (blockError) {
-      // Pipeline review 1 finding 8: the bare catch discarded why the RPC
-      // refused, so an operator saw the gate's reason and no trace of the
-      // second failure. Both causes are recorded as their class only.
-      //
-      // Pipeline fix review 1 finding 7: the gate's own message used to be
-      // concatenated in raw. Most gate messages are category strings, but this
-      // path also carries whatever `signedIdentityUrl`, the anchor read or the
-      // inspiration read threw, including a PostgREST body with row values in
-      // it, and `fail` writes this string into the customer-visible
-      // `terminal_error_code`. Two classes, no free text.
       await repository.fail({
         task,
         run,
@@ -559,10 +231,6 @@ export async function executePresentationTask(
     }
     return { status: "operator_review" as const, attempt: task.attempt };
   };
-  // The release row the job loaded is not the release the task is pinned to.
-  // That is a property of the two rows, so re-dispatching cannot change it.
-  // `attempt` is the latest attempt the database holds for this task, which
-  // inside the regeneration loop is `reservation.attempt`, not `task.attempt`.
   const stopBeforeSpend = async (
     code: string,
     attempt = task.attempt,
@@ -579,11 +247,6 @@ export async function executePresentationTask(
     });
     return { status: "operator_review" as const, attempt };
   };
-  // The stored checkpoint is read first. Reordering is safe: it depends on
-  // the task row alone, returns nothing at attempt 0 (so every pre-spend gate
-  // below behaves exactly as before on a first dispatch) and spends nothing.
-  // What it changes is that a gate failing on a resume now knows the attempt
-  // is paid for and re-throws rather than closing it at 0.
   try {
     checkpoint = await repository.loadStoredOutput(task);
   } catch (error) {
@@ -595,282 +258,19 @@ export async function executePresentationTask(
       );
     throw error;
   }
-  if (release.id !== task.prompt_release_id)
-    return blockPreSpendTerminally(new Error("task_prompt_release_mismatch"));
-  let snapshot = existingSnapshot;
-  if (!snapshot) {
-    // The route is decided here, once, and written into the snapshot: a studio
-    // still by its own name (`studioStillRoute`, D-024), a dependent view by
-    // its parent's. A parent with no snapshot yet has not been dispatched, so
-    // the view waits.
-    const parentRoute = task.dependency_task_id
-      ? await repository.dependencyStillRoute(task)
-      : undefined;
-    if (task.dependency_task_id && !parentRoute) {
-      // No parent snapshot has two causes. The parent went terminal before it
-      // ever compiled one, in which case waiting is waiting for ever and the
-      // stale sweeper would re-queue this view once per window: refuse it
-      // pre-spend here, exactly as the later missing-reference block does.
-      // Otherwise the parent simply has not been dispatched yet: defer.
-      const terminal = await repository.dependencyTerminalStatus(task);
-      if (terminal)
-        return blockPreSpendTerminally(new Error(`dependency_${terminal}`));
-      return { status: "deferred" as const };
-    }
-    let compiled: ReturnType<typeof compileStillPrompt>;
-    let compiledPrompt: string;
-    let route: StillRouteChoice;
-    try {
-      // Inside the try with the compile: `studioStillRoute` reads the same
-      // revision-shaped fields the variable snapshot does, so a specification
-      // that is wrong in the row fails here as `prompt_compile_failed` rather
-      // than throwing out of the job and looping on the stale sweeper.
-      route =
-        parentRoute ?? repository.studioStillRoute(revision, release).route;
-      const variables = buildPromptVariableSnapshot({
-        approvedName: revision.identity_anchor.approvedText,
-        language: revision.identity_anchor.language,
-        specification: revision.specification,
-        presentationView: task.presentation_view,
-        route,
-      });
-      compiled = compileStillPrompt({
-        profile: release.profile,
-        template: release.template,
-        variables,
-        references: {
-          stencil: route === "stencil",
-          master: Boolean(task.dependency_task_id),
-          // Same predicate the reference resolution below uses, so the prompt
-          // can never name an image the request does not carry.
-          look: stillLookReferenceRequired(
-            revision.specification.construction,
-          ),
-          style: task.presentation_view !== "studio",
-          inspiration: Boolean(
-            revision.specification.referenceAsset &&
-              typeof revision.specification.referenceAsset === "object",
-          ),
-        },
-      });
-      compiledPrompt = compiled.compiledPrompt;
-    } catch (error) {
-      // A revision whose specification cannot fill the release's pinned
-      // variable set can never compile, however often it is re-dispatched.
-      // Left to throw, the task stays `queued` at attempt 0 and the stale
-      // sweeper re-queues it once per stale window for ever. This is a pre-spend gate like the
-      // identity and anchor gates: block once, release the reservation, and
-      // send it to operator review.
-      return blockPreSpendTerminally(
-        new Error(
-          `prompt_compile_failed:${
-            error instanceof Error ? error.message : "unknown"
-          }`,
-        ),
-      );
-    }
-    try {
-      snapshot = await repository.materializePromptSnapshot({
-        task,
-        release,
-        variables: compiled.variableSnapshot,
-        compiledPrompt,
-        compilerVersion: compiled.compilerVersion,
-        sha256: createHash("sha256")
-          .update(compiledPrompt, "utf8")
-          .digest("hex"),
-        stillRoute: route,
-      });
-    } catch (error) {
-      // A write against Supabase fails in two different ways and they need
-      // opposite answers. A transport fault or a 5xx is about the moment: the
-      // same task succeeds on the next dispatch, so it is rethrown and the
-      // stale sweeper recovers it. A deterministic raise from the RPC is about
-      // the rows, so re-dispatching it turns one bad row into an outbox event
-      // once per stale window for ever; it is refused once, pre-spend, like
-      // the other gates here.
-      const reason = promptSnapshotRejectionClass(error);
-      if (reason === undefined) throw error;
-      return blockPreSpendTerminally(
-        new Error(
-          // A schema that is merely behind gets its own head, not the
-          // deterministic `prompt_snapshot_rejected` family: running the
-          // migration makes the same dispatch work.
-          reason === "schema_behind"
-            ? "prompt_snapshot_schema_behind"
-            : `prompt_snapshot_rejected:${reason}`,
-        ),
-      );
-    }
-  }
-  // Read once, here, and used everywhere below: an absent route is a snapshot
-  // from before migration 20260924020000, which is a stencil one by definition.
-  // A present value that is neither route is a corrupt row and still refused.
-  const stillRoute: StillRouteChoice = snapshot.still_route ?? "stencil";
-  // A stored snapshot that belongs to another task, another release or another
-  // prompt text is wrong in the row, not in this attempt: the same comparison
-  // fails on every redispatch, so it is a pre-spend refusal like the others.
-  if (
-    snapshot.task_id !== task.id ||
-    snapshot.prompt_release_id !== task.prompt_release_id ||
-    (stillRoute !== "stencil" && stillRoute !== "free") ||
-    // The sha ties the text to itself but nothing tied the route to the text.
-    // A free-route snapshot whose compiled text still references the stencil
-    // would send the letter drawing to a free render: the route column and the
-    // words disagree, which is wrong in the row and fails the same way on every
-    // redispatch.
-    (stillRoute === "free" && snapshot.compiled_prompt.includes("@stencil")) ||
-    createHash("sha256")
-      .update(snapshot.compiled_prompt, "utf8")
-      .digest("hex") !== snapshot.sha256
-  )
-    return blockPreSpendTerminally(
-      new Error("prompt_snapshot_lineage_mismatch"),
-    );
-  // A snapshot compiled by an older compiler is sent verbatim - that is the
-  // point of a snapshot - but the images beside it are rebuilt on every
-  // attempt. v2 added the `look` reference, so a v1 snapshot's IMAGE ROLES
-  // block numbers the inputs one way while the request carries another, and
-  // the model is told the style photograph is the stencil. `materialize` is
-  // `on conflict do nothing`, so this task can never get a fresh snapshot;
-  // refusing is the only correct answer, and it is the same answer on every
-  // redispatch, so it is a pre-spend refusal like the others.
-  if (snapshot.compiler_version !== STILL_COMPILER_VERSION)
-    return blockPreSpendTerminally(
-      new Error("prompt_snapshot_compiler_stale"),
-    );
-  // SP-2e2e. Why this studio still took its route, in the closed snake_case
-  // vocabulary the decision uses and never a letter of the customer's name,
-  // recorded on the asset beside the route itself. Without it an operator
-  // looking at a stencil photograph of an allowlisted-looking name has no way
-  // to tell which rule sent it there.
-  //
-  // Asked again here rather than carried down from the compile above, because
-  // a resumed dispatch reuses a stored snapshot and never compiles; the
-  // decision is pure, so asking it twice costs nothing. It is recorded only
-  // when it still answers the route this snapshot was compiled for: the switch
-  // can be flipped between the two, and a reason for the other route is not the
-  // reason for this photograph. A dependent view inherits its studio's route
-  // and has no reasons of its own, so it records none.
-  //
-  // Bookkeeping only: nothing here decides anything this attempt does, so a
-  // specification too malformed to read again loses the reasons rather than
-  // failing a task whose snapshot is already compiled and valid.
-  let studioDecision: StillRouteDecision | undefined;
-  if (!task.dependency_task_id) {
-    try {
-      studioDecision = repository.studioStillRoute(revision, release);
-    } catch {
-      studioDecision = undefined;
-    }
-  }
-  const stillRouteReasons =
-    studioDecision?.route === stillRoute ? studioDecision.reasons : undefined;
-  let identity: Awaited<
-    ReturnType<PresentationRepository["signedIdentityUrl"]>
-  >;
-  let styleAnchorUrl: string | undefined;
-  let lookReferenceUrl: string | undefined;
-  let inspirationImageUrl: string | undefined;
-  let reference: { url: string; assetId: string } | undefined;
-  try {
-    if (task.dependency_task_id) {
-      reference = await repository.signedDependencyStillUrl?.(task);
-      if (!reference) {
-        // A dependent view whose studio still is terminal can never get a
-        // pendant to copy. Deferring would let the stale sweeper re-queue it
-        // once per stale window forever; block it once instead, through the
-        // pre-spend path below.
-        const terminal = await repository.dependencyTerminalStatus(task);
-        if (terminal) throw new Error(`dependency_${terminal}`);
-        // Otherwise a recovery dispatch simply arrived before the studio still
-        // existed: wait for the release rather than spend on an empty scene.
-        return { status: "deferred" as const };
-      }
-    }
-    // Identity and exact style release existence are hard pre-spend gates.
-    identity = await repository.signedIdentityUrl(
-      revision,
-      task.owner_principal_id,
-      task,
-      // The route this task was resolved with above, so the reuse gate compares
-      // the parent against one already-decided value instead of re-reading it
-      // and applying a second, different absent-route rule.
-      stillRoute,
-    );
-    // The studio still gets NO style photo: every wrong name today was copied
-    // from the anchor. Dependent views inherit the studio still as reference.
-    styleAnchorUrl =
-      task.presentation_view === "studio"
-        ? undefined
-        : await repository.signedStyleAnchorUrl(task);
-    // A construction whose look the model only reaches with a texture
-    // reference never generates without it: no asset, no spend.
-    if (stillLookReferenceRequired(revision.specification.construction)) {
-      const construction = String(revision.specification.construction);
-      if (!repository.signedLookReferenceUrl)
-        throw new Error(`look_reference_missing:${construction}`);
-      lookReferenceUrl =
-        await repository.signedLookReferenceUrl(construction);
-    }
-    inspirationImageUrl = await repository.signedInspirationUrl(
-      revision,
-      task.owner_principal_id,
-    );
-  } catch (error) {
-    return blockPreSpendTerminally(error);
-  }
-  // SP-2e2: the stencil file this request will carry, decided once here and
-  // handed to the generator below, so the pairing asserted before spend is the
-  // pairing sent. The stencil is rendered, gated, hashed and stored on both
-  // routes (D-010); only the stencil route sends it to the model.
-  let identityImageUrl = stillRoute === "stencil" ? identity.url : undefined;
-  // SP-2e2b: the words this model will actually read, compared against the
-  // images this request will actually carry. Not the route column against a
-  // value derived from it - that compares a thing with itself - but the stored
-  // `compiled_prompt` text against the two URLs, so a snapshot whose route and
-  // whose words disagree is caught here whichever of them is wrong.
-  //
-  // The compiler leaves exactly one readable mark per image it numbered: it
-  // rewrites every `@role` tag into `Image N (role)` and writes the same label
-  // in the IMAGE ROLES header and in the minimal family's opening lines, so a
-  // stencil compile always says "(stencil)" and a master compile always says
-  // "(master)". A free compile can say neither: `compileStillPrompt` refuses
-  // the whole prompt if the word "stencil" survives anywhere in it
-  // (`still_free_route_names_stencil`).
-  //
-  // Compared here, before the attempt budget is read and before any
-  // reservation: the same disagreement inside `generator.generate` costs a
-  // booked attempt. Each side is a property of the stored snapshot and the task
-  // row, so every redispatch decides it the same way: terminal, a code, no
-  // customer text.
-  const promptNamesStencil = snapshot.compiled_prompt.includes("(stencil)");
-  const promptNamesMaster = snapshot.compiled_prompt.includes("(master)");
-  if (promptNamesStencil && !identityImageUrl?.trim())
-    return blockPreSpendTerminally(new Error("still_stencil_required"));
-  if (!promptNamesStencil && identityImageUrl?.trim())
-    return blockPreSpendTerminally(
-      new Error("still_free_route_carries_stencil"),
-    );
-  // A dependent view copies the approved studio photograph, and on the free
-  // route that photograph is the only authority for the piece - no stencil is
-  // sent - so words that name a master without one have nothing to copy.
-  if (promptNamesMaster && !reference?.url?.trim())
-    return blockPreSpendTerminally(new Error("still_master_required"));
-  // D-020, fix pass 6: there is no bar rail any more and no flag that lets one
-  // through. `ringPlacement` is `welded`, `frame` (P2-2b: the construction the
-  // shopper chose carries the rings on its own frame or rails, and the solver
-  // gates that piece exactly as it gates a welded one) or `none`, and this file
-  // branches on none of them: every refusal is an `IdentitySolverError` raised
-  // inside the render. A name whose lettering
-  // offers no ring seat makes the solver throw `identity_no_ring_seat` inside
-  // the identity render above - which is inside this same try, so it lands in
-  // `blockPreSpendTerminally` before the attempt budget is read, before any
-  // reservation and before any provider call, and the shop sees the piece
-  // instead of the shopper. The seat is a property of the name and the style,
-  // so a redispatch would decide the same thing: terminal, a code, no customer
-  // text.
-  //
+  // SIMPLE-1: only the studio view is generated. `runtime_policy.studio_only`
+  // is meant to cancel the other three before they are ever dispatched; where
+  // it is off, one arrives here and stops cleanly rather than being
+  // photographed by a path that has no anchor to place it against.
+  if (task.presentation_view !== "studio")
+    return blockPreSpendTerminally(new Error("studio_view_only"));
+  // The whole prompt: the approved name, the script it is written in, and the
+  // construction the shopper chose.
+  const prompt = stillPrompt({
+    name: revision.identity_anchor.approvedText,
+    script: revision.identity_anchor.language === "ar" ? "ar" : "en",
+    construction: String(revision.specification.construction ?? "classical"),
+  });
   // The attempt budget is the database's, not this file's: `reserve_provider_attempt`,
   // `retry_generation_task` and `operator_retry_generation_task` all refuse past
   // the same `runtime_policy.provider_attempt_budget`, so a job that stopped one
@@ -879,27 +279,15 @@ export async function executePresentationTask(
   const attemptBudget =
     (await repository.providerAttemptBudget?.()) ??
     pipelineLimits.providerAttemptBudget;
-  // Every refusal below that stops a dispatch before a new image is paid for
-  // ends here rather than throwing: a throw leaves the task `retrying` (or its
-  // attempt open) and the sweeper re-dispatches it every window for ever. At
-  // attempt 0 the task still holds its up-front reservation, which only
-  // `mark_task_pre_spend_blocked` releases; past it every earlier attempt was
-  // reconciled, so `fail` closes whatever `actualCostCents` names and blocks.
   const provider = generator instanceof MockStudioGenerator ? "mock" : "openai";
   const model =
     generator instanceof OpenAIStillAdapter
       ? generator.model
       : "mock-openai-still-v1";
-  // Storyline review 1 M2. The last pre-spend gate, and the only one that is
-  // about the shop rather than the piece: a real-mode dispatch refuses to book
-  // an attempt at all while `runtime_policy` is looser than the ceilings this
-  // deployment set. `provider` is `mock` exactly when the generator is the mock
-  // one, which `productionPresentationDependencies` selects exactly when
-  // production derives the real generator from NODE_ENV; local `PROVIDER_MODE`
-  // is resolved once at the config boundary, so this reads "real mode" without
-  // a second copy of the environment in here. It sits above `reserveAttempt` because
-  // `mark_task_pre_spend_blocked` only takes a task at attempt 0, and because a
-  // reservation is already spend.
+  // Storyline review 1 M2. A real-mode dispatch refuses to book an attempt at
+  // all while `runtime_policy` is looser than the ceilings this deployment set.
+  // It sits above `reserveAttempt` because `mark_task_pre_spend_blocked` only
+  // takes a task at attempt 0, and because a reservation is already spend.
   if (provider !== "mock" && repository.spendPolicy) {
     const readPolicy = repository.spendPolicy.bind(repository);
     const refusal = spendCeilingRefusal(await readSpendPolicy(readPolicy));
@@ -921,371 +309,60 @@ export async function executePresentationTask(
       : await repository.reserveAttempt(task, provider, model);
   } catch (error) {
     if (isTaskCancelled(error)) return { status: "cancelled" as const };
-    // "Already open" and a guard that can still clear re-throw: another
-    // dispatch is live, or the next window may book.
     const code = reservationRefusal(error, task.reservation_usage_date);
     if (code) return stopBeforeSpend(code);
     throw error;
   }
   if (reservation.duplicateComplete) return { status: "deduplicated" as const };
-  const inputAssetIds = reference ? [reference.assetId] : [];
   // Undefined until an attempt actually reaches the provider, so a failure
   // before that never reconciles a sibling attempt's cost.
   let actualCostCents: number | undefined;
-  // Name-rejected stills are kept in private storage so an operator can see
-  // what the model actually engraved; they never become assets.
-  const rejectedObjectPaths: string[] = [];
-  // Both deterministic refusals in the loop below - a pendant that is not one
-  // piece, and a name the model did not engrave - end an attempt the same way:
-  // keep the still as evidence, fail this attempt inline, then either stop at
-  // operator review or book the next attempt and regenerate.
-  //
-  // Inline is the whole point. Thrown instead, they land in the outer `catch`,
-  // whose `fail` is not terminal until the attempt budget is reached and never
-  // bumps the attempt - so an attempt that has already written its immutable
-  // provider output checkpoint goes `retrying`, the stale sweeper's
-  // `has_checkpoint` branch flips it back to `verifying`, the resumed dispatch
-  // loads the SAME checkpoint bytes, pays for the same read, gets the same
-  // refusal, and repeats once per stale window for ever: never terminal, never
-  // re-shot, never in front of an operator.
-  //
-  // Returns the terminal result to return, or `undefined` when the caller
-  // should `continue` into the next regeneration.
-  const refuseAttempt = async (
-    media: GeneratedMedia,
-    error: Error,
-    terminal: boolean,
-  ) => {
-    if (repository.storeRejectedOutput)
-      rejectedObjectPaths.push(
-        await repository.storeRejectedOutput({
-          task,
-          run,
-          revision,
-          attempt: reservation.attempt,
-          media,
-        }),
-      );
-    await repository.fail({
-      task,
-      run,
-      attempt: reservation.attempt,
-      error,
-      terminal,
-      actualCostCents: actualCostCents ?? 0,
-      rejectedObjectPaths,
-    });
-    if (terminal)
-      return {
-        status: "operator_review" as const,
-        attempt: reservation.attempt,
-      };
-    try {
-      reservation = await repository.reserveAttempt(
-        task,
-        provider,
-        model,
-        reservation.attempt + 1,
-      );
-    } catch (error) {
-      // Same classification as the dispatch-time reservation. The attempt
-      // just failed above is the latest one, so that is what `fail` names.
-      const code = reservationRefusal(error, task.reservation_usage_date);
-      if (code) return stopBeforeSpend(code, reservation.attempt);
-      throw error;
-    }
-    actualCostCents = undefined;
-    return undefined;
-  };
-  // RETRY-SIGN. Every input above was signed once, before the reservation, for
-  // `pipelineLimits.signedUrlExpirySeconds`. An in-place regeneration is a
-  // second and a third provider call two and five minutes later, and they were
-  // being sent those same links: the live run 217cb812 (24 Sep) had its two
-  // refused attempts followed by `openai_input_download_failed:400` on attempt
-  // 3, because OpenAI could no longer fetch the expired inputs. So every
-  // provider request renews its links first.
-  //
-  // Only the links are renewed. The identity render and its validation, the
-  // dependency reuse guard, the terminal-parent check and the pairing assertion
-  // ran once above and stay run once; a `data:` input carries its own bytes and
-  // has no clock; and each renewal replaces a non-empty URL with a non-empty
-  // URL of the same object, so freshness changes and presence never does - the
-  // pairing asserted before spend is still the pairing sent.
-  const refreshInputUrls = async () => {
-    // SP-2e2e. A stencil link with a clock, on the route that sends it, that
-    // this repository cannot re-sign is the exact failure RETRY-SIGN exists to
-    // stop: the attempt would go out carrying the expired link it was given.
-    // Fail closed like the dependency, look and inspiration branches below
-    // rather than send a stale URL. A `data:` stencil carries its own bytes and
-    // has no clock, and the free route sends no stencil at all.
-    if (
-      stillRoute === "stencil" &&
-      !identity.url.startsWith("data:") &&
-      !(identity.storage && repository.signedStorageUrl)
-    )
-      throw new Error("identity_resign_unavailable");
-    if (identity.storage && repository.signedStorageUrl) {
-      const url = await repository.signedStorageUrl(
-        identity.storage.bucket,
-        identity.storage.objectPath,
-      );
-      if (!url.trim()) throw new Error("identity_resign_empty");
-      identity = { ...identity, url };
-      // The same route expression the assertion above compared the words
-      // against, so a stencil task keeps sending the stencil and a free one
-      // can never start.
-      identityImageUrl = stillRoute === "stencil" ? identity.url : undefined;
-    }
-    if (reference && !reference.url.startsWith("data:")) {
-      const again = await repository.signedDependencyStillUrl?.(task);
-      // A master that has become a different asset, or none at all, would give
-      // this attempt another piece to copy than the one the words name.
-      if (!again?.url.trim() || again.assetId !== reference.assetId)
-        throw new Error("dependency_still_resign_changed");
-      reference = again;
-    }
-    if (styleAnchorUrl && !styleAnchorUrl.startsWith("data:"))
-      styleAnchorUrl = await repository.signedStyleAnchorUrl(task);
-    if (lookReferenceUrl && !lookReferenceUrl.startsWith("data:")) {
-      const again = await repository.signedLookReferenceUrl?.(
-        String(revision.specification.construction),
-      );
-      if (!again?.trim()) throw new Error("look_reference_resign_empty");
-      lookReferenceUrl = again;
-    }
-    if (inspirationImageUrl && !inspirationImageUrl.startsWith("data:")) {
-      const again = await repository.signedInspirationUrl(
-        revision,
-        task.owner_principal_id,
-      );
-      if (!again?.trim()) throw new Error("inspiration_resign_empty");
-      inspirationImageUrl = again;
-    }
-  };
   try {
-    // A studio still whose engraved name is not the approved one is regenerated
-    // in place: at most two extra paid attempts, then operator review.
-    for (let regeneration = 0; ; regeneration += 1) {
-      const resumable = regeneration === 0 ? checkpoint : undefined;
-      let media: GeneratedMedia;
-      let stored: StoredOutput["stored"];
-      if (resumable) {
-        media = resumable.media;
-        stored = resumable.stored;
-        actualCostCents = media.estimatedCostCents;
-      } else {
-        const started = await repository.transitionTask(
-          task.id,
-          ["queued", "retrying", "generating"],
-          "generating",
-          { attempt: reservation.attempt, input_asset_ids: inputAssetIds },
-        );
-        if (started === "cancelled") return { status: "cancelled" as const };
-        // The first request carries the links signed just above the
-        // reservation; every regeneration after it signs its own, because by
-        // then the first set is one or two vision-read cycles old.
-        if (regeneration > 0) await refreshInputUrls();
-        media = await generator.generate({
-          idempotencyKey: reservation.idempotencyKey,
-          prompt: snapshot.compiled_prompt,
-          referenceImageUrl: reference?.url,
-          // Resolved and asserted against the route before the reservation
-          // above (D-010: the stencil is rendered, gated, hashed and stored on
-          // both routes; only the stencil route sends it).
-          route: stillRoute,
-          identityImageUrl,
-          lookReferenceUrl,
-          styleAnchorUrl,
-          inspirationImageUrl,
-          identityFingerprint: identity.fingerprint,
-          aspectRatio:
-            task.aspect_ratio ??
-            PRESENTATION_ASPECT_RATIO[task.presentation_view],
-          presentationView: task.presentation_view,
-          specification: revision.specification,
-        });
-        actualCostCents = media.estimatedCostCents;
-        stored = await repository.storeProviderOutput({
-          task,
-          run,
-          revision,
-          attempt: reservation.attempt,
-          media,
-        });
-      }
-      const verifying = await repository.transitionTask(
+    let media: GeneratedMedia;
+    let stored: StoredOutput["stored"];
+    if (checkpoint) {
+      media = checkpoint.media;
+      stored = checkpoint.stored;
+      actualCostCents = media.estimatedCostCents;
+    } else {
+      const started = await repository.transitionTask(
         task.id,
-        ["generating", "verifying"],
-        "verifying",
+        ["queued", "retrying", "generating"],
+        "generating",
+        { attempt: reservation.attempt },
       );
-      if (verifying === "cancelled") return { status: "cancelled" as const };
-      const verification = await readVision(() => verifier.verify({
-        approvedText: revision.identity_anchor.approvedText,
-        identityFingerprint: identity.fingerprint,
-        identityImageUrl: identity.url,
-        presentationView: task.presentation_view,
-        specification: revision.specification,
-        media,
-      }));
-      // A name cut into two halves hanging off separate rings is not a piece a
-      // jeweller can make, so it is refused before the generic verdict and with
-      // its own code: the operator sees why, not just that it failed. Same
-      // failure and retry path as `identity_verification_failed`.
-      if (verification.singleConnectedPiece !== true)
-        throw new Error("identity_not_one_piece");
-      if (
-        !verification.passed ||
-        !verification.exactText ||
-        !verification.exactScript ||
-        !verification.exactlyTwoConnectedRings ||
-        !verification.correctShot ||
-        !verification.noAddedIdentityElements
-      )
-        throw new Error("identity_verification_failed");
-      const record = verification as unknown as Record<string, unknown>;
-      // SP-2e2b: which way this photograph was taken, stored beside the checks
-      // that passed it. An operator asking why a piece looks the way it does
-      // reads it off the asset instead of joining back to the prompt snapshot.
-      record.stillRoute = stillRoute;
-      // SP-2e2e: and why, for a studio still (see `stillRouteReasons` above).
-      // A plain extra key in the same JSON column: the completion function
-      // reads `verification_result` key by key
-      // (`20260924000000_completion_requires_single_connected_piece.sql`) and
-      // the column has no check constraint, so no migration is involved.
-      // A free route is a route with nothing against it, so the key appears
-      // only where there is something to read: on a stencil studio still.
-      if (stillRouteReasons?.length)
-        record.stillRouteReasons = stillRouteReasons;
-      // SP-2a. In real mode the verifier above is the mock, so its
-      // `singleConnectedPiece` is always true and the gate on it never fires.
-      // The blind piece reader is the live one: one image, one question, no
-      // stencil and no approved text.
-      //
-      // The piece read and the name read run concurrently: at high detail the
-      // piece read alone can take over a minute, and in sequence the two filled
-      // the executor cap. Each retries only itself (`readVision`). The gates
-      // still apply in the old order - a thrown piece read, the piece verdict,
-      // then a thrown name read and the name verdict - so a split pendant is
-      // refused as `identity_not_one_piece` whatever the name read says. The
-      // cost is one name read paid for on a split pendant. If the verifier is
-      // ever live again it joins this group (see `executorRequestCapSeconds`).
-      const expected = revision.identity_anchor.approvedText;
-      const [pieceRead, nameRead] = await Promise.allSettled([
-        pieceReader
-          ? readVision(() => pieceReader.read(media))
-          : Promise.resolve(undefined),
-        nameReader
-          ? readVision(() => nameReader.read(media, expected))
-          : Promise.resolve(undefined),
-      ]);
-      if (pieceRead.status === "rejected") throw pieceRead.reason;
-      if (pieceRead.value) {
-        const piece = pieceRead.value;
-        record.pieceCheck = {
-          singleConnectedPiece: piece.singleConnectedPiece,
-          notes: piece.notes,
-        };
-        // One authoritative verdict in the stored record: the verifier and the
-        // reader must both say yes. `complete_presentation` restates this field
-        // in the database, and the dependent-view reuse guard reads it back, so
-        // it has to be the conjunction and not the mock verifier's opinion.
-        record.singleConnectedPiece =
-          verification.singleConnectedPiece === true &&
-          piece.singleConnectedPiece === true;
-        if (piece.singleConnectedPiece !== true) {
-          // Exactly the name-mismatch path: the split still is kept as
-          // evidence, this attempt fails in place, and a fresh still is shot
-          // rather than the refused checkpoint being read again. The error
-          // code stays SP-1's - the reader's notes are prose and
-          // `terminal_error_code` is customer-visible.
-          const refused = await refuseAttempt(
-            media,
-            new Error("identity_not_one_piece"),
-            regeneration >= 2 || reservation.attempt >= attemptBudget,
-          );
-          if (refused) return refused;
-          continue;
-        }
-      }
-      if (nameRead.status === "rejected") throw nameRead.reason;
-      if (nameRead.value) {
-        const reading = nameRead.value;
-        const readText = reading.text;
-        // Pipeline review 1 finding 1. The script of a name is decided by its
-        // letters. The old class required the whole approved text to be Latin
-        // letters, spaces, `'` and `-`, so the two-name join
-        // `canonical_identity_anchor` writes ("SARA & OMAR"), a typographic
-        // apostrophe ("O’Neill") and any combining mark made the name
-        // "not Latin" - and the still was then required to contain Arabic,
-        // which it never did. Every attempt failed, three paid stills per view
-        // were spent, and the shopper was told the piece was unavailable.
-        const expectedLetters = expected.replaceAll(/\P{L}/gu, "");
-        // Pipeline fix review 1 finding 1. An approved text with no letters
-        // ("1234", "-", "'") normalises to `""`, which made `latinExpected`
-        // true, the script test vacuous and `identityTextMatches` compare `""`
-        // to `""` - so the gate passed whatever the model had engraved. It is
-        // a property of the approved row, not of this attempt: no regeneration
-        // can give a letterless name letters, so it fails closed at once
-        // instead of spending two more stills first.
-        const letterlessApproved = normalizeIdentityText(expected).length === 0;
-        const scriptOk =
-          !letterlessApproved &&
-          (!/\p{Script=Arabic}/u.test(expectedLetters)
-            ? !/\p{Script=Arabic}/u.test(readText)
-            : /\p{Script=Arabic}/u.test(readText));
-        // Pipeline review 1 finding 3. The deterministic comparison is the only
-        // thing that can pass a still. The model's own `matches` is kept in the
-        // decision as evidence of what it claimed, and is never sufficient: a
-        // self-report was exactly what let wrong names through in August.
-        const passed = scriptOk && identityTextMatches(readText, expected);
-        record.nameCheck = {
-          passed,
-          readText,
-          expected,
-          scriptOk,
-          letterlessApproved,
-          modelReportedMatch: reading.matches,
-        };
-        if (!passed) {
-          const refused = await refuseAttempt(
-            media,
-            new Error(
-              letterlessApproved
-                ? "approved_text_has_no_letters"
-                : nameMismatchCode(readText),
-            ),
-            letterlessApproved ||
-              regeneration >= 2 ||
-              reservation.attempt >= attemptBudget,
-          );
-          if (refused) return refused;
-          continue;
-        }
-      }
-      if (rejectedObjectPaths.length)
-        record.rejectedObjectPaths = [...rejectedObjectPaths];
-      const completed = await repository.complete({
+      if (started === "cancelled") return { status: "cancelled" as const };
+      media = await generator.generate({
+        idempotencyKey: reservation.idempotencyKey,
+        prompt,
+        aspectRatio: task.aspect_ratio ?? "1:1",
+      });
+      actualCostCents = media.estimatedCostCents;
+      stored = await repository.storeProviderOutput({
         task,
         run,
         revision,
         attempt: reservation.attempt,
         media,
-        stored,
-        verification: record,
-        identityFingerprint: identity.fingerprint,
-        identityArtifactId: identity.artifactId,
-        inputAssetIds,
       });
-      if (completed === "cancelled") return { status: "cancelled" as const };
-      // The run id travels with the result so the caller can scope its
-      // dependent-outbox dispatch to this run instead of claiming every
-      // principal's pending rows.
-      return {
-        status: "ready" as const,
-        attempt: reservation.attempt,
-        runId: task.run_id,
-      };
     }
+    const completed = await repository.complete({
+      task,
+      run,
+      revision,
+      attempt: reservation.attempt,
+      media,
+      stored,
+    });
+    if (completed === "cancelled") return { status: "cancelled" as const };
+    // The run id travels with the result so the caller can scope its
+    // dependent-outbox dispatch to this run instead of claiming every
+    // principal's pending rows.
+    return {
+      status: "ready" as const,
+      attempt: reservation.attempt,
+      runId: task.run_id,
+    };
   } catch (error) {
     if (isTaskCancelled(error)) return { status: "cancelled" as const };
     const terminal = reservation.attempt >= attemptBudget;
@@ -1296,7 +373,6 @@ export async function executePresentationTask(
       error,
       terminal,
       actualCostCents: actualCostCents ?? 0,
-      rejectedObjectPaths,
     });
     if (!terminal) throw error;
     return { status: "operator_review" as const, attempt: reservation.attempt };
@@ -1307,56 +383,10 @@ export class SupabasePresentationRepository implements PresentationRepository {
   constructor(
     private readonly url: string,
     private readonly key: string,
-    private readonly allowMockAnchors = false,
     // Motion is opt-in (VIDEO_ENABLED). Off means a ready studio still never
     // asks fal for a preview, so no run spends video cents.
     private readonly videoEnabled = false,
-    // P1-5. Constructions that carry their own suspension and so want no jump
-    // rings welded on. Read once from the validated environment; the identity
-    // package never reads an environment variable itself.
-    private readonly ringlessConstructions: ReadonlySet<string> = new Set<string>(),
-    // P1-6. The pipeline release every identity artifact and task is pinned to,
-    // validated in `@jewelo/config` (PIPELINE_RELEASE_ID) rather than written
-    // here as a literal, so a release bump is a configuration change.
-    private readonly pipelineReleaseId = "caleums-final-media-v2",
-    // Construction id -> sha256 of its approved look reference, validated in
-    // `@jewelo/config` (LOOK_REFERENCES). A construction that needs a look and
-    // is not in this map is refused before any spend.
-    private readonly lookReferences: ReadonlyMap<string, string> = new Map(),
-    // SP-2e2 / D-024. Off (the default, and what production runs until the
-    // switch is set) every studio still is photographed from the stencil,
-    // exactly as before. On, the approved name decides. Validated in
-    // `@jewelo/config` (STILL_FREE_ROUTE) rather than read here.
-    private readonly freeRouteEnabled = false,
   ) {}
-  studioStillRoute(
-    revision: RevisionRow,
-    release: PromptReleaseRow,
-  ): StillRouteDecision {
-    // SP-2e2e. Both answers this method gives on its own carry a reason too,
-    // so every stencil studio still on the asset says why it is a stencil one
-    // and an operator never reads a bare "stencil" with nothing behind it.
-    if (!this.freeRouteEnabled)
-      return { route: "stencil", reasons: ["free_route_off"] };
-    // SP-2e2b. The live `image.packshot` release is `@v4` and does not name the
-    // stencil in its prose; the older `@v2` and `@v3`, which a task can still
-    // be pinned to, do. Compiled free, that prose keeps
-    // a tag no image was numbered for, and `compileStillPrompt` refuses the
-    // whole snapshot (`still_unresolved_reference_tag:@stencil`), which would
-    // make an allowlisted name unphotographable rather than free. Decided here,
-    // once, from the release this task is pinned to, rather than caught as a
-    // per-attempt fallback.
-    if (/stencil/i.test(release.template))
-      return { route: "stencil", reasons: ["release_names_stencil"] };
-    return decideStillRoute({
-      approvedText: revision.identity_anchor.approvedText,
-      language: revision.identity_anchor.language,
-      // The same specification object the snapshot's variables are built from,
-      // read structurally: `stillRoute` proves each field it uses and routes to
-      // the stencil for anything it cannot name.
-      specification: revision.specification as StillRouteSpecification,
-    });
-  }
   async #request<T>(path: string, init: RequestInit = {}): Promise<T> {
     const response = await fetch(`${this.url}${path}`, {
       ...init,
@@ -1391,48 +421,10 @@ export class SupabasePresentationRepository implements PresentationRepository {
     );
     const revision = revisions[0];
     if (!revision) throw new Error("revision_not_found");
-    const releases = await this.#request<PromptReleaseRow[]>(
-      `/rest/v1/prompt_releases?id=eq.${task.prompt_release_id}`,
-    );
-    const release = releases[0];
-    if (!release) throw new Error("prompt_release_not_found");
-    const snapshots = await this.#request<PromptSnapshotRow[]>(
-      `/rest/v1/generation_prompt_snapshots?task_id=eq.${task.id}`,
-    );
-    return { task, run, revision, release, snapshot: snapshots[0] };
+    return { task, run, revision };
   }
-  async materializePromptSnapshot(input: {
-    task: TaskRow;
-    release: PromptReleaseRow;
-    variables: PromptVariableSnapshot;
-    compiledPrompt: string;
-    compilerVersion: string;
-    sha256: string;
-    stillRoute: StillRouteChoice;
-  }) {
-    return this.#request<PromptSnapshotRow>(
-      "/rest/v1/rpc/materialize_prompt_snapshot",
-      {
-        method: "POST",
-        body: JSON.stringify({
-          p_task_id: input.task.id,
-          p_prompt_release_id: input.release.id,
-          p_variable_snapshot: input.variables,
-          p_compiled_prompt: input.compiledPrompt,
-          p_compiler_version: input.compilerVersion,
-          p_sha256: input.sha256,
-          p_still_route: input.stillRoute,
-        }),
-      },
-    );
-  }
-  async reserveAttempt(
-    task: TaskRow,
-    provider: string,
-    model: string,
-    attemptOverride?: number,
-  ) {
-    const attempt = attemptOverride ?? task.attempt + 1;
+  async reserveAttempt(task: TaskRow, provider: string, model: string) {
+    const attempt = task.attempt + 1;
     const idempotencyKey = `${task.dispatch_idempotency_key}:attempt:${attempt}`;
     const rows = await this.#request<
       Array<{ attempt_number: number; duplicate_complete: boolean }>
@@ -1485,10 +477,9 @@ export class SupabasePresentationRepository implements PresentationRepository {
         0,
       );
     // A checkpoint is resumable only while its attempt is still open. Once
-    // `fail` closed it (a transient verifier error after the still was stored),
-    // `complete_presentation_task` refuses that attempt for ever, so resuming it
-    // paid for a vision read that could never complete. Undefined here makes
-    // the dispatch book attempt + 1 and shoot a fresh still; the stale sweeper
+    // `fail` closed it, `complete_presentation_task` refuses that attempt for
+    // ever, so resuming it would pay for nothing. Undefined here makes the
+    // dispatch book attempt + 1 and shoot a fresh still; the stale sweeper
     // applies the same rule (20260924010000_resume_only_open_checkpoints.sql).
     if (
       !["reserved", "submitted"].includes(attempt.status) ||
@@ -1496,11 +487,8 @@ export class SupabasePresentationRepository implements PresentationRepository {
     )
       return undefined;
     // Bound the resume. The sweeper writes one `task.stale_verification_recovered`
-    // row per verification recovery it emits, in the same transaction as the
-    // outbox event, carrying this task and attempt; a resume only happens
-    // because of one. So the count is exactly how often this stored photograph
-    // has been handed back, with no counter of our own to keep in step or to
-    // lose when a worker dies. Past the limit the attempt closes at its
+    // row per recovery it emits, carrying this task and attempt, and a resume
+    // only happens because of one. Past the limit the attempt closes at its
     // estimate - the photograph was paid for - and a person looks at it.
     const recoveries = await this.#request<Array<{ id: string }>>(
       `/rest/v1/audit_events?select=id&action=eq.task.stale_verification_recovered&principal_id=eq.${task.owner_principal_id}&detail->>taskId=eq.${task.id}&detail->>attempt=eq.${task.attempt}`,
@@ -1534,8 +522,7 @@ export class SupabasePresentationRepository implements PresentationRepository {
       signal: AbortSignal.timeout(pipelineLimits.storageRequestTimeoutMs),
     });
     // Gone for good (404/410): the image was paid for, so the attempt closes
-    // at its estimate - the same conservative charge the sweeper books for an
-    // ambiguous attempt. Any other status is storage having a bad moment: the
+    // at its estimate. Any other status is storage having a bad moment: the
     // attempt stays open and the next window resumes the paid photograph.
     if (response.status === 404 || response.status === 410)
       throw new StoredOutputUnavailableError(
@@ -1587,360 +574,11 @@ export class SupabasePresentationRepository implements PresentationRepository {
       throw error;
     }
   }
-  async signedIdentityUrl(
-    revision: RevisionRow,
-    ownerId: string,
-    task: TaskRow,
-    stillRoute: StillRouteChoice,
-  ) {
-    // Adversarial review 1 finding 1: the release the engine stamps into the
-    // artifact has to be the release the task is pinned to. Two releases in one
-    // run mean media from two different identity engines under one order, and
-    // nothing downstream would say which pendant the customer is looking at.
-    // Both values are release ids from the registry, never customer text.
-    // Review 2 finding 7: the comparison used to run after the stencil had been
-    // shaped, rasterised, measured and encoded, so a mismatch cost a full
-    // render before it refused. The release the engine will stamp is the one
-    // handed to it, so the comparison belongs here, where it costs nothing.
-    if (this.pipelineReleaseId !== task.pipeline_release)
-      throw new Error(
-        `identity_pipeline_release_mismatch:task=${task.pipeline_release},report=${this.pipelineReleaseId}`,
-      );
-    if (task.dependency_task_id)
-      return this.#reuseDependencyIdentity(revision, ownerId, task, stillRoute);
-    const rendered = await renderIdentityAnchor(
-      {
-        approvedText: revision.identity_anchor.approvedText,
-        language: revision.identity_anchor.language,
-        typography: revision.identity_anchor.typography,
-        fingerprint: revision.identity_anchor.fingerprint,
-      },
-      revision.specification,
-      this.pipelineReleaseId,
-      this.ringlessConstructions,
-    );
-    // And the same statement about what the engine actually stamped, which is
-    // cheap now that the report exists and keeps the check honest if the solver
-    // ever stops echoing the release it was given.
-    if (rendered.report.pipelineRelease !== task.pipeline_release)
-      throw new Error(
-        `identity_pipeline_release_mismatch:task=${task.pipeline_release},report=${rendered.report.pipelineRelease}`,
-      );
-    const basePath = `principal/${ownerId}/revision/${revision.id}/identity-${rendered.fingerprint}`;
-    // The engine renders a PNG and only a PNG: the stencil is rasterised from
-    // its own path data and the SVG never leaves `identityStencilSvg`. The
-    // upload loop used to branch on an `svg` field the renderer never sets, so
-    // it promised a second artifact that no run has ever written.
-    const uploadBody = rendered.png.buffer.slice(
-      rendered.png.byteOffset,
-      rendered.png.byteOffset + rendered.png.byteLength,
-    ) as ArrayBuffer;
-    const upload = await fetch(
-      `${this.url}/storage/v1/object/identity-anchors/${basePath}.png`,
-      {
-        method: "POST",
-        signal: AbortSignal.timeout(pipelineLimits.storageRequestTimeoutMs),
-        headers: {
-          apikey: this.key,
-          authorization: `Bearer ${this.key}`,
-          "content-type": "image/png",
-          "x-upsert": "false",
-        },
-        body: uploadBody,
-      },
-    );
-    const uploadDetail = await upload.text();
-    if (!upload.ok && !isDuplicateObject(upload, uploadDetail))
-      throw new Error(`identity anchor upload failed:${upload.status}`);
-    // Four sibling tasks race to insert the same artifact; a loser can hit the
-    // (bucket_id, object_path) unique key instead of the on_conflict target.
-    try {
-      await this.#request(
-        "/rest/v1/identity_artifacts?on_conflict=revision_id,fingerprint",
-        {
-          method: "POST",
-          headers: { prefer: "resolution=ignore-duplicates,return=minimal" },
-          body: JSON.stringify({
-            revision_id: revision.id,
-            owner_principal_id: ownerId,
-            engine_release: String(rendered.report.engineRelease),
-            // P1-6: the sha of the bytes HarfBuzz actually shaped with, never
-            // a placeholder. `existing-latin` used to stand in for the Latin
-            // path, which no longer exists: both scripts go through the solver.
-            font_release: rendered.report.fontSha256Measured,
-            approved_text: revision.identity_anchor.approvedText,
-            script: revision.identity_anchor.language,
-            fingerprint: rendered.fingerprint,
-            bucket_id: "identity-anchors",
-            object_path: `${basePath}.png`,
-            png_sha256: rendered.pngSha256,
-            validation_report: rendered.report,
-          }),
-        },
-      );
-    } catch (error) {
-      if (!String(error).includes("23505")) throw error;
-    }
-    const artifacts = await this.#request<Array<{ id: string }>>(
-      `/rest/v1/identity_artifacts?revision_id=eq.${revision.id}&fingerprint=eq.${rendered.fingerprint}&select=id`,
-    );
-    const artifactId = artifacts[0]?.id;
-    if (!artifactId) throw new Error("identity_artifact_lineage_missing");
-    await this.#request(`/rest/v1/generation_tasks?id=eq.${task.id}`, {
-      method: "PATCH",
-      body: JSON.stringify({ identity_artifact_id: artifactId }),
-    });
-    // Through the shared signer so this path is percent-encoded segment by
-    // segment like every other one.
-    const url = await this.signedStorageUrl(
-      "identity-anchors",
-      `${basePath}.png`,
-    );
-    return {
-      url,
-      fingerprint: rendered.fingerprint,
-      artifactId,
-      // RETRY-SIGN: the object the link above points at, so a regeneration
-      // re-signs these bytes rather than re-rendering the stencil.
-      storage: { bucket: "identity-anchors", objectPath: `${basePath}.png` },
-    };
-  }
-  async dependencyStillRoute(task: TaskRow) {
-    if (!task.dependency_task_id) return undefined;
-    return this.#snapshotStillRoute(task.dependency_task_id);
-  }
-  /**
-   * The one place a stored snapshot's route is read. The column is not named in
-   * the select, because a database without migration 20260924020000 answers a
-   * named-column select with 400 and the throw would escape the pre-spend path
-   * and leave the dependent views looping on the stale sweeper. No row means no
-   * route yet (`undefined`); a row without the column is a snapshot from before
-   * the migration, which is a stencil one by definition - the same rule the
-   * studio path applies to `snapshot.still_route`.
-   */
-  async #snapshotStillRoute(taskId: string) {
-    const rows = await this.#request<
-      Array<{ still_route?: StillRouteChoice | null }>
-    >(
-      `/rest/v1/generation_prompt_snapshots?task_id=eq.${encodeURIComponent(taskId)}&limit=1`,
-    );
-    const row = rows[0];
-    if (!row) return undefined;
-    return row.still_route ?? ("stencil" as StillRouteChoice);
-  }
-  async #reuseDependencyIdentity(
-    revision: RevisionRow,
-    ownerId: string,
-    task: TaskRow,
-    stillRoute: StillRouteChoice,
-  ) {
-    const parents = await this.#request<TaskRow[]>(
-      `/rest/v1/generation_tasks?id=eq.${encodeURIComponent(task.dependency_task_id!)}&select=id,run_id,owner_principal_id,presentation_view,status,attempt,cancel_requested_at,pipeline_release,identity_artifact_id`,
-    );
-    const parent = parents[0];
-    if (
-      !parent || parent.id !== task.dependency_task_id || parent.run_id !== task.run_id ||
-      parent.owner_principal_id !== ownerId || task.owner_principal_id !== ownerId ||
-      parent.presentation_view !== "studio" || parent.status !== "ready" ||
-      parent.cancel_requested_at || parent.pipeline_release !== task.pipeline_release ||
-      !parent.identity_artifact_id
-    ) throw new Error("identity_reuse_source_task_mismatch");
-    // A view on another route than its studio would photograph a different
-    // piece: a stencil-bound view redraws the letters from the stencil, a free
-    // one copies the studio photograph. The child's route is the one already
-    // resolved from its own snapshot above, so there is one rule in one place;
-    // only the parent's is read here, through the shared reader, and a parent
-    // with no snapshot row at all is still a mismatch.
-    const parentRoute = await this.#snapshotStillRoute(parent.id);
-    if (!parentRoute || parentRoute !== stillRoute)
-      throw new Error("identity_reuse_route_mismatch");
-    const runs = await this.#request<RunRow[]>(
-      `/rest/v1/generation_runs?id=eq.${encodeURIComponent(task.run_id)}&select=id,revision_id,owner_principal_id`,
-    );
-    if (runs[0]?.revision_id !== revision.id || runs[0]?.owner_principal_id !== ownerId)
-      throw new Error("identity_reuse_revision_mismatch");
-    const assets = await this.#request<Array<{
-      owner_principal_id: string; run_id: string; revision_id: string;
-      identity_artifact_id: string; identity_fingerprint: string;
-      presentation_view: string; pipeline_release: string; provider: string;
-      verification_result: Record<string, unknown>;
-    }>>(
-      `/rest/v1/assets?task_id=eq.${encodeURIComponent(parent.id)}&attempt=eq.${parent.attempt}&select=owner_principal_id,run_id,revision_id,identity_artifact_id,identity_fingerprint,presentation_view,pipeline_release,provider,verification_result`,
-    );
-    const asset = assets[0];
-    const verification = asset?.verification_result;
-    const nameCheck = verification?.nameCheck as Record<string, unknown> | undefined;
-    if (
-      assets.length !== 1 || !asset || asset.owner_principal_id !== ownerId ||
-      asset.run_id !== task.run_id || asset.revision_id !== revision.id ||
-      asset.identity_artifact_id !== parent.identity_artifact_id ||
-      !["openai", "mock"].includes(asset.provider) ||
-      asset.presentation_view !== "studio" || asset.pipeline_release !== task.pipeline_release ||
-      !verification || verification.passed !== true || verification.exactText !== true ||
-      verification.singleConnectedPiece !== true ||
-      verification.exactScript !== true || verification.exactlyTwoConnectedRings !== true ||
-      verification.correctShot !== true || verification.noAddedIdentityElements !== true ||
-      (asset.provider === "openai" && nameCheck?.passed !== true)
-    ) throw new Error("identity_reuse_source_asset_mismatch");
-    const artifacts = await this.#request<StoredIdentityAnchor[]>(
-      `/rest/v1/identity_artifacts?id=eq.${encodeURIComponent(parent.identity_artifact_id)}`,
-    );
-    const artifact = artifacts[0];
-    if (
-      !artifact || artifact.id !== parent.identity_artifact_id ||
-      artifact.revision_id !== revision.id || artifact.owner_principal_id !== ownerId ||
-      artifact.fingerprint !== asset.identity_fingerprint ||
-      artifact.bucket_id !== "identity-anchors" ||
-      artifact.object_path !== `principal/${ownerId}/revision/${revision.id}/identity-${artifact.fingerprint}.png`
-    ) throw new Error("identity_reuse_artifact_mismatch");
-    const signed = await this.signedStorageUrl(artifact.bucket_id, artifact.object_path);
-    const response = await fetch(signed, {
-      signal: AbortSignal.timeout(pipelineLimits.storageRequestTimeoutMs),
-    });
-    if (!response.ok) throw new Error(`identity_reuse_download_failed:${response.status}`);
-    const png = new Uint8Array(await response.arrayBuffer());
-    await validateStoredIdentityAnchor(
-      artifact, png, revision.identity_anchor, revision.specification,
-      task.pipeline_release, this.ringlessConstructions,
-    );
-    await this.#request(`/rest/v1/generation_tasks?id=eq.${task.id}`, {
-      method: "PATCH",
-      body: JSON.stringify({ identity_artifact_id: artifact.id }),
-    });
-    // Feed the checked bytes to the adapter, not a URL fetched again later.
-    return {
-      url: `data:image/png;base64,${Buffer.from(png).toString("base64")}`,
-      fingerprint: artifact.fingerprint,
-      artifactId: artifact.id,
-    };
-  }
-  async signedStyleAnchorUrl(task: TaskRow) {
-    if (!task.style_anchor_release_id)
-      throw new Error(`style_anchor_missing:${task.presentation_view}`);
-    const releases = await this.#request<
-      Array<{
-        id: string;
-        source_task_id: string;
-        bucket_id?: string;
-        object_path?: string;
-        checksum_sha256?: string;
-        status: string;
-      }>
-    >(`/rest/v1/style_anchor_releases?id=eq.${task.style_anchor_release_id}`);
-    const release = releases[0];
-    if (
-      !release ||
-      release.status !== "published" ||
-      !release.bucket_id ||
-      !release.object_path ||
-      !release.checksum_sha256
-    ) {
-      if (this.allowMockAnchors)
-        return "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=";
-      throw new Error(
-        `style_anchor_missing:${release?.source_task_id ?? task.presentation_view}`,
-      );
-    }
-    const signed = await this.signedStorageUrl(
-      release.bucket_id,
-      release.object_path,
-    );
-    // Every anchor carries a different customer's name; the low-pass keeps its
-    // light, palette and mood while destroying the letterforms the model kept
-    // copying into the pendant.
-    const response = await fetch(signed, {
-      signal: AbortSignal.timeout(pipelineLimits.storageRequestTimeoutMs),
-    });
-    if (!response.ok)
-      throw new Error(`style_anchor_unreadable:${release.source_task_id}`);
-    const lowPassed = await sharp(Buffer.from(await response.arrayBuffer()))
-      .resize(256, null, { fit: "inside" })
-      .blur(20)
-      .resize(1024, null, { fit: "inside" })
-      .png()
-      .toBuffer();
-    return `data:image/png;base64,${lowPassed.toString("base64")}`;
-  }
-  /**
-   * The look reference for a construction, as bytes proved against the sha256
-   * the deployment configured. The object is private brand reference and is
-   * never in git: `scripts/look-references/publish.mjs` puts it in the
-   * `look-references` bucket at `<construction>/v1.png` from a local directory.
-   */
-  async signedLookReferenceUrl(construction: string) {
-    const checksum = this.lookReferences.get(construction);
-    if (!checksum) {
-      // Mock mode draws nothing real, so it takes the same 1x1 the style
-      // anchors take rather than blocking a zero-cost staging run.
-      if (this.allowMockAnchors)
-        return "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=";
-      throw new Error(`look_reference_missing:${construction}`);
-    }
-    const signed = await this.signedStorageUrl(
-      "look-references",
-      `${construction}/v1.png`,
-    );
-    const response = await fetch(signed, {
-      signal: AbortSignal.timeout(pipelineLimits.storageRequestTimeoutMs),
-    });
-    if (!response.ok)
-      throw new Error(`look_reference_unreadable:${construction}`);
-    const bytes = Buffer.from(await response.arrayBuffer());
-    if (createHash("sha256").update(bytes).digest("hex") !== checksum)
-      throw new Error(`look_reference_checksum_mismatch:${construction}`);
-    return `data:image/png;base64,${bytes.toString("base64")}`;
-  }
-  async signedDependencyStillUrl(task: TaskRow) {
-    if (!task.dependency_task_id) return undefined;
-    const assets = await this.#request<
-      Array<{ id: string; bucket_id: string; object_path: string }>
-    >(
-      `/rest/v1/assets?task_id=eq.${task.dependency_task_id}&provider=in.(openai,mock)&select=id,bucket_id,object_path&order=created_at.desc&limit=1`,
-    );
-    const asset = assets[0];
-    if (!asset) return undefined;
-    return {
-      url: await this.signedStorageUrl(asset.bucket_id, asset.object_path),
-      assetId: asset.id,
-    };
-  }
-  async dependencyTerminalStatus(task: TaskRow) {
-    if (!task.dependency_task_id) return undefined;
-    const rows = await this.#request<Array<{ status: string }>>(
-      `/rest/v1/generation_tasks?id=eq.${task.dependency_task_id}&status=in.(blocked,failed,cancelled)&select=status&limit=1`,
-    );
-    return rows[0]?.status;
-  }
-  async signedInspirationUrl(revision: RevisionRow, ownerId: string) {
-    const reference = revision.specification.referenceAsset;
-    if (!reference || typeof reference !== "object") return undefined;
-    const id = String((reference as Record<string, unknown>).id ?? "");
-    const fileName = String(
-      (reference as Record<string, unknown>).fileName ?? "reference",
-    ).replaceAll(/[^a-zA-Z0-9._-]/g, "_");
-    if (!id) throw new Error("inspiration_reference_missing");
-    // Pipeline review 1 finding 5 / security review 1 finding 3. The
-    // specification is customer-supplied and, until the draft schema lands,
-    // unvalidated: this id was interpolated straight into a service-role
-    // storage path, where `..` segments normalise before the request and can
-    // read another principal's object. The id is an opaque identifier, so it
-    // is matched against its own shape rather than escaped.
-    if (!REFERENCE_ASSET_ID.test(id))
-      throw new Error("inspiration_reference_invalid");
-    return this.signedStorageUrl(
-      "references",
-      `principal/${ownerId}/${id}/${fileName}`,
-    ).catch(() => {
-      throw new Error(`inspiration_reference_missing:${id}`);
-    });
-  }
   async signedStorageUrl(bucket: string, path: string) {
-    // Pipeline fix review 1 finding 4. Each segment is encoded on its own so a
-    // `/` inside a name stays part of the name rather than a new segment. That
-    // is all the encoding does: `encodeURIComponent` leaves `.` and `-`
-    // untouched, so `..` survives it unchanged and a dot segment would still
-    // be resolved by whatever normalises the path. The traversal is refused
-    // here instead, before anything is signed.
+    // Each segment is encoded on its own so a `/` inside a name stays part of
+    // the name rather than a new segment. `encodeURIComponent` leaves `.`
+    // untouched, so `..` survives it unchanged; the traversal is refused here
+    // instead, before anything is signed.
     const segments = path.split("/");
     if (
       segments.some(
@@ -1979,11 +617,7 @@ export class SupabasePresentationRepository implements PresentationRepository {
    * The spend ceiling gate's one read: the same single row, all three numbers,
    * with the service key. A value the row does not hold, or holds as null, is
    * read as whichever end refuses - an unreadable policy is not evidence that
-   * the day is capped, and this gate exists to refuse exactly that. The two
-   * ceilings read as `Number.MAX_SAFE_INTEGER`, above every configurable cap;
-   * the reservation reads as 0, below every published floor. A missing column
-   * therefore refuses pre-spend for a priced quality (max, xhigh, auto); for an
-   * unpriced one the floor is 0 and the reservation check passes.
+   * the day is capped, and this gate exists to refuse exactly that.
    */
   async spendPolicy(): Promise<RuntimeSpendPolicy> {
     const rows = await this.#request<
@@ -2014,20 +648,13 @@ export class SupabasePresentationRepository implements PresentationRepository {
   }
   /**
    * Fix-2 review M1: `mark_task_pre_spend_blocked` writes `p_reason` straight
-   * into `terminal_error_code`, which `/api/state` selects on every poll, and
-   * the reason here can be whatever `signedIdentityUrl`, the anchor read or
-   * the inspiration read threw - including a PostgREST body carrying row
-   * values. Only the class goes to the RPC; the full message is recorded once
-   * in an audit event, which no customer-facing route reads.
+   * into `terminal_error_code`, which `/api/state` selects on every poll. Only
+   * the class goes to the RPC; the full message is recorded once in an audit
+   * event, which no customer-facing route reads.
    *
-   * Fix-3 review M2: that audit insert used to run first and unguarded, so a
-   * failed logging write threw before `mark_task_pre_spend_blocked` ever ran.
-   * The caller's fallback then reached `fail` at attempt 0, where
-   * `reconcile_provider_attempt` finds no attempt row and returns, and the
-   * run-start reservation stayed booked for the rest of the day. The RPC that
-   * blocks the task and releases the reservation goes first now, and the
-   * detail is written after it and cannot propagate: an explanation is never
-   * allowed to be a prerequisite for releasing money.
+   * Fix-3 review M2: the RPC that blocks the task and releases the reservation
+   * goes first, and the detail is written after it and cannot propagate: an
+   * explanation is never allowed to be a prerequisite for releasing money.
    */
   async blockPreSpend(input: { task: TaskRow; run: RunRow; error: unknown }) {
     const message =
@@ -2123,36 +750,6 @@ export class SupabasePresentationRepository implements PresentationRepository {
       throw new Error("provider_output_checkpoint_conflict");
     return { bucket: "generated-assets", path, checksum };
   }
-  async storeRejectedOutput(input: {
-    task: TaskRow;
-    run: RunRow;
-    revision: RevisionRow;
-    attempt: number;
-    media: GeneratedMedia;
-  }) {
-    const checksum = createHash("sha256")
-      .update(input.media.bytes)
-      .digest("hex");
-    const path = `principal/${input.task.owner_principal_id}/design/${input.run.design_id}/revision/${input.revision.id}/run/${input.run.id}/${input.task.presentation_view}/rejected-attempt-${input.attempt}-${checksum.slice(0, 12)}.png`;
-    const response = await fetch(
-      `${this.url}/storage/v1/object/generated-assets/${path}`,
-      {
-        method: "POST",
-        signal: AbortSignal.timeout(pipelineLimits.storageRequestTimeoutMs),
-        headers: {
-          apikey: this.key,
-          authorization: `Bearer ${this.key}`,
-          "content-type": input.media.mimeType,
-          "x-upsert": "false",
-        },
-        body: Buffer.from(input.media.bytes),
-      },
-    );
-    const uploadBody = await response.text();
-    if (!response.ok && !isDuplicateObject(response, uploadBody))
-      throw new Error(`rejected asset upload failed:${response.status}`);
-    return path;
-  }
   async complete(input: {
     task: TaskRow;
     run: RunRow;
@@ -2160,10 +757,6 @@ export class SupabasePresentationRepository implements PresentationRepository {
     attempt: number;
     media: GeneratedMedia;
     stored: { bucket: string; path: string; checksum: string };
-    verification: Record<string, unknown>;
-    identityFingerprint: string;
-    identityArtifactId: string;
-    inputAssetIds?: readonly string[];
   }): Promise<TransitionOutcome> {
     // The database owns the cancellation fence and publishes asset + ready +
     // accounting together. A replay cannot charge or create the asset twice.
@@ -2190,13 +783,17 @@ export class SupabasePresentationRepository implements PresentationRepository {
             model: input.media.model,
             prompt_release: input.task.prompt_release,
             prompt_release_id: input.task.prompt_release_id,
-            identity_fingerprint: input.identityFingerprint,
-            identity_artifact_id: input.identityArtifactId,
+            // SIMPLE-1: nothing renders an identity anchor any more, so the
+            // NOT NULL fingerprint column carries the revision's own value -
+            // the hash of the approved name the prompt was built from.
+            identity_fingerprint: input.revision.identity_anchor.fingerprint,
+            identity_artifact_id: input.task.identity_artifact_id ?? null,
             attempt: input.attempt,
-            verification_result: input.verification,
+            // NOT NULL, and there is no verification any more.
+            verification_result: {},
             pipeline_release: input.task.pipeline_release,
             style_anchor_release_id: input.task.style_anchor_release_id,
-            input_asset_ids: input.inputAssetIds ?? [],
+            input_asset_ids: [],
           },
         }),
       });
@@ -2232,18 +829,15 @@ export class SupabasePresentationRepository implements PresentationRepository {
           }),
         });
         // The still stays ready; only the run carries the visible motion failure.
-        await this.#request(
-          `/rest/v1/generation_runs?id=eq.${input.run.id}`,
-          {
-            method: "PATCH",
-            body: JSON.stringify({
-              operator_review_reason: `video_request_failed:${reason}`.slice(
-                0,
-                300,
-              ),
-            }),
-          },
-        );
+        await this.#request(`/rest/v1/generation_runs?id=eq.${input.run.id}`, {
+          method: "PATCH",
+          body: JSON.stringify({
+            operator_review_reason: `video_request_failed:${reason}`.slice(
+              0,
+              300,
+            ),
+          }),
+        });
       }
     }
     return "applied";
@@ -2255,16 +849,13 @@ export class SupabasePresentationRepository implements PresentationRepository {
     error: unknown;
     terminal: boolean;
     actualCostCents: number;
-    rejectedObjectPaths?: readonly string[];
   }) {
     const message =
       input.error instanceof Error ? input.error.message : "unknown";
-    // Fix-2 review M1: the outer catch of `runPresentationTask` reaches here
-    // with whatever the run threw, and `#request` folds a PostgREST status and
-    // body into its message, so row values used to land in the
-    // customer-visible `terminal_error_code`. The class is what both the
-    // ledger row and the task column get; the full message is kept only in the
-    // audit event below, which no customer-facing route reads.
+    // Fix-2 review M1: `#request` folds a PostgREST status and body into its
+    // message, so row values used to land in the customer-visible
+    // `terminal_error_code`. The class is what both the ledger row and the task
+    // column get; the full message is kept only in the audit event below.
     const errorCode = errorClass(input.error);
     await this.#request("/rest/v1/rpc/reconcile_provider_attempt", {
       method: "POST",
@@ -2295,9 +886,6 @@ export class SupabasePresentationRepository implements PresentationRepository {
           attempt: input.attempt,
           errorClass: errorCode,
           error: message.slice(0, 300),
-          ...(input.rejectedObjectPaths?.length
-            ? { rejectedObjectPaths: input.rejectedObjectPaths }
-            : {}),
         },
       }),
     });
@@ -2311,22 +899,10 @@ export function productionPresentationDependencies(
   const repository = new SupabasePresentationRepository(
     config.SUPABASE_URL,
     config.SUPABASE_SERVICE_ROLE_KEY,
-    config.PROVIDER_MODE === "mock",
     config.VIDEO_ENABLED,
-    config.IDENTITY_RINGLESS_CONSTRUCTIONS,
-    config.PIPELINE_RELEASE_ID,
-    config.LOOK_REFERENCES,
-    config.STILL_FREE_ROUTE,
   );
   if (config.PROVIDER_MODE === "mock")
-    return {
-      repository,
-      generator: new MockStudioGenerator(),
-      verifier: new MockStudioVerifier(),
-      nameReader: undefined as StudioNameReader | undefined,
-      // Mock mode keeps no readers: local runs stay free and unchanged.
-      pieceReader: undefined as StudioPieceReader | undefined,
-    };
+    return { repository, generator: new MockStudioGenerator() };
   return {
     repository,
     generator: new OpenAIStillAdapter(
@@ -2334,17 +910,5 @@ export function productionPresentationDependencies(
       config.OPENAI_IMAGE_MODEL,
       config.OPENAI_STILL_ESTIMATED_COST_CENTS,
     ),
-    // Verifier removed 2026-08-27: the OpenAI vision check passed wrong names.
-    verifier: new MockStudioVerifier(),
-    // Narrow replacement: transcribe the engraved name and regenerate on drift.
-    nameReader: new OpenAINameReader(
-      config.OPENAI_API_KEY!,
-      config.OPENAI_VERIFIER_MODEL,
-    ) as StudioNameReader | undefined,
-    // The only live one-piece check: the verifier above is the mock.
-    pieceReader: new OpenAIPieceReader(
-      config.OPENAI_API_KEY!,
-      config.OPENAI_VERIFIER_MODEL,
-    ) as StudioPieceReader | undefined,
   };
 }

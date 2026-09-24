@@ -28,7 +28,6 @@ import {
   pastCeiling,
   PERSONALIZED_RUN_CEILING_MS,
   PERSONALIZED_RUN_WATCH_MS,
-  preflightRefusal,
   resumeSubmission,
   shouldStartRun,
   shouldWatchRun,
@@ -365,19 +364,6 @@ export function usePersonalizedPreview(input: {
       setReason("invalid");
       setPhase("degraded");
       startedFor.current = undefined;
-      return;
-    }
-    const refusal = preflightRefusal(preview.specification);
-    if (refusal) {
-      // Proved unmakeable before a single cent is reserved: this goes straight
-      // to the shop instead of a blocked run.
-      setSubmission({ signature: currentSignature, requestKey, startedAt });
-      remember(
-        { signature: currentSignature, requestKey, startedAt },
-        capturedIdFor(currentSignature),
-      );
-      setReason("unsupported");
-      setPhase("degraded");
       return;
     }
     setPhase("starting");

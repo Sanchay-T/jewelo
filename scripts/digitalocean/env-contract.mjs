@@ -116,20 +116,6 @@ export const optionalRuntimeConfig = [
   // of `max`; a deployment that raises the quality must raise this with it or
   // the app refuses to boot, so it has to be shippable from the env file.
   "OPENAI_STILL_ESTIMATED_COST_CENTS",
-  // Which constructions have an approved look reference published, as
-  // "<construction>:<sha256>" pairs. Empty until the lab picks its crops; a
-  // construction that needs a look and is not named here is refused before
-  // spend rather than generated flat.
-  "LOOK_REFERENCES",
-  // SP-2e2 / D-024. "0" (the config default) photographs every studio still
-  // from the stencil, which is what production does today; "1" lets
-  // `stillRoute` decide each studio still's route from the approved name
-  // before any spend. Shipped when present so the switch can be flipped on one
-  // environment without a code change. It holds no secret, but this file has no
-  // plain-config category: `appSecretEnvs` below types every non-empty value
-  // `SECRET`, so this one ships encrypted like the rest.
-  "STILL_FREE_ROUTE",
-  "OPENAI_VERIFIER_MODEL",
   "REAL_MODE_MAX_RESERVED_SPEND_CENTS",
   "REAL_MODE_MAX_ATTEMPT_BUDGET",
   // Optional because `/api/readiness` still answers the bare public `status`
@@ -290,23 +276,6 @@ export function validateWebEnv(values) {
       errors.push(
         `OPENAI_STILL_ESTIMATED_COST_CENTS must be at least ${floor} for OPENAI_IMAGE_QUALITY=${effectiveQuality} at OPENAI_IMAGE_SIZE_PROFILE=${effectiveProfile}`,
       );
-  }
-  // Same rule as `LOOK_REFERENCES` in packages/config. Checksums only, no path
-  // and no byte of a private asset is ever printed.
-  const lookReferences = values.get("LOOK_REFERENCES");
-  if (
-    lookReferences &&
-    lookReferences
-      .split(",")
-      .map((entry) => entry.trim())
-      .filter(Boolean)
-      .some((entry) => !/^[a-z0-9]+(?:-[a-z0-9]+)*:[0-9a-f]{64}$/u.test(entry))
-  ) {
-    errors.push('LOOK_REFERENCES entries must be "<construction-id>:<sha256>", comma separated');
-  }
-  const verifierModel = values.get("OPENAI_VERIFIER_MODEL");
-  if (verifierModel && !verifierModel.trim()) {
-    errors.push("OPENAI_VERIFIER_MODEL must be non-empty");
   }
   for (const [name, maximum] of [
     ["REAL_MODE_MAX_RESERVED_SPEND_CENTS", 100_000],

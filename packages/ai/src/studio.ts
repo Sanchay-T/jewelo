@@ -1,32 +1,9 @@
-import { pipelineLimits } from "@jewelo/config";
-import type { StillRouteChoice } from "@jewelo/identity";
-import { prepareOpenAIStillRequest, prepareStillRequest } from "./prompt-registry";
+import { pipelineLimits, stillImageOptions } from "@jewelo/config";
 
 export interface StudioGenerationInput {
   idempotencyKey: string;
   prompt: string;
-  /** Verified sibling still whose pendant the new scene must reproduce. */
-  referenceImageUrl?: string;
-  /**
-   * The route recorded in this task's prompt snapshot. It decides which images
-   * are sent and in what order, which is the order the compiled prompt numbers
-   * them in (`buildStillReferences`).
-   */
-  route: StillRouteChoice;
-  /**
-   * The stencil. Required on the stencil route and refused on the free route
-   * (`still_stencil_required`, `still_free_route_carries_stencil`): the free
-   * prompt names no stencil, so sending one would be an input nobody measured.
-   */
-  identityImageUrl?: string;
-  /** Texture-only crop for the chosen construction; no letters, no layout. */
-  lookReferenceUrl?: string;
-  styleAnchorUrl?: string;
-  inspirationImageUrl?: string;
-  identityFingerprint: string;
   aspectRatio: "1:1" | "4:5" | "9:16" | "16:9";
-  presentationView: string;
-  specification: Readonly<Record<string, unknown>>;
 }
 
 export interface GeneratedMedia {
@@ -38,47 +15,8 @@ export interface GeneratedMedia {
   estimatedCostCents: number;
 }
 
-export interface VerificationDecision {
-  passed: boolean;
-  exactText: boolean;
-  exactScript: boolean;
-  identityScore: number;
-  correctMetalAndStones: boolean;
-  coherentPendant: boolean;
-  /**
-   * The piece a jeweller can actually make: one continuous run of metal from
-   * ring to ring. A still that answers anything but `true` is refused by the
-   * gate - a name cut in two halves hanging off separate rings reached human
-   * review in September and nothing in the pipeline caught it.
-   */
-  singleConnectedPiece: boolean;
-  exactlyTwoConnectedRings: boolean;
-  correctShot: boolean;
-  noAddedIdentityElements: boolean;
-  notes: string;
-}
-
-/**
- * The one definition of "one piece", shared by the full verifier and the blind
- * piece reader. Two copies of this sentence would drift, and the two checks
- * would then disagree about the same photograph.
- */
-export const ONE_PIECE_RULE =
-  "singleConnectedPiece is true only if every letter, dot, diacritic, mark, frame and rail between the two rings is joined into one continuous piece of metal. Parts that touch along an edge, overlap, or meet at a weld line or seam are joined, and that includes a letter that runs into or rests against a frame or rail. A facet line, seam, polished edge, reflection, highlight or shadow on the metal is not a gap. Joined is transitive: two parts are one piece if any path of touching metal links them, directly or through a third part, so a word that meets the frame or a rail at even one place, whether a strut, an inner rail it rests on or a shared edge, is joined to it even where open background or shadow shows between that word and the frame everywhere else. Only a join along an edge or a run of metal counts as a link in that path; a single point or corner of contact never does. That joint has to be metal you can see and point to in this photograph, a band with width: a strut, an inner rail, a shared edge, or a letter stroke running into the frame. If you cannot see such a band of metal, the word is a separate piece however close it comes to the frame, and closeness, alignment, a dark seam or a shadow is not a joint. The open space inside a frame is expected in this kind of pendant and is not a break, so look for one such joint before reading a gap as a break. It is false if any part of the name is a separate object with no touching path to the rest, that is if background shows all the way through around it and nothing bridges it anywhere. A dot, diamond, diacritic or mark floats free and makes it false whenever its contact is a point, a corner or a tip rather than a band of metal with width, and that holds even when no background shows at the meeting point itself: a dot resting on its letter at one corner, a dot or diamond balanced on its own point, and two dots or diamonds meeting each other tip to tip are all floating. Background visible between a mark and its letter also makes it false. Judge every dot, diacritic and detached mark on its own contact and not on the word's: a word joined to a frame or a rail does not carry a floating dot with it. Arabic letters such as ا د ذ ر ز و do not join the next letter in handwriting, and a pendant that keeps that gap with nothing bridging it, no rail, strut or frame that both sides touch, is two pieces, not one.";
-
 export interface StudioGenerator {
   generate(input: StudioGenerationInput): Promise<GeneratedMedia>;
-}
-
-export interface StudioVerifier {
-  verify(input: {
-    approvedText: string;
-    identityFingerprint: string;
-    identityImageUrl: string;
-    presentationView: string;
-    specification: Readonly<Record<string, unknown>>;
-    media: GeneratedMedia;
-  }): Promise<VerificationDecision>;
 }
 
 export class MockStudioGenerator implements StudioGenerator {
@@ -86,11 +24,6 @@ export class MockStudioGenerator implements StudioGenerator {
     // Deterministic zero-cost failure hook for mock end-to-end verification.
     if (input.prompt.includes("MOCKFAIL"))
       throw new Error("mock_generation_failed");
-    // The same request builder the real adapter uses, so a mock run refuses a
-    // route and stencil that do not match and records the reference roles it
-    // was given, in the order a real request would send them. The roles end
-    // up in `provider_request_id`, where a mock run can be read back.
-    const roles = prepareStillRequest(input).references.map(({ role }) => role);
     const transparentPng = Buffer.from(
       "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M/wHwAF/gL+X8tZAAAAAElFTkSuQmCC",
       "base64",
@@ -98,7 +31,7 @@ export class MockStudioGenerator implements StudioGenerator {
     return {
       provider: "mock",
       model: "mock-openai-still-v1",
-      requestId: `mock:${input.idempotencyKey}:roles=${roles.join("+")}`,
+      requestId: `mock:${input.idempotencyKey}`,
       bytes: new Uint8Array(transparentPng),
       mimeType: "image/png",
       estimatedCostCents: 0,
@@ -106,26 +39,14 @@ export class MockStudioGenerator implements StudioGenerator {
   }
 }
 
-export class MockStudioVerifier implements StudioVerifier {
-  async verify(): Promise<VerificationDecision> {
-    return {
-      passed: true,
-      exactText: true,
-      exactScript: true,
-      identityScore: 1,
-      correctMetalAndStones: true,
-      coherentPendant: true,
-      singleConnectedPiece: true,
-      exactlyTwoConnectedRings: true,
-      correctShot: true,
-      noAddedIdentityElements: true,
-      notes: "Mock verification passed without a provider call.",
-    };
-  }
-}
-
 type Fetch = typeof fetch;
 
+/**
+ * SIMPLE-1. One prompt string, no input images: `/v1/images/generations` with a
+ * JSON body. Quality and canvas stay validated configuration
+ * (`stillImageOptions`), never literals, because the quality label means
+ * different things on different model snapshots.
+ */
 export class OpenAIStillAdapter implements StudioGenerator {
   constructor(
     private readonly apiKey: string,
@@ -135,46 +56,39 @@ export class OpenAIStillAdapter implements StudioGenerator {
   ) {}
 
   async generate(input: StudioGenerationInput): Promise<GeneratedMedia> {
-    const request = prepareOpenAIStillRequest(input, this.model);
-    const form = new FormData();
-    form.set("model", request.model);
-    form.set("prompt", request.prompt);
-    form.set("size", request.size);
-    form.set("quality", request.quality);
-    form.set("output_format", request.output_format);
-    for (const { url, fileName } of request.references) {
-      const response = await this.fetcher(url);
-      if (!response.ok)
-        throw new Error(`OpenAI input download failed:${response.status}`);
-      form.append(
-        "image[]",
-        new Blob([await response.arrayBuffer()], {
-          type: response.headers.get("content-type") ?? "image/png",
-        }),
-        fileName,
-      );
-    }
+    if (!this.model.trim()) throw new Error("still_model_required");
+    const options = stillImageOptions();
+    const size = options.sizeByRatio[input.aspectRatio];
+    if (!size) throw new Error("unsupported_still_aspect_ratio");
     const response = await this.fetcher(
-      "https://api.openai.com/v1/images/edits",
+      "https://api.openai.com/v1/images/generations",
       {
         method: "POST",
         headers: {
           authorization: `Bearer ${this.apiKey}`,
+          "content-type": "application/json",
           "Idempotency-Key": input.idempotencyKey,
         },
-        body: form,
+        body: JSON.stringify({
+          model: this.model,
+          prompt: input.prompt,
+          size,
+          quality: options.quality,
+          output_format: "png",
+          n: 1,
+        }),
         signal: AbortSignal.timeout(pipelineLimits.providerRequestTimeoutMs),
       },
     );
     if (!response.ok)
-      throw new Error(`OpenAI image edit failed:${response.status}`);
+      throw new Error(`OpenAI image generation failed:${response.status}`);
     const result = (await response.json()) as {
       id?: string;
       created?: number;
       data?: Array<{ b64_json?: string }>;
     };
     const encoded = result.data?.[0]?.b64_json;
-    if (!encoded) throw new Error("OpenAI image edit omitted b64_json");
+    if (!encoded) throw new Error("OpenAI image generation omitted b64_json");
     return {
       provider: "openai",
       model: this.model,
@@ -182,378 +96,6 @@ export class OpenAIStillAdapter implements StudioGenerator {
       bytes: new Uint8Array(Buffer.from(encoded, "base64")),
       mimeType: "image/png",
       estimatedCostCents: this.estimatedCostCents,
-    };
-  }
-}
-
-export class OpenAIStudioVerifier implements StudioVerifier {
-  constructor(
-    private readonly apiKey: string,
-    private readonly model: string,
-    private readonly fetcher: Fetch = fetch,
-  ) {}
-
-  async verify(input: {
-    approvedText: string;
-    identityFingerprint: string;
-    identityImageUrl: string;
-    presentationView: string;
-    specification: Readonly<Record<string, unknown>>;
-    media: GeneratedMedia;
-  }): Promise<VerificationDecision> {
-    const base64 = Buffer.from(input.media.bytes).toString("base64");
-    const response = await this.fetcher("https://api.openai.com/v1/responses", {
-      method: "POST",
-      headers: {
-        authorization: `Bearer ${this.apiKey}`,
-        "content-type": "application/json",
-      },
-      body: JSON.stringify({
-        model: this.model,
-        input: [
-          {
-            role: "user",
-            content: [
-              {
-                type: "input_text",
-                text: [
-                  `Compare the generated pendant with the immutable identity silhouette and approved exact text ${JSON.stringify(input.approvedText)}.`,
-                  `Identity fingerprint: ${input.identityFingerprint}. Required shot: ${input.presentationView}.`,
-                  `Approved configuration: ${JSON.stringify(input.specification)}.`,
-                  ONE_PIECE_RULE,
-                  "Fail unless spelling and script are exact, identity is preserved, metal and stones match, the pendant is coherent, the pendant is a single connected piece, exactly two connected jump rings attach the chain, the shot is correct, and there are no added letters, names, charms or duplicate pendants.",
-                ].join(" "),
-              },
-              { type: "input_image", image_url: input.identityImageUrl },
-              {
-                type: "input_image",
-                image_url: `data:${input.media.mimeType};base64,${base64}`,
-              },
-            ],
-          },
-        ],
-        text: {
-          format: {
-            type: "json_schema",
-            name: "caleums_image_verification",
-            strict: true,
-            schema: {
-              type: "object",
-              additionalProperties: false,
-              properties: {
-                passed: { type: "boolean" },
-                exactText: { type: "boolean" },
-                exactScript: { type: "boolean" },
-                identityScore: { type: "number" },
-                correctMetalAndStones: { type: "boolean" },
-                coherentPendant: { type: "boolean" },
-                singleConnectedPiece: { type: "boolean" },
-                exactlyTwoConnectedRings: { type: "boolean" },
-                correctShot: { type: "boolean" },
-                noAddedIdentityElements: { type: "boolean" },
-                notes: { type: "string" },
-              },
-              required: [
-                "passed",
-                "exactText",
-                "exactScript",
-                "identityScore",
-                "correctMetalAndStones",
-                "coherentPendant",
-                "singleConnectedPiece",
-                "exactlyTwoConnectedRings",
-                "correctShot",
-                "noAddedIdentityElements",
-                "notes",
-              ],
-            },
-          },
-        },
-      }),
-      // Pipeline fix review 1 finding 2: without this the call could outlive
-      // the stale window, a second worker would take the task, and the two
-      // would race to complete or fail it.
-      signal: AbortSignal.timeout(pipelineLimits.visionRequestTimeoutMs),
-    });
-    if (!response.ok)
-      throw new Error(`OpenAI verification failed:${response.status}`);
-    const parsed = JSON.parse(
-      extractResponseText(await response.json()),
-    ) as VerificationDecision;
-    if (
-      typeof parsed.passed !== "boolean" ||
-      typeof parsed.exactText !== "boolean" ||
-      typeof parsed.singleConnectedPiece !== "boolean" ||
-      typeof parsed.exactlyTwoConnectedRings !== "boolean"
-    )
-      throw new Error("OpenAI verification was malformed");
-    return parsed;
-  }
-}
-
-/** Reads the letters actually engraved on a generated pendant. */
-export interface StudioNameReader {
-  read(
-    media: GeneratedMedia,
-    expected: string,
-  ): Promise<{ text: string; matches: boolean }>;
-}
-
-/**
- * Comparison form for an approved name: NFC, no combining marks, no tatweel and
- * no whitespace, so only the letters themselves decide a mismatch.
- */
-export function normalizeIdentityText(value: string): string {
-  return value
-    .normalize("NFD")
-    .replaceAll(/\p{M}/gu, "")
-    .replaceAll(/[^\p{L}]/gu, "")
-    .replaceAll("ـ", "")
-    .toLowerCase()
-    .normalize("NFC");
-}
-
-/**
- * The comparison form of a name: `normalizeIdentityText` after an NFKC fold.
- *
- * NFKC folds the Arabic presentation forms (U+FB50-U+FDFF, U+FE70-U+FEFF) back
- * onto the letters they render: a reader that answers with U+FEE7 U+FEEC U+FEAE
- * is describing the same three letters as U+0646 U+0648 U+0631, and refusing it
- * would burn three paid stills on a pendant that is actually correct.
- *
- * Fix-2 review minor 7: both sides are folded, but only here, and only to
- * compare. `nameSchema` in `@jewelo/contracts` accepts Arabic presentation
- * forms as approved text, so a customer whose name arrived as U+FEE7 U+FEEC
- * U+FEAE had every reading of it - including a perfectly correct one in the
- * ordinary letters - refused, three paid stills spent and the piece stuck in
- * "preparing" for ever. Folding is what makes the two spellings of one name
- * comparable.
- *
- * It is never applied where the approved text is used as the truth: the stencil
- * is still shaped from the confirmed string and the identity fingerprint still
- * hashes it, so the shopper's own spelling is what the pendant is cut from and
- * what the anchor is pinned to. This function only interprets two strings for a
- * verdict; nothing it returns is stored, shaped or hashed.
- */
-function normalizeComparisonText(value: string): string {
-  return normalizeIdentityText(value.normalize("NFKC"));
-}
-
-/**
- * A serif Latin render can lose or swap a single glyph to the reader without
- * being a different name, so a five-letter-or-longer Latin name passes within
- * one Damerau-Levenshtein edit. Arabic identity stays exact.
- *
- * Pipeline fix review 1 finding 1: an empty comparison form on either side is
- * a refusal, never a match. A name with no letters ("-", "1234") normalises to
- * `""`, and `"" === ""` used to pass any still at all, whatever was engraved
- * on it. There is nothing to compare, so there is nothing that can pass.
- *
- * Fix-3 review minor 12: folding the approved side too widened the comparison
- * in both directions, so a modifier letter in the approved text now compares
- * equal to its base letter - `identityTextMatches("Halima", "ʰalima")` is
- * true. What keeps that unreachable is not this function: it is the shaping
- * coverage gate, which refuses to cut any approved string containing a
- * character the identity engine has no glyph for, `\p{Lm}` included, before a
- * run can exist. The strictness lives there; if that gate is ever relaxed, this
- * comparison stops being safe and has to be tightened with it.
- *
- * Case is already folded, on both sides, by `normalizeIdentityText`: a
- * construction whose stencil draws capitals - "SARA" cut in caps and read back
- * as "Sara" - passes here without a per-construction rule, and dropping the
- * fold would burn three paid stills on a pendant that is correct.
- */
-export function identityTextMatches(
-  readText: string,
-  approvedText: string,
-): boolean {
-  const read = normalizeComparisonText(readText);
-  const approved = normalizeComparisonText(approvedText);
-  if (!read || !approved) return false;
-  if (read === approved) return true;
-  if (approved.length < 5 || !/^[a-z]+$/.test(approved)) return false;
-  return damerauLevenshteinDistance(read, approved) <= 1;
-}
-
-function damerauLevenshteinDistance(a: string, b: string): number {
-  const rows = Array.from({ length: a.length + 1 }, (_row, index) =>
-    Array.from({ length: b.length + 1 }, (_cell, column) =>
-      index === 0 ? column : column === 0 ? index : 0,
-    ),
-  );
-  for (let i = 1; i <= a.length; i += 1)
-    for (let j = 1; j <= b.length; j += 1) {
-      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
-      let distance = Math.min(
-        rows[i - 1]![j]! + 1,
-        rows[i]![j - 1]! + 1,
-        rows[i - 1]![j - 1]! + cost,
-      );
-      if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1])
-        distance = Math.min(distance, rows[i - 2]![j - 2]! + 1);
-      rows[i]![j] = distance;
-    }
-  return rows[a.length]![b.length]!;
-}
-
-export class OpenAINameReader implements StudioNameReader {
-  constructor(
-    private readonly apiKey: string,
-    private readonly model: string,
-    private readonly fetcher: Fetch = fetch,
-  ) {}
-
-  async read(
-    media: GeneratedMedia,
-    expected: string,
-  ): Promise<{ text: string; matches: boolean }> {
-    const base64 = Buffer.from(media.bytes).toString("base64");
-    const response = await this.fetcher("https://api.openai.com/v1/responses", {
-      method: "POST",
-      headers: {
-        authorization: `Bearer ${this.apiKey}`,
-        "content-type": "application/json",
-      },
-      body: JSON.stringify({
-        model: this.model,
-        max_output_tokens: pipelineLimits.nameReaderMaxOutputTokens,
-        input: [
-          {
-            role: "user",
-            content: [
-              {
-                type: "input_text",
-                text: `The approved name for this pendant is "${expected}". Read the name written on the pendant carefully (it may be cursive, pavé, or Arabic calligraphy). Reply with JSON {"text": "<what is written>", "matches": <true if it spells exactly the approved name, letter for letter, in the same script; otherwise false>} only.`,
-              },
-              {
-                type: "input_image",
-                image_url: `data:${media.mimeType};base64,${base64}`,
-              },
-            ],
-          },
-        ],
-        text: {
-          format: {
-            type: "json_schema",
-            name: "caleums_pendant_text",
-            strict: true,
-            schema: {
-              type: "object",
-              additionalProperties: false,
-              properties: {
-                text: { type: "string" },
-                matches: { type: "boolean" },
-              },
-              required: ["text", "matches"],
-            },
-          },
-        },
-      }),
-      // The name read is the longest un-bumped gap in a dispatch: the task
-      // sits in `verifying` while it runs. Bounded by the same vision timeout
-      // the stale window is derived from.
-      signal: AbortSignal.timeout(pipelineLimits.visionRequestTimeoutMs),
-    });
-    if (!response.ok)
-      throw new Error(`OpenAI name read failed:${response.status}`);
-    const parsed = JSON.parse(extractResponseText(await response.json())) as {
-      text?: unknown;
-      matches?: unknown;
-    };
-    if (typeof parsed.text !== "string" || typeof parsed.matches !== "boolean")
-      throw new Error("OpenAI name read was malformed");
-    return { text: parsed.text, matches: parsed.matches };
-  }
-}
-
-/**
- * Answers one question about one photograph: is the pendant one connected piece
- * of metal? It is deliberately blind - no stencil, no approved text, no
- * specification - because the August failure was a vision call given so much
- * context that it agreed with whatever it was shown. Nothing here can pass a
- * still; it can only refuse one.
- */
-export interface StudioPieceReader {
-  read(
-    media: GeneratedMedia,
-  ): Promise<{ singleConnectedPiece: boolean; notes: string }>;
-}
-
-export class OpenAIPieceReader implements StudioPieceReader {
-  constructor(
-    private readonly apiKey: string,
-    private readonly model: string,
-    private readonly fetcher: Fetch = fetch,
-  ) {}
-
-  async read(
-    media: GeneratedMedia,
-  ): Promise<{ singleConnectedPiece: boolean; notes: string }> {
-    const base64 = Buffer.from(media.bytes).toString("base64");
-    const response = await this.fetcher("https://api.openai.com/v1/responses", {
-      method: "POST",
-      headers: {
-        authorization: `Bearer ${this.apiKey}`,
-        "content-type": "application/json",
-      },
-      body: JSON.stringify({
-        model: this.model,
-        max_output_tokens: pipelineLimits.pieceReaderMaxOutputTokens,
-        input: [
-          {
-            role: "user",
-            content: [
-              {
-                type: "input_text",
-                text: [
-                  "Look only at the pendant in this photograph and judge whether a jeweller could make it as one piece.",
-                  ONE_PIECE_RULE,
-                  "Put in notes what you saw: where the metal is continuous and, if it is not, exactly where it breaks.",
-                ].join(" "),
-              },
-              {
-                type: "input_image",
-                image_url: `data:${media.mimeType};base64,${base64}`,
-                detail: "high",
-              },
-            ],
-          },
-        ],
-        text: {
-          format: {
-            type: "json_schema",
-            name: "caleums_pendant_piece",
-            strict: true,
-            schema: {
-              type: "object",
-              additionalProperties: false,
-              properties: {
-                singleConnectedPiece: { type: "boolean" },
-                notes: { type: "string" },
-              },
-              required: ["singleConnectedPiece", "notes"],
-            },
-          },
-        },
-      }),
-      // Same bound as the name read: the task sits in `verifying` while this
-      // runs, and the stale window is derived from this timeout.
-      signal: AbortSignal.timeout(pipelineLimits.visionRequestTimeoutMs),
-    });
-    if (!response.ok)
-      throw new Error(`OpenAI piece read failed:${response.status}`);
-    const parsed = JSON.parse(extractResponseText(await response.json())) as {
-      singleConnectedPiece?: unknown;
-      notes?: unknown;
-    };
-    if (
-      typeof parsed.singleConnectedPiece !== "boolean" ||
-      typeof parsed.notes !== "string"
-    )
-      throw new Error("OpenAI piece read was malformed");
-    return {
-      singleConnectedPiece: parsed.singleConnectedPiece,
-      notes: parsed.notes,
     };
   }
 }
@@ -650,16 +192,4 @@ export class FalSeedanceVideoAdapter {
       throw new Error("fal video result omitted video URL");
     return { state: "ready", temporaryOutputUrl: result.video.url };
   }
-}
-
-function extractResponseText(value: unknown): string {
-  const response = value as {
-    output_text?: string;
-    output?: Array<{ content?: Array<{ type?: string; text?: string }> }>;
-  };
-  if (response.output_text) return response.output_text;
-  for (const item of response.output ?? [])
-    for (const content of item.content ?? [])
-      if (content.type === "output_text" && content.text) return content.text;
-  throw new Error("OpenAI verification omitted output text");
 }

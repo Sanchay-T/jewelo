@@ -1,3 +1,5 @@
+> **Superseded 2026-09-25 by SIMPLE-1.** The media graph described below - four independent stills, stencil anchors, verification and the identity gate - is no longer what the product does. The image path is now one prompt string (`packages/ai/src/prompt.ts`) to one image model, studio view only. This file is kept as the record of what was built and why it was replaced.
+
 > UI reset — 5 September 2026: customer UI and prior screen/flow proposals were discarded by the user. Read `docs/START-HERE.md` and `docs/OMRAN-BUSINESS-CONTEXT.md` first. Customer-journey prescriptions below are superseded for brainstorming; retained backend contracts do not approve a new UI.
 
 # Caleums final E2E contract

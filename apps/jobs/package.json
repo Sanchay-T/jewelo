@@ -10,13 +10,7 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "lab-diff": "tsx scripts/lab-diff.mts",
     "lint": "eslint src",
-    "mask-contact-sheet": "tsx scripts/mask-contact-sheet.mts",
-    "measure-stencils": "tsx scripts/measure-stencils.mts",
-    "publish-prompt": "tsx --env-file=../../.env scripts/publish-prompt-release.mts",
-    "render-stencils": "tsx scripts/render-stencils.mts",
-    "replay-lab": "tsx scripts/replay-lab.mts",
     "test": "vitest run",
     "typecheck": "tsc -p tsconfig.json"
   },
@@ -25,11 +19,7 @@
     "@jewelo/config": "workspace:*",
     "@jewelo/contracts": "workspace:*",
     "@jewelo/data": "workspace:*",
-    "@jewelo/identity": "workspace:*",
     "@jewelo/media": "workspace:*",
     "sharp": "0.35.4"
-  },
-  "devDependencies": {
-    "tsx": "4.23.13"
   }
 }

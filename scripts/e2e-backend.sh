@@ -155,33 +155,6 @@ req PATCH "/api/designs/drafts/$DRAFT_A" "{\"specification\":$SPEC_OK,\"spelling
 expect_status "03 drafts.confirm-spelling" "200" "spelling_confirmed=$(j '.spelling_confirmed')"
 expect_eq "03 drafts.confirm-spelling persisted" "true" "$(j '.spelling_confirmed')"
 
-# /api/transliterate takes {"name": "<Latin name>"} and calls OpenAI directly
-# with no mock path, so the happy case is opt-in and off by default: this
-# driver must not spend provider budget. It is a customer route: it requires the
-# same authenticated anonymous principal as the rest, and it refuses outright
-# unless the runtime selects real providers. Production derives that from
-# NODE_ENV; local/test runs may still opt in with PROVIDER_MODE=real. The
-# rejection cases are settled before any provider call, so they always run.
-if [[ "${E2E_TRANSLITERATE:-0}" == "1" ]]; then
-  req POST /api/transliterate '{"name":"Layla"}' "${AUTH_A[@]}"
-  if [[ "${NODE_ENV:-development}" == "production" || "${PROVIDER_MODE:-mock}" == "real" ]]; then
-    expect_status "04 transliterate(short name)" "200" "$(j '.')"
-  else
-    expect_status "04 transliterate(mock mode refuses)" "503" "$(err)"
-    expect_code "04 transliterate code (want transliteration_unavailable)"
-  fi
-else
-  skip "04 transliterate(short name)" "real OpenAI call; set E2E_TRANSLITERATE=1 to include it"
-fi
-LONG=$(python3 -c 'print("Layla"*20)')
-req POST /api/transliterate "{\"name\":\"$LONG\"}" "${AUTH_A[@]}"
-expect_status "04b transliterate(100 chars rejected)" "422" "route caps names at 36 characters"
-expect_code "04b transliterate code (want invalid_input)"
-
-req POST /api/transliterate '{"name":"Layla"}'
-expect_status "04c transliterate(no bearer rejected)" "401" "customer routes require an anonymous principal"
-expect_code "04c transliterate code (want unauthenticated)"
-
 # ---------------------------------------------------------------------------
 # 3. Reference upload (multipart)
 # ---------------------------------------------------------------------------
@@ -360,9 +333,6 @@ if [[ -n "${OPERATOR_EMAIL:-}" && -n "${OPERATOR_PASSPHRASE:-}" ]]; then
   req POST /api/operator/session "{\"email\":\"$OPERATOR_EMAIL\",\"passphrase\":\"$OPERATOR_PASSPHRASE\"}" -c "$JAR"
   expect_status "23 operator.session" "200" "$(j '.')"
   if [[ "$HTTP" == "200" ]]; then
-    req GET "/api/operator/prompts?profile=image.packshot" "" -b "$JAR"
-    expect_status "24 operator.prompts" "200" "active=$(j '.activeReleaseId') releases=$(j '.releases|length')"
-
     EXP=$(python3 -c 'import datetime;print((datetime.datetime.now(datetime.timezone.utc)+datetime.timedelta(days=7)).isoformat())')
     req POST /api/operator/commands "{\"command\":\"issue_quote\",\"designId\":\"$DESIGN_A\",\"targetId\":\"$QUOTE\",\"idempotencyKey\":\"$(uuid)\",\"payload\":{\"total\":$TOTAL,\"expiresAt\":\"$EXP\"}}" -b "$JAR"
     expect_status "25 operator.issue_quote" "200 201" "status=$(j '.status')"

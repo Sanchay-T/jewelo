@@ -62,19 +62,12 @@ importers:
       '@jewelo/data':
         specifier: workspace:*
         version: link:../../packages/data
-      '@jewelo/identity':
-        specifier: workspace:*
-        version: link:../../packages/identity
       '@jewelo/media':
         specifier: workspace:*
         version: link:../../packages/media
       sharp:
         specifier: 0.35.4
         version: 0.35.4(@types/node@24.13.3)
-    devDependencies:
-      tsx:
-        specifier: 4.23.13
-        version: 4.23.13
 
   apps/web:
     dependencies:
@@ -96,9 +89,6 @@ importers:
       '@jewelo/data':
         specifier: workspace:*
         version: link:../../packages/data
-      '@jewelo/identity':
-        specifier: workspace:*
-        version: link:../../packages/identity
       '@jewelo/jobs':
         specifier: workspace:*
         version: link:../jobs
@@ -160,9 +150,6 @@ importers:
       '@jewelo/contracts':
         specifier: workspace:*
         version: link:../contracts
-      '@jewelo/identity':
-        specifier: workspace:*
-        version: link:../identity
 
   packages/config:
     dependencies:
@@ -186,15 +173,6 @@ importers:
         version: 2.112.4(@opentelemetry/api@1.9.1)
 
   packages/domain: {}
-
-  packages/identity:
-    dependencies:
-      '@jewelo/domain':
-        specifier: workspace:*
-        version: link:../domain
-      harfbuzzjs:
-        specifier: 1.6.1
-        version: 1.6.1
 
   packages/media: {}
 
@@ -2813,9 +2791,6 @@ packages:
 
   graceful-fs@4.2.11:
     resolution: {integrity: sha512-RbJ5/jmFcNNCcDV5o9eTnBLJ/HszWV0P73bc+Ff4nS/rJj+YaS6IGyiOL0VoBYX+l1Wrl3k63h/KrH+nhJ0XvQ==}
-
-  harfbuzzjs@1.6.1:
-    resolution: {integrity: sha512-+JeJmO+HzXjDwpfCOdGSyM2bNP8WzJNFKl/8TKivbInMYDtfRIuPIDLtnBNmQzcJw6GptbhHY6o5gaH6deCMEw==}
 
   has-flag@4.0.0:
     resolution: {integrity: sha512-EykJT/Q1KjTWctppgIAgfSO0tKVuZUjhgMr17kqTumMl6Afv3EISleU7qZUzoXDFTAHTDC4NOoG/ZxU3EvlMPQ==}
@@ -6416,6 +6391,7 @@ snapshots:
       '@esbuild/win32-arm64': 0.28.2
       '@esbuild/win32-ia32': 0.28.2
       '@esbuild/win32-x64': 0.28.2
+    optional: true
 
   escalade@3.2.0: {}
 
@@ -6692,8 +6668,6 @@ snapshots:
     optional: true
 
   graceful-fs@4.2.11: {}
-
-  harfbuzzjs@1.6.1: {}
 
   has-flag@4.0.0: {}
 
@@ -7656,6 +7630,7 @@ snapshots:
       esbuild: 0.28.2
     optionalDependencies:
       fsevents: 2.3.3
+    optional: true
 
   turbo@2.10.12:
     optionalDependencies:

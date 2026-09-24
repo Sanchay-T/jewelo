@@ -1,5 +1,3 @@
-import { normalizeIdentityText } from "@jewelo/ai";
-
 /**
  * The codes-only shape a category column is allowed to hold: a snake_case code,
  * optionally followed by `:` and a suffix spelled in `[a-z0-9_=,]`, and any
@@ -75,31 +73,4 @@ export function errorClass(error: unknown): string {
   const suffix = colon === -1 ? "" : line.slice(colon + 1).trim();
   const code = CODE_SUFFIX.test(suffix) ? `${head}:${suffix}` : head;
   return code.slice(0, 120);
-}
-
-/**
- * What a name rejection is allowed to say: a code, a count and a script name.
- *
- * Pipeline fix review 1 finding 7. This used to be `name_mismatch:<read text>`,
- * and `terminal_error_code` is a customer-visible column (`/api/state` selects
- * it), so a wrong reading of somebody's name was published back to the browser.
- * An operator who needs the actual letters reads `verification_result.nameCheck`
- * on the attempt, which never leaves the server.
- *
- * The length is of the comparison form - the letters that decided the verdict,
- * after presentation forms are folded and marks and punctuation dropped - so it
- * describes the decision rather than the raw string. `script` is `none` when the
- * reader returned no letters at all, which is a different failure from a reading
- * in the wrong script and has to be told apart in the operator console.
- *
- * It lives next to `errorClass` because it is the reason the suffix survives:
- * this is the codes-only shape `errorClass` is required to preserve.
- */
-export function nameMismatchCode(readText: string): string {
-  const letters = normalizeIdentityText(readText.normalize("NFKC"));
-  const arabic = /\p{Script=Arabic}/u.test(letters);
-  const latin = /\p{Script=Latin}/u.test(letters);
-  const script =
-    arabic && latin ? "mixed" : arabic ? "arabic" : latin ? "latin" : "none";
-  return `name_mismatch:len=${letters.length},script=${script}`;
 }

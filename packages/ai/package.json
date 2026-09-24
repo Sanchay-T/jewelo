@@ -15,7 +15,6 @@
   },
   "dependencies": {
     "@jewelo/config": "workspace:*",
-    "@jewelo/contracts": "workspace:*",
-    "@jewelo/identity": "workspace:*"
+    "@jewelo/contracts": "workspace:*"
   }
 }

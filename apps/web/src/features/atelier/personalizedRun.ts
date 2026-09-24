@@ -13,7 +13,6 @@
  * - nothing here invents a percentage, an estimate or a remaining time.
  */
 import { PRESENTABLE_PROVIDERS } from "@jewelo/contracts";
-import { sellableLooks } from "@jewelo/config/sellable";
 
 import { views, type View } from "./model";
 
@@ -281,8 +280,6 @@ export function heroSlot(run: PersonalizedRun | undefined) {
 export type DegradeReason =
   | "daily_limit"
   | "busy"
-  /** Proved unmakeable by the identity engine before any spend. */
-  | "unsupported"
   | "spend_guard"
   | "run_active"
   | "dispatch"
@@ -403,54 +400,6 @@ export function pastCeiling(
   ceilingMs = PERSONALIZED_RUN_CEILING_MS,
 ) {
   return now - startedAt >= ceilingMs;
-}
-
-/**
- * Refusals the client can prove before spending anything.
- *
- * - `arabic_two_name`: the Arabic identity engine solves exactly one name
- *   (`unsupported_arabic_two_name`), so a two-name Arabic pendant would burn a
- *   run, a reservation and a slot of the daily allowance only to end blocked.
- * - `unsupported_construction` and `unsupported_lettering`: a value outside
- *   the request contract is refused before a draft can reserve a run. The
- *   contract currently contains every construction and lettering style shown
- *   by the atelier; `sellableLooks()` mirrors that vocabulary so there is no
- *   second deployment allowlist that can drift from the prompt or stencil.
- *   These refusal codes remain as a defensive boundary for stale clients,
- *   malformed requests, or a future option that has not been wired through the
- *   identity/prompt path.
- *
- * Each of these goes straight to request capture instead of a run.
- */
-export type PreflightRefusal =
-  | "arabic_two_name"
-  | "unsupported_construction"
-  | "unsupported_lettering";
-
-/**
- * D-022. The shop's current option set is deterministic and code-owned.
- * Contract options are available without a deployment override; values outside
- * that set stay blocked before request capture or any run starts, so a prompt
- * can never photograph one design and label it as another.
- */
-const SELLABLE = sellableLooks();
-
-export function preflightRefusal(specification: {
-  script: string;
-  names: readonly string[];
-  construction: string;
-  lettering: string;
-}): PreflightRefusal | undefined {
-  if (specification.script === "Arabic" && specification.names.length > 1)
-    return "arabic_two_name";
-  if (!SELLABLE.constructions.has(specification.construction))
-    return "unsupported_construction";
-  const lettering =
-    specification.script === "Arabic"
-      ? SELLABLE.arabicLettering
-      : SELLABLE.englishLettering;
-  if (!lettering.has(specification.lettering)) return "unsupported_lettering";
-  return undefined;
 }
 
 /**

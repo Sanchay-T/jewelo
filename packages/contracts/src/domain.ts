@@ -447,9 +447,9 @@ export const GEMSTONE_MAX = 3;
  * How many Latin characters the identity engine can actually cast as one
  * pendant, measured rather than guessed.
  *
- * Measured on 2026-09-08 by shaping candidate strings with
- * `shapeText` + `identityStencilSvg` (`packages/identity/src/shaping.ts`)
- * against the pinned Latin face `PlayfairDisplay-SemiBold.ttf` and reading
+ * Measured on 2026-09-08 by shaping candidate strings with the identity
+ * engine SIMPLE-1 removed, against the pinned Latin face
+ * `PlayfairDisplay-SemiBold.ttf` and reading
  * where the fit throws `identity_fit_overflow`. The fit scales the run down to
  * `IDENTITY_MIN_FONT_SIZE` (40 px) inside the body box `IDENTITY_BODY_WIDTH` x
  * `IDENTITY_BODY_HEIGHT` (884 x 774 px) and refuses anything still wider:

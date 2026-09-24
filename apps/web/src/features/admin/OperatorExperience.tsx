@@ -8,7 +8,6 @@ import type { FormEvent } from "react";
 import { SignOut } from "@phosphor-icons/react";
 import { CaleumsWordmark } from "@/components/app-shell";
 import { useJewelo } from "@/lib/jewelo-provider";
-import { PromptLibrary } from "./PromptLibrary";
 import { PreviewRequestQueue } from "./PreviewRequestQueue";
 import {
   arabicStyleLabel,
@@ -34,7 +33,6 @@ export function OperatorExperience({ locale }: { locale: Locale }) {
           signed: "تم تسجيل الدخول كمشغل",
           close: "إغلاق القائمة",
           workQueue: "قائمة العمل",
-          prompts: "وصفات التصوير",
         }
       : {
           operations: "Atelier operations",
@@ -49,11 +47,9 @@ export function OperatorExperience({ locale }: { locale: Locale }) {
           signed: "Signed in as operator",
           close: "Close queue",
           workQueue: "Work queue",
-          prompts: "Photograph recipes",
         };
   const { client, state, refresh } = useJewelo();
   const searchParams = useSearchParams();
-  const tab = searchParams.get("tab") === "prompts" ? "prompts" : "queue";
   const reviewStyle =
     searchParams.get("review") === "arabic-style"
       ? (searchParams.get("style") as ArabicStyle | null)
@@ -181,24 +177,11 @@ export function OperatorExperience({ locale }: { locale: Locale }) {
         </button>
       </header>
       <nav className="clm-operator-nav" aria-label="Operator sections">
-        <Link
-          aria-current={tab === "queue" ? "page" : undefined}
-          href={`/${locale}/operator`}
-        >
+        <Link aria-current="page" href={`/${locale}/operator`}>
           {copy.workQueue}
-        </Link>
-        <Link
-          aria-current={tab === "prompts" ? "page" : undefined}
-          href={`/${locale}/operator?tab=prompts`}
-        >
-          {copy.prompts}
         </Link>
       </nav>
       <div className="clm-operator-body">
-        {tab === "prompts" ? (
-          <PromptLibrary />
-        ) : (
-          <>
             {reviewStyle && (
               <section className="clm-review-handoff" role="status">
                 <div>
@@ -241,12 +224,10 @@ export function OperatorExperience({ locale }: { locale: Locale }) {
                 </ul>
               </section>
             )}
-            {message && (
-              <p className="clm-status" role="status">
-                {message}
-              </p>
-            )}
-          </>
+        {message && (
+          <p className="clm-status" role="status">
+            {message}
+          </p>
         )}
       </div>
     </main>
