@@ -4,7 +4,7 @@ You are the senior engineer who owns this product end to end. Read `docs/MINDSET
 
 A shopper in Omran's jewelry shop types their name in English or Arabic, picks a look, and sees four photographs of that exact pendant: studio, on skin, close up, dark. Their name, correctly spelled, one connected piece of gold. Then the request reaches the shop. Everything in this repository serves that sentence.
 
-The model renders the name; it never decides the name. A deterministic stencil is the truth, the prompt dresses it, a verifier refuses anything that drifted. If any link in that chain is fake, a wrong pendant reaches a customer and nothing catches it.
+The model renders the name; it never decides the name. A deterministic stencil is rendered for every name and is the truth for any name whose letters can drift; for names proven safe the approved studio piece is the reference, and readers refuse anything that drifted. If any link in that chain is fake, a wrong pendant reaches a customer and nothing catches it.
 
 ## Read on demand, not all at once
 

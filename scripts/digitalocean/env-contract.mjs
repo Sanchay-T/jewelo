@@ -121,6 +121,12 @@ export const optionalRuntimeConfig = [
   // construction that needs a look and is not named here is refused before
   // spend rather than generated flat.
   "LOOK_REFERENCES",
+  // SP-2e2 / D-024. "0" (the config default) photographs every studio still
+  // from the stencil, which is what production does today; "1" lets
+  // `stillRoute` decide each studio still's route from the approved name
+  // before any spend. Shipped when present so the switch can be flipped on one
+  // environment without a code change.
+  "STILL_FREE_ROUTE",
   "OPENAI_VERIFIER_MODEL",
   "REAL_MODE_MAX_RESERVED_SPEND_CENTS",
   "REAL_MODE_MAX_ATTEMPT_BUDGET",

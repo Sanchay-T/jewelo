@@ -153,7 +153,8 @@ English goes through the same solver, not a separate renderer.
 There is no Studio-parent image graph and no chained still edit. Each still is
 an independent idempotent OpenAI Images edit request receiving, in this order:
 
-1. the same immutable deterministic silhouette;
+1. the same immutable deterministic silhouette, on the stencil route only
+   (D-024; the free route sends no silhouette and the words carry the spelling);
 2. the exact pinned shot-specific style anchor;
 3. an optional owner-approved inspiration image, if one exists;
 4. the task's immutable compiled prompt and customer configuration;
@@ -172,12 +173,29 @@ Default customer fanout is concurrent and progressive:
 profiles but are not part of default customer fanout. A failed sibling never
 deletes or invalidates ready siblings.
 
-OpenAI verification compares each generated still with the identity silhouette
-and approved configuration. `ready` requires exact spelling/script and identity,
-correct metal/stones and shot, a coherent pendant, exactly two connected jump
-rings with chain attachment, and no added letters, names, charms, or duplicates.
-Provider output is copied immediately into private Supabase Storage before the
-verification transition.
+Every still is photographed on one of two routes, decided by the approved name
+before any spend (D-024). `stillRoute` in `packages/identity` answers `free` or
+`stencil` for the studio still behind the validated switch `STILL_FREE_ROUTE`
+(default off, which is stencil for every name); the answer is written into the
+immutable prompt snapshot and the three dependent views inherit it from their
+studio rather than deciding again. The silhouette is rendered, gated, hashed and
+stored for every name on both routes (D-010); the free route does not put it in
+front of the model. A view on another route than its studio is refused
+(`identity_reuse_route_mismatch`), and the route, the compiled words and the
+images the request carries are asserted to agree before the attempt is reserved
+(`still_stencil_required`, `still_free_route_carries_stencil`,
+`still_master_required`).
+
+OpenAI verification compares each generated still with the approved
+configuration, and with the identity silhouette on the stencil route. `ready`
+requires exact spelling/script and identity, correct metal/stones and shot, a
+coherent pendant, exactly two connected jump rings with chain attachment, and no
+added letters, names, charms, or duplicates. On the free route the spelling
+reader and the one-piece reader are the gate the silhouette is on the stencil
+route: the metal must say the approved name and be one connected run of gold, a
+dependent view must be the same piece as the studio photograph it copies, and a
+refusal from either reader ends the attempt. Provider output is copied
+immediately into private Supabase Storage before the verification transition.
 
 ## Style anchors
 

@@ -619,6 +619,16 @@ export const jobsEnvSchema = trustedWebEnvSchema
     VIDEO_ENABLED: z
       .preprocess(blankToUndefined, z.enum(["0", "1"]).default("0"))
       .transform((value) => value === "1"),
+    // SP-2e2 / D-024. Off means every studio still is photographed from the
+    // stencil, exactly as production does today. On, `stillRoute` in
+    // `@jewelo/identity` decides each studio still's route from the approved
+    // name and the specification before any spend, and the three dependent
+    // views inherit their studio's route from its stored snapshot. The stencil
+    // is rendered, gated, hashed and stored on both routes (D-010); only the
+    // stencil route sends it to the model.
+    STILL_FREE_ROUTE: z
+      .preprocess(blankToUndefined, z.enum(["0", "1"]).default("0"))
+      .transform((value) => value === "1"),
     // P1-6. Which pipeline release a run pins its identity artifacts and tasks
     // to. It used to be a literal in `presentation.ts`, so bumping the release
     // meant editing business code. The default is the release the migration in

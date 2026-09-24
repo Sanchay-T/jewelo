@@ -13,7 +13,7 @@
 | D-007 | fal.ai as Seedance inference gateway | accepted | access, licensing, quota, or reliability gate fails |
 | D-008 | Seedance 2.0 Fast for four 4-second previews | accepted showcase default | conversion/cost evidence favors selected-only or another tested profile |
 | D-009 | Seedance 2.0 Standard for optional selected final motion | accepted | quality/cost/identity gate fails |
-| D-010 | Deterministic canonical pendant identity precedes generation | accepted invariant | never; implementation may evolve |
+| D-010 | Deterministic canonical pendant identity precedes generation. D-024 keeps that invariant and narrows what the stencil is *sent* for: it is rendered, gated, hashed and stored for every name on both routes, and only the stencil route puts it in front of the model | accepted invariant | never; implementation may evolve |
 | D-011 | Four product pipelines run concurrently; each independently unlocks worn + motion in parallel | accepted invariant | provider limitation forces a documented temporary queue policy |
 | D-012 | Anonymous guest first, link identity for durable account/commerce | accepted | legal/fraud requirements |
 | D-013 | Modular monolith with web + jobs deployables | accepted | tracing proves independent service boundary |
@@ -27,6 +27,36 @@
 | D-021 | The stencil is the truth for the whole physical piece, not only for the name. The construction the shopper approved is a shape input to the identity engine and part of the fingerprint: `framed-minimal` draws its rectangular frame and `diamond-rails` its two rails, from validated engine constants, with the two jump rings welded onto that structure and the name welded into it in two places per rail; `classical` and `origami-ribbon` stay the lettering alone, and the ribbon's folded facets are a finish the stencil never claims. `ringPlacement` gains `frame`, with `carrier.kind` as the detail | accepted 9 Sep 2026, P2-2b default decision in `docs/TASKS.md`, after the P2-2 contact sheet showed the registration comparing a bare name with a photograph of a framed pendant | Omran changes what a construction is, or a fifth construction is sold |
 | D-022 | The atelier exposes every contract construction and lettering style without a deployment allowlist. `packages/config/src/sellable.ts` keeps that set deterministic and code-owned; the identity solver and verifier remain the authority for exact spelling and safe geometry on each name. | user override 10 Sep 2026; removed the custom deployment restriction while preserving the identity gates | a requested name cannot pass its identity gates, or a style/construction is removed from the contract |
 | D-023 | The construction the shopper approved sets the letterform as well as the structure. `CONSTRUCTION_LETTERING` in `packages/identity/src/caleums-arabic-v3.ts` is the one table: `origami-ribbon`, `framed-minimal` and `diamond-rails` draw the Latin name in `cairo.ttf`, tightened by 60 font units per advance so the letters touch, and in capitals, at the weight the lab measured for each (`framed-minimal` 800, `origami-ribbon` 600 since the 24 Sep 2026 addendum, `diamond-rails` 500); their Arabic name is `NotoKufiArabic-Regular.ttf` at `wght=800` with no tracking, because Arabic joins. `classical` keeps the customer's own lettering unchanged. Capitals are a drawing transform: `approvedCharacters` stays exactly as approved and the report carries `drawnText` beside it. The face, the weight, the tracking and the drawn case are fingerprint inputs and the engine release moves to `caleums-identity-v5` | accepted 22 Sep 2026: the client approved the boxy capitals look, and the image lab showed the stencil rather than the prompt sets the letterform | the client approves another letterform, or a lab pass measures a weight or tracking that reads better in metal |
+| D-024 | A still's route is decided by the name, before any spend. `stillRoute` in `packages/identity/src/still-route.ts` reads the approved text and the specification and answers `free` or `stencil`; `SupabasePresentationRepository.studioStillRoute` calls it for a studio still behind the validated switch `STILL_FREE_ROUTE` (`packages/config`, "0"/"1", default "0"), and the three dependent views inherit their studio's route from its stored snapshot rather than deciding again. The stencil is rendered, gated, hashed and stored for every name on both routes (D-010); the free route simply does not send it to the model, and on that route the spelling reader and the one-piece reader are the gate that the stencil is on the other. The route, the compiled words and the images the request carries are asserted to agree before the attempt is reserved | accepted 24 Sep 2026, SP-2e2: the SP-2d and SP-2f2 labs measured which names a free prompt spells as one piece, and the route is an allowlist of exactly those | a live free view comes back a different piece from its studio photograph, or a free still passes both readers and is still wrong in the metal |
+
+## D-024 detail
+
+A stencil photograph is stiff.
+The letters are correct because a deterministic drawing put them there, and the model is only allowed to light that drawing, so the jewellery looks like a render of a shape rather than a photograph of a pendant.
+The free route is the same pendant photographed from words alone, and it is better to look at - when the name survives it.
+
+Which names survive is measured, not assumed.
+The SP-2d lab shot the free prompt at every construction and found two failures nothing downstream catches: classical ليلى came back as two pieces of metal because the dots under ي hung off the stroke, and origami-ribbon محمد lost the loop of م and read لحمد, which the production name reader passed.
+So `stillRoute` is an allowlist and it is deliberately wide: a letter routes free only if it has no detached part in any positional form and joins the letter after it unless it is last, the construction has to be one the lab proved for that script, and anything the module cannot positively name - a second name, a layout that is not `single-name`, a combining mark, a presentation form, a mixed script, an accented Latin letter, a dotted i or j, an inner capital - is a stencil.
+A false `stencil` costs a slightly stiffer photograph; a false `free` costs a customer a pendant that spells their name in two pieces.
+
+The decision is made once, from the name, before anything is spent, and written into the immutable prompt snapshot.
+Nothing recomputes it: the request builder, the reuse gate and the three dependent views all read that one column.
+A view on another route than its studio would photograph a different piece - a stencil-bound view redraws the letters, a free one copies the studio photograph - so `identity_reuse_route_mismatch` refuses the pair rather than shipping two pendants under one order.
+
+D-010 is unchanged and the stencil is not optional.
+It is rendered for every name on both routes, it passes the same shaping, component and ring gates, its fingerprint is hashed into the artifact and the artifact is stored and lineage-checked.
+What the route decides is only whether it is sent to the model.
+On the free route the readers carry what the stencil carries on the other one: the spelling reader is the authority that the metal says the approved name, and the one-piece reader is the authority that it is one connected run of gold.
+Both already run on every still; on the free route a refusal from either is the only thing standing between a wrong name and a customer, which is why the route stays an allowlist.
+
+The pairing is asserted before the reservation, in `apps/jobs/src/presentation.ts`, not only inside the compiler: a stencil route with no signed stencil URL (`still_stencil_required`), a free route carrying one (`still_free_route_carries_stencil`) and a free dependent view with no master photograph to copy (`still_master_required`) each stop the dispatch pre-spend with a stored code an operator can read.
+`compileStillPrompt` and `buildStillReferences` raise the same three codes as the second line, past the reservation.
+
+The switch ships off.
+With `STILL_FREE_ROUTE` unset or `0` every studio still is stencil and production behaviour is byte for byte what it was; the flag is turned on for one environment at a time, and staging is first.
+
+Revisit when a live free view comes back as a different piece from its studio photograph, or when a free still passes both readers and is still wrong in the metal.
 
 ## D-023 detail
 

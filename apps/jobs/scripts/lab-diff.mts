@@ -45,6 +45,8 @@ import {
 } from "@jewelo/ai";
 import { stillRoute } from "@jewelo/identity";
 
+import { SupabasePresentationRepository } from "../src/presentation";
+
 const REPO_ROOT = resolve(fileURLToPath(new URL("../../..", import.meta.url)));
 const LAB_0922 = "docs/goals/road-to-gold/lab-2026-09-22/final";
 const LAB_0923 = "docs/goals/road-to-gold/lab-2026-09-23-origami/prompts";
@@ -731,6 +733,52 @@ for (const [label, run, want] of [
   else {
     failed += 1;
     console.log(`DIFFER ${label}: ${caught || "no error thrown"}`);
+  }
+}
+
+/**
+ * SP-2e2 / D-024: the switch itself, through the exact call
+ * `executePresentationTask` makes for a studio still
+ * (`repository.studioStillRoute(revision)`), not through `stillRoute` again.
+ *
+ * With `STILL_FREE_ROUTE` off - what production runs until the switch is set -
+ * every studio still is stencil, whatever the name. With it on, a proven-safe
+ * name is photographed from the words and a dotted Arabic name still goes to
+ * the stencil. The constructor takes no network: nothing here is paid and
+ * nothing here connects.
+ */
+const routeRevision = (approvedText: string, language: "en" | "ar") => ({
+  id: "revision",
+  specification: { layout: "single-name", construction: "classical" },
+  identity_anchor: {
+    approvedText,
+    language,
+    typography: "caleums-arabic-v3",
+    fingerprint: "fingerprint",
+  },
+});
+for (const [name, language, freeRouteEnabled, want] of [
+  ["Omar", "en", false, "stencil"],
+  ["فاطمة", "ar", false, "stencil"],
+  ["Omar", "en", true, "free"],
+  ["فاطمة", "ar", true, "stencil"],
+] as const) {
+  const repository = new SupabasePresentationRepository(
+    "https://lab.invalid",
+    "no-key",
+    false,
+    false,
+    new Set<string>(),
+    "caleums-final-media-v2",
+    new Map<string, string>(),
+    freeRouteEnabled,
+  );
+  const got = repository.studioStillRoute(routeRevision(name, language));
+  const label = `studio ${name} classical with STILL_FREE_ROUTE=${freeRouteEnabled ? 1 : 0} routes ${want}`;
+  if (got === want) console.log(`MATCH  ${label}`);
+  else {
+    failed += 1;
+    console.log(`DIFFER ${label}: got ${got}`);
   }
 }
 

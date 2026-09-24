@@ -134,11 +134,13 @@ const PLAIN_WORDS: Readonly<Record<string, string>> = {
     "The shop is set to the studio photograph only, so this view was not taken.",
   // SP-2e1: the recipe and the photograph's inputs disagree about how this
   // pendant is to be made, which no re-run changes.
-  // Unreachable while STUDIO_STILL_ROUTE is stencil; kept for SP-2e2.
+  // SP-2e2: checked before anything is spent, on every photograph.
   still_free_route_carries_stencil:
     "The recipe and the photograph's inputs do not agree.",
   still_stencil_required:
     "The recipe and the photograph's inputs do not agree.",
+  still_master_required:
+    "This view had no approved studio photograph to copy.",
   // SP-2e1c: the shop's photograph settings are missing or out of range, which
   // a person fixes in the settings and then runs again.
   still_model_required:

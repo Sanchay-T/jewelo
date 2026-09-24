@@ -806,9 +806,13 @@ export const DETERMINISTIC_REFUSAL_CODES = [
   // SP-2e1: the compiled recipe and the images the request carries disagree
   // about the route. A property of the snapshot and the release, so the same
   // dispatch decides it the same way every time.
-  // Unreachable while STUDIO_STILL_ROUTE is stencil; kept for SP-2e2.
+  // SP-2e2: all three are asserted pre-spend in `apps/jobs/src/presentation.ts`
+  // before the reservation, and raised again inside `compileStillPrompt` and
+  // `buildStillReferences` as the second line.
   "still_free_route_carries_stencil",
   "still_stencil_required",
+  // A dependent view with no approved studio photograph to copy.
+  "still_master_required",
   // An immutable snapshot or a pinned release that does not line up with its task never will.
   "prompt_snapshot_lineage_mismatch",
   "task_prompt_release_mismatch",

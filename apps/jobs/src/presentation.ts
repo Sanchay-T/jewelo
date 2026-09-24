@@ -26,7 +26,11 @@ import { parseJobsEnv, pipelineLimits } from "@jewelo/config";
 // path - is the one the upload route validates against, so this job cannot
 // drift from it.
 import { REFERENCE_ASSET_ID } from "@jewelo/contracts";
-import type { StillRouteChoice } from "@jewelo/identity";
+import {
+  stillRoute,
+  type StillRouteChoice,
+  type StillRouteSpecification,
+} from "@jewelo/identity";
 import { isDuplicateObject } from "@jewelo/media";
 import sharp from "sharp";
 // Fix-3 review M1: `errorClass` used to be private to this file, so the video
@@ -109,13 +113,6 @@ interface PromptSnapshotRow {
   still_route?: StillRouteChoice | null;
 }
 
-/**
- * SP-2e1: the route every studio still is compiled for, in one place.
- * Pinned to the stencil, so production is unchanged. SP-2e2 replaces this
- * constant with `stillRoute` behind a validated config switch. Dependent views
- * never read it: they copy their parent studio snapshot's route.
- */
-const STUDIO_STILL_ROUTE: StillRouteChoice = "stencil";
 interface StoredOutput {
   media: GeneratedMedia;
   stored: { bucket: string; path: string; checksum: string };
@@ -150,6 +147,18 @@ export interface PresentationRepository {
    * while the parent has none. A dependent view compiles on that route.
    */
   dependencyStillRoute(task: TaskRow): Promise<StillRouteChoice | undefined>;
+  /**
+   * SP-2e2 / D-024: the route a studio still is compiled for, decided once,
+   * from the approved name and the specification, before any spend.
+   *
+   * It lives on the repository for the same reason `ringlessConstructions` and
+   * `pipelineReleaseId` do: the switch that governs it (`STILL_FREE_ROUTE`) is
+   * validated configuration read once at the environment boundary, and this
+   * file never reads an environment variable. Required rather than optional so
+   * a repository that cannot say which route a studio takes is a compile error
+   * instead of a silent stencil.
+   */
+  studioStillRoute(revision: RevisionRow): StillRouteChoice;
   loadStoredOutput(task: TaskRow): Promise<StoredOutput | undefined>;
   reserveAttempt(
     task: TaskRow,
@@ -557,12 +566,13 @@ export async function executePresentationTask(
     return blockPreSpendTerminally(new Error("task_prompt_release_mismatch"));
   let snapshot = existingSnapshot;
   if (!snapshot) {
-    // The route is decided here, once, and written into the snapshot: the
-    // studio takes `STUDIO_STILL_ROUTE`, a dependent view its parent's. A
-    // parent with no snapshot yet has not been dispatched, so the view waits.
+    // The route is decided here, once, and written into the snapshot: a studio
+    // still by its own name (`studioStillRoute`, D-024), a dependent view by
+    // its parent's. A parent with no snapshot yet has not been dispatched, so
+    // the view waits.
     const route = task.dependency_task_id
       ? await repository.dependencyStillRoute(task)
-      : STUDIO_STILL_ROUTE;
+      : repository.studioStillRoute(revision);
     if (!route) {
       // No parent snapshot has two causes. The parent went terminal before it
       // ever compiled one, in which case waiting is waiting for ever and the
@@ -743,6 +753,30 @@ export async function executePresentationTask(
   } catch (error) {
     return blockPreSpendTerminally(error);
   }
+  // SP-2e2: the stencil file this request will carry, decided once here and
+  // handed to the generator below, so the pairing asserted before spend is the
+  // pairing sent. The stencil is rendered, gated, hashed and stored on both
+  // routes (D-010); only the stencil route sends it to the model.
+  const identityImageUrl = stillRoute === "stencil" ? identity.url : undefined;
+  // SP-2e2: the route the snapshot recorded and the images this request
+  // carries must agree, and they are compared here, before the attempt budget
+  // is read and before any reservation. `buildStillReferences` and
+  // `compileStillPrompt` raise the same three codes inside `generator.generate`,
+  // which is past the reservation: a disagreement caught there costs a booked
+  // attempt, and one caught here costs nothing. Each is a property of the
+  // snapshot row and the task row, so every redispatch decides it the same way:
+  // terminal, a code, no customer text.
+  if (stillRoute === "stencil" && !identityImageUrl?.trim())
+    return blockPreSpendTerminally(new Error("still_stencil_required"));
+  if (stillRoute === "free" && identityImageUrl?.trim())
+    return blockPreSpendTerminally(
+      new Error("still_free_route_carries_stencil"),
+    );
+  // A dependent view copies the approved studio photograph. On the free route
+  // that photograph is the only authority for the piece - no stencil is sent -
+  // so a free view without it has nothing to copy.
+  if (stillRoute === "free" && task.dependency_task_id && !reference?.url)
+    return blockPreSpendTerminally(new Error("still_master_required"));
   // D-020, fix pass 6: there is no bar rail any more and no flag that lets one
   // through. `ringPlacement` is `welded`, `frame` (P2-2b: the construction the
   // shopper chose carries the rings on its own frame or rails, and the solver
@@ -906,10 +940,11 @@ export async function executePresentationTask(
           idempotencyKey: reservation.idempotencyKey,
           prompt: snapshot.compiled_prompt,
           referenceImageUrl: reference?.url,
-          // The stencil is rendered, gated, hashed and stored on both routes
-          // (D-010); only the stencil route sends it.
+          // Resolved and asserted against the route before the reservation
+          // above (D-010: the stencil is rendered, gated, hashed and stored on
+          // both routes; only the stencil route sends it).
           route: stillRoute,
-          identityImageUrl: stillRoute === "stencil" ? identity.url : undefined,
+          identityImageUrl,
           lookReferenceUrl,
           styleAnchorUrl,
           inspirationImageUrl,
@@ -1126,7 +1161,23 @@ export class SupabasePresentationRepository implements PresentationRepository {
     // `@jewelo/config` (LOOK_REFERENCES). A construction that needs a look and
     // is not in this map is refused before any spend.
     private readonly lookReferences: ReadonlyMap<string, string> = new Map(),
+    // SP-2e2 / D-024. Off (the default, and what production runs until the
+    // switch is set) every studio still is photographed from the stencil,
+    // exactly as before. On, the approved name decides. Validated in
+    // `@jewelo/config` (STILL_FREE_ROUTE) rather than read here.
+    private readonly freeRouteEnabled = false,
   ) {}
+  studioStillRoute(revision: RevisionRow): StillRouteChoice {
+    if (!this.freeRouteEnabled) return "stencil";
+    return stillRoute({
+      approvedText: revision.identity_anchor.approvedText,
+      language: revision.identity_anchor.language,
+      // The same specification object the snapshot's variables are built from,
+      // read structurally: `stillRoute` proves each field it uses and routes to
+      // the stencil for anything it cannot name.
+      specification: revision.specification as StillRouteSpecification,
+    }).route;
+  }
   async #request<T>(path: string, init: RequestInit = {}): Promise<T> {
     const response = await fetch(`${this.url}${path}`, {
       ...init,
@@ -2083,6 +2134,7 @@ export function productionPresentationDependencies(
     config.IDENTITY_RINGLESS_CONSTRUCTIONS,
     config.PIPELINE_RELEASE_ID,
     config.LOOK_REFERENCES,
+    config.STILL_FREE_ROUTE,
   );
   if (config.PROVIDER_MODE === "mock")
     return {
