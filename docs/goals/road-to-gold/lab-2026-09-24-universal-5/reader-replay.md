@@ -22,4 +22,4 @@ Spend: USD 0.374 (OpenAI), 9 of 16 reads timed out.
 
 - One piece 16 of 16, spelled 10 of 16, presentable 10 of 16.
 - Misspelled: تسنيم a (three dots on ت), كريم a and b (the same extra dot under م on both), مؤمن a (hamza drawn as a plain ball) and b (dots on the struts above each م), آمنة b (hamza hook with a ball instead of a madda).
-- The piece reader's 8 accepts are all one piece by the viewer; 4 of them are misspelled (مؤمن b, and the reads it did not return include the others), so on rails wording A fixes the piece and leaves spelling to a gate that does not exist yet.
+- The piece reader's 8 accepts are all one piece by the viewer; 2 of them are misspelled (آمنة b, مؤمن b), so on rails wording A fixes the piece and leaves spelling to a gate that does not exist yet.
