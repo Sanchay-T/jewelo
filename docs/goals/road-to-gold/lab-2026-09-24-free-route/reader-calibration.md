@@ -182,11 +182,11 @@ Metered from the response `usage` at USD 1.25 per million input and USD 10 per m
 Variant 1 calibration USD 0.8984, variant 2 calibration USD 1.0055, variant 3 split probe USD 0.3125, dependent replay USD 0.6523.
 Total USD 2.869 against the USD 3 cap.
 
-### SP-2a3 wording 3, full calibration set (lead, after the implementer's cap)
+### SP-2a3 wording 3, full calibration set (lead, recounted after review 5)
 
-`cal.mts sp2a3-v3-full`, the shipped wording 3, 35 images x 3 reads, USD 1.0202.
-Split pendants: 30 of 30 reads refused, 0 misses.
-One-piece pendants: 9 false refusals in 71 reads that returned (4 reads errored and are retried once in production), 12.7%, against 10 of 74 (13.5%) for the SP-2a2 wording.
-The refusals: `framed-minimal-muhammad-ar-a` 1 of 3 (was 3 of 3), `v3/c-fat-studio-a` 3 of 3 (was 3 of 3), `v2/r-fat-studio` 3 of 3 (was 2 of 3, label still unconfirmed, SP-2a2 asked for a viewer re-score), `v2/f-fat-studio` 2 of 3 (was 3 of 3).
-Framed-minimal in this set went from 6 of 12 reads refused to 1 of 12.
-Total SP-2a3 spend: USD 2.869 (implementer) + USD 1.0202 (this run) = USD 3.89.
+`cal.mts sp2a3-v3-full`, the wording 3 text, 35 images x 3 reads, USD 1.0202.
+`cal.mts` still carries the pre-re-score labels, and my first write-up counted against them; the corrected labels above (10 split, 25 one piece) give these numbers.
+Split pendants: 29 of 30 reads refused. The miss is `v2/f-fat-studio`, the framed فاطمة whose ف dot touches only at a corner, read `FFT`; with the implementer's probe (`FFF`) wording 3 accepts it on 1 of 6 reads.
+One-piece pendants: 4 false refusals in 71 reads that returned (4 errored), 5.6%: `framed-minimal-muhammad-ar-a` 1 of 3 and `v2/r-fat-studio` 3 of 3 (label unconfirmed); SP-2a2's wording refused 10 of 74.
+Verdict: wording 3 lets a split framed pendant through, which the gate may never do, so it is not shipped; the SP-2a2 wording is restored and SP-2a3 stays open until a wording refuses every split read, with framed negative controls added to the set (review 5 found the set has no framed pendant whose word truly floats).
+Total SP-2a3 spend so far: USD 3.89.
