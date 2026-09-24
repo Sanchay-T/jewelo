@@ -16,6 +16,24 @@
  *
  * Pure and deterministic: no provider call, no font, no I/O. It is decided
  * before any spend.
+ *
+ * Reasons are fixed snake_case codes and never carry a character of the
+ * customer's name or an unvalidated specification string: the same invariant
+ * `errorClass` holds in `apps/jobs/src/error-class.ts`, because a reason is
+ * logged, counted and read by an operator, and a name in a code is a name in a
+ * log. The only variable part allowed is a value this module has already
+ * checked against a closed enum (`layout:<known id>`,
+ * `latin_print_construction:<known id>`); anything else collapses to the bare
+ * code.
+ *
+ * NOT routed here, decided by the lead on 24 Sep 2026 (SP-2 review):
+ * Arabic dotted letters (ن ب ي ...) and Latin capital-plus-lowercase joins
+ * ("Omar", "Omran") also risk a second piece of metal, but they are NOT sent to
+ * the stencil by this function. They are gated after generation by the blind
+ * one-piece reader (`OpenAIPieceReader`, `apps/jobs/src/presentation.ts`), and
+ * the SP-2d lab measures exactly those cases - نبيل, ليلى, Omar, Omran - before
+ * the route is switched on in SP-2e. If that lab shows a material failure rate,
+ * they move into this function and route wide like the rest.
  */
 
 /** Free prompt, or the deterministic stencil. */
@@ -54,6 +72,29 @@ export interface StillRouteDecision {
 const SINGLE_NAME_LAYOUT = "single-name";
 
 /**
+ * `PendantLayout` and `PendantConstruction` copied from
+ * `packages/contracts/src/domain.ts`: `@jewelo/identity` does not depend on
+ * `@jewelo/contracts`, and a reason code may only name a value that is in a
+ * closed enum. A layout or construction not in these sets is an unvalidated
+ * string and never reaches a code.
+ */
+const KNOWN_LAYOUTS = new Set([
+  "single-name",
+  "side-by-side",
+  "connected-heart",
+  "stacked",
+  "stacked-heart",
+  "infinity",
+  "interlocked",
+]);
+const KNOWN_CONSTRUCTIONS = new Set([
+  "classical",
+  "origami-ribbon",
+  "framed-minimal",
+  "diamond-rails",
+]);
+
+/**
  * The only English construction drawn as connected script. Every other
  * construction prints detached letters, which a free prompt cannot be trusted
  * to weld into one piece.
@@ -83,13 +124,18 @@ type ArabicJoiningType = "D" | "C" | "R" | "U" | "T";
  * initial and medial forms exist at U+FBE8/U+FBE9), but the Naskh and Kufi
  * faces pinned in `engines/caleums-arabic-v3` draw it final-only, so it is
  * deliberately NOT listed here and is treated as R.
+ *
+ * U+0698 JEH was listed here by mistake (SP-2 review major). ArabicShaping.txt
+ * reads `0698; JEH; R; REH`: it is a REH-group letter and does not join the
+ * letter after it, so Persian ژیلا was being photographed from a free prompt
+ * with a gap after the ژ. It is removed; it now falls through to R.
  */
 const JOINING_TYPE_D = new Set(
   [
     0x0620, 0x0626, 0x0628, 0x062a, 0x062b, 0x062c, 0x062d, 0x062e, 0x0633,
     0x0634, 0x0635, 0x0636, 0x0637, 0x0638, 0x0639, 0x063a, 0x0641, 0x0642,
     0x0643, 0x0644, 0x0645, 0x0646, 0x0647, 0x064a, 0x066e, 0x066f, 0x0679,
-    0x067e, 0x0686, 0x0698, 0x06a4, 0x06a9, 0x06af, 0x06be, 0x06c1, 0x06cc,
+    0x067e, 0x0686, 0x06a4, 0x06a9, 0x06af, 0x06be, 0x06c1, 0x06cc,
     0x06d0,
   ],
 );
@@ -154,7 +200,9 @@ export function stillRoute(input: StillRouteInput): StillRouteDecision {
 
   // 1. Layout and second name: only one name, laid out as one name.
   const layout = specification.layout ?? "unknown";
-  if (layout !== SINGLE_NAME_LAYOUT) add(`layout:${layout}`);
+  if (layout !== SINGLE_NAME_LAYOUT) {
+    add(KNOWN_LAYOUTS.has(layout) ? `layout:${layout}` : "layout_not_single_name");
+  }
   const secondName = specification.names?.[1];
   if (
     (specification.nameCount ?? 1) > 1 ||
@@ -175,7 +223,7 @@ export function stillRoute(input: StillRouteInput): StillRouteDecision {
   for (const character of characters) {
     if (/\s/u.test(character)) add("whitespace");
     else if (!isLetter(character) && !/\p{M}/u.test(character)) {
-      add(`non_letter:${character}`);
+      add("non_letter");
     }
   }
 
@@ -188,12 +236,12 @@ export function stillRoute(input: StillRouteInput): StillRouteDecision {
     add("mixed_scripts");
   }
   if (language !== "ar" && language !== "en") {
-    add(`unknown_language:${language || "unset"}`);
+    add("unknown_language");
   } else if (
     (language === "ar" && latinLetters.length > 0) ||
     (language === "en" && arabicLetters.length > 0)
   ) {
-    add(`language_script_mismatch:${language}`);
+    add("language_script_mismatch");
   }
 
   // 4. Arabic: every letter but the last must join the letter that follows it.
@@ -211,7 +259,7 @@ export function stillRoute(input: StillRouteInput): StillRouteDecision {
       const followed = points
         .slice(index + 1)
         .some((next) => next.type !== "T");
-      if (followed) add(`arabic_non_joining_gap:${point.character}`);
+      if (followed) add("arabic_non_joining_gap");
     });
   }
 
@@ -219,14 +267,18 @@ export function stillRoute(input: StillRouteInput): StillRouteDecision {
   if (latinLetters.length > 0) {
     const construction = specification.construction ?? "unspecified";
     if (construction !== CONNECTED_LATIN_CONSTRUCTION) {
-      add(`latin_print_construction:${construction}`);
+      add(
+        KNOWN_CONSTRUCTIONS.has(construction)
+          ? `latin_print_construction:${construction}`
+          : "latin_print_construction",
+      );
     }
     // Script capitals do not join one another, so NOOR is four pieces.
     if (latinLetters.length > 1 && latinLetters.every((l) => l !== l.toLowerCase()))
       add("latin_all_capitals");
     for (const letter of latinLetters) {
-      if (LATIN_TITTLE.test(letter)) add(`latin_tittle:${letter}`);
-      else if (hasDetachedMark(letter)) add(`latin_detached_mark:${letter}`);
+      if (LATIN_TITTLE.test(letter)) add("latin_tittle");
+      else if (hasDetachedMark(letter)) add("latin_detached_mark");
     }
   }
 
