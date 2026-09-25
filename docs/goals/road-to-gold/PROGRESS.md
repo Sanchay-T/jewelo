@@ -467,3 +467,10 @@ Later the same day:
 Open:
 
 - Arabic live 0/2 against 9/12 in the Runway lab. Without a reader nothing catches a misspelt Arabic piece before the shopper sees it; Sanchay's call whether that stands.
+
+## 2026-09-25 - CAL-TASTE-2 live on caleums (burgundy still life)
+
+- Sanchay chose the "floating on burgundy" still life as the one photo line for all seven styles, after rejecting white packshots and in-shop settings.
+- Caleums PR #8 squash-merged as `bab8d51` (hand-written briefs + burgundy line); deployment `a9b38a8c` ACTIVE on https://caleums-xp8xk.ondigitalocean.app.
+- Live order at 1440x900: ليلى, Floating Rails, 18K yellow, no stones -> spelt right, rails with gold beads, burgundy backdrop, one piece. Evidence: `dogfood-2026-09-25/caleums-live-burgundy-*.webp`.
+- Open: jewelo staging `packages/ai/src/prompt.ts` still uses the white studio line; bringing it in step is a prompt change and needs the full sweep.
