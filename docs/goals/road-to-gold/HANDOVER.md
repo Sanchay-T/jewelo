@@ -64,7 +64,7 @@ Seen in my own agent-browser session on staging at `d1b3cbc7`, evidence in `docs
 
 1. Arabic spelling: live 0/2, lab 9/12, and no reader. Keep it as is, or allow one step back (the one-line mark list in the lab ledger fixed most dot errors).
 2. Supabase billing before 29 September 2026 (upgrade Devonel or move the project).
-3. The old `caleums` app (`caleums-xp8xk.ondigitalocean.app`) still serves the old studio: redirect it to staging or delete it.
+3. The redesigned landing page with the hero films lives in the separate `caleums` app (`caleums-xp8xk.ondigitalocean.app`, repo `Sanchay-T/caleums`, last deployed 15 Sep); this repository's staging URL redirects `/` to the design studio. Decide whether the landing links into this studio or the two merge.
 4. Spend cap is 2000 cents and 16 runs a day; say when to go back to 800 and 4.
 5. Resend (or SMTP) and `NOTIFICATION_TO` so captured requests email the shop.
 
