@@ -475,3 +475,12 @@ Open:
 - Live order at 1440x900: ليلى, Floating Rails, 18K yellow, no stones -> spelt right, rails with gold beads, burgundy backdrop, one piece. Evidence: `dogfood-2026-09-25/caleums-live-burgundy-*.webp`.
 - Live order at 390x844: Sara, Origami, English -> spelt right, folded facets, burgundy. Evidence: `caleums-live-burgundy-sara-phone.webp`.
 - Open: jewelo staging `packages/ai/src/prompt.ts` still uses the white studio line; bringing it in step is a prompt change and needs the full sweep.
+
+## 2026-09-25 - Omran feedback live on caleums
+
+- caleums PR #9 (0b89b14): up to 3 stones, one chain (cable 45 cm), size first, 4 steps, own picture on review, newest first, no italics. Reviewer pass: 2 majors + 4 minors, all fixed before merge.
+- caleums PR #10 (708df7e): style tiles show the piece first, the chosen tile turns over to the worn photo (Omran: "Design first then the body").
+- caleums PR #11 (2f3dde2): English name offers its Arabic spelling (gpt-6-luna, shopper presses to accept). Live: Layla -> ليلى. The web component needed CALEUMS_IMAGE_API_KEY added (it was worker-only).
+- Seven per-style videos recorded on the live site (scratchpad, not committed): all seven names spelt right on burgundy.
+- Deploy 19ced6df ACTIVE. Two DO deploys hung at build; cancelled via API, force-rebuild worked.
+- Open: email on save needs a mail provider; the site says "a generated study" on review, which the Omran copy rule forbids; homepage "finishing details" still shows rolo/box/curb chains; name toggle still uses the local letter walk rather than the new helper.
